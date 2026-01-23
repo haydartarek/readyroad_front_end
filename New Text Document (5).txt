@@ -1,0 +1,23 @@
+npm run dev
+
+Back-end 
+cd C:\Users\fqsdg\Desktop\end_project\readyroad
+.\mvnw.cmd spring-boot:run
+
+Front-end
+cd "C:\Users\fqsdg\Desktop\end_project\readyroad_front_end"; npm run dev
+
+
+
+cd C:\Users\fqsdg\Desktop\end_project\readyroad
+.\mvnw.cmd clean test
+
+
+cd C:\Users\fqsdg\Desktop\end_project\readyroad\postman
+newman run ReadyRoad.smoke-test.postman_collection.json -e ReadyRoad.local.postman_environment.json -r "cli,html" --reporter-html-export report-100-percent.html
+
+
+cd C:\Users\fqsdg\Desktop\end_project\readyroad_front_end\mobile_app
+flutter run
+
+Remove-Item "C:\Users\fqsdg\Desktop\end_project\readyroad\mobile_app_backup_20260123_120559" -Recurse -Force

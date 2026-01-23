@@ -1,0 +1,50 @@
+{
+  "deep_analysis_flutter_ux": {
+    "image_id": "Flutter.jpg",
+    "workflow_stage": "From Concept Sketching to Digital Prototyping",
+    "functional_deep_dive": {
+      "navigation_system": {
+        "type": "BottomNavigationBar",
+        "items_count": 4,
+        "routes": ["Home", "Practice", "Exam", "Profile"],
+        "interaction_model": "Persistent navigation with nested routing"
+      },
+      "screen_specific_logic": {
+        "home_screen": {
+          "header": "Language selector + quick access actions",
+          "primary_cta": "Start Practice or Start Exam",
+          "data_fetch": "GET /api/users/me/progress (summary) and GET /api/users/me/analytics (summary)"
+        },
+        "practice_screen": {
+          "ui_pattern": "Category selection + difficulty selection",
+          "behavior": "Practice session loads next eligible question based on backend rules",
+          "data_fetch": "POST /api/users/me/practice/start and POST /api/users/me/practice/answer"
+        },
+        "exam_screen": {
+          "exam_rules": "50 questions, time-limited, no answer reveal during session",
+          "flow": "Start exam -> answer questions -> submit or auto-submit on expiry",
+          "data_fetch": "POST /api/users/me/exams/start and POST /api/users/me/exams/answer and POST /api/users/me/exams/submit"
+        },
+        "profile_and_analytics": {
+          "user_metrics": {
+            "accuracy": "Percentage",
+            "attempts": "Integer",
+            "streak": "Integer (optional)"
+          },
+          "weak_areas": {
+            "feature": "Show top weak categories with recommendations",
+            "data_fetch": "GET /api/users/me/analytics/weak-areas"
+          }
+        }
+      },
+      "design_consistency": {
+        "border_radius": "24.0 (consistent with token-based style guide)",
+        "elevation": "Subtle elevation for cards and interactive surfaces",
+        "typography": "Scalable typography + RTL support for Arabic"
+      }
+    },
+    "logical_mapping": {
+      "sketch_to_digital_conversion": "Sketch list views map to Flutter ListView.builder, and card components map to reusable widgets driven by API responses."
+    }
+  }
+}

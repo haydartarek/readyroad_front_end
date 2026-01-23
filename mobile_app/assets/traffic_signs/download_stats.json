@@ -1,0 +1,37 @@
+﻿{
+    "Timestamp":  "2026-01-14 14:49:02",
+    "Failed":  2,
+    "TotalSigns":  230,
+    "Skipped":  34,
+    "Downloaded":  194,
+    "Categories":  {
+                       "M":  {
+                                 "Count":  21,
+                                 "FolderName":  "bicycle_signs"
+                             },
+                       "E":  {
+                                 "Count":  14,
+                                 "FolderName":  "parking_signs"
+                             },
+                       "D":  {
+                                 "Count":  21,
+                                 "FolderName":  "mandatory_signs"
+                             },
+                       "F":  {
+                                 "Count":  93,
+                                 "FolderName":  "information_signs"
+                             },
+                       "B":  {
+                                 "Count":  16,
+                                 "FolderName":  "priority_signs"
+                             },
+                       "C":  {
+                                 "Count":  34,
+                                 "FolderName":  "prohibition_signs"
+                             },
+                       "A":  {
+                                 "Count":  31,
+                                 "FolderName":  "danger_signs"
+                             }
+                   }
+}

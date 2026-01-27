@@ -12,10 +12,7 @@ import 'sign_details_screen.dart';
 class CategorySignsScreen extends StatefulWidget {
   final Category category;
 
-  const CategorySignsScreen({
-    super.key,
-    required this.category,
-  });
+  const CategorySignsScreen({super.key, required this.category});
 
   @override
   State<CategorySignsScreen> createState() => _CategorySignsScreenState();
@@ -26,6 +23,10 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
   List<ContentItem> _contentItems = [];
   bool _isLoading = true;
   String? _error;
+
+  String _convertToAssetPath(String imageUrl) {
+    return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  }
 
   @override
   void initState() {
@@ -40,7 +41,9 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
     });
 
     try {
-      final items = await _contentService.getContentByCategory(widget.category.id);
+      final items = await _contentService.getContentByCategory(
+        widget.category.id,
+      );
       setState(() {
         _contentItems = items;
         _isLoading = false;
@@ -58,18 +61,14 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
     final languageCode = context.watch<LanguageProvider>().currentLanguage;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.category.getName(languageCode)),
-      ),
+      appBar: AppBar(title: Text(widget.category.getName(languageCode))),
       body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
@@ -77,11 +76,7 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               'Error loading content',
@@ -112,11 +107,7 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.content_paste,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.content_paste, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'No content in this category',
@@ -150,7 +141,7 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
     return Consumer2<LanguageProvider, FavoritesProvider>(
       builder: (context, languageProvider, favoritesProvider, child) {
         final isFavorite = favoritesProvider.isFavorite(item.id);
-        
+
         return Card(
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -172,9 +163,10 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
                       flex: 3,
                       child: Container(
                         color: Colors.grey[200],
-                        child: item.imageUrl != null
-                            ? Image.network(
-                                item.imageUrl!,
+                        child:
+                            item.imageUrl != null && item.imageUrl!.isNotEmpty
+                            ? Image.asset(
+                                _convertToAssetPath(item.imageUrl!),
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) {
                                   return const Icon(
@@ -201,17 +193,15 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
                           children: [
                             Text(
                               item.code,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: Colors.grey[600]),
                             ),
                             const SizedBox(height: 4),
                             Expanded(
                               child: Text(
                                 item.getName(languageProvider.currentLanguage),
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -244,4 +234,3 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
     );
   }
 }
-

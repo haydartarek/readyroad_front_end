@@ -1,0 +1,6 @@
+{
+    "files.exclude": {
+        "**/mobile_app/**": true
+    },
+    "dart.enabled": false
+}

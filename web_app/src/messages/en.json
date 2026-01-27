@@ -1,7 +1,6 @@
 {
   "app.name": "ReadyRoad",
   "app.tagline": "Master Your Belgian Driving License",
-  
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
   "nav.exam": "Exam",
@@ -11,7 +10,15 @@
   "nav.profile": "Profile",
   "nav.traffic_signs": "Traffic Signs",
   "nav.lessons": "Lessons",
-  
+  "nav.language": "Language",
+  "nav.more": "More",
+  "nav.search": "Search",
+  "nav.notifications": "Notifications",
+  "search.page": "Page",
+  "search.sign": "Sign",
+  "search.lesson": "Lesson",
+  "search.loading": "Loading...",
+  "search.noResults": "No results found",
   "auth.login": "Login",
   "auth.register": "Register",
   "auth.logout": "Logout",
@@ -27,7 +34,6 @@
   "auth.have_account": "Already have an account?",
   "auth.sign_in": "Sign In",
   "auth.sign_up": "Sign Up",
-  
   "exam.start": "Start Exam",
   "exam.rules": "Exam Rules",
   "exam.rules.title": "Exam Rules & Instructions",
@@ -57,7 +63,6 @@
   "exam.failed": "Failed",
   "exam.score": "Score",
   "exam.correct_answers": "Correct Answers",
-  
   "practice.title": "Practice Mode",
   "practice.subtitle": "Choose a category and start practicing at your own pace",
   "practice.start": "Start Practice",
@@ -66,18 +71,15 @@
   "practice.easy": "Easy",
   "practice.medium": "Medium",
   "practice.hard": "Hard",
-  
   "analytics.error_patterns": "Error Patterns",
   "analytics.weak_areas": "Weak Areas",
   "analytics.strong_areas": "Strong Areas",
   "analytics.recommendations": "Recommendations",
-  
   "progress.overview": "Progress Overview",
   "progress.exams_taken": "Exams Taken",
   "progress.average_score": "Average Score",
   "progress.pass_rate": "Pass Rate",
   "progress.current_streak": "Current Streak",
-  
   "common.loading": "Loading...",
   "common.save": "Save",
   "common.cancel": "Cancel",

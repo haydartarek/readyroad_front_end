@@ -1,145 +1,149 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { useLanguage } from '@/contexts/language-context';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { ROUTES } from '@/lib/constants';
+import { ProgressOverviewCard } from '@/components/dashboard/progress-overview-card';
+import { QuickActionsSection } from '@/components/dashboard/quick-actions-section';
+import { WeakAreasPreview } from '@/components/dashboard/weak-areas-preview';
+import { RecentActivityList } from '@/components/dashboard/recent-activity-list';
+import apiClient from '@/lib/api';
+
+interface OverallProgress {
+  totalAttempts: number;
+  correctAnswers: number;
+  overallAccuracy: number;
+  masteryLevel: string;
+  weakCategories: string[];
+  strongCategories: string[];
+  studyStreak: number;
+  lastActivityDate: string | null;
+}
+
+interface WeakAreaData {
+  categoryCode: string;
+  categoryName: string;
+  accuracy: number;
+  totalAttempted: number;
+  totalCorrect: number;
+  masteryLevel: string;
+  improvementPlan: string;
+}
+
+interface WeakAreasResponse {
+  weakAreas: WeakAreaData[];
+  recommendations: string[];
+}
+
+// Default values for when API returns no data
+const defaultProgressData = {
+  totalExamsTaken: 0,
+  averageScore: 0,
+  passRate: 0,
+  currentStreak: 0,
+};
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const [progressData, setProgressData] = useState(defaultProgressData);
+  const [weakAreas, setWeakAreas] = useState<{ category: string; accuracy: number; totalQuestions: number }[]>([]);
+  const [recentActivities, setRecentActivities] = useState<{ id: string; type: 'exam' | 'practice'; date: string; score: number; passed?: boolean; category?: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+
+        // Fetch overall progress
+        const progressResponse = await apiClient.get<OverallProgress>('/users/me/progress/overall');
+        const progress = progressResponse.data;
+
+        setProgressData({
+          totalExamsTaken: progress.totalAttempts || 0,
+          averageScore: progress.overallAccuracy || 0,
+          passRate: progress.overallAccuracy >= 82 ? 100 : (progress.overallAccuracy / 82) * 100,
+          currentStreak: progress.studyStreak || 0,
+        });
+
+        // Fetch weak areas
+        const weakAreasResponse = await apiClient.get<WeakAreasResponse>('/users/me/analytics/weak-areas');
+        const weakAreasData = weakAreasResponse.data.weakAreas || [];
+
+        setWeakAreas(
+          weakAreasData.map((area: WeakAreaData) => ({
+            category: area.categoryName,
+            accuracy: area.accuracy,
+            totalQuestions: area.totalAttempted,
+          }))
+        );
+
+        // For recent activities, we'll use the progress data for now
+        // In a real implementation, you'd have a separate endpoint for recent activities
+        if (progress.lastActivityDate) {
+          setRecentActivities([
+            {
+              id: '1',
+              type: 'practice',
+              date: progress.lastActivityDate,
+              score: Math.round(progress.overallAccuracy),
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        // Don't show error toast for new users who have no data yet
+        // The API might return 404 or empty data for new users
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">
+            Welcome back, {user?.firstName || 'User'}!
+          </h1>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
       <div>
         <h1 className="text-4xl font-bold mb-2">
-          Welcome back, {user?.firstName}! 👋
+          Welcome back, {user?.firstName || 'User'}!
         </h1>
         <p className="text-muted-foreground">
           Ready to continue your journey to mastering the Belgian driving license?
         </p>
       </div>
 
+      {/* Progress Overview */}
+      <ProgressOverviewCard data={progressData} />
+
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-2 hover:border-primary transition-colors">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="text-2xl">📝</span>
-              {t('exam.start')}
-            </CardTitle>
-            <CardDescription>
-              Take a full 50-question exam (45 minutes)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href={ROUTES.EXAM}>{t('exam.start')}</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 hover:border-primary transition-colors">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="text-2xl">🎯</span>
-              {t('practice.start')}
-            </CardTitle>
-            <CardDescription>
-              Practice specific categories and difficulties
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" className="w-full">
-              <Link href={ROUTES.PRACTICE}>{t('practice.start')}</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 hover:border-primary transition-colors">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="text-2xl">📊</span>
-              {t('analytics.weak_areas')}
-            </CardTitle>
-            <CardDescription>
-              View your performance analytics
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" className="w-full">
-              <Link href={ROUTES.ANALYTICS_WEAK_AREAS}>View Analytics</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
+        <QuickActionsSection />
       </div>
 
-      {/* Progress Overview Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('progress.overview')}</CardTitle>
-          <CardDescription>Your learning statistics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-accent rounded-lg">
-              <div className="text-3xl font-bold text-primary">0</div>
-              <div className="text-sm text-muted-foreground">{t('progress.exams_taken')}</div>
-            </div>
-            <div className="text-center p-4 bg-accent rounded-lg">
-              <div className="text-3xl font-bold text-primary">0%</div>
-              <div className="text-sm text-muted-foreground">{t('progress.average_score')}</div>
-            </div>
-            <div className="text-center p-4 bg-accent rounded-lg">
-              <div className="text-3xl font-bold text-primary">0%</div>
-              <div className="text-sm text-muted-foreground">{t('progress.pass_rate')}</div>
-            </div>
-            <div className="text-center p-4 bg-accent rounded-lg">
-              <div className="text-3xl font-bold text-primary">0</div>
-              <div className="text-sm text-muted-foreground">{t('progress.current_streak')}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="text-2xl">🚦</span>
-              {t('nav.traffic_signs')}
-            </CardTitle>
-            <CardDescription>
-              Learn 200+ Belgian traffic signs
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" className="w-full">
-              <Link href={ROUTES.TRAFFIC_SIGNS}>Browse Signs</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="text-2xl">📚</span>
-              {t('nav.lessons')}
-            </CardTitle>
-            <CardDescription>
-              31 comprehensive theory lessons
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" className="w-full">
-              <Link href={ROUTES.LESSONS}>View Lessons</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Weak Areas & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WeakAreasPreview weakAreas={weakAreas} />
+        <RecentActivityList activities={recentActivities} />
       </div>
     </div>
   );

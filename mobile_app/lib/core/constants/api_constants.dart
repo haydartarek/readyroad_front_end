@@ -3,7 +3,7 @@ class ApiConstants {
   // Base URL - Change this to match your backend
   // For Android Emulator use: 10.0.2.2
   // For real device use: your computer's IP address
-  static const String baseUrl = 'http://10.0.2.2:8888';
+  static const String baseUrl = 'http://10.0.2.2:8890';
 
   // API Endpoints
   static const String apiVersion = '/api';

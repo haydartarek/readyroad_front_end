@@ -14,10 +14,9 @@ class ExamScreen extends StatefulWidget {
 class _ExamScreenState extends State<ExamScreen> {
   final ExamQuestionService _questionService = getIt<ExamQuestionService>();
   List<Map<String, dynamic>> _questions = [];
-  Map<int, int> _answers = {}; // questionIndex -> selectedAnswer
+  final Map<int, int> _answers = {}; // questionIndex -> selectedAnswer
   int _currentQuestionIndex = 0;
   bool _isLoading = true;
-  bool _isSubmitted = false;
   String? _error;
 
   @override
@@ -34,7 +33,9 @@ class _ExamScreenState extends State<ExamScreen> {
       });
 
       // Get 10 random questions (adjust count as needed)
-      final questions = await _questionService.getRandomExamQuestions(count: 10);
+      final questions = await _questionService.getRandomExamQuestions(
+        count: 10,
+      );
       setState(() {
         _questions = questions;
         _isLoading = false;
@@ -70,7 +71,10 @@ class _ExamScreenState extends State<ExamScreen> {
   }
 
   void _submitExam() {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
     final isArabic = languageProvider.currentLanguage == 'ar';
 
     // Check if all questions are answered
@@ -121,14 +125,13 @@ class _ExamScreenState extends State<ExamScreen> {
       }
     }
 
-    setState(() {
-      _isSubmitted = true;
-    });
-
     final percentage = (correctAnswers / _questions.length * 100).round();
     final passed = percentage >= 82; // 41/50 = 82% passing score
 
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
     final isArabic = languageProvider.currentLanguage == 'ar';
 
     showDialog(
@@ -136,7 +139,9 @@ class _ExamScreenState extends State<ExamScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Text(
-          passed ? (isArabic ? 'نجحت!' : 'Passed!') : (isArabic ? 'راسب' : 'Failed'),
+          passed
+              ? (isArabic ? 'نجحت!' : 'Passed!')
+              : (isArabic ? 'راسب' : 'Failed'),
           style: TextStyle(
             color: passed ? Colors.green : Colors.red,
             fontWeight: FontWeight.bold,
@@ -171,11 +176,11 @@ class _ExamScreenState extends State<ExamScreen> {
             Text(
               isArabic
                   ? (passed
-                      ? 'تهانينا! لقد نجحت في الامتحان'
-                      : 'يجب الحصول على 82% على الأقل للنجاح')
+                        ? 'تهانينا! لقد نجحت في الامتحان'
+                        : 'يجب الحصول على 82% على الأقل للنجاح')
                   : (passed
-                      ? 'Congratulations! You passed the exam'
-                      : 'You need at least 82% to pass'),
+                        ? 'Congratulations! You passed the exam'
+                        : 'You need at least 82% to pass'),
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.grey),
             ),
@@ -196,7 +201,6 @@ class _ExamScreenState extends State<ExamScreen> {
                 setState(() {
                   _answers.clear();
                   _currentQuestionIndex = 0;
-                  _isSubmitted = false;
                 });
                 _loadQuestions();
               },
@@ -226,12 +230,14 @@ class _ExamScreenState extends State<ExamScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text('Error: $_error'))
-              : _questions.isEmpty
-                  ? Center(
-                      child: Text(isArabic ? 'لا توجد أسئلة متاحة' : 'No questions available'),
-                    )
-                  : _buildExamView(isArabic),
+          ? Center(child: Text('Error: $_error'))
+          : _questions.isEmpty
+          ? Center(
+              child: Text(
+                isArabic ? 'لا توجد أسئلة متاحة' : 'No questions available',
+              ),
+            )
+          : _buildExamView(isArabic),
       bottomNavigationBar: !_isLoading && _questions.isNotEmpty
           ? _buildNavigationBar(isArabic)
           : null,
@@ -240,7 +246,9 @@ class _ExamScreenState extends State<ExamScreen> {
 
   Widget _buildExamView(bool isArabic) {
     final question = _questions[_currentQuestionIndex];
-    final questionText = isArabic ? question['questionAr'] : question['questionEn'];
+    final questionText = isArabic
+        ? question['questionAr']
+        : question['questionEn'];
     final selectedAnswer = _answers[_currentQuestionIndex];
 
     return Column(
@@ -262,7 +270,10 @@ class _ExamScreenState extends State<ExamScreen> {
                       children: [
                         Text(
                           '${isArabic ? 'السؤال' : 'Question'} ${_currentQuestionIndex + 1}/${_questions.length}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -277,7 +288,10 @@ class _ExamScreenState extends State<ExamScreen> {
                 const SizedBox(height: 16),
                 Text(
                   isArabic ? 'الخيارات:' : 'Options:',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 ...[1, 2, 3, 4].map((optionNumber) {
@@ -289,15 +303,50 @@ class _ExamScreenState extends State<ExamScreen> {
                   return Card(
                     color: isSelected ? Colors.blue.shade100 : null,
                     margin: const EdgeInsets.only(bottom: 12),
-                    child: RadioListTile<int>(
-                      value: optionNumber,
-                      groupValue: selectedAnswer,
-                      onChanged: (value) => _selectAnswer(value!),
-                      title: Text(optionText),
-                      dense: false,
+                    child: InkWell(
+                      onTap: () => _selectAnswer(optionNumber),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Theme.of(context).primaryColor
+                                      : Colors.grey,
+                                  width: 2,
+                                ),
+                              ),
+                              child: isSelected
+                                  ? Center(
+                                      child: Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Theme.of(context).primaryColor,
+                                        ),
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                optionText,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -313,7 +362,7 @@ class _ExamScreenState extends State<ExamScreen> {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),

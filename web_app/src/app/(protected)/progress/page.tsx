@@ -53,13 +53,69 @@ export default function ProgressPage() {
     const fetchProgress = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.get<ProgressData>('/users/me/progress');
-        setData(response.data);
+
+        // Fetch overall progress and category progress in parallel
+        const [overallResponse, categoriesResponse] = await Promise.all([
+          apiClient.get<{
+            totalAttempts: number;
+            correctAnswers: number;
+            overallAccuracy: number;
+            masteryLevel: string;
+            weakCategories: string[];
+            strongCategories: string[];
+            studyStreak: number;
+            lastActivityDate: string | null;
+          }>('/users/me/progress/overall'),
+          apiClient.get<Array<{
+            categoryCode: string;
+            categoryName: string;
+            totalAttempted: number;
+            totalCorrect: number;
+            accuracy: number;
+            masteryLevel: string;
+            lastPracticed: string | null;
+          }>>('/users/me/progress/categories'),
+        ]);
+
+        const overall = overallResponse.data;
+        const categories = categoriesResponse.data;
+
+        // Transform data to match component structure
+        setData({
+          overallStats: {
+            totalExams: overall.totalAttempts,
+            totalQuestions: overall.totalAttempts,
+            averageScore: overall.overallAccuracy,
+            passRate: overall.overallAccuracy >= 82 ? 100 : (overall.overallAccuracy / 82) * 100,
+            currentStreak: overall.studyStreak,
+            bestScore: overall.overallAccuracy, // Backend doesn't provide this separately
+          },
+          examHistory: [], // Backend doesn't provide exam history in this endpoint
+          categoryProgress: categories.map(cat => ({
+            categoryCode: cat.categoryCode,
+            categoryName: cat.categoryName,
+            questionsAttempted: cat.totalAttempted,
+            correctAnswers: cat.totalCorrect,
+            accuracy: cat.accuracy,
+            trend: cat.accuracy >= 70 ? 'improving' as const : cat.accuracy >= 50 ? 'stable' as const : 'declining' as const,
+          })),
+        });
         setError(null);
       } catch (err) {
         console.error('Failed to fetch progress:', err);
-        setError('Failed to load progress data');
-        toast.error('Failed to load progress');
+        // Don't show error for new users with no progress data
+        setData({
+          overallStats: {
+            totalExams: 0,
+            totalQuestions: 0,
+            averageScore: 0,
+            passRate: 0,
+            currentStreak: 0,
+            bestScore: 0,
+          },
+          examHistory: [],
+          categoryProgress: [],
+        });
       } finally {
         setIsLoading(false);
       }

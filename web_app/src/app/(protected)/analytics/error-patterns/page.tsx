@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { ErrorSummary } from '@/components/analytics/error-summary';
+import { ErrorPatternList } from '@/components/analytics/error-pattern-list';
 import apiClient from '@/lib/api';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -28,7 +27,7 @@ interface AnalyticsData {
   patterns: ErrorPattern[];
 }
 
-export default function ErrorPatternsPage() {
+function ErrorPatternsContent() {
   const searchParams = useSearchParams();
   const examId = searchParams.get('examId');
 
@@ -97,144 +96,85 @@ export default function ErrorPatternsPage() {
     );
   }
 
-  const severityConfig = {
-    HIGH: {
-      color: 'bg-red-100 text-red-800 border-red-300',
-      icon: '🔴',
-      label: 'High Priority',
-    },
-    MEDIUM: {
-      color: 'bg-orange-100 text-orange-800 border-orange-300',
-      icon: '🟠',
-      label: 'Medium Priority',
-    },
-    LOW: {
-      color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      icon: '🟡',
-      label: 'Low Priority',
-    },
-  };
-
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-12">
+    <div className="container mx-auto max-w-6xl px-4 py-12">
       <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-4xl font-bold">Error Pattern Analysis</h1>
+        <div className="text-center">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-primary">
+            <span className="text-2xl">🔍</span>
+            <span className="font-semibold">Error Analysis</span>
+          </div>
+          <h1 className="mt-4 text-4xl font-bold">Your Error Patterns</h1>
           <p className="mt-2 text-lg text-gray-600">
-            We analyzed your {data.totalErrors} incorrect answer{data.totalErrors > 1 ? 's' : ''} and
-            identified these patterns:
+            We analyzed {data.totalErrors} errors and identified these patterns to help you improve
           </p>
         </div>
+
+        {/* Summary Cards */}
+        <ErrorSummary totalErrors={data.totalErrors} patterns={data.patterns} />
 
         {/* Info Alert */}
         <Alert>
           <AlertDescription>
-            <p className="font-semibold">💡 Understanding Error Patterns</p>
+            <p className="font-semibold">💡 How to Use This Analysis</p>
             <p className="mt-1 text-sm">
-              Error patterns help you identify systematic mistakes in your understanding.
-              Focus on high-priority patterns first for maximum improvement.
+              Focus on critical patterns first. Each pattern shows affected categories,
+              recommendations, and example questions to practice. Click on any pattern to expand details.
             </p>
           </AlertDescription>
         </Alert>
 
-        {/* Pattern Cards */}
-        <div className="space-y-6">
-          {data.patterns.map((pattern, index) => {
-            const config = severityConfig[pattern.severity];
-            
-            return (
-              <Card key={index} className={cn('border-2', config.color)}>
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">{config.icon}</span>
-                        <Badge variant="outline" className={config.color}>
-                          {config.label}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-xl">{pattern.pattern}</CardTitle>
-                      <CardDescription className="mt-2">
-                        {pattern.description}
-                      </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold">{pattern.count}</div>
-                      <div className="text-sm text-gray-600">errors</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Progress Bar */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Impact on total errors</span>
-                      <span className="font-semibold">{pattern.percentage.toFixed(1)}%</span>
-                    </div>
-                    <Progress value={pattern.percentage} />
-                  </div>
+        {/* Pattern List */}
+        <ErrorPatternList patterns={data.patterns} />
 
-                  {/* Affected Categories */}
-                  {pattern.affectedCategories.length > 0 && (
-                    <div>
-                      <p className="text-sm font-semibold mb-2">Affected Categories:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {pattern.affectedCategories.map((category, idx) => (
-                          <Badge key={idx} variant="secondary">
-                            {category}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Recommendation */}
-                  <div className="rounded-lg bg-blue-50 p-4">
-                    <p className="text-sm font-semibold text-blue-900 mb-1">
-                      💡 Recommendation:
-                    </p>
-                    <p className="text-sm text-blue-800">{pattern.recommendation}</p>
-                  </div>
-
-                  {/* Example Questions */}
-                  {pattern.exampleQuestions.length > 0 && (
-                    <div>
-                      <p className="text-sm font-semibold mb-2">
-                        Example Questions: {pattern.exampleQuestions.slice(0, 3).join(', ')}
-                        {pattern.exampleQuestions.length > 3 && ` and ${pattern.exampleQuestions.length - 3} more`}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Actions */}
+        {/* Next Steps */}
         <Card>
           <CardHeader>
-            <CardTitle>Next Steps</CardTitle>
+            <CardTitle>Recommended Actions</CardTitle>
+            <CardDescription>
+              Based on your error patterns, here's what we recommend
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              Based on these patterns, we recommend:
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="flex-1">
-                <Link href="/practice">Practice Weak Areas</Link>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-3">
+              <Button asChild size="lg">
+                <Link href="/practice">
+                  <span className="mr-2">📝</span>
+                  Practice Weak Areas
+                </Link>
               </Button>
-              <Button variant="outline" asChild className="flex-1">
-                <Link href="/analytics/weak-areas">View Weak Areas</Link>
+              <Button variant="outline" asChild size="lg">
+                <Link href="/analytics/weak-areas">
+                  <span className="mr-2">📊</span>
+                  View Weak Categories
+                </Link>
               </Button>
-              <Button variant="outline" asChild className="flex-1">
-                <Link href="/lessons">Study Lessons</Link>
+              <Button variant="outline" asChild size="lg">
+                <Link href="/lessons">
+                  <span className="mr-2">📚</span>
+                  Study Lessons
+                </Link>
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ErrorPatternsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
+          <p className="text-lg text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ErrorPatternsContent />
+    </Suspense>
   );
 }

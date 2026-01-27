@@ -21,3 +21,36 @@ cd C:\Users\fqsdg\Desktop\end_project\readyroad_front_end\mobile_app
 flutter run
 
 Remove-Item "C:\Users\fqsdg\Desktop\end_project\readyroad\mobile_app_backup_20260123_120559" -Recurse -Force
+
+
+cd C:\Users\heyde\Desktop\end_project\readyroad
+.\mvnw.cmd spring-boot:run
+
+cd C:\Users\heyde\Desktop\end_project\readyroad_front_end\web_app
+npm run dev
+
+
+
+
+# 1. إيقاف Java (Spring Boot)
+Get-Process -Name java -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# 2. تشغيل Spring Boot
+cd C:\Users\heyde\Desktop\end_project\readyroad
+mvn spring-boot:run
+
+# 3. في terminal جديد - تشغيل Next.js
+cd C:\Users\heyde\Desktop\end_project\readyroad_front_end\web_app
+npm run dev
+
+# 4. في terminal جديد - تشغيل Flutter
+cd C:\Users\heyde\Desktop\end_project\readyroad_front_end\mobile_app
+flutter run
+
+
+Since I cannot access the backend directly, I'll focus on what I can do: updating the frontend to call the real API (which will need to be implemented) and documenting everything in README.md ONLY. Let me now fix the frontend traffic signs pages to use real API calls and update the README:
+
+
+
+
+

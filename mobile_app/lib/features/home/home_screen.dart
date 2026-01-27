@@ -79,9 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const SearchScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const SearchScreen()),
               );
             },
           ),
@@ -152,9 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const QuizScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const QuizScreen()),
           );
         },
         icon: const Icon(Icons.quiz),
@@ -165,9 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
@@ -175,11 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               'Error loading data',
@@ -206,9 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (_categories.isEmpty) {
-      return const Center(
-        child: Text('No categories found'),
-      );
+      return const Center(child: Text('No categories found'));
     }
 
     return RefreshIndicator(
@@ -222,19 +210,19 @@ class _HomeScreenState extends State<HomeScreen> {
           // Categories Section
           Text(
             'Traffic Sign Categories',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           ..._categories.map((category) {
-            final languageCode = context.watch<LanguageProvider>().currentLanguage;
+            final languageCode = context
+                .watch<LanguageProvider>()
+                .currentLanguage;
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
-                leading: CircleAvatar(
-                  child: Text('${category.id}'),
-                ),
+                leading: CircleAvatar(child: Text('${category.id}')),
                 title: Text(category.getName(languageCode)),
                 subtitle: category.getDescription(languageCode) != null
                     ? Text(
@@ -248,13 +236,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CategorySignsScreen(category: category),
+                      builder: (context) =>
+                          CategorySignsScreen(category: category),
                     ),
                   );
                 },
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -269,9 +258,9 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           isArabic ? 'ابدأ التعلم' : 'Start Learning',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Row(
@@ -304,9 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const ExamScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const ExamScreen()),
                   );
                 },
               ),
@@ -347,10 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -359,4 +343,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

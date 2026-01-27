@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { WeakAreaSummary } from '@/components/analytics/weak-area-summary';
+import { WeakAreaDetails } from '@/components/analytics/weak-area-details';
 import apiClient from '@/lib/api';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -14,20 +13,21 @@ import Link from 'next/link';
 interface WeakArea {
   categoryCode: string;
   categoryName: string;
-  totalQuestions: number;
-  correctAnswers: number;
-  wrongAnswers: number;
+  correctCount: number;
+  totalCount: number;
   accuracy: number;
-  rank: number;
-  recommendations: string[];
-  relatedTrafficSigns: string[];
-  relatedLessons: number[];
+  averageTime: string;
+  commonMistakes: string[];
+  recommendedLessons: Array<{
+    code: string;
+    title: string;
+  }>;
 }
 
 interface WeakAreasData {
   weakAreas: WeakArea[];
   overallAccuracy: number;
-  totalQuestionsAttempted: number;
+  totalCategories: number;
 }
 
 export default function WeakAreasPage() {
@@ -92,194 +92,69 @@ export default function WeakAreasPage() {
     );
   }
 
-  const getRankBadge = (rank: number) => {
-    if (rank === 1) return { label: '🥇 Priority #1', variant: 'destructive' as const };
-    if (rank === 2) return { label: '🥈 Priority #2', variant: 'destructive' as const };
-    if (rank === 3) return { label: '🥉 Priority #3', variant: 'secondary' as const };
-    return { label: `Priority #${rank}`, variant: 'secondary' as const };
-  };
-
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-12">
+    <div className="container mx-auto max-w-6xl px-4 py-12">
       <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-4xl font-bold">Weak Areas Analysis</h1>
+        <div className="text-center">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-primary">
+            <span className="text-2xl">📊</span>
+            <span className="font-semibold">Weak Areas Analysis</span>
+          </div>
+          <h1 className="mt-4 text-4xl font-bold">Areas for Improvement</h1>
           <p className="mt-2 text-lg text-gray-600">
-            Based on {data.totalQuestionsAttempted} questions attempted with {data.overallAccuracy.toFixed(1)}% overall accuracy
+            Focused analysis to help you target and strengthen weak categories
           </p>
         </div>
 
-        {/* Overall Stats */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Overall Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Overall Accuracy</span>
-                <span className="font-semibold">{data.overallAccuracy.toFixed(1)}%</span>
-              </div>
-              <Progress value={data.overallAccuracy} />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Summary Cards */}
+        <WeakAreaSummary
+          weakAreas={data.weakAreas}
+          totalCategories={data.totalCategories}
+          overallAccuracy={data.overallAccuracy}
+        />
 
         {/* Info Alert */}
         <Alert>
           <AlertDescription>
-            <p className="font-semibold">🎯 Improvement Strategy</p>
+            <p className="font-semibold">🎯 Smart Improvement Strategy</p>
             <p className="mt-1 text-sm">
-              Focus on your top 3 weak areas first. Practice questions in these categories
-              and study related lessons to improve your understanding.
+              Focus on critical areas first (below 50% accuracy). Practice these categories daily
+              and review related lessons. Track your progress and celebrate small improvements!
             </p>
           </AlertDescription>
         </Alert>
 
-        {/* Weak Areas Cards */}
-        <div className="space-y-6">
-          {data.weakAreas.map((area) => {
-            const rankBadge = getRankBadge(area.rank);
-            const isTopPriority = area.rank <= 3;
-            
-            return (
-              <Card
-                key={area.categoryCode}
-                className={cn(
-                  'border-2',
-                  isTopPriority && 'border-red-300 bg-red-50/50'
-                )}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <Badge variant={rankBadge.variant} className="mb-2">
-                        {rankBadge.label}
-                      </Badge>
-                      <CardTitle className="text-xl">{area.categoryName}</CardTitle>
-                      <CardDescription className="mt-1">
-                        Category {area.categoryCode}
-                      </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className={cn(
-                        "text-3xl font-bold",
-                        area.accuracy < 50 ? "text-red-600" :
-                        area.accuracy < 70 ? "text-orange-600" : "text-yellow-600"
-                      )}>
-                        {area.accuracy.toFixed(1)}%
-                      </div>
-                      <div className="text-sm text-gray-600">accuracy</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Stats */}
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-lg bg-gray-50 p-3">
-                      <div className="text-sm text-gray-600">Total Questions</div>
-                      <div className="text-xl font-bold">{area.totalQuestions}</div>
-                    </div>
-                    <div className="rounded-lg bg-green-50 p-3">
-                      <div className="text-sm text-gray-600">Correct</div>
-                      <div className="text-xl font-bold text-green-600">{area.correctAnswers}</div>
-                    </div>
-                    <div className="rounded-lg bg-red-50 p-3">
-                      <div className="text-sm text-gray-600">Wrong</div>
-                      <div className="text-xl font-bold text-red-600">{area.wrongAnswers}</div>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Accuracy</span>
-                      <span className="font-semibold">{area.accuracy.toFixed(1)}%</span>
-                    </div>
-                    <Progress value={area.accuracy} />
-                  </div>
-
-                  {/* Recommendations */}
-                  {area.recommendations.length > 0 && (
-                    <div className="rounded-lg bg-blue-50 p-4">
-                      <p className="text-sm font-semibold text-blue-900 mb-2">
-                        💡 Recommendations:
-                      </p>
-                      <ul className="space-y-1">
-                        {area.recommendations.map((rec, idx) => (
-                          <li key={idx} className="text-sm text-blue-800 flex gap-2">
-                            <span>•</span>
-                            <span>{rec}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Related Resources */}
-                  <div className="flex flex-wrap gap-2">
-                    {area.relatedTrafficSigns.length > 0 && (
-                      <Badge variant="outline">
-                        🚦 {area.relatedTrafficSigns.length} Traffic Signs
-                      </Badge>
-                    )}
-                    {area.relatedLessons.length > 0 && (
-                      <Badge variant="outline">
-                        📚 {area.relatedLessons.length} Lessons
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      asChild
-                      className="flex-1"
-                    >
-                      <Link href={`/practice/${area.categoryCode}`}>
-                        Practice This Category
-                      </Link>
-                    </Button>
-                    {area.relatedLessons.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="flex-1"
-                      >
-                        <Link href={`/lessons?category=${area.categoryCode}`}>
-                          Study Lessons
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        {/* Weak Areas Details */}
+        <WeakAreaDetails weakAreas={data.weakAreas} />
 
         {/* Overall Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Improve Your Skills</CardTitle>
+            <CardTitle>Start Improving Today</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              Ready to tackle your weak areas? Choose how you want to improve:
+          <CardContent>
+            <p className="mb-4 text-gray-600">
+              Choose your learning path based on your current needs:
             </p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Button asChild>
-                <Link href="/practice">Practice Mode</Link>
+            <div className="grid gap-3 md:grid-cols-3">
+              <Button asChild size="lg">
+                <Link href="/practice">
+                  <span className="mr-2">📝</span>
+                  Practice Mode
+                </Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link href="/lessons">Study Lessons</Link>
+              <Button variant="outline" asChild size="lg">
+                <Link href="/lessons">
+                  <span className="mr-2">📚</span>
+                  Study Lessons
+                </Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link href="/exam">Take Full Exam</Link>
+              <Button variant="outline" asChild size="lg">
+                <Link href="/exam">
+                  <span className="mr-2">🎯</span>
+                  Take Full Exam
+                </Link>
               </Button>
             </div>
           </CardContent>

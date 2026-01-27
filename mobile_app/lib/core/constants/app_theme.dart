@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// App Theme Colors
+/// App Theme Colors - ReadyRoad Brand Identity
 class AppColors {
-  // Primary Colors
-  static const Color primary = Color(0xFF1976D2); // Blue
-  static const Color primaryDark = Color(0xFF1565C0);
-  static const Color primaryLight = Color(0xFF42A5F5);
+  // Primary Colors - ReadyRoad Orange (#DF5830)
+  static const Color primary = Color(0xFFDF5830); // ReadyRoad Orange
+  static const Color primaryDark = Color(0xFFC74621);
+  static const Color primaryLight = Color(0xFFF17347);
 
-  // Secondary Colors
-  static const Color secondary = Color(0xFFFFA726); // Orange
-  static const Color secondaryDark = Color(0xFFF57C00);
-  static const Color secondaryLight = Color(0xFFFFB74D);
+  // Secondary Colors - Dark Blue (#2C3E50)
+  static const Color secondary = Color(0xFF2C3E50); // Dark Blue
+  static const Color secondaryDark = Color(0xFF23313E);
+  static const Color secondaryLight = Color(0xFF4A6486);
 
   // Background
   static const Color background = Color(0xFFF5F5F5);
@@ -20,11 +20,11 @@ class AppColors {
   static const Color textPrimary = Color(0xFF212121);
   static const Color textSecondary = Color(0xFF757575);
 
-  // Status
-  static const Color success = Color(0xFF4CAF50);
-  static const Color error = Color(0xFFF44336);
-  static const Color warning = Color(0xFFFF9800);
-  static const Color info = Color(0xFF2196F3);
+  // Status - ReadyRoad Standard Colors
+  static const Color success = Color(0xFF27AE60); // #27AE60
+  static const Color error = Color(0xFFE74C3C); // #E74C3C
+  static const Color warning = Color(0xFFF39C12); // #F39C12
+  static const Color info = Color(0xFF3498DB); // #3498DB
 
   // Dark Mode Colors
   static const Color darkBackground = Color(0xFF121212);
@@ -52,14 +52,14 @@ class AppTheme {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(24), // ReadyRoad Standard: 24px
         ),
       ),
     ),
     cardTheme: CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24), // ReadyRoad Standard: 24px
       ),
     ),
   );
@@ -84,7 +84,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(24), // ReadyRoad Standard: 24px
         ),
       ),
     ),
@@ -92,7 +92,7 @@ class AppTheme {
       color: AppColors.darkCard,
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24), // ReadyRoad Standard: 24px
       ),
     ),
   );

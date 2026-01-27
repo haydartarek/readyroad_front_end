@@ -36,14 +36,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchUser = async () => {
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    
+    // Don't attempt to fetch if no token exists
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await apiClient.get<User>('/users/me');
+      const response = await apiClient.get<User>('/auth/me');
       setUser(response.data);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.data));
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      // Only log error if we have a token (backend issue)
+      // Otherwise, silently fail (user not logged in)
+      if (token) {
+        console.error('Failed to fetch user:', error);
+        toast.error('Session expired. Please login again.');
+      }
       localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }

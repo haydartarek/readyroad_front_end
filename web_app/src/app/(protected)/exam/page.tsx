@@ -22,13 +22,28 @@ export default function ExamRulesPage() {
       setIsStarting(true);
       setError(null);
 
-      // Create exam simulation via API
-      const response = await apiClient.post<{ id: number }>('/exams', {
-        userId: user?.id,
-      });
+      // Check if user can start exam
+      const canStartResponse = await apiClient.get<{ canStart: boolean; message?: string }>(
+        `/exams/simulations/can-start?userId=${user?.id}`
+      );
 
-      const examId = response.data.id;
-      
+      if (!canStartResponse.data.canStart) {
+        setError(canStartResponse.data.message || 'You cannot start an exam at this time.');
+        setIsStarting(false);
+        return;
+      }
+
+      // Create exam simulation via API
+      const response = await apiClient.post<{ examId: number; questions: unknown[] }>(
+        '/exams/simulations/start',
+        { userId: user?.id }
+      );
+
+      const examId = response.data.examId;
+
+      // Store exam data in localStorage for the exam page
+      localStorage.setItem('current_exam', JSON.stringify(response.data));
+
       // Redirect to exam questions page
       router.push(`/exam/${examId}`);
     } catch (err) {

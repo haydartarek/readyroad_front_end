@@ -54,7 +54,26 @@ export default function ExamQuestionsPage() {
     const fetchExamData = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.get<ExamData>(`/exams/${examId}`);
+
+        // First try to get from localStorage (set when starting exam)
+        const storedExam = localStorage.getItem('current_exam');
+        if (storedExam) {
+          const parsedExam = JSON.parse(storedExam);
+          if (parsedExam.examId === examId) {
+            setExamData({
+              id: parsedExam.examId,
+              createdAt: parsedExam.startTime || new Date().toISOString(),
+              expiresAt: parsedExam.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+              questions: parsedExam.questions || [],
+            });
+            setError(null);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // If not in localStorage, fetch from API
+        const response = await apiClient.get<ExamData>(`/exams/simulations/${examId}`);
         setExamData(response.data);
         setError(null);
       } catch (err) {
@@ -70,15 +89,28 @@ export default function ExamQuestionsPage() {
   }, [examId]);
 
   // Handle answer selection
-  const handleAnswerSelect = useCallback((optionNumber: number) => {
+  const handleAnswerSelect = useCallback(async (optionNumber: number) => {
     if (!examData) return;
-    
+
     const currentQuestion = examData.questions[currentQuestionIndex];
+
+    // Update local state immediately for UI responsiveness
     setAnswers(prev => ({
       ...prev,
       [currentQuestion.id]: optionNumber,
     }));
-  }, [examData, currentQuestionIndex]);
+
+    // Submit answer to backend
+    try {
+      await apiClient.post(`/exams/simulations/${examId}/questions/${currentQuestion.id}/answer`, {
+        answer: optionNumber,
+      });
+    } catch (err) {
+      console.error('Failed to save answer:', err);
+      // Don't show error toast for every answer - just log it
+      // The final submission will handle any issues
+    }
+  }, [examData, currentQuestionIndex, examId]);
 
   // Navigation handlers
   const handlePrevious = useCallback(() => {
@@ -96,24 +128,15 @@ export default function ExamQuestionsPage() {
 
   // Time expired handler
   const handleTimeExpired = useCallback(async () => {
-    toast.warning('Time is up! Submitting exam...');
+    toast.warning('Time is up! Exam completed.');
     if (!examData) return;
 
-    try {
-      setIsSubmitting(true);
-      const submissionData = examData.questions.map(question => ({
-        questionId: question.id,
-        selectedOption: answers[question.id] || null,
-      }));
-      await apiClient.post(`/exams/${examId}/submit`, { answers: submissionData });
-      toast.success('Exam submitted successfully!');
-      router.push(`/exam/results/${examId}`);
-    } catch (err) {
-      console.error('Failed to submit exam:', err);
-      toast.error('Failed to submit exam. Please try again.');
-      setIsSubmitting(false);
-    }
-  }, [answers, examId, examData, router]);
+    // Clear stored exam data
+    localStorage.removeItem('current_exam');
+
+    // Redirect to results - the backend already has all the answers
+    router.push(`/exam/results/${examId}`);
+  }, [examId, examData, router]);
 
   // Submit exam
   const submitExam = async () => {
@@ -122,16 +145,8 @@ export default function ExamQuestionsPage() {
     try {
       setIsSubmitting(true);
 
-      // Format answers for API
-      const submissionData = examData.questions.map(question => ({
-        questionId: question.id,
-        selectedOption: answers[question.id] || null,
-      }));
-
-      // Submit to API
-      await apiClient.post(`/exams/${examId}/submit`, {
-        answers: submissionData,
-      });
+      // Clear stored exam data
+      localStorage.removeItem('current_exam');
 
       toast.success('Exam submitted successfully!');
       router.push(`/exam/results/${examId}`);

@@ -1,5 +1,3 @@
-import { Navbar } from '@/components/layout/navbar';
-
 export default function ProtectedLayout({
   children,
 }: {
@@ -7,7 +5,6 @@ export default function ProtectedLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8">
         {children}
       </main>

@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import Link from 'next/link';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { ExamStats } from '@/components/exam/exam-stats';
+import { ScoreBreakdown } from '@/components/exam/score-breakdown';
+import { QuestionReview } from '@/components/exam/question-review';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import apiClient from '@/lib/api';
 import { toast } from 'sonner';
-import Link from 'next/link';
 
 interface CategoryBreakdown {
   categoryCode: string;
@@ -20,15 +20,42 @@ interface CategoryBreakdown {
   percentage: number;
 }
 
+interface IncorrectQuestion {
+  questionId: number;
+  questionText: string;
+  userAnswer: number;
+  correctAnswer: number;
+  categoryName: string;
+}
+
 interface ExamResults {
-  id: number;
-  passed: boolean;
+  examId: number;
+  userId: number;
   score: number;
   totalQuestions: number;
   percentage: number;
-  passingScore: number;
+  passed: boolean;
   timeTaken: string;
   categoryBreakdown: CategoryBreakdown[];
+  incorrectQuestions: IncorrectQuestion[];
+}
+
+interface TimeAnalysis {
+  totalTime: string;
+  averagePerQuestion: string;
+  fastestQuestion: string;
+  slowestQuestion: string;
+}
+
+interface ReviewQuestion {
+  id: number;
+  questionText: string;
+  imageUrl?: string;
+  selectedOption: number;
+  correctOption: number;
+  isCorrect: boolean;
+  categoryName: string;
+  explanation?: string;
 }
 
 export default function ExamResultsPage() {
@@ -43,7 +70,7 @@ export default function ExamResultsPage() {
     const fetchResults = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.get<ExamResults>(`/exams/${examId}/results`);
+        const response = await apiClient.get<ExamResults>(`/exams/simulations/${examId}/results`);
         setResults(response.data);
         setError(null);
       } catch (err) {
@@ -79,110 +106,78 @@ export default function ExamResultsPage() {
     );
   }
 
+  // Transform incorrect questions to review format
+  const reviewQuestions: ReviewQuestion[] = results.incorrectQuestions.map(q => ({
+    id: q.questionId,
+    questionText: q.questionText,
+    selectedOption: q.userAnswer,
+    correctOption: q.correctAnswer,
+    isCorrect: false,
+    categoryName: q.categoryName,
+  }));
+
+  const passingScore = 41; // 82% of 50 questions
+
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-12">
+    <div className="container mx-auto max-w-6xl px-4 py-12">
       <div className="space-y-8">
-        {/* Result Header */}
-        <Card>
-          <CardContent className="p-8">
-            <div className="text-center">
-              {/* Status Badge */}
-              <div
-                className={cn(
-                  'mb-6 inline-flex items-center gap-2 rounded-full px-6 py-3 text-2xl font-bold',
-                  results.passed ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                )}
-              >
-                {results.passed ? '✅ PASSED' : '❌ NOT PASSED'}
-              </div>
+        {/* Page Header */}
+        <div className="text-center">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-primary">
+            <span className="text-2xl">📝</span>
+            <span className="font-semibold">Exam Results</span>
+          </div>
+          <h1 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
+            {results.passed ? '🎉 Congratulations!' : '💪 Keep Practicing!'}
+          </h1>
+          <p className="mt-2 text-lg text-gray-600">
+            {results.passed
+              ? "You've passed the exam! You're ready for the real test."
+              : `You need ${passingScore - results.score} more correct answers to pass.`}
+          </p>
+        </div>
 
-              {/* Score */}
-              <div className="mb-6">
-                <div className="text-6xl font-bold text-gray-900">
-                  {results.score}
-                  <span className="text-3xl text-gray-500">/{results.totalQuestions}</span>
-                </div>
-                <div className="mt-2 text-3xl font-semibold text-primary">
-                  {results.percentage.toFixed(1)}%
-                </div>
-              </div>
-
-              {/* Message */}
-              <div className="mb-6">
-                {results.passed ? (
-                  <p className="text-xl text-gray-700">
-                    🎉 Congratulations! You&apos;re ready for the real exam!
-                  </p>
-                ) : (
-                  <p className="text-xl text-gray-700">
-                    💪 Keep practicing! You need {results.passingScore - results.score} more correct
-                    answer{results.passingScore - results.score > 1 ? 's' : ''}.
-                  </p>
-                )}
-              </div>
-
-              {/* Stats */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[24px] border-2 border-gray-200 p-4">
-                  <div className="text-sm text-gray-600">Passing Score</div>
-                  <div className="text-2xl font-bold">
-                    {results.passingScore}/{results.totalQuestions} (82%)
-                  </div>
-                </div>
-                <div className="rounded-[24px] border-2 border-gray-200 p-4">
-                  <div className="text-sm text-gray-600">Time Taken</div>
-                  <div className="text-2xl font-bold">{results.timeTaken}</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Stats Cards */}
+        <ExamStats
+          score={results.score}
+          totalQuestions={results.totalQuestions}
+          passed={results.passed}
+          passingScore={passingScore}
+          timeAnalysis={undefined}
+        />
 
         {/* Category Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance by Category</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {results.categoryBreakdown.map((category) => {
-                const status =
-                  category.percentage >= 80 ? 'strong' : category.percentage >= 60 ? 'average' : 'weak';
+        <ScoreBreakdown categoryBreakdown={results.categoryBreakdown} />
 
-                return (
-                  <div key={category.categoryCode} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">{category.categoryName}</span>
-                        <Badge
-                          variant={status === 'strong' ? 'default' : status === 'average' ? 'secondary' : 'destructive'}
-                        >
-                          {status === 'strong' && '✅ Strong'}
-                          {status === 'average' && '🟡 Average'}
-                          {status === 'weak' && '⚠️ Weak'}
-                        </Badge>
-                      </div>
-                      <div className="font-semibold">
-                        {category.correct}/{category.total} ({category.percentage.toFixed(1)}%)
-                      </div>
-                    </div>
-                    <Progress value={category.percentage} />
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Question Review Tabs */}
+        {reviewQuestions.length > 0 && (
+          <Tabs defaultValue="wrong" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="wrong">
+                Wrong Answers ({reviewQuestions.length})
+              </TabsTrigger>
+              <TabsTrigger value="all">
+                All Questions ({results.totalQuestions})
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="wrong" className="mt-6">
+              <QuestionReview questions={reviewQuestions} showOnlyWrong={true} />
+            </TabsContent>
+            <TabsContent value="all" className="mt-6">
+              <QuestionReview questions={reviewQuestions} showOnlyWrong={false} />
+            </TabsContent>
+          </Tabs>
+        )}
 
         {/* Action Buttons */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-          <Button variant="outline" size="lg" asChild>
+        <div className="flex flex-wrap justify-center gap-4">
+          <Button size="lg" asChild>
             <Link href="/dashboard">Back to Dashboard</Link>
           </Button>
 
           {!results.passed && (
-            <Button size="lg" asChild>
-              <Link href="/practice">Practice More</Link>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/analytics/weak-areas">Study Weak Areas</Link>
             </Button>
           )}
 

@@ -86,24 +86,30 @@ flutter:
   assets:
     # Danger Signs / علامات الخطر (A-serie)
     - assets/traffic_signs/danger_signs/
-    
+
     # Priority Signs / علامات الأولوية (B-serie)
     - assets/traffic_signs/priority_signs/
-    
+
     # Prohibition Signs / علامات المنع (C-serie)
     - assets/traffic_signs/prohibition_signs/
-    
+
     # Mandatory Signs / علامات الإلزام (D-serie)
     - assets/traffic_signs/mandatory_signs/
-    
+
     # Parking Signs / علامات الوقوف والانتظار (E-serie)
     - assets/traffic_signs/parking_signs/
-    
+
     # Information Signs / علامات إرشادية (F-serie)
     - assets/traffic_signs/information_signs/
-    
-    # Bicycle Signs / لوحات الدراجات (M-serie)
-    - assets/traffic_signs/bicycle_signs/
+
+    # Additional Signs / لوحات إضافية (G-serie)
+    - assets/traffic_signs/additional_signs/
+
+    # Zone Signs / علامات المناطق (Z-serie)
+    - assets/traffic_signs/zone_signs/
+
+    # Delineation Signs / علامات التحديد
+    - assets/traffic_signs/delineation_signs/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

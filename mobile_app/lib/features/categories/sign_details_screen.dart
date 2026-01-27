@@ -7,10 +7,7 @@ import '../../core/providers/favorites_provider.dart';
 class SignDetailsScreen extends StatelessWidget {
   final ContentItem content;
 
-  const SignDetailsScreen({
-    super.key,
-    required this.content,
-  });
+  const SignDetailsScreen({super.key, required this.content});
 
   @override
   Widget build(BuildContext context) {
@@ -64,15 +61,17 @@ class SignDetailsScreen extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       content.code,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
 
@@ -125,30 +124,28 @@ class SignDetailsScreen extends StatelessWidget {
     );
   }
 
+  String _convertToAssetPath(String imageUrl) {
+    // تحويل من /images/signs/danger_signs/A1a.png
+    // إلى assets/traffic_signs/danger_signs/A1a.png
+    return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  }
+
   Widget _buildImageSection() {
     return Container(
       height: 250,
       color: Colors.grey[100],
-      child: content.imageUrl != null
-          ? Image.network(
-              content.imageUrl!,
+      child: content.imageUrl != null && content.imageUrl!.isNotEmpty
+          ? Image.asset(
+              _convertToAssetPath(content.imageUrl!),
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
                 return const Center(
-                  child: Icon(
-                    Icons.image,
-                    size: 100,
-                    color: Colors.grey,
-                  ),
+                  child: Icon(Icons.image, size: 100, color: Colors.grey),
                 );
               },
             )
           : const Center(
-              child: Icon(
-                Icons.image,
-                size: 100,
-                color: Colors.grey,
-              ),
+              child: Icon(Icons.image, size: 100, color: Colors.grey),
             ),
     );
   }
@@ -164,23 +161,20 @@ class SignDetailsScreen extends StatelessWidget {
       children: [
         Text(
           languageLabel,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelMedium?.copyWith(color: Colors.grey[600]),
         ),
         const SizedBox(height: 8),
         Text(
           name,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         if (description != null && description.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ],
     );
@@ -229,4 +223,3 @@ class SignDetailsScreen extends StatelessWidget {
     );
   }
 }
-

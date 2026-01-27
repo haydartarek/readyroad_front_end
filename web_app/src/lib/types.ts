@@ -130,11 +130,12 @@ export interface CategoryProgress {
   averageTime: number;
 }
 
-// Traffic Signs Types
+// Traffic Sign Types
 export interface TrafficSign {
-  id: number;
+  id?: number; // From backend
   signCode: string;
-  series: string;
+  category: string; // Mapped from categoryCode
+  categoryCode?: string; // Backend field
   nameEn: string;
   nameAr: string;
   nameNl: string;
@@ -143,7 +144,9 @@ export interface TrafficSign {
   descriptionAr: string;
   descriptionNl: string;
   descriptionFr: string;
-  imagePath: string;
+  imageUrl: string;
+  meaning?: string; // Not in backend response
+  penalties?: string; // Not in backend response
 }
 
 // Lesson Types

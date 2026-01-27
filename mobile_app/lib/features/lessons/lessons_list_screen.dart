@@ -50,50 +50,52 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
     final isArabic = languageProvider.currentLanguage == 'ar';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isArabic ? 'الدروس' : 'Lessons'),
-      ),
+      appBar: AppBar(title: Text(isArabic ? 'الدروس' : 'Lessons')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        isArabic ? 'خطأ في تحميل البيانات' : 'Error loading data',
-                        style: const TextStyle(fontSize: 18, color: Colors.red),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadLessons,
-                        child: Text(isArabic ? 'إعادة المحاولة' : 'Retry'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isArabic ? 'خطأ في تحميل البيانات' : 'Error loading data',
+                    style: const TextStyle(fontSize: 18, color: Colors.red),
                   ),
-                )
-              : _lessons.isEmpty
-                  ? Center(
-                      child: Text(
-                        isArabic ? 'لا توجد دروس متاحة' : 'No lessons available',
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadLessons,
-                      child: ListView.builder(
-                        itemCount: _lessons.length,
-                        padding: const EdgeInsets.all(16),
-                        itemBuilder: (context, index) {
-                          final lesson = _lessons[index];
-                          return _buildLessonCard(context, lesson, isArabic);
-                        },
-                      ),
-                    ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadLessons,
+                    child: Text(isArabic ? 'إعادة المحاولة' : 'Retry'),
+                  ),
+                ],
+              ),
+            )
+          : _lessons.isEmpty
+          ? Center(
+              child: Text(
+                isArabic ? 'لا توجد دروس متاحة' : 'No lessons available',
+                style: const TextStyle(fontSize: 18),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadLessons,
+              child: ListView.builder(
+                itemCount: _lessons.length,
+                padding: const EdgeInsets.all(16),
+                itemBuilder: (context, index) {
+                  final lesson = _lessons[index];
+                  return _buildLessonCard(context, lesson, isArabic);
+                },
+              ),
+            ),
     );
   }
 
-  Widget _buildLessonCard(BuildContext context, Map<String, dynamic> lesson, bool isArabic) {
+  Widget _buildLessonCard(
+    BuildContext context,
+    Map<String, dynamic> lesson,
+    bool isArabic,
+  ) {
     final title = isArabic ? lesson['titleAr'] : lesson['titleEn'];
     final content = isArabic ? lesson['contentAr'] : lesson['contentEn'];
     final estimatedMinutes = lesson['estimatedMinutes'] ?? 10;
@@ -105,7 +107,10 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
           backgroundColor: Theme.of(context).primaryColor,
           child: Text(
             '${lesson['displayOrder']}',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         title: Text(
@@ -117,7 +122,9 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
           children: [
             const SizedBox(height: 8),
             Text(
-              content.length > 100 ? '${content.substring(0, 100)}...' : content,
+              content.length > 100
+                  ? '${content.substring(0, 100)}...'
+                  : content,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -127,7 +134,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                 const Icon(Icons.access_time, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
-                  '${estimatedMinutes} ${isArabic ? 'دقيقة' : 'min'}',
+                  '$estimatedMinutes ${isArabic ? 'دقيقة' : 'min'}',
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ],
@@ -161,9 +168,7 @@ class LessonDetailScreen extends StatelessWidget {
     final content = isArabic ? lesson['contentAr'] : lesson['contentEn'];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -174,10 +179,7 @@ class LessonDetailScreen extends StatelessWidget {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Text(
-              content,
-              style: const TextStyle(fontSize: 16, height: 1.5),
-            ),
+            Text(content, style: const TextStyle(fontSize: 16, height: 1.5)),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -186,7 +188,8 @@ class LessonDetailScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PracticeScreen(lessonId: lesson['id']),
+                      builder: (context) =>
+                          PracticeScreen(lessonId: lesson['id']),
                     ),
                   );
                 },

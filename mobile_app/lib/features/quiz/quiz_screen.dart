@@ -35,6 +35,11 @@ class _QuizScreenState extends State<QuizScreen> {
 
   late DateTime _startTime;
 
+  /// Convert backend imageUrl to asset path for Flutter
+  String _convertToAssetPath(String imageUrl) {
+    return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -232,9 +237,9 @@ class _QuizScreenState extends State<QuizScreen> {
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: question.correctContent.imageUrl != null
-                      ? Image.network(
-                          question.correctContent.imageUrl!,
+                  child: question.correctContent.imageUrl != null && question.correctContent.imageUrl!.isNotEmpty
+                      ? Image.asset(
+                          _convertToAssetPath(question.correctContent.imageUrl!),
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(Icons.image, size: 100);

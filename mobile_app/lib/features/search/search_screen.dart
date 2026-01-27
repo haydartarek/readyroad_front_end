@@ -18,6 +18,11 @@ class _SearchScreenState extends State<SearchScreen> {
   final ContentService _contentService = getIt<ContentService>();
   final TextEditingController _searchController = TextEditingController();
 
+  /// Convert backend imageUrl to asset path for Flutter
+  String _convertToAssetPath(String imageUrl) {
+    return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  }
+
   List<ContentItem> _allContent = [];
   List<ContentItem> _filteredContent = [];
   bool _isLoading = true;
@@ -234,9 +239,9 @@ class _SearchScreenState extends State<SearchScreen> {
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(8),
           ),
-          child: item.imageUrl != null
-              ? Image.network(
-                  item.imageUrl!,
+          child: item.imageUrl != null && item.imageUrl!.isNotEmpty
+              ? Image.asset(
+                  _convertToAssetPath(item.imageUrl!),
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(Icons.image, color: Colors.grey);

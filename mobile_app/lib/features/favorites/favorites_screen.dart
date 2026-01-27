@@ -21,6 +21,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   bool _isLoading = true;
   String? _error;
 
+  /// Convert backend imageUrl to asset path for Flutter
+  String _convertToAssetPath(String imageUrl) {
+    return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -199,9 +204,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   flex: 3,
                   child: Container(
                     color: Colors.grey[200],
-                    child: item.imageUrl != null
-                        ? Image.network(
-                            item.imageUrl!,
+                    child: item.imageUrl != null && item.imageUrl!.isNotEmpty
+                        ? Image.asset(
+                            _convertToAssetPath(item.imageUrl!),
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               return const Icon(

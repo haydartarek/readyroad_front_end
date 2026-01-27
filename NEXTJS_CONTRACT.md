@@ -1,6 +1,9 @@
 🎯 ReadyRoad Next.js Web App - BDD Contract
 📄 File: NEXTJS_CONTRACT.md
 text
+
+✅ **DONE** - All BDD Scenarios Implemented!
+
 # ReadyRoad Next.js Web Application - BDD Contract
 
 **Project:** ReadyRoad Belgian Driving License Platform  
@@ -31,13 +34,16 @@ text
 **Epic:** As a user, I need secure authentication to access personalized features.
 
 **Backend Contract:**
+
 - Endpoint: `POST /api/auth/login`
 - Request Body:
+
   ```json
   {
     "username": "test@readyroad.be",
     "password": "SecurePass123"
   }
+
 Success Response (200):
 
 json
@@ -61,12 +67,12 @@ Feature: User Authentication
   So that I can access my personalized dashboard
 
   Background:
-    Given the backend API is running on "http://localhost:8890"
-    And the database contains a user with username "test@readyroad.be" and password "SecurePass123"
+    Given the backend API is running on "<http://localhost:8890>"
+    And the database contains a user with username "<test@readyroad.be>" and password "SecurePass123"
 
   Scenario: Successful login with valid credentials
     Given I am on the login page "/login"
-    When I enter "test@readyroad.be" in the username field
+    When I enter "<test@readyroad.be>" in the username field
     And I enter "SecurePass123" in the password field
     And I click the "Login" button
     Then I should see a loading indicator
@@ -78,7 +84,7 @@ Feature: User Authentication
 
   Scenario: Failed login with invalid credentials
     Given I am on the login page "/login"
-    When I enter "wrong@email.com" in the username field
+    When I enter "<wrong@email.com>" in the username field
     And I enter "wrongpassword" in the password field
     And I click the "Login" button
     Then the system should send POST request to "/api/auth/login"
@@ -176,7 +182,7 @@ Feature: Axios API Client Configuration
     When the API client module is loaded
     Then it should be configured with:
       | Property          | Value                              |
-      | baseURL           | http://localhost:8890/api          |
+      | baseURL           | <http://localhost:8890/api>          |
       | timeout           | 10000                              |
       | Content-Type      | application/json                   |
       | withCredentials   | false                              |
@@ -236,8 +242,8 @@ Success Response (200):
 json
 {
   "id": 1,
-  "username": "test@readyroad.be",
-  "email": "test@readyroad.be",
+  "username": "<test@readyroad.be>",
+  "email": "<test@readyroad.be>",
   "firstName": "John",
   "lastName": "Doe",
   "role": "STUDENT",
@@ -259,8 +265,8 @@ Feature: User Profile Display
     And the system should receive status code 200
     And the response should contain:
       | Field     | Example Value         |
-      | username  | test@readyroad.be     |
-      | email     | test@readyroad.be     |
+      | username  | <test@readyroad.be>     |
+      | email     | <test@readyroad.be>     |
       | firstName | John                  |
       | lastName  | Doe                   |
       | role      | STUDENT               |
@@ -344,7 +350,7 @@ Feature: Exam Simulation Creation
   So that I can practice under real conditions
 
   Background:
-    Given I am logged in as "test@readyroad.be"
+    Given I am logged in as "<test@readyroad.be>"
     And I am on the exam page "/exam"
 
   Scenario: Start exam with Belgian rules
@@ -381,7 +387,7 @@ Feature: Exam Simulation Creation
       """
       You have an exam in progress.
       Starting a new exam will forfeit your current attempt.
-      
+
       Continue with current exam?
       [Continue Current] [Start New]
       """
@@ -691,7 +697,7 @@ Feature: Manual Exam Submission
     Then I should see a confirmation modal:
       """
       Submit Exam
-      
+
       You have answered 50/50 questions.
       
       Once submitted, you cannot change your answers.
@@ -714,7 +720,7 @@ Feature: Manual Exam Submission
     Then I should see a confirmation modal:
       """
       Submit Exam
-      
+
       You have answered 45/50 questions.
       5 questions are unanswered (will count as incorrect).
       
@@ -901,7 +907,7 @@ json
       "description": "Confusing similar-looking traffic signs",
       "affectedCategories": ["DANGER_SIGNS", "PROHIBITION_SIGNS"],
       "recommendation": "Focus on distinguishing sign shapes and colors. Study signs side-by-side.",
-      "exampleQuestions": 
+      "exampleQuestions":
     },
     {
       "pattern": "PRIORITY_MISUNDERSTANDING",
@@ -911,7 +917,7 @@ json
       "description": "Misunderstanding right-of-way rules",
       "affectedCategories": ["PRIORITY_RULES"],
       "recommendation": "Review priority rules at intersections and roundabouts.",
-      "exampleQuestions": 
+      "exampleQuestions":
     }
   ]
 }
@@ -940,7 +946,7 @@ Feature: C1 - Error Pattern Analysis
     Then I should see a header:
       """
       Error Pattern Analysis
-      
+
       We analyzed your 12 incorrect answers and identified these patterns:
       """
     And I should see 6 pattern cards (or fewer if not all patterns present):
@@ -1078,7 +1084,7 @@ Feature: C2 - Weak Areas Recommendations
     Then I should see a header:
       """
       Personalized Study Recommendations
-      
+
       Based on your exam history, we recommend focusing on these areas:
       """
     And I should see a table:
@@ -1666,7 +1672,7 @@ Feature: Next.js 14 App Router Structure
     Given the Next.js project is initialized
     Then the structure should be:
       ```
-      src/
+src/
       ├── app/
       │   ├── (auth)/
       │   │   ├── login/
@@ -1730,13 +1736,13 @@ Feature: Environment Configuration
     Given the project root
     Then there should be a file ".env.local" with:
       ```
-      NEXT_PUBLIC_API_URL=http://localhost:8890/api
+NEXT_PUBLIC_API_URL=http://localhost:8890/api
       NEXT_PUBLIC_APP_URL=http://localhost:3000
       JWT_SECRET=your-secret-key-here
       ```
     And there should be a file ".env.production" with:
       ```
-      NEXT_PUBLIC_API_URL=https://api.readyroad.be/api
+NEXT_PUBLIC_API_URL=https://api.readyroad.be/api
       NEXT_PUBLIC_APP_URL=https://readyroad.be
       JWT_SECRET=production-secret-key
       ```
@@ -1765,7 +1771,7 @@ Feature: Authentication Middleware
                                || request.nextUrl.pathname.startsWith('/exam')
                                || request.nextUrl.pathname.startsWith('/analytics')
                                || request.nextUrl.pathname.startsWith('/progress')
-        
+
         if (isProtectedRoute && !token) {
           return NextResponse.redirect(new URL('/login', request.url))
         }
@@ -2000,7 +2006,7 @@ Feature: SEO Optimization with Metadata
       ```typescript
       export async function generateMetadata({ params }: Props): Promise<Metadata> {
         const sign = await getTrafficSign(params.signCode);
-        
+
         return {
           title: `${sign.signCode} - ${sign.nameEn}`,
           description: sign.descriptionEn.substring(0, 160),
@@ -2080,7 +2086,7 @@ Feature: Next.js Image Optimization
     Then I should use the Next.js Image component:
       ```tsx
       import Image from 'next/image';
-      
+
       <Image
         src={sign.imageUrl}
         alt={sign.nameEn}
@@ -2219,7 +2225,6 @@ Feature: Non-Functional Requirements - Accessibility
 Summary:
 Non-Functional Requirements ensure ReadyRoad is not only functionally correct,
 but also a reliable, scalable, and human-centered system suitable for real-world use.
-
 
 Summary
 This BDD contract defines:

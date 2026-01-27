@@ -14,7 +14,8 @@ class PracticeScreen extends StatefulWidget {
 }
 
 class _PracticeScreenState extends State<PracticeScreen> {
-  final PracticeQuestionService _questionService = getIt<PracticeQuestionService>();
+  final PracticeQuestionService _questionService =
+      getIt<PracticeQuestionService>();
   List<Map<String, dynamic>> _questions = [];
   int _currentQuestionIndex = 0;
   int? _selectedAnswer;
@@ -36,7 +37,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
         _error = null;
       });
 
-      final questions = await _questionService.getPracticeQuestionsByLesson(widget.lessonId);
+      final questions = await _questionService.getPracticeQuestionsByLesson(
+        widget.lessonId,
+      );
       setState(() {
         _questions = questions;
         _isLoading = false;
@@ -74,7 +77,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   void _showResults() {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
     final isArabic = languageProvider.currentLanguage == 'ar';
     final percentage = (_correctAnswers / _questions.length * 100).round();
 
@@ -143,7 +149,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 '${_currentQuestionIndex + 1}/${_questions.length}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -152,18 +161,22 @@ class _PracticeScreenState extends State<PracticeScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text('Error: $_error'))
-              : _questions.isEmpty
-                  ? Center(
-                      child: Text(isArabic ? 'لا توجد أسئلة متاحة' : 'No questions available'),
-                    )
-                  : _buildQuestionView(isArabic),
+          ? Center(child: Text('Error: $_error'))
+          : _questions.isEmpty
+          ? Center(
+              child: Text(
+                isArabic ? 'لا توجد أسئلة متاحة' : 'No questions available',
+              ),
+            )
+          : _buildQuestionView(isArabic),
     );
   }
 
   Widget _buildQuestionView(bool isArabic) {
     final question = _questions[_currentQuestionIndex];
-    final questionText = isArabic ? question['questionAr'] : question['questionEn'];
+    final questionText = isArabic
+        ? question['questionAr']
+        : question['questionEn'];
     final correctAnswer = question['correctAnswer'];
 
     return Column(
@@ -183,7 +196,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Text(
                       questionText,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -215,20 +231,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         backgroundColor: _isAnswered && isCorrect
                             ? Colors.green
                             : _isAnswered && isSelected
-                                ? Colors.red
-                                : null,
+                            ? Colors.red
+                            : null,
                         child: Text('$optionNumber'),
                       ),
                       title: Text(optionText),
                       trailing: _isAnswered && isCorrect
                           ? const Icon(Icons.check_circle, color: Colors.green)
                           : _isAnswered && isSelected
-                              ? const Icon(Icons.cancel, color: Colors.red)
-                              : null,
+                          ? const Icon(Icons.cancel, color: Colors.red)
+                          : null,
                       onTap: () => _selectAnswer(optionNumber),
                     ),
                   );
-                }).toList(),
+                }),
                 if (_isAnswered) ...[
                   const SizedBox(height: 16),
                   Card(

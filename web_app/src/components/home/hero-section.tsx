@@ -4,107 +4,152 @@ import Image from 'next/image';
 
 export function HeroSection() {
   return (
-    <section className="bg-white py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-b from-gray-50/50 to-white py-12 lg:py-20">
       <div className="container mx-auto px-4">
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Left content */}
-          <div className="space-y-6">
-            {/* Label */}
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-              </svg>
-              Belgian Driving License Platform
+        {/* Hero Container - Main rounded card matching reference */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-50/40 via-white to-blue-50/30 p-8 shadow-sm ring-1 ring-gray-200/50 lg:p-12 xl:p-16">
+          {/* Background decorative blobs for depth */}
+          <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 translate-x-32 -translate-y-32 rounded-full bg-gradient-to-br from-[#DF5830]/5 to-transparent blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-80 w-80 -translate-x-20 translate-y-20 rounded-full bg-gradient-to-tr from-[#2C3E50]/5 to-transparent blur-3xl" />
+
+          <div className="relative grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+            {/* Left content column */}
+            <div className="space-y-6 lg:space-y-8">
+              {/* Pill label - Mind-Body-Soul equivalent */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#DF5830]/20 bg-white/80 px-4 py-2 text-sm font-medium text-[#DF5830] shadow-sm backdrop-blur-sm">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-[#DF5830]"
+                >
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
+                </svg>
+                Belgian Driving License Platform
+              </div>
+
+              {/* Headline - enhanced typography */}
+              <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#2C3E50] md:text-5xl lg:text-6xl xl:text-7xl">
+                Master Your{' '}
+                <span className="relative inline-block">
+                  <span className="relative z-10">Belgian Driving</span>
+                  <span className="absolute inset-x-0 bottom-2 h-3 bg-[#DF5830]/20" />
+                </span>{' '}
+                License Exam
+              </h1>
+
+              {/* Supporting text - calm and readable */}
+              <p className="text-lg leading-relaxed text-gray-600 lg:text-xl">
+                Prepare with confidence using our comprehensive platform featuring 50-question
+                exams, 200+ traffic signs, 31 theory lessons, and intelligent analytics in 4
+                languages.
+              </p>
+
+              {/* CTA row - matching reference spacing */}
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Link href="/register">
+                  <Button
+                    size="lg"
+                    className="h-12 rounded-full px-8 text-base font-semibold shadow-md transition-all hover:shadow-lg"
+                  >
+                    Start Free Trial
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12 rounded-full border-2 border-gray-200 px-8 text-base font-semibold transition-all hover:border-gray-300 hover:bg-gray-50"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Stats row - clean separator */}
+              <div className="flex flex-wrap gap-6 border-t border-gray-200/60 pt-6 lg:gap-8 lg:pt-8">
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-[#DF5830]">50</div>
+                  <div className="text-sm text-gray-600">Questions per Exam</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-[#DF5830]">200+</div>
+                  <div className="text-sm text-gray-600">Traffic Signs</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-[#DF5830]">31</div>
+                  <div className="text-sm text-gray-600">Theory Lessons</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-[#DF5830]">4</div>
+                  <div className="text-sm text-gray-600">Languages</div>
+                </div>
+              </div>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-4xl font-bold leading-tight text-[#2C3E50] md:text-5xl lg:text-6xl">
-              Master Your Belgian Driving License Exam
-            </h1>
-
-            {/* Supporting text */}
-            <p className="text-lg text-gray-600 leading-relaxed">
-              Prepare with confidence using our comprehensive platform featuring 50-question
-              exams, 200+ traffic signs, 31 theory lessons, and intelligent analytics in 4
-              languages.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4 pt-2">
-              <Link href="/register">
-                <Button size="lg" className="text-base h-12 px-8">
-                  Start Free Trial
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button size="lg" variant="outline" className="text-base h-12 px-8">
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div className="flex flex-wrap gap-8 pt-6 border-t border-gray-100">
-              <div>
-                <div className="text-3xl font-bold text-[#DF5830]">50</div>
-                <div className="text-sm text-gray-600">Questions per Exam</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-[#DF5830]">200+</div>
-                <div className="text-sm text-gray-600">Traffic Signs</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-[#DF5830]">31</div>
-                <div className="text-sm text-gray-600">Theory Lessons</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-[#DF5830]">4</div>
-                <div className="text-sm text-gray-600">Languages</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right visual */}
-          <div className="relative flex items-center justify-center lg:justify-end">
-            <div className="relative w-full max-w-lg">
-              {/* Main visual container */}
-              <div className="relative aspect-square w-full rounded-3xl bg-gradient-to-br from-[#DF5830]/5 to-[#2C3E50]/5 p-8 lg:p-12">
-                <div className="flex h-full flex-col items-center justify-center space-y-8 text-center">
-                  {/* Logo */}
-                  <div className="relative w-48 h-48">
+            {/* Right visual column - with flowing ribbon/wave */}
+            <div className="relative flex items-center justify-center">
+              <div className="relative w-full max-w-md">
+                {/* Main image container with rounded soft bg */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white to-gray-50/50 p-8 ring-1 ring-gray-100 lg:p-10">
+                  {/* Central logo */}
+                  <div className="relative z-10 mx-auto aspect-square w-56">
                     <Image
                       src="/images/logo.png"
                       alt="ReadyRoad"
                       fill
-                      sizes="(max-width: 768px) 192px, 192px"
+                      sizes="(max-width: 768px) 224px, 224px"
                       className="object-contain"
                       priority
                     />
                   </div>
 
-                  {/* Status badge */}
-                  <div className="rounded-2xl bg-white px-8 py-4 shadow-sm border border-gray-100">
-                    <p className="text-2xl font-bold text-[#2C3E50]">
-                      Ready to Drive! 🚗
-                    </p>
+                  {/* Flowing ribbon/wave with text - matching reference */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6">
+                    <div className="relative rotate-12">
+                      {/* Ribbon background - curved path */}
+                      <svg
+                        width="280"
+                        height="80"
+                        viewBox="0 0 280 80"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="drop-shadow-lg"
+                      >
+                        <path
+                          d="M0 20 Q70 0, 140 10 T280 20 L280 60 Q210 70, 140 60 T0 60 Z"
+                          fill="#7C3AED"
+                          opacity="0.95"
+                        />
+                      </svg>
+                      {/* Ribbon text */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="flex items-center gap-2 px-4 text-white">
+                          <span className="text-xs font-medium tracking-wider">
+                            50 Questions • 200+ Signs • 31 Lessons • Real Exam Simulation
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Decorative gradient blobs for depth */}
+                  <div className="pointer-events-none absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-gradient-to-tr from-[#DF5830]/10 to-transparent blur-2xl" />
+                  <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-bl from-[#2C3E50]/10 to-transparent blur-2xl" />
+                </div>
+
+                {/* Status badge below */}
+                <div className="mt-6 rounded-2xl border border-gray-200/60 bg-white/90 px-6 py-3 text-center shadow-sm backdrop-blur-sm">
+                  <p className="text-xl font-bold text-[#2C3E50]">Ready to Drive! 🚗</p>
                 </div>
               </div>
-
-              {/* Decorative element - subtle */}
-              <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-[#DF5830]/10" />
-              <div className="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-[#2C3E50]/10" />
             </div>
           </div>
         </div>

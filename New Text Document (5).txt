@@ -47,8 +47,46 @@ npm run dev
 cd C:\Users\heyde\Desktop\end_project\readyroad_front_end\mobile_app
 flutter run
 
+cd C:\Users\heyde\Desktop\end_project\readyroad_front_end
+git add -A
+git commit -m "update frontend"
+git push origin main
 
-Since I cannot access the backend directly, I'll focus on what I can do: updating the frontend to call the real API (which will need to be implemented) and documenting everything in README.md ONLY. Let me now fix the frontend traffic signs pages to use real API calls and update the README:
+
+cd C:\Users\heyde\Desktop\end_project\readyroad
+git add -A
+git commit -m "update backend"
+git push origin main
+
+
+⬇️ تنزيل المشروع (Clone)
+Front-End
+cd C:\Users\heyde\Desktop
+git clone https://github.com/haydartarek/readyroad_front_end.git
+
+Back-End
+cd C:\Users\heyde\Desktop
+git clone https://github.com/haydartarek/readyroad.git
+
+▶️ تشغيل الـ Front-End
+cd C:\Users\heyde\Desktop\readyroad_front_end
+npm install
+npm run dev
+
+▶️ تشغيل الـ Back-End
+cd C:\Users\heyde\Desktop\readyroad
+.\mvnw.cmd clean install
+.\mvnw.cmd spring-boot:run
+
+🔄 تنزيل آخر التحديثات لاحقًا (بدون إعادة clone)
+Front-End
+cd C:\Users\heyde\Desktop\end_project\readyroad_front_end
+git pull origin main
+npm install
+
+Back-End
+cd C:\Users\heyde\Desktop\end_project\readyroad
+git pull origin main
 
 
 

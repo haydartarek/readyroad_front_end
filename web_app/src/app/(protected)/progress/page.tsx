@@ -9,7 +9,6 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import apiClient from '@/lib/api';
-import { toast } from 'sonner';
 import Link from 'next/link';
 
 interface ExamHistory {
@@ -275,10 +274,10 @@ export default function ProgressPage() {
               </Card>
             ) : (
               categoryProgress.map((category) => {
-                const trendIcon = 
+                const trendIcon =
                   category.trend === 'improving' ? '📈' :
-                  category.trend === 'declining' ? '📉' : '➡️';
-                
+                    category.trend === 'declining' ? '📉' : '➡️';
+
                 return (
                   <Card key={category.categoryCode}>
                     <CardHeader>
@@ -298,7 +297,7 @@ export default function ProgressPage() {
                           <div className={cn(
                             "text-2xl font-bold",
                             category.accuracy >= 80 ? "text-green-600" :
-                            category.accuracy >= 60 ? "text-orange-600" : "text-red-600"
+                              category.accuracy >= 60 ? "text-orange-600" : "text-red-600"
                           )}>
                             {category.accuracy.toFixed(1)}%
                           </div>

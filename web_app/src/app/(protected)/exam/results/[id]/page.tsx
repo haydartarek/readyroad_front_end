@@ -40,13 +40,6 @@ interface ExamResults {
   incorrectQuestions: IncorrectQuestion[];
 }
 
-interface TimeAnalysis {
-  totalTime: string;
-  averagePerQuestion: string;
-  fastestQuestion: string;
-  slowestQuestion: string;
-}
-
 interface ReviewQuestion {
   id: number;
   questionText: string;

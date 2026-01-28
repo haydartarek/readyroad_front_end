@@ -90,5 +90,9 @@ git pull origin main
 
 
 
+cd /d C:\Users\heyde\Desktop\end_project\readyroad_front_end\mobile_app && flutter run -d emulator-5554 --enable-software-rendering --device-timeout 180
+
+
+
 
 

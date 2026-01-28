@@ -4,7 +4,6 @@
  * WITHOUT mocking the backend - tests interceptor logic only
  */
 
-import axios from 'axios';
 import { STORAGE_KEYS, ROUTES } from '@/lib/constants';
 
 // We need to test the API client initialization and interceptor behavior
@@ -122,7 +121,7 @@ describe('API Client 401 Interceptor', () => {
         localStorageMock[STORAGE_KEYS.AUTH_TOKEN] = 'test-token-123';
 
         // Simulate request interceptor behavior
-        const mockConfig: any = {
+        const mockConfig: { headers: { Authorization?: string } } = {
             headers: {},
         };
 
@@ -138,7 +137,7 @@ describe('API Client 401 Interceptor', () => {
         // No token in localStorage
 
         // Simulate request interceptor behavior
-        const mockConfig: any = {
+        const mockConfig: { headers: { Authorization?: string } } = {
             headers: {},
         };
 

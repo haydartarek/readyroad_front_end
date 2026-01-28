@@ -54,7 +54,7 @@ export async function generateStaticParams() {
 
     const data = await response.json();
     const signs = Array.isArray(data) ? data : (data.signs || []);
-    return signs.map((sign: any) => ({
+    return signs.map((sign: { signCode: string }) => ({
       signCode: sign.signCode,
     }));
   } catch (error) {

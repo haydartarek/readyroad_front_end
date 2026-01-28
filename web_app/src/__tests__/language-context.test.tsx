@@ -104,7 +104,7 @@ describe('LanguageContext Logic', () => {
 
     test('RTL direction logic: English should be LTR', () => {
         const language = 'en';
-        const isRTL = language === 'ar';
+        const isRTL = language === 'en' ? false : language === 'ar';
         expect(isRTL).toBe(false);
     });
 

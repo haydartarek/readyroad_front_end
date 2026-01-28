@@ -125,6 +125,50 @@ The app connects to the Spring Boot backend API:
 
 2. **Multiple Lockfiles:** Warning about workspace root inference. Can be silenced by setting `turbopack.root` in next.config.ts.
 
+## Continuation Part 2 - Stability & Safety Fixes
+
+**Date:** January 28, 2026  
+**Status:** ✅ COMPLETED
+
+### Changes Applied
+
+1. **Division by Zero Protection** ✅
+   - **[progress-bar.tsx](src/components/exam/progress-bar.tsx#L9)** - Added zero-division guard
+   - **[exam-stats.tsx](src/components/exam/exam-stats.tsx#L30-L61)** - Added zero-division guards (2 locations)
+   - **[practice-stats.tsx](src/components/practice/practice-stats.tsx#L21)** - Added zero-division guard
+   - **Impact:** Prevents NaN rendering when total questions = 0
+
+2. **Git Hygiene** ✅
+   - Removed 8061 node_modules files from Git tracking
+   - Created root `.gitignore` with proper exclusions
+   - **Impact:** Clean repository, reduced Git overhead
+
+3. **Auth Reconciliation** ✅
+   - Token identity unified: `readyroad_auth_token` across all layers
+   - Profile endpoint: `GET /api/users/me` (contract-compliant)
+   - Dual storage: localStorage + cookie for middleware validation
+   - **Impact:** Auth flow stable after page refresh
+
+### Verified Compliance
+
+| Gate | Status | Evidence |
+|------|--------|----------|
+| **Token Identity** | ✅ PASS | Single key `readyroad_auth_token` in middleware, AuthContext, API client |
+| **Profile Endpoint** | ✅ PASS | Uses `/api/users/me` (not `/auth/me`) |
+| **API Client** | ✅ PASS | baseURL environment-driven, no malformed URLs |
+| **SSR Auth Wiring** | ✅ PASS | Client Components only for auth, public SSG unchanged |
+| **UI Safety** | ✅ PASS | Zero-division guards prevent NaN crashes |
+| **Testing (No-Mock)** | ✅ PASS | 27/27 tests passing, zero HTTP mocks |
+| **Git Hygiene** | ✅ PASS | node_modules untracked, .gitignore configured |
+
+### Test Results
+
+```bash
+Test Suites: 4 passed, 4 total
+Tests:       27 passed, 27 total
+Time:        0.949s
+```
+
 ## Development
 
 ```bash
@@ -134,7 +178,7 @@ npm run lint
 # Build
 npm run build
 
-# Run tests (if configured)
+# Run tests
 npm test
 ```
 

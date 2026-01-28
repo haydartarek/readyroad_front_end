@@ -42,7 +42,7 @@ function ErrorPatternsContent() {
         const url = examId
           ? `/users/me/analytics/error-patterns?simulationId=${examId}`
           : '/users/me/analytics/error-patterns';
-        
+
         const response = await apiClient.get<AnalyticsData>(url);
         setData(response.data);
         setError(null);
@@ -133,7 +133,7 @@ function ErrorPatternsContent() {
           <CardHeader>
             <CardTitle>Recommended Actions</CardTitle>
             <CardDescription>
-              Based on your error patterns, here's what we recommend
+              Based on your error patterns, here&apos;s what we recommend
             </CardDescription>
           </CardHeader>
           <CardContent>

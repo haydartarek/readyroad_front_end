@@ -18,7 +18,7 @@ export function PracticeStats({
   wrongAnswers,
   accuracy,
 }: PracticeStatsProps) {
-  const progressPercentage = ((currentQuestion - 1) / totalQuestions) * 100;
+  const progressPercentage = totalQuestions === 0 ? 0 : ((currentQuestion - 1) / totalQuestions) * 100;
 
   return (
     <Card>

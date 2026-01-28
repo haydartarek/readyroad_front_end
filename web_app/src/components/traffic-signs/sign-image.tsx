@@ -31,10 +31,15 @@ export function SignImage({ src, alt, className = 'object-contain' }: SignImageP
   const [imgSrc, setImgSrc] = useState(() => convertToPublicUrl(src));
   const [mounted, setMounted] = useState(false);
 
+  // Only update src when it changes, not on mount
   useEffect(() => {
-    setMounted(true);
     setImgSrc(convertToPublicUrl(src));
   }, [src]);
+
+  // Separate effect for mounting flag
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Render a placeholder during SSR to avoid hydration issues
   if (!mounted) {

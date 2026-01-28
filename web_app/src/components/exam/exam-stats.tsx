@@ -20,14 +20,14 @@ interface ExamStatsProps {
   timeAnalysis?: TimeAnalysis;
 }
 
-export function ExamStats({ 
-  score, 
-  totalQuestions, 
-  passed, 
+export function ExamStats({
+  score,
+  totalQuestions,
+  passed,
   passingScore,
-  timeAnalysis 
+  timeAnalysis
 }: ExamStatsProps) {
-  const percentage = ((score / totalQuestions) * 100).toFixed(1);
+  const percentage = totalQuestions === 0 ? '0.0' : ((score / totalQuestions) * 100).toFixed(1);
   const wrongCount = totalQuestions - score;
 
   return (
@@ -58,7 +58,7 @@ export function ExamStats({
               {percentage}%
             </div>
             <div className="text-sm text-gray-600">
-              Required: {passingScore}/{totalQuestions} ({((passingScore / totalQuestions) * 100).toFixed(0)}%)
+              Required: {passingScore}/{totalQuestions} ({totalQuestions === 0 ? '0' : ((passingScore / totalQuestions) * 100).toFixed(0)}%)
             </div>
           </div>
 

@@ -53,7 +53,7 @@ async function getAllTrafficSigns(): Promise<TrafficSign[]> {
     const signs = Array.isArray(data) ? data : (data.signs || []);
 
     // Map backend response to frontend format (categoryCode → category name)
-    return signs.map((sign: any) => ({
+    return signs.map((sign: { categoryCode: string; category?: string;[key: string]: unknown }) => ({
       ...sign,
       category: getCategoryName(sign.categoryCode) || sign.category || 'UNKNOWN',
     }));

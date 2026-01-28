@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-    
+
     // Don't attempt to fetch if no token exists
     if (!token) {
       setIsLoading(false);
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await apiClient.get<User>('/auth/me');
+      const response = await apiClient.get<User>('/api/users/me');
       setUser(response.data);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.data));
     } catch (error) {
@@ -69,8 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
       const { token } = response.data;
 
-      // Store token
+      // Store token in both localStorage and cookie
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+      document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=${token}; path=/; max-age=604800; SameSite=Lax`;
 
       // Fetch user data
       await fetchUser();
@@ -90,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+    document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=; path=/; max-age=0`;
     setUser(null);
     toast.info('You have been logged out');
     router.push(ROUTES.LOGIN);

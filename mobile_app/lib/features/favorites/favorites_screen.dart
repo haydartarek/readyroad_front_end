@@ -23,7 +23,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   /// Convert backend imageUrl to asset path for Flutter
   String _convertToAssetPath(String imageUrl) {
-    return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+    // Handle both API formats:
+    // 1. /images/signs/... (web format)
+    // 2. assets/traffic_signs/... (backend format)
+    if (imageUrl.startsWith('/images/signs/')) {
+      return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+    }
+    // Already in correct format for Flutter assets
+    return imageUrl;
   }
 
   @override

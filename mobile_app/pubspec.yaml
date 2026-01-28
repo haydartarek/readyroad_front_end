@@ -37,6 +37,7 @@ dependencies:
 
   # State Management
   provider: ^6.1.1
+  flutter_bloc: ^8.1.3
 
   # Network
   http: ^1.2.0
@@ -47,13 +48,16 @@ dependencies:
 
   # Storage
   shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
 
   # UI
   flutter_svg: ^2.0.9
   cached_network_image: ^3.3.1
 
   # Internationalization
-  intl: ^0.19.0
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -105,11 +109,17 @@ flutter:
     # Additional Signs / لوحات إضافية (G-serie)
     - assets/traffic_signs/additional_signs/
 
+    # Bicycle Signs / علامات الدراجات (M-serie)
+    - assets/traffic_signs/bicycle_signs/
+
     # Zone Signs / علامات المناطق (Z-serie)
     - assets/traffic_signs/zone_signs/
 
     # Delineation Signs / علامات التحديد
     - assets/traffic_signs/delineation_signs/
+
+    # Translation files
+    - lib/l10n/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

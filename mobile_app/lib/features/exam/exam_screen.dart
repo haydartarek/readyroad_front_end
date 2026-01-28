@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/providers/language_provider.dart';
 import 'exam_question_service.dart';
 
@@ -71,46 +72,32 @@ class _ExamScreenState extends State<ExamScreen> {
   }
 
   void _submitExam() {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
-    final isArabic = languageProvider.currentLanguage == 'ar';
+    final l10n = AppLocalizations.of(context);
 
     // Check if all questions are answered
     if (_answers.length < _questions.length) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isArabic
-                ? 'يرجى الإجابة على جميع الأسئلة'
-                : 'Please answer all questions',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please answer all questions')));
       return;
     }
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isArabic ? 'تأكيد التسليم' : 'Confirm Submission'),
-        content: Text(
-          isArabic
-              ? 'هل أنت متأكد من تسليم الامتحان؟'
-              : 'Are you sure you want to submit the exam?',
-        ),
+        title: Text('Confirm Submission'),
+        content: Text('Are you sure you want to submit the exam?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _calculateResults();
             },
-            child: Text(isArabic ? 'تسليم' : 'Submit'),
+            child: Text(l10n.examSubmit),
           ),
         ],
       ),
@@ -118,6 +105,8 @@ class _ExamScreenState extends State<ExamScreen> {
   }
 
   void _calculateResults() {
+    final l10n = AppLocalizations.of(context);
+
     int correctAnswers = 0;
     for (int i = 0; i < _questions.length; i++) {
       if (_answers[i] == _questions[i]['correctAnswer']) {
@@ -128,20 +117,12 @@ class _ExamScreenState extends State<ExamScreen> {
     final percentage = (correctAnswers / _questions.length * 100).round();
     final passed = percentage >= 82; // 41/50 = 82% passing score
 
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
-    );
-    final isArabic = languageProvider.currentLanguage == 'ar';
-
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Text(
-          passed
-              ? (isArabic ? 'نجحت!' : 'Passed!')
-              : (isArabic ? 'راسب' : 'Failed'),
+          passed ? l10n.examPassed : l10n.examFailed,
           style: TextStyle(
             color: passed ? Colors.green : Colors.red,
             fontWeight: FontWeight.bold,
@@ -157,9 +138,7 @@ class _ExamScreenState extends State<ExamScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              isArabic
-                  ? '$correctAnswers من ${_questions.length} إجابات صحيحة'
-                  : '$correctAnswers out of ${_questions.length} correct answers',
+              '$correctAnswers ${l10n.examOf} ${_questions.length} ${l10n.examCorrectAnswers}',
               style: const TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),
@@ -174,13 +153,9 @@ class _ExamScreenState extends State<ExamScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              isArabic
-                  ? (passed
-                        ? 'تهانينا! لقد نجحت في الامتحان'
-                        : 'يجب الحصول على 82% على الأقل للنجاح')
-                  : (passed
-                        ? 'Congratulations! You passed the exam'
-                        : 'You need at least 82% to pass'),
+              passed
+                  ? 'Congratulations! You passed the exam'
+                  : 'You need at least 82% to pass',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.grey),
             ),
@@ -192,7 +167,7 @@ class _ExamScreenState extends State<ExamScreen> {
               Navigator.of(context).pop();
               Navigator.of(context).pop();
             },
-            child: Text(isArabic ? 'إنهاء' : 'Finish'),
+            child: Text(l10n.commonClose),
           ),
           if (!passed)
             ElevatedButton(
@@ -204,7 +179,7 @@ class _ExamScreenState extends State<ExamScreen> {
                 });
                 _loadQuestions();
               },
-              child: Text(isArabic ? 'إعادة المحاولة' : 'Retry'),
+              child: const Text('Retry'),
             ),
         ],
       ),
@@ -213,40 +188,38 @@ class _ExamScreenState extends State<ExamScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final languageProvider = Provider.of<LanguageProvider>(context);
-    final isArabic = languageProvider.currentLanguage == 'ar';
+    final currentLanguage = languageProvider.currentLanguage;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isArabic ? 'الامتحان' : 'Exam'),
+        title: Text(l10n.navExam),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: _submitExam,
-            tooltip: isArabic ? 'تسليم' : 'Submit',
+            tooltip: l10n.examSubmit,
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: Text(l10n.commonLoading))
           : _error != null
           ? Center(child: Text('Error: $_error'))
           : _questions.isEmpty
-          ? Center(
-              child: Text(
-                isArabic ? 'لا توجد أسئلة متاحة' : 'No questions available',
-              ),
-            )
-          : _buildExamView(isArabic),
+          ? const Center(child: Text('No questions available'))
+          : _buildExamView(currentLanguage),
       bottomNavigationBar: !_isLoading && _questions.isNotEmpty
-          ? _buildNavigationBar(isArabic)
+          ? _buildNavigationBar()
           : null,
     );
   }
 
-  Widget _buildExamView(bool isArabic) {
+  Widget _buildExamView(String currentLanguage) {
+    final l10n = AppLocalizations.of(context);
     final question = _questions[_currentQuestionIndex];
-    final questionText = isArabic
+    final questionText = currentLanguage == 'ar'
         ? question['questionAr']
         : question['questionEn'];
     final selectedAnswer = _answers[_currentQuestionIndex];
@@ -269,7 +242,7 @@ class _ExamScreenState extends State<ExamScreen> {
                     child: Column(
                       children: [
                         Text(
-                          '${isArabic ? 'السؤال' : 'Question'} ${_currentQuestionIndex + 1}/${_questions.length}',
+                          '${l10n.examQuestion} ${_currentQuestionIndex + 1}/${_questions.length}',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -286,16 +259,13 @@ class _ExamScreenState extends State<ExamScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  isArabic ? 'الخيارات:' : 'Options:',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                const Text(
+                  'Options:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 8),
                 ...[1, 2, 3, 4].map((optionNumber) {
-                  final optionText = isArabic
+                  final optionText = currentLanguage == 'ar'
                       ? question['option${optionNumber}Ar']
                       : question['option${optionNumber}En'];
                   final isSelected = selectedAnswer == optionNumber;
@@ -355,7 +325,9 @@ class _ExamScreenState extends State<ExamScreen> {
     );
   }
 
-  Widget _buildNavigationBar(bool isArabic) {
+  Widget _buildNavigationBar() {
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -373,7 +345,7 @@ class _ExamScreenState extends State<ExamScreen> {
           Expanded(
             child: OutlinedButton(
               onPressed: _currentQuestionIndex > 0 ? _previousQuestion : null,
-              child: Text(isArabic ? 'السابق' : 'Previous'),
+              child: Text(l10n.examPrevious),
             ),
           ),
           const SizedBox(width: 16),
@@ -389,8 +361,8 @@ class _ExamScreenState extends State<ExamScreen> {
                   : _submitExam,
               child: Text(
                 _currentQuestionIndex < _questions.length - 1
-                    ? (isArabic ? 'التالي' : 'Next')
-                    : (isArabic ? 'تسليم' : 'Submit'),
+                    ? l10n.examNext
+                    : l10n.examSubmit,
               ),
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../shared/models/category.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/providers/language_provider.dart';
 import '../../core/providers/favorites_provider.dart';
 import '../../core/providers/theme_provider.dart';
@@ -57,9 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ReadyRoad'),
+        title: Text(l10n.appName),
         centerTitle: true,
         actions: [
           IconButton(
@@ -72,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-            tooltip: 'Statistics',
+            tooltip: l10n.navAnalytics,
           ),
           IconButton(
             icon: const Icon(Icons.search),
@@ -154,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         icon: const Icon(Icons.quiz),
-        label: const Text('Take Quiz'),
+        label: Text(l10n.navPractice),
       ),
     );
   }
@@ -201,63 +204,82 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadCategories,
-      child: ListView(
+      child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        children: [
+        itemCount: _categories.length + 3, // Quick access + title + spacing
+        itemBuilder: (context, index) {
+          final l10n = AppLocalizations.of(context);
+
           // Quick Access Section
-          _buildQuickAccessSection(context),
-          const SizedBox(height: 24),
-          // Categories Section
-          Text(
-            'Traffic Sign Categories',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          ..._categories.map((category) {
-            final languageCode = context
-                .watch<LanguageProvider>()
-                .currentLanguage;
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                leading: CircleAvatar(child: Text('${category.id}')),
-                title: Text(category.getName(languageCode)),
-                subtitle: category.getDescription(languageCode) != null
-                    ? Text(
-                        category.getDescription(languageCode)!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    : null,
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.push(
+          if (index == 0) {
+            return _buildQuickAccessSection(context);
+          }
+
+          // Spacing
+          if (index == 1) {
+            return const SizedBox(height: 24);
+          }
+
+          // Categories Section Title
+          if (index == 2) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.navTrafficSigns,
+                  style: Theme.of(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CategorySignsScreen(category: category),
-                    ),
-                  );
-                },
-              ),
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+              ],
             );
-          }),
-        ],
+          }
+
+          // Category Items (lazy loaded)
+          final categoryIndex = index - 3;
+          final category = _categories[categoryIndex];
+          final languageCode = context
+              .watch<LanguageProvider>()
+              .currentLanguage;
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: CircleAvatar(child: Text('${category.id}')),
+              title: Text(category.getName(languageCode)),
+              subtitle: category.getDescription(languageCode) != null
+                  ? Text(
+                      category.getDescription(languageCode)!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : null,
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CategorySignsScreen(category: category),
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildQuickAccessSection(BuildContext context) {
-    final languageProvider = context.watch<LanguageProvider>();
-    final isArabic = languageProvider.currentLanguage == 'ar';
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isArabic ? 'ابدأ التعلم' : 'Start Learning',
+          l10n.navHome,
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -268,8 +290,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _buildQuickAccessCard(
                 context,
-                title: isArabic ? 'الدروس' : 'Lessons',
-                subtitle: isArabic ? 'ادرس 31 درس' : 'Study 31 lessons',
+                title: l10n.navLessons,
+                subtitle: l10n.navLessons,
                 icon: Icons.school,
                 color: Colors.blue,
                 onTap: () {
@@ -286,8 +308,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _buildQuickAccessCard(
                 context,
-                title: isArabic ? 'الامتحان' : 'Exam',
-                subtitle: isArabic ? 'اختبر معلوماتك' : 'Test your knowledge',
+                title: l10n.navExam,
+                subtitle: l10n.examStart,
                 icon: Icons.quiz,
                 color: Colors.green,
                 onTap: () {

@@ -125,9 +125,14 @@ class SignDetailsScreen extends StatelessWidget {
   }
 
   String _convertToAssetPath(String imageUrl) {
-    // تحويل من /images/signs/danger_signs/A1a.png
-    // إلى assets/traffic_signs/danger_signs/A1a.png
-    return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+    // Handle both API formats:
+    // 1. /images/signs/... (web format)
+    // 2. assets/traffic_signs/... (backend format)
+    if (imageUrl.startsWith('/images/signs/')) {
+      return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+    }
+    // Already in correct format for Flutter assets
+    return imageUrl;
   }
 
   Widget _buildImageSection() {

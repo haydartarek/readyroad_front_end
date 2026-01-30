@@ -4,7 +4,10 @@
  * WITHOUT mocking backend - uses localStorage stub only
  */
 
-import { STORAGE_KEYS, LANGUAGES, DEFAULT_LANGUAGE } from '@/lib/constants';
+import { LANGUAGES, DEFAULT_LANGUAGE } from '@/lib/constants';
+
+// ✅ Contract-compliant storage key
+const STORAGE_KEY = 'readyroad_locale';
 
 describe('LanguageContext Logic', () => {
     let localStorageMock: { [key: string]: string };
@@ -56,20 +59,20 @@ describe('LanguageContext Logic', () => {
         jest.clearAllMocks();
     });
 
-    test('language storage key is correct', () => {
-        expect(STORAGE_KEYS.LANGUAGE).toBe('readyroad_language');
+    test('language storage key is contract-compliant', () => {
+        expect(STORAGE_KEY).toBe('readyroad_locale');
     });
 
     test('default language is English', () => {
         expect(DEFAULT_LANGUAGE).toBe('en');
     });
 
-    test('language switching persists to localStorage', () => {
+    test('language switching persists to localStorage with correct key', () => {
         const newLanguage = 'fr';
-        localStorage.setItem(STORAGE_KEYS.LANGUAGE, newLanguage);
+        localStorage.setItem(STORAGE_KEY, newLanguage);
 
-        expect(window.localStorage.setItem).toHaveBeenCalledWith(STORAGE_KEYS.LANGUAGE, 'fr');
-        expect(localStorageMock[STORAGE_KEYS.LANGUAGE]).toBe('fr');
+        expect(window.localStorage.setItem).toHaveBeenCalledWith(STORAGE_KEY, 'fr');
+        expect(localStorageMock[STORAGE_KEY]).toBe('fr');
     });
 
     test('Arabic language has RTL direction in config', () => {

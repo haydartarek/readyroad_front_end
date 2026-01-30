@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { LANGUAGES, DEFAULT_LANGUAGE, STORAGE_KEYS } from '@/lib/constants';
+import { LANGUAGES, DEFAULT_LANGUAGE } from '@/lib/constants';
 
 type Language = 'en' | 'ar' | 'nl' | 'fr';
 
@@ -14,6 +14,9 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+// ✅ Contract-compliant storage key
+const STORAGE_KEY = 'readyroad_locale';
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(DEFAULT_LANGUAGE as Language);
   const [translations, setTranslations] = useState<Record<string, string>>({});
@@ -22,7 +25,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Load saved language from localStorage
-    const savedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE) as Language;
+    const savedLanguage = localStorage.getItem(STORAGE_KEY) as Language;
     if (savedLanguage && LANGUAGES.find(l => l.code === savedLanguage)) {
       setLanguageState(savedLanguage);
     }
@@ -31,8 +34,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Load translations for current language
     loadTranslations(language);
-    
-    // Update HTML attributes
+
+    // Update HTML attributes for RTL support
     document.documentElement.lang = language;
     document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
   }, [language, isRTL]);
@@ -47,8 +50,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   const setLanguage = (lang: Language) => {
+    // Guard: prevent redundant changes
+    if (lang === language) {
+      return;
+    }
+
     setLanguageState(lang);
-    localStorage.setItem(STORAGE_KEYS.LANGUAGE, lang);
+    localStorage.setItem(STORAGE_KEY, lang);
+    // NOTE: Do NOT call router.refresh() - would cause route change
+    // Language change should only update content, not navigate
   };
 
   const t = (key: string): string => {

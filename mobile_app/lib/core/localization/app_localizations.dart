@@ -102,6 +102,10 @@ class AppLocalizations {
   String get examFailed => translate('exam.failed');
   String get examScore => translate('exam.score');
   String get examCorrectAnswers => translate('exam.correct_answers');
+  String get examExitTitle => translate('exam.exit_title');
+  String get examExitMessage => translate('exam.exit_message');
+  String get examExitStay => translate('exam.exit_stay');
+  String get examExitLeave => translate('exam.exit_leave');
 
   // ========== PRACTICE ==========
   String get practiceTitle => translate('practice.title');

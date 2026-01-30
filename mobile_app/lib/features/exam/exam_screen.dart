@@ -19,6 +19,7 @@ class _ExamScreenState extends State<ExamScreen> {
   int _currentQuestionIndex = 0;
   bool _isLoading = true;
   String? _error;
+  bool _isExamActive = true; // Track if exam is in progress for back prevention
 
   @override
   void initState() {
@@ -104,8 +105,41 @@ class _ExamScreenState extends State<ExamScreen> {
     );
   }
 
+  /// Show exit confirmation dialog when back is pressed during active exam
+  Future<bool> _onBackPressed() async {
+    if (!_isExamActive || _questions.isEmpty) {
+      return true; // Allow navigation if exam is not active
+    }
+
+    final l10n = AppLocalizations.of(context);
+
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.examExitTitle),
+        content: Text(l10n.examExitMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(l10n.examExitLeave),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.examExitStay),
+          ),
+        ],
+      ),
+    );
+
+    return shouldExit ?? false;
+  }
+
   void _calculateResults() {
     final l10n = AppLocalizations.of(context);
+
+    // Mark exam as inactive after completion
+    _isExamActive = false;
 
     int correctAnswers = 0;
     for (int i = 0; i < _questions.length; i++) {
@@ -192,7 +226,17 @@ class _ExamScreenState extends State<ExamScreen> {
     final languageProvider = Provider.of<LanguageProvider>(context);
     final currentLanguage = languageProvider.currentLanguage;
 
-    return Scaffold(
+    // Wrap with PopScope to handle Android back button
+    return PopScope(
+      canPop: !_isExamActive || _questions.isEmpty,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldExit = await _onBackPressed();
+        if (shouldExit && mounted && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(l10n.navExam),
         actions: [
@@ -213,6 +257,7 @@ class _ExamScreenState extends State<ExamScreen> {
       bottomNavigationBar: !_isLoading && _questions.isNotEmpty
           ? _buildNavigationBar()
           : null,
+      ),
     );
   }
 

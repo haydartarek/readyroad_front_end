@@ -11,7 +11,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest, redirectPath?: string) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
 }
@@ -35,6 +35,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /**
+   * Clear all auth state (localStorage + cookie)
+   * Used when token is invalid/expired
+   */
+  const clearAuth = () => {
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+    document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=; path=/; max-age=0`;
+    setUser(null);
+  };
+
   const fetchUser = async () => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
@@ -45,25 +56,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await apiClient.get<User>('/api/users/me');
+      const response = await apiClient.get<User>('/auth/me');
       setUser(response.data);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.data));
     } catch (error) {
-      // Only log error if we have a token (backend issue)
-      // Otherwise, silently fail (user not logged in)
-      if (token) {
-        console.error('Failed to fetch user:', error);
-        toast.error('Session expired. Please login again.');
-      }
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-      setUser(null);
+      console.error('Failed to fetch user:', error);
+      // Clear everything (localStorage + cookie) to prevent redirect loop
+      clearAuth();
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (credentials: LoginRequest) => {
+  const login = async (credentials: LoginRequest, redirectPath?: string) => {
     try {
       setIsLoading(true);
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
@@ -73,11 +78,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=${token}; path=/; max-age=604800; SameSite=Lax`;
 
-      // Fetch user data
-      await fetchUser();
+      // Set user data directly from login response (avoids extra /auth/me call)
+      // This prevents any timing issue with fetchUser failing after login
+      const userData: User = {
+        userId: response.data.userId ?? 0,
+        username: response.data.username ?? '',
+        email: response.data.email ?? '',
+        fullName: response.data.fullName ?? '',
+        role: response.data.role ?? 'USER',
+        isActive: true,
+      };
+      setUser(userData);
+      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
 
       toast.success('Welcome back!');
-      router.push(ROUTES.DASHBOARD);
+
+      // Use window.location.href to force page reload with new cookie
+      // This ensures middleware sees the cookie before navigation
+      window.location.href = redirectPath || ROUTES.DASHBOARD;
     } catch (error) {
       const err = error as { response?: { data?: { message?: string } } };
       console.error('Login failed:', error);
@@ -89,10 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-    document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=; path=/; max-age=0`;
-    setUser(null);
+    clearAuth();
     toast.info('You have been logged out');
     router.push(ROUTES.LOGIN);
   };

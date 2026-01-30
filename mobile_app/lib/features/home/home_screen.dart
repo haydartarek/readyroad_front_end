@@ -15,6 +15,8 @@ import '../quiz/quiz_screen.dart';
 import '../statistics/statistics_screen.dart';
 import '../lessons/lessons_list_screen.dart';
 import '../exam/exam_screen.dart';
+import '../auth/presentation/bloc/auth_bloc.dart';
+import '../auth/presentation/bloc/auth_event.dart';
 
 /// Home Screen - Main entry point
 class HomeScreen extends StatefulWidget {
@@ -54,6 +56,37 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  /// Show logout confirmation dialog
+  void _showLogoutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.authLogout),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              // Dispatch logout event to AuthBloc
+              context.read<AuthBloc>().add(LogoutEvent());
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.authLogout),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -145,6 +178,12 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const LanguageSelector(),
+          // Logout Button
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _showLogoutDialog(context),
+            tooltip: l10n.authLogout,
+          ),
           const SizedBox(width: 8),
         ],
       ),

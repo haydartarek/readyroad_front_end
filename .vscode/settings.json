@@ -2,5 +2,15 @@
     "files.exclude": {
         "**/mobile_app/**": true
     },
-    "dart.enabled": false
+    "dart.enabled": false,
+    "chat.tools.terminal.autoApprove": {
+        "/^netstat -ano \\| Select-String \"8890\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd C:\\\\Users\\\\heyde\\\\Desktop\\\\end_project\\\\readyroad; mvn spring-boot:run -Dspring-boot\\.run\\.profiles=secure$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
 }

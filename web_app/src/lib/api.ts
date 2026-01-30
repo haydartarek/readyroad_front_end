@@ -20,13 +20,21 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request Interceptor: Add auth token
+    // Request Interceptor: Add auth token (skip for auth endpoints)
     this.instance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         if (typeof window !== 'undefined') {
-          const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-          if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+          // Skip adding token only for login & register (auth/me NEEDS the token)
+          const url = config.url || '';
+          const isPublicAuthEndpoint =
+            url.includes('/auth/login') || url.includes('/auth/register') ||
+            url.startsWith('auth/login') || url.startsWith('auth/register');
+
+          if (!isPublicAuthEndpoint) {
+            const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+            if (token) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
           }
         }
         return config;
@@ -41,10 +49,21 @@ class ApiClient {
       (response: AxiosResponse) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
-          // Unauthorized - clear auth and redirect to login
-          if (typeof window !== 'undefined') {
+          // Skip redirect for auth endpoints (login, register, fetchUser)
+          // These are handled by auth-context.tsx directly
+          const requestUrl = error.config?.url || '';
+          const isAuthEndpoint =
+            requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register') ||
+            requestUrl.includes('/auth/me') ||
+            requestUrl.startsWith('auth/login') || requestUrl.startsWith('auth/register') ||
+            requestUrl.startsWith('auth/me');
+
+          if (!isAuthEndpoint && typeof window !== 'undefined') {
+            // Unauthorized on a protected endpoint - clear auth and redirect
             localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
             localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+            // CRITICAL: Also clear the cookie to prevent middleware redirect loop
+            document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=; path=/; max-age=0`;
             window.location.href = ROUTES.LOGIN;
           }
         }

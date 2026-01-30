@@ -1,0 +1,112 @@
+name: Mobile Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-android:
+    name: Build Android Release
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./mobile_app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Get Flutter dependencies
+        run: flutter pub get
+      
+      - name: Run Flutter analyzer
+        run: flutter analyze
+      
+      - name: Run Flutter tests
+        run: flutter test
+      
+      - name: Build Android APK
+        run: flutter build apk --release
+      
+      - name: Build Android App Bundle (AAB)
+        run: flutter build appbundle --release
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-${{ github.sha }}
+          path: mobile_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+      
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab-${{ github.sha }}
+          path: mobile_app/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+  
+  build-ios:
+    name: Build iOS Release
+    runs-on: macos-latest
+    
+    defaults:
+      run:
+        working-directory: ./mobile_app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Get Flutter dependencies
+        run: flutter pub get
+      
+      - name: Run Flutter analyzer
+        run: flutter analyze
+      
+      - name: Run Flutter tests
+        run: flutter test
+      
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+      
+      - name: Archive iOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-archive-${{ github.sha }}
+          path: mobile_app/build/ios/archive/Runner.xcarchive
+          retention-days: 30
+      
+      - name: Build notes
+        run: |
+          echo "iOS build complete (unsigned)"
+          echo "For signed IPA, run: flutter build ipa --release"
+          echo "Requires Apple Developer account and proper code signing setup"

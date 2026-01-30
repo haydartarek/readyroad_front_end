@@ -71,7 +71,7 @@ export function Navbar() {
     }
 
     try {
-      const response = await apiClient.get<{ unreadCount: number }>('/api/users/me/notifications/unread-count');
+      const response = await apiClient.get<{ unreadCount: number }>('/users/me/notifications/unread-count');
       setUnreadCount(response.data.unreadCount || 0);
     } catch (error) {
       // Silently fail - hide badge on error (safe fallback)

@@ -1,3 +1,5 @@
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+
 export default function ProtectedLayout({
   children,
 }: {
@@ -6,6 +8,7 @@ export default function ProtectedLayout({
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 container mx-auto px-4 py-8">
+        <Breadcrumb />
         {children}
       </main>
       <footer className="border-t py-6 bg-muted/30">

@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Language Provider for managing app language
+/// Uses contract-compliant storage key 'readyroad_locale'
 class LanguageProvider extends ChangeNotifier {
   String _currentLanguage = 'en';
 
   String get currentLanguage => _currentLanguage;
+
+  // ✅ Contract-compliant storage key
+  static const String _storageKey = 'readyroad_locale';
 
   // Supported languages
   final List<LanguageOption> supportedLanguages = [
@@ -21,17 +25,20 @@ class LanguageProvider extends ChangeNotifier {
 
   Future<void> _loadLanguage() async {
     final prefs = await SharedPreferences.getInstance();
-    _currentLanguage = prefs.getString('language') ?? 'en';
+    _currentLanguage = prefs.getString(_storageKey) ?? 'en';
     notifyListeners();
   }
 
   Future<void> setLanguage(String languageCode) async {
-    if (_currentLanguage != languageCode) {
-      _currentLanguage = languageCode;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('language', languageCode);
-      notifyListeners();
+    // Guard: prevent redundant changes
+    if (_currentLanguage == languageCode) {
+      return;
     }
+
+    _currentLanguage = languageCode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_storageKey, languageCode);
+    notifyListeners();
   }
 
   LanguageOption get currentLanguageOption {
@@ -48,10 +55,5 @@ class LanguageOption {
   final String name;
   final String flag;
 
-  LanguageOption({
-    required this.code,
-    required this.name,
-    required this.flag,
-  });
+  LanguageOption({required this.code, required this.name, required this.flag});
 }
-

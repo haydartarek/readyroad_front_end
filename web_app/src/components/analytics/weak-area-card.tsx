@@ -100,11 +100,15 @@ export function WeakAreaCard({ area }: WeakAreaCardProps) {
           </div>
         </div>
 
-        <Link href={`/practice?category=${encodeURIComponent(area.category)}`}>
-          <Button className="w-full">
-            Practice {area.category} Now
+        {/* Direct practice button for category */}
+        <div>
+          <Button asChild className="w-full" size="lg">
+            <Link href={`/practice/${area.category.toLowerCase().replace(/\s+/g, '-')}`}>
+              <span className="mr-2">💪</span>
+              Practice Now
+            </Link>
           </Button>
-        </Link>
+        </div>
       </CardContent>
     </Card>
   );

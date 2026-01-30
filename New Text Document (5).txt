@@ -43,6 +43,12 @@ mvn spring-boot:run
 cd C:\Users\heyde\Desktop\end_project\readyroad_front_end\web_app
 npm run dev
 
+
+
+   Username: testuser
+   Password: Test123!
+   Email: testuser@readyroad.be
+
 # 4. في terminal جديد - تشغيل Flutter
 cd C:\Users\heyde\Desktop\end_project\readyroad_front_end\mobile_app
 flutter run

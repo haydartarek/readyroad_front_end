@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -62,17 +62,17 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       setIsLoading(true);
-      
+
       // Combine firstName and lastName into fullName for backend
       const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
-      
+
       await apiClient.post('/auth/register', {
         username: formData.username,
         email: formData.email,
@@ -106,92 +106,128 @@ export default function RegisterPage() {
           Create your account to start learning
         </CardDescription>
       </CardHeader>
-      
+
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">{t('auth.first_name')}</Label>
+              <Label htmlFor="firstName" className="text-sm font-semibold text-foreground">
+                {t('auth.first_name')}
+              </Label>
               <Input
                 id="firstName"
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 disabled={isLoading}
+                className="h-11 text-base transition-all duration-200"
+                aria-invalid={!!errors.firstName}
               />
               {errors.firstName && (
-                <p className="text-sm text-error">{errors.firstName}</p>
+                <p className="text-xs text-destructive font-medium mt-1.5 animate-in fade-in-50 duration-200">
+                  {errors.firstName}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastName">{t('auth.last_name')}</Label>
+              <Label htmlFor="lastName" className="text-sm font-semibold text-foreground">
+                {t('auth.last_name')}
+              </Label>
               <Input
                 id="lastName"
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 disabled={isLoading}
+                className="h-11 text-base transition-all duration-200"
+                aria-invalid={!!errors.lastName}
               />
               {errors.lastName && (
-                <p className="text-sm text-error">{errors.lastName}</p>
+                <p className="text-xs text-destructive font-medium mt-1.5 animate-in fade-in-50 duration-200">
+                  {errors.lastName}
+                </p>
               )}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="username">{t('auth.username')}</Label>
+            <Label htmlFor="username" className="text-sm font-semibold text-foreground">
+              {t('auth.username')}
+            </Label>
             <Input
               id="username"
               type="text"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               disabled={isLoading}
+              className="h-11 text-base transition-all duration-200"
+              aria-invalid={!!errors.username}
             />
             {errors.username && (
-              <p className="text-sm text-error">{errors.username}</p>
+              <p className="text-xs text-destructive font-medium mt-1.5 animate-in fade-in-50 duration-200">
+                {errors.username}
+              </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">{t('auth.email')}</Label>
+            <Label htmlFor="email" className="text-sm font-semibold text-foreground">
+              {t('auth.email')}
+            </Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               disabled={isLoading}
+              className="h-11 text-base transition-all duration-200"
+              aria-invalid={!!errors.email}
             />
             {errors.email && (
-              <p className="text-sm text-error">{errors.email}</p>
+              <p className="text-xs text-destructive font-medium mt-1.5 animate-in fade-in-50 duration-200">
+                {errors.email}
+              </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">{t('auth.password')}</Label>
+            <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+              {t('auth.password')}
+            </Label>
             <Input
               id="password"
               type="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               disabled={isLoading}
+              className="h-11 text-base transition-all duration-200"
+              aria-invalid={!!errors.password}
             />
             {errors.password && (
-              <p className="text-sm text-error">{errors.password}</p>
+              <p className="text-xs text-destructive font-medium mt-1.5 animate-in fade-in-50 duration-200">
+                {errors.password}
+              </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">{t('auth.confirm_password')}</Label>
+            <Label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground">
+              {t('auth.confirm_password')}
+            </Label>
             <Input
               id="confirmPassword"
               type="password"
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               disabled={isLoading}
+              className="h-11 text-base transition-all duration-200"
+              aria-invalid={!!errors.confirmPassword}
             />
             {errors.confirmPassword && (
-              <p className="text-sm text-error">{errors.confirmPassword}</p>
+              <p className="text-xs text-destructive font-medium mt-1.5 animate-in fade-in-50 duration-200">
+                {errors.confirmPassword}
+              </p>
             )}
           </div>
         </CardContent>
@@ -207,8 +243,8 @@ export default function RegisterPage() {
 
           <p className="text-sm text-center text-muted-foreground">
             {t('auth.have_account')}{' '}
-            <Link 
-              href={ROUTES.LOGIN} 
+            <Link
+              href={ROUTES.LOGIN}
               className="text-primary font-semibold hover:underline"
             >
               {t('auth.sign_in')}

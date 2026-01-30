@@ -2,13 +2,18 @@
 
 // User Types
 export interface User {
-  id: number;
+  userId: number;
   username: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  preferredLanguage: 'en' | 'ar' | 'nl' | 'fr';
-  createdAt: string;
+  fullName: string;
+  role: string;
+  isActive: boolean;
+  // Legacy fields (kept for backward compatibility)
+  id?: number;
+  firstName?: string;
+  lastName?: string;
+  preferredLanguage?: 'en' | 'ar' | 'nl' | 'fr';
+  createdAt?: string;
 }
 
 // Auth Types
@@ -20,7 +25,13 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   type: string;
-  expiresIn: number;
+  expiresIn?: number;
+  // User data included in login response from backend
+  userId?: number;
+  username?: string;
+  email?: string;
+  fullName?: string;
+  role?: string;
 }
 
 export interface RegisterRequest {

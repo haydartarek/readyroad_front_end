@@ -42,7 +42,7 @@ export function useSearch(language: string) {
         setIsOpen(true);
 
         try {
-            const response = await apiClient.get<SearchResponse>('/api/search', {
+            const response = await apiClient.get<SearchResponse>('/search', {
                 q: searchQuery,
                 lang: language,
             });

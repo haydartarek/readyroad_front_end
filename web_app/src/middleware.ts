@@ -14,23 +14,42 @@ const protectedRoutes = [
 // Auth routes that should redirect to dashboard if already logged in
 const authRoutes = ['/login', '/register'];
 
+/**
+ * Check if a token looks like a valid JWT (basic format check).
+ * JWT = 3 base64url parts separated by dots, header starts with "eyJ".
+ * This does NOT verify the signature — just prevents stale/empty cookies
+ * from causing redirect loops between /login ↔ /dashboard.
+ */
+function isValidTokenFormat(token: string | undefined): boolean {
+  if (!token || token.length < 10) return false;
+  const parts = token.split('.');
+  return parts.length === 3 && token.startsWith('eyJ');
+}
+
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('readyroad_auth_token')?.value;
+  const rawToken = request.cookies.get('readyroad_auth_token')?.value;
+  const hasValidToken = isValidTokenFormat(rawToken);
   const { pathname } = request.nextUrl;
 
-  // Check if the current path is a protected route
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
 
-  // Redirect to login if accessing protected route without token
-  if (isProtectedRoute && !token) {
+  // If cookie exists but token format is invalid → clear cookie, let page load normally
+  if (rawToken && !hasValidToken) {
+    const response = NextResponse.next();
+    response.cookies.delete('readyroad_auth_token');
+    return response;
+  }
+
+  // Redirect to login if accessing protected route without valid token
+  if (isProtectedRoute && !hasValidToken) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    loginUrl.searchParams.set('returnUrl', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // Redirect to dashboard if accessing auth routes with valid token
-  if (isAuthRoute && token) {
+  if (isAuthRoute && hasValidToken) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

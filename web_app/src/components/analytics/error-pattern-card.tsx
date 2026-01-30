@@ -1,8 +1,36 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+
+/**
+ * Maps error pattern types to practice URLs with filter parameters
+ * Follows Epic 6 contract: /practice/[category]?filter=[type]
+ */
+function getPracticeUrl(patternType: string, affectedCategories: string[]): string {
+  // Map common error patterns to practice routes
+  const patternMap: Record<string, { category: string; filter?: string }> = {
+    'SIGN_CONFUSION': { category: 'traffic-signs', filter: 'confusion' },
+    'PRIORITY_MISUNDERSTANDING': { category: 'priority-rules', filter: 'priority' },
+    'SPEED_LIMIT_ERRORS': { category: 'speed-limits', filter: 'speed' },
+    'PARKING_VIOLATIONS': { category: 'parking', filter: 'parking' },
+    'RIGHT_OF_WAY': { category: 'priority-rules', filter: 'right-of-way' },
+  };
+
+  // Try to match pattern type
+  const mapping = patternMap[patternType.toUpperCase().replace(/\s+/g, '_')];
+
+  if (mapping) {
+    const baseUrl = `/practice/${mapping.category}`;
+    return mapping.filter ? `${baseUrl}?filter=${mapping.filter}` : baseUrl;
+  }
+
+  // Fallback: use first affected category or default to traffic-signs
+  const defaultCategory = affectedCategories[0]?.toLowerCase().replace(/\s+/g, '-') || 'traffic-signs';
+  return `/practice/${defaultCategory}`;
+}
 
 interface ErrorPatternCardProps {
   pattern: {
@@ -40,9 +68,8 @@ export function ErrorPatternCard({ pattern }: ErrorPatternCardProps) {
             <p className="text-sm text-gray-600 mt-1">{pattern.description}</p>
           </div>
           <div
-            className={`px-3 py-1 rounded-full text-xs font-semibold border-2 ${
-              severityColors[pattern.severity]
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold border-2 ${severityColors[pattern.severity]
+              }`}
           >
             {pattern.severity.toUpperCase()}
           </div>
@@ -79,6 +106,16 @@ export function ErrorPatternCard({ pattern }: ErrorPatternCardProps) {
               </li>
             ))}
           </ul>
+        </div>
+
+        {/* Practice button for targeted practice */}
+        <div>
+          <Button asChild className="w-full">
+            <Link href={getPracticeUrl(pattern.patternType, pattern.affectedCategories)}>
+              <span className="mr-2">📝</span>
+              Practice This Area
+            </Link>
+          </Button>
         </div>
 
         <div>

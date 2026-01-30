@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ExamTimer } from '@/components/exam/exam-timer';
 import { QuestionCard } from '@/components/exam/question-card';
@@ -8,6 +8,7 @@ import { ProgressBar } from '@/components/exam/progress-bar';
 import { QuestionNavigator } from '@/components/exam/question-navigator';
 import { OverviewDialog } from '@/components/exam/overview-dialog';
 import { SubmitConfirmDialog } from '@/components/exam/submit-confirm-dialog';
+import { ExitConfirmDialog } from '@/components/exam/exit-confirm-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import apiClient from '@/lib/api';
 import { toast } from 'sonner';
@@ -48,6 +49,48 @@ export default function ExamQuestionsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+
+  // Track if exam is active (not submitted/expired)
+  const isExamActive = useRef(true);
+  // Track pending navigation for after exit confirmation
+  const pendingNavigation = useRef<string | null>(null);
+
+  // Handle browser back button and beforeunload
+  useEffect(() => {
+    // Warn before page unload (refresh/close tab)
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isExamActive.current) {
+        e.preventDefault();
+        // Modern browsers require returnValue to be set
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    // Handle browser back button via popstate
+    const handlePopState = (e: PopStateEvent) => {
+      if (isExamActive.current) {
+        // Prevent the back navigation
+        e.preventDefault();
+        // Push current state back to prevent navigation
+        window.history.pushState(null, '', window.location.href);
+        // Show exit confirmation dialog
+        setShowExitDialog(true);
+      }
+    };
+
+    // Push initial state to enable popstate detection
+    window.history.pushState(null, '', window.location.href);
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   // Fetch exam data
   useEffect(() => {
@@ -128,6 +171,8 @@ export default function ExamQuestionsPage() {
 
   // Time expired handler
   const handleTimeExpired = useCallback(async () => {
+    // Mark exam as inactive to allow navigation
+    isExamActive.current = false;
     toast.warning('Time is up! Exam completed.');
     if (!examData) return;
 
@@ -138,12 +183,28 @@ export default function ExamQuestionsPage() {
     router.push(`/exam/results/${examId}`);
   }, [examId, examData, router]);
 
+  // Handle exit dialog actions
+  const handleExitStay = useCallback(() => {
+    // User chose to stay - do nothing, dialog will close
+    pendingNavigation.current = null;
+  }, []);
+
+  const handleExitLeave = useCallback(() => {
+    // Mark exam as inactive to allow navigation
+    isExamActive.current = false;
+    // Navigate back
+    router.back();
+  }, [router]);
+
   // Submit exam
   const submitExam = async () => {
     if (!examData) return;
 
     try {
       setIsSubmitting(true);
+
+      // Mark exam as inactive to allow navigation
+      isExamActive.current = false;
 
       // Clear stored exam data
       localStorage.removeItem('current_exam');
@@ -269,6 +330,14 @@ export default function ExamQuestionsPage() {
         totalQuestions={examData.questions.length}
         onConfirm={handleSubmitConfirm}
         isSubmitting={isSubmitting}
+      />
+
+      {/* Exit Confirm Dialog */}
+      <ExitConfirmDialog
+        open={showExitDialog}
+        onOpenChange={setShowExitDialog}
+        onStay={handleExitStay}
+        onLeave={handleExitLeave}
       />
     </div>
   );

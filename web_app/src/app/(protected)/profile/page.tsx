@@ -211,7 +211,7 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Member Since</span>
               <span className="text-sm font-medium">
-                {new Date(user.createdAt).toLocaleDateString()}
+                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
               </span>
             </div>
             <div className="flex items-center justify-between">

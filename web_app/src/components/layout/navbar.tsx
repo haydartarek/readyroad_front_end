@@ -207,11 +207,11 @@ export function Navbar() {
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuContent align="center">
                 {secondaryNavItems.map((item) => (
-                  <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
+                  <DropdownMenuItem key={item.href} asChild>
                     <Link href={item.href} className={cn(
-                      pathname.startsWith(item.href) && 'bg-accent font-medium'
+                      pathname.startsWith(item.href) && 'bg-primary/8 text-primary font-semibold'
                     )}>
                       {t(item.name)}
                     </Link>
@@ -229,11 +229,11 @@ export function Navbar() {
                   <Menu className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-56">
+              <DropdownMenuContent align={isRTL ? 'start' : 'end'}>
                 {[...primaryNavItems, ...secondaryNavItems].map((item) => (
-                  <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
+                  <DropdownMenuItem key={item.href} asChild>
                     <Link href={item.href} className={cn(
-                      pathname.startsWith(item.href) && 'bg-accent font-medium'
+                      pathname.startsWith(item.href) && 'bg-primary/8 text-primary font-semibold'
                     )}>
                       {t(item.name)}
                     </Link>
@@ -305,14 +305,13 @@ export function Navbar() {
                   <span className="text-base">{currentLanguage?.flag}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-40">
+              <DropdownMenuContent align={isRTL ? 'start' : 'end'}>
                 {LANGUAGES.map((lang) => (
                   <DropdownMenuItem
                     key={lang.code}
                     onClick={() => setLanguage(lang.code as 'en' | 'ar' | 'nl' | 'fr')}
                     className={cn(
-                      'cursor-pointer gap-2',
-                      language === lang.code && 'bg-accent'
+                      language === lang.code && 'bg-primary/8 text-primary font-semibold'
                     )}
                   >
                     <span>{lang.flag}</span>

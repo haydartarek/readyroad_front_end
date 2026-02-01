@@ -1,9 +1,15 @@
+'use client';
+
+import { useLanguage } from '@/contexts/language-context';
+
 export function StatsSection() {
+  const { t } = useLanguage();
+
   const stats = [
-    { value: '10,000+', label: 'Students Enrolled' },
-    { value: '85%', label: 'Pass Rate' },
-    { value: '50,000+', label: 'Practice Questions Completed' },
-    { value: '4.9/5', label: 'Average Rating' },
+    { value: '50', label: t('home.stats.questions') },
+    { value: '200+', label: t('home.stats.signs') },
+    { value: '31', label: t('home.stats.lessons') },
+    { value: '4', label: t('home.stats.languages') },
   ];
 
   return (

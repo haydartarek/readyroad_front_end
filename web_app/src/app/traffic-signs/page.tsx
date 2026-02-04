@@ -1,21 +1,10 @@
-import { Metadata } from 'next';
+'use client';
+
 import { TrafficSignsGrid } from '@/components/traffic-signs/traffic-signs-grid';
 import { TrafficSignsFilters } from '@/components/traffic-signs/traffic-signs-filters';
 import { TrafficSign } from '@/lib/types';
 import { API_CONFIG } from '@/lib/constants';
-
-export const metadata: Metadata = {
-  title: 'Belgian Traffic Signs Library | ReadyRoad',
-  description: 'Complete library of 194 Belgian traffic signs with detailed explanations in 4 languages. Learn all road signs for your driving license exam.',
-  openGraph: {
-    title: 'Belgian Traffic Signs Library',
-    description: 'Complete library of 194 Belgian traffic signs with real images',
-    images: ['/images/og-traffic-signs.png'],
-  },
-};
-
-// Enable ISR (Incremental Static Regeneration)
-export const revalidate = 3600; // Revalidate every 1 hour
+import { useEffect, useState } from 'react';
 
 // Map category codes to display names
 function getCategoryName(code: string): string {
@@ -27,7 +16,8 @@ function getCategoryName(code: string): string {
     'E': 'PARKING',
     'F': 'INFORMATION',
     'G': 'ADDITIONAL',
-    'M': 'BICYCLE',
+    'H': 'TEMPORARY',
+    'M': 'DELINEATION',
     'Z': 'ZONE',
   };
   return categoryMap[code] || code;
@@ -35,7 +25,7 @@ function getCategoryName(code: string): string {
 
 async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/traffic-signs`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/traffic-signs`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -63,41 +53,80 @@ async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   }
 }
 
-export default async function TrafficSignsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string; search?: string }>;
-}) {
-  const allSigns = await getAllTrafficSigns();
-  const params = await searchParams;
+export default function TrafficSignsPage() {
+  const [allSigns, setAllSigns] = useState<TrafficSign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState('all');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    async function loadSigns() {
+      try {
+        const signs = await getAllTrafficSigns();
+        setAllSigns(signs);
+      } catch (error) {
+        console.error('Failed to load signs:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSigns();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-gray-600">Loading traffic signs...</p>
+      </div>
+    );
+  }
 
   // Filter by category if specified
   let filteredSigns = allSigns;
-  if (params.category && params.category !== 'all') {
+  if (category && category !== 'all') {
     filteredSigns = allSigns.filter(
-      sign => sign.category.toLowerCase() === params.category?.toLowerCase()
+      sign => sign.category.toLowerCase() === category?.toLowerCase()
     );
   }
 
   // Filter by search query
-  if (params.search) {
-    const searchLower = params.search.toLowerCase();
+  if (search) {
+    const searchLower = search.toLowerCase();
     filteredSigns = filteredSigns.filter(sign =>
       sign.nameEn.toLowerCase().includes(searchLower) ||
-      sign.nameAr.includes(params.search!) ||
+      sign.nameAr.includes(search!) ||
       sign.descriptionEn.toLowerCase().includes(searchLower)
     );
   }
 
+  // Build categories dynamically from actual data
+  const categoryCounts = allSigns.reduce((acc, sign) => {
+    acc[sign.category] = (acc[sign.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const categoryLabels: Record<string, string> = {
+    'DANGER': 'Danger Signs',
+    'PRIORITY': 'Priority Signs',
+    'PROHIBITION': 'Prohibition Signs',
+    'MANDATORY': 'Mandatory Signs',
+    'PARKING': 'Parking Signs',
+    'INFORMATION': 'Information Signs',
+    'ADDITIONAL': 'Supplementary Signs',
+    'TEMPORARY': 'Temporary Signs',
+    'ZONE': 'Zone Signs',
+    'DELINEATION': 'Delineation Signs',
+  };
+
   const categories = [
     { value: 'all', label: 'All Signs', count: allSigns.length },
-    { value: 'DANGER', label: 'Danger Signs', count: allSigns.filter(s => s.category === 'DANGER').length },
-    { value: 'PROHIBITION', label: 'Prohibition Signs', count: allSigns.filter(s => s.category === 'PROHIBITION').length },
-    { value: 'MANDATORY', label: 'Mandatory Signs', count: allSigns.filter(s => s.category === 'MANDATORY').length },
-    { value: 'PRIORITY', label: 'Priority Signs', count: allSigns.filter(s => s.category === 'PRIORITY').length },
-    { value: 'INFORMATION', label: 'Information Signs', count: allSigns.filter(s => s.category === 'INFORMATION').length },
-    { value: 'PARKING', label: 'Parking Signs', count: allSigns.filter(s => s.category === 'PARKING').length },
-    { value: 'BICYCLE', label: 'Bicycle Signs', count: allSigns.filter(s => s.category === 'BICYCLE').length },
+    ...Object.entries(categoryCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, count]) => ({
+        value: cat,
+        label: categoryLabels[cat] || cat,
+        count,
+      })),
   ];
 
   return (
@@ -117,8 +146,8 @@ export default async function TrafficSignsPage({
         {/* Filters */}
         <TrafficSignsFilters
           categories={categories}
-          selectedCategory={params.category || 'all'}
-          searchQuery={params.search || ''}
+          selectedCategory={category}
+          searchQuery={search}
         />
 
         {/* Results count */}

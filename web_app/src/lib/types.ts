@@ -50,7 +50,8 @@ export interface Question {
   questionTextAr: string;
   questionTextNl: string;
   questionTextFr: string;
-  imagePath?: string;
+  imagePath?: string; // Legacy field
+  contentImageUrl?: string; // Backend field name
   option1En: string;
   option1Ar: string;
   option1Nl: string;

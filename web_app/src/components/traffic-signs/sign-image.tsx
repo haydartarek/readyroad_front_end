@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { convertToPublicImageUrl, FALLBACK_IMAGE } from '@/lib/image-utils';
 
 interface SignImageProps {
   src: string;
@@ -8,23 +9,10 @@ interface SignImageProps {
   className?: string;
 }
 
-const FALLBACK_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaWduIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
-
 // Convert asset path from backend to public URL
 function convertToPublicUrl(src: string): string {
   if (!src) return FALLBACK_IMAGE;
-
-  // If already a public URL, return as-is
-  if (src.startsWith('/images/') || src.startsWith('http')) {
-    return src;
-  }
-
-  // Convert from "assets/traffic_signs/..." to "/images/signs/..."
-  if (src.startsWith('assets/traffic_signs/')) {
-    return src.replace('assets/traffic_signs/', '/images/signs/');
-  }
-
-  return src;
+  return convertToPublicImageUrl(src) || FALLBACK_IMAGE;
 }
 
 export function SignImage({ src, alt, className = 'object-contain' }: SignImageProps) {

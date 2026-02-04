@@ -16,7 +16,8 @@ interface QuizQuestion {
   questionTextAr: string;
   questionTextNl: string;
   questionTextFr: string;
-  imagePath?: string;
+  imagePath?: string; // Legacy field
+  contentImageUrl?: string; // Backend field name
   option1En: string;
   option1Ar: string;
   option1Nl: string;
@@ -202,7 +203,7 @@ export default function PracticeQuestionsPage() {
   const mappedQuestion = {
     id: String(currentQuestion.id),
     text: getQuestionText(currentQuestion),
-    imageUrl: currentQuestion.imagePath,
+    imageUrl: currentQuestion.contentImageUrl || currentQuestion.imagePath,
     options: [
       { id: '1', text: getOptionText(currentQuestion, 1) },
       { id: '2', text: getOptionText(currentQuestion, 2) },

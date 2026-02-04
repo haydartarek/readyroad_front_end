@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
+import { convertToPublicImageUrl } from '@/lib/image-utils';
 
 interface Question {
   id: number;
@@ -69,11 +70,11 @@ export function QuestionCard({
       <CardContent className="p-8">
         <div className="space-y-8">
           {/* Question Image */}
-          {question.imageUrl && (
+          {question.imageUrl && convertToPublicImageUrl(question.imageUrl) && (
             <div className="flex justify-center">
               <div className="relative h-64 w-full max-w-md overflow-hidden rounded-[24px] bg-gray-100">
                 <Image
-                  src={question.imageUrl}
+                  src={convertToPublicImageUrl(question.imageUrl)!}
                   alt="Question illustration"
                   fill
                   className="object-contain"

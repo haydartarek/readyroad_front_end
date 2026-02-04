@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Generate static params for all signs (ISR)
 export async function generateStaticParams() {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/traffic-signs`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/traffic-signs`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -76,7 +76,8 @@ function getCategoryName(code: string): string {
     'E': 'PARKING',
     'F': 'INFORMATION',
     'G': 'ADDITIONAL',
-    'M': 'BICYCLE',
+    'H': 'TEMPORARY',
+    'M': 'DELINEATION',
     'Z': 'ZONE',
   };
   return categoryMap[code] || code;
@@ -84,20 +85,21 @@ function getCategoryName(code: string): string {
 
 async function getTrafficSign(signCode: string): Promise<TrafficSign | null> {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/traffic-signs/${signCode}`, {
+    const url = `${API_CONFIG.BASE_URL}/api/traffic-signs/${signCode}`;
+    console.log('Fetching traffic sign from:', url);
+
+    const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      next: { revalidate: 3600 },
+      cache: 'no-store',
     });
+
+    console.log('Response status:', response.status);
 
     if (!response.ok) {
       if (response.status === 404) {
         return null;
       }
-      console.error('Failed to fetch traffic sign:', response.status);
+      console.error('Failed to fetch traffic sign:', response.status, await response.text());
       return null;
     }
 
@@ -122,7 +124,10 @@ function getCategoryColor(category: string): string {
     'PRIORITY': 'bg-yellow-100 text-yellow-800 border-yellow-200',
     'INFORMATION': 'bg-green-100 text-green-800 border-green-200',
     'PARKING': 'bg-purple-100 text-purple-800 border-purple-200',
-    'BICYCLE': 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    'ADDITIONAL': 'bg-gray-100 text-gray-800 border-gray-200',
+    'TEMPORARY': 'bg-orange-100 text-orange-800 border-orange-200',
+    'ZONE': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    'DELINEATION': 'bg-cyan-100 text-cyan-800 border-cyan-200',
   };
   return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
 }

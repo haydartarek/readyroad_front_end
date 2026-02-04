@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { convertToPublicImageUrl } from '@/lib/image-utils';
 
 interface PracticeQuestionCardProps {
   question: {
@@ -89,10 +90,10 @@ export function PracticeQuestionCard({ question, onAnswer }: PracticeQuestionCar
 
       <CardContent className="space-y-4">
         {/* Question Image */}
-        {question.imageUrl && (
+        {question.imageUrl && convertToPublicImageUrl(question.imageUrl) && (
           <div className="rounded-lg overflow-hidden border border-gray-200">
             <Image
-              src={question.imageUrl}
+              src={convertToPublicImageUrl(question.imageUrl)!}
               alt="Question illustration"
               width={800}
               height={400}
@@ -115,11 +116,11 @@ export function PracticeQuestionCard({ question, onAnswer }: PracticeQuestionCar
               <div className="flex items-start gap-3">
                 {/* Option content */}
                 <div className="flex-1">
-                  {option.imageUrl ? (
+                  {option.imageUrl && convertToPublicImageUrl(option.imageUrl) ? (
                     <div className="space-y-2">
                       <p className="font-medium">{option.text}</p>
                       <Image
-                        src={option.imageUrl}
+                        src={convertToPublicImageUrl(option.imageUrl)!}
                         alt={option.text}
                         width={128}
                         height={128}

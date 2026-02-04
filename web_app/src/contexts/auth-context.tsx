@@ -135,3 +135,55 @@ export function useAuth() {
   }
   return context;
 }
+
+/**
+ * Role-based Authorization Utilities
+ * Implements Feature: Role checking utilities for RBAC
+ * 
+ * @author ReadyRoad Team
+ * @since 2026-02-04
+ */
+
+/**
+ * Check if user has a specific role
+ * @param user - Current user object
+ * @param role - Role to check (ADMIN, MODERATOR, USER)
+ * @returns boolean
+ */
+export function hasRole(user: User | null, role: string): boolean {
+  return user?.role === role;
+}
+
+/**
+ * Check if user has any of the specified roles
+ * @param user - Current user object
+ * @param roles - Array of roles to check
+ * @returns boolean
+ */
+export function hasAnyRole(user: User | null, roles: string[]): boolean {
+  return user ? roles.includes(user.role) : false;
+}
+
+/**
+ * Check if user is admin
+ * Shortcut for hasRole(user, 'ADMIN')
+ */
+export function isAdmin(user: User | null): boolean {
+  return hasRole(user, 'ADMIN');
+}
+
+/**
+ * Check if user is moderator
+ * Shortcut for hasRole(user, 'MODERATOR')
+ */
+export function isModerator(user: User | null): boolean {
+  return hasRole(user, 'MODERATOR');
+}
+
+/**
+ * Check if user can moderate (MODERATOR or ADMIN)
+ * Implements: Moderation endpoints accessible to MODERATOR and ADMIN
+ */
+export function canModerate(user: User | null): boolean {
+  return hasAnyRole(user, ['MODERATOR', 'ADMIN']);
+}

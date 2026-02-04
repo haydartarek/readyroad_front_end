@@ -31,10 +31,10 @@ export const CATEGORIES = {
 
 // Languages
 export const LANGUAGES = [
-  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧', dir: 'ltr' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', dir: 'rtl' },
-  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱', dir: 'ltr' },
-  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷', dir: 'ltr' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: 'En', dir: 'ltr' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: 'Ar', dir: 'rtl' },
+  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: 'Nl', dir: 'ltr' },
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: 'Fr', dir: 'ltr' },
 ] as const;
 
 export const DEFAULT_LANGUAGE = 'en';

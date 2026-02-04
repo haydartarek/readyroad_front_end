@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Turbopack configuration to suppress multiple lockfiles warning
+  turbopack: {
+    root: 'C:/Users/fqsdg/Desktop/end_project/readyroad_front_end/web_app',
+  },
+
   // Image optimization for external sources
   images: {
     remotePatterns: [

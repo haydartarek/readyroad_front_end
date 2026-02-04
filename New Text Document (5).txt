@@ -104,6 +104,21 @@ git pull origin main
 cd /d C:\Users\heyde\Desktop\end_project\readyroad_front_end\mobile_app && flutter run -d emulator-5554 --enable-software-rendering --device-timeout 180
 
 
+cd "C:\Users\fqsdg\Desktop\end_project\readyroad"
+.\mvnw.cmd -v
+.\mvnw.cmd spring-boot:run
+افتح Terminal ثاني:
+
+# Web app (Next.js)
+cd "C:\Users\fqsdg\Desktop\end_project\readyroad_front_end\web_app"
+npm install
+npm run dev
+ولو تريد Flutter (اختياري) بترمينال ثالث:
+
+cd "C:\Users\fqsdg\Desktop\end_project\readyroad_front_end\mobile_app"
+flutter pub get
+flutter run
+
 
 
 

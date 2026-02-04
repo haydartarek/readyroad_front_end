@@ -5,7 +5,10 @@
 // API Configuration
 // ═══════════════════════════════════════════════════════════
 export const API_CONFIG = {
+<<<<<<< HEAD
   // Base URL includes /api prefix - all endpoints are relative to this
+=======
+>>>>>>> 16d6022 (update frontend)
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8890/api',
   TIMEOUT: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
 } as const;

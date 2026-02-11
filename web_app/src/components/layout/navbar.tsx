@@ -14,11 +14,13 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { ROUTES, LANGUAGES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { Search, Bell, ChevronDown, Menu, X } from 'lucide-react';
+import { Search, Bell, ChevronDown, Menu, X, User, LogOut, BarChart3, Settings, Shield, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { apiClient } from '@/lib/api';
 import { useSearch } from '@/hooks/use-search';
 import { SearchDropdown, type SearchResult } from '@/components/layout/search-dropdown';
+
+// ✅ NEW: Import from services instead of apiClient directly
+import { getUnreadNotificationCount } from '@/services';
 
 // Primary navigation items (visible in center)
 const primaryNavItems = [
@@ -38,13 +40,31 @@ const secondaryNavItems = [
 ];
 
 export function Navbar() {
-  const { user } = useAuth();
+  const auth = useAuth();
+  const { user, logout, isAuthenticated } = auth;
   const { t, language, setLanguage, isRTL } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // 🐛 DEBUG: Log auth state
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      console.log('⚠️ Navbar: Skipping debug (SSR)');
+      return;
+    }
+
+    console.log('🔍 Navbar Auth State (client-side):', {
+      isAuthenticated,
+      hasUser: !!user,
+      username: user?.username,
+      fullName: user?.fullName,
+      tokenLS: localStorage.getItem('token')?.substring(0, 20) + '...',
+      cookieHasToken: document.cookie.includes('token='),
+    });
+  }, [isAuthenticated, user]);
 
   // Search hook integration
   const {
@@ -64,18 +84,19 @@ export function Navbar() {
   // Check if any secondary nav item is active
   const isSecondaryNavActive = secondaryNavItems.some(item => pathname.startsWith(item.href));
 
-  // Fetch unread notifications count
+  // ✅ UPDATED: Fetch unread notifications count using new service
   const fetchUnreadCount = useCallback(async () => {
     if (!user) {
       return;
     }
 
     try {
-      const response = await apiClient.get<{ unreadCount: number }>('/users/me/notifications/unread-count');
-      setUnreadCount(response.data.unreadCount || 0);
+      // ✅ Use service instead of direct apiClient call
+      const count = await getUnreadNotificationCount();
+      setUnreadCount(count);
     } catch (error) {
       // Silently fail - hide badge on error (safe fallback)
-      console.warn('Failed to fetch unread notifications count:', error);
+      console.warn('[Navbar] Failed to fetch unread notifications count:', error);
       setUnreadCount(0);
     }
   }, [user]);
@@ -321,16 +342,118 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* User Avatar or Auth Buttons */}
-            {user ? (
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-full">
-                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-xs font-semibold text-primary">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
-                  </span>
-                </div>
-              </Button>
-            ) : (
+            {/* User Account or Auth Buttons */}
+            {isAuthenticated && user ? (() => {
+              const isAdmin = user.role === 'ADMIN';
+              const isModerator = user.role === 'MODERATOR';
+              const isStaff = isAdmin || isModerator;
+
+              return (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "flex items-center gap-2 rounded-full border pl-1 pr-3 py-1 transition-all focus:outline-none focus:ring-2 shadow-sm",
+                        isAdmin
+                          ? "border-amber-300 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 focus:ring-amber-300/50"
+                          : isModerator
+                            ? "border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 focus:ring-blue-300/50"
+                            : "border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 focus:ring-primary/50"
+                      )}
+                      aria-label="Account menu"
+                    >
+                      {/* Avatar circle - different style per role */}
+                      <span className={cn(
+                        "h-7 w-7 rounded-full flex items-center justify-center shrink-0",
+                        isAdmin
+                          ? "bg-gradient-to-br from-amber-500 to-orange-600"
+                          : isModerator
+                            ? "bg-gradient-to-br from-blue-500 to-indigo-600"
+                            : "bg-gradient-to-br from-primary to-primary/70"
+                      )}>
+                        {isAdmin ? (
+                          <Shield className="h-4 w-4 text-white" />
+                        ) : (
+                          <User className="h-4 w-4 text-white" />
+                        )}
+                      </span>
+                      {/* Username */}
+                      <span className={cn(
+                        "text-sm font-medium hidden sm:block max-w-[100px] truncate",
+                        isAdmin ? "text-amber-800" : isModerator ? "text-blue-800" : "text-gray-700"
+                      )}>
+                        {user.fullName || user.username || 'User'}
+                      </span>
+                      <ChevronDown className={cn(
+                        "h-3.5 w-3.5 hidden sm:block",
+                        isAdmin ? "text-amber-400" : "text-gray-400"
+                      )} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-52">
+                    {/* User info header */}
+                    <div className={cn(
+                      "px-3 py-2 border-b",
+                      isAdmin ? "border-amber-100 bg-amber-50/50" : "border-gray-100"
+                    )}>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {user.fullName || user.username}
+                        </p>
+                        {isStaff && (
+                          <span className={cn(
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide",
+                            isAdmin
+                              ? "bg-amber-100 text-amber-700 border border-amber-200"
+                              : "bg-blue-100 text-blue-700 border border-blue-200"
+                          )}>
+                            {user.role}
+                          </span>
+                        )}
+                      </div>
+                      {user.email && (
+                        <p className="text-xs text-gray-500 truncate mt-0.5">{user.email}</p>
+                      )}
+                    </div>
+
+                    {/* Admin Panel link - only for ADMIN */}
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                          <Link href="/admin" className="flex items-center gap-2">
+                            <LayoutDashboard className="h-4 w-4 text-amber-600" />
+                            <span className="text-amber-700 font-medium">Admin Panel</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <div className="border-t border-gray-100 my-1" />
+                      </>
+                    )}
+
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link href={ROUTES.PROFILE} className="flex items-center gap-2">
+                        <Settings className="h-4 w-4 text-gray-500" />
+                        {t('nav.profile')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link href={ROUTES.PROGRESS} className="flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4 text-gray-500" />
+                        {t('nav.progress')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <div className="border-t border-gray-100 my-1" />
+                    <DropdownMenuItem
+                      onClick={logout}
+                      className="text-red-600 focus:text-red-600 cursor-pointer flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {t('auth.logout')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              );
+            })() : (
               <div className="hidden sm:flex items-center gap-2">
                 <Button asChild variant="ghost" size="sm">
                   <Link href={ROUTES.LOGIN}>{t('auth.login')}</Link>

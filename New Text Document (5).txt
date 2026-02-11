@@ -44,6 +44,9 @@ cd C:\Users\heyde\Desktop\end_project\readyroad_front_end\web_app
 npm run dev
 
 
+admin
+Admin2026Secure!
+
 
    Username: testuser
    Password: Test123!
@@ -58,12 +61,14 @@ git add -A
 git commit -m "update frontend"
 git push origin main
 
+https://github.com/haydartarek/readyroad_front_end
 
 cd C:\Users\heyde\Desktop\end_project\readyroad
 git add -A
 git commit -m "update backend"
 git push origin main
 
+https://github.com/haydartarek/readyroad
 
 ⬇️ تنزيل المشروع (Clone)
 Front-End
@@ -80,7 +85,7 @@ npm install
 npm run dev
 
 ▶️ تشغيل الـ Back-End
-cd C:\Users\heyde\Desktop\readyroad
+cd C:\Users\heyde\Desktop\end_project\readyroad
 .\mvnw.cmd clean install
 .\mvnw.cmd spring-boot:run
 

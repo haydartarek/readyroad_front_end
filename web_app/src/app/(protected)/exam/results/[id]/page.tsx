@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -53,13 +53,39 @@ interface ReviewQuestion {
 
 export default function ExamResultsPage() {
   const params = useParams();
-  const examId = parseInt(params.id as string);
+
+  // Safe examId extraction with fallback to localStorage
+  const paramIdRaw = (params as Record<string, string | string[] | undefined>)?.id;
+  const paramId = Array.isArray(paramIdRaw) ? paramIdRaw[0] : paramIdRaw;
+  const fromParam = paramId ? parseInt(paramId, 10) : NaN;
+
+  // ✅ Use useMemo to avoid re-reading localStorage on every render
+  const fromStorage = useMemo(() => {
+    if (typeof window === 'undefined') return NaN;
+    try {
+      const raw = localStorage.getItem('current_exam');
+      if (!raw) return NaN;
+      const parsed = JSON.parse(raw);
+      return typeof parsed?.examId === 'number' ? parsed.examId : NaN;
+    } catch {
+      return NaN;
+    }
+  }, []);
+
+  const examId = Number.isFinite(fromParam) ? fromParam : fromStorage;
 
   const [results, setResults] = useState<ExamResults | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Guard: validate examId before fetching
+    if (!Number.isFinite(examId) || examId <= 0) {
+      setIsLoading(false);
+      setError('Invalid exam ID');
+      return;
+    }
+
     const fetchResults = async () => {
       try {
         setIsLoading(true);
@@ -99,6 +125,12 @@ export default function ExamResultsPage() {
     );
   }
 
+  // ✅ Normalize numeric values from API to prevent NaN in calculations/display
+  const safeScore = Number.isFinite(Number(results.score)) ? Number(results.score) : 0;
+  const safeTotalQuestions = Number.isFinite(Number(results.totalQuestions)) ? Number(results.totalQuestions) : 50;
+  const passingScore = 41; // 82% of 50 questions
+  const remainingToPass = Math.max(0, passingScore - safeScore);
+
   // Transform incorrect questions to review format
   const reviewQuestions: ReviewQuestion[] = results.incorrectQuestions.map(q => ({
     id: q.questionId,
@@ -108,8 +140,6 @@ export default function ExamResultsPage() {
     isCorrect: false,
     categoryName: q.categoryName,
   }));
-
-  const passingScore = 41; // 82% of 50 questions
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-12">
@@ -126,14 +156,14 @@ export default function ExamResultsPage() {
           <p className="mt-2 text-lg text-gray-600">
             {results.passed
               ? "You've passed the exam! You're ready for the real test."
-              : `You need ${passingScore - results.score} more correct answers to pass.`}
+              : `You need ${remainingToPass} more correct answers to pass.`}
           </p>
         </div>
 
         {/* Stats Cards */}
         <ExamStats
-          score={results.score}
-          totalQuestions={results.totalQuestions}
+          score={safeScore}
+          totalQuestions={safeTotalQuestions}
           passed={results.passed}
           passingScore={passingScore}
           timeAnalysis={undefined}

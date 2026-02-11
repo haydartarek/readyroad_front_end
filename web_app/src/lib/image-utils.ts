@@ -1,26 +1,60 @@
 /**
+ * Map Dutch folder names (from backend) to English folder names (in public/)
+ */
+const FOLDER_NAME_MAP: Record<string, string> = {
+  'gevaarsborden': 'danger_signs',
+  'voorrangsborden': 'priority_signs',
+  'verbodsborden': 'prohibition_signs',
+  'gebodsborden': 'mandatory_signs',
+  'onderborden': 'additional_signs',
+  'zoneborden': 'zone_signs',
+  'aanwijzingsborden': 'information_signs',
+  'afbakeningsborden': 'delineation_signs',
+  'Informatieborden_en_tijdelijke_verkeersmaatregelen': 'information_signs',
+  'direction_signs': 'information_signs',
+};
+
+/**
  * Convert asset path from backend to public URL
  * Handles both traffic sign images and question images
  */
 export function convertToPublicImageUrl(src: string | undefined): string | undefined {
   if (!src) return undefined;
 
-  // If already a public URL or HTTP URL, return as-is
-  if (src.startsWith('/images/') || src.startsWith('http')) {
+  // If already an HTTP URL, return as-is
+  if (src.startsWith('http')) {
     return src;
   }
 
-  // Convert from "assets/traffic_signs/..." to "/images/signs/..."
-  if (src.startsWith('assets/traffic_signs/')) {
-    return '/' + src.replace('assets/traffic_signs/', 'images/signs/');
+  let path = src;
+
+  // Normalize prefix: ensure path starts with /images/signs/
+  if (path.startsWith('assets/traffic_signs/')) {
+    path = '/images/signs/' + path.slice('assets/traffic_signs/'.length);
+  } else if (path.startsWith('assets/signs/')) {
+    path = '/images/signs/' + path.slice('assets/signs/'.length);
+  } else if (path.startsWith('assets/')) {
+    path = '/images/' + path.slice('assets/'.length);
+  } else if (path.startsWith('images/')) {
+    path = '/' + path;
+  } else if (!path.startsWith('/')) {
+    path = '/' + path;
   }
 
-  // Convert from "assets/..." to "/images/..."
-  if (src.startsWith('assets/')) {
-    return '/' + src.replace('assets/', 'images/');
+  // Map Dutch folder names to English
+  for (const [dutch, english] of Object.entries(FOLDER_NAME_MAP)) {
+    if (path.includes('/' + dutch + '/')) {
+      path = path.replace('/' + dutch + '/', '/' + english + '/');
+      break;
+    }
   }
 
-  return src;
+  // Encode special characters in path segments (spaces, parentheses, etc.)
+  path = path.split('/').map((segment, i) =>
+    i === 0 && segment === '' ? '' : encodeURIComponent(segment)
+  ).join('/');
+
+  return path;
 }
 
 /**

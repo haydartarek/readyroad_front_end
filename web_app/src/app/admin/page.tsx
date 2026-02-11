@@ -1,7 +1,9 @@
 'use client';
 
-import useSWR from 'swr';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { apiClient } from '@/lib/api';
+import { useLanguage } from '@/contexts/language-context';
 
 /**
  * Admin Dashboard Stats Interface
@@ -14,31 +16,34 @@ interface DashboardStats {
 }
 
 /**
- * Admin Dashboard Page
- * 
- * Implements Features:
- * - Scenario: Allow admin users to access admin routes
- * - Scenario: Admin dashboard loads stats from backend
- * - Then I should see "Admin Dashboard"
- * - And I should see "totalUsers", "totalSigns", "totalQuizzes"
- * 
- * @author ReadyRoad Team
- * @since 2026-02-04
+ * Admin Dashboard Page - Multilingual (EN, AR, NL, FR)
  */
 export default function AdminDashboard() {
     const { user } = useAuth();
+    const { t } = useLanguage();
+    const [data, setData] = useState<DashboardStats | null>(null);
+    const [error, setError] = useState<Error | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Scenario: Admin dashboard loads stats from backend
-    // GET /api/admin/dashboard
-    const { data, error, isLoading } = useSWR<DashboardStats>(
-        '/api/admin/dashboard'
-    );
+    useEffect(() => {
+        async function fetchDashboard() {
+            try {
+                const response = await apiClient.get<DashboardStats>('/admin/dashboard');
+                setData(response.data);
+            } catch (err) {
+                setError(err as Error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchDashboard();
+    }, []);
 
     if (error) {
         return (
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                <h3 className="text-red-800 font-semibold mb-2">خطأ في تحميل البيانات</h3>
-                <p className="text-red-600">{error.message || 'حدث خطأ غير متوقع'}</p>
+                <h3 className="text-red-800 font-semibold mb-2">{t('admin.error_loading')}</h3>
+                <p className="text-red-600">{error.message || t('admin.error_unexpected')}</p>
             </div>
         );
     }
@@ -62,64 +67,64 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                        لوحة التحكم
+                        {t('admin.dashboard')}
                     </h1>
                     <p className="text-gray-600 mt-2">
-                        مرحباً {user?.fullName || 'مدير النظام'}
+                        {t('admin.welcome')}, {user?.fullName || t('admin.system_admin')}
                     </p>
                 </div>
-                <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-semibold">
-                    👑 {user?.role}
+                <div className="bg-amber-100 text-amber-700 px-4 py-2 rounded-lg font-semibold border border-amber-200">
+                    {user?.role}
                 </div>
             </div>
 
-            {/* Stats Cards - Scenario: UI should render stats cards using returned values */}
+            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
-                    title="عدد المستخدمين"
+                    title={t('admin.total_users')}
                     value={data?.totalUsers ?? 0}
                     icon="👥"
                     color="blue"
-                    description="إجمالي المستخدمين المسجلين"
+                    description={t('admin.total_users_desc')}
                 />
                 <StatCard
-                    title="عدد اللافتات المرورية"
+                    title={t('admin.total_signs')}
                     value={data?.totalSigns ?? 0}
                     icon="🚦"
                     color="green"
-                    description="لافتات متاحة في النظام"
+                    description={t('admin.total_signs_desc')}
                 />
                 <StatCard
-                    title="عدد الاختبارات"
+                    title={t('admin.total_quizzes')}
                     value={data?.totalQuizzes ?? 0}
                     icon="📝"
                     color="purple"
-                    description="اختبارات تم إنشاؤها"
+                    description={t('admin.total_quizzes_desc')}
                 />
             </div>
 
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold mb-4">إجراءات سريعة</h2>
+                <h2 className="text-xl font-semibold mb-4">{t('admin.quick_actions')}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <QuickActionButton
                         icon="➕"
-                        label="إضافة لافتة"
+                        label={t('admin.add_sign')}
                         href="/admin/signs/new"
                     />
                     <QuickActionButton
                         icon="👥"
-                        label="إدارة المستخدمين"
+                        label={t('admin.manage_users')}
                         href="/admin/users"
                     />
                     <QuickActionButton
                         icon="📊"
-                        label="الإحصائيات"
+                        label={t('admin.statistics')}
                         href="/admin/analytics"
                     />
                     <QuickActionButton
                         icon="⚙️"
-                        label="الإعدادات"
+                        label={t('admin.settings')}
                         href="/admin/settings"
                     />
                 </div>
@@ -130,7 +135,6 @@ export default function AdminDashboard() {
 
 /**
  * Stat Card Component
- * Displays a single statistic with icon and color theme
  */
 function StatCard({
     title,
@@ -171,9 +175,9 @@ function StatCard({
                 <div className={`text-4xl p-3 rounded-full ${colors.bg}`}>
                     {icon}
                 </div>
-                <div className="text-left">
+                <div className="text-right">
                     <p className={`text-3xl font-bold ${colors.text}`}>
-                        {value.toLocaleString('ar-SA')}
+                        {value.toLocaleString()}
                     </p>
                 </div>
             </div>

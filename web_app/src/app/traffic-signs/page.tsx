@@ -3,7 +3,8 @@
 import { TrafficSignsGrid } from '@/components/traffic-signs/traffic-signs-grid';
 import { TrafficSignsFilters } from '@/components/traffic-signs/traffic-signs-filters';
 import { TrafficSign } from '@/lib/types';
-import { API_CONFIG } from '@/lib/constants';
+import { apiClient } from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 
 // Map category codes to display names
@@ -25,21 +26,8 @@ function getCategoryName(code: string): string {
 
 async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/traffic-signs`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      console.error('Failed to fetch traffic signs:', response.status);
-      return [];
-    }
-
-    const data = await response.json();
+    const response = await apiClient.get<TrafficSign[] | { signs: TrafficSign[] }>(API_ENDPOINTS.TRAFFIC_SIGNS.LIST);
+    const data = response.data;
     const signs = Array.isArray(data) ? data : (data.signs || []);
 
     // Map backend response to frontend format (categoryCode → category name)

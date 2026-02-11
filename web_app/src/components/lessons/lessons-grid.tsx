@@ -35,18 +35,18 @@ export function LessonsGrid({ lessons }: LessonsGridProps) {
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {lessons.map((lesson) => (
-        <Card 
-          key={lesson.lessonCode} 
+        <Card
+          key={lesson.id}
           className="group transition-all hover:shadow-lg"
         >
           <CardContent className="p-6">
             {/* Lesson number badge */}
             <div className="mb-4 flex items-center justify-between">
               <Badge variant="secondary" className="text-sm">
-                Lesson {lesson.orderIndex}
+                Lesson {lesson.id}
               </Badge>
               <span className="text-xs text-gray-400">
-                {lesson.lessonCode}
+                {lesson.categoryCode || 'N/A'}
               </span>
             </div>
 
@@ -62,7 +62,7 @@ export function LessonsGrid({ lessons }: LessonsGridProps) {
 
             {/* Actions */}
             <div className="flex gap-2">
-              <Link href={`/lessons/${lesson.lessonCode}`} className="flex-1">
+              <Link href={`/lessons/${lesson.id}`} className="flex-1">
                 <Button variant="default" className="w-full">
                   Read Lesson
                 </Button>

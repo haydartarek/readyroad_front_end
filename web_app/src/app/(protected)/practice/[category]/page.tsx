@@ -35,6 +35,7 @@ interface QuizQuestion {
 }
 
 interface Category {
+  id: number;
   code: string;
   nameEn: string;
   nameAr: string;
@@ -68,24 +69,29 @@ export default function PracticeQuestionsPage() {
         setIsLoading(true);
 
         // Fetch questions based on category
-        const endpoint =
-          categoryCode === 'random'
-            ? '/quiz/random?count=20'
-            : `/quiz/category/${categoryCode}?count=20`;
+        let endpoint: string;
 
-        const questionsResponse = await apiClient.get<QuizQuestion[]>(endpoint);
-        setQuestions(questionsResponse.data);
-
-        // Fetch category info if not random
-        if (categoryCode !== 'random') {
+        if (categoryCode === 'random') {
+          // ✅ Use correct backend endpoint for random questions
+          endpoint = '/smart-quiz/random?count=20';
+        } else {
+          // ✅ First get categoryId from category code, then fetch questions
           try {
             const categoryResponse = await apiClient.get<Category>(`/categories/${categoryCode}`);
             setCategory(categoryResponse.data);
-          } catch {
-            // Category not found, use default name
-            setCategory({ code: categoryCode, nameEn: categoryCode, nameAr: categoryCode, nameNl: categoryCode, nameFr: categoryCode });
+
+            // Use categoryId (numeric) instead of categoryCode (letter)
+            endpoint = `/smart-quiz/category/${categoryResponse.data.id}?count=20`;
+          } catch (catErr) {
+            console.error('Failed to fetch category:', catErr);
+            // Fallback: use default category info
+            setCategory({ id: 0, code: categoryCode, nameEn: categoryCode, nameAr: categoryCode, nameNl: categoryCode, nameFr: categoryCode });
+            throw new Error('Category not found');
           }
         }
+
+        const questionsResponse = await apiClient.get<QuizQuestion[]>(endpoint);
+        setQuestions(questionsResponse.data);
 
         setError(null);
       } catch (err) {
@@ -126,15 +132,9 @@ export default function PracticeQuestionsPage() {
   };
 
   const handleAnswer = useCallback(async (isCorrect: boolean, questionId: number, selectedAnswer: number) => {
-    // Submit answer to backend for tracking
-    try {
-      await apiClient.post<AnswerResponse>(`/quiz/questions/${questionId}/answer`, {
-        answer: selectedAnswer,
-      });
-    } catch (err) {
-      console.error('Failed to submit answer:', err);
-      // Don't block the flow if answer submission fails
-    }
+    // Note: Answer tracking endpoint not yet implemented in backend
+    // TODO: Implement /api/quiz/questions/{id}/answer endpoint
+    // For now, we just track locally in frontend state
 
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);

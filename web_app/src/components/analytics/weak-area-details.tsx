@@ -159,7 +159,7 @@ export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
                     {area.recommendedLessons.map((lesson) => (
                       <Link
                         key={lesson.code}
-                        href={`/lessons/${lesson.code}`}
+                        href={`/lessons/${lesson.id}`}
                         className="block rounded-md bg-white px-3 py-2 text-sm text-blue-800 transition-colors hover:bg-blue-100"
                       >
                         → {lesson.title}

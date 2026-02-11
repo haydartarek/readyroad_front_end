@@ -6,33 +6,7 @@ import { ProgressOverviewCard } from '@/components/dashboard/progress-overview-c
 import { QuickActionsSection } from '@/components/dashboard/quick-actions-section';
 import { WeakAreasPreview } from '@/components/dashboard/weak-areas-preview';
 import { RecentActivityList } from '@/components/dashboard/recent-activity-list';
-import apiClient from '@/lib/api';
-
-interface OverallProgress {
-  totalAttempts: number;
-  correctAnswers: number;
-  overallAccuracy: number;
-  masteryLevel: string;
-  weakCategories: string[];
-  strongCategories: string[];
-  studyStreak: number;
-  lastActivityDate: string | null;
-}
-
-interface WeakAreaData {
-  categoryCode: string;
-  categoryName: string;
-  accuracy: number;
-  totalAttempted: number;
-  totalCorrect: number;
-  masteryLevel: string;
-  improvementPlan: string;
-}
-
-interface WeakAreasResponse {
-  weakAreas: WeakAreaData[];
-  recommendations: string[];
-}
+import { getOverallProgress, getWeakAreas } from '@/services';
 
 // Default values for when API returns no data
 const defaultProgressData = {
@@ -54,9 +28,8 @@ export default function DashboardPage() {
       try {
         setIsLoading(true);
 
-        // Fetch overall progress
-        const progressResponse = await apiClient.get<OverallProgress>('/users/me/progress/overall');
-        const progress = progressResponse.data;
+        // Fetch overall progress using service
+        const progress = await getOverallProgress();
 
         setProgressData({
           totalExamsTaken: progress.totalAttempts || 0,
@@ -65,15 +38,15 @@ export default function DashboardPage() {
           currentStreak: progress.studyStreak || 0,
         });
 
-        // Fetch weak areas
-        const weakAreasResponse = await apiClient.get<WeakAreasResponse>('/users/me/analytics/weak-areas');
-        const weakAreasData = weakAreasResponse.data.weakAreas || [];
+        // Fetch weak areas using service
+        const weakAreasData = await getWeakAreas();
+        const areas = weakAreasData.weakAreas || [];
 
         setWeakAreas(
-          weakAreasData.map((area: WeakAreaData) => ({
+          areas.map((area) => ({
             category: area.categoryName,
             accuracy: area.accuracy,
-            totalQuestions: area.totalAttempted,
+            totalQuestions: area.totalCount,
           }))
         );
 

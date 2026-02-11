@@ -27,7 +27,8 @@ function isValidTokenFormat(token: string | undefined): boolean {
 }
 
 export function middleware(request: NextRequest) {
-  const rawToken = request.cookies.get('readyroad_auth_token')?.value;
+  // IMPORTANT: Cookie name must match STORAGE_KEYS.AUTH_TOKEN in constants.ts ('token')
+  const rawToken = request.cookies.get('token')?.value;
   const hasValidToken = isValidTokenFormat(rawToken);
   const { pathname } = request.nextUrl;
 
@@ -37,7 +38,7 @@ export function middleware(request: NextRequest) {
   // If cookie exists but token format is invalid → clear cookie, let page load normally
   if (rawToken && !hasValidToken) {
     const response = NextResponse.next();
-    response.cookies.delete('readyroad_auth_token');
+    response.cookies.delete('token');
     return response;
   }
 

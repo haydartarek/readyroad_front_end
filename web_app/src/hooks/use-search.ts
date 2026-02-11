@@ -23,14 +23,16 @@ export function useSearch(language: string) {
     const cacheRef = useRef<Map<string, SearchResult[]>>(new Map());
 
     const performSearch = useCallback(async (searchQuery: string) => {
-        if (!searchQuery || searchQuery.length < MIN_QUERY_LENGTH) {
+        // Guard: Don't search empty/whitespace queries
+        const trimmedQuery = searchQuery?.trim();
+        if (!trimmedQuery || trimmedQuery.length < MIN_QUERY_LENGTH) {
             setResults([]);
             setIsOpen(false);
             return;
         }
 
         // Check cache first
-        const cacheKey = `${language}:${searchQuery.toLowerCase()}`;
+        const cacheKey = `${language}:${trimmedQuery.toLowerCase()}`;
         if (cacheRef.current.has(cacheKey)) {
             setResults(cacheRef.current.get(cacheKey)!);
             setIsOpen(true);
@@ -42,9 +44,21 @@ export function useSearch(language: string) {
         setIsOpen(true);
 
         try {
+            // 🔍 DEBUG: Log search request
+            console.log('🔎 SEARCH REQUEST:', {
+                fullURL: `${apiClient.getInstance().defaults.baseURL}/search`,
+                params: { q: trimmedQuery, lang: language },
+            });
+
             const response = await apiClient.get<SearchResponse>('/search', {
-                q: searchQuery,
+                q: trimmedQuery,
                 lang: language,
+            });
+
+            console.log('✅ SEARCH RESPONSE:', {
+                status: response.status,
+                resultCount: response.data?.results?.length || 0,
+                query: response.data?.query,
             });
 
             // Backend returns SearchResponse with query and results array
@@ -55,7 +69,10 @@ export function useSearch(language: string) {
             cacheRef.current.set(cacheKey, searchResults);
             setTimeout(() => cacheRef.current.delete(cacheKey), 5 * 60 * 1000);
         } catch (error) {
-            console.error('Search error:', error);
+            console.error('❌ SEARCH ERROR:', {
+                error,
+                message: error instanceof Error ? error.message : 'Unknown error',
+            });
             setResults([]);
         } finally {
             setIsLoading(false);

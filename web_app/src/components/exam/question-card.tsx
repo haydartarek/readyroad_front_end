@@ -38,7 +38,7 @@ export function QuestionCard({
   correctAnswer,
 }: QuestionCardProps) {
   const { language } = useLanguage();
-  
+
   const getQuestionText = () => {
     switch (language) {
       case 'ar':
@@ -51,7 +51,7 @@ export function QuestionCard({
         return question.questionTextEn;
     }
   };
-  
+
   const getOptionText = (option: Question['options'][0]) => {
     switch (language) {
       case 'ar':
@@ -64,7 +64,7 @@ export function QuestionCard({
         return option.textEn;
     }
   };
-  
+
   return (
     <Card>
       <CardContent className="p-8">
@@ -83,24 +83,24 @@ export function QuestionCard({
               </div>
             </div>
           )}
-          
+
           {/* Question Text */}
           <div>
             <h3 className="text-xl font-semibold leading-relaxed">
               {getQuestionText()}
             </h3>
           </div>
-          
+
           {/* Options */}
           <div className="space-y-4">
             {question.options.map((option) => {
               const isSelected = selectedAnswer === option.number;
               const isCorrect = showCorrectAnswer && correctAnswer === option.number;
               const isWrong = showCorrectAnswer && isSelected && correctAnswer !== option.number;
-              
+
               return (
                 <button
-                  key={option.number}
+                  key={`${question.id}-${option.number}`}
                   onClick={() => !showCorrectAnswer && onAnswerSelect(option.number)}
                   disabled={showCorrectAnswer}
                   className={cn(
@@ -125,12 +125,12 @@ export function QuestionCard({
                     >
                       {option.number}
                     </div>
-                    
+
                     {/* Option Text */}
                     <div className="flex-1 text-base font-medium">
                       {getOptionText(option)}
                     </div>
-                    
+
                     {/* Feedback Icons (Practice Mode) */}
                     {showCorrectAnswer && (
                       <div className="flex-shrink-0">

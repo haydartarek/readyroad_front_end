@@ -37,14 +37,18 @@ export default function PracticePage() {
       try {
         setIsLoading(true);
 
-        // Fetch categories and quiz stats in parallel
-        const [categoriesResponse, statsResponse] = await Promise.all([
-          apiClient.get<Category[]>('/categories'),
-          apiClient.get<QuizStats>('/quiz/stats'),
-        ]);
+        // Fetch categories (fixed endpoint: /api/categories)
+        const categoriesResponse = await apiClient.get<Category[]>('/categories');
 
         setCategories(categoriesResponse.data);
-        setQuizStats(statsResponse.data);
+
+        // Generate stats from categories (quiz/stats endpoint doesn't exist)
+        const stats: QuizStats = {
+          totalQuestions: 0,
+          questionsByCategory: {},
+        };
+        setQuizStats(stats);
+
         setError(null);
       } catch (err) {
         console.error('Failed to fetch data:', err);

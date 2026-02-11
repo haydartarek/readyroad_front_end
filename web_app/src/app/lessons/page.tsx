@@ -1,48 +1,35 @@
-import { Metadata } from 'next';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { LessonsGrid } from '@/components/lessons/lessons-grid';
 import { Lesson } from '@/lib/types';
-import { API_CONFIG } from '@/lib/constants';
+import { apiClient } from '@/lib/api';
 
-export const metadata: Metadata = {
-  title: 'Driving Theory Lessons | ReadyRoad',
-  description: 'Comprehensive driving theory lessons in 4 languages. Master all 31 topics for the Belgian driving license exam.',
-  openGraph: {
-    title: 'Belgian Driving Theory Lessons',
-    description: 'Complete theory course with 31 lessons',
-    images: ['/images/og-lessons.png'],
-  },
-};
+export default function LessonsPage() {
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
 
-// Enable ISR (Incremental Static Regeneration)
-export const revalidate = 3600; // Revalidate every hour
-
-async function getAllLessons(): Promise<Lesson[]> {
-  try {
-    // Call real backend API
-    const response = await fetch(`${API_CONFIG.BASE_URL}/lessons`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    });
-
-    if (!response.ok) {
-      console.error('Failed to fetch lessons:', response.status, response.statusText);
-      return [];
+  useEffect(() => {
+    async function fetchLessons() {
+      try {
+        const response = await apiClient.get<Lesson[]>('/lessons');
+        setLessons(response.data);
+      } catch (error) {
+        console.error('Error fetching lessons:', error);
+      } finally {
+        setLoading(false);
+      }
     }
+    fetchLessons();
+  }, []);
 
-    const data = await response.json();
-    return data as Lesson[];
-  } catch (error) {
-    console.error('Error fetching lessons:', error);
-    return [];
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-gray-600">Loading lessons...</p>
+      </div>
+    );
   }
-}
-
-export default async function LessonsPage() {
-  const lessons = await getAllLessons();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

@@ -36,10 +36,68 @@ interface ExamData {
   questions: Question[];
 }
 
+// Backend API response types
+interface BackendQuestion {
+  questionId: number;
+  questionOrder?: number;
+  questionTextEn: string;
+  questionTextAr: string;
+  questionTextNl: string;
+  questionTextFr: string;
+  imageUrl?: string;
+  options: Array<{
+    optionId: number;
+    optionTextEn: string;
+    optionTextAr: string;
+    optionTextNl: string;
+    optionTextFr: string;
+  }>;
+}
+
+interface BackendExamData {
+  examId: number;
+  startedAt?: string;
+  startTime?: string;  // Alternative field name from localStorage
+  expiresAt: string;
+  questions: BackendQuestion[];
+}
+
+// Helper type for mixed Question format (normalized or backend)
+type MixedQuestion = Question | BackendQuestion;
+type MixedOption = Question['options'][0] | BackendQuestion['options'][0];
+
+// Normalize backend response to frontend format
+function normalizeExamData(backendData: BackendExamData): ExamData {
+  return {
+    id: backendData.examId,
+    createdAt: backendData.startedAt || backendData.startTime || new Date().toISOString(),
+    expiresAt: backendData.expiresAt,
+    questions: backendData.questions.map((q) => ({
+      id: q.questionId,
+      questionTextEn: q.questionTextEn,
+      questionTextAr: q.questionTextAr,
+      questionTextNl: q.questionTextNl,
+      questionTextFr: q.questionTextFr,
+      imageUrl: q.imageUrl,
+      options: q.options.slice(0, 3).map((opt, optIndex) => ({
+        number: (optIndex + 1) as 1 | 2 | 3,  // Convert array index to option number (1-3)
+        textEn: opt.optionTextEn,
+        textAr: opt.optionTextAr,
+        textNl: opt.optionTextNl,
+        textFr: opt.optionTextFr,
+      })),
+    })),
+  };
+}
+
 export default function ExamQuestionsPage() {
   const router = useRouter();
   const params = useParams();
-  const examId = parseInt(params.id as string);
+
+  // Safe examId extraction with validation
+  const paramIdRaw = (params as Record<string, string | string[] | undefined>)?.id;
+  const paramId = Array.isArray(paramIdRaw) ? paramIdRaw[0] : paramIdRaw;
+  const examId = paramId ? parseInt(paramId, 10) : NaN;
 
   const [examData, setExamData] = useState<ExamData | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -98,27 +156,52 @@ export default function ExamQuestionsPage() {
       try {
         setIsLoading(true);
 
+        // Validate examId before proceeding
+        if (!Number.isFinite(examId) || examId <= 0) {
+          setIsLoading(false);
+          setError('Invalid exam ID');
+          toast.error('Invalid exam ID. Please start a new exam.');
+          return;
+        }
+
         // First try to get from localStorage (set when starting exam)
         const storedExam = localStorage.getItem('current_exam');
         if (storedExam) {
-          const parsedExam = JSON.parse(storedExam);
+          const parsedExam = JSON.parse(storedExam) as BackendExamData;
           if (parsedExam.examId === examId) {
-            setExamData({
-              id: parsedExam.examId,
-              createdAt: parsedExam.startTime || new Date().toISOString(),
-              expiresAt: parsedExam.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-              questions: parsedExam.questions || [],
-            });
+            // Normalize backend data to frontend format
+            const normalized = normalizeExamData(parsedExam);
+            setExamData(normalized);
             setError(null);
             setIsLoading(false);
             return;
           }
         }
 
-        // If not in localStorage, fetch from API
-        const response = await apiClient.get<ExamData>(`/exams/simulations/${examId}`);
-        setExamData(response.data);
-        setError(null);
+        // If not in localStorage, fetch from API using /active endpoint
+        // Note: /active returns the exam WITH questions, unlike /{examId}
+        const response = await apiClient.get<{
+          hasActiveExam: boolean;
+          activeExam: BackendExamData;
+        }>(`/exams/simulations/active`);
+
+        if (response.data.hasActiveExam && response.data.activeExam) {
+          const backendExam = response.data.activeExam;
+
+          // Normalize backend data to frontend format
+          const normalized = normalizeExamData(backendExam);
+
+          // If the active exam ID differs from URL, sync the URL to reality
+          if (normalized.id !== examId) {
+            router.replace(`/exam/${normalized.id}`);
+            // Don't return - let the component re-render with correct URL
+          }
+
+          setExamData(normalized);
+          setError(null);
+        } else {
+          throw new Error('No active exam found');
+        }
       } catch (err) {
         console.error('Failed to fetch exam data:', err);
         setError('Failed to load exam. Please try again.');
@@ -129,29 +212,65 @@ export default function ExamQuestionsPage() {
     };
 
     fetchExamData();
-  }, [examId]);
+  }, [examId, router]);
 
   // Handle answer selection
   const handleAnswerSelect = useCallback(async (optionNumber: number) => {
     if (!examData) return;
 
     const currentQuestion = examData.questions[currentQuestionIndex];
+    if (!currentQuestion) return;
+
+    // Guard: extract and validate questionId (support both normalized and backend format)
+    const mixedQuestion = currentQuestion as MixedQuestion;
+    const questionId = Number(
+      ('id' in mixedQuestion ? mixedQuestion.id : null) ??
+      ('questionId' in mixedQuestion ? mixedQuestion.questionId : null)
+    );
+    if (!Number.isFinite(questionId)) {
+      console.error('Invalid question ID', { currentQuestion });
+      toast.error('Invalid question ID');
+      return;
+    }
+
+    const safeExamId = Number(examId);
+    if (!Number.isFinite(safeExamId)) {
+      console.error('Invalid exam ID', { examId });
+      toast.error('Invalid exam ID');
+      return;
+    }
+
+    // ✅ Normalize options numbers (same logic as QuestionCard)
+    const normalizedOptions = (mixedQuestion.options as MixedOption[])?.map((opt: MixedOption, idx: number) => {
+      const n = Number(
+        ('number' in opt ? opt.number : null) ??
+        ('optionId' in opt ? opt.optionId : null) ??
+        idx + 1
+      );
+      return { ...opt, __n: n };
+    }) ?? [];
+
+    const selectedOption = normalizedOptions.find((opt) => opt.__n === optionNumber);
+    if (!selectedOption) {
+      console.error('Invalid option selected', { optionNumber, normalizedOptions });
+      toast.error('Invalid option');
+      return;
+    }
 
     // Update local state immediately for UI responsiveness
     setAnswers(prev => ({
       ...prev,
-      [currentQuestion.id]: optionNumber,
+      [questionId]: optionNumber,
     }));
 
-    // Submit answer to backend
+    // Submit answer to backend - keep original API contract
     try {
-      await apiClient.post(`/exams/simulations/${examId}/questions/${currentQuestion.id}/answer`, {
+      await apiClient.post(`/exams/simulations/${safeExamId}/questions/${questionId}/answer`, {
         answer: optionNumber,
       });
     } catch (err) {
       console.error('Failed to save answer:', err);
-      // Don't show error toast for every answer - just log it
-      // The final submission will handle any issues
+      toast.error('Failed to save answer');
     }
   }, [examData, currentQuestionIndex, examId]);
 

@@ -6,6 +6,7 @@ import apiClient from '@/lib/api';
 import { STORAGE_KEYS, ROUTES } from '@/lib/constants';
 import { User, LoginRequest, LoginResponse } from '@/lib/types';
 import { toast } from 'sonner';
+import { getAuthToken, setAuthToken, removeAuthToken } from '@/lib/auth-token';
 
 interface AuthContextType {
   user: User | null;
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -40,14 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Used when token is invalid/expired
    */
   const clearAuth = () => {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    removeAuthToken();
     localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-    document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=; path=/; max-age=0`;
     setUser(null);
   };
 
   const fetchUser = async () => {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const token = getAuthToken();
 
     // Don't attempt to fetch if no token exists
     if (!token) {
@@ -74,9 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
       const { token } = response.data;
 
-      // Store token in both localStorage and cookie
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
-      document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=${token}; path=/; max-age=604800; SameSite=Lax`;
+      // Store token using centralized helper
+      setAuthToken(token);
 
       // Set user data directly from login response (avoids extra /auth/me call)
       // This prevents any timing issue with fetchUser failing after login

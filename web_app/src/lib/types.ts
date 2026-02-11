@@ -1,32 +1,29 @@
 // Type definitions for ReadyRoad Next.js App
+// Unified and cleaned up to match backend contract
 
-// User Types
-export interface User {
-  userId: number;
-  username: string;
-  email: string;
-  fullName: string;
-  role: string;
-  isActive: boolean;
-  // Legacy fields (kept for backward compatibility)
-  id?: number;
-  firstName?: string;
-  lastName?: string;
-  preferredLanguage?: 'en' | 'ar' | 'nl' | 'fr';
-  createdAt?: string;
-}
-
+// ═══════════════════════════════════════════════════════════
 // Auth Types
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Login request - supports both username and email for flexibility
+ * Backend expects "username", but we support "email" as fallback
+ */
 export interface LoginRequest {
-  username: string;
+  username?: string;  // Backend field (preferred)
+  email?: string;     // Frontend field (fallback, will be sent as username)
   password: string;
 }
 
+/**
+ * Login response from backend
+ * Contains JWT token and user information
+ */
 export interface LoginResponse {
   token: string;
-  type: string;
+  type?: string;
   expiresIn?: number;
-  // User data included in login response from backend
+  // User data included in login response
   userId?: number;
   username?: string;
   email?: string;
@@ -34,6 +31,9 @@ export interface LoginResponse {
   role?: string;
 }
 
+/**
+ * Registration request
+ */
 export interface RegisterRequest {
   username: string;
   email: string;
@@ -43,7 +43,27 @@ export interface RegisterRequest {
   preferredLanguage: 'en' | 'ar' | 'nl' | 'fr';
 }
 
+// ═══════════════════════════════════════════════════════════
+// User Types
+// ═══════════════════════════════════════════════════════════
+
+export interface User {
+  userId: number;
+  username: string;
+  email: string;
+  fullName: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  isActive: boolean;
+  preferredLanguage?: 'en' | 'ar' | 'nl' | 'fr';
+  createdAt?: string;
+}
+
+// ═══════════════════════════════════════════════════════════
 // Exam Types
+// ═══════════════════════════════════════════════════════════
+
 export interface Question {
   id: number;
   questionTextEn: string;
@@ -102,7 +122,10 @@ export interface CategoryScore {
   percentage: number;
 }
 
+// ═══════════════════════════════════════════════════════════
 // Analytics Types (Feature C)
+// ═══════════════════════════════════════════════════════════
+
 export interface ErrorPattern {
   pattern: string;
   frequency: number;
@@ -123,7 +146,10 @@ export interface WeakArea {
   topMistakes: string[];
 }
 
-// Progress Types
+// ═══════════════════════════════════════════════════════════
+// Progress Types (Feature B)
+// ═══════════════════════════════════════════════════════════
+
 export interface ProgressOverview {
   totalExamsTaken: number;
   averageScore: number;
@@ -142,7 +168,10 @@ export interface CategoryProgress {
   averageTime: number;
 }
 
+// ═══════════════════════════════════════════════════════════
 // Traffic Sign Types
+// ═══════════════════════════════════════════════════════════
+
 export interface TrafficSign {
   id?: number; // From backend
   signCode: string;
@@ -161,7 +190,10 @@ export interface TrafficSign {
   penalties?: string; // Not in backend response
 }
 
+// ═══════════════════════════════════════════════════════════
 // Lesson Types
+// ═══════════════════════════════════════════════════════════
+
 export interface Lesson {
   id: number;
   lessonCode: string;
@@ -180,7 +212,28 @@ export interface Lesson {
   orderIndex: number;
 }
 
+// ═══════════════════════════════════════════════════════════
+// Notification Types
+// ═══════════════════════════════════════════════════════════
+
+export interface Notification {
+  id: number;
+  userId: number;
+  type: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  readAt?: string;
+}
+
+export interface NotificationCount {
+  unreadCount: number;
+}
+
+// ═══════════════════════════════════════════════════════════
 // API Response Types
+// ═══════════════════════════════════════════════════════════
+
 export interface ApiResponse<T> {
   data: T;
   message?: string;
@@ -192,12 +245,40 @@ export interface ApiError {
   message: string;
   timestamp: string;
   path: string;
+  status?: number;
 }
 
+// ═══════════════════════════════════════════════════════════
 // Language Type
+// ═══════════════════════════════════════════════════════════
+
 export type Language = 'en' | 'ar' | 'nl' | 'fr';
 
+// ═══════════════════════════════════════════════════════════
 // Utility Types
+// ═══════════════════════════════════════════════════════════
+
 export type LocalizedContent<T extends string> = {
   [K in `${T}${Capitalize<Language>}`]: string;
 };
+
+/**
+ * Generic paginated response
+ */
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+/**
+ * Generic list response
+ */
+export interface ListResponse<T> {
+  data: T[];
+  total: number;
+}

@@ -6,29 +6,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { WeakAreaSummary } from '@/components/analytics/weak-area-summary';
 import { WeakAreaDetails } from '@/components/analytics/weak-area-details';
-import apiClient from '@/lib/api';
+import { getWeakAreas, type WeakAreasData } from '@/services';
 import { toast } from 'sonner';
 import Link from 'next/link';
-
-interface WeakArea {
-  categoryCode: string;
-  categoryName: string;
-  correctCount: number;
-  totalCount: number;
-  accuracy: number;
-  averageTime: string;
-  commonMistakes: string[];
-  recommendedLessons: Array<{
-    code: string;
-    title: string;
-  }>;
-}
-
-interface WeakAreasData {
-  weakAreas: WeakArea[];
-  overallAccuracy: number;
-  totalCategories: number;
-}
 
 export default function WeakAreasPage() {
   const [data, setData] = useState<WeakAreasData | null>(null);
@@ -39,8 +19,8 @@ export default function WeakAreasPage() {
     const fetchWeakAreas = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.get<WeakAreasData>('/users/me/analytics/weak-areas');
-        setData(response.data);
+        const weakAreasData = await getWeakAreas();
+        setData(weakAreasData);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch weak areas:', err);

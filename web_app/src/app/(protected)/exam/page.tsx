@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -23,26 +23,83 @@ export default function ExamRulesPage() {
       setError(null);
 
       // Check if user can start exam
-      const canStartResponse = await apiClient.get<{ canStart: boolean; message?: string }>(
-        `/exams/simulations/can-start?userId=${user?.id}`
+      const canStartResponse = await apiClient.get<{
+        canStart: boolean;
+        message?: string;
+        activeExamId?: number;
+        startedAt?: string;
+        expiresAt?: string;
+      }>(
+        `/exams/simulations/can-start?userId=${user?.userId}`
       );
 
       if (!canStartResponse.data.canStart) {
+        // If an exam is already active, go to it instead of blocking the user
+        const activeExamId = canStartResponse.data.activeExamId;
+
+        if (activeExamId) {
+          // Clear any stale cached exam before redirecting to active one
+          localStorage.removeItem('current_exam');
+          setIsStarting(false);
+          router.push(`/exam/${activeExamId}`);
+          return;
+        }
+
+        // Fallback: ask backend for the active exam
+        try {
+          const active = await apiClient.get<{ hasActiveExam: boolean; activeExam: { id: number } }>(
+            `/exams/simulations/active`
+          );
+
+          if (active.data.hasActiveExam && active.data.activeExam?.id) {
+            // Clear any stale cached exam before redirecting to active one
+            localStorage.removeItem('current_exam');
+            setIsStarting(false);
+            router.push(`/exam/${active.data.activeExam.id}`);
+            return;
+          }
+        } catch {
+          // ignore and show error below
+        }
+
         setError(canStartResponse.data.message || 'You cannot start an exam at this time.');
         setIsStarting(false);
         return;
       }
 
       // Create exam simulation via API
-      const response = await apiClient.post<{ examId: number; questions: unknown[] }>(
-        '/exams/simulations/start',
-        { userId: user?.id }
-      );
+      // The /start endpoint returns the full exam data including questions array
+      const startResponse = await apiClient.post<{
+        examId: number;
+        questions: Array<{
+          questionId: number;
+          questionOrder?: number;
+          questionTextEn: string;
+          questionTextAr: string;
+          questionTextNl: string;
+          questionTextFr: string;
+          imageUrl?: string;
+          options: Array<{
+            optionId: number;
+            optionTextEn: string;
+            optionTextAr: string;
+            optionTextNl: string;
+            optionTextFr: string;
+          }>;
+        }>;
+        expiresAt: string;
+        startedAt: string;
+      }>('/exams/simulations/start', { userId: user?.userId });
 
-      const examId = response.data.examId;
+      const examId = startResponse.data.examId;
 
-      // Store exam data in localStorage for the exam page
-      localStorage.setItem('current_exam', JSON.stringify(response.data));
+      // Store complete exam data in localStorage (keep backend format for compatibility with [id]/page.tsx normalizer)
+      localStorage.setItem('current_exam', JSON.stringify({
+        examId: startResponse.data.examId,
+        questions: startResponse.data.questions,
+        expiresAt: startResponse.data.expiresAt,
+        startedAt: startResponse.data.startedAt
+      }));
 
       // Redirect to exam questions page
       router.push(`/exam/${examId}`);
@@ -71,7 +128,7 @@ export default function ExamRulesPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">
-              📋 {t('exam.rules.examRules')}
+              ðŸ“‹ {t('exam.rules.examRules')}
             </CardTitle>
             <CardDescription>
               {t('exam.rules.description')}
@@ -103,7 +160,7 @@ export default function ExamRulesPage() {
                   {t('exam.rules.timeLimit')}
                 </h3>
                 <p className="mt-1 text-gray-600">
-                  You have <strong>{EXAM_RULES.DURATION_MINUTES} minutes</strong> to complete the exam. 
+                  You have <strong>{EXAM_RULES.DURATION_MINUTES} minutes</strong> to complete the exam.
                   The timer will start immediately when you begin.
                 </p>
               </div>
@@ -119,7 +176,7 @@ export default function ExamRulesPage() {
                   {t('exam.rules.passScore')}
                 </h3>
                 <p className="mt-1 text-gray-600">
-                  To pass, you must score at least <strong>{EXAM_RULES.PASS_PERCENTAGE}%</strong> 
+                  To pass, you must score at least <strong>{EXAM_RULES.PASS_PERCENTAGE}%</strong>
                   ({EXAM_RULES.MIN_CORRECT_ANSWERS} correct answers or more).
                 </p>
               </div>
@@ -151,7 +208,7 @@ export default function ExamRulesPage() {
                   {t('exam.rules.submission')}
                 </h3>
                 <p className="mt-1 text-gray-600">
-                  Click <strong>Submit Exam</strong> when you&apos;re done. 
+                  Click <strong>Submit Exam</strong> when you&apos;re done.
                   Unanswered questions will be marked as incorrect.
                   <strong className="text-red-600"> You cannot change answers after submission.</strong>
                 </p>
@@ -178,7 +235,7 @@ export default function ExamRulesPage() {
         {/* Important Notes Alert */}
         <Alert>
           <AlertDescription>
-            <p className="font-semibold">⚡ Important Notes:</p>
+            <p className="font-semibold">âš¡ Important Notes:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
               <li>Make sure you have a stable internet connection</li>
               <li>Do not refresh the page during the exam</li>
@@ -217,3 +274,4 @@ export default function ExamRulesPage() {
     </div>
   );
 }
+

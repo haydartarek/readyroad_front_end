@@ -1,5 +1,7 @@
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { SignImage } from '@/components/traffic-signs/sign-image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,63 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TrafficSign } from '@/lib/types';
-import { API_CONFIG } from '@/lib/constants';
-
-interface Props {
-  params: { signCode: string };
-}
-
-// Generate metadata for SEO
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { signCode } = await params;
-  const sign = await getTrafficSign(signCode);
-
-  if (!sign) {
-    return {
-      title: 'Sign Not Found | ReadyRoad',
-    };
-  }
-
-  return {
-    title: `${sign.nameEn} - Belgian Traffic Sign | ReadyRoad`,
-    description: sign.descriptionEn,
-    openGraph: {
-      title: sign.nameEn,
-      description: sign.descriptionEn,
-      images: [sign.imageUrl],
-    },
-  };
-}
-
-// Generate static params for all signs (ISR)
-export async function generateStaticParams() {
-  try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/traffic-signs`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error('Failed to fetch traffic signs for static params:', response.status);
-      return [];
-    }
-
-    const data = await response.json();
-    const signs = Array.isArray(data) ? data : (data.signs || []);
-    return signs.map((sign: { signCode: string }) => ({
-      signCode: sign.signCode,
-    }));
-  } catch (error) {
-    console.error('Error fetching traffic signs for static params:', error);
-    return [];
-  }
-}
-
-// Enable ISR (Incremental Static Regeneration)
-export const revalidate = 3600; // 1 hour
+import { apiClient } from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 // Map category codes to display names
 function getCategoryName(code: string): string {
@@ -83,39 +30,6 @@ function getCategoryName(code: string): string {
   return categoryMap[code] || code;
 }
 
-async function getTrafficSign(signCode: string): Promise<TrafficSign | null> {
-  try {
-    const url = `${API_CONFIG.BASE_URL}/api/traffic-signs/${signCode}`;
-    console.log('Fetching traffic sign from:', url);
-
-    const response = await fetch(url, {
-      method: 'GET',
-      cache: 'no-store',
-    });
-
-    console.log('Response status:', response.status);
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      console.error('Failed to fetch traffic sign:', response.status, await response.text());
-      return null;
-    }
-
-    const sign = await response.json();
-
-    // Map backend response to frontend format (categoryCode → category name)
-    return {
-      ...sign,
-      category: getCategoryName(sign.categoryCode) || sign.category || 'UNKNOWN',
-    };
-  } catch (error) {
-    console.error('Error fetching traffic sign:', error);
-    return null;
-  }
-}
-
 function getCategoryColor(category: string): string {
   const colors: Record<string, string> = {
     'DANGER': 'bg-red-100 text-red-800 border-red-200',
@@ -132,12 +46,49 @@ function getCategoryColor(category: string): string {
   return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
 }
 
-export default async function TrafficSignDetailPage({ params }: Props) {
-  const { signCode } = await params;
-  const sign = await getTrafficSign(signCode);
+export default function TrafficSignDetailPage() {
+  const params = useParams();
+  const signCode = params.signCode as string;
+  const [sign, setSign] = useState<TrafficSign | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (!sign) {
-    notFound();
+  useEffect(() => {
+    async function fetchSign() {
+      try {
+        const response = await apiClient.get<TrafficSign>(API_ENDPOINTS.TRAFFIC_SIGNS.DETAIL(signCode));
+        const data = response.data;
+        setSign({
+          ...data,
+          category: getCategoryName(data.categoryCode || '') || data.category || 'UNKNOWN',
+        });
+      } catch (err) {
+        console.error('Error fetching traffic sign:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSign();
+  }, [signCode]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-gray-600">Loading sign details...</p>
+      </div>
+    );
+  }
+
+  if (error || !sign) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-lg text-gray-600">Sign not found</p>
+        <Link href="/traffic-signs">
+          <Button variant="outline">← Back to all signs</Button>
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -185,10 +136,10 @@ export default async function TrafficSignDetailPage({ params }: Props) {
               <CardContent>
                 <Tabs defaultValue="en" className="w-full">
                   <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="en">🇬🇧 English</TabsTrigger>
-                    <TabsTrigger value="ar">🇸🇦 العربية</TabsTrigger>
-                    <TabsTrigger value="nl">🇳🇱 Nederlands</TabsTrigger>
-                    <TabsTrigger value="fr">🇫🇷 Français</TabsTrigger>
+                    <TabsTrigger value="en">EN English</TabsTrigger>
+                    <TabsTrigger value="ar">AR العربية</TabsTrigger>
+                    <TabsTrigger value="nl">NL Nederlands</TabsTrigger>
+                    <TabsTrigger value="fr">FR Français</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="en" className="space-y-4">
@@ -248,7 +199,7 @@ export default async function TrafficSignDetailPage({ params }: Props) {
             {sign.penalties && (
               <Alert variant="destructive" className="mt-6">
                 <AlertDescription>
-                  <strong>⚠️ Penalties:</strong> {sign.penalties}
+                  <strong>Penalties:</strong> {sign.penalties}
                 </AlertDescription>
               </Alert>
             )}
@@ -279,10 +230,10 @@ export default async function TrafficSignDetailPage({ params }: Props) {
                 <CardTitle>Study Tips</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <p>✅ Memorize the sign shape and colors</p>
-                <p>✅ Understand what action it requires</p>
-                <p>✅ Know when and where it applies</p>
-                <p>✅ Practice with exam questions</p>
+                <p>Memorize the sign shape and colors</p>
+                <p>Understand what action it requires</p>
+                <p>Know when and where it applies</p>
+                <p>Practice with exam questions</p>
               </CardContent>
             </Card>
 

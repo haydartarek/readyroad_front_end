@@ -27,8 +27,21 @@ export function ExamStats({
   passingScore,
   timeAnalysis
 }: ExamStatsProps) {
-  const percentage = totalQuestions === 0 ? '0.0' : ((score / totalQuestions) * 100).toFixed(1);
-  const wrongCount = totalQuestions - score;
+  // ✅ Helper to normalize any value to a safe number
+  const toSafeNumber = (v: unknown, fallback = 0) => {
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  // ✅ Normalize all numeric values before calculations
+  const safeScore = toSafeNumber(score, 0);
+  const safeTotal = toSafeNumber(totalQuestions, 0);
+  const safePassingScore = toSafeNumber(passingScore, 0);
+
+  const percentage = safeTotal === 0 ? '0.0' : ((safeScore / safeTotal) * 100).toFixed(1);
+  const correctCount = safeScore;
+  const wrongCount = Math.max(0, safeTotal - safeScore);
+  const passingPercentage = safeTotal === 0 ? '0' : ((safePassingScore / safeTotal) * 100).toFixed(0);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -47,9 +60,9 @@ export function ExamStats({
                 'text-6xl font-bold',
                 passed ? 'text-green-600' : 'text-red-600'
               )}>
-                {score}
+                {correctCount}
               </span>
-              <span className="text-3xl text-gray-500">/{totalQuestions}</span>
+              <span className="text-3xl text-gray-500">/{safeTotal}</span>
             </div>
             <div className={cn(
               'mb-2 text-2xl font-bold',
@@ -58,13 +71,13 @@ export function ExamStats({
               {percentage}%
             </div>
             <div className="text-sm text-gray-600">
-              Required: {passingScore}/{totalQuestions} ({totalQuestions === 0 ? '0' : ((passingScore / totalQuestions) * 100).toFixed(0)}%)
+              Required: {safePassingScore}/{safeTotal} ({passingPercentage}%)
             </div>
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-4 text-center">
             <div className="rounded-lg bg-white p-3">
-              <div className="text-2xl font-bold text-green-600">{score}</div>
+              <div className="text-2xl font-bold text-green-600">{correctCount}</div>
               <div className="text-xs text-gray-600">Correct</div>
             </div>
             <div className="rounded-lg bg-white p-3">

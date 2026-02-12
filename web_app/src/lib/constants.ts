@@ -200,6 +200,19 @@ export const API_ENDPOINTS = {
 
   // Health Check
   HEALTH: '/actuator/health',
+
+  // Admin Signs CRUD
+  ADMIN: {
+    SIGNS: {
+      LIST: '/admin/signs',
+      DETAIL: (id: number | string) => `/admin/signs/${id}`,
+      CREATE: '/admin/signs',
+      UPDATE: (id: number | string) => `/admin/signs/${id}`,
+      DELETE: (id: number | string) => `/admin/signs/${id}`,
+    },
+    DASHBOARD: '/admin/dashboard',
+    USERS: '/admin/users',
+  },
 } as const;
 
 // ═══════════════════════════════════════════════════════════

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api';
+import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
 
 interface CreateSignForm {
@@ -17,6 +18,7 @@ interface CreateSignForm {
     descriptionAr: string;
     descriptionNl: string;
     descriptionFr: string;
+    imageUrl: string;
 }
 
 interface CategoryOption {
@@ -38,7 +40,13 @@ const INITIAL_FORM: CreateSignForm = {
     descriptionAr: '',
     descriptionNl: '',
     descriptionFr: '',
+    imageUrl: '',
 };
+
+function isValidUrl(str: string): boolean {
+    if (str.startsWith('assets/') || str.startsWith('/')) return true;
+    try { new URL(str); return true; } catch { return false; }
+}
 
 export default function AdminAddSignPage() {
     const router = useRouter();
@@ -48,11 +56,19 @@ export default function AdminAddSignPage() {
     const [submitting, setSubmitting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => setToast(null), 3500);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
 
     useEffect(() => {
         apiClient.get<CategoryOption[]>('/categories')
             .then(res => setCategories(res.data))
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     const isValid = useMemo(() => {
@@ -73,9 +89,12 @@ export default function AdminAddSignPage() {
 
     const validate = (): boolean => {
         const errors: Record<string, string> = {};
-        if (!form.signCode.trim()) errors.signCode = t('admin.signs.form.error_code');
-        if (!form.categoryCode.trim()) errors.categoryCode = t('admin.signs.form.error_category');
-        if (!form.nameEn.trim()) errors.nameEn = t('admin.signs.form.error_name');
+        if (!form.signCode.trim()) errors.signCode = t('admin.signs.form.error_code') || 'Sign code is required';
+        if (!form.categoryCode.trim()) errors.categoryCode = t('admin.signs.form.error_category') || 'Category is required';
+        if (!form.nameEn.trim()) errors.nameEn = t('admin.signs.form.error_name') || 'English name is required';
+        if (form.imageUrl.trim() && !isValidUrl(form.imageUrl.trim())) {
+            errors.imageUrl = t('admin.signs.form.error_url') || 'Invalid URL format';
+        }
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -92,7 +111,7 @@ export default function AdminAddSignPage() {
 
         try {
             setSubmitting(true);
-            await apiClient.post('/admin/signs', {
+            await apiClient.post(API_ENDPOINTS.ADMIN.SIGNS.CREATE, {
                 signCode: form.signCode.trim(),
                 categoryCode: form.categoryCode.trim(),
                 nameEn: form.nameEn.trim(),
@@ -103,15 +122,21 @@ export default function AdminAddSignPage() {
                 descriptionAr: form.descriptionAr.trim() || '',
                 descriptionNl: form.descriptionNl.trim() || '',
                 descriptionFr: form.descriptionFr.trim() || '',
+                imageUrl: form.imageUrl.trim() || null,
             });
-            router.push('/admin/signs');
+            setToast({ message: t('admin.signs.form.create_success') || 'Sign created successfully', type: 'success' });
+            setTimeout(() => router.push('/admin/signs'), 600);
         } catch (err: unknown) {
             const axiosErr = err as { response?: { data?: { error?: string; message?: string } }; message?: string };
             const msg = axiosErr?.response?.data?.error ||
                 axiosErr?.response?.data?.message ||
                 axiosErr?.message ||
                 t('admin.signs.form.error_generic');
-            setErrorMsg(String(msg));
+            if (axiosErr?.response?.status === 400 && msg?.includes('already exists')) {
+                setFieldErrors(prev => ({ ...prev, signCode: String(msg) }));
+            } else {
+                setErrorMsg(String(msg));
+            }
         } finally {
             setSubmitting(false);
         }
@@ -119,6 +144,12 @@ export default function AdminAddSignPage() {
 
     return (
         <div className="space-y-6">
+            {toast && (
+                <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {toast.message}
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center gap-3">
                 <Link href="/admin/signs" className="text-gray-400 hover:text-gray-600 transition-colors text-xl">
@@ -170,6 +201,18 @@ export default function AdminAddSignPage() {
                             )}
                         </div>
                     </div>
+                </div>
+
+                {/* Image URL */}
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.signs.form.image') || 'Image'}</h2>
+                    <FormField
+                        label={t('admin.signs.form.image_url') || 'Image URL'}
+                        placeholder="https://example.com/sign.png or assets/traffic_signs/..."
+                        value={form.imageUrl}
+                        error={fieldErrors.imageUrl}
+                        onChange={v => setField('imageUrl', v)}
+                    />
                 </div>
 
                 {/* Names */}

@@ -49,11 +49,6 @@ export function convertToPublicImageUrl(src: string | undefined): string | undef
     }
   }
 
-  // Encode special characters in path segments (spaces, parentheses, etc.)
-  path = path.split('/').map((segment, i) =>
-    i === 0 && segment === '' ? '' : encodeURIComponent(segment)
-  ).join('/');
-
   return path;
 }
 

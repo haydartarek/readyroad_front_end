@@ -387,6 +387,7 @@ export default function AdminSignsPage() {
                                                         src={convertToPublicImageUrl(sign.imageUrl) || FALLBACK_IMAGE}
                                                         alt={sign.signCode}
                                                         fill
+                                                        unoptimized
                                                         className="object-contain p-1"
                                                         sizes="48px"
                                                         onError={(e) => {
@@ -504,8 +505,8 @@ export default function AdminSignsPage() {
                                     <button
                                         onClick={() => handlePageChange(p)}
                                         className={`px-2.5 py-1 text-xs rounded border ${p === page
-                                                ? 'bg-blue-600 text-white border-blue-600'
-                                                : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
+                                            ? 'bg-blue-600 text-white border-blue-600'
+                                            : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
                                             }`}
                                     >
                                         {p + 1}

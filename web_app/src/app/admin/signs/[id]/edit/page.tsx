@@ -211,7 +211,7 @@ export default function AdminEditSignPage() {
             {form.imageUrl && (
                 <div className="bg-white rounded-lg shadow-sm border p-4 flex items-center gap-4">
                     <div className="w-20 h-20 relative rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                        <Image src={convertToPublicImageUrl(form.imageUrl) || FALLBACK_IMAGE} alt={form.signCode} fill className="object-contain p-1" sizes="80px"
+                        <Image src={convertToPublicImageUrl(form.imageUrl) || FALLBACK_IMAGE} alt={form.signCode} fill unoptimized className="object-contain p-1" sizes="80px"
                             onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }} />
                     </div>
                     <div>

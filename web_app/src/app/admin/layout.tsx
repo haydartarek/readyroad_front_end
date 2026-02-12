@@ -4,15 +4,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { useLanguage } from '@/contexts/language-context';
 
 /**
  * Admin Layout Component
- * 
+ *
  * Implements Feature: Redirect non-admin users away from admin routes
  * Scenario: Given I am logged in with role USER
  *           When I visit "/admin/dashboard"
  *           Then I should be redirected to "/unauthorized"
- * 
+ *
+ * Feature: Sidebar follows selected language (EN, NL, FR, AR)
+ *          RTL direction applied dynamically for Arabic
+ *
  * @author ReadyRoad Team
  * @since 2026-02-04
  */
@@ -23,6 +27,7 @@ export default function AdminLayout({
 }) {
     const { user, isLoading } = useAuth();
     const router = useRouter();
+    const { t, isRTL } = useLanguage();
 
     // Scenario: Redirect non-admin users away from admin routes
     useEffect(() => {
@@ -43,7 +48,7 @@ export default function AdminLayout({
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">جاري التحقق من الصلاحيات...</p>
+                    <p className="text-gray-600">{t('admin.sidebar.checking_permissions')}</p>
                 </div>
             </div>
         );
@@ -55,8 +60,9 @@ export default function AdminLayout({
     }
 
     // Scenario: Allow admin users to access admin routes
+    // dir is set dynamically based on selected language
     return (
-        <div className="flex min-h-screen bg-gray-50" dir="rtl">
+        <div className="flex min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
             <AdminSidebar />
             <main className="flex-1 p-8 transition-all duration-300">
                 <div className="max-w-7xl mx-auto">

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -128,7 +128,7 @@ export default function ExamRulesPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">
-              ðŸ“‹ {t('exam.rules.examRules')}
+              📋 {t('exam.rules.examRules')}
             </CardTitle>
             <CardDescription>
               {t('exam.rules.description')}
@@ -235,7 +235,7 @@ export default function ExamRulesPage() {
         {/* Important Notes Alert */}
         <Alert>
           <AlertDescription>
-            <p className="font-semibold">âš¡ Important Notes:</p>
+            <p className="font-semibold">⚡ Important Notes:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
               <li>Make sure you have a stable internet connection</li>
               <li>Do not refresh the page during the exam</li>

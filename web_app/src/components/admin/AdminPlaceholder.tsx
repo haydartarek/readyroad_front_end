@@ -1,4 +1,7 @@
+'use client';
+
 import Link from "next/link";
+import { useLanguage } from '@/contexts/language-context';
 
 type Props = {
     title: string;
@@ -6,6 +9,8 @@ type Props = {
 };
 
 export default function AdminPlaceholder({ title, description }: Props) {
+    const { t } = useLanguage();
+
     return (
         <div className="mx-auto w-full max-w-5xl px-4 py-10">
             <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -13,28 +18,28 @@ export default function AdminPlaceholder({ title, description }: Props) {
                     <div>
                         <h1 className="text-2xl font-semibold">{title}</h1>
                         <p className="mt-2 text-sm text-muted-foreground">
-                            {description ?? "هذه الصفحة قيد التطوير حالياً. تم إنشاء Placeholder لإزالة 404."}
+                            {description ?? t('admin.lessons.coming_soon_desc')}
                         </p>
                     </div>
 
                     <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                        Coming soon
+                        {t('admin.lessons.coming_soon')}
                     </span>
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-3">
                     <Link
-                        href="/admin"
+                        href="/admin/dashboard"
                         className="inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
                     >
-                        العودة للوحة التحكم
+                        {t('admin.sidebar.dashboard')}
                     </Link>
 
                     <Link
                         href="/"
                         className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted/30"
                     >
-                        العودة للموقع
+                        {t('admin.sidebar.back_to_site')}
                     </Link>
                 </div>
             </div>

@@ -1,12 +1,14 @@
 // API Client using Axios for ReadyRoad Next.js App
 // Fixed version with proper public endpoint handling
 
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { API_CONFIG, STORAGE_KEYS, ROUTES } from './constants';
-import { getAuthToken } from './auth-token';
+import { getAuthToken, removeAuthToken } from './auth-token';
 
 class ApiClient {
   private instance: AxiosInstance;
+  /** Guard: true while a 401/403 redirect is already in progress */
+  private isRedirecting = false;
 
   // Public endpoints that DON'T require authentication
   // Note: baseURL already includes /api, so paths are relative to /api
@@ -57,6 +59,22 @@ class ApiClient {
     return this.PUBLIC_ENDPOINTS.some(endpoint => url.startsWith(endpoint));
   }
 
+  /**
+   * Summarize response body for logging (safe, never too large).
+   */
+  private summarizeBody(data: unknown): string {
+    if (data === null || data === undefined) return '(empty)';
+    if (typeof data === 'string') {
+      return data.length > 200 ? `${data.substring(0, 200)}… (${data.length} chars)` : data;
+    }
+    if (typeof data === 'object') {
+      const keys = Object.keys(data as Record<string, unknown>);
+      const preview = JSON.stringify(data).substring(0, 300);
+      return `{keys:[${keys.join(',')}]} ${preview.length >= 300 ? preview + '…' : preview}`;
+    }
+    return String(data);
+  }
+
   private setupInterceptors() {
     // ═══════════════════════════════════════════════════════════
     // Request Interceptor: Add JWT token to protected endpoints
@@ -65,77 +83,75 @@ class ApiClient {
       (config: InternalAxiosRequestConfig) => {
         if (typeof window !== 'undefined') {
           const url = config.url || '';
+          const method = (config.method || 'GET').toUpperCase();
 
           // Only add token if this is NOT a public endpoint
           if (!this.isPublicEndpoint(url)) {
             const token = getAuthToken();
 
-            console.log('[API] Protected endpoint:', url);
-            console.log('[API] Token found:', token ? `${token.substring(0, 20)}...` : 'null');
+            console.log(`[API] → ${method} ${url} | auth: ${token ? 'yes' : 'NO TOKEN'}`);
 
             if (token) {
-              // Ensure headers exist
               config.headers = config.headers || {};
               config.headers.Authorization = `Bearer ${token}`;
             } else {
-              console.warn('[API] ⚠️ No token found for protected endpoint:', url);
+              console.warn(`[API] ⚠️ No token for protected ${method} ${url}`);
             }
+          } else {
+            console.log(`[API] → ${method} ${url} (public)`);
           }
         }
         return config;
       },
       (error: AxiosError) => {
-        console.error('[API Client] Request interceptor error:', error);
+        console.error('[API] Request interceptor error:', error.message);
         return Promise.reject(error);
       }
     );
 
     // ═══════════════════════════════════════════════════════════
-    // Response Interceptor: Handle errors globally
+    // Response Interceptor: Log result + handle errors globally
     // ═══════════════════════════════════════════════════════════
     this.instance.interceptors.response.use(
-      (response: AxiosResponse) => response,
+      (response: AxiosResponse) => {
+        // Log every successful response: method, URL, status, body summary
+        if (typeof window !== 'undefined') {
+          const method = (response.config.method || 'GET').toUpperCase();
+          const url = response.config.url || '';
+          console.log(
+            `[API] ← ${method} ${url} | ${response.status} | ${this.summarizeBody(response.data)}`
+          );
+        }
+        return response;
+      },
       (error: AxiosError) => {
         const status = error.response?.status;
         const requestUrl = error.config?.url || '';
+        const method = (error.config?.method || 'GET').toUpperCase();
+        const errorBody = error.response?.data;
+
+        // Always log the full error details: method, URL, status, body
+        if (typeof window !== 'undefined') {
+          console.error(
+            `[API] ← ${method} ${requestUrl} | ${status ?? 'NETWORK_ERROR'} | ${this.summarizeBody(errorBody)}`
+          );
+        }
 
         // Handle 401 Unauthorized (token expired/invalid)
-        if (status === 401) {
-          // Don't redirect if this is a login/register request (they return 401 on purpose)
+        // Also handle 403 on /users/me/** endpoints as auth-invalid
+        // (safety net for legacy backend behaviour before AuthenticationEntryPoint fix).
+        if (status === 401 || (status === 403 && requestUrl.includes('/users/me'))) {
           const isAuthRequest = requestUrl.includes('/auth/login') ||
             requestUrl.includes('/auth/register');
 
-          if (!isAuthRequest && typeof window !== 'undefined') {
-            console.warn('[API Client] 401 Unauthorized - Clearing session and redirecting to login');
+          if (!isAuthRequest && typeof window !== 'undefined' && !this.isRedirecting) {
+            this.isRedirecting = true;
+            console.warn(`[API] ${status} — Clearing session, redirecting to login`);
 
-            // Clear all auth data
-            localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+            removeAuthToken();
             localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-
-            // Clear cookie to prevent middleware redirect loop
-            document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=; path=/; max-age=0`;
-
-            // Redirect to login
             window.location.href = ROUTES.LOGIN;
           }
-        }
-
-        // Handle 403 Forbidden (insufficient permissions)
-        if (status === 403) {
-          console.error('[API Client] 403 Forbidden - Access denied to:', requestUrl);
-          // You can add a notification here or redirect to a "No Access" page
-        }
-
-        // Handle 404 Not Found
-        if (status === 404) {
-          console.warn('[API Client] 404 Not Found:', requestUrl);
-          // You might want to show a user-friendly message
-        }
-
-        // Handle 500 Server Error
-        if (status === 500) {
-          console.error('[API Client] 500 Server Error:', requestUrl);
-          // You can show a generic error message to the user
         }
 
         return Promise.reject(error);
@@ -157,8 +173,8 @@ class ApiClient {
   /**
    * POST Request
    */
-  async post<T>(url: string, data?: unknown): Promise<AxiosResponse<T>> {
-    return this.instance.post<T>(url, data);
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return this.instance.post<T>(url, data, config);
   }
 
   /**

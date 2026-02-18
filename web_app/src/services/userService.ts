@@ -81,8 +81,13 @@ export const getUnreadNotificationCount = async (): Promise<number> => {
         );
         return response.data.count;
     } catch (error) {
-        console.error('[UserService] Failed to fetch notification count:', error);
-        // Return 0 instead of throwing to prevent UI errors
+        // Re-throw auth errors so the caller can count them;
+        // the API interceptor already handles session clearing.
+        const status = (error as { response?: { status?: number } }).response?.status;
+        if (status === 401 || status === 403) {
+            throw error;
+        }
+        // Swallow transient network errors — return 0 to hide badge
         return 0;
     }
 };

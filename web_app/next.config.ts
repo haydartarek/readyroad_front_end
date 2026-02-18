@@ -65,6 +65,11 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // Fix workspace root detection when multiple lockfiles exist
+  turbopack: {
+    root: '.',
+  },
+
   // Suppress middleware deprecation warning (auth middleware still supported)
   // The warning is about API proxy middleware, not auth middleware
   experimental: {

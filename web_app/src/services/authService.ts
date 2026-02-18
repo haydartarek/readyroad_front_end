@@ -3,6 +3,7 @@
 
 import { apiClient } from '@/lib/api';
 import { API_ENDPOINTS, STORAGE_KEYS } from '@/lib/constants';
+import { getAuthToken, setAuthToken, removeAuthToken } from '@/lib/auth-token';
 import type { UserProfile } from './userService';
 
 // ═══════════════════════════════════════════════════════════
@@ -42,12 +43,9 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
             credentials
         );
 
-        // Save token to localStorage
+        // Save token via centralized helper (localStorage + cookie)
         if (response.data.token) {
-            localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.token);
-
-            // Also set as cookie for SSR/middleware
-            document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=${response.data.token}; path=/; max-age=86400; SameSite=Lax`;
+            setAuthToken(response.data.token);
         }
 
         return response.data;
@@ -70,8 +68,7 @@ export const register = async (data: RegisterRequest): Promise<LoginResponse> =>
 
         // Auto-login after registration
         if (response.data.token) {
-            localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.token);
-            document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=${response.data.token}; path=/; max-age=86400; SameSite=Lax`;
+            setAuthToken(response.data.token);
         }
 
         return response.data;
@@ -85,12 +82,9 @@ export const register = async (data: RegisterRequest): Promise<LoginResponse> =>
  * Logout user
  */
 export const logout = (): void => {
-    // Clear localStorage
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    // Clear token from all storage (localStorage + cookie + legacy keys)
+    removeAuthToken();
     localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-
-    // Clear cookie
-    document.cookie = `${STORAGE_KEYS.AUTH_TOKEN}=; path=/; max-age=0`;
 
     // Redirect to login
     window.location.href = '/login';
@@ -105,12 +99,9 @@ export const isAuthenticated = (): boolean => {
 };
 
 /**
- * Get stored token
+ * Get stored token — delegates to centralized auth-token module
  */
-export const getToken = (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-};
+export const getToken = getAuthToken;
 
 // ═══════════════════════════════════════════════════════════
 // Export all functions

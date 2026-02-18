@@ -3,9 +3,11 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useLanguage } from '@/contexts/language-context';
+import { useAuth } from '@/contexts/auth-context';
 
 export function CTASection() {
   const { t } = useLanguage();
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <section className="py-20 lg:py-32">
@@ -18,11 +20,21 @@ export function CTASection() {
             {t('home.cta.subtitle')}
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/register">
-              <Button size="lg" variant="secondary" className="text-lg">
-                {t('home.cta.button')}
-              </Button>
-            </Link>
+            {isLoading ? (
+              <div className="h-12 w-48 animate-pulse rounded-full bg-white/20" />
+            ) : isAuthenticated ? (
+              <Link href="/dashboard">
+                <Button size="lg" variant="secondary" className="text-lg">
+                  {t('home.hero.cta_auth_primary')}
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/register">
+                <Button size="lg" variant="secondary" className="text-lg">
+                  {t('home.hero.cta_guest_primary')}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

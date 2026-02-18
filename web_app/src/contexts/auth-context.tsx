@@ -64,6 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Failed to fetch user:', error);
       // Clear everything (localStorage + cookie) to prevent redirect loop
       clearAuth();
+
+      // Signal the login page to show a "session expired" toast.
+      // The login page reads this flag inside its own LanguageProvider
+      // so the message can be properly translated.
+      try { sessionStorage.setItem('session_expired', '1'); } catch { /* noop */ }
     } finally {
       setIsLoading(false);
     }

@@ -61,8 +61,12 @@ const CATEGORY_LABELS: Record<string, Record<string, string>> = {
     Z: { en: 'Delineation Signs', ar: 'علامات التحديد', nl: 'Afbakeningsborden', fr: 'Panneaux de délimitation' },
 };
 
-type SortField = 'signCode' | 'nameEn' | 'categoryCode';
+type SortField = 'signCode' | 'nameEn' | 'nameAr' | 'nameNl' | 'nameFr' | 'categoryCode';
 type SortDir = 'asc' | 'desc';
+
+const NAME_SORT_FIELD: Record<string, SortField> = {
+    en: 'nameEn', ar: 'nameAr', nl: 'nameNl', fr: 'nameFr',
+};
 
 // ─── Component ─────────────────────────────────────────
 
@@ -138,7 +142,7 @@ export default function AdminSignsPage() {
             if (categoryFilter) params.categoryCode = categoryFilter;
             if (searchQuery) params.q = searchQuery;
 
-            const res = await apiClient.get<PageResponse>(API_ENDPOINTS.ADMIN.SIGNS.LIST, { params });
+            const res = await apiClient.get<PageResponse>(API_ENDPOINTS.ADMIN.SIGNS.LIST, params);
             setSigns(res.data.items);
             setTotalItems(res.data.totalItems);
             setTotalPages(res.data.totalPages);
@@ -195,7 +199,9 @@ export default function AdminSignsPage() {
 
     const handleSort = (field: SortField) => {
         let newDir: SortDir = 'asc';
-        if (sortField === field) {
+        // Treat all name fields as the same column for toggle logic
+        const isSameColumn = sortField === field || (isNameSortField(field) && isNameSortField(sortField));
+        if (isSameColumn) {
             newDir = sortDir === 'asc' ? 'desc' : 'asc';
         }
         setSortField(field);
@@ -246,8 +252,11 @@ export default function AdminSignsPage() {
         return CATEGORY_LABELS[code]?.[language] || CATEGORY_LABELS[code]?.en || code;
     };
 
+    const isNameSortField = (f: SortField) => ['nameEn', 'nameAr', 'nameNl', 'nameFr'].includes(f);
+
     const SortIcon = ({ field }: { field: SortField }) => {
-        if (sortField !== field) return <span className="text-gray-300 ml-1">↕</span>;
+        const isActive = sortField === field || (isNameSortField(field) && isNameSortField(sortField));
+        if (!isActive) return <span className="text-gray-300 ml-1">↕</span>;
         return <span className="text-blue-600 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
     };
 
@@ -359,8 +368,8 @@ export default function AdminSignsPage() {
                                 <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort('signCode')}>
                                     {t('admin.signs.col_code') || 'Code'}<SortIcon field="signCode" />
                                 </th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort('nameEn')}>
-                                    {t('admin.signs.col_name') || 'Name'}<SortIcon field="nameEn" />
+                                <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort(NAME_SORT_FIELD[language] || 'nameEn')}>
+                                    {t('admin.signs.col_name') || 'Name'}<SortIcon field={NAME_SORT_FIELD[language] || 'nameEn'} />
                                 </th>
                                 <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort('categoryCode')}>
                                     {t('admin.signs.col_category') || 'Category'}<SortIcon field="categoryCode" />

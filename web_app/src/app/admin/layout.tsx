@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb';
 import { useLanguage } from '@/contexts/language-context';
 
 /**
@@ -66,6 +67,7 @@ export default function AdminLayout({
             <AdminSidebar />
             <main className="flex-1 p-8 transition-all duration-300">
                 <div className="max-w-7xl mx-auto">
+                    <AdminBreadcrumb />
                     {children}
                 </div>
             </main>

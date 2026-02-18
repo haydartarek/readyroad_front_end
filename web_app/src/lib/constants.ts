@@ -213,8 +213,23 @@ export const API_ENDPOINTS = {
       UPDATE: (id: number | string) => `/admin/signs/${id}`,
       DELETE: (id: number | string) => `/admin/signs/${id}`,
     },
+    QUIZ_QUESTIONS: {
+      LIST: '/admin/quiz/questions',
+      DETAIL: (id: number | string) => `/admin/quiz/questions/${id}`,
+      CREATE: '/admin/quiz/questions',
+      UPDATE: (id: number | string) => `/admin/quiz/questions/${id}`,
+      DELETE: (id: number | string) => `/admin/quiz/questions/${id}`,
+    },
+    UPLOAD_IMAGE: '/admin/upload/image',
+    RESET_TEST_DATA: '/admin/reset-test-data',
     DASHBOARD: '/admin/dashboard',
     USERS: '/admin/users',
+    DATA_IMPORT: {
+      PREVIEW: (type: string) => `/admin/import/${type}/preview`,
+      EXECUTE: (type: string) => `/admin/import/${type}/execute`,
+      HISTORY: '/admin/import/history',
+      HISTORY_DETAIL: (id: number) => `/admin/import/history/${id}`,
+    },
   },
 } as const;
 

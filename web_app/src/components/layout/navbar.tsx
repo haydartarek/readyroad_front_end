@@ -47,6 +47,10 @@ export function Navbar() {
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const consecutiveErrorsRef = useRef(0);
+  const lastFetchTsRef = useRef(0); // timestamp of last fetch — dedupe guard
+  const MAX_CONSECUTIVE_ERRORS = 3;
+  const BASE_POLL_MS = 30_000;       // 30 s normal
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // 🐛 DEBUG: Log auth state
@@ -84,22 +88,58 @@ export function Navbar() {
   // Check if any secondary nav item is active
   const isSecondaryNavActive = secondaryNavItems.some(item => pathname.startsWith(item.href));
 
-  // ✅ UPDATED: Fetch unread notifications count using new service
+  // ✅ Fetch unread notifications with backoff + dedupe + max-fail
   const fetchUnreadCount = useCallback(async () => {
-    if (!user) {
+    if (!user) return;
+
+    // Dedupe: skip if last fetch was < 2 s ago (prevents burst on tab focus)
+    const now = Date.now();
+    if (now - lastFetchTsRef.current < 2_000) return;
+    lastFetchTsRef.current = now;
+
+    // Stop after too many consecutive errors
+    if (consecutiveErrorsRef.current >= MAX_CONSECUTIVE_ERRORS) {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
       return;
     }
 
     try {
-      // ✅ Use service instead of direct apiClient call
       const count = await getUnreadNotificationCount();
       setUnreadCount(count);
-    } catch (error) {
-      // Silently fail - hide badge on error (safe fallback)
-      console.warn('[Navbar] Failed to fetch unread notifications count:', error);
+      consecutiveErrorsRef.current = 0; // reset on success
+
+      // Restore normal interval after recovery
+      restartPolling(BASE_POLL_MS);
+    } catch {
+      consecutiveErrorsRef.current += 1;
       setUnreadCount(0);
+
+      if (consecutiveErrorsRef.current >= MAX_CONSECUTIVE_ERRORS) {
+        console.warn('[Navbar] Notification polling stopped after repeated failures');
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      } else {
+        // Exponential backoff: 60 s, 120 s, …
+        const backoffMs = BASE_POLL_MS * Math.pow(2, consecutiveErrorsRef.current);
+        restartPolling(backoffMs);
+      }
     }
   }, [user]);
+
+  /** (Re)start the polling interval at a given cadence */
+  const restartPolling = useCallback((intervalMs: number) => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+    pollingIntervalRef.current = setInterval(() => {
+      fetchUnreadCount();
+    }, intervalMs);
+  }, [fetchUnreadCount]);
 
   // Setup polling and visibility change handler
   useEffect(() => {
@@ -115,17 +155,19 @@ export function Navbar() {
       return;
     }
 
-    // Fetch immediately on login (async to avoid setState warning)
+    // Reset error counter on new login/user change
+    consecutiveErrorsRef.current = 0;
+    lastFetchTsRef.current = 0;
+
+    // Fetch immediately on login
     queueMicrotask(() => {
       fetchUnreadCount();
     });
 
-    // Start polling every 30 seconds
-    pollingIntervalRef.current = setInterval(() => {
-      fetchUnreadCount();
-    }, 30000);
+    // Start polling at normal cadence
+    restartPolling(BASE_POLL_MS);
 
-    // Handle tab visibility change - refresh when user returns
+    // Handle tab visibility change — dedupe guard inside fetchUnreadCount
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && user) {
         fetchUnreadCount();
@@ -142,7 +184,7 @@ export function Navbar() {
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user, fetchUnreadCount]);
+  }, [user, fetchUnreadCount, restartPolling]);
 
   // Close search dropdown when clicking outside
   useEffect(() => {

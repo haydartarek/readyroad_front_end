@@ -45,7 +45,7 @@ export default function AdminUsersPage() {
         setError(null);
         try {
             const res = await apiClient.get<UsersResponse>('/admin/users', {
-                params: { page: pageNum, size: pageSize }
+                page: pageNum, size: pageSize
             });
             const data = res.data;
             const userList = Array.isArray(data) ? data : (data.users ?? []);
@@ -244,10 +244,9 @@ export default function AdminUsersPage() {
                                             {/* User */}
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${
-                                                        user.role === 'ADMIN' ? 'bg-purple-500' :
-                                                        user.role === 'MODERATOR' ? 'bg-blue-500' : 'bg-gray-400'
-                                                    }`}>
+                                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${user.role === 'ADMIN' ? 'bg-purple-500' :
+                                                            user.role === 'MODERATOR' ? 'bg-blue-500' : 'bg-gray-400'
+                                                        }`}>
                                                         {(displayName || '?')[0].toUpperCase()}
                                                     </div>
                                                     <div>
@@ -266,11 +265,10 @@ export default function AdminUsersPage() {
                                                     value={user.role}
                                                     onChange={e => changeRole(user, e.target.value)}
                                                     disabled={isLoading}
-                                                    className={`rounded-md border px-2 py-1 text-xs font-medium outline-none focus:ring-1 focus:ring-blue-500 ${
-                                                        user.role === 'ADMIN' ? 'border-purple-200 bg-purple-50 text-purple-700' :
-                                                        user.role === 'MODERATOR' ? 'border-blue-200 bg-blue-50 text-blue-700' :
-                                                        'border-gray-200 bg-gray-50 text-gray-700'
-                                                    }`}
+                                                    className={`rounded-md border px-2 py-1 text-xs font-medium outline-none focus:ring-1 focus:ring-blue-500 ${user.role === 'ADMIN' ? 'border-purple-200 bg-purple-50 text-purple-700' :
+                                                            user.role === 'MODERATOR' ? 'border-blue-200 bg-blue-50 text-blue-700' :
+                                                                'border-gray-200 bg-gray-50 text-gray-700'
+                                                        }`}
                                                 >
                                                     {ROLES.map(r => (
                                                         <option key={r} value={r}>{r}</option>
@@ -281,9 +279,8 @@ export default function AdminUsersPage() {
                                             {/* Status */}
                                             <td className="px-4 py-3">
                                                 <div className="flex flex-col gap-1">
-                                                    <span className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                                        user.isActive ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
-                                                    }`}>
+                                                    <span className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-xs font-medium ${user.isActive ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
+                                                        }`}>
                                                         {user.isActive ? t('admin.users.status_active') : t('admin.users.status_inactive')}
                                                     </span>
                                                     {isLocked && (
@@ -304,11 +301,10 @@ export default function AdminUsersPage() {
                                                 <button
                                                     onClick={() => toggleLock(user)}
                                                     disabled={isLoading}
-                                                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-                                                        isLocked
+                                                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${isLocked
                                                             ? 'border border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
                                                             : 'border border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {isLoading && actionLoading[user.id] === 'lock'
                                                         ? '...'

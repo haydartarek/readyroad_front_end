@@ -5,24 +5,47 @@ import { TrafficSignsFilters } from '@/components/traffic-signs/traffic-signs-fi
 import { TrafficSign } from '@/lib/types';
 import { apiClient } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
-// Map category codes to display names
-function getCategoryName(code: string): string {
-  const categoryMap: Record<string, string> = {
-    'A': 'DANGER',
-    'B': 'PRIORITY',
-    'C': 'PROHIBITION',
-    'D': 'MANDATORY',
-    'E': 'PARKING',
-    'F': 'INFORMATION',
-    'G': 'ADDITIONAL',
-    'H': 'TEMPORARY',
-    'M': 'DELINEATION',
-    'Z': 'ZONE',
-  };
-  return categoryMap[code] || code;
+// ─── Category code → key mapping ────────────────────────
+// Each sign from the API has categoryCode (A, B, C…).
+// We map them to stable uppercase keys for filtering.
+
+const CODE_TO_KEY: Record<string, string> = {
+  A: 'DANGER',
+  B: 'PRIORITY',
+  C: 'PROHIBITION',
+  D: 'MANDATORY',
+  E: 'PARKING',
+  F: 'INFORMATION',
+  G: 'ADDITIONAL',
+  H: 'TEMPORARY',
+  M: 'DELINEATION',
+  Z: 'ZONE',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  DANGER: 'Danger Signs',
+  PRIORITY: 'Priority Signs',
+  PROHIBITION: 'Prohibition Signs',
+  MANDATORY: 'Mandatory Signs',
+  PARKING: 'Parking Signs',
+  INFORMATION: 'Information Signs',
+  ADDITIONAL: 'Supplementary Signs',
+  TEMPORARY: 'Temporary Signs',
+  ZONE: 'Zone Signs',
+  DELINEATION: 'Delineation Signs',
+};
+
+// Build a reverse map  KEY → [codes]  (for filtering)
+const KEY_TO_CODES: Record<string, string[]> = {};
+for (const [code, key] of Object.entries(CODE_TO_KEY)) {
+  if (!KEY_TO_CODES[key]) KEY_TO_CODES[key] = [];
+  KEY_TO_CODES[key].push(code);
 }
+
+// ─── Fetch helper ────────────────────────────────────────
 
 async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   try {
@@ -30,10 +53,9 @@ async function getAllTrafficSigns(): Promise<TrafficSign[]> {
     const data = response.data;
     const signs = Array.isArray(data) ? data : (data.signs || []);
 
-    // Map backend response to frontend format (categoryCode → category name)
     return signs.map((sign: { categoryCode: string; category?: string;[key: string]: unknown }) => ({
       ...sign,
-      category: getCategoryName(sign.categoryCode) || sign.category || 'UNKNOWN',
+      category: CODE_TO_KEY[sign.categoryCode] || sign.category || 'UNKNOWN',
     }));
   } catch (error) {
     console.error('Error fetching traffic signs:', error);
@@ -41,11 +63,19 @@ async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   }
 }
 
+// ─── Page component ──────────────────────────────────────
+
 export default function TrafficSignsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Read filter state from URL so buttons & results stay in sync
+  const category = searchParams.get('category') || 'all';
+  const search = searchParams.get('search') || '';
+
   const [allSigns, setAllSigns] = useState<TrafficSign[]>([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState('all');
-  const [search, setSearch] = useState('');
 
   useEffect(() => {
     async function loadSigns() {
@@ -61,6 +91,84 @@ export default function TrafficSignsPage() {
     loadSigns();
   }, []);
 
+  // ─── URL helpers ─────────────────────────────────────
+  const updateUrl = useCallback(
+    (params: Record<string, string>) => {
+      const sp = new URLSearchParams(searchParams.toString());
+      Object.entries(params).forEach(([k, v]) => {
+        if (!v || v === 'all') {
+          sp.delete(k);
+        } else {
+          sp.set(k, v);
+        }
+      });
+      const qs = sp.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
+    },
+    [searchParams, pathname, router],
+  );
+
+  const handleCategoryChange = useCallback(
+    (value: string) => updateUrl({ category: value }),
+    [updateUrl],
+  );
+
+  const handleSearchChange = useCallback(
+    (value: string) => updateUrl({ search: value }),
+    [updateUrl],
+  );
+
+  const handleClearFilters = useCallback(() => {
+    router.replace(pathname, { scroll: false });
+  }, [router, pathname]);
+
+  // ─── Filtering (client-side, code-based) ─────────────
+  const filteredSigns = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return allSigns.filter((sign) => {
+      // Category match: use the codes array for the selected key
+      const matchesCategory =
+        category === 'all' ||
+        (KEY_TO_CODES[category]
+          ? KEY_TO_CODES[category].includes(sign.categoryCode ?? '')
+          : sign.category?.toLowerCase() === category.toLowerCase());
+
+      // Text search across all name fields + description
+      const matchesSearch =
+        !q ||
+        sign.signCode?.toLowerCase().includes(q) ||
+        sign.nameEn?.toLowerCase().includes(q) ||
+        sign.nameAr?.includes(q) ||
+        sign.nameNl?.toLowerCase().includes(q) ||
+        sign.nameFr?.toLowerCase().includes(q) ||
+        sign.descriptionEn?.toLowerCase().includes(q);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [allSigns, category, search]);
+
+  // ─── Build category options from actual data ─────────
+  const categories = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const sign of allSigns) {
+      const key = sign.category || 'UNKNOWN';
+      counts[key] = (counts[key] || 0) + 1;
+    }
+
+    return [
+      { value: 'all', label: 'All Signs', count: allSigns.length },
+      ...Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key, count]) => ({
+          value: key,
+          label: CATEGORY_LABELS[key] || key,
+          count,
+        })),
+    ];
+  }, [allSigns]);
+
+  // ─── Render ──────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -68,54 +176,6 @@ export default function TrafficSignsPage() {
       </div>
     );
   }
-
-  // Filter by category if specified
-  let filteredSigns = allSigns;
-  if (category && category !== 'all') {
-    filteredSigns = allSigns.filter(
-      sign => sign.category.toLowerCase() === category?.toLowerCase()
-    );
-  }
-
-  // Filter by search query
-  if (search) {
-    const searchLower = search.toLowerCase();
-    filteredSigns = filteredSigns.filter(sign =>
-      sign.nameEn.toLowerCase().includes(searchLower) ||
-      sign.nameAr.includes(search!) ||
-      sign.descriptionEn.toLowerCase().includes(searchLower)
-    );
-  }
-
-  // Build categories dynamically from actual data
-  const categoryCounts = allSigns.reduce((acc, sign) => {
-    acc[sign.category] = (acc[sign.category] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const categoryLabels: Record<string, string> = {
-    'DANGER': 'Danger Signs',
-    'PRIORITY': 'Priority Signs',
-    'PROHIBITION': 'Prohibition Signs',
-    'MANDATORY': 'Mandatory Signs',
-    'PARKING': 'Parking Signs',
-    'INFORMATION': 'Information Signs',
-    'ADDITIONAL': 'Supplementary Signs',
-    'TEMPORARY': 'Temporary Signs',
-    'ZONE': 'Zone Signs',
-    'DELINEATION': 'Delineation Signs',
-  };
-
-  const categories = [
-    { value: 'all', label: 'All Signs', count: allSigns.length },
-    ...Object.entries(categoryCounts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([cat, count]) => ({
-        value: cat,
-        label: categoryLabels[cat] || cat,
-        count,
-      })),
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -136,6 +196,9 @@ export default function TrafficSignsPage() {
           categories={categories}
           selectedCategory={category}
           searchQuery={search}
+          onCategoryChange={handleCategoryChange}
+          onSearchChange={handleSearchChange}
+          onClearFilters={handleClearFilters}
         />
 
         {/* Results count */}

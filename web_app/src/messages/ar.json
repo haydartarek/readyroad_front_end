@@ -34,6 +34,8 @@
   "auth.have_account": "لديك حساب بالفعل؟",
   "auth.sign_in": "دخول",
   "auth.sign_up": "تسجيل",
+  "auth.session_expired": "انتهت الجلسة",
+  "auth.session_expired_detail": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.",
   "exam.start": "بدء الامتحان",
   "exam.rules": "قواعد الامتحان",
   "exam.rules.title": "قواعد وتعليمات الامتحان",
@@ -275,9 +277,12 @@
   "admin.signs.form.error_category": "الفئة مطلوبة",
   "admin.signs.form.error_name": "الاسم بالإنجليزية مطلوب",
   "admin.signs.form.error_generic": "فشل إنشاء العلامة. حاول مرة أخرى.",
+  "admin.signs.form.error_url": "تنسيق الرابط غير صالح",
+  "admin.signs.form.create_success": "تم إنشاء العلامة بنجاح",
   "admin.signs.form.update": "تحديث العلامة",
   "admin.signs.form.updating": "جاري التحديث...",
   "admin.signs.form.update_error": "فشل تحديث العلامة. حاول مرة أخرى.",
+  "admin.signs.form.update_success": "تم تحديث العلامة بنجاح",
   "admin.signs.form.current_image": "الصورة الحالية",
   "admin.signs.form.image": "الصورة",
   "admin.signs.form.image_url": "رابط الصورة",
@@ -286,6 +291,7 @@
   "admin.signs.edit_title": "تعديل العلامة",
   "admin.signs.edit_desc": "تحديث علامة مرورية موجودة.",
   "admin.signs.edit_not_found": "العلامة غير موجودة.",
+  "admin.signs.delete_success": "تم حذف العلامة بنجاح",
   "admin.signs.per_page": "لكل صفحة",
   "admin.signs.filtered_from": "مفلترة من",
   "admin.signs.categories_count": "فئات",
@@ -312,10 +318,100 @@
   "admin.users.lock_error": "فشل تحديث حالة الحظر.",
   "admin.users.role_error": "فشل تحديث الدور.",
   "admin.users.page_info": "صفحة {current} من {total}",
-  "admin.quizzes.title": "الاختبارات",
-  "admin.quizzes.description": "إنشاء وإدارة الاختبارات والأسئلة.",
-  "admin.quizzes.coming_soon": "قريباً",
-  "admin.quizzes.coming_soon_desc": "صفحة إدارة الاختبارات قيد التطوير.",
+  "admin.quizzes.title": "أسئلة الاختبار",
+  "admin.quizzes.description": "إنشاء وتعديل وإدارة أسئلة الاختبار.",
+  "admin.quizzes.total_count": "إجمالي الأسئلة",
+  "admin.quizzes.search_placeholder": "البحث في الأسئلة...",
+  "admin.quizzes.all_categories": "جميع الفئات",
+  "admin.quizzes.all_difficulties": "جميع المستويات",
+  "admin.quizzes.showing": "عرض",
+  "admin.quizzes.col_question": "السؤال",
+  "admin.quizzes.col_category": "الفئة",
+  "admin.quizzes.col_difficulty": "الصعوبة",
+  "admin.quizzes.col_type": "النوع",
+  "admin.quizzes.col_options": "الخيارات",
+  "admin.quizzes.col_status": "الحالة",
+  "admin.quizzes.col_actions": "الإجراءات",
+  "admin.quizzes.delete": "حذف",
+  "admin.quizzes.confirm_delete": "تأكيد",
+  "admin.quizzes.cancel": "إلغاء",
+  "admin.quizzes.no_results": "لم يتم العثور على أسئلة.",
+  "admin.quizzes.fetch_error": "فشل تحميل الأسئلة.",
+  "admin.quizzes.retry": "إعادة المحاولة",
+  "admin.quizzes.delete_success": "تم حذف السؤال بنجاح",
+  "admin.quizzes.delete_conflict": "لا يمكن حذف هذا السؤال لأنه مرتبط بمحاولات اختبار أو إجابات مستخدمين. احذف تلك الارتباطات أولاً.",
+  "admin.quizzes.delete_conflict_hint": "نصيحة: يمكنك تعطيل السؤال أو إلغاء نشره بدلاً من حذفه.",
+  "admin.quizzes.delete_not_found": "السؤال غير موجود — ربما تم حذفه بالفعل.",
+  "admin.quizzes.delete_failed": "فشل حذف السؤال. يرجى المحاولة مرة أخرى.",
+  "admin.quizzes.edit_referenced_title": "سؤال مرتبط — تعديل محدود",
+  "admin.quizzes.edit_referenced_detail": "هذا السؤال مرتبط بمحاولات اختبار أو سجل إجابات المستخدمين. يمكنك تعديل النص والتوضيحات والصور وحالة التفعيل، لكن لا يمكنك تغيير الفئة أو الصعوبة أو نوع السؤال أو خيارات الإجابة أو الإجابات الصحيحة.",
+  "admin.quizzes.edit_conflict": "لا يمكن تغيير الفئة أو الصعوبة أو نوع السؤال أو الإجابات الصحيحة لسؤال مرتبط. يمكن تحديث النص والتوضيحات والصورة وحالة التفعيل فقط.",
+  "admin.quizzes.reset_test_data": "إعادة تعيين بيانات الاختبار",
+  "admin.quizzes.reset_confirm_title": "إعادة تعيين بيانات الاختبار",
+  "admin.quizzes.reset_confirm_warning": "سيؤدي هذا إلى حذف جميع محاولات الاختبار والإجابات المميزة كبيانات اختبار نهائياً. لن تتأثر بيانات المستخدمين الحقيقية. لا يمكن التراجع عن هذا الإجراء.",
+  "admin.quizzes.reset_confirm_label": "اكتب",
+  "admin.quizzes.reset_confirm_label_suffix": "للتأكيد",
+  "admin.quizzes.reset_confirm_button": "إعادة تعيين بيانات الاختبار",
+  "admin.quizzes.resetting": "جارٍ إعادة التعيين…",
+  "admin.quizzes.reset_success": "تمت إعادة تعيين بيانات الاختبار بنجاح.",
+  "admin.quizzes.reset_deleted_attempts": "المحاولات المحذوفة",
+  "admin.quizzes.reset_deleted_answers": "الإجابات المحذوفة",
+  "admin.quizzes.reset_error": "فشل إعادة تعيين بيانات الاختبار. يرجى المحاولة مرة أخرى.",
+  "admin.quizzes.add_new": "إضافة سؤال",
+  "admin.quizzes.add_new_desc": "إنشاء سؤال اختبار جديد مع خيارات الإجابة.",
+  "admin.quizzes.edit": "تعديل",
+  "admin.quizzes.view": "عرض التفاصيل",
+  "admin.quizzes.edit_title": "تعديل السؤال",
+  "admin.quizzes.edit_desc": "تحديث سؤال اختبار موجود.",
+  "admin.quizzes.edit_not_found": "السؤال غير موجود.",
+  "admin.quizzes.per_page": "لكل صفحة",
+  "admin.quizzes.form.basic_info": "المعلومات الأساسية",
+  "admin.quizzes.form.category": "الفئة",
+  "admin.quizzes.form.select_category": "اختر فئة...",
+  "admin.quizzes.form.difficulty": "مستوى الصعوبة",
+  "admin.quizzes.form.question_type": "نوع السؤال",
+  "admin.quizzes.form.questions": "نص السؤال (متعدد اللغات)",
+  "admin.quizzes.form.question_en": "السؤال (الإنجليزية)",
+  "admin.quizzes.form.question_ar": "السؤال (العربية)",
+  "admin.quizzes.form.question_nl": "السؤال (الهولندية)",
+  "admin.quizzes.form.question_fr": "السؤال (الفرنسية)",
+  "admin.quizzes.form.explanations": "الشروحات (متعدد اللغات)",
+  "admin.quizzes.form.explanation_en": "الشرح (الإنجليزية)",
+  "admin.quizzes.form.explanation_ar": "الشرح (العربية)",
+  "admin.quizzes.form.explanation_nl": "الشرح (الهولندية)",
+  "admin.quizzes.form.explanation_fr": "الشرح (الفرنسية)",
+  "admin.quizzes.form.image_url": "رابط صورة المحتوى",
+  "admin.quizzes.form.options_title": "خيارات الإجابة",
+  "admin.quizzes.form.option_text_en": "الخيار (الإنجليزية)",
+  "admin.quizzes.form.option_text_ar": "الخيار (العربية)",
+  "admin.quizzes.form.option_text_nl": "الخيار (الهولندية)",
+  "admin.quizzes.form.option_text_fr": "الخيار (الفرنسية)",
+  "admin.quizzes.form.is_correct": "الإجابة الصحيحة",
+  "admin.quizzes.form.add_option": "إضافة خيار",
+  "admin.quizzes.form.remove_option": "إزالة",
+  "admin.quizzes.form.save": "حفظ السؤال",
+  "admin.quizzes.form.saving": "جاري الحفظ...",
+  "admin.quizzes.form.update": "تحديث السؤال",
+  "admin.quizzes.form.updating": "جاري التحديث...",
+  "admin.quizzes.form.required_note": "الحقول المعلمة بـ * مطلوبة.",
+  "admin.quizzes.form.error_category": "الفئة مطلوبة",
+  "admin.quizzes.form.error_question": "نص السؤال بالإنجليزية مطلوب",
+  "admin.quizzes.form.error_options": "يجب إضافة خيارين على الأقل",
+  "admin.quizzes.form.error_correct": "يجب تحديد إجابة صحيحة واحدة على الأقل",
+  "admin.quizzes.form.error_generic": "فشل حفظ السؤال. يرجى المحاولة مرة أخرى.",
+  "admin.quizzes.form.create_success": "تم إنشاء السؤال بنجاح",
+  "admin.quizzes.form.update_success": "تم تحديث السؤال بنجاح",
+  "admin.quizzes.form.update_error": "فشل تحديث السؤال. يرجى المحاولة مرة أخرى.",
+  "admin.quizzes.upload.title": "صورة المحتوى",
+  "admin.quizzes.upload.button": "📤 رفع صورة",
+  "admin.quizzes.upload.uploading": "جاري الرفع...",
+  "admin.quizzes.upload.success": "تم رفع الصورة بنجاح",
+  "admin.quizzes.upload.remove": "إزالة الصورة",
+  "admin.quizzes.upload.invalid_type": "نوع ملف غير صالح. المسموح: JPG, JPEG, PNG, WEBP",
+  "admin.quizzes.upload.too_large": "الملف كبير جداً. الحد الأقصى:",
+  "admin.quizzes.upload.hint": "المقبول: JPG, JPEG, PNG, WEBP. أقصى 5 ميغابايت.",
+  "admin.quizzes.edit_not_found": "السؤال غير موجود",
+  "admin.quizzes.fetch_error": "فشل في تحميل السؤال",
   "admin.analytics.title": "الإحصائيات",
   "admin.analytics.description": "تقارير الأداء، الأخطاء الشائعة، ونسب النجاح.",
   "admin.analytics.refresh": "تحديث",
@@ -360,9 +456,50 @@
   "admin.analytics.exam_user": "المستخدم",
   "admin.analytics.users_label": "مستخدمين",
   "admin.import.title": "استيراد البيانات",
-  "admin.import.description": "رفع ملفات CSV/JSON لاستيراد العلامات أو الأسئلة.",
-  "admin.import.coming_soon": "قريباً",
-  "admin.import.coming_soon_desc": "صفحة استيراد البيانات قيد التطوير.",
+  "admin.import.description": "رفع ملفات JSON لاستيراد العلامات أو الدروس أو الفئات أو أسئلة الامتحان.",
+  "admin.import.select_type": "اختر نوع الاستيراد",
+  "admin.import.type_signs": "إشارات المرور",
+  "admin.import.type_lessons": "الدروس",
+  "admin.import.type_categories": "أوصاف الفئات",
+  "admin.import.type_quiz": "أسئلة الامتحان",
+  "admin.import.upload_title": "رفع ملف",
+  "admin.import.upload_drag": "اسحب وأفلت ملف JSON هنا",
+  "admin.import.upload_browse": "أو انقر للتصفح",
+  "admin.import.upload_max_size": "الحد الأقصى 10 ميغابايت",
+  "admin.import.upload_remove": "إزالة",
+  "admin.import.preview": "معاينة التغييرات",
+  "admin.import.previewing": "جاري التحليل…",
+  "admin.import.execute": "استيراد الآن",
+  "admin.import.executing": "جاري الاستيراد…",
+  "admin.import.results_title": "نتائج الاستيراد",
+  "admin.import.created": "تم الإنشاء",
+  "admin.import.updated": "تم التحديث",
+  "admin.import.skipped": "تم التخطي",
+  "admin.import.warnings": "تحذيرات",
+  "admin.import.errors": "أخطاء",
+  "admin.import.success": "تم الاستيراد بنجاح.",
+  "admin.import.dry_run_badge": "معاينة",
+  "admin.import.dry_run_note": "هذه معاينة فقط. لم يتم إجراء أي تغييرات في قاعدة البيانات.",
+  "admin.import.validation.no_file": "يرجى اختيار ملف أولاً.",
+  "admin.import.validation.invalid_type": "يُسمح فقط بملفات JSON (.json).",
+  "admin.import.validation.too_large": "حجم الملف يتجاوز الحد الأقصى 10 ميغابايت.",
+  "admin.import.validation.invalid_json": "الملف لا يحتوي على JSON صالح.",
+  "admin.import.history_title": "سجل الاستيراد",
+  "admin.import.history_empty": "لا يوجد سجل استيراد بعد.",
+  "admin.import.history_date": "التاريخ",
+  "admin.import.history_user": "المستخدم",
+  "admin.import.history_type": "النوع",
+  "admin.import.history_file": "الملف",
+  "admin.import.history_mode": "الوضع",
+  "admin.import.history_records": "السجلات",
+  "admin.import.history_status": "الحالة",
+  "admin.import.history_preview": "معاينة",
+  "admin.import.history_import": "استيراد",
+  "admin.import.history_success": "نجاح",
+  "admin.import.history_failed": "فشل",
+  "admin.import.records_total": "إجمالي السجلات",
+  "admin.import.history_no_issues": "لا توجد تحذيرات أو أخطاء.",
+  "admin.import.loading": "جاري التحميل…",
   "admin.settings_page.title": "الإعدادات",
   "admin.settings_page.description": "إعدادات النظام، اللغات، والمحتوى.",
   "admin.settings_page.save": "حفظ الإعدادات",
@@ -389,5 +526,96 @@
   "admin.moderation.title": "الإشراف",
   "admin.moderation.description": "مراجعة المحتوى، البلاغات، ومهام الإشراف.",
   "admin.moderation.coming_soon": "قريباً",
-  "admin.moderation.coming_soon_desc": "صفحة الإشراف قيد التطوير."
+  "admin.moderation.coming_soon_desc": "صفحة الإشراف قيد التطوير.",
+  "admin.group.overview": "نظرة عامة",
+  "admin.group.content": "المحتوى",
+  "admin.group.data": "البيانات",
+  "admin.group.users": "المستخدمون",
+  "admin.group.trust": "الثقة والأمان",
+  "admin.group.insights": "الرؤى",
+  "admin.group.system": "النظام",
+  "admin.sidebar.quizzes_all": "جميع الأسئلة",
+  "admin.sidebar.quizzes_add": "إضافة سؤال",
+  "admin.sidebar.lessons": "الدروس",
+  "admin.breadcrumb.new": "جديد",
+  "admin.breadcrumb.edit": "تعديل",
+  "admin.lessons.title": "الدروس",
+  "admin.lessons.description": "إدارة محتوى الدروس.",
+  "admin.lessons.coming_soon": "قريباً",
+  "admin.lessons.coming_soon_desc": "إدارة الدروس قيد التطوير.",
+  "home.hero.cta_guest_primary": "أنشئ حساباً مجانياً",
+  "home.hero.cta_guest_secondary": "جرب امتحاناً تجريبياً",
+  "home.hero.cta_auth_primary": "أكمل من حيث توقفت",
+  "home.hero.trust_secure": "تسجيل دخول آمن",
+  "home.hero.trust_privacy": "لا نبيع بياناتك",
+  "home.hero.trust_free": "مجاني أثناء الإصدار التجريبي",
+  "home.whats_new.title": "ما الجديد",
+  "home.whats_new.fallback_title": "محتوى محسّن مؤخراً",
+  "home.whats_new.type_questions": "أسئلة",
+  "home.whats_new.type_signs": "علامات",
+  "home.whats_new.type_lessons": "دروس",
+  "home.whats_new.item1_title": "تحديث شروحات علامات المرور",
+  "home.whats_new.item2_title": "إضافة أسئلة تدريب جديدة",
+  "home.whats_new.item3_title": "تحسين محتوى الدروس",
+  "home.testimonials.title": "ماذا يقول الطلاب",
+  "home.testimonials.subtitle": "اسمع من المتعلمين الذين يستعدون لامتحان القيادة البلجيكي",
+  "home.testimonials.beta_title": "ساعدنا على التحسين",
+  "home.testimonials.beta_desc": "نحن في مرحلة تجريبية ونحب سماع ملاحظاتك لجعل ReadyRoad أفضل.",
+  "home.testimonials.beta_cta": "أرسل ملاحظاتك",
+  "home.testimonials.t1_name": "سارة",
+  "home.testimonials.t1_city": "بروكسل",
+  "home.testimonials.t1_quote": "امتحانات التدريب تشبه الامتحان الحقيقي تماماً. نجحت من أول مرة!",
+  "home.testimonials.t2_name": "محمد",
+  "home.testimonials.t2_city": "أنتويرب",
+  "home.testimonials.t2_quote": "القدرة على الدراسة بالعربية أحدثت فرقاً كبيراً بالنسبة لي. منصة رائعة.",
+  "home.testimonials.t3_name": "إيما",
+  "home.testimonials.t3_city": "غنت",
+  "home.testimonials.t3_quote": "مكتبة علامات المرور مفيدة للغاية. أخيراً فهمتها جميعاً.",
+  "home.quiz_preview.title": "جربها الآن",
+  "home.quiz_preview.subtitle": "أجب عن سؤال تجريبي حقيقي — لا حاجة لحساب",
+  "home.quiz_preview.question": "ماذا يجب أن تفعل عندما ترى هذه العلامة؟",
+  "home.quiz_preview.option_a": "توقف تماماً وأعطِ الأولوية لجميع المركبات",
+  "home.quiz_preview.option_b": "أبطئ وأعطِ الأولوية إذا لزم الأمر",
+  "home.quiz_preview.option_c": "لديك الأولوية على المركبات الأخرى",
+  "home.quiz_preview.option_d": "اضغط على البوق لتحذير السائقين الآخرين",
+  "home.quiz_preview.correct": "صحيح!",
+  "home.quiz_preview.incorrect": "غير صحيح",
+  "home.quiz_preview.explanation": "علامة أعطِ الأولوية (المثلث المقلوب) تعني أنه يجب عليك الإبطاء وإعطاء الأولوية لحركة المرور على الطريق الذي تدخله. تحتاج فقط للتوقف إذا كانت هناك مركبات.",
+  "home.quiz_preview.try_more": "تريد المزيد؟ ابدأ التدريب مجاناً",
+  "home.modes.title": "التدريب مقابل الامتحان الكامل",
+  "home.modes.subtitle": "اختر الوضع الذي يناسب هدف دراستك",
+  "home.modes.attr_time": "الوقت المحدد",
+  "home.modes.attr_questions": "الأسئلة",
+  "home.modes.attr_scoring": "التقييم",
+  "home.modes.attr_explanations": "الشروحات",
+  "home.modes.practice": "التدريب",
+  "home.modes.exam": "الامتحان الكامل",
+  "home.modes.practice_time": "بدون حد زمني",
+  "home.modes.exam_time": "45 دقيقة",
+  "home.modes.practice_questions": "حسب الفئة",
+  "home.modes.exam_questions": "50 سؤال عشوائي",
+  "home.modes.practice_scoring": "فوري لكل سؤال",
+  "home.modes.exam_scoring": "82% للنجاح",
+  "home.modes.practice_explanations": "بعد كل إجابة",
+  "home.modes.exam_explanations": "بعد التسليم",
+  "home.why.disclaimer": "ReadyRoad هي منصة تعليمية مستقلة. غير تابعة لسلطات الامتحان البلجيكية الرسمية.",
+  "home.why.evidence_analytics": "تتبع نقاط الضعف مع تحليلات فورية",
+  "home.why.evidence_signs": "مكتبة بصرية لأكثر من 200 علامة مرور بلجيكية",
+  "home.why.evidence_exam": "يطابق الصيغة الرسمية: 50 سؤال في 45 دقيقة",
+  "home.why.evidence_multilingual": "ادرس بلغتك: EN, NL, FR, AR",
+  "home.footer.terms": "الشروط",
+  "home.footer.privacy": "الخصوصية",
+  "home.footer.contact": "اتصل بنا",
+  "home.footer.support": "الدعم",
+  "home.footer.report": "الإبلاغ عن مشكلة",
+  "home.footer.rights": "جميع الحقوق محفوظة.",
+  "home.footer.language": "اللغة",
+  "home.footer.description": "تدرب لامتحان رخصة القيادة البلجيكية مع أسئلة حقيقية وعلامات مرور ودروس شاملة.",
+  "home.hero.failure_stat_pct": "40%",
+  "home.hero.failure_stat": "من المرشحين يرسبون في امتحان القيادة النظري البلجيكي من المحاولة الأولى.",
+  "home.hero.dont_be_one": "لا تكن واحداً منهم.",
+  "home.testimonials.cta_text": "انضم إليهم — ابدأ التدريب مجاناً",
+  "home.comparison.cta_text": "ابدأ التدريب الآن",
+  "home.sticky.tagline": "مستعد لاجتياز امتحان القيادة؟",
+  "home.sticky.cta_text": "ابدأ التدريب المجاني"
 }

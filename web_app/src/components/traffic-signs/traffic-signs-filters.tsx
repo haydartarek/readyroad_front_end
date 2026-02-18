@@ -1,9 +1,8 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Category {
   value: string;
@@ -15,50 +14,31 @@ interface TrafficSignsFiltersProps {
   categories: Category[];
   selectedCategory: string;
   searchQuery: string;
+  onCategoryChange: (category: string) => void;
+  onSearchChange: (query: string) => void;
+  onClearFilters: () => void;
 }
 
 export function TrafficSignsFilters({
   categories,
   selectedCategory,
   searchQuery,
+  onCategoryChange,
+  onSearchChange,
+  onClearFilters,
 }: TrafficSignsFiltersProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchQuery);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
+  // Keep local input in sync when parent clears
   useEffect(() => {
     setSearch(searchQuery);
   }, [searchQuery]);
 
-  const handleCategoryChange = (category: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (category === 'all') {
-      params.delete('category');
-    } else {
-      params.set('category', category);
-    }
-    router.push(`/traffic-signs?${params.toString()}`);
-  };
-
-  const handleSearchChange = (value: string) => {
+  const handleSearchInput = (value: string) => {
     setSearch(value);
-    
-    // Debounce search
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set('search', value);
-    } else {
-      params.delete('search');
-    }
-    
-    setTimeout(() => {
-      router.push(`/traffic-signs?${params.toString()}`);
-    }, 500);
-  };
-
-  const handleClearFilters = () => {
-    setSearch('');
-    router.push('/traffic-signs');
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => onSearchChange(value), 400);
   };
 
   return (
@@ -69,28 +49,28 @@ export function TrafficSignsFilters({
           type="text"
           placeholder="Search traffic signs..."
           value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(e) => handleSearchInput(e.target.value)}
           className="max-w-md"
         />
         {(selectedCategory !== 'all' || search) && (
-          <Button variant="outline" onClick={handleClearFilters}>
+          <Button variant="outline" onClick={onClearFilters}>
             Clear Filters
           </Button>
         )}
       </div>
 
-      {/* Category filters */}
+      {/* Category filter buttons */}
       <div className="flex flex-wrap gap-3">
-        {categories.map((category) => (
+        {categories.map((cat) => (
           <Button
-            key={category.value}
-            variant={selectedCategory === category.value ? 'default' : 'outline'}
-            onClick={() => handleCategoryChange(category.value)}
+            key={cat.value}
+            variant={selectedCategory === cat.value ? 'default' : 'outline'}
+            onClick={() => onCategoryChange(cat.value)}
             className="rounded-full"
           >
-            {category.label}
+            {cat.label}
             <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">
-              {category.count}
+              {cat.count}
             </span>
           </Button>
         ))}

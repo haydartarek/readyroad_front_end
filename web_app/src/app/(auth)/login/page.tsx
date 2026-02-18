@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useLanguage } from '@/contexts/language-context';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert } from '@/components/ui/alert';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
+import { toast } from 'sonner';
 
 /**
  * Validates and sanitizes returnUrl to prevent open redirects
@@ -43,6 +44,19 @@ function LoginForm() {
     username: '',
     password: '',
   });
+
+  // Show session-expired toast (translated) if redirected due to expired token
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('session_expired')) {
+        sessionStorage.removeItem('session_expired');
+        toast.warning(t('auth.session_expired'), {
+          description: t('auth.session_expired_detail'),
+          duration: 6000,
+        });
+      }
+    } catch { /* sessionStorage unavailable — ignore */ }
+  }, [t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

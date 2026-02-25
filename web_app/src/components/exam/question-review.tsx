@@ -19,7 +19,7 @@ interface QuestionReviewProps {
 }
 
 export function QuestionReview({ questions, showOnlyWrong = false }: QuestionReviewProps) {
-  
+
   const displayQuestions = showOnlyWrong
     ? questions.filter(q => !q.isCorrect)
     : questions;
@@ -31,7 +31,7 @@ export function QuestionReview({ questions, showOnlyWrong = false }: QuestionRev
           <CardTitle className="text-xl">
             {showOnlyWrong ? 'Wrong Answers' : 'All Questions Review'}
           </CardTitle>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-muted-foreground">
             {displayQuestions.length} question{displayQuestions.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -41,18 +41,17 @@ export function QuestionReview({ questions, showOnlyWrong = false }: QuestionRev
           {displayQuestions.map((question, index) => (
             <div
               key={question.id}
-              className={`rounded-lg border p-4 ${
-                question.isCorrect
+              className={`rounded-lg border p-4 ${question.isCorrect
                   ? 'border-green-200 bg-green-50'
                   : 'border-red-200 bg-red-50'
-              }`}
+                }`}
             >
               <div className="mb-2 flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm font-bold text-gray-700">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-card text-sm font-bold text-foreground">
                     {index + 1}
                   </span>
-                  <span className="text-xs text-gray-600">{question.categoryName}</span>
+                  <span className="text-xs text-muted-foreground">{question.categoryName}</span>
                 </div>
                 <span
                   className={`text-lg ${question.isCorrect ? 'text-green-600' : 'text-red-600'}`}
@@ -61,22 +60,21 @@ export function QuestionReview({ questions, showOnlyWrong = false }: QuestionRev
                 </span>
               </div>
 
-              <p className="mb-3 text-gray-900">{question.questionText}</p>
+              <p className="mb-3 text-foreground">{question.questionText}</p>
 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-700">Your answer:</span>
+                  <span className="font-medium text-foreground">Your answer:</span>
                   <span
-                    className={`font-medium ${
-                      question.isCorrect ? 'text-green-600' : 'text-red-600'
-                    }`}
+                    className={`font-medium ${question.isCorrect ? 'text-green-600' : 'text-red-600'
+                      }`}
                   >
                     Option {question.selectedOption}
                   </span>
                 </div>
                 {!question.isCorrect && (
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-700">Correct answer:</span>
+                    <span className="font-medium text-foreground">Correct answer:</span>
                     <span className="font-medium text-green-600">
                       Option {question.correctOption}
                     </span>
@@ -85,7 +83,7 @@ export function QuestionReview({ questions, showOnlyWrong = false }: QuestionRev
               </div>
 
               {question.explanation && (
-                <div className="mt-3 rounded-md bg-white p-3 text-sm text-gray-700">
+                <div className="mt-3 rounded-md bg-card p-3 text-sm text-foreground">
                   <span className="font-medium">Explanation:</span> {question.explanation}
                 </div>
               )}
@@ -94,7 +92,7 @@ export function QuestionReview({ questions, showOnlyWrong = false }: QuestionRev
         </div>
 
         {displayQuestions.length === 0 && showOnlyWrong && (
-          <div className="py-8 text-center text-gray-500">
+          <div className="py-8 text-center text-muted-foreground">
             <p className="text-lg">🎉 Perfect score! No wrong answers.</p>
           </div>
         )}

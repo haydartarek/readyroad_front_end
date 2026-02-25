@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
-import apiClient from '@/lib/api';
+import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { EXAM_RULES } from '@/lib/constants';
 
 export default function ExamRulesPage() {
@@ -16,6 +17,7 @@ export default function ExamRulesPage() {
   const { user } = useAuth();
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   const handleStartExam = async () => {
     try {
@@ -105,8 +107,12 @@ export default function ExamRulesPage() {
       router.push(`/exam/${examId}`);
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
-      console.error('Failed to start exam:', error);
-      setError(error.response?.data?.message || 'Failed to start exam. Please try again.');
+      logApiError('Failed to start exam', err);
+      if (isServiceUnavailable(err)) {
+        setServiceUnavailable(true);
+      } else {
+        setError(error.response?.data?.message || 'Failed to start exam. Please try again.');
+      }
       setIsStarting(false);
     }
   };
@@ -116,10 +122,10 @@ export default function ExamRulesPage() {
       <div className="space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900">
+          <h1 className="text-4xl font-bold text-foreground">
             {t('exam.rules.title')}
           </h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <p className="mt-2 text-lg text-muted-foreground">
             {t('exam.rules.subtitle')}
           </p>
         </div>
@@ -144,7 +150,7 @@ export default function ExamRulesPage() {
                 <h3 className="font-semibold">
                   {t('exam.rules.totalQuestions')}
                 </h3>
-                <p className="mt-1 text-gray-600">
+                <p className="mt-1 text-muted-foreground">
                   The exam consists of exactly <strong>{EXAM_RULES.TOTAL_QUESTIONS} multiple-choice questions</strong>.
                 </p>
               </div>
@@ -159,7 +165,7 @@ export default function ExamRulesPage() {
                 <h3 className="font-semibold">
                   {t('exam.rules.timeLimit')}
                 </h3>
-                <p className="mt-1 text-gray-600">
+                <p className="mt-1 text-muted-foreground">
                   You have <strong>{EXAM_RULES.DURATION_MINUTES} minutes</strong> to complete the exam.
                   The timer will start immediately when you begin.
                 </p>
@@ -175,7 +181,7 @@ export default function ExamRulesPage() {
                 <h3 className="font-semibold">
                   {t('exam.rules.passScore')}
                 </h3>
-                <p className="mt-1 text-gray-600">
+                <p className="mt-1 text-muted-foreground">
                   To pass, you must score at least <strong>{EXAM_RULES.PASS_PERCENTAGE}%</strong>
                   ({EXAM_RULES.MIN_CORRECT_ANSWERS} correct answers or more).
                 </p>
@@ -191,7 +197,7 @@ export default function ExamRulesPage() {
                 <h3 className="font-semibold">
                   {t('exam.rules.navigation')}
                 </h3>
-                <p className="mt-1 text-gray-600">
+                <p className="mt-1 text-muted-foreground">
                   You can navigate between questions using the <strong>Previous</strong> and <strong>Next</strong> buttons.
                   Use the <strong>Overview</strong> button to see all questions at once.
                 </p>
@@ -207,7 +213,7 @@ export default function ExamRulesPage() {
                 <h3 className="font-semibold">
                   {t('exam.rules.submission')}
                 </h3>
-                <p className="mt-1 text-gray-600">
+                <p className="mt-1 text-muted-foreground">
                   Click <strong>Submit Exam</strong> when you&apos;re done.
                   Unanswered questions will be marked as incorrect.
                   <strong className="text-red-600"> You cannot change answers after submission.</strong>
@@ -224,7 +230,7 @@ export default function ExamRulesPage() {
                 <h3 className="font-semibold">
                   {t('exam.rules.autoSubmit')}
                 </h3>
-                <p className="mt-1 text-gray-600">
+                <p className="mt-1 text-muted-foreground">
                   The exam will be <strong>automatically submitted</strong> when the time expires.
                 </p>
               </div>
@@ -244,6 +250,11 @@ export default function ExamRulesPage() {
             </ul>
           </AlertDescription>
         </Alert>
+
+        {/* Service Unavailable Banner */}
+        {serviceUnavailable && (
+          <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setError(null); }} className="mb-4" />
+        )}
 
         {/* Error Display */}
         {error && (

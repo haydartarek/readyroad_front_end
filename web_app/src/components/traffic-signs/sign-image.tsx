@@ -33,7 +33,7 @@ export function SignImage({ src, alt, className = 'object-contain' }: SignImageP
   if (!mounted) {
     return (
       <div
-        className={`absolute inset-0 h-full w-full bg-gray-100 ${className}`}
+        className={`absolute inset-0 h-full w-full bg-muted ${className}`}
         aria-label={alt}
       />
     );

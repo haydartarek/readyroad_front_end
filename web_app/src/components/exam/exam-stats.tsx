@@ -62,7 +62,7 @@ export function ExamStats({
               )}>
                 {correctCount}
               </span>
-              <span className="text-3xl text-gray-500">/{safeTotal}</span>
+              <span className="text-3xl text-muted-foreground">/{safeTotal}</span>
             </div>
             <div className={cn(
               'mb-2 text-2xl font-bold',
@@ -70,19 +70,19 @@ export function ExamStats({
             )}>
               {percentage}%
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Required: {safePassingScore}/{safeTotal} ({passingPercentage}%)
             </div>
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-4 text-center">
-            <div className="rounded-lg bg-white p-3">
+            <div className="rounded-lg bg-card p-3">
               <div className="text-2xl font-bold text-green-600">{correctCount}</div>
-              <div className="text-xs text-gray-600">Correct</div>
+              <div className="text-xs text-muted-foreground">Correct</div>
             </div>
-            <div className="rounded-lg bg-white p-3">
+            <div className="rounded-lg bg-card p-3">
               <div className="text-2xl font-bold text-red-600">{wrongCount}</div>
-              <div className="text-xs text-gray-600">Wrong</div>
+              <div className="text-xs text-muted-foreground">Wrong</div>
             </div>
           </div>
         </CardContent>
@@ -96,20 +96,20 @@ export function ExamStats({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-                <span className="text-sm text-gray-600">Total Time</span>
-                <span className="font-bold text-gray-900">{timeAnalysis.totalTime}</span>
+              <div className="flex items-center justify-between rounded-lg bg-muted p-3">
+                <span className="text-sm text-muted-foreground">Total Time</span>
+                <span className="font-bold text-foreground">{timeAnalysis.totalTime}</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-                <span className="text-sm text-gray-600">Avg per Question</span>
-                <span className="font-bold text-gray-900">{timeAnalysis.averagePerQuestion}</span>
+              <div className="flex items-center justify-between rounded-lg bg-muted p-3">
+                <span className="text-sm text-muted-foreground">Avg per Question</span>
+                <span className="font-bold text-foreground">{timeAnalysis.averagePerQuestion}</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-                <span className="text-sm text-gray-600">Fastest</span>
+              <div className="flex items-center justify-between rounded-lg bg-muted p-3">
+                <span className="text-sm text-muted-foreground">Fastest</span>
                 <span className="font-bold text-green-600">{timeAnalysis.fastestQuestion}</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-                <span className="text-sm text-gray-600">Slowest</span>
+              <div className="flex items-center justify-between rounded-lg bg-muted p-3">
+                <span className="text-sm text-muted-foreground">Slowest</span>
                 <span className="font-bold text-orange-600">{timeAnalysis.slowestQuestion}</span>
               </div>
             </div>

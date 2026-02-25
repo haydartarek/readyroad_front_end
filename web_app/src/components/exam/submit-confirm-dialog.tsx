@@ -29,7 +29,7 @@ export function SubmitConfirmDialog({
   isSubmitting,
 }: SubmitConfirmDialogProps) {
   const unansweredCount = totalQuestions - answeredCount;
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -39,7 +39,7 @@ export function SubmitConfirmDialog({
             You have answered {answeredCount}/{totalQuestions} questions.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {unansweredCount > 0 && (
             <Alert variant="destructive">
@@ -52,12 +52,12 @@ export function SubmitConfirmDialog({
               </AlertDescription>
             </Alert>
           )}
-          
-          <p className="text-sm text-gray-600">
+
+          <p className="text-sm text-muted-foreground">
             Once submitted, you cannot change your answers. Are you sure you want to submit?
           </p>
         </div>
-        
+
         <DialogFooter>
           <Button
             variant="outline"

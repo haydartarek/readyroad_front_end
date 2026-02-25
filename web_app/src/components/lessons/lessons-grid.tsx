@@ -8,77 +8,78 @@ import { Lesson } from '@/lib/types';
 import { useLanguage } from '@/contexts/language-context';
 
 interface LessonsGridProps {
-  lessons: Lesson[];
+    lessons: Lesson[];
 }
 
 export function LessonsGrid({ lessons }: LessonsGridProps) {
-  const { language } = useLanguage();
+    const { language, t } = useLanguage();
 
-  const getLessonTitle = (lesson: Lesson) => {
-    switch (language) {
-      case 'ar': return lesson.titleAr;
-      case 'nl': return lesson.titleNl;
-      case 'fr': return lesson.titleFr;
-      default: return lesson.titleEn;
-    }
-  };
+    const getLessonTitle = (lesson: Lesson) => {
+        switch (language) {
+            case 'ar': return lesson.titleAr;
+            case 'nl': return lesson.titleNl;
+            case 'fr': return lesson.titleFr;
+            default: return lesson.titleEn;
+        }
+    };
 
-  const getLessonContent = (lesson: Lesson) => {
-    switch (language) {
-      case 'ar': return lesson.contentAr;
-      case 'nl': return lesson.contentNl;
-      case 'fr': return lesson.contentFr;
-      default: return lesson.contentEn;
-    }
-  };
+    const getLessonDescription = (lesson: Lesson) => {
+        switch (language) {
+            case 'ar': return lesson.descriptionAr;
+            case 'nl': return lesson.descriptionNl;
+            case 'fr': return lesson.descriptionFr;
+            default: return lesson.descriptionEn;
+        }
+    };
 
-  return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {lessons.map((lesson) => (
-        <Card
-          key={lesson.id}
-          className="group transition-all hover:shadow-lg"
-        >
-          <CardContent className="p-6">
-            {/* Lesson number badge */}
-            <div className="mb-4 flex items-center justify-between">
-              <Badge variant="secondary" className="text-sm">
-                Lesson {lesson.id}
-              </Badge>
-              <span className="text-xs text-gray-400">
-                {lesson.categoryCode || 'N/A'}
-              </span>
-            </div>
+    return (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {lessons.map((lesson) => (
+                <Card
+                    key={lesson.id}
+                    className="group transition-all hover:shadow-lg"
+                >
+                    <CardContent className="p-6">
+                        {/* Lesson number badge + icon */}
+                        <div className="mb-4 flex items-center justify-between">
+                            <Badge variant="secondary" className="text-sm">
+                                {t('lessons.lesson')} {lesson.displayOrder}
+                            </Badge>
+                            <span className="text-2xl">{lesson.icon}</span>
+                        </div>
 
-            {/* Lesson title */}
-            <h3 className="mb-3 text-lg font-semibold text-gray-900 line-clamp-2">
-              {getLessonTitle(lesson)}
-            </h3>
+                        {/* Lesson title */}
+                        <h3 className="mb-3 text-lg font-semibold text-foreground line-clamp-2">
+                            {getLessonTitle(lesson)}
+                        </h3>
 
-            {/* Lesson preview */}
-            <p className="mb-4 text-sm text-gray-600 line-clamp-3">
-              {getLessonContent(lesson).substring(0, 150)}...
-            </p>
+                        {/* Lesson preview */}
+                        <p className="mb-4 text-sm text-muted-foreground line-clamp-3">
+                            {(getLessonDescription(lesson) || '').substring(0, 150)}
+                            {(getLessonDescription(lesson) || '').length > 150 ? '...' : ''}
+                        </p>
 
-            {/* Actions */}
-            <div className="flex gap-2">
-              <Link href={`/lessons/${lesson.id}`} className="flex-1">
-                <Button variant="default" className="w-full">
-                  Read Lesson
-                </Button>
-              </Link>
-            </div>
+                        {/* Meta info */}
+                        <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
+                            {lesson.estimatedMinutes > 0 && (
+                                <span>~{lesson.estimatedMinutes} min</span>
+                            )}
+                            {(lesson.totalPages ?? 0) > 0 && (
+                                <span>{lesson.totalPages} {t('lessons.pages')}</span>
+                            )}
+                        </div>
 
-            {/* PDF indicators */}
-            <div className="mt-4 flex flex-wrap gap-1 text-xs text-gray-500">
-              {lesson.pdfPathEn && <span>📄 EN</span>}
-              {lesson.pdfPathAr && <span>📄 AR</span>}
-              {lesson.pdfPathNl && <span>📄 NL</span>}
-              {lesson.pdfPathFr && <span>📄 FR</span>}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                            <Link href={`/lessons/${lesson.lessonCode}`} className="flex-1">
+                                <Button variant="default" className="w-full">
+                                    {t('lessons.read_lesson')}
+                                </Button>
+                            </Link>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
 }

@@ -10,7 +10,8 @@ import { OverviewDialog } from '@/components/exam/overview-dialog';
 import { SubmitConfirmDialog } from '@/components/exam/submit-confirm-dialog';
 import { ExitConfirmDialog } from '@/components/exam/exit-confirm-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import apiClient from '@/lib/api';
+import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { toast } from 'sonner';
 
 interface Question {
@@ -107,6 +108,8 @@ export default function ExamQuestionsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
   const [showExitDialog, setShowExitDialog] = useState(false);
 
   // Track if exam is active (not submitted/expired)
@@ -203,16 +206,20 @@ export default function ExamQuestionsPage() {
           throw new Error('No active exam found');
         }
       } catch (err) {
-        console.error('Failed to fetch exam data:', err);
-        setError('Failed to load exam. Please try again.');
-        toast.error('Failed to load exam');
+        logApiError('Failed to fetch exam data', err);
+        if (isServiceUnavailable(err)) {
+          setServiceUnavailable(true);
+        } else {
+          setError('Failed to load exam. Please try again.');
+          toast.error('Failed to load exam');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchExamData();
-  }, [examId, router]);
+  }, [examId, router, fetchKey]);
 
   // Handle answer selection
   const handleAnswerSelect = useCallback(async (optionNumber: number) => {
@@ -269,8 +276,8 @@ export default function ExamQuestionsPage() {
         answer: optionNumber,
       });
     } catch (err) {
-      console.error('Failed to save answer:', err);
-      toast.error('Failed to save answer');
+      logApiError('Failed to save answer', err);
+      if (!isServiceUnavailable(err)) toast.error('Failed to save answer');
     }
   }, [examData, currentQuestionIndex, examId]);
 
@@ -331,8 +338,8 @@ export default function ExamQuestionsPage() {
       toast.success('Exam submitted successfully!');
       router.push(`/exam/results/${examId}`);
     } catch (err) {
-      console.error('Failed to submit exam:', err);
-      toast.error('Failed to submit exam. Please try again.');
+      logApiError('Failed to submit exam', err);
+      if (!isServiceUnavailable(err)) toast.error('Failed to submit exam. Please try again.');
       setIsSubmitting(false);
       setShowSubmitDialog(false);
     }
@@ -352,8 +359,17 @@ export default function ExamQuestionsPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg text-gray-600">Loading exam...</p>
+          <p className="text-lg text-muted-foreground">Loading exam...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Service unavailable state
+  if (serviceUnavailable) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }} className="max-w-md" />
       </div>
     );
   }
@@ -376,7 +392,7 @@ export default function ExamQuestionsPage() {
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-muted py-8">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="space-y-6">
           {/* Header */}
@@ -388,7 +404,7 @@ export default function ExamQuestionsPage() {
             />
 
             {/* Question Counter */}
-            <div className="rounded-full bg-white px-6 py-2 font-semibold shadow-sm">
+            <div className="rounded-full bg-card px-6 py-2 font-semibold shadow-sm">
               Question {currentQuestionIndex + 1} of {examData.questions.length}
             </div>
           </div>
@@ -417,12 +433,12 @@ export default function ExamQuestionsPage() {
           />
 
           {/* Stats Bar */}
-          <div className="flex justify-center gap-6 text-sm text-gray-600">
+          <div className="flex justify-center gap-6 text-sm text-muted-foreground">
             <div>
               <span className="font-semibold text-green-600">{answeredCount}</span> Answered
             </div>
             <div>
-              <span className="font-semibold text-gray-400">
+              <span className="font-semibold text-muted-foreground">
                 {examData.questions.length - answeredCount}
               </span>{' '}
               Unanswered

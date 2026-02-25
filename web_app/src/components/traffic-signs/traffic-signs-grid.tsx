@@ -21,7 +21,7 @@ function getCategoryColor(category: string): string {
     'PARKING': 'bg-purple-100 text-purple-800',
     'BICYCLE': 'bg-cyan-100 text-cyan-800',
   };
-  return colors[category] || 'bg-gray-100 text-gray-800';
+  return colors[category] || 'bg-muted text-foreground';
 }
 
 export function TrafficSignsGrid({ signs }: TrafficSignsGridProps) {
@@ -56,7 +56,7 @@ export function TrafficSignsGrid({ signs }: TrafficSignsGridProps) {
           <Card className="h-full transition-all hover:shadow-lg">
             <CardContent className="p-6">
               {/* Sign image */}
-              <div className="mb-4 flex justify-center rounded-lg bg-gray-50 p-6">
+              <div className="mb-4 flex justify-center rounded-lg bg-muted p-6">
                 <div className="relative h-32 w-32">
                   <SignImage
                     src={sign.imageUrl}
@@ -72,17 +72,17 @@ export function TrafficSignsGrid({ signs }: TrafficSignsGridProps) {
               </Badge>
 
               {/* Sign name */}
-              <h3 className="mb-2 font-semibold text-gray-900 line-clamp-2">
+              <h3 className="mb-2 font-semibold text-foreground line-clamp-2">
                 {getSignName(sign)}
               </h3>
 
               {/* Sign description */}
-              <p className="text-sm text-gray-600 line-clamp-2">
+              <p className="text-sm text-muted-foreground line-clamp-2">
                 {getSignDescription(sign)}
               </p>
 
               {/* Sign code */}
-              <p className="mt-3 font-mono text-xs text-gray-400">
+              <p className="mt-3 font-mono text-xs text-muted-foreground">
                 {sign.signCode}
               </p>
             </CardContent>

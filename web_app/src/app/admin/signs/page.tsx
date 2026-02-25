@@ -4,10 +4,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { apiClient } from '@/lib/api';
+import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
 import { convertToPublicImageUrl, FALLBACK_IMAGE } from '@/lib/image-utils';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 
 // ─── Types ─────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ export default function AdminSignsPage() {
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
     // ─── Load categories once ──────────────────────────
     useEffect(() => {
@@ -147,8 +149,12 @@ export default function AdminSignsPage() {
             setTotalItems(res.data.totalItems);
             setTotalPages(res.data.totalPages);
         } catch (err) {
-            console.error('Failed to fetch admin signs:', err);
-            setError(t('admin.signs.fetch_error') || 'Failed to load signs');
+            logApiError('Failed to fetch admin signs', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
+            } else {
+                setError(t('admin.signs.fetch_error') || 'Failed to load signs');
+            }
         } finally {
             setLoading(false);
         }
@@ -223,14 +229,19 @@ export default function AdminSignsPage() {
                 fetchSigns();
             }
         } catch (err: unknown) {
-            const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
-            const status = axiosErr?.response?.status;
-            if (status === 409) {
-                setToast({ message: axiosErr?.response?.data?.error || 'Cannot delete — sign is referenced by other records', type: 'error' });
-            } else if (status === 404) {
-                setToast({ message: 'Sign not found — it may have been already deleted', type: 'error' });
+            logApiError('Failed to delete sign', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
             } else {
-                setToast({ message: 'Failed to delete sign', type: 'error' });
+                const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
+                const status = axiosErr?.response?.status;
+                if (status === 409) {
+                    setToast({ message: axiosErr?.response?.data?.error || 'Cannot delete — sign is referenced by other records', type: 'error' });
+                } else if (status === 404) {
+                    setToast({ message: 'Sign not found — it may have been already deleted', type: 'error' });
+                } else {
+                    setToast({ message: 'Failed to delete sign', type: 'error' });
+                }
             }
             setDeleteId(null);
         } finally {
@@ -256,7 +267,7 @@ export default function AdminSignsPage() {
 
     const SortIcon = ({ field }: { field: SortField }) => {
         const isActive = sortField === field || (isNameSortField(field) && isNameSortField(sortField));
-        if (!isActive) return <span className="text-gray-300 ml-1">↕</span>;
+        if (!isActive) return <span className="text-muted-foreground ml-1">↕</span>;
         return <span className="text-blue-600 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
     };
 
@@ -268,10 +279,10 @@ export default function AdminSignsPage() {
     if (loading && signs.length === 0) {
         return (
             <div className="space-y-6">
-                <div className="h-8 bg-gray-200 rounded w-64 animate-pulse" />
+                <div className="h-8 bg-muted rounded w-64 animate-pulse" />
                 <div className="grid grid-cols-1 gap-4">
                     {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="bg-white rounded-lg border p-4 h-16 animate-pulse" />
+                        <div key={i} className="bg-card rounded-lg border p-4 h-16 animate-pulse" />
                     ))}
                 </div>
             </div>
@@ -291,6 +302,8 @@ export default function AdminSignsPage() {
 
     return (
         <div className="space-y-6">
+            {serviceUnavailable && <ServiceUnavailableBanner onRetry={fetchSigns} className="mb-4" />}
+
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
@@ -302,9 +315,9 @@ export default function AdminSignsPage() {
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('admin.signs.title') || 'Traffic Signs'}</h1>
-                    <p className="text-gray-600 mt-1">
-                        {t('admin.signs.total_count') || 'Total'}: <span className="font-semibold text-gray-900">{totalItems}</span>
+                    <h1 className="text-2xl font-bold text-foreground">{t('admin.signs.title') || 'Traffic Signs'}</h1>
+                    <p className="text-muted-foreground mt-1">
+                        {t('admin.signs.total_count') || 'Total'}: <span className="font-semibold text-foreground">{totalItems}</span>
                     </p>
                 </div>
                 <Link
@@ -322,12 +335,12 @@ export default function AdminSignsPage() {
                     placeholder={t('admin.signs.search_placeholder') || 'Search signs...'}
                     value={searchInput}
                     onChange={e => setSearchInput(e.target.value)}
-                    className="flex-1 min-w-[200px] max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 min-w-[200px] max-w-sm rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                 />
                 <select
                     value={categoryFilter}
                     onChange={e => handleCategoryChange(e.target.value)}
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card"
                 >
                     <option value="">{t('admin.signs.all_categories') || 'All Categories'}</option>
                     {categories.map(cat => (
@@ -337,7 +350,7 @@ export default function AdminSignsPage() {
                 <select
                     value={size}
                     onChange={e => handleSizeChange(Number(e.target.value))}
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card"
                 >
                     {PAGE_SIZE_OPTIONS.map(s => (
                         <option key={s} value={s}>{s} {t('admin.signs.per_page') || 'per page'}</option>
@@ -351,30 +364,30 @@ export default function AdminSignsPage() {
 
             {/* Results Count */}
             {totalItems > 0 && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                     {t('admin.signs.showing') || 'Showing'} {startIdx}–{endIdx} / {totalItems}
                 </p>
             )}
 
             {/* Table */}
-            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+            <div className="bg-card rounded-lg shadow-sm border overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b">
+                        <thead className="bg-muted border-b">
                             <tr>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600 w-16">
+                                <th className="px-4 py-3 text-left font-medium text-muted-foreground w-16">
                                     {t('admin.signs.col_image') || 'Image'}
                                 </th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort('signCode')}>
+                                <th className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none" onClick={() => handleSort('signCode')}>
                                     {t('admin.signs.col_code') || 'Code'}<SortIcon field="signCode" />
                                 </th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort(NAME_SORT_FIELD[language] || 'nameEn')}>
+                                <th className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none" onClick={() => handleSort(NAME_SORT_FIELD[language] || 'nameEn')}>
                                     {t('admin.signs.col_name') || 'Name'}<SortIcon field={NAME_SORT_FIELD[language] || 'nameEn'} />
                                 </th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort('categoryCode')}>
+                                <th className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none" onClick={() => handleSort('categoryCode')}>
                                     {t('admin.signs.col_category') || 'Category'}<SortIcon field="categoryCode" />
                                 </th>
-                                <th className="px-4 py-3 text-right font-medium text-gray-600">
+                                <th className="px-4 py-3 text-right font-medium text-muted-foreground">
                                     {t('admin.signs.col_actions') || 'Actions'}
                                 </th>
                             </tr>
@@ -382,16 +395,16 @@ export default function AdminSignsPage() {
                         <tbody className="divide-y divide-gray-100">
                             {signs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                                    <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
                                         {t('admin.signs.no_results') || 'No signs found'}
                                     </td>
                                 </tr>
                             ) : (
                                 signs.map(sign => (
                                     <React.Fragment key={sign.id}>
-                                        <tr className="hover:bg-gray-50 transition-colors">
+                                        <tr className="hover:bg-muted transition-colors">
                                             <td className="px-4 py-3">
-                                                <div className="w-12 h-12 relative rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                                                <div className="w-12 h-12 relative rounded overflow-hidden bg-muted flex-shrink-0">
                                                     <Image
                                                         src={convertToPublicImageUrl(sign.imageUrl) || FALLBACK_IMAGE}
                                                         alt={sign.signCode}
@@ -411,10 +424,10 @@ export default function AdminSignsPage() {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className="text-gray-900">{getSignName(sign)}</span>
+                                                <span className="text-foreground">{getSignName(sign)}</span>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-foreground">
                                                     {getCategoryLabel(sign.categoryCode)}
                                                 </span>
                                             </td>
@@ -422,7 +435,7 @@ export default function AdminSignsPage() {
                                                 <div className="inline-flex items-center gap-1">
                                                     <button
                                                         onClick={() => setExpandedId(expandedId === sign.id ? null : sign.id)}
-                                                        className="text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                                        className="text-xs text-muted-foreground hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
                                                         title={t('admin.signs.view') || 'View'}
                                                     >
                                                         {expandedId === sign.id ? '▲' : '▼'}
@@ -444,7 +457,7 @@ export default function AdminSignsPage() {
                                                             </button>
                                                             <button
                                                                 onClick={() => setDeleteId(null)}
-                                                                className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300"
+                                                                className="text-xs bg-muted text-foreground px-2 py-1 rounded hover:bg-accent"
                                                             >
                                                                 {t('admin.signs.cancel') || 'Cancel'}
                                                             </button>
@@ -471,11 +484,11 @@ export default function AdminSignsPage() {
                                                     </div>
                                                     {sign.imageUrl && (
                                                         <div className="mt-3 flex items-center gap-2">
-                                                            <span className="text-xs text-gray-500">URL:</span>
-                                                            <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600 break-all">{sign.imageUrl}</code>
+                                                            <span className="text-xs text-muted-foreground">URL:</span>
+                                                            <code className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground break-all">{sign.imageUrl}</code>
                                                         </div>
                                                     )}
-                                                    <div className="mt-2 flex items-center gap-4 text-xs text-gray-400">
+                                                    <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                                                         <span>ID: {sign.id}</span>
                                                         <span>Active: {sign.isActive ? '✓' : '✗'}</span>
                                                         {sign.createdAt && <span>Created: {new Date(sign.createdAt).toLocaleDateString()}</span>}
@@ -493,29 +506,29 @@ export default function AdminSignsPage() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50">
-                        <p className="text-xs text-gray-500">
+                    <div className="flex items-center justify-between px-4 py-3 border-t bg-muted">
+                        <p className="text-xs text-muted-foreground">
                             Page {page + 1} of {totalPages}
                         </p>
                         <div className="flex items-center gap-1">
                             <button onClick={() => handlePageChange(0)} disabled={page <= 0}
-                                className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                                className="px-2 py-1 text-xs rounded border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">
                                 ««
                             </button>
                             <button onClick={() => handlePageChange(page - 1)} disabled={page <= 0}
-                                className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                                className="px-2 py-1 text-xs rounded border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">
                                 «
                             </button>
                             {generatePageNumbers(page, totalPages).map((p, idx, arr) => (
                                 <span key={`${p}-${idx}`}>
                                     {idx > 0 && arr[idx - 1] !== p - 1 && (
-                                        <span className="px-1 text-gray-400 text-xs">…</span>
+                                        <span className="px-1 text-muted-foreground text-xs">…</span>
                                     )}
                                     <button
                                         onClick={() => handlePageChange(p)}
                                         className={`px-2.5 py-1 text-xs rounded border ${p === page
                                             ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
+                                            : 'border-border bg-card hover:bg-muted text-foreground'
                                             }`}
                                     >
                                         {p + 1}
@@ -523,11 +536,11 @@ export default function AdminSignsPage() {
                                 </span>
                             ))}
                             <button onClick={() => handlePageChange(page + 1)} disabled={page >= totalPages - 1}
-                                className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                                className="px-2 py-1 text-xs rounded border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">
                                 »
                             </button>
                             <button onClick={() => handlePageChange(totalPages - 1)} disabled={page >= totalPages - 1}
-                                className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                                className="px-2 py-1 text-xs rounded border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">
                                 »»
                             </button>
                         </div>
@@ -552,10 +565,10 @@ function generatePageNumbers(current: number, total: number): number[] {
 
 function DetailLang({ label, name, desc, dir }: { label: string; name: string; desc: string; dir?: string }) {
     return (
-        <div className="rounded-lg border border-gray-200 bg-white p-3" dir={dir}>
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-            <p className="text-sm font-medium text-gray-900">{name || '—'}</p>
-            {desc && <p className="text-xs text-gray-500 mt-1 line-clamp-3">{desc}</p>}
+        <div className="rounded-lg border border-border bg-card p-3" dir={dir}>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">{label}</p>
+            <p className="text-sm font-medium text-foreground">{name || '—'}</p>
+            {desc && <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{desc}</p>}
         </div>
     );
 }

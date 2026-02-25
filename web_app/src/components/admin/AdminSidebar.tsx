@@ -57,32 +57,31 @@ export default function AdminSidebar() {
 
     return (
         <aside
-            className={`w-64 bg-white min-h-screen sticky top-0 shadow-sm flex flex-col ${
-                isRTL ? 'border-l border-gray-200' : 'border-r border-gray-200'
-            }`}
+            className={`w-64 bg-card min-h-screen sticky top-0 shadow-sm flex flex-col ${isRTL ? 'border-l border-border' : 'border-r border-border'
+                }`}
         >
             {/* Logo & Brand */}
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b border-border">
                 <Link href="/admin/dashboard" className="flex items-center gap-3">
                     <div className="text-3xl">🚗</div>
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900">ReadyRoad</h2>
-                        <p className="text-xs text-gray-500">{t('admin.sidebar.panel_title')}</p>
+                        <h2 className="text-xl font-bold text-foreground">ReadyRoad</h2>
+                        <p className="text-xs text-muted-foreground">{t('admin.sidebar.panel_title')}</p>
                     </div>
                 </Link>
             </div>
 
             {/* User Info */}
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="p-4 border-b border-border bg-muted">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
                         {user?.fullName?.[0] || 'A'}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
+                        <p className="text-sm font-semibold text-foreground truncate">
                             {user?.fullName || t('admin.system_admin')}
                         </p>
-                        <p className="text-xs text-gray-600">{user?.role}</p>
+                        <p className="text-xs text-muted-foreground">{user?.role}</p>
                     </div>
                 </div>
             </div>
@@ -102,13 +101,12 @@ export default function AdminSidebar() {
                                 onClick={() => toggleGroup(group.key)}
                                 className="w-full flex items-center justify-between px-2 py-1.5 mb-1"
                             >
-                                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                     {t(group.labelKey)}
                                 </span>
                                 <ChevronDown
-                                    className={`h-3 w-3 text-gray-400 transition-transform duration-200 ${
-                                        isCollapsed ? (isRTL ? 'rotate-90' : '-rotate-90') : ''
-                                    }`}
+                                    className={`h-3 w-3 text-muted-foreground transition-transform duration-200 ${isCollapsed ? (isRTL ? 'rotate-90' : '-rotate-90') : ''
+                                        }`}
                                 />
                             </button>
 
@@ -132,10 +130,10 @@ export default function AdminSidebar() {
             </nav>
 
             {/* Bottom Actions */}
-            <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="p-4 border-t border-border bg-card">
                 <Link
                     href="/"
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                     <Home className="h-4 w-4" />
                     <span className="text-sm font-medium">{t('admin.sidebar.back_to_site')}</span>
@@ -186,7 +184,7 @@ function SidebarItem({
                     flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm
                     ${isActive
                         ? 'bg-blue-50 text-blue-600 font-semibold'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        : 'text-foreground hover:bg-muted'
                     }
                 `}
             >
@@ -205,7 +203,7 @@ function SidebarItem({
                                     block px-3 py-1.5 text-sm rounded-md transition-colors
                                     ${pathname === child.path
                                         ? 'text-blue-600 font-medium bg-blue-50/50'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                        : 'text-muted-foreground hover:bg-muted'
                                     }
                                 `}
                             >

@@ -17,13 +17,16 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { LANGUAGES } from '@/lib/constants';
+import { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { language, setLanguage } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -36,11 +39,16 @@ export default function ProfilePage() {
     try {
       // TODO: Implement API call to update profile
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       toast.success('Profile updated successfully!');
       setIsEditing(false);
-    } catch {
-      toast.error('Failed to update profile');
+    } catch (err) {
+      logApiError('Failed to update profile', err);
+      if (isServiceUnavailable(err)) {
+        setServiceUnavailable(true);
+      } else {
+        toast.error('Failed to update profile');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -59,16 +67,18 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center text-gray-500">Loading...</div>
+        <div className="text-center text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12">
+      {serviceUnavailable && <ServiceUnavailableBanner onRetry={() => setServiceUnavailable(false)} className="mb-4" />}
+
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-foreground">Profile Settings</h1>
+        <p className="mt-2 text-muted-foreground">
           Manage your account information and preferences
         </p>
       </div>
@@ -127,9 +137,9 @@ export default function ProfilePage() {
                 id="username"
                 value={formData.username}
                 disabled
-                className="bg-gray-50"
+                className="bg-muted"
               />
-              <p className="text-xs text-gray-500">Username cannot be changed</p>
+              <p className="text-xs text-muted-foreground">Username cannot be changed</p>
             </div>
 
             {isEditing && (
@@ -168,7 +178,7 @@ export default function ProfilePage() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 This language will be used for questions and interface
               </p>
             </div>
@@ -182,17 +192,17 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-lg border-2 border-gray-200 p-4">
+              <div className="rounded-lg border-2 border-border p-4">
                 <div className="text-2xl font-bold text-primary">12</div>
-                <div className="text-sm text-gray-600">Exams Taken</div>
+                <div className="text-sm text-muted-foreground">Exams Taken</div>
               </div>
-              <div className="rounded-lg border-2 border-gray-200 p-4">
+              <div className="rounded-lg border-2 border-border p-4">
                 <div className="text-2xl font-bold text-green-600">85%</div>
-                <div className="text-sm text-gray-600">Average Score</div>
+                <div className="text-sm text-muted-foreground">Average Score</div>
               </div>
-              <div className="rounded-lg border-2 border-gray-200 p-4">
+              <div className="rounded-lg border-2 border-border p-4">
                 <div className="text-2xl font-bold text-blue-600">245</div>
-                <div className="text-sm text-gray-600">Practice Questions</div>
+                <div className="text-sm text-muted-foreground">Practice Questions</div>
               </div>
             </div>
           </CardContent>
@@ -205,17 +215,17 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Account Type</span>
+              <span className="text-sm text-muted-foreground">Account Type</span>
               <Badge>Free Account</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Member Since</span>
+              <span className="text-sm text-muted-foreground">Member Since</span>
               <span className="text-sm font-medium">
                 {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Email Verified</span>
+              <span className="text-sm text-muted-foreground">Email Verified</span>
               <Badge variant="secondary">✓ Verified</Badge>
             </div>
           </CardContent>

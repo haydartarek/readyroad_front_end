@@ -1,78 +1,68 @@
 /**
  * Centralized auth token management
- * Single source of truth for token storage/retrieval
+ *
+ * SECURITY MODEL (HttpOnly Cookie):
+ * - The JWT is stored in an HttpOnly cookie set by the BFF route handlers
+ *   (/api/auth/login, /api/auth/register)
+ * - Client-side JavaScript CANNOT read, write, or delete the token
+ * - Auth state is derived from the AuthContext which calls /api/auth/me on mount
+ * - Logout is performed via POST /api/auth/logout (clears the HttpOnly cookie server-side)
+ *
+ * These exports are kept for backward compatibility during migration.
+ * They are intentional NO-OPs — the real auth logic lives server-side.
  */
 
-export const TOKEN_KEYS = {
-    PRIMARY: 'token',
-    SECONDARY: 'AUTH_TOKEN',
-    COOKIE: 'token',
-} as const;
+/**
+ * @deprecated Token is in an HttpOnly cookie — client JS cannot read it.
+ * Use the AuthContext's `isAuthenticated` state instead.
+ */
+export function getAuthToken(): string | null {
+    // HttpOnly cookie is invisible to client JS by design
+    return null;
+}
 
 /**
- * Get cookie value by name
+ * @deprecated Token is set by the BFF login route handler via Set-Cookie.
+ * Do NOT call this — it is a no-op.
+ */
+export function setAuthToken(_token: string): void {
+    // No-op: token is set server-side by /api/auth/login route handler
+}
+
+/**
+ * @deprecated Use `logoutAndClearCookie()` or call POST /api/auth/logout directly.
+ */
+export function removeAuthToken(): void {
+    // Trigger server-side cookie cleanup
+    logoutAndClearCookie();
+}
+
+/**
+ * Clear the HttpOnly auth cookie by calling the BFF logout endpoint.
+ * This is the ONLY way to remove the token since client JS cannot access it.
+ */
+export async function logoutAndClearCookie(): Promise<void> {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+        // Best-effort logout — cookie will expire eventually
+    }
+}
+
+/**
+ * Read a non-HttpOnly cookie by name.
+ * Used for reading the CSRF double-submit token.
  */
 export function getCookie(name: string): string | null {
     if (typeof document === 'undefined') return null;
-
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     return match ? decodeURIComponent(match[2]) : null;
 }
 
 /**
- * Get auth token from localStorage or cookie
- * Checks multiple locations for compatibility
+ * Get the CSRF token from the non-HttpOnly csrf_token cookie.
+ * Must be sent as the x-csrf-token header on mutation requests.
  */
-export function getAuthToken(): string | null {
-    if (typeof window === 'undefined') return null;
-
-    // 1) Check primary localStorage key
-    const primaryToken = localStorage.getItem(TOKEN_KEYS.PRIMARY);
-    if (primaryToken) return primaryToken;
-
-    // 2) Check secondary localStorage key (legacy)
-    const secondaryToken = localStorage.getItem(TOKEN_KEYS.SECONDARY);
-    if (secondaryToken) {
-        // Migrate to primary key
-        localStorage.setItem(TOKEN_KEYS.PRIMARY, secondaryToken);
-        localStorage.removeItem(TOKEN_KEYS.SECONDARY);
-        return secondaryToken;
-    }
-
-    // 3) Check cookie fallback
-    const cookieToken = getCookie(TOKEN_KEYS.COOKIE);
-    if (cookieToken) {
-        // Sync to localStorage for faster access
-        localStorage.setItem(TOKEN_KEYS.PRIMARY, cookieToken);
-        return cookieToken;
-    }
-
-    return null;
-}
-
-/**
- * Set auth token in localStorage and cookie
- */
-export function setAuthToken(token: string): void {
-    if (typeof window === 'undefined') return;
-
-    localStorage.setItem(TOKEN_KEYS.PRIMARY, token);
-
-    // Set HTTP-only like cookie (7 days)
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `${TOKEN_KEYS.COOKIE}=${encodeURIComponent(token)}; path=/; expires=${expires}; SameSite=Strict`;
-}
-
-/**
- * Remove auth token from all storage locations
- */
-export function removeAuthToken(): void {
-    if (typeof window === 'undefined') return;
-
-    // Remove from localStorage
-    localStorage.removeItem(TOKEN_KEYS.PRIMARY);
-    localStorage.removeItem(TOKEN_KEYS.SECONDARY);
-
-    // Remove from cookie
-    document.cookie = `${TOKEN_KEYS.COOKIE}=; path=/; max-age=0; SameSite=Strict`;
+export function getCsrfToken(): string | null {
+    return getCookie('csrf_token');
 }

@@ -7,7 +7,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ErrorSummary } from '@/components/analytics/error-summary';
 import { ErrorPatternList } from '@/components/analytics/error-pattern-list';
-import apiClient from '@/lib/api';
+import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -34,6 +35,8 @@ function ErrorPatternsContent() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -47,24 +50,36 @@ function ErrorPatternsContent() {
         setData(response.data);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch analytics:', err);
-        setError('Failed to load error patterns');
-        toast.error('Failed to load analytics');
+        logApiError('Failed to fetch analytics', err);
+        if (isServiceUnavailable(err)) {
+          setServiceUnavailable(true);
+        } else {
+          setError('Failed to load error patterns');
+          toast.error('Failed to load analytics');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchAnalytics();
-  }, [examId]);
+  }, [examId, fetchKey]);
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg text-gray-600">Analyzing your errors...</p>
+          <p className="text-lg text-muted-foreground">Analyzing your errors...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (serviceUnavailable) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }} className="max-w-md" />
       </div>
     );
   }
@@ -85,7 +100,7 @@ function ErrorPatternsContent() {
         <div className="text-center">
           <div className="mb-4 text-6xl">📊</div>
           <h1 className="text-3xl font-bold">No Error Patterns Yet</h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             Take an exam first to see your error patterns
           </p>
           <Button className="mt-6" asChild>
@@ -106,7 +121,7 @@ function ErrorPatternsContent() {
             <span className="font-semibold">Error Analysis</span>
           </div>
           <h1 className="mt-4 text-4xl font-bold">Your Error Patterns</h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <p className="mt-2 text-lg text-muted-foreground">
             We analyzed {data.totalErrors} errors and identified these patterns to help you improve
           </p>
         </div>
@@ -170,7 +185,7 @@ export default function ErrorPatternsPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg text-gray-600">Loading...</p>
+          <p className="text-lg text-muted-foreground">Loading...</p>
         </div>
       </div>
     }>

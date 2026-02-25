@@ -11,14 +11,14 @@ export function ProgressBar({ current, total }: ProgressBarProps) {
   return (
     <div className="flex items-center gap-4">
       <div className="flex-1">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
             className="h-full bg-primary transition-all duration-300"
             style={{ width: `${percentage}%` }}
           />
         </div>
       </div>
-      <div className="text-sm font-medium text-gray-600">
+      <div className="text-sm font-medium text-muted-foreground">
         {current}/{total}
       </div>
     </div>

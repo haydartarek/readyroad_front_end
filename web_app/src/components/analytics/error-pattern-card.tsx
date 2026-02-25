@@ -65,7 +65,7 @@ export function ErrorPatternCard({ pattern }: ErrorPatternCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-lg">{pattern.patternType}</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">{pattern.description}</p>
+            <p className="text-sm text-muted-foreground mt-1">{pattern.description}</p>
           </div>
           <div
             className={`px-3 py-1 rounded-full text-xs font-semibold border-2 ${severityColors[pattern.severity]
@@ -77,18 +77,18 @@ export function ErrorPatternCard({ pattern }: ErrorPatternCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-medium text-foreground">
             Frequency: <span className="font-bold">{pattern.frequency} times</span>
           </p>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Affected Categories:</p>
+          <p className="text-sm font-medium text-foreground mb-2">Affected Categories:</p>
           <div className="flex flex-wrap gap-2">
             {pattern.affectedCategories.map((category) => (
               <span
                 key={category}
-                className="px-3 py-1 bg-gray-100 rounded-full text-sm"
+                className="px-3 py-1 bg-muted rounded-full text-sm"
               >
                 {category}
               </span>
@@ -97,7 +97,7 @@ export function ErrorPatternCard({ pattern }: ErrorPatternCardProps) {
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Recommendations:</p>
+          <p className="text-sm font-medium text-foreground mb-2">Recommendations:</p>
           <ul className="space-y-2">
             {pattern.recommendations.map((rec, idx) => (
               <li key={idx} className="flex items-start space-x-2 text-sm">
@@ -133,7 +133,7 @@ export function ErrorPatternCard({ pattern }: ErrorPatternCardProps) {
               {pattern.exampleQuestions.map((question) => (
                 <div
                   key={question.id}
-                  className="rounded-[12px] border-2 border-gray-200 p-4 bg-gray-50"
+                  className="rounded-[12px] border-2 border-border p-4 bg-muted"
                 >
                   <p className="font-medium mb-3">{question.text}</p>
                   <div className="space-y-2 text-sm">

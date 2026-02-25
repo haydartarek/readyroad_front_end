@@ -3,9 +3,10 @@
 import { TrafficSignsGrid } from '@/components/traffic-signs/traffic-signs-grid';
 import { TrafficSignsFilters } from '@/components/traffic-signs/traffic-signs-filters';
 import { TrafficSign } from '@/lib/types';
-import { apiClient } from '@/lib/api';
+import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 // ─── Category code → key mapping ────────────────────────
@@ -53,19 +54,35 @@ async function getAllTrafficSigns(): Promise<TrafficSign[]> {
     const data = response.data;
     const signs = Array.isArray(data) ? data : (data.signs || []);
 
-    return signs.map((sign: { categoryCode: string; category?: string;[key: string]: unknown }) => ({
+    return signs.map((sign: TrafficSign) => ({
       ...sign,
-      category: CODE_TO_KEY[sign.categoryCode] || sign.category || 'UNKNOWN',
-    }));
+      category: (sign.categoryCode ? CODE_TO_KEY[sign.categoryCode] : undefined) || sign.category || 'UNKNOWN',
+    })) as TrafficSign[];
   } catch (error) {
-    console.error('Error fetching traffic signs:', error);
+    if (isServiceUnavailable(error)) throw error;
+    logApiError('Error fetching traffic signs', error);
     return [];
   }
 }
 
 // ─── Page component ──────────────────────────────────────
 
+/** Default export wraps in Suspense (required for useSearchParams in App Router) */
 export default function TrafficSignsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-lg text-muted-foreground">Loading traffic signs...</p>
+        </div>
+      }
+    >
+      <TrafficSignsContent />
+    </Suspense>
+  );
+}
+
+function TrafficSignsContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -76,6 +93,8 @@ export default function TrafficSignsPage() {
 
   const [allSigns, setAllSigns] = useState<TrafficSign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
     async function loadSigns() {
@@ -83,13 +102,17 @@ export default function TrafficSignsPage() {
         const signs = await getAllTrafficSigns();
         setAllSigns(signs);
       } catch (error) {
-        console.error('Failed to load signs:', error);
+        logApiError('Failed to load signs', error);
+        if (isServiceUnavailable(error)) {
+          setServiceUnavailable(true);
+        }
       } finally {
         setLoading(false);
       }
     }
     loadSigns();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey]);
 
   // ─── URL helpers ─────────────────────────────────────
   const updateUrl = useCallback(
@@ -169,23 +192,31 @@ export default function TrafficSignsPage() {
   }, [allSigns]);
 
   // ─── Render ──────────────────────────────────────────
+  if (serviceUnavailable) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }} className="mb-4" />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-gray-600">Loading traffic signs...</p>
+        <p className="text-lg text-muted-foreground">Loading traffic signs...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted to-background">
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-12 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">
+          <h1 className="mb-4 text-4xl font-bold text-foreground md:text-5xl">
             Belgian Traffic Signs
           </h1>
-          <p className="mx-auto max-w-2xl text-lg text-gray-600">
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
             Learn all Belgian traffic signs with detailed explanations in 4 languages.
             Essential for passing your driving license exam.
           </p>
@@ -202,7 +233,7 @@ export default function TrafficSignsPage() {
         />
 
         {/* Results count */}
-        <div className="mb-6 text-sm text-gray-600">
+        <div className="mb-6 text-sm text-muted-foreground">
           Showing {filteredSigns.length} of {allSigns.length} signs
         </div>
 
@@ -212,8 +243,8 @@ export default function TrafficSignsPage() {
         {/* Empty state */}
         {filteredSigns.length === 0 && (
           <div className="py-20 text-center">
-            <p className="text-lg text-gray-500">No signs found matching your criteria.</p>
-            <p className="mt-2 text-sm text-gray-400">Try adjusting your filters or search query.</p>
+            <p className="text-lg text-muted-foreground">No signs found matching your criteria.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Try adjusting your filters or search query.</p>
           </div>
         )}
       </div>

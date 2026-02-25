@@ -8,8 +8,7 @@ import { useAuth } from '@/contexts/auth-context';
 
 /**
  * Sticky bottom CTA bar that appears once the user scrolls past
- * the hero section. Provides a persistent "Start Free Practice"
- * call-to-action with a close/dismiss option.
+ * the hero section. All colors from design tokens only.
  */
 export function StickyCTA() {
   const { t } = useLanguage();
@@ -19,7 +18,6 @@ export function StickyCTA() {
 
   useEffect(() => {
     function onScroll() {
-      /* Show after scrolling 600px (past the hero fold) */
       setVisible(window.scrollY > 600);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -30,12 +28,12 @@ export function StickyCTA() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-md transition-transform duration-300"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 shadow-lg backdrop-blur-md transition-transform duration-300"
       role="complementary"
       aria-label="Quick action"
     >
       <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-3">
-        <p className="hidden text-sm font-medium text-[#2C3E50] sm:block">
+        <p className="hidden text-sm font-medium text-secondary sm:block">
           {t('home.sticky.tagline')}
         </p>
 
@@ -44,7 +42,7 @@ export function StickyCTA() {
             <Link href="/dashboard">
               <Button
                 size="sm"
-                className="rounded-full bg-[#DF5830] px-6 text-sm font-bold shadow-md transition-all hover:bg-[#c94d2a] hover:shadow-lg"
+                className="rounded-full px-6 text-sm font-bold shadow-md transition-all hover:shadow-lg"
               >
                 {t('home.hero.cta_auth_primary')}
               </Button>
@@ -53,7 +51,7 @@ export function StickyCTA() {
             <Link href="/practice">
               <Button
                 size="sm"
-                className="rounded-full bg-[#DF5830] px-6 text-sm font-bold shadow-md transition-all hover:bg-[#c94d2a] hover:shadow-lg"
+                className="rounded-full px-6 text-sm font-bold shadow-md transition-all hover:shadow-lg"
               >
                 {t('home.sticky.cta_text')}
               </Button>
@@ -62,7 +60,7 @@ export function StickyCTA() {
 
           <button
             onClick={() => setDismissed(true)}
-            className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DF5830]"
+            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Dismiss"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

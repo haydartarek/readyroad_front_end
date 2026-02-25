@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Turbopack configuration to suppress multiple lockfiles warning
   turbopack: {
-    root: 'C:/Users/fqsdg/Desktop/end_project/readyroad_front_end/web_app',
+    root: '.',
   },
 
   // Image optimization for external sources
@@ -63,11 +63,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-
-  // Fix workspace root detection when multiple lockfiles exist
-  turbopack: {
-    root: '.',
   },
 
   // Suppress middleware deprecation warning (auth middleware still supported)

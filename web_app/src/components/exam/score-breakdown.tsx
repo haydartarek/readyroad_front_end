@@ -33,7 +33,7 @@ export function ScoreBreakdown({ categoryBreakdown }: ScoreBreakdownProps) {
               <div key={category.categoryCode} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-foreground">
                       {category.categoryName}
                     </span>
                     {isWeak && (
@@ -47,7 +47,7 @@ export function ScoreBreakdown({ categoryBreakdown }: ScoreBreakdownProps) {
                       </Badge>
                     )}
                   </div>
-                  <span className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-muted-foreground">
                     {category.correct}/{category.total} ({category.percentage.toFixed(0)}%)
                   </span>
                 </div>
@@ -65,24 +65,24 @@ export function ScoreBreakdown({ categoryBreakdown }: ScoreBreakdownProps) {
         </div>
 
         {/* Summary Stats */}
-        <div className="mt-6 grid grid-cols-3 gap-4 rounded-lg bg-gray-50 p-4">
+        <div className="mt-6 grid grid-cols-3 gap-4 rounded-lg bg-muted p-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
               {categoryBreakdown.filter(c => c.percentage >= 85).length}
             </div>
-            <div className="text-xs text-gray-600">Strong Areas</div>
+            <div className="text-xs text-muted-foreground">Strong Areas</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600">
               {categoryBreakdown.filter(c => c.percentage >= 70 && c.percentage < 85).length}
             </div>
-            <div className="text-xs text-gray-600">Average Areas</div>
+            <div className="text-xs text-muted-foreground">Average Areas</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-red-600">
               {categoryBreakdown.filter(c => c.percentage < 70).length}
             </div>
-            <div className="text-xs text-gray-600">Weak Areas</div>
+            <div className="text-xs text-muted-foreground">Weak Areas</div>
           </div>
         </div>
       </CardContent>

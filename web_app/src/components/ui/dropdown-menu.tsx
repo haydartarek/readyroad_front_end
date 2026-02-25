@@ -43,7 +43,7 @@ function DropdownMenuContent({
         sideOffset={sideOffset}
         className={cn(
           // Modern 2026 styling with brand colors and design system tokens
-          "bg-white text-gray-900 border border-gray-200/80 rounded-2xl shadow-lg",
+          "bg-popover text-popover-foreground border border-border rounded-2xl shadow-lg",
           // Smooth micro-interactions
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -59,8 +59,6 @@ function DropdownMenuContent({
           "p-2",
           // Backdrop blur for depth (modern 2026 effect)
           "backdrop-blur-sm",
-          // Dark mode support (future-ready)
-          "dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700",
           className
         )}
         {...props}
@@ -95,7 +93,7 @@ function DropdownMenuItem({
         // Base styles - modern and clean
         "relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium outline-hidden select-none transition-all duration-150",
         // Text color
-        "text-gray-700 dark:text-gray-200",
+        "text-foreground",
         // Hover state - modern with primary brand color
         "hover:bg-primary/5 hover:text-primary focus:bg-primary/8 focus:text-primary",
         // Active/pressed state for mobile
@@ -107,16 +105,15 @@ function DropdownMenuItem({
         // Inset for nested items
         "data-[inset]:pl-10",
         // Destructive variant
-        "data-[variant=destructive]:text-red-600 dark:data-[variant=destructive]:text-red-400",
-        "data-[variant=destructive]:hover:bg-red-50 data-[variant=destructive]:hover:text-red-700",
-        "data-[variant=destructive]:focus:bg-red-50 data-[variant=destructive]:focus:text-red-700",
-        "dark:data-[variant=destructive]:hover:bg-red-950/30 dark:data-[variant=destructive]:focus:bg-red-950/40",
+        "data-[variant=destructive]:text-destructive",
+        "data-[variant=destructive]:hover:bg-destructive/10 data-[variant=destructive]:hover:text-destructive",
+        "data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive",
         // Icon styling
         "[&_svg]:pointer-events-none [&_svg]:shrink-0",
         "[&_svg:not([class*='size-'])]:size-4",
-        "[&_svg:not([class*='text-'])]:text-gray-500 dark:[&_svg:not([class*='text-'])]:text-gray-400",
+        "[&_svg:not([class*='text-'])]:text-muted-foreground",
         "hover:[&_svg:not([class*='text-'])]:text-primary focus:[&_svg:not([class*='text-'])]:text-primary",
-        "data-[variant=destructive]:[&_svg]:!text-red-600 dark:data-[variant=destructive]:[&_svg]:!text-red-400",
+        "data-[variant=destructive]:[&_svg]:!text-destructive",
         className
       )}
       {...props}
@@ -135,7 +132,7 @@ function DropdownMenuCheckboxItem({
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
         "relative flex cursor-pointer items-center gap-3 rounded-xl py-2.5 pr-3 pl-10 text-sm font-medium outline-hidden select-none transition-all duration-150",
-        "text-gray-700 dark:text-gray-200",
+        "text-foreground",
         "hover:bg-primary/5 hover:text-primary focus:bg-primary/8 focus:text-primary",
         "active:bg-primary/10 active:scale-[0.98]",
         "focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-1",
@@ -177,7 +174,7 @@ function DropdownMenuRadioItem({
       data-slot="dropdown-menu-radio-item"
       className={cn(
         "relative flex cursor-pointer items-center gap-3 rounded-xl py-2.5 pr-3 pl-10 text-sm font-medium outline-hidden select-none transition-all duration-150",
-        "text-gray-700 dark:text-gray-200",
+        "text-foreground",
         "hover:bg-primary/5 hover:text-primary focus:bg-primary/8 focus:text-primary",
         "active:bg-primary/10 active:scale-[0.98]",
         "focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-1",
@@ -209,7 +206,7 @@ function DropdownMenuLabel({
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
-        "px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400",
+        "px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground",
         "data-[inset]:pl-10",
         className
       )}
@@ -226,7 +223,7 @@ function DropdownMenuSeparator({
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
       className={cn(
-        "bg-gray-200/60 dark:bg-gray-700/60 -mx-1 my-2 h-px",
+        "bg-border -mx-1 my-2 h-px",
         className
       )}
       {...props}
@@ -270,13 +267,13 @@ function DropdownMenuSubTrigger({
       data-inset={inset}
       className={cn(
         "relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium outline-hidden select-none transition-all duration-150",
-        "text-gray-700 dark:text-gray-200",
+        "text-foreground",
         "hover:bg-primary/5 hover:text-primary focus:bg-primary/8 focus:text-primary",
         "data-[state=open]:bg-primary/8 data-[state=open]:text-primary",
         "active:bg-primary/10 active:scale-[0.98]",
         "focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-1",
         "data-[inset]:pl-10",
-        "[&_svg:not([class*='text-'])]:text-gray-500 dark:[&_svg:not([class*='text-'])]:text-gray-400",
+        "[&_svg:not([class*='text-'])]:text-muted-foreground",
         "hover:[&_svg:not([class*='text-'])]:text-primary focus:[&_svg:not([class*='text-'])]:text-primary",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
@@ -298,7 +295,7 @@ function DropdownMenuSubContent({
       data-slot="dropdown-menu-sub-content"
       className={cn(
         // Modern 2026 styling matching main dropdown
-        "bg-white text-gray-900 border border-gray-200/80 rounded-2xl shadow-lg",
+        "bg-popover text-popover-foreground border border-border rounded-2xl shadow-lg",
         // Smooth micro-interactions
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -308,8 +305,6 @@ function DropdownMenuSubContent({
         // Positioning and sizing
         "z-50 min-w-[12rem] origin-(--radix-dropdown-menu-content-transform-origin)",
         "overflow-hidden p-2",
-        // Dark mode support
-        "dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700",
         className
       )}
       {...props}

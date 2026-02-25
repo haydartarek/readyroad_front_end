@@ -2,39 +2,48 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { PracticeQuestionCard } from '@/components/practice/practice-question-card';
+import { PracticeQuestionCard, AnswerFeedback } from '@/components/practice/practice-question-card';
 import { PracticeStats } from '@/components/practice/practice-stats';
 import { PracticeComplete } from '@/components/practice/practice-complete';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
-import apiClient from '@/lib/api';
+import { useAuth } from '@/contexts/auth-context';
+import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { toast } from 'sonner';
 
-interface QuizQuestion {
+// ── Interfaces matching the secure delivery DTO contract ──────────────
+//    NO correctOptionId, NO explanations — those come from submission only
+
+interface QuizAnswerOptionDTO {
   id: number;
-  questionTextEn: string;
-  questionTextAr: string;
-  questionTextNl: string;
-  questionTextFr: string;
-  imagePath?: string; // Legacy field
-  contentImageUrl?: string; // Backend field name
-  option1En: string;
-  option1Ar: string;
-  option1Nl: string;
-  option1Fr: string;
-  option2En: string;
-  option2Ar: string;
-  option2Nl: string;
-  option2Fr: string;
-  option3En: string;
-  option3Ar: string;
-  option3Nl: string;
-  option3Fr: string;
-  correctAnswer: number;
-  categoryCode: string;
+  optionTextEn: string;
+  optionTextAr: string;
+  optionTextNl: string;
+  optionTextFr: string;
+  displayOrder: number;
 }
 
-interface Category {
+interface QuizQuestionDTO {
+  id: number;
+  questionEn: string;
+  questionAr: string;
+  questionNl: string;
+  questionFr: string;
+  questionType: string;
+  difficultyLevel: string;
+  categoryId: number;
+  categoryCode: string;
+  categoryNameEn: string;
+  categoryNameAr: string;
+  categoryNameNl: string;
+  categoryNameFr: string;
+  contentImageUrl: string | null;
+  options: QuizAnswerOptionDTO[];
+}
+
+interface CategoryDTO {
   id: number;
   code: string;
   nameEn: string;
@@ -43,106 +52,141 @@ interface Category {
   nameFr: string;
 }
 
-interface AnswerResponse {
-  correct: boolean;
-  correctAnswer: number;
-  explanation?: string;
+// ── Server submission response shape ──────────────────────────────────
+
+interface SubmitAnswerResponse {
+  questionId: number;
+  isCorrect: boolean;
+  selectedOptionId: number;
+  correctOptionId: number;
+  correctOptionTextEn: string;
+  correctOptionTextAr: string;
+  correctOptionTextNl: string;
+  correctOptionTextFr: string;
+  explanationEn: string | null;
+  explanationAr: string | null;
+  explanationNl: string | null;
+  explanationFr: string | null;
+  updatedAccuracy: number | null;
+  totalAttempts: number | null;
+  correctAttempts: number | null;
+  masteryLevel: string | null;
 }
 
 export default function PracticeQuestionsPage() {
   const params = useParams();
   const categoryCode = params.category as string;
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
+  const { isAuthenticated } = useAuth();
 
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [category, setCategory] = useState<Category | null>(null);
+  const [questions, setQuestions] = useState<QuizQuestionDTO[]>([]);
+  const [category, setCategory] = useState<CategoryDTO | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      let endpoint: string;
+
+      if (categoryCode === 'random') {
+        endpoint = '/smart-quiz/random?count=20';
+      } else {
+        const catResp = await apiClient.get<CategoryDTO>(`/categories/${categoryCode}`);
+        setCategory(catResp.data);
+        endpoint = `/smart-quiz/category/${catResp.data.id}?count=20`;
+      }
+
+      const resp = await apiClient.get<QuizQuestionDTO[]>(endpoint);
+      setQuestions(resp.data);
+      setError(null);
+    } catch (err) {
+      logApiError('Failed to fetch quiz data', err);
+      if (isServiceUnavailable(err)) {
+        setServiceUnavailable(true);
+      } else {
+        const msg = t('practice.load_error');
+        setError(msg);
+        toast.error(msg);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-
-        // Fetch questions based on category
-        let endpoint: string;
-
-        if (categoryCode === 'random') {
-          // ✅ Use correct backend endpoint for random questions
-          endpoint = '/smart-quiz/random?count=20';
-        } else {
-          // ✅ First get categoryId from category code, then fetch questions
-          try {
-            const categoryResponse = await apiClient.get<Category>(`/categories/${categoryCode}`);
-            setCategory(categoryResponse.data);
-
-            // Use categoryId (numeric) instead of categoryCode (letter)
-            endpoint = `/smart-quiz/category/${categoryResponse.data.id}?count=20`;
-          } catch (catErr) {
-            console.error('Failed to fetch category:', catErr);
-            // Fallback: use default category info
-            setCategory({ id: 0, code: categoryCode, nameEn: categoryCode, nameAr: categoryCode, nameNl: categoryCode, nameFr: categoryCode });
-            throw new Error('Category not found');
-          }
-        }
-
-        const questionsResponse = await apiClient.get<QuizQuestion[]>(endpoint);
-        setQuestions(questionsResponse.data);
-
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('Failed to load practice session');
-        toast.error('Failed to load practice session');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
-  }, [categoryCode]);
+  }, [categoryCode, t]);
 
-  const getQuestionText = (q: QuizQuestion) => {
-    switch (language) {
-      case 'ar': return q.questionTextAr || q.questionTextEn;
-      case 'nl': return q.questionTextNl || q.questionTextEn;
-      case 'fr': return q.questionTextFr || q.questionTextEn;
-      default: return q.questionTextEn;
-    }
+  // ── Language-aware getters ──────────────────────────────────────────
+
+  const getQuestionText = (q: QuizQuestionDTO): string => {
+    const map: Record<string, string> = {
+      en: q.questionEn, ar: q.questionAr, nl: q.questionNl, fr: q.questionFr,
+    };
+    return map[language] || q.questionEn || '';
   };
 
-  const getOptionText = (q: QuizQuestion, optionNum: 1 | 2 | 3) => {
-    const key = `option${optionNum}${language === 'en' ? 'En' : language === 'ar' ? 'Ar' : language === 'nl' ? 'Nl' : 'Fr'}` as keyof QuizQuestion;
-    const fallbackKey = `option${optionNum}En` as keyof QuizQuestion;
-    return (q[key] as string) || (q[fallbackKey] as string);
+  const getOptionText = (opt: QuizAnswerOptionDTO): string => {
+    const map: Record<string, string> = {
+      en: opt.optionTextEn, ar: opt.optionTextAr, nl: opt.optionTextNl, fr: opt.optionTextFr,
+    };
+    return map[language] || opt.optionTextEn || '';
   };
 
-  const getCategoryName = () => {
-    if (!category) return categoryCode === 'random' ? 'Random Practice' : categoryCode;
-    switch (language) {
-      case 'ar': return category.nameAr || category.nameEn;
-      case 'nl': return category.nameNl || category.nameEn;
-      case 'fr': return category.nameFr || category.nameEn;
-      default: return category.nameEn;
-    }
+  const getExplanationFromResponse = (resp: SubmitAnswerResponse): string | undefined => {
+    const map: Record<string, string | null> = {
+      en: resp.explanationEn, ar: resp.explanationAr, nl: resp.explanationNl, fr: resp.explanationFr,
+    };
+    return (map[language] || resp.explanationEn) ?? undefined;
   };
 
-  const handleAnswer = useCallback(async (isCorrect: boolean, questionId: number, selectedAnswer: number) => {
-    // Note: Answer tracking endpoint not yet implemented in backend
-    // TODO: Implement /api/quiz/questions/{id}/answer endpoint
-    // For now, we just track locally in frontend state
+  const getCategoryName = (): string => {
+    if (categoryCode === 'random') return t('practice.random');
+    const src = category ?? (questions[0] ? {
+      nameEn: questions[0].categoryNameEn,
+      nameAr: questions[0].categoryNameAr,
+      nameNl: questions[0].categoryNameNl,
+      nameFr: questions[0].categoryNameFr,
+    } : null);
+    if (!src) return categoryCode;
+    const map: Record<string, string> = {
+      en: src.nameEn, ar: src.nameAr, nl: src.nameNl, fr: src.nameFr,
+    };
+    return map[language] || src.nameEn;
+  };
 
-    if (isCorrect) {
+  const getCategoryCode = (): string => {
+    return category?.code ?? questions[0]?.categoryCode ?? categoryCode;
+  };
+
+  // ── Server-side answer submission ──────────────────────────────────
+
+  const submitAnswer = useCallback(async (
+    questionId: number,
+    selectedOptionId: number,
+  ): Promise<AnswerFeedback> => {
+    const resp = await apiClient.post<SubmitAnswerResponse>(
+      `/quiz/questions/${questionId}/answer`,
+      { selectedOptionId },
+    );
+    const data = resp.data;
+
+    // Update counters based on server response
+    if (data.isCorrect) {
       setCorrectCount((prev) => prev + 1);
     } else {
       setWrongCount((prev) => prev + 1);
     }
 
-    // Move to next question after delay
+    // Advance to next question after a brief delay
     setTimeout(() => {
       if (currentIndex < questions.length - 1) {
         setCurrentIndex((prev) => prev + 1);
@@ -150,7 +194,14 @@ export default function PracticeQuestionsPage() {
         setIsComplete(true);
       }
     }, 2000);
-  }, [currentIndex, questions.length]);
+
+    return {
+      isCorrect: data.isCorrect,
+      correctOptionId: String(data.correctOptionId),
+      explanation: getExplanationFromResponse(data),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, questions.length, language]);
 
   const handleRestart = useCallback(() => {
     setCurrentIndex(0);
@@ -159,23 +210,73 @@ export default function PracticeQuestionsPage() {
     setIsComplete(false);
   }, []);
 
+  // ── Render ─────────────────────────────────────────────────────────
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg text-gray-600">Loading questions...</p>
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <p className="text-lg text-muted-foreground">{t('practice.loading')}</p>
         </div>
       </div>
     );
   }
 
-  if (error || questions.length === 0) {
+  if (serviceUnavailable) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <Alert variant="destructive" className="max-w-md">
-          <AlertDescription>{error || 'No questions found for this category'}</AlertDescription>
-        </Alert>
+        <div className="max-w-md w-full">
+          <ServiceUnavailableBanner
+            onRetry={() => {
+              setServiceUnavailable(false);
+              setError(null);
+              fetchData();
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-md text-center space-y-4">
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <button
+            onClick={fetchData}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+          >
+            {t('practice.retry') || 'Try Again'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-md text-center space-y-4">
+          <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <AlertCircle className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground">
+            {t('practice.no_questions_title') || 'No Questions Available'}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('practice.no_questions_hint') || 'There are no deliverable questions in this category right now. Please try another category or check back later.'}
+          </p>
+          <button
+            onClick={() => window.history.back()}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+          >
+            {t('practice.go_back') || 'Go Back'}
+          </button>
+        </div>
       </div>
     );
   }
@@ -183,7 +284,6 @@ export default function PracticeQuestionsPage() {
   const totalAttempted = correctCount + wrongCount;
   const accuracy = totalAttempted > 0 ? (correctCount / totalAttempted) * 100 : 0;
 
-  // Show completion screen
   if (isComplete) {
     return (
       <PracticeComplete
@@ -199,26 +299,34 @@ export default function PracticeQuestionsPage() {
 
   const currentQuestion = questions[currentIndex];
 
-  // Map question to component format
+  // Options are already sorted by displayOrder from the backend
   const mappedQuestion = {
     id: String(currentQuestion.id),
     text: getQuestionText(currentQuestion),
-    imageUrl: currentQuestion.contentImageUrl || currentQuestion.imagePath,
-    options: [
-      { id: '1', text: getOptionText(currentQuestion, 1) },
-      { id: '2', text: getOptionText(currentQuestion, 2) },
-      { id: '3', text: getOptionText(currentQuestion, 3) },
-    ],
-    correctOptionId: String(currentQuestion.correctAnswer),
-    categoryCode: currentQuestion.categoryCode,
+    imageUrl: currentQuestion.contentImageUrl ?? undefined,
+    options: (currentQuestion.options || [])
+      .map((opt) => ({
+        id: String(opt.id),
+        text: getOptionText(opt),
+      }))
+      .filter((opt) => opt.text.trim() !== ''),
+    categoryCode: getCategoryCode(),
     categoryName: getCategoryName(),
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-muted py-8">
       <div className="container mx-auto max-w-4xl px-4">
         <div className="space-y-6">
-          {/* Stats */}
+          {/* Guest mode banner */}
+          {!isAuthenticated && (
+            <Alert className="border-amber-300 bg-amber-50">
+              <AlertDescription className="text-amber-800">
+                {t('practice.guest_banner')}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <PracticeStats
             totalQuestions={questions.length}
             currentQuestion={currentIndex + 1}
@@ -227,10 +335,12 @@ export default function PracticeQuestionsPage() {
             accuracy={accuracy}
           />
 
-          {/* Question Card */}
           <PracticeQuestionCard
+            key={currentQuestion.id}
             question={mappedQuestion}
-            onAnswer={(isCorrect) => handleAnswer(isCorrect, currentQuestion.id, parseInt(mappedQuestion.correctOptionId))}
+            onSubmitAnswer={(selectedOptionId) =>
+              submitAnswer(currentQuestion.id, Number(selectedOptionId))
+            }
           />
         </div>
       </div>

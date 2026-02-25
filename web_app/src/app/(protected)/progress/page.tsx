@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import apiClient from '@/lib/api';
+import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import Link from 'next/link';
 
 interface ExamHistory {
@@ -47,6 +48,8 @@ export default function ProgressPage() {
   const [data, setData] = useState<ProgressData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -101,34 +104,47 @@ export default function ProgressPage() {
         });
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch progress:', err);
-        // Don't show error for new users with no progress data
-        setData({
-          overallStats: {
-            totalExams: 0,
-            totalQuestions: 0,
-            averageScore: 0,
-            passRate: 0,
-            currentStreak: 0,
-            bestScore: 0,
-          },
-          examHistory: [],
-          categoryProgress: [],
-        });
+        logApiError('Failed to fetch progress', err);
+        if (isServiceUnavailable(err)) {
+          setServiceUnavailable(true);
+        } else {
+          // Don't show error for new users with no progress data
+          setData({
+            overallStats: {
+              totalExams: 0,
+              totalQuestions: 0,
+              averageScore: 0,
+              passRate: 0,
+              currentStreak: 0,
+              bestScore: 0,
+            },
+            examHistory: [],
+            categoryProgress: [],
+          });
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchProgress();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey]);
+
+  if (serviceUnavailable) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }} className="mb-4" />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg text-gray-600">Loading your progress...</p>
+          <p className="text-lg text-muted-foreground">Loading your progress...</p>
         </div>
       </div>
     );
@@ -152,7 +168,7 @@ export default function ProgressPage() {
         {/* Header */}
         <div>
           <h1 className="text-4xl font-bold">Your Progress</h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <p className="mt-2 text-lg text-muted-foreground">
             Track your improvement and stay motivated
           </p>
         </div>
@@ -161,13 +177,13 @@ export default function ProgressPage() {
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Exams Taken
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold">{overallStats.totalExams}</div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {overallStats.totalQuestions} questions attempted
               </p>
             </CardContent>
@@ -175,7 +191,7 @@ export default function ProgressPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Average Score
               </CardTitle>
             </CardHeader>
@@ -183,7 +199,7 @@ export default function ProgressPage() {
               <div className="text-4xl font-bold text-primary">
                 {overallStats.averageScore.toFixed(1)}%
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Best: {overallStats.bestScore}%
               </p>
             </CardContent>
@@ -191,7 +207,7 @@ export default function ProgressPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Pass Rate
               </CardTitle>
             </CardHeader>
@@ -199,7 +215,7 @@ export default function ProgressPage() {
               <div className="text-4xl font-bold text-green-600">
                 {overallStats.passRate.toFixed(0)}%
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 🔥 {overallStats.currentStreak} day streak
               </p>
             </CardContent>
@@ -218,7 +234,7 @@ export default function ProgressPage() {
             {examHistory.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-gray-600">No exam history yet</p>
+                  <p className="text-muted-foreground">No exam history yet</p>
                   <Button className="mt-4" asChild>
                     <Link href="/exam">Take Your First Exam</Link>
                   </Button>
@@ -234,7 +250,7 @@ export default function ProgressPage() {
                           <Badge variant={exam.passed ? 'default' : 'destructive'}>
                             {exam.passed ? '✅ Passed' : '❌ Failed'}
                           </Badge>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-muted-foreground">
                             {new Date(exam.date).toLocaleDateString()}
                           </span>
                         </div>
@@ -243,11 +259,11 @@ export default function ProgressPage() {
                             <span className="text-2xl font-bold">
                               {exam.score}/{exam.totalQuestions}
                             </span>
-                            <span className="ml-2 text-lg text-gray-600">
+                            <span className="ml-2 text-lg text-muted-foreground">
                               ({exam.percentage.toFixed(1)}%)
                             </span>
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-muted-foreground">
                             ⏱️ {exam.timeTaken}
                           </div>
                         </div>
@@ -269,7 +285,7 @@ export default function ProgressPage() {
             {categoryProgress.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-gray-600">No category data yet</p>
+                  <p className="text-muted-foreground">No category data yet</p>
                 </CardContent>
               </Card>
             ) : (
@@ -335,7 +351,7 @@ export default function ProgressPage() {
               <CardTitle>Keep Going! 🚀</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-700">
+              <p className="text-foreground">
                 {overallStats.averageScore >= 82
                   ? "Great job! You're consistently passing. Keep practicing to maintain your skills!"
                   : "You're making progress! Keep practicing and you'll reach the pass threshold soon."}

@@ -28,7 +28,7 @@ export function OverviewDialog({
 }: OverviewDialogProps) {
   const answeredCount = Object.keys(answers).length;
   const unansweredCount = questions.length - answeredCount;
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -38,7 +38,7 @@ export function OverviewDialog({
             {answeredCount}/{questions.length} questions answered
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Stats */}
           <div className="flex gap-4">
@@ -47,17 +47,17 @@ export function OverviewDialog({
               <span className="text-sm">Answered ({answeredCount})</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded-full bg-gray-300" />
+              <div className="h-4 w-4 rounded-full bg-muted" />
               <span className="text-sm">Unanswered ({unansweredCount})</span>
             </div>
           </div>
-          
+
           {/* Question Grid */}
           <div className="grid grid-cols-10 gap-3">
             {questions.map((question, index) => {
               const isAnswered = answers[question.id] !== undefined;
               const isCurrent = index === currentIndex;
-              
+
               return (
                 <button
                   key={question.id}
@@ -69,7 +69,7 @@ export function OverviewDialog({
                     'flex h-12 w-12 items-center justify-center rounded-full font-semibold transition-all',
                     'hover:scale-110',
                     isAnswered && 'bg-green-500 text-white',
-                    !isAnswered && 'bg-gray-300 text-gray-700',
+                    !isAnswered && 'bg-muted text-foreground',
                     isCurrent && 'ring-4 ring-primary ring-offset-2'
                   )}
                 >

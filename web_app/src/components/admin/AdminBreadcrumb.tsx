@@ -30,20 +30,20 @@ export default function AdminBreadcrumb() {
 
     return (
         <nav aria-label="Breadcrumb" className="mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
-            <ol className="flex items-center flex-wrap text-sm text-gray-500 gap-1">
+            <ol className="flex items-center flex-wrap text-sm text-muted-foreground gap-1">
                 {trail.map((segment, idx) => (
                     <li key={segment.href + idx} className="flex items-center">
                         {idx > 0 && (
-                            <SeparatorIcon className="h-3.5 w-3.5 mx-1 text-gray-400 flex-shrink-0" />
+                            <SeparatorIcon className="h-3.5 w-3.5 mx-1 text-muted-foreground flex-shrink-0" />
                         )}
                         {segment.isCurrentPage ? (
-                            <span className="font-medium text-gray-900 truncate max-w-[200px]" aria-current="page">
+                            <span className="font-medium text-foreground truncate max-w-[200px]" aria-current="page">
                                 {segment.label}
                             </span>
                         ) : (
                             <Link
                                 href={segment.href}
-                                className="text-gray-500 hover:text-blue-600 hover:underline truncate max-w-[150px] transition-colors"
+                                className="text-muted-foreground hover:text-blue-600 hover:underline truncate max-w-[150px] transition-colors"
                             >
                                 {segment.label}
                             </Link>

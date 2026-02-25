@@ -26,13 +26,8 @@
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
-<<<<<<< HEAD
     "react": "18.3.1",
     "react-dom": "18.3.1",
-=======
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
->>>>>>> 16d6022 (update frontend)
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0"
   },

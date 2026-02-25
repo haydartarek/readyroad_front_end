@@ -3,9 +3,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { apiClient } from '@/lib/api';
+import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 
 // ─── Types ─────────────────────────────────────────────
 
@@ -123,6 +124,7 @@ export default function AdminQuizzesPage() {
     const [resetConfirmText, setResetConfirmText] = useState('');
     const [resetting, setResetting] = useState(false);
     const [resetResult, setResetResult] = useState<{ deletedAnswers: number; deletedAttempts: number } | null>(null);
+    const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
     // Race-condition guard: only the latest fetch writes state
     const fetchIdRef = useRef(0);
@@ -182,8 +184,12 @@ export default function AdminQuizzesPage() {
             setTotalPages(res.data.totalPages);
         } catch (err) {
             if (id !== fetchIdRef.current) return;   // stale error — ignore
-            console.error('Failed to fetch admin quiz questions:', err);
-            setError(tRef.current('admin.quizzes.fetch_error') || 'Failed to load quiz questions');
+            logApiError('Failed to fetch admin quiz questions', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
+            } else {
+                setError(tRef.current('admin.quizzes.fetch_error') || 'Failed to load quiz questions');
+            }
         } finally {
             if (id === fetchIdRef.current) setLoading(false);
         }
@@ -238,27 +244,32 @@ export default function AdminQuizzesPage() {
                 fetchQuestions();
             }
         } catch (err: unknown) {
-            const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
-            const status = axiosErr?.response?.status;
-            if (status === 409) {
-                setToast({
-                    message: t('admin.quizzes.delete_conflict') || 'Cannot delete this question because it is referenced by quiz attempts or user answers. Remove those references first.',
-                    detail: t('admin.quizzes.delete_conflict_hint') || 'Tip: You can deactivate or unpublish the question instead of deleting it.',
-                    actionLabel: t('admin.quizzes.edit') || 'Edit',
-                    actionHref: `/admin/quizzes/${id}/edit`,
-                    type: 'error',
-                });
-            } else if (status === 404) {
-                setToast({
-                    message: t('admin.quizzes.delete_not_found') || 'Question not found — it may have been already deleted.',
-                    type: 'error',
-                });
-                fetchQuestions();
+            logApiError('Failed to delete quiz question', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
             } else {
-                setToast({
-                    message: t('admin.quizzes.delete_failed') || 'Failed to delete question. Please try again.',
-                    type: 'error',
-                });
+                const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
+                const status = axiosErr?.response?.status;
+                if (status === 409) {
+                    setToast({
+                        message: t('admin.quizzes.delete_conflict') || 'Cannot delete this question because it is referenced by quiz attempts or user answers. Remove those references first.',
+                        detail: t('admin.quizzes.delete_conflict_hint') || 'Tip: You can deactivate or unpublish the question instead of deleting it.',
+                        actionLabel: t('admin.quizzes.edit') || 'Edit',
+                        actionHref: `/admin/quizzes/${id}/edit`,
+                        type: 'error',
+                    });
+                } else if (status === 404) {
+                    setToast({
+                        message: t('admin.quizzes.delete_not_found') || 'Question not found — it may have been already deleted.',
+                        type: 'error',
+                    });
+                    fetchQuestions();
+                } else {
+                    setToast({
+                        message: t('admin.quizzes.delete_failed') || 'Failed to delete question. Please try again.',
+                        type: 'error',
+                    });
+                }
             }
             setDeleteId(null);
         } finally {
@@ -287,9 +298,14 @@ export default function AdminQuizzesPage() {
             });
             fetchQuestions(); // Refresh to update referenced status
         } catch (err: unknown) {
-            const axiosErr = err as { response?: { data?: { error?: string } }; message?: string };
-            const msg = axiosErr?.response?.data?.error || axiosErr?.message || 'Reset failed';
-            setToast({ message: String(msg), type: 'error' });
+            logApiError('Failed to reset test data', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
+            } else {
+                const axiosErr = err as { response?: { data?: { error?: string } }; message?: string };
+                const msg = axiosErr?.response?.data?.error || axiosErr?.message || 'Reset failed';
+                setToast({ message: String(msg), type: 'error' });
+            }
         } finally {
             setResetting(false);
             setShowResetModal(false);
@@ -316,7 +332,7 @@ export default function AdminQuizzesPage() {
     };
 
     const SortIcon = ({ field }: { field: SortField }) => {
-        if (sortField !== field) return <span className="text-gray-300 ml-1">↕</span>;
+        if (sortField !== field) return <span className="text-muted-foreground ml-1">↕</span>;
         return <span className="text-blue-600 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
     };
 
@@ -326,10 +342,10 @@ export default function AdminQuizzesPage() {
     if (loading && questions.length === 0) {
         return (
             <div className="space-y-6">
-                <div className="h-8 bg-gray-200 rounded w-64 animate-pulse" />
+                <div className="h-8 bg-muted rounded w-64 animate-pulse" />
                 <div className="grid grid-cols-1 gap-4">
                     {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="bg-white rounded-lg border p-4 h-16 animate-pulse" />
+                        <div key={i} className="bg-card rounded-lg border p-4 h-16 animate-pulse" />
                     ))}
                 </div>
             </div>
@@ -349,6 +365,8 @@ export default function AdminQuizzesPage() {
 
     return (
         <div className="space-y-6">
+            {serviceUnavailable && <ServiceUnavailableBanner onRetry={fetchQuestions} className="mb-4" />}
+
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 max-w-md px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                     <div className="flex items-start gap-2">
@@ -359,7 +377,7 @@ export default function AdminQuizzesPage() {
                             )}
                             {toast.actionHref && (
                                 <Link href={toast.actionHref}
-                                    className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-white/20 hover:bg-white/30 rounded transition-colors">
+                                    className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-background/20 hover:bg-background/30 rounded transition-colors">
                                     {toast.actionLabel}
                                 </Link>
                             )}
@@ -375,9 +393,9 @@ export default function AdminQuizzesPage() {
 
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('admin.quizzes.title') || 'Quiz Questions'}</h1>
-                    <p className="text-gray-600 mt-1">
-                        {t('admin.quizzes.total_count') || 'Total'}: <span className="font-semibold text-gray-900">{totalItems}</span>
+                    <h1 className="text-2xl font-bold text-foreground">{t('admin.quizzes.title') || 'Quiz Questions'}</h1>
+                    <p className="text-muted-foreground mt-1">
+                        {t('admin.quizzes.total_count') || 'Total'}: <span className="font-semibold text-foreground">{totalItems}</span>
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -395,23 +413,23 @@ export default function AdminQuizzesPage() {
             <div className="flex flex-wrap gap-3 items-center">
                 <input type="text" placeholder={t('admin.quizzes.search_placeholder') || 'Search questions...'} value={searchInput}
                     onChange={e => setSearchInput(e.target.value)}
-                    className="flex-1 min-w-[200px] max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                    className="flex-1 min-w-[200px] max-w-sm rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring" />
                 <select value={categoryFilter} onChange={e => handleCategoryChange(e.target.value)}
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card">
                     <option value="">{t('admin.quizzes.all_categories') || 'All Categories'}</option>
                     {categories.map(cat => (
                         <option key={cat.code} value={cat.code}>{getCategoryLabel(cat.code)} ({cat.code})</option>
                     ))}
                 </select>
                 <select value={difficultyFilter} onChange={e => handleDifficultyChange(e.target.value)}
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card">
                     <option value="">{t('admin.quizzes.all_difficulties') || 'All Difficulties'}</option>
                     {['EASY', 'MEDIUM', 'HARD'].map(d => (
                         <option key={d} value={d}>{getDifficultyLabel(d)}</option>
                     ))}
                 </select>
                 <select value={size} onChange={e => handleSizeChange(Number(e.target.value))}
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-card">
                     {PAGE_SIZE_OPTIONS.map(s => (
                         <option key={s} value={s}>{s} {t('admin.quizzes.per_page') || 'per page'}</option>
                     ))}
@@ -420,58 +438,58 @@ export default function AdminQuizzesPage() {
             </div>
 
             {totalItems > 0 && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                     {t('admin.quizzes.showing') || 'Showing'} {startIdx}–{endIdx} / {totalItems}
                 </p>
             )}
 
-            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+            <div className="bg-card rounded-lg shadow-sm border overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                        <thead className="bg-gray-50 border-b">
+                        <thead className="bg-muted border-b">
                             <tr>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none w-10" onClick={() => handleSort('id')}>
+                                <th className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none w-10" onClick={() => handleSort('id')}>
                                     ID<SortIcon field="id" />
                                 </th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort('questionEn')}>
+                                <th className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none" onClick={() => handleSort('questionEn')}>
                                     {t('admin.quizzes.col_question') || 'Question'}<SortIcon field="questionEn" />
                                 </th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600">{t('admin.quizzes.col_category') || 'Category'}</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-600 cursor-pointer select-none" onClick={() => handleSort('difficultyLevel')}>
+                                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t('admin.quizzes.col_category') || 'Category'}</th>
+                                <th className="px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer select-none" onClick={() => handleSort('difficultyLevel')}>
                                     {t('admin.quizzes.col_difficulty') || 'Difficulty'}<SortIcon field="difficultyLevel" />
                                 </th>
-                                <th className="px-4 py-3 text-center font-medium text-gray-600">{t('admin.quizzes.col_type') || 'Type'}</th>
-                                <th className="px-4 py-3 text-center font-medium text-gray-600">{t('admin.quizzes.col_options') || 'Opts'}</th>
-                                <th className="px-4 py-3 text-center font-medium text-gray-600">{t('admin.quizzes.col_status') || 'Status'}</th>
-                                <th className="px-4 py-3 text-right font-medium text-gray-600">{t('admin.quizzes.col_actions') || 'Actions'}</th>
+                                <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.quizzes.col_type') || 'Type'}</th>
+                                <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.quizzes.col_options') || 'Opts'}</th>
+                                <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t('admin.quizzes.col_status') || 'Status'}</th>
+                                <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t('admin.quizzes.col_actions') || 'Actions'}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {questions.length === 0 ? (
-                                <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">{t('admin.quizzes.no_results') || 'No quiz questions found'}</td></tr>
+                                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">{t('admin.quizzes.no_results') || 'No quiz questions found'}</td></tr>
                             ) : (
                                 questions.map(q => (
                                     <React.Fragment key={q.id}>
-                                        <tr className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-4 py-3"><span className="font-mono text-xs text-gray-500">{q.id}</span></td>
-                                            <td className="px-4 py-3 max-w-md"><span className="text-gray-900 line-clamp-2">{getQuestionText(q)}</span></td>
+                                        <tr className="hover:bg-muted transition-colors">
+                                            <td className="px-4 py-3"><span className="font-mono text-xs text-muted-foreground">{q.id}</span></td>
+                                            <td className="px-4 py-3 max-w-md"><span className="text-foreground line-clamp-2">{getQuestionText(q)}</span></td>
                                             <td className="px-4 py-3">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{getCategoryLabel(q.categoryCode)}</span>
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-foreground">{getCategoryLabel(q.categoryCode)}</span>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${DIFFICULTY_COLORS[q.difficultyLevel] || 'bg-gray-100 text-gray-700'}`}>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${DIFFICULTY_COLORS[q.difficultyLevel] || 'bg-muted text-foreground'}`}>
                                                     {getDifficultyLabel(q.difficultyLevel)}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-center"><span className="text-xs text-gray-600 font-mono">{TYPE_LABELS[q.questionType] || q.questionType}</span></td>
-                                            <td className="px-4 py-3 text-center"><span className="text-xs text-gray-600">{q.optionsCount}</span></td>
+                                            <td className="px-4 py-3 text-center"><span className="text-xs text-muted-foreground font-mono">{TYPE_LABELS[q.questionType] || q.questionType}</span></td>
+                                            <td className="px-4 py-3 text-center"><span className="text-xs text-muted-foreground">{q.optionsCount}</span></td>
                                             <td className="px-4 py-3 text-center">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${q.status === 'PUBLISHED' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{q.status}</span>
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${q.status === 'PUBLISHED' ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}`}>{q.status}</span>
                                             </td>
                                             <td className="px-4 py-3 text-right">
                                                 <div className="inline-flex items-center gap-1">
                                                     <button onClick={() => setExpandedId(expandedId === q.id ? null : q.id)}
-                                                        className="text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                                        className="text-xs text-muted-foreground hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
                                                         title={t('admin.quizzes.view') || 'View'}>
                                                         {expandedId === q.id ? '▲' : '▼'}
                                                     </button>
@@ -486,7 +504,7 @@ export default function AdminQuizzesPage() {
                                                                 {deleting ? '...' : (t('admin.quizzes.confirm_delete') || 'Confirm')}
                                                             </button>
                                                             <button onClick={() => setDeleteId(null)}
-                                                                className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300">
+                                                                className="text-xs bg-muted text-foreground px-2 py-1 rounded hover:bg-accent">
                                                                 {t('admin.quizzes.cancel') || 'Cancel'}
                                                             </button>
                                                         </div>
@@ -510,14 +528,14 @@ export default function AdminQuizzesPage() {
                                                     </div>
                                                     {q.options && q.options.length > 0 && (
                                                         <div className="mb-3">
-                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Answer Options</p>
+                                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Answer Options</p>
                                                             <div className="space-y-1">
                                                                 {q.options
                                                                     .sort((a, b) => a.displayOrder - b.displayOrder)
                                                                     .map((opt, idx) => (
-                                                                        <div key={opt.id} className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded ${opt.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'}`}>
-                                                                            <span className="text-xs font-medium text-gray-400 w-5">{idx + 1}.</span>
-                                                                            <span className={opt.isCorrect ? 'text-green-700 font-medium' : 'text-gray-700'}>{getOptionText(opt)}</span>
+                                                                        <div key={opt.id} className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded ${opt.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-card border border-border'}`}>
+                                                                            <span className="text-xs font-medium text-muted-foreground w-5">{idx + 1}.</span>
+                                                                            <span className={opt.isCorrect ? 'text-green-700 font-medium' : 'text-foreground'}>{getOptionText(opt)}</span>
                                                                             {opt.isCorrect && <span className="text-green-600 text-xs ml-auto">✓ Correct</span>}
                                                                         </div>
                                                                     ))}
@@ -526,11 +544,11 @@ export default function AdminQuizzesPage() {
                                                     )}
                                                     {q.explanationEn && (
                                                         <div className="mb-3">
-                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Explanation</p>
-                                                            <p className="text-sm text-gray-600">{q.explanationEn}</p>
+                                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Explanation</p>
+                                                            <p className="text-sm text-muted-foreground">{q.explanationEn}</p>
                                                         </div>
                                                     )}
-                                                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                                                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                                         <span>ID: {q.id}</span>
                                                         <span>Active: {q.isActive ? '✓' : '✗'}</span>
                                                         {q.contentImageUrl && <span>Has Image</span>}
@@ -548,26 +566,26 @@ export default function AdminQuizzesPage() {
                 </div>
 
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50">
-                        <p className="text-xs text-gray-500">Page {page + 1} of {totalPages}</p>
+                    <div className="flex items-center justify-between px-4 py-3 border-t bg-muted">
+                        <p className="text-xs text-muted-foreground">Page {page + 1} of {totalPages}</p>
                         <div className="flex items-center gap-1">
                             <button onClick={() => handlePageChange(0)} disabled={page <= 0}
-                                className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">««</button>
+                                className="px-2 py-1 text-xs rounded border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">««</button>
                             <button onClick={() => handlePageChange(page - 1)} disabled={page <= 0}
-                                className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">«</button>
+                                className="px-2 py-1 text-xs rounded border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">«</button>
                             {generatePageNumbers(page, totalPages).map((p, idx, arr) => (
                                 <span key={`${p}-${idx}`}>
-                                    {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-gray-400 text-xs">…</span>}
+                                    {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-muted-foreground text-xs">…</span>}
                                     <button onClick={() => handlePageChange(p)}
-                                        className={`px-2.5 py-1 text-xs rounded border ${p === page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'}`}>
+                                        className={`px-2.5 py-1 text-xs rounded border ${p === page ? 'bg-blue-600 text-white border-blue-600' : 'border-border bg-card hover:bg-muted text-foreground'}`}>
                                         {p + 1}
                                     </button>
                                 </span>
                             ))}
                             <button onClick={() => handlePageChange(page + 1)} disabled={page >= totalPages - 1}
-                                className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">»</button>
+                                className="px-2 py-1 text-xs rounded border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">»</button>
                             <button onClick={() => handlePageChange(totalPages - 1)} disabled={page >= totalPages - 1}
-                                className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">»»</button>
+                                className="px-2 py-1 text-xs rounded border border-border bg-card hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">»»</button>
                         </div>
                     </div>
                 )}
@@ -575,15 +593,15 @@ export default function AdminQuizzesPage() {
 
             {/* Reset Test Data Confirmation Modal */}
             {showResetModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm">
+                    <div className="bg-card rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
                         <h3 className="text-lg font-bold text-red-700 mb-2">
                             {t('admin.quizzes.reset_confirm_title') || 'Reset Test Data'}
                         </h3>
-                        <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+                        <p className="text-sm text-foreground mb-4 leading-relaxed">
                             {t('admin.quizzes.reset_confirm_warning') || 'This will permanently delete all quiz attempts and answers marked as test data. Real user data will NOT be affected. This action cannot be undone.'}
                         </p>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                             {t('admin.quizzes.reset_confirm_label') || 'Type'} <span className="font-mono font-bold text-red-600">RESET TEST DATA</span> {t('admin.quizzes.reset_confirm_label_suffix') || 'to confirm'}:
                         </label>
                         <input
@@ -591,13 +609,13 @@ export default function AdminQuizzesPage() {
                             value={resetConfirmText}
                             onChange={(e) => setResetConfirmText(e.target.value)}
                             placeholder="RESET TEST DATA"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-4"
+                            className="w-full rounded-lg border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-4"
                             autoFocus
                         />
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => { setShowResetModal(false); setResetConfirmText(''); }}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-foreground border border-border rounded-lg hover:bg-muted transition-colors"
                                 disabled={resetting}
                             >
                                 {t('admin.quizzes.cancel') || 'Cancel'}
@@ -627,9 +645,9 @@ function generatePageNumbers(current: number, total: number): number[] {
 
 function DetailLang({ label, text, dir }: { label: string; text: string; dir?: string }) {
     return (
-        <div className="rounded-lg border border-gray-200 bg-white p-3" dir={dir}>
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-            <p className="text-sm text-gray-900 line-clamp-3">{text || '—'}</p>
+        <div className="rounded-lg border border-border bg-card p-3" dir={dir}>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">{label}</p>
+            <p className="text-sm text-foreground line-clamp-3">{text || '—'}</p>
         </div>
     );
 }

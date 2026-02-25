@@ -23,7 +23,7 @@ export function RecentActivityList({ activities }: RecentActivityListProps) {
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className="flex items-center justify-between rounded-[12px] border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between rounded-[12px] border border-border p-4 hover:bg-muted transition-colors"
             >
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">
@@ -35,7 +35,7 @@ export function RecentActivityList({ activities }: RecentActivityListProps) {
                       ? 'Official Exam'
                       : `Practice: ${activity.category}`}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {new Date(activity.date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -50,9 +50,8 @@ export function RecentActivityList({ activities }: RecentActivityListProps) {
                     <p className="font-bold text-lg">{activity.score}%</p>
                     {activity.passed !== undefined && (
                       <p
-                        className={`text-sm ${
-                          activity.passed ? 'text-green-600' : 'text-red-600'
-                        }`}
+                        className={`text-sm ${activity.passed ? 'text-green-600' : 'text-red-600'
+                          }`}
                       >
                         {activity.passed ? '✅ Passed' : '❌ Failed'}
                       </p>

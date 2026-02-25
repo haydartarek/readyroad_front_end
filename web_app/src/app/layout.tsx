@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { LanguageProvider } from "@/contexts/language-context";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/navbar";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -76,15 +77,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <ErrorBoundary>
-          <LanguageProvider>
-            <AuthProvider>
-              <Navbar />
-              {children}
-              <Toaster position="top-right" richColors />
-            </AuthProvider>
-          </LanguageProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <LanguageProvider>
+              <AuthProvider>
+                <Navbar />
+                {children}
+                <Toaster position="top-right" richColors />
+              </AuthProvider>
+            </LanguageProvider>
+          </ThemeProvider>
         </ErrorBoundary>
       </body>
     </html>

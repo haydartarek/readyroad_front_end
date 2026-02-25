@@ -9,7 +9,8 @@ import { ScoreBreakdown } from '@/components/exam/score-breakdown';
 import { QuestionReview } from '@/components/exam/question-review';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import apiClient from '@/lib/api';
+import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { toast } from 'sonner';
 
 interface CategoryBreakdown {
@@ -77,6 +78,8 @@ export default function ExamResultsPage() {
   const [results, setResults] = useState<ExamResults | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
     // Guard: validate examId before fetching
@@ -93,24 +96,36 @@ export default function ExamResultsPage() {
         setResults(response.data);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch results:', err);
-        setError('Failed to load exam results');
-        toast.error('Failed to load results');
+        logApiError('Failed to fetch results', err);
+        if (isServiceUnavailable(err)) {
+          setServiceUnavailable(true);
+        } else {
+          setError('Failed to load exam results');
+          toast.error('Failed to load results');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchResults();
-  }, [examId]);
+  }, [examId, fetchKey]);
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg text-gray-600">Loading results...</p>
+          <p className="text-lg text-muted-foreground">Loading results...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (serviceUnavailable) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }} className="max-w-md" />
       </div>
     );
   }
@@ -150,10 +165,10 @@ export default function ExamResultsPage() {
             <span className="text-2xl">📝</span>
             <span className="font-semibold">Exam Results</span>
           </div>
-          <h1 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
+          <h1 className="mt-4 text-3xl font-bold text-foreground md:text-4xl">
             {results.passed ? '🎉 Congratulations!' : '💪 Keep Practicing!'}
           </h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <p className="mt-2 text-lg text-muted-foreground">
             {results.passed
               ? "You've passed the exam! You're ready for the real test."
               : `You need ${remainingToPass} more correct answers to pass.`}

@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { useLanguage } from '@/contexts/language-context';
 
 interface PracticeStatsProps {
   totalQuestions: number;
@@ -18,6 +19,7 @@ export function PracticeStats({
   wrongAnswers,
   accuracy,
 }: PracticeStatsProps) {
+  const { t } = useLanguage();
   const progressPercentage = totalQuestions === 0 ? 0 : ((currentQuestion - 1) / totalQuestions) * 100;
 
   return (
@@ -27,9 +29,9 @@ export function PracticeStats({
           {/* Progress */}
           <div>
             <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium">Progress</span>
-              <span className="text-gray-600">
-                Question {currentQuestion} of {totalQuestions}
+              <span className="font-medium">{t('practice.progress')}</span>
+              <span className="text-muted-foreground">
+                {t('practice.question_of').replace('{current}', String(currentQuestion)).replace('{total}', String(totalQuestions))}
               </span>
             </div>
             <Progress value={progressPercentage} className="h-2" />
@@ -37,28 +39,23 @@ export function PracticeStats({
 
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-3">
-            {/* Accuracy */}
             <div className="text-center rounded-lg bg-blue-50 p-3">
               <div className="text-2xl font-bold text-blue-600">
                 {accuracy.toFixed(0)}%
               </div>
-              <div className="text-xs text-blue-800 mt-1">Accuracy</div>
+              <div className="text-xs text-blue-800 mt-1">{t('practice.accuracy')}</div>
             </div>
-
-            {/* Correct */}
             <div className="text-center rounded-lg bg-green-50 p-3">
               <div className="text-2xl font-bold text-green-600">
                 {correctAnswers}
               </div>
-              <div className="text-xs text-green-800 mt-1">Correct</div>
+              <div className="text-xs text-green-800 mt-1">{t('practice.correct_label')}</div>
             </div>
-
-            {/* Wrong */}
             <div className="text-center rounded-lg bg-red-50 p-3">
               <div className="text-2xl font-bold text-red-600">
                 {wrongAnswers}
               </div>
-              <div className="text-xs text-red-800 mt-1">Wrong</div>
+              <div className="text-xs text-red-800 mt-1">{t('practice.wrong_label')}</div>
             </div>
           </div>
         </div>

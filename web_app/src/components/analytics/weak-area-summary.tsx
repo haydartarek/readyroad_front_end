@@ -23,43 +23,43 @@ export function WeakAreaSummary({ weakAreas, totalCategories, overallAccuracy }:
     <div className="grid gap-6 md:grid-cols-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Overall Accuracy</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Overall Accuracy</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-primary">
             {overallAccuracy.toFixed(0)}%
           </div>
-          <p className="text-xs text-gray-500">Across all categories</p>
+          <p className="text-xs text-muted-foreground">Across all categories</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Critical Areas</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Critical Areas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-red-600">{criticalAreas}</div>
-          <p className="text-xs text-gray-500">Below 50% accuracy</p>
+          <p className="text-xs text-muted-foreground">Below 50% accuracy</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Needs Practice</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Needs Practice</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-orange-600">{improvingAreas}</div>
-          <p className="text-xs text-gray-500">50-70% accuracy</p>
+          <p className="text-xs text-muted-foreground">50-70% accuracy</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Strong Areas</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Strong Areas</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-green-600">{strongAreas}</div>
-          <p className="text-xs text-gray-500">Above 70% accuracy</p>
+          <p className="text-xs text-muted-foreground">Above 70% accuracy</p>
         </CardContent>
       </Card>
     </div>

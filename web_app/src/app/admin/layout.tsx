@@ -46,10 +46,10 @@ export default function AdminLayout({
     // Show loading state while checking auth
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="flex items-center justify-center min-h-screen bg-muted">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">{t('admin.sidebar.checking_permissions')}</p>
+                    <p className="text-muted-foreground">{t('admin.sidebar.checking_permissions')}</p>
                 </div>
             </div>
         );
@@ -63,7 +63,7 @@ export default function AdminLayout({
     // Scenario: Allow admin users to access admin routes
     // dir is set dynamically based on selected language
     return (
-        <div className="flex min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="flex min-h-screen bg-muted" dir={isRTL ? 'rtl' : 'ltr'}>
             <AdminSidebar />
             <main className="flex-1 p-8 transition-all duration-300">
                 <div className="max-w-7xl mx-auto">

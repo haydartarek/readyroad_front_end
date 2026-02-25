@@ -59,7 +59,7 @@ export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm font-bold text-gray-700">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-card text-sm font-bold text-foreground">
                       {index + 1}
                     </span>
                     <Badge
@@ -84,7 +84,7 @@ export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
                   >
                     {area.accuracy.toFixed(0)}%
                   </div>
-                  <div className="text-sm text-gray-600">Accuracy</div>
+                  <div className="text-sm text-muted-foreground">Accuracy</div>
                 </div>
               </div>
             </CardHeader>
@@ -92,23 +92,23 @@ export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
             <CardContent className="space-y-6">
               {/* Performance Stats */}
               <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-lg bg-white p-4 text-center">
+                <div className="rounded-lg bg-card p-4 text-center">
                   <div className="text-2xl font-bold text-green-600">
                     {area.correctCount}
                   </div>
-                  <div className="text-xs text-gray-600">Correct</div>
+                  <div className="text-xs text-muted-foreground">Correct</div>
                 </div>
-                <div className="rounded-lg bg-white p-4 text-center">
+                <div className="rounded-lg bg-card p-4 text-center">
                   <div className="text-2xl font-bold text-red-600">
                     {area.totalCount - area.correctCount}
                   </div>
-                  <div className="text-xs text-gray-600">Wrong</div>
+                  <div className="text-xs text-muted-foreground">Wrong</div>
                 </div>
-                <div className="rounded-lg bg-white p-4 text-center">
+                <div className="rounded-lg bg-card p-4 text-center">
                   <div className="text-2xl font-bold text-blue-600">
                     {area.averageTime}
                   </div>
-                  <div className="text-xs text-gray-600">Avg Time</div>
+                  <div className="text-xs text-muted-foreground">Avg Time</div>
                 </div>
               </div>
 
@@ -116,7 +116,7 @@ export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
               <div>
                 <div className="mb-2 flex items-center justify-between text-sm">
                   <span className="font-medium">Your Progress</span>
-                  <span className="text-gray-600">
+                  <span className="text-muted-foreground">
                     {area.correctCount}/{area.totalCount} questions
                   </span>
                 </div>
@@ -132,14 +132,14 @@ export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
 
               {/* Common Mistakes */}
               {area.commonMistakes.length > 0 && (
-                <div className="rounded-lg bg-white p-4">
-                  <h4 className="mb-3 flex items-center gap-2 font-semibold text-gray-900">
+                <div className="rounded-lg bg-card p-4">
+                  <h4 className="mb-3 flex items-center gap-2 font-semibold text-foreground">
                     <span>⚠️</span>
                     Common Mistakes
                   </h4>
                   <ul className="space-y-2">
                     {area.commonMistakes.map((mistake, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                      <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
                         <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-500" />
                         <span>{mistake}</span>
                       </li>
@@ -159,8 +159,8 @@ export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
                     {area.recommendedLessons.map((lesson) => (
                       <Link
                         key={lesson.code}
-                        href={`/lessons/${lesson.id}`}
-                        className="block rounded-md bg-white px-3 py-2 text-sm text-blue-800 transition-colors hover:bg-blue-100"
+                        href={`/lessons/${lesson.code}`}
+                        className="block rounded-md bg-background px-3 py-2 text-sm text-blue-800 transition-colors hover:bg-blue-100"
                       >
                         → {lesson.title}
                       </Link>

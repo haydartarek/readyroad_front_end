@@ -7,6 +7,8 @@ import { QuickActionsSection } from '@/components/dashboard/quick-actions-sectio
 import { WeakAreasPreview } from '@/components/dashboard/weak-areas-preview';
 import { RecentActivityList } from '@/components/dashboard/recent-activity-list';
 import { getOverallProgress, getWeakAreas } from '@/services';
+import { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 
 // Default values for when API returns no data
 const defaultProgressData = {
@@ -22,6 +24,8 @@ export default function DashboardPage() {
   const [weakAreas, setWeakAreas] = useState<{ category: string; accuracy: number; totalQuestions: number }[]>([]);
   const [recentActivities, setRecentActivities] = useState<{ id: string; type: 'exam' | 'practice'; date: string; score: number; passed?: boolean; category?: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -63,7 +67,10 @@ export default function DashboardPage() {
           ]);
         }
       } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
+        logApiError('Failed to fetch dashboard data', error);
+        if (isServiceUnavailable(error)) {
+          setServiceUnavailable(true);
+        }
         // Don't show error toast for new users who have no data yet
         // The API might return 404 or empty data for new users
       } finally {
@@ -72,7 +79,8 @@ export default function DashboardPage() {
     };
 
     fetchDashboardData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey]);
 
   if (isLoading) {
     return (
@@ -94,6 +102,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {serviceUnavailable && <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }} className="mb-4" />}
+
       {/* Welcome Section */}
       <div>
         <h1 className="text-4xl font-bold mb-2">

@@ -72,7 +72,7 @@ export function QuestionCard({
           {/* Question Image */}
           {question.imageUrl && convertToPublicImageUrl(question.imageUrl) && (
             <div className="flex justify-center">
-              <div className="relative h-64 w-full max-w-md overflow-hidden rounded-[24px] bg-gray-100">
+              <div className="relative h-64 w-full max-w-md overflow-hidden rounded-[24px] bg-muted">
                 <Image
                   src={convertToPublicImageUrl(question.imageUrl)!}
                   alt="Question illustration"
@@ -120,7 +120,7 @@ export function QuestionCard({
                         isSelected && !showCorrectAnswer && 'border-primary bg-primary text-white',
                         isCorrect && 'border-green-500 bg-green-500 text-white',
                         isWrong && 'border-red-500 bg-red-500 text-white',
-                        !isSelected && !isCorrect && !isWrong && 'border-gray-300 bg-white'
+                        !isSelected && !isCorrect && !isWrong && 'border-border bg-card'
                       )}
                     >
                       {option.number}

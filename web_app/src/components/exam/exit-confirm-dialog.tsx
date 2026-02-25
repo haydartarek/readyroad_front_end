@@ -50,7 +50,7 @@ export function ExitConfirmDialog({
           <Button
             variant="outline"
             onClick={handleLeave}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             {t('exam.exit_leave')}
           </Button>

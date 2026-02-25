@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
-import apiClient from '@/lib/api';
+import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { isValidEmail, isValidPassword } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -18,6 +19,7 @@ export default function RegisterPage() {
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -84,8 +86,13 @@ export default function RegisterPage() {
       toast.success('Account created successfully! Please login.');
       router.push(ROUTES.LOGIN);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
+      logApiError('[Register] register', err);
+      if (isServiceUnavailable(err)) {
+        setServiceUnavailable(true);
+      } else {
+        const error = err as { response?: { data?: { message?: string } } };
+        toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +116,9 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-5">
+          {serviceUnavailable && (
+            <ServiceUnavailableBanner onRetry={() => setServiceUnavailable(false)} />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName" className="text-sm font-semibold text-foreground">

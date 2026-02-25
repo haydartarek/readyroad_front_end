@@ -29,19 +29,18 @@ export function WeakAreasPreview({ weakAreas }: WeakAreasPreviewProps) {
             <div key={area.category}>
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium">{area.category}</span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   {area.accuracy.toFixed(1)}% ({area.totalQuestions} questions)
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
-                  className={`h-full transition-all ${
-                    area.accuracy < 60
+                  className={`h-full transition-all ${area.accuracy < 60
                       ? 'bg-red-500'
                       : area.accuracy < 75
-                      ? 'bg-orange-500'
-                      : 'bg-green-500'
-                  }`}
+                        ? 'bg-orange-500'
+                        : 'bg-green-500'
+                    }`}
                   style={{ width: `${area.accuracy}%` }}
                 />
               </div>

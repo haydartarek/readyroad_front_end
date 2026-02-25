@@ -72,16 +72,16 @@ export function ErrorPatternList({ patterns }: ErrorPatternListProps) {
                     <Badge variant="outline" className={cn('border-current', config.textColor)}>
                       {config.label}
                     </Badge>
-                    <span className="text-sm text-gray-600">#{index + 1}</span>
+                    <span className="text-sm text-muted-foreground">#{index + 1}</span>
                   </div>
                   <CardTitle className="text-xl">{pattern.pattern}</CardTitle>
-                  <p className="mt-2 text-sm text-gray-600">{pattern.description}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{pattern.description}</p>
                 </div>
                 <div className="ml-4 text-right">
                   <div className={cn('text-3xl font-bold', config.textColor)}>
                     {pattern.count}
                   </div>
-                  <div className="text-sm text-gray-600">errors</div>
+                  <div className="text-sm text-muted-foreground">errors</div>
                 </div>
               </div>
             </CardHeader>
@@ -99,7 +99,7 @@ export function ErrorPatternList({ patterns }: ErrorPatternListProps) {
                 <div className="space-y-4 border-t pt-4">
                   {/* Affected Categories */}
                   <div>
-                    <h4 className="mb-2 text-sm font-semibold text-gray-700">Affected Categories</h4>
+                    <h4 className="mb-2 text-sm font-semibold text-foreground">Affected Categories</h4>
                     <div className="flex flex-wrap gap-2">
                       {pattern.affectedCategories.map((category) => (
                         <Badge key={category} variant="secondary">
@@ -121,7 +121,7 @@ export function ErrorPatternList({ patterns }: ErrorPatternListProps) {
                   {/* Example Questions */}
                   {pattern.exampleQuestions.length > 0 && (
                     <div>
-                      <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                      <h4 className="mb-2 text-sm font-semibold text-foreground">
                         Example Questions ({pattern.exampleQuestions.length})
                       </h4>
                       <div className="flex flex-wrap gap-2">

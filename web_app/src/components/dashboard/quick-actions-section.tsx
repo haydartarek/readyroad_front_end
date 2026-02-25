@@ -37,7 +37,7 @@ export function QuickActionsSection() {
               <div className="text-4xl">{action.icon}</div>
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">{action.title}</h3>
-                <p className="text-sm text-gray-600 mt-1">{action.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">{action.description}</p>
               </div>
             </CardContent>
           </Card>

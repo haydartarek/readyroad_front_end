@@ -1,7 +1,7 @@
 // Analytics Service - Handles analytics and statistics API calls
 // Location: src/services/analyticsService.ts
 
-import { apiClient } from '@/lib/api';
+import { apiClient, isServiceUnavailable } from '@/lib/api';
 
 // ═══════════════════════════════════════════════════════════
 // Type Definitions
@@ -70,8 +70,8 @@ export const getWeakAreas = async (): Promise<WeakAreasData> => {
         );
         return response.data;
     } catch (error) {
-        console.error('[AnalyticsService] Failed to fetch weak areas:', error);
-        // Return empty data instead of throwing to prevent UI breaks
+        if (isServiceUnavailable(error)) throw error;
+        // Graceful fallback for non-503 errors
         return {
             weakAreas: [],
             overallAccuracy: 0,
@@ -93,7 +93,7 @@ export const getErrorPatterns = async (): Promise<ErrorPatternsData> => {
         );
         return response.data;
     } catch (error) {
-        console.error('[AnalyticsService] Failed to fetch error patterns:', error);
+        if (isServiceUnavailable(error)) throw error;
         return {
             patterns: [],
             totalErrors: 0,
@@ -117,7 +117,7 @@ export const getAnalyticsSummary = async () => {
             errorPatterns,
         };
     } catch (error) {
-        console.error('[AnalyticsService] Failed to fetch analytics summary:', error);
+        if (isServiceUnavailable(error)) throw error;
         throw error;
     }
 };

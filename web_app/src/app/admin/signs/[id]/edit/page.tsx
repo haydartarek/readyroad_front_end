@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { apiClient } from '@/lib/api';
+import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
 import { convertToPublicImageUrl, FALLBACK_IMAGE } from '@/lib/image-utils';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 
 // ─── Types ─────────────────────────────────────────────
 
@@ -72,6 +73,7 @@ export default function AdminEditSignPage() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
     // ─── Load data (single sign fetch via GET /api/admin/signs/{id}) ──
     useEffect(() => {
@@ -96,12 +98,16 @@ export default function AdminEditSignPage() {
                 imageUrl: sign.imageUrl || '',
             });
         }).catch((err) => {
-            console.error('Failed to load sign:', err);
-            const status = (err as { response?: { status?: number } })?.response?.status;
-            if (status === 404) {
-                setErrorMsg(t('admin.signs.edit_not_found') || 'Sign not found');
+            logApiError('Failed to load sign', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
             } else {
-                setErrorMsg(t('admin.signs.fetch_error') || 'Failed to load sign data');
+                const status = (err as { response?: { status?: number } })?.response?.status;
+                if (status === 404) {
+                    setErrorMsg(t('admin.signs.edit_not_found') || 'Sign not found');
+                } else {
+                    setErrorMsg(t('admin.signs.fetch_error') || 'Failed to load sign data');
+                }
             }
         }).finally(() => {
             setLoading(false);
@@ -167,12 +173,17 @@ export default function AdminEditSignPage() {
             setToast({ message: t('admin.signs.form.update_success') || 'Sign updated successfully', type: 'success' });
             setTimeout(() => router.push('/admin/signs'), 600);
         } catch (err: unknown) {
-            const axiosErr = err as { response?: { status?: number; data?: { error?: string; message?: string } }; message?: string };
-            const msg = axiosErr?.response?.data?.error || axiosErr?.response?.data?.message || axiosErr?.message;
-            if (axiosErr?.response?.status === 400 && msg?.includes('already exists')) {
-                setFieldErrors(prev => ({ ...prev, signCode: msg || 'Sign code already exists' }));
+            logApiError('Failed to update sign', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
             } else {
-                setErrorMsg(String(msg || t('admin.signs.form.update_error') || 'Failed to update sign'));
+                const axiosErr = err as { response?: { status?: number; data?: { error?: string; message?: string } }; message?: string };
+                const msg = axiosErr?.response?.data?.error || axiosErr?.response?.data?.message || axiosErr?.message;
+                if (axiosErr?.response?.status === 400 && msg?.includes('already exists')) {
+                    setFieldErrors(prev => ({ ...prev, signCode: msg || 'Sign code already exists' }));
+                } else {
+                    setErrorMsg(String(msg || t('admin.signs.form.update_error') || 'Failed to update sign'));
+                }
             }
         } finally {
             setSubmitting(false);
@@ -182,9 +193,9 @@ export default function AdminEditSignPage() {
     if (loading) {
         return (
             <div className="space-y-6">
-                <div className="h-8 bg-gray-200 rounded w-64 animate-pulse" />
-                <div className="bg-white rounded-lg border p-6 space-y-4">
-                    {[1, 2, 3, 4].map(i => <div key={i} className="h-10 bg-gray-100 rounded animate-pulse" />)}
+                <div className="h-8 bg-muted rounded w-64 animate-pulse" />
+                <div className="bg-card rounded-lg border p-6 space-y-4">
+                    {[1, 2, 3, 4].map(i => <div key={i} className="h-10 bg-muted rounded animate-pulse" />)}
                 </div>
             </div>
         );
@@ -192,6 +203,8 @@ export default function AdminEditSignPage() {
 
     return (
         <div className="space-y-6">
+            {serviceUnavailable && <ServiceUnavailableBanner onRetry={() => window.location.reload()} className="mb-4" />}
+
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                     {toast.message}
@@ -199,41 +212,41 @@ export default function AdminEditSignPage() {
             )}
 
             <div className="flex items-center gap-3">
-                <Link href="/admin/signs" className="text-gray-400 hover:text-gray-600 transition-colors text-xl">←</Link>
+                <Link href="/admin/signs" className="text-muted-foreground hover:text-muted-foreground transition-colors text-xl">←</Link>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
+                    <h1 className="text-2xl font-bold text-foreground">
                         {t('admin.signs.edit_title') || 'Edit Sign'}{originalCode ? `: ${originalCode}` : ''}
                     </h1>
-                    <p className="text-gray-600 mt-1">{t('admin.signs.edit_desc') || 'Update traffic sign details'}</p>
+                    <p className="text-muted-foreground mt-1">{t('admin.signs.edit_desc') || 'Update traffic sign details'}</p>
                 </div>
             </div>
 
             {form.imageUrl && (
-                <div className="bg-white rounded-lg shadow-sm border p-4 flex items-center gap-4">
-                    <div className="w-20 h-20 relative rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                <div className="bg-card rounded-lg shadow-sm border p-4 flex items-center gap-4">
+                    <div className="w-20 h-20 relative rounded overflow-hidden bg-muted flex-shrink-0">
                         <Image src={convertToPublicImageUrl(form.imageUrl) || FALLBACK_IMAGE} alt={form.signCode} fill unoptimized className="object-contain p-1" sizes="80px"
                             onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }} />
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-gray-700">{t('admin.signs.form.current_image') || 'Current Image'}</p>
-                        <p className="text-xs text-gray-400 break-all">{form.imageUrl}</p>
+                        <p className="text-sm font-medium text-foreground">{t('admin.signs.form.current_image') || 'Current Image'}</p>
+                        <p className="text-xs text-muted-foreground break-all">{form.imageUrl}</p>
                     </div>
                 </div>
             )}
 
-            <form onSubmit={onSubmit} className="bg-white rounded-lg shadow-sm border p-6 space-y-6">
+            <form onSubmit={onSubmit} className="bg-card rounded-lg shadow-sm border p-6 space-y-6">
                 {errorMsg && (
                     <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{errorMsg}</div>
                 )}
 
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.signs.form.basic_info') || 'Basic Information'}</h2>
+                    <h2 className="text-lg font-semibold text-foreground mb-4">{t('admin.signs.form.basic_info') || 'Basic Information'}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField label={(t('admin.signs.form.sign_code') || 'Sign Code') + ' *'} placeholder="A1a" value={form.signCode} error={fieldErrors.signCode} onChange={v => setField('signCode', v)} />
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.signs.form.category') || 'Category'} *</label>
+                            <label className="block text-sm font-medium text-foreground mb-1">{t('admin.signs.form.category') || 'Category'} *</label>
                             <select value={form.categoryCode} onChange={e => setField('categoryCode', e.target.value)}
-                                className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${fieldErrors.categoryCode ? 'border-red-300' : 'border-gray-300'}`}>
+                                className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-card ${fieldErrors.categoryCode ? 'border-red-300' : 'border-border'}`}>
                                 <option value="">{t('admin.signs.form.select_category') || 'Select category'}</option>
                                 {categories.map(cat => <option key={cat.code} value={cat.code}>{getCategoryName(cat)} ({cat.code})</option>)}
                             </select>
@@ -243,12 +256,12 @@ export default function AdminEditSignPage() {
                 </div>
 
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.signs.form.image') || 'Image'}</h2>
+                    <h2 className="text-lg font-semibold text-foreground mb-4">{t('admin.signs.form.image') || 'Image'}</h2>
                     <FormField label={t('admin.signs.form.image_url') || 'Image URL'} placeholder="https://example.com/sign.png or assets/traffic_signs/..." value={form.imageUrl} error={fieldErrors.imageUrl} onChange={v => setField('imageUrl', v)} />
                 </div>
 
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.signs.form.names') || 'Names'}</h2>
+                    <h2 className="text-lg font-semibold text-foreground mb-4">{t('admin.signs.form.names') || 'Names'}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField label={(t('admin.signs.form.name_en') || 'English Name') + ' *'} placeholder="Dangerous curve" value={form.nameEn} error={fieldErrors.nameEn} onChange={v => setField('nameEn', v)} />
                         <FormField label={t('admin.signs.form.name_ar') || 'Arabic Name'} placeholder="منحنى خطير" value={form.nameAr} onChange={v => setField('nameAr', v)} dir="rtl" />
@@ -258,7 +271,7 @@ export default function AdminEditSignPage() {
                 </div>
 
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.signs.form.descriptions') || 'Descriptions'}</h2>
+                    <h2 className="text-lg font-semibold text-foreground mb-4">{t('admin.signs.form.descriptions') || 'Descriptions'}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormTextarea label={t('admin.signs.form.desc_en') || 'English Description'} placeholder="Description in English..." value={form.descriptionEn} onChange={v => setField('descriptionEn', v)} />
                         <FormTextarea label={t('admin.signs.form.desc_ar') || 'Arabic Description'} placeholder="الوصف بالعربية..." value={form.descriptionAr} onChange={v => setField('descriptionAr', v)} dir="rtl" />
@@ -268,9 +281,9 @@ export default function AdminEditSignPage() {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t">
-                    <p className="text-xs text-gray-400">{t('admin.signs.form.required_note') || '* Required fields'}</p>
+                    <p className="text-xs text-muted-foreground">{t('admin.signs.form.required_note') || '* Required fields'}</p>
                     <div className="flex gap-3">
-                        <Link href="/admin/signs" className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+                        <Link href="/admin/signs" className="px-4 py-2 text-sm rounded-lg border border-border text-foreground hover:bg-muted transition-colors">
                             {t('admin.signs.cancel') || 'Cancel'}
                         </Link>
                         <button type="submit" disabled={!isValid || submitting}
@@ -294,9 +307,9 @@ function FormField({ label, placeholder, value, error, onChange, dir }: {
 }) {
     return (
         <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+            <label className="block text-sm font-medium text-foreground mb-1">{label}</label>
             <input value={value} placeholder={placeholder} onChange={e => onChange(e.target.value)} dir={dir}
-                className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? 'border-red-300' : 'border-gray-300'}`} />
+                className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${error ? 'border-red-300' : 'border-border'}`} />
             {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
         </div>
     );
@@ -307,9 +320,9 @@ function FormTextarea({ label, placeholder, value, onChange, dir }: {
 }) {
     return (
         <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+            <label className="block text-sm font-medium text-foreground mb-1">{label}</label>
             <textarea value={value} placeholder={placeholder} onChange={e => onChange(e.target.value)} dir={dir} rows={3}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
         </div>
     );
 }

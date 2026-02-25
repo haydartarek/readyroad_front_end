@@ -24,41 +24,41 @@ export function ErrorSummary({ totalErrors, patterns }: ErrorSummaryProps) {
     <div className="grid gap-6 md:grid-cols-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Total Errors</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Total Errors</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-gray-900">{totalErrors}</div>
-          <p className="text-xs text-gray-500">Across all exams</p>
+          <div className="text-3xl font-bold text-foreground">{totalErrors}</div>
+          <p className="text-xs text-muted-foreground">Across all exams</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Critical Patterns</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Critical Patterns</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-red-600">{highSeverity}</div>
-          <p className="text-xs text-gray-500">Need immediate attention</p>
+          <p className="text-xs text-muted-foreground">Need immediate attention</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Important Patterns</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Important Patterns</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-orange-600">{mediumSeverity}</div>
-          <p className="text-xs text-gray-500">Should be addressed</p>
+          <p className="text-xs text-muted-foreground">Should be addressed</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Top Pattern</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Top Pattern</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-primary">{topPattern?.count || 0}</div>
-          <p className="text-xs text-gray-500 line-clamp-1">
+          <p className="text-xs text-muted-foreground line-clamp-1">
             {topPattern?.pattern || 'No patterns'}
           </p>
         </CardContent>

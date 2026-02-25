@@ -16,11 +16,12 @@ export interface LoginRequest {
 }
 
 /**
- * Login response from backend
- * Contains JWT token and user information
+ * Login response.
+ * When using BFF auth routes: token is NOT included (HttpOnly cookie instead).
+ * When calling backend directly: token is included in the response body.
  */
 export interface LoginResponse {
-  token: string;
+  token?: string;  // Only present on direct backend calls (NOT via BFF)
   type?: string;
   expiresIn?: number;
   // User data included in login response
@@ -185,18 +186,23 @@ export interface TrafficSign {
   descriptionAr: string;
   descriptionNl: string;
   descriptionFr: string;
+  longDescriptionEn?: string;
+  longDescriptionNl?: string;
+  longDescriptionFr?: string;
+  longDescriptionAr?: string;
+  isLongDescriptionComplete?: boolean;
   imageUrl: string;
   meaning?: string; // Not in backend response
   penalties?: string; // Not in backend response
 }
 
 // ═══════════════════════════════════════════════════════════
-// Lesson Types
+// Lesson Types (source: database via REST API)
 // ═══════════════════════════════════════════════════════════
 
-export interface Lesson {
+export interface LessonPage {
   id: number;
-  lessonCode: string;
+  pageNumber: number;
   titleEn: string;
   titleAr: string;
   titleNl: string;
@@ -205,11 +211,37 @@ export interface Lesson {
   contentAr: string;
   contentNl: string;
   contentFr: string;
-  pdfPathEn?: string;
-  pdfPathAr?: string;
-  pdfPathNl?: string;
-  pdfPathFr?: string;
-  orderIndex: number;
+  bulletPointsEn: string[];
+  bulletPointsAr: string[];
+  bulletPointsNl: string[];
+  bulletPointsFr: string[];
+}
+
+/**
+ * Lesson summary returned by GET /api/lessons (no pages field).
+ */
+export interface Lesson {
+  id: number;
+  lessonCode: string;
+  icon: string;
+  titleEn: string;
+  titleAr: string;
+  titleNl: string;
+  titleFr: string;
+  descriptionEn: string;
+  descriptionAr: string;
+  descriptionNl: string;
+  descriptionFr: string;
+  displayOrder: number;
+  estimatedMinutes: number;
+  totalPages: number;
+}
+
+/**
+ * Full lesson with pages returned by GET /api/lessons/{code}.
+ */
+export interface LessonDetail extends Omit<Lesson, 'totalPages'> {
+  pages: LessonPage[];
 }
 
 // ═══════════════════════════════════════════════════════════

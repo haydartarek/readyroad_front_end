@@ -18,32 +18,32 @@ export default function UnauthorizedPage() {
     const router = useRouter();
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" dir="rtl">
+        <div className="min-h-screen bg-muted flex items-center justify-center p-4" dir="rtl">
             <div className="max-w-md w-full">
                 {/* Icon */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-24 h-24 bg-red-100 rounded-full mb-4">
                         <span className="text-5xl">🚫</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-3xl font-bold text-foreground mb-2">
                         الوصول غير مصرح به
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-muted-foreground">
                         عذراً، ليس لديك الصلاحيات الكافية للوصول إلى هذه الصفحة
                     </p>
                 </div>
 
                 {/* Error Details */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-6">
                     <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
                             <span className="text-red-600 text-sm">!</span>
                         </div>
                         <div>
-                            <h3 className="font-semibold text-gray-900 mb-1">
+                            <h3 className="font-semibold text-foreground mb-1">
                                 لماذا حدث هذا؟
                             </h3>
-                            <ul className="text-sm text-gray-600 space-y-2">
+                            <ul className="text-sm text-muted-foreground space-y-2">
                                 <li>• قد لا تملك الدور المطلوب (ADMIN أو MODERATOR)</li>
                                 <li>• قد تكون محاولاً الوصول إلى صفحة محظورة</li>
                                 <li>• قد تحتاج إلى تسجيل الدخول بحساب مختلف</li>
@@ -56,7 +56,7 @@ export default function UnauthorizedPage() {
                 <div className="space-y-3">
                     <button
                         onClick={() => router.back()}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors font-medium"
                     >
                         <span>←</span>
                         <span>العودة للصفحة السابقة</span>
@@ -64,7 +64,7 @@ export default function UnauthorizedPage() {
 
                     <Link
                         href="/"
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-lg hover:bg-gray-50 transition-colors font-medium border border-gray-200"
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-card text-foreground rounded-lg hover:bg-muted transition-colors font-medium border border-border"
                     >
                         <span>🏠</span>
                         <span>الذهاب للصفحة الرئيسية</span>
@@ -81,7 +81,7 @@ export default function UnauthorizedPage() {
 
                 {/* Help Link */}
                 <div className="text-center mt-6">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                         تحتاج مساعدة؟{' '}
                         <Link href="/contact" className="text-blue-600 hover:underline">
                             تواصل معنا

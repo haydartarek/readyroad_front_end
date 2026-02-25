@@ -122,7 +122,7 @@ export function Breadcrumb() {
 
   // Separator component - direction-aware
   const Separator = () => (
-    <span className="mx-2 text-gray-400 flex-shrink-0" aria-hidden="true">
+    <span className="mx-2 text-muted-foreground flex-shrink-0" aria-hidden="true">
       {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
     </span>
   );
@@ -143,7 +143,7 @@ export function Breadcrumb() {
         <div className="relative">
           <button
             onClick={() => setShowCollapsedMenu(!showCollapsedMenu)}
-            className="flex items-center px-2 py-1 rounded hover:bg-gray-100 text-gray-500"
+            className="flex items-center px-2 py-1 rounded hover:bg-muted text-muted-foreground"
             aria-label="Show more breadcrumbs"
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -153,7 +153,7 @@ export function Breadcrumb() {
           {showCollapsedMenu && (
             <div
               className={cn(
-                "absolute top-full mt-1 bg-white border rounded-md shadow-lg py-1 z-50 min-w-[150px]",
+                "absolute top-full mt-1 bg-popover border border-border rounded-md shadow-lg py-1 z-50 min-w-[150px]",
                 isRTL ? "right-0" : "left-0"
               )}
             >
@@ -161,7 +161,7 @@ export function Breadcrumb() {
                 <Link
                   key={index}
                   href={item.href}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
                   onClick={() => setShowCollapsedMenu(false)}
                 >
                   {item.label}
@@ -196,7 +196,7 @@ export function Breadcrumb() {
     >
       <div
         ref={containerRef}
-        className="flex items-center flex-wrap text-sm text-gray-600 overflow-hidden"
+        className="flex items-center flex-wrap text-sm text-muted-foreground overflow-hidden"
       >
         {isCollapsed ? renderCollapsedBreadcrumbs() : renderFullBreadcrumbs()}
       </div>
@@ -209,7 +209,7 @@ function BreadcrumbLink({ item }: { item: BreadcrumbItem }) {
   if (item.isCurrentPage) {
     return (
       <span
-        className="font-medium text-gray-900 truncate max-w-[200px]"
+        className="font-medium text-foreground truncate max-w-[200px]"
         aria-current="page"
       >
         {item.label}
@@ -220,7 +220,7 @@ function BreadcrumbLink({ item }: { item: BreadcrumbItem }) {
   return (
     <Link
       href={item.href}
-      className="text-gray-600 hover:text-primary hover:underline truncate max-w-[150px] transition-colors"
+      className="text-muted-foreground hover:text-primary hover:underline truncate max-w-[150px] transition-colors"
     >
       {item.label}
     </Link>

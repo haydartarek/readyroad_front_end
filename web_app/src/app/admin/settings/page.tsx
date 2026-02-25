@@ -42,8 +42,11 @@ export default function AdminSettingsPage() {
                 const parsed = JSON.parse(stored);
                 setSettings({ ...DEFAULTS, ...parsed });
             }
-        } catch (e) {
-            console.error('Failed to load settings:', e);
+        } catch {
+            // Safari private mode / quota exceeded — use defaults silently
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn('[Settings] localStorage read failed, using defaults');
+            }
         } finally {
             setLoading(false);
         }
@@ -61,8 +64,11 @@ export default function AdminSettingsPage() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
             setSuccess(t('admin.settings_page.save_success'));
             setTimeout(() => setSuccess(null), 3000);
-        } catch (e) {
-            console.error('Failed to save settings:', e);
+        } catch {
+            // Safari private mode / quota exceeded — save failed silently
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn('[Settings] localStorage write failed');
+            }
         } finally {
             setSaving(false);
         }
@@ -85,13 +91,13 @@ export default function AdminSettingsPage() {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('admin.settings_page.title')}</h1>
-                    <p className="text-gray-600 mt-1">{t('admin.settings_page.description')}</p>
+                    <h1 className="text-2xl font-bold text-foreground">{t('admin.settings_page.title')}</h1>
+                    <p className="text-muted-foreground mt-1">{t('admin.settings_page.description')}</p>
                 </div>
                 <div className="flex gap-2">
                     <button
                         onClick={resetSettings}
-                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
                         disabled={loading || saving}
                     >
                         {t('admin.settings_page.reset')}
@@ -121,7 +127,7 @@ export default function AdminSettingsPage() {
                         type="text"
                         value={settings.siteName}
                         onChange={e => updateField('siteName', e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring outline-none"
                         placeholder="ReadyRoad"
                         disabled={loading}
                     />
@@ -131,7 +137,7 @@ export default function AdminSettingsPage() {
                     <select
                         value={settings.defaultLanguage}
                         onChange={e => updateField('defaultLanguage', e.target.value as any)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring outline-none"
                         disabled={loading}
                     >
                         <option value="en">English</option>
@@ -151,10 +157,10 @@ export default function AdminSettingsPage() {
                         max={100}
                         value={settings.examQuestions}
                         onChange={e => updateField('examQuestions', Number(e.target.value))}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring outline-none"
                         disabled={loading}
                     />
-                    <p className="text-xs text-gray-400 mt-1">{t('admin.settings_page.exam_questions_hint')}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t('admin.settings_page.exam_questions_hint')}</p>
                 </Field>
 
                 <Field label={t('admin.settings_page.exam_duration')}>
@@ -164,10 +170,10 @@ export default function AdminSettingsPage() {
                         max={120}
                         value={settings.examDurationMinutes}
                         onChange={e => updateField('examDurationMinutes', Number(e.target.value))}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring outline-none"
                         disabled={loading}
                     />
-                    <p className="text-xs text-gray-400 mt-1">{t('admin.settings_page.exam_duration_hint')}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t('admin.settings_page.exam_duration_hint')}</p>
                 </Field>
 
                 <Field label={t('admin.settings_page.passing_score')}>
@@ -181,9 +187,9 @@ export default function AdminSettingsPage() {
                             className="flex-1"
                             disabled={loading}
                         />
-                        <span className="text-sm font-bold text-gray-900 w-12 text-center">{settings.passingScorePercent}%</span>
+                        <span className="text-sm font-bold text-foreground w-12 text-center">{settings.passingScorePercent}%</span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">{t('admin.settings_page.passing_score_hint')}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t('admin.settings_page.passing_score_hint')}</p>
                 </Field>
             </Section>
 
@@ -208,7 +214,7 @@ export default function AdminSettingsPage() {
             </Section>
 
             {/* Info */}
-            <div className="rounded-lg border bg-gray-50 px-4 py-3 text-xs text-gray-500">
+            <div className="rounded-lg border bg-muted px-4 py-3 text-xs text-muted-foreground">
                 {t('admin.settings_page.local_storage_note')}
             </div>
         </div>
@@ -219,9 +225,9 @@ export default function AdminSettingsPage() {
 
 function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
     return (
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-            <div className="px-5 py-4 border-b bg-gray-50">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+        <div className="bg-card rounded-lg shadow-sm border overflow-hidden">
+            <div className="px-5 py-4 border-b bg-muted">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                     <span>{icon}</span>
                     {title}
                 </h3>
@@ -236,7 +242,7 @@ function Section({ title, icon, children }: { title: string; icon: string; child
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">{label}</label>
             {children}
         </div>
     );
@@ -253,8 +259,8 @@ function Toggle({ label, description, value, onChange, disabled, danger }: {
     return (
         <div className={`flex items-center justify-between gap-4 rounded-lg border p-4 ${danger ? 'border-red-200 bg-red-50/30' : ''}`}>
             <div>
-                <p className="text-sm font-medium text-gray-900">{label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+                <p className="text-sm font-medium text-foreground">{label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
             </div>
             <button
                 type="button"
@@ -262,15 +268,13 @@ function Toggle({ label, description, value, onChange, disabled, danger }: {
                 aria-checked={value}
                 onClick={() => onChange(!value)}
                 disabled={disabled}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-                    value
-                        ? danger ? 'bg-red-500' : 'bg-blue-600'
-                        : 'bg-gray-300'
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 ${value
+                    ? danger ? 'bg-red-500' : 'bg-blue-600'
+                    : 'bg-input'
+                    }`}
             >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    value ? 'translate-x-6' : 'translate-x-1'
-                }`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${value ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
             </button>
         </div>
     );

@@ -1,17 +1,5 @@
 // App Constants for ReadyRoad
-// Updated: 2026-02-08 - Fixed API configuration and TypeScript types
-
-// ═══════════════════════════════════════════════════════════
-// API Configuration
-// ═══════════════════════════════════════════════════════════
-export const API_CONFIG = {
-<<<<<<< HEAD
-  // Base URL includes /api prefix - all endpoints are relative to this
-=======
->>>>>>> 16d6022 (update frontend)
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8890/api',
-  TIMEOUT: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
-} as const;
+// Updated: 2026-02-24 - BFF proxy; API_CONFIG removed (api.ts uses /api/proxy)
 
 // ═══════════════════════════════════════════════════════════
 // Exam Rules (Belgian Driving License)
@@ -80,15 +68,15 @@ export const ROUTES = {
 // Local Storage Keys
 // ═══════════════════════════════════════════════════════════
 export const STORAGE_KEYS = {
-  // Authentication - IMPORTANT: Must match cookie name in middleware.ts!
-  AUTH_TOKEN: 'token', // Used for both localStorage AND cookie
-  USER_DATA: 'readyroad_user',
+  // Authentication — token is in HttpOnly cookie, NOT in localStorage
+  // This key is kept for cookie name reference only (used by middleware)
+  AUTH_COOKIE_NAME: 'token',
 
-  // App Settings
+  // App Settings (non-sensitive — localStorage is fine)
   LANGUAGE: 'readyroad_language',
   THEME: 'readyroad_theme',
 
-  // Exam State
+  // Exam State (non-sensitive — localStorage is fine)
   EXAM_STATE: 'readyroad_exam_state',
 } as const;
 
@@ -125,7 +113,6 @@ export const SIMULATION_STATUS = {
 export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 20,
   TRAFFIC_SIGNS_PAGE_SIZE: 24,
-  LESSONS_PAGE_SIZE: 12,
 } as const;
 
 // ═══════════════════════════════════════════════════════════
@@ -174,13 +161,6 @@ export const API_ENDPOINTS = {
     SEARCH: '/traffic-signs/search',
   },
 
-  // Lessons
-  LESSONS: {
-    LIST: '/lessons',
-    DETAIL: (code: string) => `/lessons/${code}`,
-    BY_CATEGORY: (category: string) => `/lessons/category/${category}`,
-  },
-
   // Exams
   EXAMS: {
     START: '/exams/start',
@@ -188,10 +168,24 @@ export const API_ENDPOINTS = {
     RESULTS: (id: number) => `/exams/${id}/results`,
   },
 
-  // Practice
-  PRACTICE: {
-    START: '/practice/start',
-    BY_CATEGORY: (category: string) => `/practice/category/${category}`,
+  // Smart Quiz (used by Practice pages)
+  SMART_QUIZ: {
+    RANDOM: '/smart-quiz/random',
+    BY_CATEGORY: (categoryId: number) => `/smart-quiz/category/${categoryId}`,
+    STATS: '/smart-quiz/stats',
+  },
+
+  // Quiz (basic + answer submission)
+  QUIZ: {
+    STATS: '/quiz/stats',
+    CATEGORY_STATS: (categoryId: number) => `/quiz/stats/category/${categoryId}`,
+    SUBMIT_ANSWER: (questionId: number) => `/quiz/questions/${questionId}/answer`,
+  },
+
+  // Categories
+  CATEGORIES: {
+    LIST: '/categories',
+    BY_CODE: (code: string) => `/categories/${code}`,
   },
 
   // Analytics
@@ -199,6 +193,14 @@ export const API_ENDPOINTS = {
     ERROR_PATTERNS: '/analytics/error-patterns',
     WEAK_AREAS: '/analytics/weak-areas',
     PROGRESS: '/analytics/progress',
+  },
+
+  // Lessons (public, read from DB)
+  LESSONS: {
+    LIST: '/lessons',
+    DETAIL: (code: string) => `/lessons/${code}`,
+    SEARCH: '/lessons/search',
+    COUNT: '/lessons/count',
   },
 
   // Health Check

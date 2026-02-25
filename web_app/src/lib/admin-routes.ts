@@ -13,7 +13,6 @@ import {
     LayoutDashboard,
     TriangleAlert,
     HelpCircle,
-    BookOpen,
     Upload,
     Users,
     Shield,
@@ -74,13 +73,13 @@ export interface BreadcrumbSegment {
 // ──────────────────────────────────────────────
 
 export const ADMIN_GROUPS: AdminGroup[] = [
-    { key: 'overview',  labelKey: 'admin.group.overview',  order: 0 },
-    { key: 'content',   labelKey: 'admin.group.content',   order: 1 },
-    { key: 'data',      labelKey: 'admin.group.data',      order: 2 },
-    { key: 'users',     labelKey: 'admin.group.users',     order: 3 },
-    { key: 'trust',     labelKey: 'admin.group.trust',     order: 4 },
-    { key: 'insights',  labelKey: 'admin.group.insights',  order: 5 },
-    { key: 'system',    labelKey: 'admin.group.system',    order: 6 },
+    { key: 'overview', labelKey: 'admin.group.overview', order: 0 },
+    { key: 'content', labelKey: 'admin.group.content', order: 1 },
+    { key: 'data', labelKey: 'admin.group.data', order: 2 },
+    { key: 'users', labelKey: 'admin.group.users', order: 3 },
+    { key: 'trust', labelKey: 'admin.group.trust', order: 4 },
+    { key: 'insights', labelKey: 'admin.group.insights', order: 5 },
+    { key: 'system', labelKey: 'admin.group.system', order: 6 },
 ];
 
 // ──────────────────────────────────────────────
@@ -120,15 +119,6 @@ export const ADMIN_ROUTES: AdminRoute[] = [
             { key: 'quizzes_all', path: '/admin/quizzes', labelKey: 'admin.sidebar.quizzes_all' },
             { key: 'quizzes_new', path: '/admin/quizzes/new', labelKey: 'admin.sidebar.quizzes_add' },
         ],
-    },
-    {
-        key: 'lessons',
-        path: '/admin/lessons',
-        labelKey: 'admin.sidebar.lessons',
-        icon: BookOpen,
-        group: 'content',
-        hidden: true,
-        featureFlag: 'admin_lessons',
     },
 
     // ── Data ──
@@ -195,7 +185,6 @@ const SEGMENT_LABEL_KEYS: Record<string, string> = {
     dashboard: 'admin.sidebar.dashboard',
     signs: 'admin.sidebar.signs',
     quizzes: 'admin.sidebar.quizzes',
-    lessons: 'admin.sidebar.lessons',
     users: 'admin.sidebar.users',
     analytics: 'admin.sidebar.analytics',
     settings: 'admin.sidebar.settings',

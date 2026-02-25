@@ -58,22 +58,22 @@ export function WeakAreaCard({ area }: WeakAreaCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-3 bg-gray-50 rounded-[12px]">
-            <p className="text-sm text-gray-600">Total</p>
+          <div className="text-center p-3 bg-muted rounded-[12px]">
+            <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-xl font-bold">{area.totalAttempts}</p>
           </div>
           <div className="text-center p-3 bg-green-50 rounded-[12px]">
-            <p className="text-sm text-gray-600">Correct</p>
+            <p className="text-sm text-muted-foreground">Correct</p>
             <p className="text-xl font-bold text-green-600">{area.correctAnswers}</p>
           </div>
           <div className="text-center p-3 bg-red-50 rounded-[12px]">
-            <p className="text-sm text-gray-600">Incorrect</p>
+            <p className="text-sm text-muted-foreground">Incorrect</p>
             <p className="text-xl font-bold text-red-600">{area.incorrectAnswers}</p>
           </div>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Related Topics:</p>
+          <p className="text-sm font-medium text-foreground mb-2">Related Topics:</p>
           <div className="flex flex-wrap gap-2">
             {area.relatedTopics.map((topic) => (
               <span
@@ -87,11 +87,11 @@ export function WeakAreaCard({ area }: WeakAreaCardProps) {
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Practice Resources:</p>
+          <p className="text-sm font-medium text-foreground mb-2">Practice Resources:</p>
           <div className="space-y-2">
             {area.practiceRecommendations.map((rec) => (
               <Link key={rec.link} href={rec.link}>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-[12px] hover:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-[12px] hover:bg-accent transition-colors">
                   <span className="text-sm">{rec.title}</span>
                   <span className="text-primary">→</span>
                 </div>

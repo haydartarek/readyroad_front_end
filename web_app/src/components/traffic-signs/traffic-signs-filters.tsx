@@ -28,7 +28,7 @@ export function TrafficSignsFilters({
   onClearFilters,
 }: TrafficSignsFiltersProps) {
   const [search, setSearch] = useState(searchQuery);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Keep local input in sync when parent clears
   useEffect(() => {
@@ -69,7 +69,7 @@ export function TrafficSignsFilters({
             className="rounded-full"
           >
             {cat.label}
-            <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">
+            <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
               {cat.count}
             </span>
           </Button>

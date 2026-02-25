@@ -7,80 +7,101 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
-import apiClient from '@/lib/api';
+import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { toast } from 'sonner';
 
-interface Category {
+interface CategoryDTO {
+  id: number;
   code: string;
   nameEn: string;
   nameAr: string;
   nameNl: string;
   nameFr: string;
-  description?: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  descriptionNl?: string;
+  descriptionFr?: string;
 }
 
-interface QuizStats {
+interface QuizStatsDTO {
   totalQuestions: number;
-  questionsByCategory: Record<string, number>;
 }
 
 export default function PracticePage() {
   const router = useRouter();
   const { language, t } = useLanguage();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
+  const [categories, setCategories] = useState<CategoryDTO[]>([]);
+  const [questionCounts, setQuestionCounts] = useState<Record<number, number>>({});
+  const [totalQuestions, setTotalQuestions] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
 
-        // Fetch categories (fixed endpoint: /api/categories)
-        const categoriesResponse = await apiClient.get<Category[]>('/categories');
+        const catResp = await apiClient.get<CategoryDTO[]>('/categories');
+        setCategories(catResp.data);
 
-        setCategories(categoriesResponse.data);
+        // Fetch total question stats
+        try {
+          const statsResp = await apiClient.get<QuizStatsDTO>('/quiz/stats');
+          setTotalQuestions(statsResp.data.totalQuestions);
+        } catch {
+          // stats endpoint optional
+        }
 
-        // Generate stats from categories (quiz/stats endpoint doesn't exist)
-        const stats: QuizStats = {
-          totalQuestions: 0,
-          questionsByCategory: {},
-        };
-        setQuizStats(stats);
+        // Fetch per-category question counts in parallel
+        const counts: Record<number, number> = {};
+        await Promise.all(
+          catResp.data.map(async (cat) => {
+            try {
+              const r = await apiClient.get<QuizStatsDTO>(`/quiz/stats/category/${cat.id}`);
+              counts[cat.id] = r.data.totalQuestions;
+            } catch {
+              counts[cat.id] = 0;
+            }
+          })
+        );
+        setQuestionCounts(counts);
 
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('Failed to load categories');
-        toast.error('Failed to load categories');
+        logApiError('Failed to fetch categories', err);
+        if (isServiceUnavailable(err)) {
+          setServiceUnavailable(true);
+        } else {
+          const msg = t('practice.load_error');
+          setError(msg);
+          toast.error(msg);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [t]);
 
-  const getCategoryName = (category: Category) => {
-    switch (language) {
-      case 'ar':
-        return category.nameAr || category.nameEn;
-      case 'nl':
-        return category.nameNl || category.nameEn;
-      case 'fr':
-        return category.nameFr || category.nameEn;
-      default:
-        return category.nameEn;
-    }
+  const getCategoryName = (cat: CategoryDTO): string => {
+    const map: Record<string, string> = {
+      en: cat.nameEn, ar: cat.nameAr, nl: cat.nameNl, fr: cat.nameFr,
+    };
+    return map[language] || cat.nameEn;
   };
 
-  const getQuestionCount = (categoryCode: string) => {
-    return quizStats?.questionsByCategory?.[categoryCode] || 0;
+  const getCategoryDescription = (cat: CategoryDTO): string => {
+    const map: Record<string, string | undefined> = {
+      en: cat.descriptionEn, ar: cat.descriptionAr, nl: cat.descriptionNl, fr: cat.descriptionFr,
+    };
+    return map[language] || cat.descriptionEn || '';
   };
 
-  const handleCategorySelect = (categoryCode: string) => {
-    router.push(`/practice/${categoryCode}`);
+  const handleCategorySelect = (code: string) => {
+    router.push(`/practice/${code}`);
   };
 
   const handleRandomPractice = () => {
@@ -91,8 +112,8 @@ export default function PracticePage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="text-lg text-gray-600">Loading categories...</p>
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <p className="text-lg text-muted-foreground">{t('practice.loading')}</p>
         </div>
       </div>
     );
@@ -103,26 +124,57 @@ export default function PracticePage() {
       <div className="space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900">
-            {t('practice.title') || 'Practice Mode'}
+          <h1 className="text-4xl font-bold text-foreground">
+            {t('practice.title')}
           </h1>
-          <p className="mt-2 text-lg text-gray-600">
-            {t('practice.subtitle') || 'Choose a category to start practicing'}
+          <p className="mt-2 text-lg text-muted-foreground">
+            {t('practice.subtitle')}
           </p>
         </div>
 
-        {/* Info Card */}
-        <Alert>
-          <AlertDescription>
-            <p className="font-semibold">💡 Practice Mode Features:</p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
-              <li>Choose a category to focus on specific topics</li>
-              <li>Get instant feedback after each answer</li>
-              <li>See correct answers and explanations</li>
-              <li>No time limit - practice at your own pace</li>
-            </ul>
-          </AlertDescription>
-        </Alert>
+        {/* Service Unavailable Banner */}
+        {serviceUnavailable && (
+          <ServiceUnavailableBanner
+            onRetry={() => {
+              setServiceUnavailable(false);
+              setError(null);
+              setIsLoading(true);
+              const fetchData = async () => {
+                try {
+                  const catResp = await apiClient.get<CategoryDTO[]>('/categories');
+                  setCategories(catResp.data);
+                  try {
+                    const statsResp = await apiClient.get<QuizStatsDTO>('/quiz/stats');
+                    setTotalQuestions(statsResp.data.totalQuestions);
+                  } catch { /* optional */ }
+                  const counts: Record<number, number> = {};
+                  await Promise.all(
+                    catResp.data.map(async (cat) => {
+                      try {
+                        const r = await apiClient.get<QuizStatsDTO>(`/quiz/stats/category/${cat.id}`);
+                        counts[cat.id] = r.data.totalQuestions;
+                      } catch { counts[cat.id] = 0; }
+                    })
+                  );
+                  setQuestionCounts(counts);
+                  setError(null);
+                } catch (err) {
+                  logApiError('Failed to fetch categories', err);
+                  if (isServiceUnavailable(err)) {
+                    setServiceUnavailable(true);
+                  } else {
+                    const msg = t('practice.load_error');
+                    setError(msg);
+                    toast.error(msg);
+                  }
+                } finally {
+                  setIsLoading(false);
+                }
+              };
+              fetchData();
+            }}
+          />
+        )}
 
         {/* Error Display */}
         {error && (
@@ -134,52 +186,48 @@ export default function PracticePage() {
         {/* Random Practice Option */}
         <Card className="border-2 border-primary">
           <CardHeader>
-            <CardTitle className="text-xl">🎲 Random Practice</CardTitle>
+            <CardTitle className="text-xl">🎲 {t('practice.random')}</CardTitle>
             <CardDescription>
-              Practice with random questions from all categories ({quizStats?.totalQuestions || 0} questions available)
+              {t('practice.random_desc') || `${totalQuestions} ${t('practice.questions_available')}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" onClick={handleRandomPractice}>
-              Start Random Practice
-              <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+              {t('practice.start_random')}
             </Button>
           </CardContent>
         </Card>
 
         {/* Categories Grid */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Practice by Category</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('practice.by_category')}</h2>
           <div className="grid gap-6 md:grid-cols-2">
-            {categories.map((category) => (
+            {categories.map((cat) => (
               <Card
-                key={category.code}
+                key={cat.code}
                 className="cursor-pointer transition-all hover:shadow-lg"
-                onClick={() => handleCategorySelect(category.code)}
+                onClick={() => handleCategorySelect(cat.code)}
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-xl">
-                        {getCategoryName(category)}
+                        {getCategoryName(cat)}
                       </CardTitle>
-                      <CardDescription className="mt-1">
-                        Code: {category.code}
-                      </CardDescription>
+                      {getCategoryDescription(cat) && (
+                        <CardDescription className="mt-1">
+                          {getCategoryDescription(cat)}
+                        </CardDescription>
+                      )}
                     </div>
                     <Badge variant="secondary" className="ml-2">
-                      {getQuestionCount(category.code)} Questions
+                      {questionCounts[cat.id] ?? 0} {t('practice.questions_label')}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <Button className="w-full" variant="outline">
-                    Practice Now
-                    <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    {t('practice.start_practice')}
                   </Button>
                 </CardContent>
               </Card>

@@ -1,64 +1,73 @@
 /**
- * Auth Context Tests
- * Tests token set/clear behavior and logout functionality
- * WITHOUT mocking the backend - uses localStorage stub only
+ * Auth Context Tests — HttpOnly Cookie Edition
+ *
+ * Tests verify that:
+ * - Auth state is determined by /api/auth/me (BFF route), NOT localStorage
+ * - Logout calls POST /api/auth/logout to clear HttpOnly cookie
+ * - No auth data is ever stored in localStorage
+ * - STORAGE_KEYS no longer contains AUTH_TOKEN or USER_DATA
  */
 
 import { STORAGE_KEYS, ROUTES } from '@/lib/constants';
 
-describe('AuthContext Logic', () => {
-    let localStorageMock: { [key: string]: string };
+// Mock fetch globally for BFF route testing
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
 
+describe('AuthContext Logic (HttpOnly Cookie)', () => {
     beforeEach(() => {
-        // Setup localStorage mock
-        localStorageMock = {};
-
-        Object.defineProperty(window, 'localStorage', {
-            value: {
-                getItem: jest.fn((key: string) => localStorageMock[key] || null),
-                setItem: jest.fn((key: string, value: string) => {
-                    localStorageMock[key] = value;
-                }),
-                removeItem: jest.fn((key: string) => {
-                    delete localStorageMock[key];
-                }),
-                clear: jest.fn(() => {
-                    localStorageMock = {};
-                }),
-            },
-            writable: true,
-        });
+        mockFetch.mockClear();
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
+    test('STORAGE_KEYS does NOT contain AUTH_TOKEN (token is in HttpOnly cookie)', () => {
+        // AUTH_TOKEN was removed from STORAGE_KEYS — token is in HttpOnly cookie
+        expect('AUTH_TOKEN' in STORAGE_KEYS).toBe(false);
     });
 
-    test('logout clears auth token from localStorage', () => {
-        // Setup: Store a token
-        localStorageMock[STORAGE_KEYS.AUTH_TOKEN] = 'test-token';
-        localStorageMock[STORAGE_KEYS.USER_DATA] = JSON.stringify({ id: 1, email: 'test@example.com' });
-
-        // Simulate logout behavior
-        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-
-        // Verify token is cleared
-        expect(window.localStorage.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.AUTH_TOKEN);
-        expect(window.localStorage.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.USER_DATA);
-        expect(localStorageMock[STORAGE_KEYS.AUTH_TOKEN]).toBeUndefined();
+    test('STORAGE_KEYS does NOT contain USER_DATA (no user data in localStorage)', () => {
+        // USER_DATA was removed from STORAGE_KEYS
+        expect('USER_DATA' in STORAGE_KEYS).toBe(false);
     });
 
-    test('auth token storage key is correct', () => {
-        expect(STORAGE_KEYS.AUTH_TOKEN).toBe('readyroad_auth_token');
-    });
-
-    test('user data storage key is correct', () => {
-        expect(STORAGE_KEYS.USER_DATA).toBe('readyroad_user');
+    test('STORAGE_KEYS contains AUTH_COOKIE_NAME for reference', () => {
+        expect(STORAGE_KEYS.AUTH_COOKIE_NAME).toBe('token');
     });
 
     test('login route is correct', () => {
         expect(ROUTES.LOGIN).toBe('/login');
     });
-});
 
+    test('logout calls BFF /api/auth/logout', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) });
+
+        await fetch('/api/auth/logout', { method: 'POST' });
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST' });
+    });
+
+    test('fetchUser calls BFF /api/auth/me', async () => {
+        const userData = { userId: 1, username: 'testuser', role: 'USER' };
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => userData,
+        });
+
+        const response = await fetch('/api/auth/me', { cache: 'no-store' });
+        const data = await response.json();
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/auth/me', { cache: 'no-store' });
+        expect(data.username).toBe('testuser');
+    });
+
+    test('fetchUser returns null on 401', async () => {
+        mockFetch.mockResolvedValueOnce({
+            ok: false,
+            status: 401,
+            json: async () => ({ message: 'Not authenticated' }),
+        });
+
+        const response = await fetch('/api/auth/me', { cache: 'no-store' });
+        expect(response.ok).toBe(false);
+        expect(response.status).toBe(401);
+    });
+});

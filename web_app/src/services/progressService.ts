@@ -1,7 +1,7 @@
 // Progress Service - Handles user progress and statistics
 // Location: src/services/progressService.ts
 
-import { apiClient } from '@/lib/api';
+import { apiClient, isServiceUnavailable } from '@/lib/api';
 
 // ═══════════════════════════════════════════════════════════
 // Type Definitions
@@ -80,8 +80,7 @@ export const getOverallProgress = async (): Promise<OverallProgress> => {
         );
         return response.data;
     } catch (error) {
-        console.error('[ProgressService] Failed to fetch overall progress:', error);
-        // Return default data instead of throwing
+        if (isServiceUnavailable(error)) throw error;
         return {
             totalAttempts: 0,
             correctAnswers: 0,
@@ -116,7 +115,7 @@ export const getProgressByCategory = async (): Promise<ProgressByCategory> => {
         );
         return response.data;
     } catch (error) {
-        console.error('[ProgressService] Failed to fetch category progress:', error);
+        if (isServiceUnavailable(error)) throw error;
         return {
             categories: [],
             overallAccuracy: 0,
@@ -136,7 +135,7 @@ export const getRecentActivity = async (limit: number = 10): Promise<RecentActiv
         );
         return response.data;
     } catch (error) {
-        console.error('[ProgressService] Failed to fetch recent activity:', error);
+        if (isServiceUnavailable(error)) throw error;
         return [];
     }
 };

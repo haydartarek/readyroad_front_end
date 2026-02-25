@@ -1,7 +1,7 @@
 // User Service - Handles all user-related API calls
 // Location: src/services/userService.ts
 
-import { apiClient } from '@/lib/api';
+import { apiClient, isServiceUnavailable } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 
 // ═══════════════════════════════════════════════════════════
@@ -64,7 +64,7 @@ export const getCurrentUser = async (): Promise<UserProfile> => {
         const response = await apiClient.get<UserProfile>(API_ENDPOINTS.USERS.ME);
         return response.data;
     } catch (error) {
-        console.error('[UserService] Failed to fetch current user:', error);
+        if (isServiceUnavailable(error)) throw error;
         throw error;
     }
 };
@@ -101,8 +101,7 @@ export const getUserStats = async (): Promise<UserStats | null> => {
         const response = await apiClient.get<UserStats>('/users/me/stats');
         return response.data;
     } catch (error) {
-        console.error('[UserService] Failed to fetch user stats:', error);
-        // Return null if not implemented yet
+        if (isServiceUnavailable(error)) throw error;
         return null;
     }
 };
@@ -121,7 +120,7 @@ export const updateProfile = async (
         );
         return response.data;
     } catch (error) {
-        console.error('[UserService] Failed to update profile:', error);
+        if (isServiceUnavailable(error)) throw error;
         throw error;
     }
 };

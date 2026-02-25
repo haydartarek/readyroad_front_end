@@ -59,9 +59,20 @@ export {
 } from './progressService';
 
 // ═══════════════════════════════════════════════════════════
+// Lesson Service
+// ═══════════════════════════════════════════════════════════
+export {
+    getAllLessons,
+    getLessonByCode,
+    searchLessons,
+    getLessonsCount,
+} from './lessonService';
+
+// ═══════════════════════════════════════════════════════════
 // Default Exports (for advanced usage: import userService from '@/services/userService')
 // ═══════════════════════════════════════════════════════════
 export { default as authService } from './authService';
 export { default as userService } from './userService';
 export { default as analyticsService } from './analyticsService';
 export { default as progressService } from './progressService';
+export { default as lessonService } from './lessonService';

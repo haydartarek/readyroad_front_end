@@ -57,10 +57,10 @@ function MetricCard({
   trend?: 'up' | 'down' | 'neutral';
 }) {
   return (
-    <div className="flex items-start space-x-3 rounded-[24px] border-2 border-gray-200 p-4">
+    <div className="flex items-start space-x-3 rounded-[24px] border-2 border-border p-4">
       <div className="text-3xl">{icon}</div>
       <div className="flex-1">
-        <p className="text-sm text-gray-600">{label}</p>
+        <p className="text-sm text-muted-foreground">{label}</p>
         <p className="text-2xl font-bold">{value}</p>
         {trend && (
           <div className="mt-1 flex items-center text-sm">

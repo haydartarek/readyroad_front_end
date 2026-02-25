@@ -53,23 +53,6 @@ export function Navbar() {
   const BASE_POLL_MS = 30_000;       // 30 s normal
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // 🐛 DEBUG: Log auth state
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      console.log('⚠️ Navbar: Skipping debug (SSR)');
-      return;
-    }
-
-    console.log('🔍 Navbar Auth State (client-side):', {
-      isAuthenticated,
-      hasUser: !!user,
-      username: user?.username,
-      fullName: user?.fullName,
-      tokenLS: localStorage.getItem('token')?.substring(0, 20) + '...',
-      cookieHasToken: document.cookie.includes('token='),
-    });
-  }, [isAuthenticated, user]);
-
   // Search hook integration
   const {
     query: searchQuery,
@@ -220,7 +203,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-50 shadow-sm">
+    <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-6">
         <div className="flex h-16 items-center justify-between gap-6">
           {/* Left: Brand */}
@@ -232,7 +215,7 @@ export function Navbar() {
               height={32}
               className="rounded-md"
             />
-            <span className="text-lg font-semibold text-gray-900">ReadyRoad</span>
+            <span className="text-lg font-semibold text-foreground">ReadyRoad</span>
           </Link>
 
           {/* Center: Primary Navigation + More Dropdown */}
@@ -246,8 +229,8 @@ export function Navbar() {
                   className={cn(
                     'px-4 py-2 text-sm font-medium transition-colors relative',
                     isActive
-                      ? 'text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {t(item.name)}
@@ -262,8 +245,8 @@ export function Navbar() {
                   className={cn(
                     'px-4 py-2 text-sm font-medium transition-colors relative inline-flex items-center gap-1',
                     isSecondaryNavActive
-                      ? 'text-gray-900 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {t('nav.more')}
@@ -311,7 +294,7 @@ export function Navbar() {
             {/* Search Input with Dropdown */}
             <div ref={searchContainerRef} className="hidden md:flex items-center relative">
               <Search className={cn(
-                "absolute h-4 w-4 text-gray-400 pointer-events-none z-10",
+                "absolute h-4 w-4 text-muted-foreground pointer-events-none z-10",
                 isRTL ? "right-3" : "left-3"
               )} />
               <input
@@ -321,7 +304,7 @@ export function Navbar() {
                 onChange={(e) => handleQueryChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 className={cn(
-                  "py-2 text-sm border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 w-48 transition-all",
+                  "py-2 text-sm border border-border rounded-full bg-muted focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 w-48 transition-all",
                   isRTL ? "pr-9 pl-10" : "pl-9 pr-10"
                 )}
               />
@@ -329,7 +312,7 @@ export function Navbar() {
                 <button
                   onClick={handleClear}
                   className={cn(
-                    "absolute h-4 w-4 text-gray-400 hover:text-gray-600 z-10",
+                    "absolute h-4 w-4 text-muted-foreground hover:text-foreground z-10",
                     isRTL ? "left-3" : "right-3"
                   )}
                   aria-label="Clear search"
@@ -353,7 +336,7 @@ export function Navbar() {
             {/* Notification Icon */}
             {user && (
               <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-5 w-5 text-gray-600" />
+                <Bell className="h-5 w-5 text-muted-foreground" />
                 {/* Dynamic notification badge - only show when unreadCount > 0 */}
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
@@ -401,7 +384,7 @@ export function Navbar() {
                           ? "border-amber-300 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 focus:ring-amber-300/50"
                           : isModerator
                             ? "border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 focus:ring-blue-300/50"
-                            : "border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 focus:ring-primary/50"
+                            : "border-border bg-background hover:bg-muted hover:border-border focus:ring-primary/50"
                       )}
                       aria-label="Account menu"
                     >
@@ -415,21 +398,21 @@ export function Navbar() {
                             : "bg-gradient-to-br from-primary to-primary/70"
                       )}>
                         {isAdmin ? (
-                          <Shield className="h-4 w-4 text-white" />
+                          <Shield className="h-4 w-4 text-primary-foreground" />
                         ) : (
-                          <User className="h-4 w-4 text-white" />
+                          <User className="h-4 w-4 text-primary-foreground" />
                         )}
                       </span>
                       {/* Username */}
                       <span className={cn(
                         "text-sm font-medium hidden sm:block max-w-[100px] truncate",
-                        isAdmin ? "text-amber-800" : isModerator ? "text-blue-800" : "text-gray-700"
+                        isAdmin ? "text-amber-800" : isModerator ? "text-blue-800" : "text-foreground"
                       )}>
                         {user.fullName || user.username || 'User'}
                       </span>
                       <ChevronDown className={cn(
                         "h-3.5 w-3.5 hidden sm:block",
-                        isAdmin ? "text-amber-400" : "text-gray-400"
+                        isAdmin ? "text-amber-400" : "text-muted-foreground"
                       )} />
                     </button>
                   </DropdownMenuTrigger>
@@ -437,10 +420,10 @@ export function Navbar() {
                     {/* User info header */}
                     <div className={cn(
                       "px-3 py-2 border-b",
-                      isAdmin ? "border-amber-100 bg-amber-50/50" : "border-gray-100"
+                      isAdmin ? "border-amber-100 bg-amber-50/50" : "border-border"
                     )}>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
+                        <p className="text-sm font-semibold text-foreground truncate">
                           {user.fullName || user.username}
                         </p>
                         {isStaff && (
@@ -455,7 +438,7 @@ export function Navbar() {
                         )}
                       </div>
                       {user.email && (
-                        <p className="text-xs text-gray-500 truncate mt-0.5">{user.email}</p>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
                       )}
                     </div>
 
@@ -468,23 +451,23 @@ export function Navbar() {
                             <span className="text-amber-700 font-medium">Admin Panel</span>
                           </Link>
                         </DropdownMenuItem>
-                        <div className="border-t border-gray-100 my-1" />
+                        <div className="border-t border-border my-1" />
                       </>
                     )}
 
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link href={ROUTES.PROFILE} className="flex items-center gap-2">
-                        <Settings className="h-4 w-4 text-gray-500" />
+                        <Settings className="h-4 w-4 text-muted-foreground" />
                         {t('nav.profile')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link href={ROUTES.PROGRESS} className="flex items-center gap-2">
-                        <BarChart3 className="h-4 w-4 text-gray-500" />
+                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
                         {t('nav.progress')}
                       </Link>
                     </DropdownMenuItem>
-                    <div className="border-t border-gray-100 my-1" />
+                    <div className="border-t border-border my-1" />
                     <DropdownMenuItem
                       onClick={logout}
                       className="text-red-600 focus:text-red-600 cursor-pointer flex items-center gap-2"

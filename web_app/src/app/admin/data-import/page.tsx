@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { apiClient } from '@/lib/api';
+import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 
 // ─── Types ────────────────────────────────────────────────
 
@@ -63,6 +64,7 @@ export default function AdminDataImportPage() {
     const [historyLoading, setHistoryLoading] = useState(true);
     const [dragActive, setDragActive] = useState(false);
     const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+    const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,7 +74,13 @@ export default function AdminDataImportPage() {
         try {
             const res = await apiClient.get<HistoryRecord[]>(API_ENDPOINTS.ADMIN.DATA_IMPORT.HISTORY);
             setHistory(res.data ?? []);
-        } catch { setHistory([]); }
+        } catch (err) {
+            logApiError('Failed to load import history', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
+            }
+            setHistory([]);
+        }
         finally { setHistoryLoading(false); }
     }, []);
 
@@ -123,12 +131,17 @@ export default function AdminDataImportPage() {
             setReport(res.data);
             loadHistory();
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Request failed';
-            setReport({
-                type: selectedType, mode: dryRun ? 'PREVIEW' : 'IMPORT', dryRun, recordsTotal: 0,
-                created: 0, updated: 0, skipped: 0,
-                warnings: [], errors: [msg],
-            });
+            logApiError('Data import failed', err);
+            if (isServiceUnavailable(err)) {
+                setServiceUnavailable(true);
+            } else {
+                const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Request failed';
+                setReport({
+                    type: selectedType, mode: dryRun ? 'PREVIEW' : 'IMPORT', dryRun, recordsTotal: 0,
+                    created: 0, updated: 0, skipped: 0,
+                    warnings: [], errors: [msg],
+                });
+            }
         } finally {
             dryRun ? setPreviewing(false) : setExecuting(false);
         }
@@ -140,15 +153,17 @@ export default function AdminDataImportPage() {
     // ── Render ──────────────────────────────────────────────
     return (
         <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+            {serviceUnavailable && <ServiceUnavailableBanner onRetry={loadHistory} className="mb-4" />}
+
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('admin.import.title')}</h1>
-                <p className="text-gray-600 mt-1">{t('admin.import.description')}</p>
+                <h1 className="text-2xl font-bold text-foreground">{t('admin.import.title')}</h1>
+                <p className="text-muted-foreground mt-1">{t('admin.import.description')}</p>
             </div>
 
             {/* ── Type selector ── */}
-            <div className="bg-white rounded-lg shadow-sm border p-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">{t('admin.import.select_type')}</label>
+            <div className="bg-card rounded-lg shadow-sm border p-4">
+                <label className="block text-sm font-medium text-foreground mb-3">{t('admin.import.select_type')}</label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {IMPORT_TYPES.map(({ key, icon, labelKey }) => (
                         <button
@@ -157,7 +172,7 @@ export default function AdminDataImportPage() {
                             className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium
                                 ${selectedType === key
                                     ? 'border-orange-500 bg-orange-50 text-orange-700'
-                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}
+                                    : 'border-border bg-card text-muted-foreground hover:border-border'}`}
                         >
                             <span className="text-xl">{icon}</span>
                             <span>{t(labelKey)}</span>
@@ -167,8 +182,8 @@ export default function AdminDataImportPage() {
             </div>
 
             {/* ── Upload zone ── */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('admin.import.upload_title')}</h2>
+            <div className="bg-card rounded-lg shadow-sm border p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">{t('admin.import.upload_title')}</h2>
 
                 <div
                     onDragEnter={handleDragIn}
@@ -177,7 +192,7 @@ export default function AdminDataImportPage() {
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all
-                        ${dragActive ? 'border-orange-400 bg-orange-50' : 'border-gray-300 hover:border-gray-400 bg-gray-50'}`}
+                        ${dragActive ? 'border-orange-400 bg-orange-50' : 'border-border hover:border-border bg-muted'}`}
                 >
                     <input
                         ref={fileInputRef}
@@ -187,9 +202,9 @@ export default function AdminDataImportPage() {
                         onChange={e => handleFileSelect(e.target.files?.[0] ?? null)}
                     />
                     <div className="text-4xl mb-3">📁</div>
-                    <p className="text-gray-600 font-medium">{t('admin.import.upload_drag')}</p>
-                    <p className="text-gray-400 text-sm mt-1">{t('admin.import.upload_browse')}</p>
-                    <p className="text-gray-400 text-xs mt-2">JSON · {t('admin.import.upload_max_size')}</p>
+                    <p className="text-muted-foreground font-medium">{t('admin.import.upload_drag')}</p>
+                    <p className="text-muted-foreground text-sm mt-1">{t('admin.import.upload_browse')}</p>
+                    <p className="text-muted-foreground text-xs mt-2">JSON · {t('admin.import.upload_max_size')}</p>
                 </div>
 
                 {/* File info */}
@@ -245,17 +260,17 @@ export default function AdminDataImportPage() {
             {report && <ResultsPanel report={report} t={t} />}
 
             {/* ── History ── */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('admin.import.history_title')}</h2>
+            <div className="bg-card rounded-lg shadow-sm border p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">{t('admin.import.history_title')}</h2>
                 {historyLoading ? (
-                    <div className="text-center py-8 text-gray-400"><Spinner /> {t('admin.import.loading')}</div>
+                    <div className="text-center py-8 text-muted-foreground"><Spinner /> {t('admin.import.loading')}</div>
                 ) : history.length === 0 ? (
-                    <p className="text-gray-400 text-center py-6">{t('admin.import.history_empty')}</p>
+                    <p className="text-muted-foreground text-center py-6">{t('admin.import.history_empty')}</p>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="text-left text-gray-500 border-b">
+                                <tr className="text-left text-muted-foreground border-b">
                                     <th className="pb-2 pr-4 w-6"></th>
                                     <th className="pb-2 pr-4">{t('admin.import.history_date')}</th>
                                     <th className="pb-2 pr-4">{t('admin.import.history_user')}</th>
@@ -274,17 +289,17 @@ export default function AdminDataImportPage() {
                                         <React.Fragment key={h.id}>
                                             <tr
                                                 onClick={() => setExpandedRowId(isExpanded ? null : h.id)}
-                                                className="border-b last:border-0 hover:bg-gray-50 cursor-pointer"
+                                                className="border-b last:border-0 hover:bg-muted cursor-pointer"
                                             >
-                                                <td className="py-2 pr-2 text-gray-400 text-xs">{isExpanded ? '▼' : '▶'}</td>
-                                                <td className="py-2 pr-4 text-gray-600 whitespace-nowrap">
+                                                <td className="py-2 pr-2 text-muted-foreground text-xs">{isExpanded ? '▼' : '▶'}</td>
+                                                <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap">
                                                     {new Date(h.performedAt).toLocaleString(language)}
                                                 </td>
                                                 <td className="py-2 pr-4">{h.performedBy}</td>
                                                 <td className="py-2 pr-4">
                                                     <TypeBadge type={h.importType} t={t} />
                                                 </td>
-                                                <td className="py-2 pr-4 text-gray-500 max-w-[150px] truncate" title={h.fileName}>
+                                                <td className="py-2 pr-4 text-muted-foreground max-w-[150px] truncate" title={h.fileName}>
                                                     {h.fileName}
                                                 </td>
                                                 <td className="py-2 pr-4">
@@ -293,7 +308,7 @@ export default function AdminDataImportPage() {
                                                         {h.dryRun ? t('admin.import.history_preview') : t('admin.import.history_import')}
                                                     </span>
                                                 </td>
-                                                <td className="py-2 pr-4 text-gray-600">{totalRecords}</td>
+                                                <td className="py-2 pr-4 text-muted-foreground">{totalRecords}</td>
                                                 <td className="py-2">
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium
                                                 ${h.status === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -302,7 +317,7 @@ export default function AdminDataImportPage() {
                                                 </td>
                                             </tr>
                                             {isExpanded && (
-                                                <tr className="bg-gray-50">
+                                                <tr className="bg-muted">
                                                     <td colSpan={8} className="px-6 py-4">
                                                         <div className="grid grid-cols-3 gap-4 mb-3">
                                                             <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-center">
@@ -313,9 +328,9 @@ export default function AdminDataImportPage() {
                                                                 <div className="text-lg font-bold text-blue-700">{h.updatedCount}</div>
                                                                 <div className="text-xs text-blue-600">{t('admin.import.updated')}</div>
                                                             </div>
-                                                            <div className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-center">
-                                                                <div className="text-lg font-bold text-gray-600">{h.skippedCount}</div>
-                                                                <div className="text-xs text-gray-500">{t('admin.import.skipped')}</div>
+                                                            <div className="bg-muted border border-border rounded-lg px-3 py-2 text-center">
+                                                                <div className="text-lg font-bold text-muted-foreground">{h.skippedCount}</div>
+                                                                <div className="text-xs text-muted-foreground">{t('admin.import.skipped')}</div>
                                                             </div>
                                                         </div>
                                                         {h.warningSummary && (
@@ -335,7 +350,7 @@ export default function AdminDataImportPage() {
                                                             </div>
                                                         )}
                                                         {!h.warningSummary && !h.errorSummary && (
-                                                            <p className="text-xs text-gray-400">{t('admin.import.history_no_issues')}</p>
+                                                            <p className="text-xs text-muted-foreground">{t('admin.import.history_no_issues')}</p>
                                                         )}
                                                     </td>
                                                 </tr>
@@ -367,15 +382,15 @@ function ResultsPanel({ report, t }: { report: ImportReport; t: (k: string) => s
     const isSuccess = report.errors.length === 0;
     const isPreview = report.mode === 'PREVIEW';
     return (
-        <div className={`rounded-lg shadow-sm border p-6 ${isSuccess ? 'bg-white' : 'bg-red-50 border-red-200'}`}>
+        <div className={`rounded-lg shadow-sm border p-6 ${isSuccess ? 'bg-card' : 'bg-red-50 border-red-200'}`}>
             <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">{t('admin.import.results_title')}</h2>
+                <h2 className="text-lg font-semibold text-foreground">{t('admin.import.results_title')}</h2>
                 {isPreview && (
                     <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-medium">
                         {t('admin.import.dry_run_badge')}
                     </span>
                 )}
-                <span className="text-sm text-gray-500 ml-auto">
+                <span className="text-sm text-muted-foreground ml-auto">
                     {t('admin.import.records_total')}: {report.recordsTotal}
                 </span>
             </div>
@@ -431,7 +446,7 @@ function CountCard({ label, count, color }: { label: string; count: number; colo
     const colorMap: Record<string, string> = {
         green: 'bg-green-50 text-green-700 border-green-200',
         blue: 'bg-blue-50 text-blue-700 border-blue-200',
-        gray: 'bg-gray-50 text-gray-600 border-gray-200',
+        gray: 'bg-muted text-muted-foreground border-border',
     };
     return (
         <div className={`rounded-lg border px-4 py-3 text-center ${colorMap[color]}`}>
@@ -449,5 +464,5 @@ function TypeBadge({ type, t }: { type: string; t: (k: string) => string }) {
         quiz_questions: { icon: '❓', key: 'admin.import.type_quiz' },
     };
     const entry = map[type] || { icon: '📦', key: type };
-    return <span className="text-gray-700">{entry.icon} {t(entry.key)}</span>;
+    return <span className="text-foreground">{entry.icon} {t(entry.key)}</span>;
 }

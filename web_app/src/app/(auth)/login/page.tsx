@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
+import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
+import { isServiceUnavailable, logApiError } from '@/lib/api';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
 import { toast } from 'sonner';
@@ -39,6 +41,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -77,8 +80,13 @@ function LoginForm() {
 
       await login(formData, validatedReturnUrl);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Login failed. Please try again.');
+      logApiError('[Login] login', err);
+      if (isServiceUnavailable(err)) {
+        setServiceUnavailable(true);
+      } else {
+        const error = err as { response?: { data?: { message?: string } } };
+        setError(error.response?.data?.message || 'Login failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +110,9 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
+          {serviceUnavailable && (
+            <ServiceUnavailableBanner onRetry={() => setServiceUnavailable(false)} />
+          )}
           {error && (
             <Alert variant="destructive" className="animate-in fade-in-50 duration-300">
               {error}

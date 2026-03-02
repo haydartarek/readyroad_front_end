@@ -6,3 +6,15 @@
 claude
 claude/
 *claude*
+
+# frontend build & deps
+node_modules/
+dist/
+build/
+.next/
+coverage/
+
+
+.env
+.env.local
+

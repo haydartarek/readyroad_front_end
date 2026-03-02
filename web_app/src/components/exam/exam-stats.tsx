@@ -1,9 +1,12 @@
 'use client';
 
+import Link from 'next/link';
+import { RefreshCw, ClipboardList, BarChart2, Timer, Zap, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
+
+// ─── Types ───────────────────────────────────────────────
 
 interface TimeAnalysis {
   totalTime: string;
@@ -20,128 +23,133 @@ interface ExamStatsProps {
   timeAnalysis?: TimeAnalysis;
 }
 
+// ─── Helpers ─────────────────────────────────────────────
+
+function toSafeNumber(v: unknown, fallback = 0): number {
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+const TIME_ROWS = (t: TimeAnalysis) => [
+  { label: 'Total Time',       value: t.totalTime,           color: 'text-foreground',  icon: Timer  },
+  { label: 'Avg per Question', value: t.averagePerQuestion,  color: 'text-foreground',  icon: Clock  },
+  { label: 'Fastest',          value: t.fastestQuestion,     color: 'text-green-600',   icon: Zap    },
+  { label: 'Slowest',          value: t.slowestQuestion,     color: 'text-orange-500',  icon: Clock  },
+] as const;
+
+const NEXT_STEPS = [
+  { label: 'Try Another Exam', href: '/exam',                  icon: RefreshCw,    variant: 'default'  as const },
+  { label: 'Practice Mode',    href: '/practice',              icon: ClipboardList, variant: 'outline' as const },
+  { label: 'View Analytics',   href: '/analytics/weak-areas',  icon: BarChart2,    variant: 'outline'  as const },
+];
+
+// ─── Component ───────────────────────────────────────────
+
 export function ExamStats({
-  score,
-  totalQuestions,
-  passed,
-  passingScore,
-  timeAnalysis
+  score, totalQuestions, passed, passingScore, timeAnalysis,
 }: ExamStatsProps) {
-  // ✅ Helper to normalize any value to a safe number
-  const toSafeNumber = (v: unknown, fallback = 0) => {
-    const n = typeof v === 'number' ? v : Number(v);
-    return Number.isFinite(n) ? n : fallback;
-  };
+  const safeScore   = toSafeNumber(score);
+  const safeTotal   = toSafeNumber(totalQuestions);
+  const safePassing = toSafeNumber(passingScore);
 
-  // ✅ Normalize all numeric values before calculations
-  const safeScore = toSafeNumber(score, 0);
-  const safeTotal = toSafeNumber(totalQuestions, 0);
-  const safePassingScore = toSafeNumber(passingScore, 0);
-
-  const percentage = safeTotal === 0 ? '0.0' : ((safeScore / safeTotal) * 100).toFixed(1);
-  const correctCount = safeScore;
-  const wrongCount = Math.max(0, safeTotal - safeScore);
-  const passingPercentage = safeTotal === 0 ? '0' : ((safePassingScore / safeTotal) * 100).toFixed(0);
+  const percentage        = safeTotal === 0 ? '0.0' : ((safeScore  / safeTotal) * 100).toFixed(1);
+  const passingPercentage = safeTotal === 0 ? '0'   : ((safePassing / safeTotal) * 100).toFixed(0);
+  const wrongCount        = Math.max(0, safeTotal - safeScore);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      {/* Main Score Card */}
+
+      {/* ── Score card ── */}
       <Card className={cn(
-        'border-2',
-        passed ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'
+        'rounded-2xl border-2 shadow-sm',
+        passed
+          ? 'border-green-200 bg-green-50/40   dark:bg-green-950/20'
+          : 'border-red-200   bg-red-50/40     dark:bg-red-950/20',
       )}>
         <CardHeader>
-          <CardTitle className="text-center text-lg">Your Score</CardTitle>
+          <CardTitle className="text-center font-black">Your Score</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center">
-            <div className="mb-4">
-              <span className={cn(
-                'text-6xl font-bold',
-                passed ? 'text-green-600' : 'text-red-600'
-              )}>
-                {correctCount}
+        <CardContent className="space-y-5">
+
+          {/* Big score */}
+          <div className="text-center space-y-1">
+            <div>
+              <span className={cn('text-6xl font-black', passed ? 'text-green-600' : 'text-red-600')}>
+                {safeScore}
               </span>
               <span className="text-3xl text-muted-foreground">/{safeTotal}</span>
             </div>
-            <div className={cn(
-              'mb-2 text-2xl font-bold',
-              passed ? 'text-green-600' : 'text-red-600'
-            )}>
+            <p className={cn('text-2xl font-black', passed ? 'text-green-600' : 'text-red-600')}>
               {percentage}%
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Required: {safePassingScore}/{safeTotal} ({passingPercentage}%)
-            </div>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Required: {safePassing}/{safeTotal} ({passingPercentage}%)
+            </p>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-4 text-center">
-            <div className="rounded-lg bg-card p-3">
-              <div className="text-2xl font-bold text-green-600">{correctCount}</div>
-              <div className="text-xs text-muted-foreground">Correct</div>
+          {/* Correct / Wrong */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-card border border-border/50 p-3 text-center">
+              <p className="text-2xl font-black text-green-600">{safeScore}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Correct</p>
             </div>
-            <div className="rounded-lg bg-card p-3">
-              <div className="text-2xl font-bold text-red-600">{wrongCount}</div>
-              <div className="text-xs text-muted-foreground">Wrong</div>
+            <div className="rounded-xl bg-card border border-border/50 p-3 text-center">
+              <p className="text-2xl font-black text-red-600">{wrongCount}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Wrong</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Time Analysis Card */}
+      {/* ── Time analysis card ── */}
       {timeAnalysis && (
-        <Card>
+        <Card className="rounded-2xl border-border/50 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Time Analysis</CardTitle>
+            <CardTitle className="font-black">Time Analysis</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg bg-muted p-3">
-                <span className="text-sm text-muted-foreground">Total Time</span>
-                <span className="font-bold text-foreground">{timeAnalysis.totalTime}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-muted p-3">
-                <span className="text-sm text-muted-foreground">Avg per Question</span>
-                <span className="font-bold text-foreground">{timeAnalysis.averagePerQuestion}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-muted p-3">
-                <span className="text-sm text-muted-foreground">Fastest</span>
-                <span className="font-bold text-green-600">{timeAnalysis.fastestQuestion}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-muted p-3">
-                <span className="text-sm text-muted-foreground">Slowest</span>
-                <span className="font-bold text-orange-600">{timeAnalysis.slowestQuestion}</span>
-              </div>
+            <div className="space-y-2">
+              {TIME_ROWS(timeAnalysis).map(({ label, value, color, icon: Icon }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3"
+                >
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                    {label}
+                  </div>
+                  <span className={cn('text-sm font-bold', color)}>{value}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Next Steps Card */}
-      <Card className="md:col-span-2">
+      {/* ── Next steps card ── */}
+      <Card className={cn('rounded-2xl border-border/50 shadow-sm', timeAnalysis ? 'md:col-span-2' : '')}>
         <CardHeader>
-          <CardTitle className="text-lg">Next Steps</CardTitle>
+          <CardTitle className="font-black">Next Steps</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Link href="/exam">
-              <Button className="w-full" variant="default">
-                🔄 Try Another Exam
+          <div className="grid gap-2 sm:grid-cols-3">
+            {NEXT_STEPS.map(({ label, href, icon: Icon, variant }) => (
+              <Button
+                key={href}
+                variant={variant}
+                className={cn('w-full rounded-xl gap-2', variant === 'default' && 'shadow-sm shadow-primary/20')}
+                asChild
+              >
+                <Link href={href}>
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
               </Button>
-            </Link>
-            <Link href="/practice">
-              <Button className="w-full" variant="outline">
-                📝 Practice Mode
-              </Button>
-            </Link>
-            <Link href="/analytics/weak-areas">
-              <Button className="w-full" variant="outline">
-                📊 View Analytics
-              </Button>
-            </Link>
+            ))}
           </div>
         </CardContent>
       </Card>
+
     </div>
   );
 }

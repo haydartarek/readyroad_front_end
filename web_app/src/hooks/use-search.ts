@@ -1,140 +1,134 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { KeyboardEvent } from 'react';
 import { apiClient } from '@/lib/api';
 import type { SearchResult } from '@/components/layout/search-dropdown';
 
-const DEBOUNCE_DELAY = 300;
-const MIN_QUERY_LENGTH = 2;
+// ─── Types ───────────────────────────────────────────────
 
 interface SearchResponse {
-    query: string;
-    results: SearchResult[];
+  query:   string;
+  results: SearchResult[];
 }
 
+// ─── Constants ───────────────────────────────────────────
+
+const DEBOUNCE_DELAY   = 300;
+const MIN_QUERY_LENGTH = 2;
+const CACHE_TTL        = 5 * 60 * 1000; // 5 minutes
+
+// ─── Hook ────────────────────────────────────────────────
+
 export function useSearch(language: string) {
-    const [query, setQuery] = useState('');
-    const [results, setResults] = useState<SearchResult[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [highlightedIndex, setHighlightedIndex] = useState(0);
-    const [isOpen, setIsOpen] = useState(false);
+  const [query,            setQuery]            = useState('');
+  const [results,          setResults]          = useState<SearchResult[]>([]);
+  const [isLoading,        setIsLoading]        = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [isOpen,           setIsOpen]           = useState(false);
 
-    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const cacheRef = useRef<Map<string, SearchResult[]>>(new Map());
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const cacheRef    = useRef<Map<string, SearchResult[]>>(new Map());
 
-    const performSearch = useCallback(async (searchQuery: string) => {
-        // Guard: Don't search empty/whitespace queries
-        const trimmedQuery = searchQuery?.trim();
-        if (!trimmedQuery || trimmedQuery.length < MIN_QUERY_LENGTH) {
-            setResults([]);
-            setIsOpen(false);
-            return;
-        }
+  const performSearch = useCallback(async (searchQuery: string) => {
+    const trimmed = searchQuery.trim();
 
-        // Check cache first
-        const cacheKey = `${language}:${trimmedQuery.toLowerCase()}`;
-        if (cacheRef.current.has(cacheKey)) {
-            setResults(cacheRef.current.get(cacheKey)!);
-            setIsOpen(true);
-            setIsLoading(false);
-            return;
-        }
+    if (!trimmed || trimmed.length < MIN_QUERY_LENGTH) {
+      setResults([]);
+      setIsOpen(false);
+      return;
+    }
 
-        setIsLoading(true);
-        setIsOpen(true);
+    const cacheKey = `${language}:${trimmed.toLowerCase()}`;
+    const cached   = cacheRef.current.get(cacheKey);
 
-        try {
-            const response = await apiClient.get<SearchResponse>('/search', {
-                q: trimmedQuery,
-                lang: language,
-            });
+    if (cached) {
+      setResults(cached);
+      setIsOpen(true);
+      setIsLoading(false);
+      return;
+    }
 
-            // Backend returns SearchResponse with query and results array
-            const searchResults = response.data?.results || [];
-            setResults(searchResults);
+    setIsLoading(true);
+    setIsOpen(true);
 
-            // Cache results for 5 minutes
-            cacheRef.current.set(cacheKey, searchResults);
-            setTimeout(() => cacheRef.current.delete(cacheKey), 5 * 60 * 1000);
-        } catch {
-            setResults([]);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [language]);
+    try {
+      const response = await apiClient.get<SearchResponse>('/search', {
+        q:    trimmed,
+        lang: language,
+      });
 
-    const handleQueryChange = useCallback((value: string) => {
-        setQuery(value);
-        setHighlightedIndex(0);
+      const searchResults = response.data?.results ?? [];
+      setResults(searchResults);
 
-        // Clear existing timer
-        if (debounceTimerRef.current) {
-            clearTimeout(debounceTimerRef.current);
-        }
+      // Cache with TTL
+      cacheRef.current.set(cacheKey, searchResults);
+      setTimeout(() => cacheRef.current.delete(cacheKey), CACHE_TTL);
+    } catch {
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [language]);
 
-        // Debounce search
-        debounceTimerRef.current = setTimeout(() => {
-            performSearch(value);
-        }, DEBOUNCE_DELAY);
-    }, [performSearch]);
+  const clearDebounce = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+  }, []);
 
-    const handleClear = useCallback(() => {
-        setQuery('');
-        setResults([]);
-        setIsOpen(false);
-        setHighlightedIndex(0);
+  const handleQueryChange = useCallback((value: string) => {
+    setQuery(value);
+    setHighlightedIndex(0);
+    clearDebounce();
+    debounceRef.current = setTimeout(() => performSearch(value), DEBOUNCE_DELAY);
+  }, [performSearch, clearDebounce]);
 
-        if (debounceTimerRef.current) {
-            clearTimeout(debounceTimerRef.current);
-        }
-    }, []);
+  const handleClear = useCallback(() => {
+    setQuery('');
+    setResults([]);
+    setIsOpen(false);
+    setHighlightedIndex(0);
+    clearDebounce();
+  }, [clearDebounce]);
 
-    const handleClose = useCallback(() => {
-        setIsOpen(false);
-        setHighlightedIndex(0);
-    }, []);
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setHighlightedIndex(0);
+  }, []);
 
-    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        if (!isOpen || results.length === 0) return;
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!isOpen || results.length === 0) return;
 
-        switch (e.key) {
-            case 'ArrowDown':
-                e.preventDefault();
-                setHighlightedIndex((prev) =>
-                    prev < results.length - 1 ? prev + 1 : 0
-                );
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                setHighlightedIndex((prev) =>
-                    prev > 0 ? prev - 1 : results.length - 1
-                );
-                break;
-            case 'Escape':
-                e.preventDefault();
-                handleClose();
-                break;
-        }
-    }, [isOpen, results.length, handleClose]);
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex(prev => (prev < results.length - 1 ? prev + 1 : 0));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex(prev => (prev > 0 ? prev - 1 : results.length - 1));
+        break;
+      case 'Escape':
+        e.preventDefault();
+        handleClose();
+        break;
+    }
+  }, [isOpen, results.length, handleClose]);
 
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            if (debounceTimerRef.current) {
-                clearTimeout(debounceTimerRef.current);
-            }
-        };
-    }, []);
+  // Cleanup debounce on unmount
+  useEffect(() => () => clearDebounce(), [clearDebounce]);
 
-    return {
-        query,
-        results,
-        isLoading,
-        isOpen,
-        highlightedIndex,
-        handleQueryChange,
-        handleClear,
-        handleClose,
-        handleKeyDown,
-    };
+  return {
+    query,
+    results,
+    isLoading,
+    isOpen,
+    highlightedIndex,
+    handleQueryChange,
+    handleClear,
+    handleClose,
+    handleKeyDown,
+  };
 }

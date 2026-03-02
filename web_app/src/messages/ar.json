@@ -11,11 +11,44 @@
   "nav.progress": "التقدم",
   "nav.profile": "الملف الشخصي",
   "nav.traffic_signs": "علامات المرور",
+  "traffic_signs.search_placeholder": "ابحث عن علامات المرور…",
+  "traffic_signs.clear_filters": "مسح الفلاتر",
   "nav.lessons": "الدروس",
   "nav.language": "اللغة",
   "nav.more": "المزيد",
   "nav.search": "بحث",
   "nav.notifications": "الإشعارات",
+  "notif.title": "الإشعارات",
+  "notif.badge_new": "جديد",
+  "notif.close": "إغلاق الإشعارات",
+  "notif.empty_title": "لا يوجد جديد!",
+  "notif.empty_subtitle": "لا توجد إشعارات بعد.",
+  "notif.footer": "عرض آخر {count} إشعار",
+  "notif.footer_plural": "عرض آخر {count} إشعارات",
+  "notif.time_just_now": "الآن",
+  "notif.time_minutes": "منذ {n} د",
+  "notif.time_hours": "منذ {n} س",
+  "notif.time_days": "منذ {n} ي",
+  "notif.unread_label": "غير مقروء",
+  "notif.type.exam_passed": "اجتياز الامتحان",
+  "notif.type.exam_failed": "رسوب في الامتحان",
+  "notif.type.weak_area": "منطقة ضعف",
+  "notif.type.streak": "سلسلة الدراسة",
+  "notif.type.achievement": "إنجاز",
+  "notif.type.reminder": "تذكير بالدراسة",
+  "notif.type.system": "النظام",
+  "notif.weak_area.title": "تم اكتشاف منطقة ضعف",
+  "notif.weak_area.cta": "مراجعة هذا الموضوع",
+  "notif.streak.title": "إنجاز في سلسلة الدراسة!",
+  "notif.streak.days": "سلسلة {n} أيام",
+  "notif.achievement.title": "إنجاز جديد!",
+  "notif.achievement.first_exam": "أول امتحان مكتمل",
+  "notif.achievement.five_passed": "اجتياز 5 امتحانات",
+  "notif.achievement.ten_passed": "اجتياز 10 امتحانات",
+  "notif.achievement.perfect_score": "علامة كاملة",
+  "notif.achievement.streak_3": "سلسلة 3 امتحانات ناجحة",
+  "notif.reminder.title": "حان وقت الدراسة!",
+  "notif.reminder.cta": "ابدأ التمرين",
   "search.page": "صفحة",
   "search.sign": "علامة",
   "search.lesson": "درس",
@@ -606,5 +639,56 @@
   "sign_detail.practice_questions": "تدريب على الأسئلة",
   "sign_detail.take_exam": "ابدأ امتحان كامل",
   "sign_detail.long_description": "وصف مفصل",
-  "sign_detail.no_long_description": "لا يوجد وصف مفصل متاح بهذه اللغة."
+  "sign_detail.no_long_description": "لا يوجد وصف مفصل متاح بهذه اللغة.",
+  "dashboard.greeting_morning": "🌅 صباح الخير",
+  "dashboard.greeting_afternoon": "☀️ مساء الخير",
+  "dashboard.greeting_evening": "🌙 مساء النور",
+  "dashboard.welcome_back": "مرحباً بعودتك،",
+  "dashboard.subtitle": "مستعد لمواصلة رحلتك نحو إتقان رخصة القيادة البلجيكية؟ 🚗",
+  "dashboard.stat_questions_done": "الأسئلة المُنجزة",
+  "dashboard.stat_avg_score": "متوسط الدرجات",
+  "dashboard.stat_pass_rate": "معدل النجاح",
+  "dashboard.stat_streak": "سلسلة الدراسة",
+  "dashboard.stat_streak_days": "أيام",
+  "dashboard.quick_actions": "إجراءات سريعة",
+  "dashboard.most_studied": "الأكثر دراسة",
+  "dashboard.mastery_strong": "قوي",
+  "dashboard.mastery_good": "جيد",
+  "dashboard.mastery_needs_work": "يحتاج تحسين",
+  "dashboard.no_weak_areas": "لم يتم اكتشاف مجالات ضعيفة حتى الآن. استمر في التدريب!",
+  "dashboard.practice_this_category": "تدرب على هذه الفئة",
+  "dashboard.view_all": "عرض الكل",
+  "dashboard.progress_title": "تقدمك",
+  "dashboard.metric_exams_taken": "الاختبارات المأخوذة",
+  "dashboard.metric_avg_score": "متوسط الدرجات",
+  "dashboard.metric_pass_rate": "معدل النجاح",
+  "dashboard.metric_current_streak": "السلسلة الحالية",
+  "dashboard.trend_good_progress": "تقدم جيد",
+  "dashboard.trend_needs_improvement": "يحتاج تحسين",
+  "dashboard.action_exam_title": "أداء اختبار",
+  "dashboard.action_exam_desc": "اختبار قيادة رسمي من 50 سؤال",
+  "dashboard.action_practice_title": "تدريب",
+  "dashboard.action_practice_desc": "تدرب حسب الفئة أو المستوى",
+  "dashboard.action_analytics_title": "عرض التحليلات",
+  "dashboard.action_analytics_desc": "اطلع على أنماط أخطائك والمجالات الضعيفة",
+  "dashboard.recent_activity": "النشاط الأخير",
+  "dashboard.no_activity": "لا يوجد نشاط بعد. أجرِ أول اختبار أو جلسة تدريب!",
+  "dashboard.activity_exam_label": "اختبار رسمي",
+  "dashboard.activity_practice_label": "تدريب",
+  "dashboard.activity_practice_prefix": "تدريب: ",
+  "dashboard.result_passed": "ناجح",
+  "dashboard.result_failed": "راسب",
+  "dashboard.activity_view": "عرض",
+
+  "unauthorized.title": "الوصول غير مصرح به",
+  "unauthorized.subtitle": "عذراً، ليس لديك الصلاحيات الكافية للوصول إلى هذه الصفحة",
+  "unauthorized.reason_heading": "لماذا حدث هذا؟",
+  "unauthorized.reason_1": "قد لا تملك الدور المطلوب (ADMIN أو MODERATOR)",
+  "unauthorized.reason_2": "قد تكون محاولاً الوصول إلى صفحة محظورة",
+  "unauthorized.reason_3": "قد تحتاج إلى تسجيل الدخول بحساب مختلف",
+  "unauthorized.go_back": "العودة للصفحة السابقة",
+  "unauthorized.go_home": "الذهاب للصفحة الرئيسية",
+  "unauthorized.logout": "تسجيل الخروج",
+  "unauthorized.need_help": "تحتاج مساعدة؟",
+  "unauthorized.contact_us": "تواصل معنا"
 }

@@ -1,10 +1,23 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
+import { CheckCircle2, XCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
 import { convertToPublicImageUrl } from '@/lib/image-utils';
+
+// ─── Types ───────────────────────────────────────────────
+
+type Lang = 'en' | 'ar' | 'nl' | 'fr';
+
+interface QuestionOption {
+  number: 1 | 2 | 3;
+  textEn: string;
+  textAr: string;
+  textNl: string;
+  textFr: string;
+}
 
 interface Question {
   id: number;
@@ -13,13 +26,7 @@ interface Question {
   questionTextNl: string;
   questionTextFr: string;
   imageUrl?: string;
-  options: Array<{
-    number: 1 | 2 | 3;
-    textEn: string;
-    textAr: string;
-    textNl: string;
-    textFr: string;
-  }>;
+  options: QuestionOption[];
 }
 
 interface QuestionCardProps {
@@ -30,6 +37,15 @@ interface QuestionCardProps {
   correctAnswer?: number;
 }
 
+// ─── Helpers ─────────────────────────────────────────────
+
+function getByLang<T extends Record<string, string>>(obj: T, key: string, lang: Lang): string {
+  const suffix = lang === 'en' ? 'En' : lang.charAt(0).toUpperCase() + lang.slice(1);
+  return (obj as Record<string, string>)[`${key}${suffix}`] ?? obj[`${key}En`] ?? '';
+}
+
+// ─── Component ───────────────────────────────────────────
+
 export function QuestionCard({
   question,
   selectedAnswer,
@@ -37,44 +53,30 @@ export function QuestionCard({
   showCorrectAnswer = false,
   correctAnswer,
 }: QuestionCardProps) {
-  const { language } = useLanguage();
+  const { language, isRTL } = useLanguage();
+  const lang = language as Lang;
 
-  const getQuestionText = () => {
-    switch (language) {
-      case 'ar':
-        return question.questionTextAr;
-      case 'nl':
-        return question.questionTextNl;
-      case 'fr':
-        return question.questionTextFr;
-      default:
-        return question.questionTextEn;
-    }
-  };
+  const questionText = getByLang(
+    { questionTextEn: question.questionTextEn, questionTextAr: question.questionTextAr,
+      questionTextNl: question.questionTextNl, questionTextFr: question.questionTextFr },
+    'questionText', lang,
+  );
 
-  const getOptionText = (option: Question['options'][0]) => {
-    switch (language) {
-      case 'ar':
-        return option.textAr;
-      case 'nl':
-        return option.textNl;
-      case 'fr':
-        return option.textFr;
-      default:
-        return option.textEn;
-    }
-  };
+  const imageUrl = question.imageUrl
+    ? convertToPublicImageUrl(question.imageUrl) ?? null
+    : null;
 
   return (
-    <Card>
-      <CardContent className="p-8">
-        <div className="space-y-8">
-          {/* Question Image */}
-          {question.imageUrl && convertToPublicImageUrl(question.imageUrl) && (
+    <Card className="rounded-2xl border-border/50 shadow-sm">
+      <CardContent className="p-6 md:p-8">
+        <div className="space-y-6">
+
+          {/* Image */}
+          {imageUrl && (
             <div className="flex justify-center">
-              <div className="relative h-64 w-full max-w-md overflow-hidden rounded-[24px] bg-muted">
+              <div className="relative h-64 w-full max-w-md overflow-hidden rounded-2xl bg-muted">
                 <Image
-                  src={convertToPublicImageUrl(question.imageUrl)!}
+                  src={imageUrl}
                   alt="Question illustration"
                   fill
                   className="object-contain"
@@ -84,66 +86,73 @@ export function QuestionCard({
             </div>
           )}
 
-          {/* Question Text */}
-          <div>
-            <h3 className="text-xl font-semibold leading-relaxed">
-              {getQuestionText()}
-            </h3>
-          </div>
+          {/* Question text */}
+          <h3
+            className="text-xl font-black leading-relaxed text-foreground"
+            dir={isRTL ? 'rtl' : 'ltr'}
+          >
+            {questionText}
+          </h3>
 
           {/* Options */}
-          <div className="space-y-4">
-            {question.options.map((option) => {
+          <div className="space-y-3">
+            {question.options.map(option => {
               const isSelected = selectedAnswer === option.number;
-              const isCorrect = showCorrectAnswer && correctAnswer === option.number;
-              const isWrong = showCorrectAnswer && isSelected && correctAnswer !== option.number;
+              const isCorrect  = showCorrectAnswer && correctAnswer === option.number;
+              const isWrong    = showCorrectAnswer && isSelected && correctAnswer !== option.number;
+              const optionText = getByLang(
+                { textEn: option.textEn, textAr: option.textAr, textNl: option.textNl, textFr: option.textFr },
+                'text', lang,
+              );
 
               return (
                 <button
                   key={`${question.id}-${option.number}`}
                   onClick={() => !showCorrectAnswer && onAnswerSelect(option.number)}
                   disabled={showCorrectAnswer}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                   className={cn(
-                    'w-full rounded-[24px] border-2 p-6 text-left transition-all',
-                    'hover:border-primary hover:bg-primary/5',
-                    isSelected && !showCorrectAnswer && 'border-primary bg-primary/10',
-                    isCorrect && 'border-green-500 bg-green-50',
-                    isWrong && 'border-red-500 bg-red-50',
-                    showCorrectAnswer && 'cursor-default'
+                    'w-full rounded-2xl border-2 p-5 text-left transition-all',
+                    // default
+                    !isSelected && !isCorrect && !isWrong &&
+                      'border-border hover:border-primary hover:bg-primary/5',
+                    // selected (exam mode)
+                    isSelected && !showCorrectAnswer &&
+                      'border-primary bg-primary/10',
+                    // correct answer
+                    isCorrect &&
+                      'border-green-500 bg-green-50  dark:bg-green-950/20',
+                    // wrong answer
+                    isWrong &&
+                      'border-red-500   bg-red-50    dark:bg-red-950/20',
+                    // disabled cursor
+                    showCorrectAnswer && 'cursor-default',
                   )}
                 >
                   <div className="flex items-center gap-4">
-                    {/* Option Number */}
-                    <div
-                      className={cn(
-                        'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 font-bold',
-                        isSelected && !showCorrectAnswer && 'border-primary bg-primary text-white',
-                        isCorrect && 'border-green-500 bg-green-500 text-white',
-                        isWrong && 'border-red-500 bg-red-500 text-white',
-                        !isSelected && !isCorrect && !isWrong && 'border-border bg-card'
-                      )}
-                    >
+
+                    {/* Number badge */}
+                    <div className={cn(
+                      'flex h-9 w-9 flex-shrink-0 items-center justify-center',
+                      'rounded-xl border-2 text-sm font-black transition-colors',
+                      isSelected && !showCorrectAnswer && 'border-primary    bg-primary    text-white',
+                      isCorrect                         && 'border-green-500  bg-green-500  text-white',
+                      isWrong                           && 'border-red-500    bg-red-500    text-white',
+                      !isSelected && !isCorrect && !isWrong && 'border-border bg-card text-foreground',
+                    )}>
                       {option.number}
                     </div>
 
-                    {/* Option Text */}
-                    <div className="flex-1 text-base font-medium">
-                      {getOptionText(option)}
-                    </div>
+                    {/* Text */}
+                    <span className="flex-1 text-base font-medium text-foreground text-left">
+                      {optionText}
+                    </span>
 
-                    {/* Feedback Icons (Practice Mode) */}
-                    {showCorrectAnswer && (
+                    {/* Feedback icon */}
+                    {showCorrectAnswer && (isCorrect || isWrong) && (
                       <div className="flex-shrink-0">
-                        {isCorrect && (
-                          <svg className="h-6 w-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                        {isWrong && (
-                          <svg className="h-6 w-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        )}
+                        {isCorrect && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                        {isWrong   && <XCircle      className="h-5 w-5 text-red-500"   />}
                       </div>
                     )}
                   </div>
@@ -151,6 +160,7 @@ export function QuestionCard({
               );
             })}
           </div>
+
         </div>
       </CardContent>
     </Card>

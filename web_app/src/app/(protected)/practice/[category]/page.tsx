@@ -6,15 +6,13 @@ import { PracticeQuestionCard, AnswerFeedback } from '@/components/practice/prac
 import { PracticeStats } from '@/components/practice/practice-stats';
 import { PracticeComplete } from '@/components/practice/practice-complete';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { toast } from 'sonner';
-
-// ── Interfaces matching the secure delivery DTO contract ──────────────
-//    NO correctOptionId, NO explanations — those come from submission only
 
 interface QuizAnswerOptionDTO {
   id: number;
@@ -52,8 +50,6 @@ interface CategoryDTO {
   nameFr: string;
 }
 
-// ── Server submission response shape ──────────────────────────────────
-
 interface SubmitAnswerResponse {
   questionId: number;
   isCorrect: boolean;
@@ -71,6 +67,21 @@ interface SubmitAnswerResponse {
   totalAttempts: number | null;
   correctAttempts: number | null;
   masteryLevel: string | null;
+}
+
+function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="text-center space-y-4">
+        <div className="relative mx-auto w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center text-2xl">🧠</div>
+        </div>
+        <p className="text-base text-muted-foreground font-medium">{message}</p>
+      </div>
+    </div>
+  );
 }
 
 export default function PracticeQuestionsPage() {
@@ -93,9 +104,7 @@ export default function PracticeQuestionsPage() {
     try {
       setIsLoading(true);
       setError(null);
-
       let endpoint: string;
-
       if (categoryCode === 'random') {
         endpoint = '/smart-quiz/random?count=20';
       } else {
@@ -103,7 +112,6 @@ export default function PracticeQuestionsPage() {
         setCategory(catResp.data);
         endpoint = `/smart-quiz/category/${catResp.data.id}?count=20`;
       }
-
       const resp = await apiClient.get<QuizQuestionDTO[]>(endpoint);
       setQuestions(resp.data);
       setError(null);
@@ -123,9 +131,8 @@ export default function PracticeQuestionsPage() {
 
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryCode, t]);
-
-  // ── Language-aware getters ──────────────────────────────────────────
 
   const getQuestionText = (q: QuizQuestionDTO): string => {
     const map: Record<string, string> = {
@@ -143,7 +150,8 @@ export default function PracticeQuestionsPage() {
 
   const getExplanationFromResponse = (resp: SubmitAnswerResponse): string | undefined => {
     const map: Record<string, string | null> = {
-      en: resp.explanationEn, ar: resp.explanationAr, nl: resp.explanationNl, fr: resp.explanationFr,
+      en: resp.explanationEn, ar: resp.explanationAr,
+      nl: resp.explanationNl, fr: resp.explanationFr,
     };
     return (map[language] || resp.explanationEn) ?? undefined;
   };
@@ -151,10 +159,8 @@ export default function PracticeQuestionsPage() {
   const getCategoryName = (): string => {
     if (categoryCode === 'random') return t('practice.random');
     const src = category ?? (questions[0] ? {
-      nameEn: questions[0].categoryNameEn,
-      nameAr: questions[0].categoryNameAr,
-      nameNl: questions[0].categoryNameNl,
-      nameFr: questions[0].categoryNameFr,
+      nameEn: questions[0].categoryNameEn, nameAr: questions[0].categoryNameAr,
+      nameNl: questions[0].categoryNameNl, nameFr: questions[0].categoryNameFr,
     } : null);
     if (!src) return categoryCode;
     const map: Record<string, string> = {
@@ -163,11 +169,8 @@ export default function PracticeQuestionsPage() {
     return map[language] || src.nameEn;
   };
 
-  const getCategoryCode = (): string => {
-    return category?.code ?? questions[0]?.categoryCode ?? categoryCode;
-  };
-
-  // ── Server-side answer submission ──────────────────────────────────
+  const getCategoryCode = (): string =>
+    category?.code ?? questions[0]?.categoryCode ?? categoryCode;
 
   const submitAnswer = useCallback(async (
     questionId: number,
@@ -178,29 +181,18 @@ export default function PracticeQuestionsPage() {
       { selectedOptionId },
     );
     const data = resp.data;
-
-    // Update counters based on server response
-    if (data.isCorrect) {
-      setCorrectCount((prev) => prev + 1);
-    } else {
-      setWrongCount((prev) => prev + 1);
-    }
-
-    // Advance to next question after a brief delay
+    if (data.isCorrect) setCorrectCount((prev) => prev + 1);
+    else setWrongCount((prev) => prev + 1);
     setTimeout(() => {
-      if (currentIndex < questions.length - 1) {
-        setCurrentIndex((prev) => prev + 1);
-      } else {
-        setIsComplete(true);
-      }
+      if (currentIndex < questions.length - 1) setCurrentIndex((prev) => prev + 1);
+      else setIsComplete(true);
     }, 2000);
-
     return {
       isCorrect: data.isCorrect,
       correctOptionId: String(data.correctOptionId),
       explanation: getExplanationFromResponse(data),
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, questions.length, language]);
 
   const handleRestart = useCallback(() => {
@@ -210,48 +202,31 @@ export default function PracticeQuestionsPage() {
     setIsComplete(false);
   }, []);
 
-  // ── Render ─────────────────────────────────────────────────────────
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-          <p className="text-lg text-muted-foreground">{t('practice.loading')}</p>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <LoadingSpinner message={t('practice.loading')} />;
 
   if (serviceUnavailable) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="max-w-md w-full">
-          <ServiceUnavailableBanner
-            onRetry={() => {
-              setServiceUnavailable(false);
-              setError(null);
-              fetchData();
-            }}
-          />
-        </div>
+      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+        <ServiceUnavailableBanner
+          onRetry={() => { setServiceUnavailable(false); setError(null); fetchData(); }}
+          className="max-w-md"
+        />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="max-w-md text-center space-y-4">
+      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="max-w-md w-full text-center space-y-4">
+          <div className="text-6xl">⚠️</div>
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-          <button
-            onClick={fetchData}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
-          >
+          <Button onClick={fetchData} className="gap-2 w-full">
+            <RefreshCw className="w-4 h-4" />
             {t('practice.retry') || 'Try Again'}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -259,23 +234,39 @@ export default function PracticeQuestionsPage() {
 
   if (questions.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="max-w-md text-center space-y-4">
-          <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-            <AlertCircle className="h-8 w-8 text-muted-foreground" />
+      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="max-w-sm w-full text-center space-y-4">
+          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 flex items-center justify-center mx-auto">
+            <span className="text-4xl">🔄</span>
           </div>
-          <h2 className="text-xl font-semibold text-foreground">
+          <h2 className="text-2xl font-black tracking-tight">
             {t('practice.no_questions_title') || 'No Questions Available'}
           </h2>
           <p className="text-sm text-muted-foreground">
             {t('practice.no_questions_hint') || 'There are no deliverable questions in this category right now. Please try another category or check back later.'}
           </p>
-          <button
-            onClick={() => window.history.back()}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
-          >
-            {t('practice.go_back') || 'Go Back'}
-          </button>
+          <div className="rounded-xl border border-amber-300/40 bg-amber-500/10 px-4 py-3 text-left">
+            <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+              💡 <strong>Tip:</strong> Try the <strong>Random Practice</strong> for questions across all categories, or come back after 24 hours for fresh questions.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={() => window.location.href = '/practice/random'}
+              className="gap-2 w-full"
+            >
+              <RefreshCw className="w-4 h-4" />
+              {'Try Random Practice'}
+            </Button>
+            <Button
+              onClick={() => window.history.back()}
+              variant="outline"
+              className="gap-2 w-full"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t('practice.go_back') || 'Go Back'}
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -299,34 +290,49 @@ export default function PracticeQuestionsPage() {
 
   const currentQuestion = questions[currentIndex];
 
-  // Options are already sorted by displayOrder from the backend
   const mappedQuestion = {
     id: String(currentQuestion.id),
     text: getQuestionText(currentQuestion),
     imageUrl: currentQuestion.contentImageUrl ?? undefined,
     options: (currentQuestion.options || [])
-      .map((opt) => ({
-        id: String(opt.id),
-        text: getOptionText(opt),
-      }))
+      .map((opt) => ({ id: String(opt.id), text: getOptionText(opt) }))
       .filter((opt) => opt.text.trim() !== ''),
     categoryCode: getCategoryCode(),
     categoryName: getCategoryName(),
   };
 
   return (
-    <div className="min-h-screen bg-muted py-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background py-8">
       <div className="container mx-auto max-w-4xl px-4">
-        <div className="space-y-6">
-          {/* Guest mode banner */}
+        <div className="space-y-5">
+
+          {/* Guest Banner */}
           {!isAuthenticated && (
-            <Alert className="border-amber-300 bg-amber-50">
-              <AlertDescription className="text-amber-800">
+            <div className="rounded-2xl border border-amber-300/50 bg-amber-500/10 px-4 py-3 flex items-start gap-3">
+              <span className="text-xl flex-shrink-0">👋</span>
+              <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
                 {t('practice.guest_banner')}
-              </AlertDescription>
-            </Alert>
+              </p>
+            </div>
           )}
 
+          {/* Progress Header */}
+          <div className="flex items-center justify-between rounded-2xl bg-card border border-border/40 px-5 py-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🧠</span>
+              <div>
+                <p className="text-xs text-muted-foreground">Category</p>
+                <p className="text-sm font-bold leading-tight">{getCategoryName()}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-sm">
+              <span className="font-black text-primary text-lg">{currentIndex + 1}</span>
+              <span className="text-muted-foreground">/</span>
+              <span className="font-semibold text-muted-foreground">{questions.length}</span>
+            </div>
+          </div>
+
+          {/* Stats */}
           <PracticeStats
             totalQuestions={questions.length}
             currentQuestion={currentIndex + 1}
@@ -335,6 +341,7 @@ export default function PracticeQuestionsPage() {
             accuracy={accuracy}
           />
 
+          {/* Question Card */}
           <PracticeQuestionCard
             key={currentQuestion.id}
             question={mappedQuestion}
@@ -342,6 +349,7 @@ export default function PracticeQuestionsPage() {
               submitAnswer(currentQuestion.id, Number(selectedOptionId))
             }
           />
+
         </div>
       </div>
     </div>

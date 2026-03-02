@@ -1,6 +1,9 @@
 'use client';
 
+import { ChevronLeft, ChevronRight, LayoutGrid, StopCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+// ─── Types ───────────────────────────────────────────────
 
 interface QuestionNavigatorProps {
   currentIndex: number;
@@ -10,6 +13,8 @@ interface QuestionNavigatorProps {
   onSubmit: () => void;
   isLastQuestion: boolean;
 }
+
+// ─── Component ───────────────────────────────────────────
 
 export function QuestionNavigator({
   currentIndex,
@@ -22,46 +27,57 @@ export function QuestionNavigator({
   const isFirstQuestion = currentIndex === 0;
 
   return (
-    <div className="flex items-center justify-between gap-2 sm:gap-4">
-      {/* Previous Button */}
+    <div className="flex items-center justify-between gap-2 sm:gap-3">
+
+      {/* Previous */}
       <Button
         variant="outline"
+        size="sm"
         onClick={onPrevious}
         disabled={isFirstQuestion}
-        size="sm"
+        className="rounded-xl gap-1"
       >
-        <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
+        <ChevronLeft className="h-4 w-4" />
         Previous
       </Button>
 
-      {/* Overview Button */}
-      <Button variant="outline" onClick={onOverview} size="sm">
-        <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-        Overview
-      </Button>
-
-      {/* End Exam Button - Always visible */}
-      <Button
-        variant="destructive"
-        onClick={onSubmit}
-        size="sm"
-      >
-        End Exam
-      </Button>
-
-      {/* Next Button (hidden on last question since End Exam handles it) */}
-      {!isLastQuestion && (
-        <Button onClick={onNext} size="sm">
-          Next
-          <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+      {/* Centre group */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOverview}
+          className="rounded-xl gap-1.5"
+        >
+          <LayoutGrid className="h-4 w-4" />
+          Overview
         </Button>
-      )}
+
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={onSubmit}
+          className="rounded-xl gap-1.5"
+        >
+          <StopCircle className="h-4 w-4" />
+          End Exam
+        </Button>
+      </div>
+
+      {/* Next — placeholder keeps layout stable on last question */}
+      <div className="min-w-[80px] flex justify-end">
+        {!isLastQuestion && (
+          <Button
+            size="sm"
+            onClick={onNext}
+            className="rounded-xl gap-1"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
     </div>
   );
 }

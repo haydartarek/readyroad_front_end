@@ -1,171 +1,148 @@
-// User Service - Handles all user-related API calls
-// Location: src/services/userService.ts
-
 import { apiClient, isServiceUnavailable } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 
-// ═══════════════════════════════════════════════════════════
-// Type Definitions
-// ═══════════════════════════════════════════════════════════
+// ─── Types ───────────────────────────────────────────────
 
-/**
- * User profile data structure
- */
 export interface UserProfile {
-    userId: number;
-    username: string;
-    email: string;
-    fullName: string;
-    role: 'USER' | 'MODERATOR' | 'ADMIN';
-    isActive: boolean;
-    createdAt?: string;
-    lastLogin?: string;
+  id:         number;
+  userId?:    number; // Keep for backward compat
+  username:   string;
+  email:      string;
+  fullName:   string;
+  role:       'USER' | 'MODERATOR' | 'ADMIN';
+  isActive:   boolean;
+  createdAt?: string;
+  lastLogin?: string;
 }
 
-/**
- * Notification count response
- */
 export interface NotificationCount {
-    count: number;
+  unreadCount: number; // Backend returns { unreadCount: N }
 }
 
-/**
- * User statistics
- */
+export interface AppNotification {
+  id:        number;
+  type:      string;   // EXAM_PASSED | EXAM_FAILED | WEAK_AREA | STREAK_ACHIEVED | SYSTEM …
+  title:     string;
+  message:   string;
+  link?:     string;
+  isRead:    boolean;
+  createdAt: string;   // ISO-8601 Instant
+  readAt?:   string;
+}
+
 export interface UserStats {
-    totalExams: number;
-    passedExams: number;
-    averageScore: number;
-    totalPracticeQuestions: number;
-    correctAnswers: number;
-    accuracy: number;
+  totalExams:             number;
+  passedExams:            number;
+  averageScore:           number;
+  totalPracticeQuestions: number;
+  correctAnswers:         number;
+  accuracy:               number;
 }
 
-/**
- * Update profile request
- */
 export interface UpdateProfileRequest {
-    fullName?: string;
-    email?: string;
-    // Add other updatable fields as needed
+  fullName?: string;
+  email?:    string;
 }
 
-// ═══════════════════════════════════════════════════════════
-// User Service Functions
-// ═══════════════════════════════════════════════════════════
+// ─── Constants ───────────────────────────────────────────
 
-/**
- * Get current user profile
- * ✅ Endpoint: GET /api/users/me
- * ✅ Status: Working
- */
-export const getCurrentUser = async (): Promise<UserProfile> => {
-    try {
-        const response = await apiClient.get<UserProfile>(API_ENDPOINTS.USERS.ME);
-        return response.data;
-    } catch (error) {
-        if (isServiceUnavailable(error)) throw error;
-        throw error;
-    }
+const ROLE_HIERARCHY: Record<UserProfile['role'], number> = {
+  ADMIN:     3,
+  MODERATOR: 2,
+  USER:      1,
 };
 
-/**
- * Get unread notification count
- * ✅ Endpoint: GET /api/users/me/notifications/unread-count
- * ✅ Status: Working
- */
-export const getUnreadNotificationCount = async (): Promise<number> => {
-    try {
-        const response = await apiClient.get<NotificationCount>(
-            API_ENDPOINTS.USERS.NOTIFICATIONS_COUNT
-        );
-        return response.data.count;
-    } catch (error) {
-        // Re-throw auth errors so the caller can count them;
-        // the API interceptor already handles session clearing.
-        const status = (error as { response?: { status?: number } }).response?.status;
-        if (status === 401 || status === 403) {
-            throw error;
-        }
-        // Swallow transient network errors — return 0 to hide badge
-        return 0;
-    }
-};
+// ─── Service ─────────────────────────────────────────────
 
-/**
- * Get user statistics (if backend supports it)
- * ⚠️  This endpoint might not exist yet - implement when backend is ready
- */
-export const getUserStats = async (): Promise<UserStats | null> => {
-    try {
-        const response = await apiClient.get<UserStats>('/users/me/stats');
-        return response.data;
-    } catch (error) {
-        if (isServiceUnavailable(error)) throw error;
-        return null;
-    }
-};
+/** GET /api/users/me */
+export async function getCurrentUser(): Promise<UserProfile> {
+  const response = await apiClient.get<UserProfile>(API_ENDPOINTS.USERS.ME);
+  return response.data;
+}
 
-/**
- * Update user profile
- * ⚠️  Implement this when backend endpoint is ready
- */
-export const updateProfile = async (
-    data: UpdateProfileRequest
-): Promise<UserProfile> => {
-    try {
-        const response = await apiClient.put<UserProfile>(
-            API_ENDPOINTS.USERS.ME,
-            data
-        );
-        return response.data;
-    } catch (error) {
-        if (isServiceUnavailable(error)) throw error;
-        throw error;
-    }
-};
+/** GET /api/users/me/notifications/unread-count */
+export async function getUnreadNotificationCount(): Promise<number> {
+  try {
+    const response = await apiClient.get<NotificationCount>(
+      API_ENDPOINTS.USERS.NOTIFICATIONS_COUNT,
+    );
+    return response.data.unreadCount;
+  } catch (error) {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    if (status === 401 || status === 403) throw error;
+    return 0;
+  }
+}
 
-/**
- * Check if user has specific role
- */
-export const hasRole = (user: UserProfile | null, role: UserProfile['role']): boolean => {
-    if (!user) return false;
+/** GET /api/users/me/notifications — returns up to 50 latest notifications */
+export async function getNotifications(): Promise<AppNotification[]> {
+  try {
+    const response = await apiClient.get<AppNotification[]>(
+      API_ENDPOINTS.USERS.NOTIFICATIONS,
+    );
+    return response.data ?? [];
+  } catch (error) {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    if (status === 401 || status === 403) throw error;
+    return [];
+  }
+}
 
-    // Role hierarchy: ADMIN > MODERATOR > USER
-    const roleHierarchy = {
-        ADMIN: 3,
-        MODERATOR: 2,
-        USER: 1,
-    };
+/** PATCH /api/users/me/notifications/{id}/read */
+export async function markNotificationAsRead(id: number): Promise<void> {
+  await apiClient.patch(API_ENDPOINTS.USERS.NOTIFICATION_READ(id));
+}
 
-    return roleHierarchy[user.role] >= roleHierarchy[role];
-};
+/** PATCH /api/users/me/notifications/read-all */
+export async function markAllNotificationsAsRead(): Promise<void> {
+  await apiClient.patch(API_ENDPOINTS.USERS.NOTIFICATIONS_READ_ALL);
+}
 
-/**
- * Check if user is admin
- */
-export const isAdmin = (user: UserProfile | null): boolean => {
-    return user?.role === 'ADMIN';
-};
+/** GET /api/users/me/stats — returns null if endpoint is unavailable */
+export async function getUserStats(): Promise<UserStats | null> {
+  try {
+    const response = await apiClient.get<UserStats>('/users/me/stats');
+    return response.data;
+  } catch (error) {
+    if (isServiceUnavailable(error)) throw error;
+    return null;
+  }
+}
 
-/**
- * Check if user is moderator or higher
- */
-export const isModerator = (user: UserProfile | null): boolean => {
-    return hasRole(user, 'MODERATOR');
-};
+/** PUT /api/users/me */
+export async function updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {
+  const response = await apiClient.put<UserProfile>(API_ENDPOINTS.USERS.ME, data);
+  return response.data;
+}
 
-// ═══════════════════════════════════════════════════════════
-// Export all functions
-// ═══════════════════════════════════════════════════════════
+// ─── Role Helpers ────────────────────────────────────────
+
+export function hasRole(user: UserProfile | null, role: UserProfile['role']): boolean {
+  if (!user) return false;
+  return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[role];
+}
+
+export function isAdmin(user: UserProfile | null): boolean {
+  return user?.role === 'ADMIN';
+}
+
+export function isModerator(user: UserProfile | null): boolean {
+  return hasRole(user, 'MODERATOR');
+}
+
+// ─── Service Object ──────────────────────────────────────
+
 export const userService = {
-    getCurrentUser,
-    getUnreadNotificationCount,
-    getUserStats,
-    updateProfile,
-    hasRole,
-    isAdmin,
-    isModerator,
+  getCurrentUser,
+  getUnreadNotificationCount,
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  getUserStats,
+  updateProfile,
+  hasRole,
+  isAdmin,
+  isModerator,
 };
 
 export default userService;

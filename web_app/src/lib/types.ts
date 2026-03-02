@@ -1,316 +1,255 @@
-// Type definitions for ReadyRoad Next.js App
-// Unified and cleaned up to match backend contract
+// ─── Shared Primitives ───────────────────────────────────
 
-// ═══════════════════════════════════════════════════════════
-// Auth Types
-// ═══════════════════════════════════════════════════════════
+export type Language   = 'en' | 'ar' | 'nl' | 'fr';
+export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
+export type UserRole   = 'USER' | 'ADMIN' | 'MODERATOR';
+
+export type LocalizedContent<T extends string> = {
+  [K in `${T}${Capitalize<Language>}`]: string;
+};
+
+// ─── Auth ────────────────────────────────────────────────
 
 /**
- * Login request - supports both username and email for flexibility
- * Backend expects "username", but we support "email" as fallback
+ * Supports both username and email login.
+ * Backend expects `username` — `email` is sent as fallback.
  */
 export interface LoginRequest {
-  username?: string;  // Backend field (preferred)
-  email?: string;     // Frontend field (fallback, will be sent as username)
-  password: string;
+  username?: string;
+  email?:    string;
+  password:  string;
 }
 
 /**
- * Login response.
- * When using BFF auth routes: token is NOT included (HttpOnly cookie instead).
- * When calling backend directly: token is included in the response body.
+ * BFF auth route: token is NOT included (HttpOnly cookie).
+ * Direct backend call: token is included in the response body.
  */
 export interface LoginResponse {
-  token?: string;  // Only present on direct backend calls (NOT via BFF)
-  type?: string;
+  token?:     string;
+  type?:      string;
   expiresIn?: number;
-  // User data included in login response
-  userId?: number;
-  username?: string;
-  email?: string;
-  fullName?: string;
-  role?: string;
+  userId?:    number;
+  username?:  string;
+  email?:     string;
+  fullName?:  string;
+  role?:      string;
 }
 
-/**
- * Registration request
- */
 export interface RegisterRequest {
-  username: string;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  preferredLanguage: 'en' | 'ar' | 'nl' | 'fr';
+  username:          string;
+  email:             string;
+  password:          string;
+  firstName:         string;
+  lastName:          string;
+  preferredLanguage: Language;
 }
 
-// ═══════════════════════════════════════════════════════════
-// User Types
-// ═══════════════════════════════════════════════════════════
+// ─── User ────────────────────────────────────────────────
 
 export interface User {
-  userId: number;
-  username: string;
-  email: string;
-  fullName: string;
-  firstName?: string;
-  lastName?: string;
-  role: string;
-  isActive: boolean;
-  preferredLanguage?: 'en' | 'ar' | 'nl' | 'fr';
-  createdAt?: string;
+  userId:             number;
+  username:           string;
+  email:              string;
+  fullName:           string;
+  firstName?:         string;
+  lastName?:          string;
+  role:               string;
+  isActive:           boolean;
+  preferredLanguage?: Language;
+  createdAt?:         string;
 }
 
-// ═══════════════════════════════════════════════════════════
-// Exam Types
-// ═══════════════════════════════════════════════════════════
+// ─── Exam ────────────────────────────────────────────────
 
 export interface Question {
-  id: number;
-  questionTextEn: string;
-  questionTextAr: string;
-  questionTextNl: string;
-  questionTextFr: string;
-  imagePath?: string; // Legacy field
-  contentImageUrl?: string; // Backend field name
-  option1En: string;
-  option1Ar: string;
-  option1Nl: string;
-  option1Fr: string;
-  option2En: string;
-  option2Ar: string;
-  option2Nl: string;
-  option2Fr: string;
-  option3En: string;
-  option3Ar: string;
-  option3Nl: string;
-  option3Fr: string;
+  id:                number;
+  questionTextEn:    string;
+  questionTextAr:    string;
+  questionTextNl:    string;
+  questionTextFr:    string;
+  imagePath?:        string; // Legacy field
+  contentImageUrl?:  string; // Backend field name
+  option1En: string; option1Ar: string; option1Nl: string; option1Fr: string;
+  option2En: string; option2Ar: string; option2Nl: string; option2Fr: string;
+  option3En: string; option3Ar: string; option3Nl: string; option3Fr: string;
   correctAnswer: number;
-  categoryCode: string;
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  categoryCode:  string;
+  difficulty:    Difficulty;
 }
 
 export interface ExamSimulation {
   simulationId: number;
-  type: 'FULL_EXAM' | 'PRACTICE';
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
-  createdAt: string;
-  expiresAt: string;
-  questions: Question[];
+  type:         'FULL_EXAM' | 'PRACTICE';
+  status:       'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
+  createdAt:    string;
+  expiresAt:    string;
+  questions:    Question[];
 }
 
 export interface Answer {
   questionId: number;
-  answer: number;
+  answer:     number;
 }
 
 export interface ExamResult {
-  simulationId: number;
-  passed: boolean;
-  score: number;
-  correctAnswers: number;
-  totalQuestions: number;
-  timeTaken: string;
-  completedAt: string;
+  simulationId:      number;
+  passed:            boolean;
+  score:             number;
+  correctAnswers:    number;
+  totalQuestions:    number;
+  timeTaken:         string;
+  completedAt:       string;
   categoryBreakdown: CategoryScore[];
 }
 
 export interface CategoryScore {
   categoryCode: string;
   categoryName: string;
-  correct: number;
-  total: number;
-  percentage: number;
+  correct:      number;
+  total:        number;
+  percentage:   number;
 }
 
-// ═══════════════════════════════════════════════════════════
-// Analytics Types (Feature C)
-// ═══════════════════════════════════════════════════════════
+// ─── Analytics ───────────────────────────────────────────
 
 export interface ErrorPattern {
-  pattern: string;
-  frequency: number;
-  severity: 'HIGH' | 'MEDIUM' | 'LOW';
-  affectedCategories: string[];
-  recommendation: string;
-  exampleQuestions: number[];
+  pattern:             string;
+  frequency:           number;
+  severity:            'HIGH' | 'MEDIUM' | 'LOW';
+  affectedCategories:  string[];
+  recommendation:      string;
+  exampleQuestions:    number[];
 }
 
 export interface WeakArea {
-  categoryCode: string;
-  categoryName: string;
-  accuracy: number;
-  questionsAttempted: number;
-  questionsCorrect: number;
-  improvementPotential: number;
-  recommendation: string;
-  topMistakes: string[];
+  categoryCode:          string;
+  categoryName:          string;
+  accuracy:              number;
+  questionsAttempted:    number;
+  questionsCorrect:      number;
+  improvementPotential:  number;
+  recommendation:        string;
+  topMistakes:           string[];
 }
 
-// ═══════════════════════════════════════════════════════════
-// Progress Types (Feature B)
-// ═══════════════════════════════════════════════════════════
+// ─── Progress ────────────────────────────────────────────
 
 export interface ProgressOverview {
-  totalExamsTaken: number;
-  averageScore: number;
-  passRate: number;
-  currentStreak: number;
+  totalExamsTaken:      number;
+  averageScore:         number;
+  passRate:             number;
+  currentStreak:        number;
   totalQuestionsSolved: number;
-  lastExamDate?: string;
+  lastExamDate?:        string;
 }
 
 export interface CategoryProgress {
-  categoryCode: string;
-  categoryName: string;
+  categoryCode:      string;
+  categoryName:      string;
   questionsAttempted: number;
-  questionsCorrect: number;
-  accuracy: number;
-  averageTime: number;
+  questionsCorrect:  number;
+  accuracy:          number;
+  averageTime:       number;
 }
 
-// ═══════════════════════════════════════════════════════════
-// Traffic Sign Types
-// ═══════════════════════════════════════════════════════════
+// ─── Traffic Signs ───────────────────────────────────────
 
 export interface TrafficSign {
-  id?: number; // From backend
-  signCode: string;
-  category: string; // Mapped from categoryCode
-  categoryCode?: string; // Backend field
-  nameEn: string;
-  nameAr: string;
-  nameNl: string;
-  nameFr: string;
-  descriptionEn: string;
-  descriptionAr: string;
-  descriptionNl: string;
-  descriptionFr: string;
-  longDescriptionEn?: string;
-  longDescriptionNl?: string;
-  longDescriptionFr?: string;
-  longDescriptionAr?: string;
+  id?:                       number;
+  signCode:                  string;
+  category:                  string;
+  categoryCode?:             string;
+  nameEn:                    string;
+  nameAr:                    string;
+  nameNl:                    string;
+  nameFr:                    string;
+  descriptionEn:             string;
+  descriptionAr:             string;
+  descriptionNl:             string;
+  descriptionFr:             string;
+  longDescriptionEn?:        string;
+  longDescriptionNl?:        string;
+  longDescriptionFr?:        string;
+  longDescriptionAr?:        string;
   isLongDescriptionComplete?: boolean;
-  imageUrl: string;
-  meaning?: string; // Not in backend response
-  penalties?: string; // Not in backend response
+  imageUrl:                  string;
+  meaning?:                  string;
+  penalties?:                string;
 }
 
-// ═══════════════════════════════════════════════════════════
-// Lesson Types (source: database via REST API)
-// ═══════════════════════════════════════════════════════════
+// ─── Lessons ─────────────────────────────────────────────
 
 export interface LessonPage {
-  id: number;
-  pageNumber: number;
-  titleEn: string;
-  titleAr: string;
-  titleNl: string;
-  titleFr: string;
-  contentEn: string;
-  contentAr: string;
-  contentNl: string;
-  contentFr: string;
-  bulletPointsEn: string[];
-  bulletPointsAr: string[];
-  bulletPointsNl: string[];
-  bulletPointsFr: string[];
+  id:              number;
+  pageNumber:      number;
+  titleEn:         string; titleAr: string; titleNl: string; titleFr: string;
+  contentEn:       string; contentAr: string; contentNl: string; contentFr: string;
+  bulletPointsEn:  string[];
+  bulletPointsAr:  string[];
+  bulletPointsNl:  string[];
+  bulletPointsFr:  string[];
 }
 
-/**
- * Lesson summary returned by GET /api/lessons (no pages field).
- */
+/** Lesson summary — returned by GET /api/lessons (no pages). */
 export interface Lesson {
-  id: number;
-  lessonCode: string;
-  icon: string;
-  titleEn: string;
-  titleAr: string;
-  titleNl: string;
-  titleFr: string;
-  descriptionEn: string;
-  descriptionAr: string;
-  descriptionNl: string;
-  descriptionFr: string;
-  displayOrder: number;
+  id:               number;
+  lessonCode:       string;
+  icon:             string;
+  titleEn:          string; titleAr: string; titleNl: string; titleFr: string;
+  descriptionEn:    string; descriptionAr: string; descriptionNl: string; descriptionFr: string;
+  displayOrder:     number;
   estimatedMinutes: number;
-  totalPages: number;
+  totalPages:       number;
 }
 
-/**
- * Full lesson with pages returned by GET /api/lessons/{code}.
- */
+/** Full lesson with pages — returned by GET /api/lessons/{code}. */
 export interface LessonDetail extends Omit<Lesson, 'totalPages'> {
   pages: LessonPage[];
 }
 
-// ═══════════════════════════════════════════════════════════
-// Notification Types
-// ═══════════════════════════════════════════════════════════
+// ─── Notifications ───────────────────────────────────────
 
 export interface Notification {
-  id: number;
-  userId: number;
-  type: string;
-  message: string;
-  isRead: boolean;
+  id:        number;
+  userId:    number;
+  type:      string;
+  message:   string;
+  isRead:    boolean;
   createdAt: string;
-  readAt?: string;
+  readAt?:   string;
 }
 
 export interface NotificationCount {
   unreadCount: number;
 }
 
-// ═══════════════════════════════════════════════════════════
-// API Response Types
-// ═══════════════════════════════════════════════════════════
+// ─── API Responses ───────────────────────────────────────
 
 export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  timestamp: string;
+  data:       T;
+  message?:   string;
+  timestamp:  string;
 }
 
 export interface ApiError {
-  error: string;
-  message: string;
+  error:     string;
+  message:   string;
   timestamp: string;
-  path: string;
-  status?: number;
+  path:      string;
+  status?:   number;
 }
 
-// ═══════════════════════════════════════════════════════════
-// Language Type
-// ═══════════════════════════════════════════════════════════
-
-export type Language = 'en' | 'ar' | 'nl' | 'fr';
-
-// ═══════════════════════════════════════════════════════════
-// Utility Types
-// ═══════════════════════════════════════════════════════════
-
-export type LocalizedContent<T extends string> = {
-  [K in `${T}${Capitalize<Language>}`]: string;
-};
-
-/**
- * Generic paginated response
- */
 export interface PaginatedResponse<T> {
-  content: T[];
+  content:       T[];
   totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-  first: boolean;
-  last: boolean;
+  totalPages:    number;
+  size:          number;
+  number:        number;
+  first:         boolean;
+  last:          boolean;
 }
 
-/**
- * Generic list response
- */
 export interface ListResponse<T> {
-  data: T[];
+  data:  T[];
   total: number;
 }

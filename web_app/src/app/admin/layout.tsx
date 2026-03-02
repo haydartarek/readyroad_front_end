@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb';
 import { useLanguage } from '@/contexts/language-context';
+import { RefreshCw } from 'lucide-react';
 
 /**
  * Admin Layout Component
@@ -21,56 +22,54 @@ import { useLanguage } from '@/contexts/language-context';
  * @author ReadyRoad Team
  * @since 2026-02-04
  */
-export default function AdminLayout({
-    children
-}: {
-    children: React.ReactNode
-}) {
-    const { user, isLoading } = useAuth();
-    const router = useRouter();
-    const { t, isRTL } = useLanguage();
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  const router              = useRouter();
+  const { t, isRTL }        = useLanguage();
 
-    // Scenario: Redirect non-admin users away from admin routes
-    useEffect(() => {
-        if (!isLoading) {
-            if (!user) {
-                // Not logged in - redirect to login
-                router.push('/auth/login?redirect=/admin');
-            } else if (user.role !== 'ADMIN') {
-                // Logged in but not admin - redirect to unauthorized
-                router.push('/unauthorized');
-            }
-        }
-    }, [user, isLoading, router]);
-
-    // Show loading state while checking auth
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-muted">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">{t('admin.sidebar.checking_permissions')}</p>
-                </div>
-            </div>
-        );
+  // Scenario: Redirect non-admin users away from admin routes
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        router.push('/auth/login?redirect=/admin');
+      } else if (user.role !== 'ADMIN') {
+        router.push('/unauthorized');
+      }
     }
+  }, [user, isLoading, router]);
 
-    // Don't render anything if user is not admin (will be redirected)
-    if (!user || user.role !== 'ADMIN') {
-        return null;
-    }
-
-    // Scenario: Allow admin users to access admin routes
-    // dir is set dynamically based on selected language
+  // ── Auth loading ──
+  if (isLoading) {
     return (
-        <div className="flex min-h-screen bg-muted" dir={isRTL ? 'rtl' : 'ltr'}>
-            <AdminSidebar />
-            <main className="flex-1 p-8 transition-all duration-300">
-                <div className="max-w-7xl mx-auto">
-                    <AdminBreadcrumb />
-                    {children}
-                </div>
-            </main>
+      <div className="flex items-center justify-center min-h-screen bg-muted">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
+            <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+          </div>
+          <p className="text-sm text-muted-foreground font-medium">
+            {t('admin.sidebar.checking_permissions')}
+          </p>
         </div>
+      </div>
     );
+  }
+
+  // Don't render anything if user is not admin (will be redirected)
+  if (!user || user.role !== 'ADMIN') return null;
+
+  // Scenario: Allow admin users to access admin routes
+  return (
+    <div
+      className="flex min-h-screen bg-muted"
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
+      <AdminSidebar />
+      <main className="flex-1 p-6 md:p-8 transition-all duration-300 min-w-0">
+        <div className="max-w-7xl mx-auto space-y-4">
+          <AdminBreadcrumb />
+          {children}
+        </div>
+      </main>
+    </div>
+  );
 }

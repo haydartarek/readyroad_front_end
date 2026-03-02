@@ -4,82 +4,95 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Lesson } from '@/lib/types';
 import { useLanguage } from '@/contexts/language-context';
+import { Lesson } from '@/lib/types';
 
-interface LessonsGridProps {
-    lessons: Lesson[];
+// ─── Types ───────────────────────────────────────────────
+
+type LangCode = 'en' | 'ar' | 'nl' | 'fr';
+
+// ─── Helpers ─────────────────────────────────────────────
+
+function getLessonTitle(lesson: Lesson, lang: LangCode): string {
+  const map: Record<LangCode, string> = {
+    en: lesson.titleEn,
+    ar: lesson.titleAr,
+    nl: lesson.titleNl,
+    fr: lesson.titleFr,
+  };
+  return map[lang] ?? lesson.titleEn;
 }
 
-export function LessonsGrid({ lessons }: LessonsGridProps) {
-    const { language, t } = useLanguage();
+function getLessonDescription(lesson: Lesson, lang: LangCode): string {
+  const map: Record<LangCode, string> = {
+    en: lesson.descriptionEn,
+    ar: lesson.descriptionAr,
+    nl: lesson.descriptionNl,
+    fr: lesson.descriptionFr,
+  };
+  return map[lang] ?? lesson.descriptionEn ?? '';
+}
 
-    const getLessonTitle = (lesson: Lesson) => {
-        switch (language) {
-            case 'ar': return lesson.titleAr;
-            case 'nl': return lesson.titleNl;
-            case 'fr': return lesson.titleFr;
-            default: return lesson.titleEn;
-        }
-    };
+// ─── Component ───────────────────────────────────────────
 
-    const getLessonDescription = (lesson: Lesson) => {
-        switch (language) {
-            case 'ar': return lesson.descriptionAr;
-            case 'nl': return lesson.descriptionNl;
-            case 'fr': return lesson.descriptionFr;
-            default: return lesson.descriptionEn;
-        }
-    };
+export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
+  const { language, t } = useLanguage();
+  const lang = language as LangCode;
 
-    return (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {lessons.map((lesson) => (
-                <Card
-                    key={lesson.id}
-                    className="group transition-all hover:shadow-lg"
-                >
-                    <CardContent className="p-6">
-                        {/* Lesson number badge + icon */}
-                        <div className="mb-4 flex items-center justify-between">
-                            <Badge variant="secondary" className="text-sm">
-                                {t('lessons.lesson')} {lesson.displayOrder}
-                            </Badge>
-                            <span className="text-2xl">{lesson.icon}</span>
-                        </div>
+  return (
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {lessons.map((lesson) => {
+        const title       = getLessonTitle(lesson, lang);
+        const description = getLessonDescription(lesson, lang);
+        const preview     = description.length > 150
+          ? `${description.substring(0, 150)}…`
+          : description;
 
-                        {/* Lesson title */}
-                        <h3 className="mb-3 text-lg font-semibold text-foreground line-clamp-2">
-                            {getLessonTitle(lesson)}
-                        </h3>
+        return (
+          <Card key={lesson.id} className="group transition-all hover:shadow-lg">
+            <CardContent className="p-6">
 
-                        {/* Lesson preview */}
-                        <p className="mb-4 text-sm text-muted-foreground line-clamp-3">
-                            {(getLessonDescription(lesson) || '').substring(0, 150)}
-                            {(getLessonDescription(lesson) || '').length > 150 ? '...' : ''}
-                        </p>
+              {/* Badge + icon */}
+              <div className="mb-4 flex items-center justify-between">
+                <Badge variant="secondary" className="text-sm">
+                  {t('lessons.lesson')} {lesson.displayOrder}
+                </Badge>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-xl ring-1 ring-primary/20">
+                  <span aria-hidden>{lesson.icon}</span>
+                </div>
+              </div>
 
-                        {/* Meta info */}
-                        <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
-                            {lesson.estimatedMinutes > 0 && (
-                                <span>~{lesson.estimatedMinutes} min</span>
-                            )}
-                            {(lesson.totalPages ?? 0) > 0 && (
-                                <span>{lesson.totalPages} {t('lessons.pages')}</span>
-                            )}
-                        </div>
+              {/* Title */}
+              <h3 className="mb-3 line-clamp-2 text-lg font-black text-foreground">
+                {title}
+              </h3>
 
-                        {/* Actions */}
-                        <div className="flex gap-2">
-                            <Link href={`/lessons/${lesson.lessonCode}`} className="flex-1">
-                                <Button variant="default" className="w-full">
-                                    {t('lessons.read_lesson')}
-                                </Button>
-                            </Link>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
-    );
+              {/* Preview */}
+              <p className="mb-4 line-clamp-3 text-base font-medium text-foreground/70">
+                {preview}
+              </p>
+
+              {/* Meta */}
+              <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
+                {lesson.estimatedMinutes > 0 && (
+                  <span>~{lesson.estimatedMinutes} min</span>
+                )}
+                {(lesson.totalPages ?? 0) > 0 && (
+                  <span>{lesson.totalPages} {t('lessons.pages')}</span>
+                )}
+              </div>
+
+              {/* CTA */}
+              <Button className="w-full" asChild>
+                <Link href={`/lessons/${lesson.lessonCode}`}>
+                  {t('lessons.read_lesson')}
+                </Link>
+              </Button>
+
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
 }

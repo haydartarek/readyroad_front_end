@@ -1,108 +1,71 @@
-/**
- * Production-safe logger utility
- * Prevents sensitive data leaks and provides structured logging
- */
+// ─── Types ───────────────────────────────────────────────
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel   = 'debug' | 'info' | 'warn' | 'error';
+type LogContext = Record<string, unknown>;
 
-interface LogContext {
-    [key: string]: unknown;
-}
+// ─── Constants ───────────────────────────────────────────
+
+const SENSITIVE_KEYS = new Set([
+  'password',
+  'token',
+  'authorization',
+  'auth',
+  'secret',
+  'apikey',
+  'api_key',
+  'credit_card',
+  'ssn',
+  'email',
+]);
+
+const DEV_ONLY_LEVELS = new Set<LogLevel>(['debug', 'info']);
+
+const CONSOLE_METHOD: Record<LogLevel, (...args: unknown[]) => void> = {
+  debug: console.debug,
+  info:  console.info,
+  warn:  console.warn,
+  error: console.error,
+};
+
+// ─── Logger ──────────────────────────────────────────────
 
 class Logger {
-    private isProduction = process.env.NODE_ENV === 'production';
+  private readonly isProd = process.env.NODE_ENV === 'production';
 
-    /**
-     * Sanitize data to remove sensitive information
-     */
-    private sanitize(data: unknown): unknown {
-        if (typeof data !== 'object' || data === null) {
-            return data;
-        }
+  private sanitize(data: unknown): unknown {
+    if (data === null || typeof data !== 'object') return data;
 
-        if (Array.isArray(data)) {
-            return data.map(item => this.sanitize(item));
-        }
+    if (Array.isArray(data)) return data.map(item => this.sanitize(item));
 
-        const sanitized: Record<string, unknown> = {};
-        const sensitiveKeys = [
-            'password',
-            'token',
-            'authorization',
-            'auth',
-            'secret',
-            'apikey',
-            'api_key',
-            'credit_card',
-            'ssn',
-            'email', // Optionally sanitize email in production
-        ];
-
-        for (const [key, value] of Object.entries(data)) {
-            const lowerKey = key.toLowerCase();
-
-            if (sensitiveKeys.some(sensitive => lowerKey.includes(sensitive))) {
-                sanitized[key] = '[REDACTED]';
-            } else if (typeof value === 'object' && value !== null) {
-                sanitized[key] = this.sanitize(value);
-            } else {
-                sanitized[key] = value;
-            }
-        }
-
-        return sanitized;
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data)) {
+      result[key] = SENSITIVE_KEYS.has(key.toLowerCase())
+        ? '[REDACTED]'
+        : this.sanitize(value);
     }
+    return result;
+  }
 
-    private log(level: LogLevel, message: string, context?: LogContext) {
-        // In production, only log warnings and errors
-        if (this.isProduction && (level === 'debug' || level === 'info')) {
-            return;
-        }
+  private log(level: LogLevel, message: string, context?: LogContext): void {
+    if (this.isProd && DEV_ONLY_LEVELS.has(level)) return;
 
-        const timestamp = new Date().toISOString();
-        const sanitizedContext = context ? this.sanitize(context) : undefined;
+    const entry: Record<string, unknown> = {
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+    };
 
-        const logData: Record<string, unknown> = {
-            timestamp,
-            level,
-            message,
-        };
+    if (context) entry.context = this.sanitize(context);
 
-        if (sanitizedContext) {
-            logData.context = sanitizedContext;
-        }
+    CONSOLE_METHOD[level](JSON.stringify(entry));
+  }
 
-        switch (level) {
-            case 'debug':
-                console.debug(JSON.stringify(logData));
-                break;
-            case 'info':
-                console.info(JSON.stringify(logData));
-                break;
-            case 'warn':
-                console.warn(JSON.stringify(logData));
-                break;
-            case 'error':
-                console.error(JSON.stringify(logData));
-                break;
-        }
-    }
-
-    debug(message: string, context?: LogContext) {
-        this.log('debug', message, context);
-    }
-
-    info(message: string, context?: LogContext) {
-        this.log('info', message, context);
-    }
-
-    warn(message: string, context?: LogContext) {
-        this.log('warn', message, context);
-    }
-
-    error(message: string, context?: LogContext) {
-        this.log('error', message, context);
-    }
+  debug(message: string, context?: LogContext): void { this.log('debug', message, context); }
+  info (message: string, context?: LogContext): void { this.log('info',  message, context); }
+  warn (message: string, context?: LogContext): void { this.log('warn',  message, context); }
+  error(message: string, context?: LogContext): void { this.log('error', message, context); }
 }
+
+// ─── Singleton ───────────────────────────────────────────
 
 export const logger = new Logger();

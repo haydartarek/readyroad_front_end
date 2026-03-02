@@ -1,26 +1,33 @@
 'use client';
 
+// ─── Types ───────────────────────────────────────────────
+
 interface ProgressBarProps {
   current: number;
   total: number;
+  showLabel?: boolean;
 }
 
-export function ProgressBar({ current, total }: ProgressBarProps) {
-  const percentage = total === 0 ? 0 : (current / total) * 100;
+// ─── Component ───────────────────────────────────────────
+
+export function ProgressBar({ current, total, showLabel = true }: ProgressBarProps) {
+  const percentage = total === 0 ? 0 : Math.min((current / total) * 100, 100);
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       <div className="flex-1">
         <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full bg-primary transition-all duration-300"
+            className="h-full rounded-full bg-primary transition-all duration-300"
             style={{ width: `${percentage}%` }}
           />
         </div>
       </div>
-      <div className="text-sm font-medium text-muted-foreground">
-        {current}/{total}
-      </div>
+      {showLabel && (
+        <span className="text-sm font-bold text-muted-foreground tabular-nums">
+          {current}/{total}
+        </span>
+      )}
     </div>
   );
 }

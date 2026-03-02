@@ -2,134 +2,148 @@
 
 import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
+import { ChevronDownIcon, CheckIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const Select = SelectPrimitive.Root;
+// ─── Simple Re-exports ───────────────────────────────────
 
+const Select      = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
-
 const SelectValue = SelectPrimitive.Value;
 
-const SelectTrigger = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      'flex h-10 w-full items-center justify-between rounded-[24px] border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-      className
-    )}
-    {...props}
-  >
-    {children}
-    <SelectPrimitive.Icon asChild>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
-    </SelectPrimitive.Icon>
-  </SelectPrimitive.Trigger>
-));
-SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
+// ─── Trigger ─────────────────────────────────────────────
 
-const SelectContent = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = 'popper', ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
-      ref={ref}
+function SelectTrigger({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Trigger>) {
+  return (
+    <SelectPrimitive.Trigger
+      data-slot="select-trigger"
       className={cn(
-        'relative z-50 min-w-[8rem] overflow-hidden rounded-[12px] border border-border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-        position === 'popper' &&
-        'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
-        className
+        'flex h-10 w-full items-center justify-between rounded-[24px]',
+        'border border-border bg-background px-3 py-2 text-sm',
+        'placeholder:text-muted-foreground',
+        'ring-offset-background transition-[color,box-shadow] outline-none',
+        'focus:ring-2 focus:ring-ring focus:ring-offset-2',
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        className,
       )}
-      position={position}
       {...props}
     >
-      <SelectPrimitive.Viewport
+      {children}
+      <SelectPrimitive.Icon asChild>
+        {/* ✅ lucide-react — موحد مع باقي المشروع، بدلاً من inline SVG */}
+        <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground" />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
+  );
+}
+
+// ─── Content ─────────────────────────────────────────────
+
+function SelectContent({
+  className,
+  children,
+  position = 'popper',
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  return (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Content
+        data-slot="select-content"
+        position={position}
         className={cn(
-          'p-1',
-          position === 'popper' &&
-          'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]'
+          'relative z-50 min-w-[8rem] overflow-hidden',
+          'rounded-[12px] border border-border bg-popover text-popover-foreground shadow-md',
+          'data-[state=open]:animate-in   data-[state=open]:fade-in-0   data-[state=open]:zoom-in-95',
+          'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+          'data-[side=bottom]:slide-in-from-top-2    data-[side=left]:slide-in-from-right-2',
+          'data-[side=right]:slide-in-from-left-2   data-[side=top]:slide-in-from-bottom-2',
+          position === 'popper' && [
+            'data-[side=bottom]:translate-y-1',
+            'data-[side=left]:-translate-x-1',
+            'data-[side=right]:translate-x-1',
+            'data-[side=top]:-translate-y-1',
+          ],
+          className,
         )}
+        {...props}
       >
-        {children}
-      </SelectPrimitive.Viewport>
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-));
-SelectContent.displayName = SelectPrimitive.Content.displayName;
-
-const SelectLabel = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Label>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
->(({ className, ...props }, ref) => (
-  <SelectPrimitive.Label
-    ref={ref}
-    className={cn('px-2 py-1.5 text-sm font-semibold', className)}
-    {...props}
-  />
-));
-SelectLabel.displayName = SelectPrimitive.Label.displayName;
-
-const SelectItem = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      'relative flex w-full cursor-default select-none items-center rounded-[8px] py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-      className
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <SelectPrimitive.Viewport
+          className={cn(
+            'p-1',
+            position === 'popper' &&
+              'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
+          )}
         >
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </SelectPrimitive.ItemIndicator>
-    </span>
+          {children}
+        </SelectPrimitive.Viewport>
+      </SelectPrimitive.Content>
+    </SelectPrimitive.Portal>
+  );
+}
 
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-  </SelectPrimitive.Item>
-));
-SelectItem.displayName = SelectPrimitive.Item.displayName;
+// ─── Label ───────────────────────────────────────────────
 
-const SelectSeparator = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Separator>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
->(({ className, ...props }, ref) => (
-  <SelectPrimitive.Separator
-    ref={ref}
-    className={cn('-mx-1 my-1 h-px bg-border', className)}
-    {...props}
-  />
-));
-SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
+function SelectLabel({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Label>) {
+  return (
+    <SelectPrimitive.Label
+      data-slot="select-label"
+      className={cn('px-2 py-1.5 text-sm font-semibold', className)}
+      {...props}
+    />
+  );
+}
+
+// ─── Item ────────────────────────────────────────────────
+
+function SelectItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Item>) {
+  return (
+    <SelectPrimitive.Item
+      data-slot="select-item"
+      className={cn(
+        'relative flex w-full cursor-default select-none items-center',
+        'rounded-[8px] py-1.5 pl-8 pr-2 text-sm outline-none',
+        'focus:bg-accent focus:text-accent-foreground',
+        'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        className,
+      )}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          {/* ✅ lucide-react — موحد مع باقي المشروع، بدلاً من inline SVG */}
+          <CheckIcon className="size-4" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </SelectPrimitive.Item>
+  );
+}
+
+// ─── Separator ───────────────────────────────────────────
+
+function SelectSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Separator>) {
+  return (
+    <SelectPrimitive.Separator
+      data-slot="select-separator"
+      className={cn('-mx-1 my-1 h-px bg-border', className)}
+      {...props}
+    />
+  );
+}
 
 export {
   Select,

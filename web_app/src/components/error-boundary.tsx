@@ -1,86 +1,100 @@
 'use client';
 
-import React, { Component, ReactNode } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { Component, type ReactNode } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface Props {
-    children: ReactNode;
-    fallback?: ReactNode;
+// ─── Types ───────────────────────────────────────────────
+
+interface ErrorBoundaryProps {
+  children:  ReactNode;
+  fallback?: ReactNode;
 }
 
-interface State {
-    hasError: boolean;
-    error?: Error;
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?:   Error;
 }
 
-/**
- * Global error boundary to catch runtime errors and show safe fallback UI
- * Prevents raw stack traces from being shown to users in production
- */
-export class ErrorBoundary extends Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = { hasError: false };
+// ─── Constants ───────────────────────────────────────────
+
+const IS_DEV = process.env.NODE_ENV === 'development';
+
+// ─── Component ───────────────────────────────────────────
+
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    if (IS_DEV) {
+      console.error('[ErrorBoundary]', error, info.componentStack);
     }
+  }
 
-    static getDerivedStateFromError(error: Error): State {
-        return { hasError: true, error };
-    }
+  handleReset = () => {
+    this.setState({ hasError: false, error: undefined });
+  };
 
-    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-        // Log error to console in development only
-        if (process.env.NODE_ENV === 'development') {
-            console.error('Error caught by boundary:', error, errorInfo);
-        }
-    }
+  handleGoHome = () => {
+    window.location.href = '/';
+  };
 
-    handleReset = () => {
-        this.setState({ hasError: false, error: undefined });
-    };
+  render() {
+    const { hasError, error } = this.state;
+    const { fallback, children } = this.props;
 
-    render() {
-        if (this.state.hasError) {
-            if (this.props.fallback) {
-                return this.props.fallback;
-            }
+    if (!hasError) return children;
+    if (fallback)  return fallback;
 
-            return (
-                <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-                    <Card className="max-w-lg w-full border-2">
-                        <CardHeader>
-                            <CardTitle className="text-2xl text-destructive">Something went wrong</CardTitle>
-                            <CardDescription>
-                                An unexpected error occurred. Please try again.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {process.env.NODE_ENV === 'development' && this.state.error && (
-                                <Alert variant="destructive">
-                                    <pre className="text-xs overflow-auto">
-                                        {this.state.error.message}
-                                    </pre>
-                                </Alert>
-                            )}
-                            <div className="flex gap-3">
-                                <Button onClick={this.handleReset} className="flex-1">
-                                    Try Again
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => window.location.href = '/'}
-                                    className="flex-1"
-                                >
-                                    Go Home
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            );
-        }
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-lg border-2">
+          <CardHeader>
+            <CardTitle className="text-2xl text-destructive">
+              Something went wrong
+            </CardTitle>
+            <CardDescription>
+              An unexpected error occurred. Please try again.
+            </CardDescription>
+          </CardHeader>
 
-        return this.props.children;
-    }
+          <CardContent className="space-y-4">
+            {IS_DEV && error && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  <pre className="overflow-auto text-xs">
+                    {error.message}
+                  </pre>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex gap-3">
+              <Button onClick={this.handleReset} className="flex-1">
+                Try Again
+              </Button>
+              <Button
+                variant="outline"
+                onClick={this.handleGoHome}
+                className="flex-1"
+              >
+                Go Home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 }

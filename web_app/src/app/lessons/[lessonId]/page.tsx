@@ -11,335 +11,309 @@ import { getLessonByCode, getAllLessons } from '@/services/lessonService';
 import { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { useLanguage } from '@/contexts/language-context';
+import { cn } from '@/lib/utils';
+import {
+  ArrowLeft, ArrowRight, ChevronLeft, ChevronRight,
+  Clock, BookOpen, RefreshCw,
+} from 'lucide-react';
 import type { Lesson, LessonDetail, LessonPage } from '@/lib/types';
 
+// ─── Helpers ────────────────────────────────────────────
+
+type MultiLang = { titleEn: string; titleAr: string; titleNl: string; titleFr: string };
+
+function getLangTitle(obj: MultiLang, lang: string): string {
+  return ({ ar: obj.titleAr, nl: obj.titleNl, fr: obj.titleFr } as Record<string, string>)[lang] ?? obj.titleEn;
+}
+
+function getPageContent(page: LessonPage, lang: string) {
+  const map: Record<string, { title: string; content: string; bullets: string[] }> = {
+    en: { title: page.titleEn, content: page.contentEn, bullets: page.bulletPointsEn ?? [] },
+    ar: { title: page.titleAr, content: page.contentAr, bullets: page.bulletPointsAr ?? [] },
+    nl: { title: page.titleNl, content: page.contentNl, bullets: page.bulletPointsNl ?? [] },
+    fr: { title: page.titleFr, content: page.contentFr, bullets: page.bulletPointsFr ?? [] },
+  };
+  return map[lang] ?? map.en;
+}
+
+// ─── Page ───────────────────────────────────────────────
+
 export default function LessonDetailPage() {
-    const params = useParams();
-    const lessonIdOrCode = params.lessonId as string;
-    const { t, language } = useLanguage();
+  const params         = useParams();
+  const lessonIdOrCode = params.lessonId as string;
+  const { t, language } = useLanguage();
 
-    const [lesson, setLesson] = useState<LessonDetail | null>(null);
-    const [allLessons, setAllLessons] = useState<Lesson[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [activePage, setActivePage] = useState(0);
-    const [serviceUnavailable, setServiceUnavailable] = useState(false);
-    const [fetchKey, setFetchKey] = useState(0);
+  const [lesson, setLesson]         = useState<LessonDetail | null>(null);
+  const [allLessons, setAllLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
+  const [activePage, setActivePage] = useState(0);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [fetchKey, setFetchKey]     = useState(0);
 
-    useEffect(() => {
-        let cancelled = false;
+  useEffect(() => {
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true); setError(null);
 
-        Promise.all([getLessonByCode(lessonIdOrCode), getAllLessons()])
-            .then(([detail, list]) => {
-                if (!cancelled) {
-                    setLesson(detail);
-                    setAllLessons(list);
-                    setActivePage(0);
-                }
-            })
-            .catch((err) => {
-                logApiError('Failed to load lesson', err);
-                if (!cancelled) {
-                    if (isServiceUnavailable(err)) {
-                        setServiceUnavailable(true);
-                    } else {
-                        setError(err?.message ?? 'Failed to load lesson');
-                    }
-                }
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false);
-            });
-
-        return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [lessonIdOrCode, fetchKey]);
-
-    // ─── Language helpers ────────────────────────────────
-
-    const getTitle = (l: { titleEn: string; titleAr: string; titleNl: string; titleFr: string }) => {
-        switch (language) {
-            case 'ar': return l.titleAr;
-            case 'nl': return l.titleNl;
-            case 'fr': return l.titleFr;
-            default: return l.titleEn;
+    Promise.all([getLessonByCode(lessonIdOrCode), getAllLessons()])
+      .then(([detail, list]) => {
+        if (!cancelled) { setLesson(detail); setAllLessons(list); setActivePage(0); }
+      })
+      .catch(err => {
+        logApiError('Failed to load lesson', err);
+        if (!cancelled) {
+          if (isServiceUnavailable(err)) setServiceUnavailable(true);
+          else setError(err?.message ?? 'Failed to load lesson');
         }
-    };
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
 
-    const getPageTitle = (p: LessonPage) => {
-        switch (language) {
-            case 'ar': return p.titleAr;
-            case 'nl': return p.titleNl;
-            case 'fr': return p.titleFr;
-            default: return p.titleEn;
-        }
-    };
+    return () => { cancelled = true; };
+  }, [lessonIdOrCode, fetchKey]);
 
-    // ─── Loading ─────────────────────────────────────────
-
-    if (serviceUnavailable) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-                <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }} className="mb-4" />
-            </div>
-        );
-    }
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-            </div>
-        );
-    }
-
-    // ─── Not found / error ───────────────────────────────
-
-    if (error || !lesson) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-                <p className="text-lg text-muted-foreground">{error ?? t('lessons.not_found')}</p>
-                <Link href="/lessons">
-                    <Button variant="outline">{t('lessons.back_to_all')}</Button>
-                </Link>
-            </div>
-        );
-    }
-
-    // ─── Navigation ──────────────────────────────────────
-
-    const total = allLessons.length;
-    const currentIdx = allLessons.findIndex(
-        (l) => l.lessonCode === lesson.lessonCode,
-    );
-    const prevLesson = currentIdx > 0 ? allLessons[currentIdx - 1] : null;
-    const nextLesson =
-        currentIdx >= 0 && currentIdx < allLessons.length - 1
-            ? allLessons[currentIdx + 1]
-            : null;
-
-    const currentPage = lesson.pages[activePage];
-
-    // ─── Render ──────────────────────────────────────────
-
+  // ── States ──
+  if (serviceUnavailable) {
     return (
-        <div className="min-h-screen bg-gradient-to-b from-muted to-background">
-            <div className="container mx-auto px-4 py-12">
-                {/* Back button */}
-                <Link href="/lessons">
-                    <Button variant="ghost" className="mb-6">
-                        {t('lessons.back_to_all')}
-                    </Button>
-                </Link>
-
-                <div className="grid gap-8 lg:grid-cols-3">
-                    {/* Main content */}
-                    <div className="lg:col-span-2">
-                        {/* Lesson header */}
-                        <Card className="mb-8">
-                            <CardHeader>
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <span className="text-2xl">{lesson.icon}</span>
-                                            <Badge>{t('lessons.lesson')} {lesson.displayOrder}</Badge>
-                                            {lesson.estimatedMinutes > 0 && (
-                                                <Badge variant="secondary">~{lesson.estimatedMinutes} min</Badge>
-                                            )}
-                                            <Badge variant="outline">{lesson.pages.length} {t('lessons.pages')}</Badge>
-                                        </div>
-                                        <CardTitle className="text-3xl">{getTitle(lesson)}</CardTitle>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                        </Card>
-
-                        {/* Page selector tabs */}
-                        {lesson.pages.length > 1 && (
-                            <div className="mb-6 flex flex-wrap gap-2">
-                                {lesson.pages.map((page, idx) => (
-                                    <Button
-                                        key={page.pageNumber}
-                                        variant={activePage === idx ? 'default' : 'outline'}
-                                        size="sm"
-                                        onClick={() => setActivePage(idx)}
-                                    >
-                                        {page.pageNumber}
-                                    </Button>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Page content with language tabs */}
-                        {currentPage && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>{getPageTitle(currentPage)}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Tabs defaultValue={language} className="w-full">
-                                        <TabsList className="grid w-full grid-cols-4">
-                                            <TabsTrigger value="en">EN English</TabsTrigger>
-                                            <TabsTrigger value="ar">AR العربية</TabsTrigger>
-                                            <TabsTrigger value="nl">NL Nederlands</TabsTrigger>
-                                            <TabsTrigger value="fr">FR Français</TabsTrigger>
-                                        </TabsList>
-
-                                        {(['en', 'ar', 'nl', 'fr'] as const).map((lang) => {
-                                            const title = lang === 'en' ? currentPage.titleEn
-                                                : lang === 'ar' ? currentPage.titleAr
-                                                    : lang === 'nl' ? currentPage.titleNl
-                                                        : currentPage.titleFr;
-                                            const content = lang === 'en' ? currentPage.contentEn
-                                                : lang === 'ar' ? currentPage.contentAr
-                                                    : lang === 'nl' ? currentPage.contentNl
-                                                        : currentPage.contentFr;
-                                            const bullets = lang === 'en' ? currentPage.bulletPointsEn
-                                                : lang === 'ar' ? currentPage.bulletPointsAr
-                                                    : lang === 'nl' ? currentPage.bulletPointsNl
-                                                        : currentPage.bulletPointsFr;
-                                            const dir = lang === 'ar' ? 'rtl' : 'ltr';
-
-                                            return (
-                                                <TabsContent key={lang} value={lang} dir={dir} className="space-y-4">
-                                                    <div className="prose max-w-none">
-                                                        <h2>{title}</h2>
-                                                        <div className="whitespace-pre-line text-foreground">
-                                                            {content}
-                                                        </div>
-                                                        {bullets && bullets.length > 0 && (
-                                                            <ul className="mt-4 space-y-2">
-                                                                {bullets.map((bullet, i) => (
-                                                                    <li key={i} className="flex items-start gap-2">
-                                                                        <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
-                                                                        <span>{bullet}</span>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        )}
-                                                    </div>
-                                                </TabsContent>
-                                            );
-                                        })}
-                                    </Tabs>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Page navigation within lesson */}
-                        {lesson.pages.length > 1 && (
-                            <div className="mt-6 flex justify-between gap-4">
-                                {activePage > 0 ? (
-                                    <Button variant="outline" onClick={() => setActivePage(activePage - 1)}>
-                                        ← {t('lessons.previous_page')}
-                                    </Button>
-                                ) : (
-                                    <div />
-                                )}
-                                {activePage < lesson.pages.length - 1 ? (
-                                    <Button onClick={() => setActivePage(activePage + 1)}>
-                                        {t('lessons.next_page')} →
-                                    </Button>
-                                ) : (
-                                    <div />
-                                )}
-                            </div>
-                        )}
-
-                        {/* Lesson navigation */}
-                        <div className="mt-8 flex justify-between gap-4">
-                            {prevLesson ? (
-                                <Link href={`/lessons/${prevLesson.lessonCode}`} className="flex-1">
-                                    <Button variant="outline" className="w-full">
-                                        {t('lessons.previous')}
-                                    </Button>
-                                </Link>
-                            ) : (
-                                <div className="flex-1" />
-                            )}
-
-                            {nextLesson ? (
-                                <Link href={`/lessons/${nextLesson.lessonCode}`} className="flex-1">
-                                    <Button className="w-full">
-                                        {t('lessons.next')}
-                                    </Button>
-                                </Link>
-                            ) : (
-                                <div className="flex-1" />
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Progress */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{t('lessons.your_progress')}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3">
-                                    <div>
-                                        <div className="mb-2 flex justify-between text-sm">
-                                            <span>{t('lessons.lesson_progress')}</span>
-                                            <span className="font-semibold">
-                                                {lesson.displayOrder} / {total}
-                                            </span>
-                                        </div>
-                                        <div className="h-2 overflow-hidden rounded-full bg-muted">
-                                            <div
-                                                className="h-full bg-primary transition-all"
-                                                style={{ width: `${total > 0 ? (lesson.displayOrder / total) * 100 : 0}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        {total > 0 ? Math.round((lesson.displayOrder / total) * 100) : 0}% {t('lessons.complete')}
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Page overview */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{t('lessons.pages_overview')}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-2">
-                                    {lesson.pages.map((page, idx) => (
-                                        <button
-                                            key={page.pageNumber}
-                                            onClick={() => setActivePage(idx)}
-                                            className={`w-full text-left rounded-lg p-2 text-sm transition-colors ${activePage === idx
-                                                ? 'bg-primary/10 text-primary font-medium'
-                                                : 'hover:bg-muted text-muted-foreground'
-                                                }`}
-                                        >
-                                            <span className="font-mono text-xs mr-2">{page.pageNumber}.</span>
-                                            {getPageTitle(page)}
-                                        </button>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Actions */}
-                        <div className="space-y-3">
-                            <Link href="/exam">
-                                <Button className="w-full" variant="outline">
-                                    {t('lessons.take_exam')}
-                                </Button>
-                            </Link>
-                            <Link href="/traffic-signs">
-                                <Button className="w-full" variant="outline">
-                                    {t('lessons.view_signs')}
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <ServiceUnavailableBanner
+          onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }}
+        />
+      </div>
     );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
+            <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+          </div>
+          <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !lesson) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-lg text-muted-foreground">{error ?? t('lessons.not_found')}</p>
+        <Button variant="outline" asChild>
+          <Link href="/lessons"><ArrowLeft className="w-4 h-4 mr-2" />{t('lessons.back_to_all')}</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  // ── Navigation ──
+  const total      = allLessons.length;
+  const currentIdx = allLessons.findIndex(l => l.lessonCode === lesson.lessonCode);
+  const prevLesson = currentIdx > 0 ? allLessons[currentIdx - 1] : null;
+  const nextLesson = currentIdx >= 0 && currentIdx < total - 1 ? allLessons[currentIdx + 1] : null;
+  const currentPage = lesson.pages[activePage];
+  const progress   = total > 0 ? Math.round((lesson.displayOrder / total) * 100) : 0;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-muted to-background">
+      <div className="container mx-auto px-4 py-10">
+
+        {/* Back */}
+        <Button variant="ghost" size="sm" className="mb-6 gap-2" asChild>
+          <Link href="/lessons"><ArrowLeft className="w-4 h-4" />{t('lessons.back_to_all')}</Link>
+        </Button>
+
+        <div className="grid gap-8 lg:grid-cols-3">
+
+          {/* ── Main ── */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Lesson header */}
+            <Card className="rounded-2xl border-border/50 shadow-sm">
+              <CardHeader>
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className="text-3xl">{lesson.icon}</span>
+                  <Badge>{t('lessons.lesson')} {lesson.displayOrder}</Badge>
+                  {lesson.estimatedMinutes > 0 && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Clock className="w-3 h-3" />~{lesson.estimatedMinutes} min
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="gap-1">
+                    <BookOpen className="w-3 h-3" />{lesson.pages.length} {t('lessons.pages')}
+                  </Badge>
+                </div>
+                <CardTitle className="text-2xl md:text-3xl font-black">
+                  {getLangTitle(lesson, language)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            {/* Page selector */}
+            {lesson.pages.length > 1 && (
+              <div className="flex flex-wrap gap-2">
+                {lesson.pages.map((page, idx) => (
+                  <Button
+                    key={page.pageNumber}
+                    variant={activePage === idx ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActivePage(idx)}
+                    className={cn(
+                      'rounded-xl transition-all',
+                      activePage === idx && 'shadow-md shadow-primary/20'
+                    )}
+                  >
+                    {page.pageNumber}
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {/* Page content */}
+            {currentPage && (
+              <Card className="rounded-2xl border-border/50 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg font-black">
+                    {getLangTitle(currentPage, language)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue={language} className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 rounded-xl">
+                      <TabsTrigger value="en">EN</TabsTrigger>
+                      <TabsTrigger value="ar">AR</TabsTrigger>
+                      <TabsTrigger value="nl">NL</TabsTrigger>
+                      <TabsTrigger value="fr">FR</TabsTrigger>
+                    </TabsList>
+                    {(['en', 'ar', 'nl', 'fr'] as const).map(lang => {
+                      const { title, content, bullets } = getPageContent(currentPage, lang);
+                      return (
+                        <TabsContent
+                          key={lang} value={lang}
+                          dir={lang === 'ar' ? 'rtl' : 'ltr'}
+                          className="space-y-4 mt-4"
+                        >
+                          <h2 className="text-base font-black text-foreground">{title}</h2>
+                          <div className="whitespace-pre-line text-foreground leading-relaxed">
+                            {content}
+                          </div>
+                          {bullets.length > 0 && (
+                            <ul className="mt-4 space-y-2">
+                              {bullets.map((bullet, i) => (
+                                <li key={i} className="flex items-start gap-2.5">
+                                  <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
+                                  <span className="text-sm text-foreground">{bullet}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </TabsContent>
+                      );
+                    })}
+                  </Tabs>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Within-lesson page nav */}
+            {lesson.pages.length > 1 && (
+              <div className="flex justify-between gap-4">
+                {activePage > 0 ? (
+                  <Button variant="outline" onClick={() => setActivePage(activePage - 1)} className="gap-2 rounded-xl">
+                    <ChevronLeft className="w-4 h-4" />{t('lessons.previous_page')}
+                  </Button>
+                ) : <div />}
+                {activePage < lesson.pages.length - 1 ? (
+                  <Button onClick={() => setActivePage(activePage + 1)} className="gap-2 rounded-xl">
+                    {t('lessons.next_page')}<ChevronRight className="w-4 h-4" />
+                  </Button>
+                ) : <div />}
+              </div>
+            )}
+
+            {/* Lesson nav */}
+            <div className="flex justify-between gap-4">
+              {prevLesson ? (
+                <Button variant="outline" className="flex-1 gap-2 rounded-xl" asChild>
+                  <Link href={`/lessons/${prevLesson.lessonCode}`}>
+                    <ArrowLeft className="w-4 h-4" />{t('lessons.previous')}
+                  </Link>
+                </Button>
+              ) : <div className="flex-1" />}
+              {nextLesson ? (
+                <Button className="flex-1 gap-2 rounded-xl shadow-md shadow-primary/20" asChild>
+                  <Link href={`/lessons/${nextLesson.lessonCode}`}>
+                    {t('lessons.next')}<ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+              ) : <div className="flex-1" />}
+            </div>
+          </div>
+
+          {/* ── Sidebar ── */}
+          <div className="space-y-5">
+
+            {/* Progress */}
+            <Card className="rounded-2xl border-border/50 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base font-black">{t('lessons.your_progress')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm mb-1.5">
+                  <span className="text-muted-foreground">{t('lessons.lesson_progress')}</span>
+                  <span className="font-bold">{lesson.displayOrder} / {total}</span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-500 rounded-full"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-bold text-foreground">{progress}%</span> {t('lessons.complete')}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Pages overview */}
+            <Card className="rounded-2xl border-border/50 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base font-black">{t('lessons.pages_overview')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  {lesson.pages.map((page, idx) => (
+                    <button
+                      key={page.pageNumber}
+                      onClick={() => setActivePage(idx)}
+                      className={cn(
+                        'w-full text-left rounded-xl px-3 py-2 text-sm transition-all',
+                        activePage === idx
+                          ? 'bg-primary/10 text-primary font-semibold'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      <span className="font-mono text-xs mr-2 opacity-60">{page.pageNumber}.</span>
+                      {getLangTitle(page, language)}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <div className="space-y-2">
+              <Button className="w-full rounded-xl" variant="outline" asChild>
+                <Link href="/exam">{t('lessons.take_exam')}</Link>
+              </Button>
+              <Button className="w-full rounded-xl" variant="outline" asChild>
+                <Link href="/traffic-signs">{t('lessons.view_signs')}</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

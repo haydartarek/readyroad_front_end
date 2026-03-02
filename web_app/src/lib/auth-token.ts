@@ -1,40 +1,65 @@
 /**
- * Centralized auth token management
+ * Client-side auth token utilities
  *
  * SECURITY MODEL (HttpOnly Cookie):
- * - The JWT is stored in an HttpOnly cookie set by the BFF route handlers
- *   (/api/auth/login, /api/auth/register)
- * - Client-side JavaScript CANNOT read, write, or delete the token
- * - Auth state is derived from the AuthContext which calls /api/auth/me on mount
- * - Logout is performed via POST /api/auth/logout (clears the HttpOnly cookie server-side)
+ * - JWT stored in HttpOnly cookie set by BFF (/api/auth/login, /api/auth/register)
+ * - Client JS cannot read, write, or delete the token
+ * - Auth state derived from AuthContext which calls /api/auth/me on mount
+ * - Logout via POST /api/auth/logout (clears HttpOnly cookie server-side)
  *
- * These exports are kept for backward compatibility during migration.
- * They are intentional NO-OPs — the real auth logic lives server-side.
+ * The deprecated exports below are backward-compat no-ops.
+ * Real auth logic lives server-side.
  */
+
+// ─── Constants ───────────────────────────────────────────
+
+const CSRF_COOKIE_NAME = 'csrf_token';
+const LOGOUT_PATH      = '/api/auth/logout';
+
+// ─── Deprecated No-ops ───────────────────────────────────
 
 /**
  * @deprecated Token is in an HttpOnly cookie — client JS cannot read it.
- * Use the AuthContext's `isAuthenticated` state instead.
+ * Use AuthContext `isAuthenticated` instead.
  */
-export function getAuthToken(): string | null {
-    // HttpOnly cookie is invisible to client JS by design
-    return null;
+export function getAuthToken(): null {
+  return null;
 }
 
 /**
  * @deprecated Token is set by the BFF login route handler via Set-Cookie.
- * Do NOT call this — it is a no-op.
+ * This is a no-op.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function setAuthToken(_token: string): void {
-    // No-op: token is set server-side by /api/auth/login route handler
+  // no-op
 }
 
 /**
- * @deprecated Use `logoutAndClearCookie()` or call POST /api/auth/logout directly.
+ * @deprecated Use `logoutAndClearCookie()` or POST /api/auth/logout directly.
  */
 export function removeAuthToken(): void {
-    // Trigger server-side cookie cleanup
-    logoutAndClearCookie();
+  logoutAndClearCookie();
+}
+
+// ─── Cookie Utilities ────────────────────────────────────
+
+/**
+ * Read a non-HttpOnly cookie by name.
+ * Returns null in SSR environments where `document` is unavailable.
+ */
+export function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+/**
+ * Get the CSRF double-submit token from the non-HttpOnly `csrf_token` cookie.
+ * Must be sent as the `x-csrf-token` header on all mutation requests.
+ */
+export function getCsrfToken(): string | null {
+  return getCookie(CSRF_COOKIE_NAME);
 }
 
 /**
@@ -42,27 +67,9 @@ export function removeAuthToken(): void {
  * This is the ONLY way to remove the token since client JS cannot access it.
  */
 export async function logoutAndClearCookie(): Promise<void> {
-    try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {
-        // Best-effort logout — cookie will expire eventually
-    }
-}
-
-/**
- * Read a non-HttpOnly cookie by name.
- * Used for reading the CSRF double-submit token.
- */
-export function getCookie(name: string): string | null {
-    if (typeof document === 'undefined') return null;
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
-}
-
-/**
- * Get the CSRF token from the non-HttpOnly csrf_token cookie.
- * Must be sent as the x-csrf-token header on mutation requests.
- */
-export function getCsrfToken(): string | null {
-    return getCookie('csrf_token');
+  try {
+    await fetch(LOGOUT_PATH, { method: 'POST' });
+  } catch {
+    // Best-effort — cookie will expire eventually
+  }
 }

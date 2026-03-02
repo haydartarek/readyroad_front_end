@@ -1,11 +1,14 @@
 'use client';
 
+import Link from 'next/link';
+import { AlertTriangle, BookOpen, ClipboardList } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
+
+// ─── Types ───────────────────────────────────────────────
 
 interface WeakArea {
   categoryCode: string;
@@ -15,24 +18,55 @@ interface WeakArea {
   accuracy: number;
   averageTime: string;
   commonMistakes: string[];
-  recommendedLessons: Array<{
-    code: string;
-    title: string;
-  }>;
+  recommendedLessons: Array<{ code: string; title: string }>;
 }
 
-interface WeakAreaDetailsProps {
-  weakAreas: WeakArea[];
+// ─── Helpers ─────────────────────────────────────────────
+
+type Severity = 'critical' | 'weak';
+
+function getSeverity(accuracy: number): Severity | null {
+  if (accuracy < 50)  return 'critical';
+  if (accuracy < 70)  return 'weak';
+  return null;
 }
 
-export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
+const SEVERITY = {
+  critical: {
+    card:     'border-red-200    bg-red-50/40    dark:bg-red-950/20',
+    badge:    'bg-red-600',
+    accuracy: 'text-red-600',
+    bar:      '[&>div]:bg-red-600',
+    label:    'Critical',
+  },
+  weak: {
+    card:     'border-orange-200 bg-orange-50/40 dark:bg-orange-950/20',
+    badge:    'bg-orange-500',
+    accuracy: 'text-orange-600',
+    bar:      '[&>div]:bg-orange-500',
+    label:    'Needs Practice',
+  },
+} as const;
+
+const STAT_CELLS = (area: WeakArea) => [
+  { label: 'Correct',  value: area.correctCount,                      color: 'text-green-600' },
+  { label: 'Wrong',    value: area.totalCount - area.correctCount,     color: 'text-red-600'   },
+  { label: 'Avg Time', value: area.averageTime,                        color: 'text-primary'   },
+];
+
+// ─── Component ───────────────────────────────────────────
+
+export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
+
   if (weakAreas.length === 0) {
     return (
-      <Card className="border-2 border-green-200 bg-green-50">
-        <CardContent className="py-12 text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h3 className="text-2xl font-bold text-green-900">Excellent Performance!</h3>
-          <p className="mt-2 text-green-700">
+      <Card className="rounded-2xl border-2 border-green-200 bg-green-50/40 dark:bg-green-950/20 shadow-sm">
+        <CardContent className="py-16 text-center space-y-3">
+          <div className="text-6xl">🎉</div>
+          <h3 className="text-2xl font-black text-green-900 dark:text-green-100">
+            Excellent Performance!
+          </h3>
+          <p className="text-green-700 dark:text-green-300">
             You don&apos;t have any weak areas. All categories show strong performance!
           </p>
         </CardContent>
@@ -43,147 +77,124 @@ export function WeakAreaDetails({ weakAreas }: WeakAreaDetailsProps) {
   return (
     <div className="space-y-6">
       {weakAreas.map((area, index) => {
-        const isVeryWeak = area.accuracy < 50;
-        const isWeak = area.accuracy >= 50 && area.accuracy < 70;
+        const severity = getSeverity(area.accuracy);
+        const cfg      = severity ? SEVERITY[severity] : null;
 
         return (
           <Card
             key={area.categoryCode}
             className={cn(
-              'border-2 transition-all hover:shadow-lg',
-              isVeryWeak && 'border-red-300 bg-red-50',
-              isWeak && 'border-orange-300 bg-orange-50'
+              'rounded-2xl border-2 shadow-sm transition-all hover:shadow-md',
+              cfg?.card ?? 'border-border/50',
             )}
           >
+            {/* ── Header ── */}
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-card text-sm font-bold text-foreground">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-black text-foreground">
                       {index + 1}
                     </span>
-                    <Badge
-                      variant="destructive"
-                      className={cn(
-                        isVeryWeak && 'bg-red-600',
-                        isWeak && 'bg-orange-600'
-                      )}
-                    >
-                      {isVeryWeak ? 'Critical' : 'Needs Practice'}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-2xl">{area.categoryName}</CardTitle>
-                </div>
-                <div className="text-right">
-                  <div
-                    className={cn(
-                      'text-4xl font-bold',
-                      isVeryWeak && 'text-red-600',
-                      isWeak && 'text-orange-600'
+                    {cfg && (
+                      <Badge variant="destructive" className={cfg.badge}>
+                        {cfg.label}
+                      </Badge>
                     )}
-                  >
-                    {area.accuracy.toFixed(0)}%
                   </div>
-                  <div className="text-sm text-muted-foreground">Accuracy</div>
+                  <CardTitle className="text-2xl font-black">{area.categoryName}</CardTitle>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className={cn('text-4xl font-black', cfg?.accuracy ?? 'text-green-600')}>
+                    {area.accuracy.toFixed(0)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">Accuracy</p>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-6">
-              {/* Performance Stats */}
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-lg bg-card p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {area.correctCount}
+            <CardContent className="space-y-5">
+
+              {/* Stats */}
+              <div className="grid gap-3 sm:grid-cols-3">
+                {STAT_CELLS(area).map(({ label, value, color }) => (
+                  <div key={label} className="rounded-xl bg-card border border-border/50 p-4 text-center">
+                    <p className={cn('text-2xl font-black', color)}>{value}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                   </div>
-                  <div className="text-xs text-muted-foreground">Correct</div>
-                </div>
-                <div className="rounded-lg bg-card p-4 text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    {area.totalCount - area.correctCount}
-                  </div>
-                  <div className="text-xs text-muted-foreground">Wrong</div>
-                </div>
-                <div className="rounded-lg bg-card p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {area.averageTime}
-                  </div>
-                  <div className="text-xs text-muted-foreground">Avg Time</div>
-                </div>
+                ))}
               </div>
 
-              {/* Progress Bar */}
+              {/* Progress */}
               <div>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="font-medium">Your Progress</span>
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="font-semibold text-foreground">Your Progress</span>
                   <span className="text-muted-foreground">
                     {area.correctCount}/{area.totalCount} questions
                   </span>
                 </div>
                 <Progress
                   value={area.accuracy}
-                  className={cn(
-                    'h-3',
-                    isVeryWeak && '[&>div]:bg-red-600',
-                    isWeak && '[&>div]:bg-orange-600'
-                  )}
+                  className={cn('h-2.5 rounded-full', cfg?.bar)}
                 />
               </div>
 
-              {/* Common Mistakes */}
+              {/* Common mistakes */}
               {area.commonMistakes.length > 0 && (
-                <div className="rounded-lg bg-card p-4">
-                  <h4 className="mb-3 flex items-center gap-2 font-semibold text-foreground">
-                    <span>⚠️</span>
+                <div className="rounded-xl bg-muted/50 border border-border/50 p-4">
+                  <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
+                    <AlertTriangle className="w-4 h-4 text-orange-500 flex-shrink-0" />
                     Common Mistakes
                   </h4>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5">
                     {area.commonMistakes.map((mistake, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
-                        <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-500" />
-                        <span>{mistake}</span>
+                      <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-500" />
+                        {mistake}
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              {/* Recommended Lessons */}
+              {/* Recommended lessons */}
               {area.recommendedLessons.length > 0 && (
-                <div className="rounded-lg bg-blue-50 p-4">
-                  <h4 className="mb-3 flex items-center gap-2 font-semibold text-blue-900">
-                    <span>📚</span>
+                <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
+                  <h4 className="flex items-center gap-2 text-sm font-semibold text-primary mb-3">
+                    <BookOpen className="w-4 h-4 flex-shrink-0" />
                     Recommended Study Material
                   </h4>
-                  <div className="space-y-2">
-                    {area.recommendedLessons.map((lesson) => (
+                  <div className="space-y-1.5">
+                    {area.recommendedLessons.map(lesson => (
                       <Link
                         key={lesson.code}
                         href={`/lessons/${lesson.code}`}
-                        className="block rounded-md bg-background px-3 py-2 text-sm text-blue-800 transition-colors hover:bg-blue-100"
+                        className="flex items-center gap-2 rounded-lg bg-card px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors group"
                       >
-                        → {lesson.title}
+                        <span className="text-primary group-hover:translate-x-0.5 transition-transform">→</span>
+                        {lesson.title}
                       </Link>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <Button asChild className="flex-1">
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <Button asChild className="flex-1 rounded-xl gap-2 shadow-sm shadow-primary/20">
                   <Link href={`/practice/${area.categoryCode}`}>
-                    <span className="mr-2">📝</span>
+                    <ClipboardList className="w-4 h-4" />
                     Practice Now
                   </Link>
                 </Button>
-                <Button variant="outline" asChild className="flex-1">
+                <Button asChild variant="outline" className="flex-1 rounded-xl gap-2">
                   <Link href={`/lessons?category=${area.categoryCode}`}>
-                    <span className="mr-2">📖</span>
+                    <BookOpen className="w-4 h-4" />
                     Study Lessons
                   </Link>
                 </Button>
               </div>
+
             </CardContent>
           </Card>
         );

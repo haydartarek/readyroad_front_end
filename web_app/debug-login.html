@@ -2,467 +2,254 @@
 <html lang="ar" dir="rtl">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار تسجيل الدخول - ReadyRoad</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReadyRoad — Login Debug Tool</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-            width: 100%;
-        }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 540px;
+      width: 100%;
+    }
 
-        h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            text-align: center;
-        }
+    h1 { color: #667eea; margin-bottom: 6px; text-align: center; font-size: 22px; }
 
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    .info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      line-height: 1.8;
+    }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
+    .info strong { color: #1e40af; }
 
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
+    .form-group { margin-bottom: 18px; }
 
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
 
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 14px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 10px;
-            transition: transform 0.2s;
-        }
+    input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border-color 0.2s;
+    }
 
-        button:hover {
-            transform: translateY(-2px);
-        }
+    input:focus { outline: none; border-color: #667eea; }
 
-        button:active {
-            transform: translateY(0);
-        }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 13px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 8px;
+      transition: transform 0.2s, opacity 0.2s;
+    }
 
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-            animation: slideIn 0.3s ease;
-        }
+    button:hover   { transform: translateY(-2px); }
+    button:active  { transform: translateY(0); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
+    .result {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      display: none;
+      animation: slideIn 0.25s ease;
+    }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-        .success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 2px solid #6ee7b7;
-        }
+    .success { background: #d1fae5; color: #065f46; border: 2px solid #6ee7b7; }
+    .error   { background: #fee2e2; color: #991b1b; border: 2px solid #fca5a5; }
 
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 2px solid #fca5a5;
-        }
+    .result h3 { margin-bottom: 12px; font-size: 16px; }
+    .result p  { margin-bottom: 6px; font-size: 14px; }
 
-        .info {
-            background: #dbeafe;
-            color: #1e40af;
-            border: 2px solid #93c5fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
+    .badges { margin: 10px 0 14px; }
 
-        pre {
-            background: #f9fafb;
-            padding: 12px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-size: 12px;
-            margin-top: 10px;
-            direction: ltr;
-            text-align: left;
-        }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
 
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            margin: 5px 5px 5px 0;
-        }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-error   { background: #fee2e2; color: #991b1b; }
 
-        .badge-success {
-            background: #d1fae5;
-            color: #065f46;
-        }
+    hr { border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 14px 0; }
 
-        .badge-error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
+    pre {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+      margin-top: 8px;
+      direction: ltr;
+      text-align: left;
+      border: 1px solid #e5e7eb;
+    }
 
-        strong {
-            color: #667eea;
-        }
-    </style>
+    strong { color: #667eea; }
+
+    ul { margin-right: 20px; margin-top: 8px; line-height: 1.8; font-size: 13px; }
+  </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>🔐 اختبار تسجيل الدخول</h1>
-        <p class="subtitle">ReadyRoad - فحص مباشر بدون Next.js</p>
+  <div class="container">
+    <h1>🔐 اختبار تسجيل الدخول</h1>
+    <p class="subtitle">ReadyRoad — Debug Tool (بدون Next.js middleware)</p>
 
-        <div class="info">
-            <strong>📡 الباك اند:</strong> http://localhost:8890/api/auth/login<br>
-            <strong>🎯 الهدف:</strong> اختبار API مباشرة بدون middleware أو caching
-        </div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">👤 اسم المستخدم:</label>
-                <input type="text" id="username" value="testuser" required>
-            </div>
-            <div class="form-group">
-                <label for="password">🔑 كلمة المرور:</label>
-                <input type="password" id="password" value="Test123!" required>
-            </div>
-            <button type="submit">🚀 تسجيل الدخول</button>
-        </form>
-
-        <div id="result" class="result"></div>
+    <div class="info">
+      <strong>📡 Backend:</strong> http://localhost:8890/api/auth/login<br>
+      <strong>🎯 الهدف:</strong> اختبار API مباشرةً بدون middleware أو caching
     </div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">👤 اسم المستخدم</label>
+        <input type="text" id="username" value="testuser" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="password">🔑 كلمة المرور</label>
+        <input type="password" id="password" value="Test123!" required autocomplete="current-password">
+      </div>
+      <button type="submit" id="submitBtn">🚀 تسجيل الدخول</button>
+    </form>
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const resultDiv = document.getElementById('result');
+    <div id="result" class="result"></div>
+  </div>
 
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'result';
-            resultDiv.innerHTML = '⏳ جاري الاتصال بالباك اند...';
+  <script>
+    const form      = document.getElementById('loginForm');
+    const resultDiv = document.getElementById('result');
+    const submitBtn = document.getElementById('submitBtn');
 
-            const startTime = Date.now();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-            try {
-                const response = await fetch('http://localhost:8890/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password })
-                });
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
 
-                const endTime = Date.now();
-                const duration = endTime - startTime;
-                const data = await response.json();
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ جاري الاتصال...';
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result';
+      resultDiv.innerHTML = '⏳ جاري الاتصال بالباك اند...';
 
-                if (response.ok) {
-                    resultDiv.className = 'result success';
-                    resultDiv.innerHTML = `
-                        <h3>✅ تسجيل الدخول نجح!</h3>
-                        <div style="margin: 15px 0;">
-                            <span class="badge badge-success">200 OK</span>
-                            <span class="badge badge-success">${duration}ms</span>
-                        </div>
-                        <p><strong>🎫 Token:</strong> ${data.token.substring(0, 40)}...</p>
-                        <p><strong>👤 اسم المستخدم:</strong> ${data.username}</p>
-                        <p><strong>📧 البريد:</strong> ${data.email}</p>
-                        <p><strong>👥 الدور:</strong> ${data.role}</p>
-                        <p><strong>🆔 User ID:</strong> ${data.userId}</p>
-                        <hr style="margin: 15px 0; border: none; border-top: 1px solid #d1fae5;">
-                        <strong>📦 الـ Response كامل:</strong>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                        <hr style="margin: 15px 0; border: none; border-top: 1px solid #d1fae5;">
-                        <p style="color: #065f46; font-weight: 600;">
-                            ✨ الباك اند يعمل بشكل مثالي!<br>
-                            المشكلة في المتصفح أو Next.js cache
-                        </p>
-                    `;
-                } else {
-                    resultDiv.className = 'result error';
-                    resultDiv.innerHTML = `
-                        <h3>❌ فشل تسجيل الدخول</h3>
-                        <div style="margin: 15px 0;">
-                            <span class="badge badge-error">${response.status} ${response.statusText}</span>
-                            <span class="badge badge-error">${duration}ms</span>
-                        </div>
-                        <p><strong>⚠️ الخطأ:</strong> ${data.message || 'خطأ غير معروف'}</p>
-                        <hr style="margin: 15px 0; border: none; border-top: 1px solid #fca5a5;">
-                        <strong>📦 Response:</strong>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    `;
-                }
-            } catch (error) {
-                const endTime = Date.now();
-                const duration = endTime - startTime;
+      const startTime = Date.now();
 
-                resultDiv.className = 'result error';
-                resultDiv.innerHTML = `
-                    <h3>❌ خطأ في الشبكة</h3>
-                    <div style="margin: 15px 0;">
-                        <span class="badge badge-error">Network Error</span>
-                        <span class="badge badge-error">${duration}ms</span>
-                    </div>
-                    <p><strong>⚠️ الخطأ:</strong> ${error.message}</p>
-                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #fca5a5;">
-                    <p><strong>🔧 الحلول الممكنة:</strong></p>
-                    <ul style="margin-right: 20px; margin-top: 10px;">
-                        <li>تأكد من أن الباك اند يعمل على: http://localhost:8890</li>
-                        <li>تحقق من CORS settings في الباك اند</li>
-                        <li>تأكد من أن Firewall لا يمنع الاتصال</li>
-                    </ul>
-                `;
-            }
+      try {
+        const response = await fetch('http://localhost:8890/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
         });
-    </script>
-</body>
 
-</html>
-<html lang="en">
+        const duration = Date.now() - startTime;
+        const data = await response.json();
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReadyRoad Login Debug Tool</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #2563eb;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        button {
-            background: #2563eb;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background: #1d4ed8;
-        }
-
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            display: none;
-        }
-
-        .success {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #86efac;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fca5a5;
-        }
-
-        .info {
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #93c5fd;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-
-        pre {
-            background: #f9fafb;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-size: 12px;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <h1>🔍 ReadyRoad Login Debug Tool</h1>
-
-        <div class="info">
-            <strong>Purpose:</strong> Test login API directly without Next.js middleware/caching.
-            <br><strong>Backend:</strong> http://localhost:8890/api/auth/login
-        </div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" id="username" value="testuser" required>
+        if (response.ok) {
+          resultDiv.className = 'result success';
+          resultDiv.innerHTML = `
+            <h3>✅ تسجيل الدخول نجح!</h3>
+            <div class="badges">
+              <span class="badge badge-success">${response.status} OK</span>
+              <span class="badge badge-success">${duration}ms</span>
             </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" value="Test123!" required>
+            <p><strong>🆔 User ID:</strong> ${data.userId ?? '—'}</p>
+            <p><strong>👤 Username:</strong> ${data.username}</p>
+            <p><strong>📧 Email:</strong> ${data.email ?? '—'}</p>
+            <p><strong>👥 Role:</strong> ${data.role}</p>
+            <p><strong>🎫 Token:</strong> ${data.token ? data.token.substring(0, 40) + '...' : '❌ غائب في الـ response'}</p>
+            <hr>
+            <strong>📦 Full Response:</strong>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        } else {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = `
+            <h3>❌ فشل تسجيل الدخول</h3>
+            <div class="badges">
+              <span class="badge badge-error">${response.status} ${response.statusText}</span>
+              <span class="badge badge-error">${duration}ms</span>
             </div>
-            <button type="submit">🚀 Test Login</button>
-        </form>
-
-        <div id="result" class="result"></div>
-    </div>
-
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const resultDiv = document.getElementById('result');
-
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'result';
-            resultDiv.innerHTML = '⏳ Testing login...';
-
-            try {
-                const response = await fetch('http://localhost:8890/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    resultDiv.className = 'result success';
-                    resultDiv.innerHTML = `
-                        <h3>✅ Login Successful!</h3>
-                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
-                        <p><strong>Token:</strong> ${data.token.substring(0, 30)}...</p>
-                        <p><strong>User ID:</strong> ${data.userId}</p>
-                        <p><strong>Username:</strong> ${data.username}</p>
-                        <p><strong>Email:</strong> ${data.email}</p>
-                        <p><strong>Role:</strong> ${data.role}</p>
-                        <hr>
-                        <strong>Full Response:</strong>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    `;
-                } else {
-                    resultDiv.className = 'result error';
-                    resultDiv.innerHTML = `
-                        <h3>❌ Login Failed</h3>
-                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
-                        <p><strong>Error:</strong> ${data.message || 'Unknown error'}</p>
-                        <hr>
-                        <strong>Response:</strong>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    `;
-                }
-            } catch (error) {
-                resultDiv.className = 'result error';
-                resultDiv.innerHTML = `
-                    <h3>❌ Network Error</h3>
-                    <p><strong>Error:</strong> ${error.message}</p>
-                    <p>Make sure backend is running on http://localhost:8890</p>
-                `;
-            }
-        });
-    </script>
+            <p><strong>⚠️ الخطأ:</strong> ${data.message || 'خطأ غير معروف'}</p>
+            <hr>
+            <strong>📦 Response:</strong>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        const duration = Date.now() - startTime;
+        resultDiv.className = 'result error';
+        resultDiv.innerHTML = `
+          <h3>❌ خطأ في الشبكة</h3>
+          <div class="badges">
+            <span class="badge badge-error">Network Error</span>
+            <span class="badge badge-error">${duration}ms</span>
+          </div>
+          <p><strong>⚠️ الخطأ:</strong> ${error.message}</p>
+          <hr>
+          <p><strong>🔧 الحلول الممكنة:</strong></p>
+          <ul>
+            <li>تأكد من أن الباك اند يعمل على: http://localhost:8890</li>
+            <li>تحقق من CORS settings في الباك اند</li>
+            <li>تأكد من أن Firewall لا يمنع الاتصال</li>
+          </ul>
+        `;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 تسجيل الدخول';
+      }
+    });
+  </script>
 </body>
 
 </html>

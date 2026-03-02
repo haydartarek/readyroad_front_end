@@ -1,20 +1,20 @@
 {
-    "MD013": false,
-    "MD024": {
-        "siblings_only": true
-    },
-    "MD033": {
-        "allowed_elements": [
-            "User",
-            "ExamData",
-            "ProgressData",
-            "ErrorPatternList",
-            "br",
-            "details",
-            "summary"
-        ]
-    },
-    "MD040": false,
-    "MD046": false,
-    "MD060": false
+  "MD013": false,
+  "MD024": {
+    "siblings_only": true
+  },
+  "MD033": {
+    "allowed_elements": [
+      "User",
+      "ExamData",
+      "ProgressData",
+      "ErrorPatternList",
+      "br",
+      "details",
+      "summary"
+    ]
+  },
+  "MD040": false,
+  "MD046": false,
+  "MD060": false
 }

@@ -2,55 +2,54 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { getBreadcrumbTrail } from '@/lib/admin-routes';
 
-/**
- * Admin Breadcrumb Component
- *
- * Uses the route registry to build a breadcrumb trail.
- * RTL-aware separators. Shown on all admin pages.
- *
- * Example: Dashboard > Signs > #3 > Edit
- *
- * @author ReadyRoad Team
- * @since 2026-02-17
- */
 export default function AdminBreadcrumb() {
-    const pathname = usePathname();
-    const { t, isRTL } = useLanguage();
+  const pathname = usePathname();
+  const { t, isRTL } = useLanguage();
 
-    const trail = getBreadcrumbTrail(pathname, t);
+  const trail = getBreadcrumbTrail(pathname, t);
 
-    // Don't render on dashboard itself or if only 1 segment
-    if (trail.length <= 1) return null;
+  if (trail.length <= 1) return null;
 
-    const SeparatorIcon = isRTL ? ChevronLeft : ChevronRight;
+  const Separator = isRTL ? ChevronLeft : ChevronRight;
 
-    return (
-        <nav aria-label="Breadcrumb" className="mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
-            <ol className="flex items-center flex-wrap text-sm text-muted-foreground gap-1">
-                {trail.map((segment, idx) => (
-                    <li key={segment.href + idx} className="flex items-center">
-                        {idx > 0 && (
-                            <SeparatorIcon className="h-3.5 w-3.5 mx-1 text-muted-foreground flex-shrink-0" />
-                        )}
-                        {segment.isCurrentPage ? (
-                            <span className="font-medium text-foreground truncate max-w-[200px]" aria-current="page">
-                                {segment.label}
-                            </span>
-                        ) : (
-                            <Link
-                                href={segment.href}
-                                className="text-muted-foreground hover:text-blue-600 hover:underline truncate max-w-[150px] transition-colors"
-                            >
-                                {segment.label}
-                            </Link>
-                        )}
-                    </li>
-                ))}
-            </ol>
-        </nav>
-    );
+  return (
+    <nav aria-label="Breadcrumb" dir={isRTL ? 'rtl' : 'ltr'} className="mb-6">
+      <ol className="inline-flex items-center gap-1 rounded-2xl border border-border/50 bg-card px-4 py-2 shadow-sm">
+        {trail.map((segment, idx) => (
+          <li key={`${segment.href}-${idx}`} className="flex items-center gap-1">
+            {idx > 0 && (
+              <Separator className="h-3 w-3 text-muted-foreground/40 flex-shrink-0 mx-0.5" />
+            )}
+            {segment.isCurrentPage ? (
+              <span
+                aria-current="page"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary truncate max-w-[200px]"
+              >
+                {segment.label}
+              </span>
+            ) : idx === 0 ? (
+              <Link
+                href={segment.href}
+                className="inline-flex items-center gap-1.5 rounded-xl px-2 py-1 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+              >
+                <Home className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate max-w-[120px]">{segment.label}</span>
+              </Link>
+            ) : (
+              <Link
+                href={segment.href}
+                className="inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground truncate max-w-[150px]"
+              >
+                {segment.label}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
 }

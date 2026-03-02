@@ -1,108 +1,106 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { ImageIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+// ─── Types ───────────────────────────────────────────────
 
 interface TrafficSignImageProps {
-    src: string;
-    alt: string;
-    className?: string;
-    width?: number;
-    height?: number;
-    priority?: boolean;
+  src:        string;
+  alt:        string;
+  className?: string;
+  width?:     number;
+  height?:    number;
+  priority?:  boolean;
 }
 
+// ─── Helpers ─────────────────────────────────────────────
+
+function buildFallbacks(src: string): string[] {
+  return [
+    src.replace(/-v\d+/, ''),
+    src.replace(/_\d+/, ''),
+    src.replace(/delineation_signs/, 'bicycle_signs'),
+    src.replace(/additional_signs/, 'bicycle_signs'),
+    '/images/signs/placeholder.png',
+  ].filter(alt => alt !== src);
+}
+
+function normalizeSrc(src: string): string {
+  const stripped  = src.replace(/^\/+/, '').replace(/^images\//, '');
+  const parts     = stripped.split('/');
+  const filename  = parts.at(-1) ?? '';
+  const category  = parts.at(-2) ?? 'signs';
+  return `/images/signs/${category}/${filename}`;
+}
+
+// ─── Placeholder ─────────────────────────────────────────
+
+function SignPlaceholder({
+  alt,
+  width,
+  height,
+  className,
+}: Pick<TrafficSignImageProps, 'alt' | 'width' | 'height' | 'className'>) {
+  return (
+    <div
+      className={cn('flex items-center justify-center rounded-lg bg-muted', className)}
+      style={{ width, height }}
+      role="img"
+      aria-label={alt}
+    >
+      <div className="flex flex-col items-center gap-2 p-4">
+        <ImageIcon className="size-12 text-muted-foreground" />
+        <p className="text-center text-xs text-muted-foreground">{alt}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Component ───────────────────────────────────────────
+
 export function TrafficSignImage({
-    src,
-    alt,
-    className = '',
-    width = 200,
-    height = 200,
-    priority = false,
+  src,
+  alt,
+  className,
+  width    = 200,
+  height   = 200,
+  priority = false,
 }: TrafficSignImageProps) {
-    const [imgSrc, setImgSrc] = useState(src);
-    const [hasError, setHasError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(() => normalizeSrc(src));
+  const [fallbacks,  setFallbacks]  = useState(() => buildFallbacks(src));
 
-    // Normalize image path
-    const normalizeImagePath = (path: string): string => {
-        // Remove any leading slashes and 'images/' prefix
-        let normalized = path.replace(/^\/+/, '').replace(/^images\//, '');
+  const handleError = useCallback(() => {
+    if (fallbacks.length === 0) return;
+    const [next, ...rest] = fallbacks;
+    setCurrentSrc(next);
+    setFallbacks(rest);
+  }, [fallbacks]);
 
-        // Extract filename from path
-        const filename = normalized.split('/').pop() || '';
-        const category = normalized.split('/')[normalized.split('/').length - 2] || 'signs';
-
-        // Try to map common variations
-        const variants = [
-            `/images/signs/${category}/${filename}`,
-            `/images/signs/${category}/${filename.replace(/-v\d+/, '')}`,
-            `/images/signs/${category}/${filename.replace(/_\d+/, '')}`,
-            `/images/signs/${category}/${filename.replace(/-links/, 'a').replace(/-rechts/, 'b')}`,
-            `/images/signs/${category}/${filename.toLowerCase()}`,
-            `/images/signs/bicycle_signs/${filename}`,
-            `/images/signs/additional_signs/${filename}`,
-        ];
-
-        return variants[0];
-    };
-
-    const handleError = () => {
-        if (!hasError) {
-            setHasError(true);
-            // Try alternative paths
-            const alternatives = [
-                imgSrc.replace(/-v\d+/, ''),
-                imgSrc.replace(/_\d+/, ''),
-                imgSrc.replace(/delineation_signs/, 'bicycle_signs'),
-                imgSrc.replace(/additional_signs/, 'bicycle_signs'),
-                '/images/signs/placeholder.png',
-            ];
-
-            const nextSrc = alternatives.find(alt => alt !== imgSrc);
-            if (nextSrc) {
-                setImgSrc(nextSrc);
-                setHasError(false);
-            }
-        }
-    };
-
-    // Show placeholder if all attempts failed
-    if (hasError) {
-        return (
-            <div
-                className={`flex items-center justify-center bg-muted rounded-lg ${className}`}
-                style={{ width, height }}
-            >
-                <div className="text-center p-4">
-                    <svg
-                        className="w-12 h-12 text-muted-foreground mx-auto mb-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                    </svg>
-                    <p className="text-xs text-muted-foreground">{alt}</p>
-                </div>
-            </div>
-        );
-    }
-
+  // All fallbacks exhausted
+  if (fallbacks.length === 0 && currentSrc === '/images/signs/placeholder.png') {
     return (
-        <Image
-            src={normalizeImagePath(imgSrc)}
-            alt={alt}
-            width={width}
-            height={height}
-            className={className}
-            priority={priority}
-            onError={handleError}
-            unoptimized
-        />
+      <SignPlaceholder
+        alt={alt}
+        width={width}
+        height={height}
+        className={className}
+      />
     );
+  }
+
+  return (
+    <Image
+      src={currentSrc}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+      priority={priority}
+      onError={handleError}
+      unoptimized
+    />
+  );
 }

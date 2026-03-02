@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,116 @@ import { useAuth } from '@/contexts/auth-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { EXAM_RULES } from '@/lib/constants';
+import {
+  ClipboardList, Timer, Trophy, Navigation,
+  SendHorizonal, AlarmClock, Wifi, RefreshCw,
+  XCircle, Play, ArrowLeft,
+} from 'lucide-react';
+
+interface CanStartResponse {
+  canStart: boolean;
+  message?: string;
+  activeExamId?: number;
+  startedAt?: string;
+  expiresAt?: string;
+}
+
+interface ActiveExamResponse {
+  hasActiveExam: boolean;
+  activeExam: { id: number };
+}
+
+interface ExamOption {
+  optionId: number;
+  optionTextEn: string;
+  optionTextAr: string;
+  optionTextNl: string;
+  optionTextFr: string;
+}
+
+interface ExamQuestion {
+  questionId: number;
+  questionOrder?: number;
+  questionTextEn: string;
+  questionTextAr: string;
+  questionTextNl: string;
+  questionTextFr: string;
+  imageUrl?: string;
+  options: ExamOption[];
+}
+
+interface StartExamResponse {
+  examId: number;
+  questions: ExamQuestion[];
+  expiresAt: string;
+  startedAt: string;
+}
+
+interface RuleItem {
+  icon: ReactNode;
+  key: string;
+  content: () => ReactNode;
+}
+
+interface NoteItem {
+  icon: ReactNode;
+  text: string;
+}
+
+const rules: RuleItem[] = [
+  {
+    icon: <ClipboardList className="w-5 h-5" />,
+    key: 'totalQuestions',
+    content: () => (
+      <>The exam consists of exactly <strong>{EXAM_RULES.TOTAL_QUESTIONS} multiple-choice questions</strong>.</>
+    ),
+  },
+  {
+    icon: <Timer className="w-5 h-5" />,
+    key: 'timeLimit',
+    content: () => (
+      <>You have <strong>{EXAM_RULES.DURATION_MINUTES} minutes</strong> to complete the exam. The timer starts immediately.</>
+    ),
+  },
+  {
+    icon: <Trophy className="w-5 h-5" />,
+    key: 'passScore',
+    content: () => (
+      <>To pass, score at least <strong>{EXAM_RULES.PASS_PERCENTAGE}%</strong> ({EXAM_RULES.PASSING_SCORE} correct answers or more).</>
+    ),
+  },
+  {
+    icon: <Navigation className="w-5 h-5" />,
+    key: 'navigation',
+    content: () => (
+      <>Navigate with <strong>Previous</strong> and <strong>Next</strong>. Use <strong>Overview</strong> to see all questions at once.</>
+    ),
+  },
+  {
+    icon: <SendHorizonal className="w-5 h-5" />,
+    key: 'submission',
+    content: () => (
+      <>
+        Click <strong>Submit Exam</strong> when done. Unanswered questions are marked incorrect.{' '}
+        <span className="text-destructive font-semibold">You cannot change answers after submission.</span>
+      </>
+    ),
+  },
+  {
+    icon: <AlarmClock className="w-5 h-5" />,
+    key: 'autoSubmit',
+    content: () => (
+      <>The exam will be <strong>automatically submitted</strong> when the time expires.</>
+    ),
+  },
+];
+
+const importantNotes: NoteItem[] = [
+  { icon: <Wifi className="w-4 h-4" />,         text: 'Make sure you have a stable internet connection' },
+  { icon: <RefreshCw className="w-4 h-4" />,    text: 'Do not refresh the page during the exam' },
+  { icon: <XCircle className="w-4 h-4" />,      text: 'Close other applications to avoid distractions' },
+  { icon: <ClipboardList className="w-4 h-4" />, text: 'You can only take the exam once per session' },
+];
 
 export default function ExamRulesPage() {
   const router = useRouter();
@@ -24,265 +135,179 @@ export default function ExamRulesPage() {
       setIsStarting(true);
       setError(null);
 
-      // Check if user can start exam
-      const canStartResponse = await apiClient.get<{
-        canStart: boolean;
-        message?: string;
-        activeExamId?: number;
-        startedAt?: string;
-        expiresAt?: string;
-      }>(
+      const canStartResponse = await apiClient.get<CanStartResponse>(
         `/exams/simulations/can-start?userId=${user?.userId}`
       );
 
       if (!canStartResponse.data.canStart) {
-        // If an exam is already active, go to it instead of blocking the user
         const activeExamId = canStartResponse.data.activeExamId;
 
         if (activeExamId) {
-          // Clear any stale cached exam before redirecting to active one
           localStorage.removeItem('current_exam');
-          setIsStarting(false);
           router.push(`/exam/${activeExamId}`);
           return;
         }
 
-        // Fallback: ask backend for the active exam
         try {
-          const active = await apiClient.get<{ hasActiveExam: boolean; activeExam: { id: number } }>(
-            `/exams/simulations/active`
-          );
-
+          const active = await apiClient.get<ActiveExamResponse>('/exams/simulations/active');
           if (active.data.hasActiveExam && active.data.activeExam?.id) {
-            // Clear any stale cached exam before redirecting to active one
             localStorage.removeItem('current_exam');
-            setIsStarting(false);
             router.push(`/exam/${active.data.activeExam.id}`);
             return;
           }
         } catch {
-          // ignore and show error below
+          void 0;
         }
 
-        setError(canStartResponse.data.message || 'You cannot start an exam at this time.');
+        setError(canStartResponse.data.message ?? 'You cannot start an exam at this time.');
         setIsStarting(false);
         return;
       }
 
-      // Create exam simulation via API
-      // The /start endpoint returns the full exam data including questions array
-      const startResponse = await apiClient.post<{
-        examId: number;
-        questions: Array<{
-          questionId: number;
-          questionOrder?: number;
-          questionTextEn: string;
-          questionTextAr: string;
-          questionTextNl: string;
-          questionTextFr: string;
-          imageUrl?: string;
-          options: Array<{
-            optionId: number;
-            optionTextEn: string;
-            optionTextAr: string;
-            optionTextNl: string;
-            optionTextFr: string;
-          }>;
-        }>;
-        expiresAt: string;
-        startedAt: string;
-      }>('/exams/simulations/start', { userId: user?.userId });
+      const startResponse = await apiClient.post<StartExamResponse>(
+        '/exams/simulations/start',
+        { userId: user?.userId }
+      );
 
-      const examId = startResponse.data.examId;
-
-      // Store complete exam data in localStorage (keep backend format for compatibility with [id]/page.tsx normalizer)
       localStorage.setItem('current_exam', JSON.stringify({
-        examId: startResponse.data.examId,
+        examId:    startResponse.data.examId,
         questions: startResponse.data.questions,
         expiresAt: startResponse.data.expiresAt,
-        startedAt: startResponse.data.startedAt
+        startedAt: startResponse.data.startedAt,
       }));
 
-      // Redirect to exam questions page
-      router.push(`/exam/${examId}`);
+      router.push(`/exam/${startResponse.data.examId}`);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
       logApiError('Failed to start exam', err);
       if (isServiceUnavailable(err)) {
         setServiceUnavailable(true);
       } else {
-        setError(error.response?.data?.message || 'Failed to start exam. Please try again.');
+        const apiErr = err as { response?: { data?: { message?: string } } };
+        setError(apiErr.response?.data?.message ?? 'Failed to start exam. Please try again.');
       }
       setIsStarting(false);
     }
   };
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background">
+      <div className="container mx-auto max-w-3xl px-4 py-10 space-y-8">
+
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-primary border border-primary/20 shadow-sm">
+            <ClipboardList className="w-4 h-4" />
+            <span className="font-semibold text-sm">Before You Begin</span>
+          </div>
+          <h1 className="text-4xl font-black tracking-tight">
             {t('exam.rules.title')}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             {t('exam.rules.subtitle')}
           </p>
         </div>
 
-        {/* Rules Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              📋 {t('exam.rules.examRules')}
-            </CardTitle>
-            <CardDescription>
-              {t('exam.rules.description')}
-            </CardDescription>
+        <Card className="border border-border/50 shadow-lg">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black">
+                  {t('exam.rules.examRules')}
+                </CardTitle>
+                <CardDescription>{t('exam.rules.description')}</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Total Questions */}
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                1
+          <CardContent className="space-y-4">
+            {rules.map((rule, index) => (
+              <div
+                key={rule.key}
+                className="flex items-start gap-4 rounded-xl p-4 bg-muted/30 border border-border/30 hover:bg-muted/50 transition-colors duration-200"
+              >
+                <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center shadow-sm shadow-primary/30">
+                  {rule.icon}
+                </div>
+                <div className="space-y-0.5">
+                  <h3 className="font-semibold text-sm">
+                    {t(`exam.rules.${rule.key}`)}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {rule.content()}
+                  </p>
+                </div>
+                <div className="ml-auto flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-black text-muted-foreground">
+                  {index + 1}
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold">
-                  {t('exam.rules.totalQuestions')}
-                </h3>
-                <p className="mt-1 text-muted-foreground">
-                  The exam consists of exactly <strong>{EXAM_RULES.TOTAL_QUESTIONS} multiple-choice questions</strong>.
-                </p>
-              </div>
-            </div>
-
-            {/* Time Limit */}
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  {t('exam.rules.timeLimit')}
-                </h3>
-                <p className="mt-1 text-muted-foreground">
-                  You have <strong>{EXAM_RULES.DURATION_MINUTES} minutes</strong> to complete the exam.
-                  The timer will start immediately when you begin.
-                </p>
-              </div>
-            </div>
-
-            {/* Pass Score */}
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  {t('exam.rules.passScore')}
-                </h3>
-                <p className="mt-1 text-muted-foreground">
-                  To pass, you must score at least <strong>{EXAM_RULES.PASS_PERCENTAGE}%</strong>
-                  ({EXAM_RULES.MIN_CORRECT_ANSWERS} correct answers or more).
-                </p>
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                4
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  {t('exam.rules.navigation')}
-                </h3>
-                <p className="mt-1 text-muted-foreground">
-                  You can navigate between questions using the <strong>Previous</strong> and <strong>Next</strong> buttons.
-                  Use the <strong>Overview</strong> button to see all questions at once.
-                </p>
-              </div>
-            </div>
-
-            {/* Submission */}
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                5
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  {t('exam.rules.submission')}
-                </h3>
-                <p className="mt-1 text-muted-foreground">
-                  Click <strong>Submit Exam</strong> when you&apos;re done.
-                  Unanswered questions will be marked as incorrect.
-                  <strong className="text-red-600"> You cannot change answers after submission.</strong>
-                </p>
-              </div>
-            </div>
-
-            {/* Auto Submit */}
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                6
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  {t('exam.rules.autoSubmit')}
-                </h3>
-                <p className="mt-1 text-muted-foreground">
-                  The exam will be <strong>automatically submitted</strong> when the time expires.
-                </p>
-              </div>
-            </div>
+            ))}
           </CardContent>
         </Card>
 
-        {/* Important Notes Alert */}
-        <Alert>
-          <AlertDescription>
-            <p className="font-semibold">⚡ Important Notes:</p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
-              <li>Make sure you have a stable internet connection</li>
-              <li>Do not refresh the page during the exam</li>
-              <li>Close other applications to avoid distractions</li>
-              <li>You can only take the exam once per session</li>
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 space-y-3">
+          <p className="font-bold text-foreground flex items-center gap-2">
+            <span>⚡</span> Important Notes
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {importantNotes.map((note, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-xl bg-background/60 border border-border/30 px-3 py-2.5 text-sm text-muted-foreground"
+              >
+                <span className="text-primary flex-shrink-0">{note.icon}</span>
+                {note.text}
+              </div>
+            ))}
+          </div>
+        </div>
 
-        {/* Service Unavailable Banner */}
         {serviceUnavailable && (
-          <ServiceUnavailableBanner onRetry={() => { setServiceUnavailable(false); setError(null); }} className="mb-4" />
+          <ServiceUnavailableBanner
+            onRetry={() => { setServiceUnavailable(false); setError(null); }}
+          />
         )}
-
-        {/* Error Display */}
         {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+          <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300">
+            <AlertDescription>⚠️ {error}</AlertDescription>
           </Alert>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-3">
           <Button
             variant="outline"
             size="lg"
             onClick={() => router.back()}
             disabled={isStarting}
+            className="h-12 px-6 gap-2 hover:bg-muted/50 transition-all duration-200"
           >
+            <ArrowLeft className="w-4 h-4" />
             Cancel
           </Button>
           <Button
             size="lg"
             onClick={handleStartExam}
             disabled={isStarting}
+            className="h-12 px-8 gap-2 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.02] transition-all duration-200"
           >
-            {isStarting ? 'Starting...' : 'Start Exam'}
+            {isStarting ? (
+              <>
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                Starting...
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                Start Exam
+              </>
+            )}
           </Button>
         </div>
+
       </div>
     </div>
   );
 }
-

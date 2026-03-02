@@ -3,40 +3,38 @@
 import { useState, useEffect } from 'react';
 import { convertToPublicImageUrl, FALLBACK_IMAGE } from '@/lib/image-utils';
 
+// ─── Types ───────────────────────────────────────────────
+
 interface SignImageProps {
-  src: string;
-  alt: string;
+  src:       string;
+  alt:       string;
   className?: string;
 }
 
-// Convert asset path from backend to public URL
-function convertToPublicUrl(src: string): string {
+// ─── Helpers ─────────────────────────────────────────────
+
+function resolveImageUrl(src: string): string {
   if (!src) return FALLBACK_IMAGE;
-  return convertToPublicImageUrl(src) || FALLBACK_IMAGE;
+  return convertToPublicImageUrl(src) ?? FALLBACK_IMAGE;
 }
 
+// ─── Component ───────────────────────────────────────────
+
 export function SignImage({ src, alt, className = 'object-contain' }: SignImageProps) {
-  const [imgSrc, setImgSrc] = useState(() => convertToPublicUrl(src));
+  const [imgSrc,  setImgSrc]  = useState(() => resolveImageUrl(src));
   const [mounted, setMounted] = useState(false);
 
-  // Only update src when it changes, not on mount
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
-    setImgSrc(convertToPublicUrl(src));
+    setImgSrc(resolveImageUrl(src));
   }, [src]);
 
-  // Separate effect for mounting flag
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const sharedClass = `absolute inset-0 h-full w-full ${className}`;
 
-  // Render a placeholder during SSR to avoid hydration issues
+  // SSR placeholder — avoids hydration mismatch
   if (!mounted) {
-    return (
-      <div
-        className={`absolute inset-0 h-full w-full bg-muted ${className}`}
-        aria-label={alt}
-      />
-    );
+    return <div className={`bg-muted ${sharedClass}`} aria-label={alt} />;
   }
 
   return (
@@ -44,7 +42,7 @@ export function SignImage({ src, alt, className = 'object-contain' }: SignImageP
     <img
       src={imgSrc}
       alt={alt}
-      className={`absolute inset-0 h-full w-full ${className}`}
+      className={sharedClass}
       onError={() => setImgSrc(FALLBACK_IMAGE)}
     />
   );

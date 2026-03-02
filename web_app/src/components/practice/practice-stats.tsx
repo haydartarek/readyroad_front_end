@@ -4,13 +4,33 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/language-context';
 
+// ─── Types ───────────────────────────────────────────────
+
 interface PracticeStatsProps {
-  totalQuestions: number;
+  totalQuestions:  number;
   currentQuestion: number;
-  correctAnswers: number;
-  wrongAnswers: number;
-  accuracy: number;
+  correctAnswers:  number;
+  wrongAnswers:    number;
+  accuracy:        number;
 }
+
+// ─── Constants ───────────────────────────────────────────
+
+interface StatCell {
+  valueKey: 'accuracy' | 'correctAnswers' | 'wrongAnswers';
+  labelKey: string;
+  bg:       string;
+  text:     string;
+  subText:  string;
+}
+
+const STAT_CELLS: StatCell[] = [
+  { valueKey: 'accuracy',       labelKey: 'practice.accuracy',      bg: 'bg-blue-50',  text: 'text-blue-600',  subText: 'text-blue-800'  },
+  { valueKey: 'correctAnswers', labelKey: 'practice.correct_label', bg: 'bg-green-50', text: 'text-green-600', subText: 'text-green-800' },
+  { valueKey: 'wrongAnswers',   labelKey: 'practice.wrong_label',   bg: 'bg-red-50',   text: 'text-red-600',   subText: 'text-red-800'   },
+];
+
+// ─── Component ───────────────────────────────────────────
 
 export function PracticeStats({
   totalQuestions,
@@ -20,44 +40,49 @@ export function PracticeStats({
   accuracy,
 }: PracticeStatsProps) {
   const { t } = useLanguage();
-  const progressPercentage = totalQuestions === 0 ? 0 : ((currentQuestion - 1) / totalQuestions) * 100;
+
+  const progressPct = totalQuestions === 0
+    ? 0
+    : ((currentQuestion - 1) / totalQuestions) * 100;
+
+  const values: Record<StatCell['valueKey'], string> = {
+    accuracy:       `${accuracy.toFixed(0)}%`,
+    correctAnswers: String(correctAnswers),
+    wrongAnswers:   String(wrongAnswers),
+  };
 
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="space-y-4">
+
           {/* Progress */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium">{t('practice.progress')}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="font-semibold">{t('practice.progress')}</span>
               <span className="text-muted-foreground">
-                {t('practice.question_of').replace('{current}', String(currentQuestion)).replace('{total}', String(totalQuestions))}
+                {t('practice.question_of')
+                  .replace('{current}', String(currentQuestion))
+                  .replace('{total}',   String(totalQuestions))}
               </span>
             </div>
-            <Progress value={progressPercentage} className="h-2" />
+            <Progress value={progressPct} className="h-2" />
           </div>
 
-          {/* Stats Grid */}
+          {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center rounded-lg bg-blue-50 p-3">
-              <div className="text-2xl font-bold text-blue-600">
-                {accuracy.toFixed(0)}%
+            {STAT_CELLS.map(cell => (
+              <div key={cell.valueKey} className={`rounded-xl p-3 text-center ${cell.bg}`}>
+                <p className={`text-2xl font-black ${cell.text}`}>
+                  {values[cell.valueKey]}
+                </p>
+                <p className={`mt-1 text-xs ${cell.subText}`}>
+                  {t(cell.labelKey)}
+                </p>
               </div>
-              <div className="text-xs text-blue-800 mt-1">{t('practice.accuracy')}</div>
-            </div>
-            <div className="text-center rounded-lg bg-green-50 p-3">
-              <div className="text-2xl font-bold text-green-600">
-                {correctAnswers}
-              </div>
-              <div className="text-xs text-green-800 mt-1">{t('practice.correct_label')}</div>
-            </div>
-            <div className="text-center rounded-lg bg-red-50 p-3">
-              <div className="text-2xl font-bold text-red-600">
-                {wrongAnswers}
-              </div>
-              <div className="text-xs text-red-800 mt-1">{t('practice.wrong_label')}</div>
-            </div>
+            ))}
           </div>
+
         </div>
       </CardContent>
     </Card>

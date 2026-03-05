@@ -25,12 +25,19 @@ import { isUnavailableStatus, logApiError } from '@/lib/api';
 
 // ─── Types ───────────────────────────────────────────────
 
+interface LoginResult {
+  success:   boolean;
+  message?:  string;
+  /** 503 = backend down */
+  status?:   number;
+}
+
 interface AuthContextType {
   user:               User | null;
   isLoading:          boolean;
   isAuthenticated:    boolean;
   serviceUnavailable: boolean;
-  login:              (credentials: LoginRequest, redirectPath?: string) => Promise<void>;
+  login:              (credentials: LoginRequest, redirectPath?: string) => Promise<LoginResult>;
   logout:             () => void;
   fetchUser:          () => Promise<void>;
 }
@@ -56,7 +63,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
     username:  (raw.username  as string)  ?? '',
     email:     (raw.email     as string)  ?? '',
     fullName:  (raw.fullName  as string)  ?? '',
-    firstName: (raw.firstName as string)  || undefined,
+    firstName: (raw.firstName as string)  || (raw.fullName as string)?.split(' ')[0] || undefined,
     lastName:  (raw.lastName  as string)  || undefined,
     role:      (raw.role      as string)  ?? 'USER',
     isActive:  true,
@@ -95,8 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/auth/me', { cache: 'no-store' });
 
       if (response.ok) {
-        const raw: User = await response.json();
-        setUser(raw);
+        const raw = await response.json() as Record<string, unknown>;
+        // Use normalizeUser so firstName is extracted from fullName on page refresh
+        // (same normalization applied during login)
+        setUser(normalizeUser(raw));
         setServiceUnavailable(false);
         return;
       }
@@ -129,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (
     credentials: LoginRequest,
     redirectPath?: string,
-  ) => {
+  ): Promise<LoginResult> => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/auth/login', {
@@ -141,8 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const message   = errorData.message ?? 'Login failed. Please check your credentials.';
-        toast.error(message);
-        throw new Error(message);
+        return { success: false, message, status: response.status };
       }
 
       const raw = await response.json();
@@ -151,22 +159,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Full reload so middleware sees the new HttpOnly cookie
       window.location.href = redirectPath ?? ROUTES.DASHBOARD;
+      return { success: true };
     } catch (error) {
-      if (error instanceof Error && !error.message.includes('Login failed')) {
-        logApiError('[AuthContext] login', error);
-        toast.error('Login failed. Please check your credentials.');
-      }
-      throw error;
+      // Network / server errors (ECONNREFUSED, etc.)
+      logApiError('[AuthContext] login', error);
+      const message = error instanceof TypeError && error.message.includes('fetch')
+        ? 'Backend service unavailable'
+        : 'An unexpected error occurred. Please try again.';
+      return { success: false, message, status: 503 };
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const logout = useCallback(() => {
-    clearAuth();
+  const logout = useCallback(async () => {
+    // MUST await clearAuth so the HttpOnly cookie is deleted BEFORE
+    // we navigate away — otherwise the middleware still sees a valid
+    // token and lets any subsequent /dashboard request through.
+    await clearAuth();
     toast.info('You have been logged out');
-    router.push(ROUTES.LOGIN);
-  }, [clearAuth, router]);
+    // Full page reload (not client-side push) so:
+    //  1. All React state is wiped (no stale dashboard data)
+    //  2. Middleware re-evaluates the request fresh (no cookie → redirects to login)
+    window.location.href = ROUTES.LOGIN;
+  }, [clearAuth]);
 
   return (
     <AuthContext.Provider

@@ -42,6 +42,7 @@ export interface OverallProgress {
   totalExamsTaken?:        number;
   passedExams?:            number;
   failedExams?:            number;
+  passRate?:               number;
   averageScore?:           number;
   totalPracticeQuestions?: number;
   correctPracticeAnswers?: number;
@@ -99,6 +100,7 @@ const OVERALL_FALLBACK: OverallProgress = {
   totalExamsTaken:        0,
   passedExams:            0,
   failedExams:            0,
+  passRate:               0,
   averageScore:           0,
   totalPracticeQuestions: 0,
   correctPracticeAnswers: 0,
@@ -132,6 +134,10 @@ export async function getOverallProgress(): Promise<OverallProgress> {
       overallAccuracy:  data.overallAccuracy  ?? 0,
       studyStreak:      data.studyStreak      ?? 0,
       lastActivityDate: data.lastActivityDate ?? null,
+      totalExamsTaken:  data.totalExamsTaken  ?? 0,
+      passedExams:      data.passedExams      ?? 0,
+      failedExams:      data.failedExams      ?? 0,
+      passRate:         data.passRate         ?? 0,
       weakCategories:      Array.isArray(data.weakCategories)      ? data.weakCategories      : [],
       strongCategories:    Array.isArray(data.strongCategories)    ? data.strongCategories    : [],
       mostStudiedCategories: Array.isArray(data.mostStudiedCategories) ? data.mostStudiedCategories : [],

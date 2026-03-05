@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
 
 // ─── Types ───────────────────────────────────────────────
@@ -15,34 +16,10 @@ interface WeakArea {
 // ─── Constants ───────────────────────────────────────────
 
 const STAT_CARDS = [
-  {
-    label:    'Overall Accuracy',
-    sub:      'Across all categories',
-    key:      'overall'   as const,
-    color:    'text-primary',
-    format:   (v: number) => `${v.toFixed(0)}%`,
-  },
-  {
-    label:    'Critical Areas',
-    sub:      'Below 50% accuracy',
-    key:      'critical'  as const,
-    color:    'text-red-600',
-    format:   (v: number) => `${v}`,
-  },
-  {
-    label:    'Needs Practice',
-    sub:      '50–70% accuracy',
-    key:      'improving' as const,
-    color:    'text-orange-600',
-    format:   (v: number) => `${v}`,
-  },
-  {
-    label:    'Strong Areas',
-    sub:      'Above 70% accuracy',
-    key:      'strong'    as const,
-    color:    'text-green-600',
-    format:   (v: number) => `${v}`,
-  },
+  { labelKey: 'analytics.overall_accuracy', subKey: 'analytics.across_all_categories', key: 'overall'   as const, color: 'text-primary',     format: (v: number) => `${v.toFixed(0)}%` },
+  { labelKey: 'analytics.critical_areas',   subKey: 'analytics.below_50_accuracy',     key: 'critical'  as const, color: 'text-destructive', format: (v: number) => `${v}` },
+  { labelKey: 'analytics.needs_practice',   subKey: 'analytics.between_50_70_accuracy',key: 'improving' as const, color: 'text-primary',     format: (v: number) => `${v}` },
+  { labelKey: 'analytics.strong_areas',     subKey: 'analytics.above_70_accuracy',     key: 'strong'    as const, color: 'text-secondary',   format: (v: number) => `${v}` },
 ] as const;
 
 // ─── Component ───────────────────────────────────────────
@@ -56,6 +33,8 @@ export function WeakAreaSummary({
   totalCategories: number;
   overallAccuracy: number;
 }) {
+  const { t } = useLanguage();
+
   const stats = useMemo(() => ({
     overall:   overallAccuracy,
     critical:  weakAreas.filter(a => a.accuracy < 50).length,
@@ -65,18 +44,18 @@ export function WeakAreaSummary({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-      {STAT_CARDS.map(({ label, sub, key, color, format }) => (
-        <Card key={label} className="rounded-2xl border-border/50 shadow-sm">
+      {STAT_CARDS.map(({ labelKey, subKey, key, color, format }) => (
+        <Card key={labelKey} className="rounded-2xl border-border/50 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {label}
+              {t(labelKey)}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-0.5">
             <p className={cn('text-3xl font-black', color)}>
               {format(stats[key])}
             </p>
-            <p className="text-xs text-muted-foreground">{sub}</p>
+            <p className="text-xs text-muted-foreground">{t(subKey)}</p>
           </CardContent>
         </Card>
       ))}

@@ -10,11 +10,10 @@ import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
-import { EXAM_RULES } from '@/lib/constants';
 import {
   ClipboardList, Timer, Trophy, Navigation,
   SendHorizonal, AlarmClock, Wifi, RefreshCw,
-  XCircle, Play, ArrowLeft,
+  XCircle, Play, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 
 interface CanStartResponse {
@@ -59,76 +58,38 @@ interface StartExamResponse {
 interface RuleItem {
   icon: ReactNode;
   key: string;
-  content: () => ReactNode;
 }
 
 interface NoteItem {
   icon: ReactNode;
-  text: string;
+  noteKey: string;
 }
 
 const rules: RuleItem[] = [
-  {
-    icon: <ClipboardList className="w-5 h-5" />,
-    key: 'totalQuestions',
-    content: () => (
-      <>The exam consists of exactly <strong>{EXAM_RULES.TOTAL_QUESTIONS} multiple-choice questions</strong>.</>
-    ),
-  },
-  {
-    icon: <Timer className="w-5 h-5" />,
-    key: 'timeLimit',
-    content: () => (
-      <>You have <strong>{EXAM_RULES.DURATION_MINUTES} minutes</strong> to complete the exam. The timer starts immediately.</>
-    ),
-  },
-  {
-    icon: <Trophy className="w-5 h-5" />,
-    key: 'passScore',
-    content: () => (
-      <>To pass, score at least <strong>{EXAM_RULES.PASS_PERCENTAGE}%</strong> ({EXAM_RULES.PASSING_SCORE} correct answers or more).</>
-    ),
-  },
-  {
-    icon: <Navigation className="w-5 h-5" />,
-    key: 'navigation',
-    content: () => (
-      <>Navigate with <strong>Previous</strong> and <strong>Next</strong>. Use <strong>Overview</strong> to see all questions at once.</>
-    ),
-  },
-  {
-    icon: <SendHorizonal className="w-5 h-5" />,
-    key: 'submission',
-    content: () => (
-      <>
-        Click <strong>Submit Exam</strong> when done. Unanswered questions are marked incorrect.{' '}
-        <span className="text-destructive font-semibold">You cannot change answers after submission.</span>
-      </>
-    ),
-  },
-  {
-    icon: <AlarmClock className="w-5 h-5" />,
-    key: 'autoSubmit',
-    content: () => (
-      <>The exam will be <strong>automatically submitted</strong> when the time expires.</>
-    ),
-  },
+  { icon: <ClipboardList className="w-5 h-5" />, key: 'totalQuestions' },
+  { icon: <Timer className="w-5 h-5" />,         key: 'timeLimit' },
+  { icon: <Trophy className="w-5 h-5" />,         key: 'passScore' },
+  { icon: <Navigation className="w-5 h-5" />,     key: 'navigation' },
+  { icon: <SendHorizonal className="w-5 h-5" />,  key: 'submission' },
+  { icon: <AlarmClock className="w-5 h-5" />,     key: 'autoSubmit' },
 ];
 
 const importantNotes: NoteItem[] = [
-  { icon: <Wifi className="w-4 h-4" />,         text: 'Make sure you have a stable internet connection' },
-  { icon: <RefreshCw className="w-4 h-4" />,    text: 'Do not refresh the page during the exam' },
-  { icon: <XCircle className="w-4 h-4" />,      text: 'Close other applications to avoid distractions' },
-  { icon: <ClipboardList className="w-4 h-4" />, text: 'You can only take the exam once per session' },
+  { icon: <Wifi className="w-4 h-4" />,          noteKey: 'note_stable_internet' },
+  { icon: <RefreshCw className="w-4 h-4" />,     noteKey: 'note_no_refresh' },
+  { icon: <XCircle className="w-4 h-4" />,       noteKey: 'note_close_apps' },
+  { icon: <ClipboardList className="w-4 h-4" />, noteKey: 'note_once_per_session' },
 ];
 
 export default function ExamRulesPage() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const isRtl = language === 'ar';
+  const ArrowBack = isRtl ? ArrowRight : ArrowLeft;
 
   const handleStartExam = async () => {
     try {
@@ -190,13 +151,13 @@ export default function ExamRulesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background">
       <div className="container mx-auto max-w-3xl px-4 py-10 space-y-8">
 
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-primary border border-primary/20 shadow-sm">
             <ClipboardList className="w-4 h-4" />
-            <span className="font-semibold text-sm">Before You Begin</span>
+            <span className="font-semibold text-sm">{t('exam.rules.before_you_begin')}</span>
           </div>
           <h1 className="text-4xl font-black tracking-tight">
             {t('exam.rules.title')}
@@ -234,10 +195,10 @@ export default function ExamRulesPage() {
                     {t(`exam.rules.${rule.key}`)}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {rule.content()}
+                    {t(`exam.rules.content.${rule.key}`)}
                   </p>
                 </div>
-                <div className="ml-auto flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-black text-muted-foreground">
+                <div className="ms-auto flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-black text-muted-foreground">
                   {index + 1}
                 </div>
               </div>
@@ -247,7 +208,7 @@ export default function ExamRulesPage() {
 
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 space-y-3">
           <p className="font-bold text-foreground flex items-center gap-2">
-            <span>⚡</span> Important Notes
+            <span>⚡</span> {t('exam.rules.important_notes')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {importantNotes.map((note, i) => (
@@ -256,7 +217,7 @@ export default function ExamRulesPage() {
                 className="flex items-center gap-3 rounded-xl bg-background/60 border border-border/30 px-3 py-2.5 text-sm text-muted-foreground"
               >
                 <span className="text-primary flex-shrink-0">{note.icon}</span>
-                {note.text}
+                {t(`exam.rules.${note.noteKey}`)}
               </div>
             ))}
           </div>
@@ -275,16 +236,6 @@ export default function ExamRulesPage() {
 
         <div className="flex justify-center gap-3">
           <Button
-            variant="outline"
-            size="lg"
-            onClick={() => router.back()}
-            disabled={isStarting}
-            className="h-12 px-6 gap-2 hover:bg-muted/50 transition-all duration-200"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Cancel
-          </Button>
-          <Button
             size="lg"
             onClick={handleStartExam}
             disabled={isStarting}
@@ -296,14 +247,24 @@ export default function ExamRulesPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
-                Starting...
+                {t('exam.starting')}
               </>
             ) : (
               <>
                 <Play className="w-4 h-4" />
-                Start Exam
+                {t('exam.start')}
               </>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => router.back()}
+            disabled={isStarting}
+            className="h-12 px-6 gap-2 hover:bg-muted/50 transition-all duration-200"
+          >
+            <ArrowBack className="w-4 h-4" />
+            {t('exam.cancel')}
           </Button>
         </div>
 

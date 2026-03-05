@@ -124,25 +124,25 @@ export default function ProfilePage() {
         )}
 
         {/* ── Hero Banner ── */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 px-8 py-10 shadow-xl shadow-primary/20">
-          <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+          <div className="pointer-events-none absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="pointer-events-none absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
           <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-6">
             {/* Avatar */}
-            <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center text-white text-4xl font-black shadow-2xl flex-shrink-0">
+            <div className="w-24 h-24 rounded-3xl bg-primary/15 border-2 border-primary/30 flex items-center justify-center text-primary text-4xl font-black shadow-md flex-shrink-0">
               {initials ? initials : <User className="w-12 h-12" strokeWidth={1.5} />}
             </div>
 
             {/* Info */}
             <div className="text-center sm:text-start space-y-1 flex-1">
-              <h1 className="text-3xl font-black text-white tracking-tight">{fullName}</h1>
-              <p className="text-white/70 text-sm font-medium">@{user.username}</p>
+              <h1 className="text-3xl font-black tracking-tight text-foreground">{fullName}</h1>
+              <p className="text-muted-foreground text-sm font-medium">@{user.username}</p>
               <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
-                <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-0.5 text-xs font-semibold text-white ring-1 ring-white/30">
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary ring-1 ring-primary/20">
                   Free Account
                 </span>
-                <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-0.5 text-xs font-semibold text-white ring-1 ring-white/30">
+                <span className="inline-flex items-center rounded-full bg-green-500/10 px-3 py-0.5 text-xs font-semibold text-green-600 dark:text-green-400 ring-1 ring-green-500/20">
                   ✓ Verified
                 </span>
               </div>
@@ -150,8 +150,8 @@ export default function ProfilePage() {
 
             {/* Member since */}
             <div className="hidden sm:block text-end">
-              <p className="text-xs text-white/50 uppercase tracking-widest font-semibold">Member since</p>
-              <p className="text-white font-bold mt-0.5">{memberSince}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Member since</p>
+              <p className="text-foreground font-bold mt-0.5">{memberSince}</p>
             </div>
           </div>
         </div>

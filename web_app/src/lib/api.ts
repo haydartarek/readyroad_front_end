@@ -75,9 +75,12 @@ class ApiClient {
         if (isAuthError && !isAuthPath && !this.isRedirecting && typeof window !== 'undefined') {
           this.isRedirecting = true;
           // Clear HttpOnly cookie via BFF, then redirect
-          fetch('/api/auth/logout', { method: 'POST' }).finally(() => {
-            window.location.href = ROUTES.LOGIN;
-          });
+          fetch('/api/auth/logout', { method: 'POST' })
+            .then(() => { window.location.href = ROUTES.LOGIN; })
+            .catch(() => {
+              this.isRedirecting = false;
+              window.location.href = ROUTES.LOGIN;
+            });
         }
 
         return Promise.reject(error);

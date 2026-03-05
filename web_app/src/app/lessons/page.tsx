@@ -116,14 +116,14 @@ export default function LessonsPage() {
           <StatCard
             value={4}
             label={t('lessons.languages')}
-            icon={<Languages className="w-6 h-6 text-emerald-600" />}
-            colorClass="border-emerald-200 bg-emerald-50 text-emerald-600"
+            icon={<Languages className="w-6 h-6 text-secondary" />}
+            colorClass="border-secondary/20 bg-secondary/5 text-secondary"
           />
           <StatCard
             value={totalPages}
             label={t('lessons.total_pages')}
-            icon={<FileText className="w-6 h-6 text-blue-600" />}
-            colorClass="border-blue-200 bg-blue-50 text-blue-600"
+            icon={<FileText className="w-6 h-6 text-accent-foreground" />}
+            colorClass="border-border bg-muted text-foreground"
           />
         </div>
 

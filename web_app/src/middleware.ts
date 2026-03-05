@@ -18,13 +18,28 @@ const AUTH_ROUTES  = ['/login', '/register'];
 // ─── JWT Utilities (edge-runtime compatible) ─────────────
 
 /**
- * Basic JWT format check — prevents stale/empty cookies from causing
- * redirect loops. Does NOT verify the signature.
+ * Validates JWT: correct format AND not expired.
+ * Does NOT verify the signature (edge runtime limitation).
  */
 function isValidTokenFormat(token: string | undefined): token is string {
   if (!token || token.length < 10) return false;
   const parts = token.split('.');
-  return parts.length === 3 && token.startsWith('eyJ');
+  if (parts.length !== 3 || !token.startsWith('eyJ')) return false;
+
+  // Also check expiry — reject tokens that are already expired
+  try {
+    const base64  = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded  = base64 + '='.repeat((4 - base64.length % 4) % 4);
+    const payload = JSON.parse(atob(padded)) as Record<string, unknown>;
+    if (typeof payload.exp === 'number') {
+      // exp is in seconds; Date.now() in milliseconds
+      if (payload.exp * 1000 < Date.now()) return false;
+    }
+  } catch {
+    return false; // malformed payload → treat as invalid
+  }
+
+  return true;
 }
 
 /**

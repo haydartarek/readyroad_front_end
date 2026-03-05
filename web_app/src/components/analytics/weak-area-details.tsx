@@ -33,25 +33,25 @@ function getSeverity(accuracy: number): Severity | null {
 
 const SEVERITY = {
   critical: {
-    card:     'border-red-200    bg-red-50/40    dark:bg-red-950/20',
-    badge:    'bg-red-600',
-    accuracy: 'text-red-600',
-    bar:      '[&>div]:bg-red-600',
+    card:     'border-destructive/30 bg-destructive/5',
+    badge:    'bg-destructive',
+    accuracy: 'text-destructive',
+    bar:      '[&>div]:bg-destructive',
     label:    'Critical',
   },
   weak: {
-    card:     'border-orange-200 bg-orange-50/40 dark:bg-orange-950/20',
-    badge:    'bg-orange-500',
-    accuracy: 'text-orange-600',
-    bar:      '[&>div]:bg-orange-500',
+    card:     'border-primary/30 bg-primary/5',
+    badge:    'bg-primary',
+    accuracy: 'text-primary',
+    bar:      '[&>div]:bg-primary',
     label:    'Needs Practice',
   },
 } as const;
 
 const STAT_CELLS = (area: WeakArea) => [
-  { label: 'Correct',  value: area.correctCount,                      color: 'text-green-600' },
-  { label: 'Wrong',    value: area.totalCount - area.correctCount,     color: 'text-red-600'   },
-  { label: 'Avg Time', value: area.averageTime,                        color: 'text-primary'   },
+  { label: 'Correct',  value: area.correctCount,                      color: 'text-secondary'   },
+  { label: 'Wrong',    value: area.totalCount - area.correctCount,     color: 'text-destructive' },
+  { label: 'Avg Time', value: area.averageTime,                        color: 'text-primary'     },
 ];
 
 // ─── Component ───────────────────────────────────────────
@@ -60,13 +60,13 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
 
   if (weakAreas.length === 0) {
     return (
-      <Card className="rounded-2xl border-2 border-green-200 bg-green-50/40 dark:bg-green-950/20 shadow-sm">
+      <Card className="rounded-2xl border-border/50 bg-muted/20 shadow-sm">
         <CardContent className="py-16 text-center space-y-3">
           <div className="text-6xl">🎉</div>
-          <h3 className="text-2xl font-black text-green-900 dark:text-green-100">
+          <h3 className="text-2xl font-black text-foreground">
             Excellent Performance!
           </h3>
-          <p className="text-green-700 dark:text-green-300">
+          <p className="text-muted-foreground">
             You don&apos;t have any weak areas. All categories show strong performance!
           </p>
         </CardContent>
@@ -105,7 +105,7 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
                   <CardTitle className="text-2xl font-black">{area.categoryName}</CardTitle>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className={cn('text-4xl font-black', cfg?.accuracy ?? 'text-green-600')}>
+                  <p className={cn('text-4xl font-black', cfg?.accuracy ?? 'text-secondary')}>
                     {area.accuracy.toFixed(0)}%
                   </p>
                   <p className="text-xs text-muted-foreground">Accuracy</p>
@@ -143,13 +143,13 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
               {area.commonMistakes.length > 0 && (
                 <div className="rounded-xl bg-muted/50 border border-border/50 p-4">
                   <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
-                    <AlertTriangle className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-primary flex-shrink-0" />
                     Common Mistakes
                   </h4>
                   <ul className="space-y-1.5">
                     {area.commonMistakes.map((mistake, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-500" />
+                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-destructive" />
                         {mistake}
                       </li>
                     ))}

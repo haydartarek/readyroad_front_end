@@ -1,0 +1,159 @@
+time="2026-03-03T15:01:23+01:00" level=warning msg="c:\\Users\\haydar\\Desktop\\end_project\\readyroad\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Image readyroad-backend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 561B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.34kB 0.0s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/maven:3.9-eclipse-temurin-21-alpine
+#3 ...
+
+#4 [auth] library/maven:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [auth] library/eclipse-temurin:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [internal] load metadata for docker.io/library/eclipse-temurin:21-jre-alpine
+#6 ...
+
+#3 [internal] load metadata for docker.io/library/maven:3.9-eclipse-temurin-21-alpine
+#3 DONE 1.6s
+
+#6 [internal] load metadata for docker.io/library/eclipse-temurin:21-jre-alpine
+#6 DONE 1.6s
+
+#7 [internal] load .dockerignore
+#7 transferring context: 547B 0.0s done
+#7 DONE 0.0s
+
+#8 [internal] load build context
+#8 DONE 0.0s
+
+#9 [build 1/6] FROM docker.io/library/maven:3.9-eclipse-temurin-21-alpine@sha256:8b2f036477a5bc9fbeb16cfb7301c484d7fff727b1c4907301ac665526bd7a8e
+#9 resolve docker.io/library/maven:3.9-eclipse-temurin-21-alpine@sha256:8b2f036477a5bc9fbeb16cfb7301c484d7fff727b1c4907301ac665526bd7a8e
+#9 resolve docker.io/library/maven:3.9-eclipse-temurin-21-alpine@sha256:8b2f036477a5bc9fbeb16cfb7301c484d7fff727b1c4907301ac665526bd7a8e 0.1s done
+#9 DONE 0.1s
+
+#10 [stage-1 1/5] FROM docker.io/library/eclipse-temurin:21-jre-alpine@sha256:6ad8ed080d9be96b61438ec3ce99388e294af216ed57356000c06070e85c5d5d
+#10 resolve docker.io/library/eclipse-temurin:21-jre-alpine@sha256:6ad8ed080d9be96b61438ec3ce99388e294af216ed57356000c06070e85c5d5d 0.1s done
+#10 DONE 0.1s
+
+#8 [internal] load build context
+#8 transferring context: 126.87kB 0.7s done
+#8 DONE 0.7s
+
+#11 [build 2/6] WORKDIR /app
+#11 CACHED
+
+#12 [build 3/6] COPY pom.xml .
+#12 CACHED
+
+#13 [build 4/6] RUN mvn dependency:go-offline -B
+#13 CACHED
+
+#14 [build 5/6] COPY src ./src
+#14 DONE 2.4s
+
+#15 [build 6/6] RUN mvn clean package -DskipTests -B
+#15 7.083 [INFO] Scanning for projects...
+#15 7.832 [INFO] 
+#15 7.832 [INFO] ------------------< com.readyroad:readyroad-backend >-------------------
+#15 7.833 [INFO] Building readyroad 0.0.1-SNAPSHOT
+#15 7.836 [INFO]   from pom.xml
+#15 7.837 [INFO] --------------------------------[ jar ]---------------------------------
+#15 10.41 [INFO] 
+#15 10.41 [INFO] --- clean:3.5.0:clean (default-clean) @ readyroad-backend ---
+#15 10.57 [INFO] 
+#15 10.57 [INFO] --- resources:3.3.1:resources (default-resources) @ readyroad-backend ---
+#15 11.04 [INFO] Copying 5 resources from src/main/resources to target/classes
+#15 11.23 [INFO] Copying 851 resources from src/main/resources to target/classes
+#15 11.82 [INFO] 
+#15 11.82 [INFO] --- compiler:3.14.1:compile (default-compile) @ readyroad-backend ---
+#15 12.65 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/projectlombok/lombok/1.18.36/lombok-1.18.36.pom
+#15 13.47 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/projectlombok/lombok/1.18.36/lombok-1.18.36.pom (1.5 kB at 1.8 kB/s)
+#15 13.51 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar
+#15 13.94 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar (2.1 MB at 4.8 MB/s)
+#15 14.05 [INFO] Recompiling the module because of changed source code.
+#15 14.12 [INFO] Compiling 216 source files with javac [debug parameters release 21] to target/classes
+#15 33.46 [WARNING] /app/src/main/java/com/readyroad/readyroadbackend/config/WebConfig.java:[31,17] extendMessageConverters(java.util.List<org.springframework.http.converter.HttpMessageConverter<?>>) in org.springframework.web.servlet.config.annotation.WebMvcConfigurer has been deprecated and marked for removal
+#15 33.46 [WARNING] /app/src/main/java/com/readyroad/readyroadbackend/config/WebConfig.java:[24,12] org.springframework.http.converter.json.MappingJackson2HttpMessageConverter in org.springframework.http.converter.json has been deprecated and marked for removal
+#15 33.46 [WARNING] /app/src/main/java/com/readyroad/readyroadbackend/config/WebConfig.java:[24,12] org.springframework.http.converter.json.MappingJackson2HttpMessageConverter in org.springframework.http.converter.json has been deprecated and marked for removal
+#15 33.46 [WARNING] /app/src/main/java/com/readyroad/readyroadbackend/config/WebConfig.java:[24,12] org.springframework.http.converter.json.MappingJackson2HttpMessageConverter in org.springframework.http.converter.json has been deprecated and marked for removal
+#15 33.46 [WARNING] /app/src/main/java/com/readyroad/readyroadbackend/config/WebConfig.java:[24,12] org.springframework.http.converter.json.MappingJackson2HttpMessageConverter in org.springframework.http.converter.json has been deprecated and marked for removal
+#15 33.46 [WARNING] /app/src/main/java/com/readyroad/readyroadbackend/config/WebConfig.java:[24,12] org.springframework.http.converter.json.MappingJackson2HttpMessageConverter in org.springframework.http.converter.json has been deprecated and marked for removal
+#15 33.46 [WARNING] /app/src/main/java/com/readyroad/readyroadbackend/config/WebConfig.java:[25,9] org.springframework.http.converter.json.MappingJackson2HttpMessageConverter in org.springframework.http.converter.json has been deprecated and marked for removal
+#15 33.46 [WARNING] /app/src/main/java/com/readyroad/readyroadbackend/config/WebConfig.java:[25,61] org.springframework.http.converter.json.MappingJackson2HttpMessageConverter in org.springframework.http.converter.json has been deprecated and marked for removal
+#15 33.46 [INFO] /app/src/main/java/com/readyroad/readyroadbackend/service/DataImportService.java: Some input files use or override a deprecated API.
+#15 33.46 [INFO] /app/src/main/java/com/readyroad/readyroadbackend/service/DataImportService.java: Recompile with -Xlint:deprecation for details.
+#15 33.46 [INFO] 
+#15 33.46 [INFO] --- resources:3.3.1:testResources (default-testResources) @ readyroad-backend ---
+#15 33.49 [INFO] skip non existing resourceDirectory /app/src/test/resources
+#15 33.50 [INFO] 
+#15 33.50 [INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ readyroad-backend ---
+#15 33.52 [INFO] No sources to compile
+#15 33.52 [INFO] 
+#15 33.53 [INFO] --- surefire:3.5.4:test (default-test) @ readyroad-backend ---
+#15 33.88 [INFO] Tests are skipped.
+#15 33.88 [INFO] 
+#15 33.88 [INFO] --- jar:3.4.2:jar (default-jar) @ readyroad-backend ---
+#15 36.04 [INFO] Building jar: /app/target/readyroad-backend-0.0.1-SNAPSHOT.jar
+#15 36.95 [INFO] 
+#15 36.95 [INFO] --- spring-boot:4.0.1:repackage (repackage) @ readyroad-backend ---
+#15 43.70 [INFO] Replacing main artifact /app/target/readyroad-backend-0.0.1-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+#15 43.70 [INFO] The original artifact has been renamed to /app/target/readyroad-backend-0.0.1-SNAPSHOT.jar.original
+#15 43.71 [INFO] ------------------------------------------------------------------------
+#15 43.71 [INFO] BUILD SUCCESS
+#15 43.72 [INFO] ------------------------------------------------------------------------
+#15 43.72 [INFO] Total time:  36.694 s
+#15 43.72 [INFO] Finished at: 2026-03-03T14:02:15Z
+#15 43.72 [INFO] ------------------------------------------------------------------------
+#15 DONE 44.4s
+
+#16 [stage-1 2/5] WORKDIR /app
+#16 CACHED
+
+#17 [stage-1 3/5] RUN addgroup -g 1001 readyroad &&     adduser -D -u 1001 -G readyroad readyroad
+#17 CACHED
+
+#18 [stage-1 4/5] COPY --from=build /app/target/*.jar app.jar
+#18 DONE 0.7s
+
+#19 [stage-1 5/5] RUN mkdir -p /app/logs &&     chown -R readyroad:readyroad /app
+#19 DONE 1.1s
+
+#20 exporting to image
+#20 exporting layers
+#20 exporting layers 7.1s done
+#20 exporting manifest sha256:4de817bf7888f416ddf050fa121e7960b07eaf73199ec7f354c4cf4644536c78 0.0s done
+#20 exporting config sha256:4c39eb1f83d26e16b5ee327252abc5dc3f443e71f48e5714b8a55c1242b8c696 0.0s done
+#20 exporting attestation manifest sha256:3816492a55a73137da167431a6c29520f8a1569746a807d7f1db6df162227df0
+#20 exporting attestation manifest sha256:3816492a55a73137da167431a6c29520f8a1569746a807d7f1db6df162227df0 0.1s done
+#20 exporting manifest list sha256:7305a1dd0f6126867277736eafde85ca0ffa186f098a1364c1adffc7279d03c7 0.0s done
+#20 naming to docker.io/library/readyroad-backend:latest 0.0s done
+#20 unpacking to docker.io/library/readyroad-backend:latest
+#20 unpacking to docker.io/library/readyroad-backend:latest 1.4s done
+#20 DONE 8.8s
+
+#21 resolving provenance for metadata file
+#21 DONE 0.1s
+ Image readyroad-backend Built 
+ Network readyroad_readyroad-network Creating 
+ Network readyroad_readyroad-network Created 
+ Volume readyroad_mysql_data Creating 
+ Volume readyroad_mysql_data Created 
+ Volume readyroad_backend_logs Creating 
+ Volume readyroad_backend_logs Created 
+ Container readyroad-mysql Creating 
+ Container readyroad-mysql Created 
+ Container readyroad-backend Creating 
+ Container readyroad-backend Created 
+ Container readyroad-mysql Starting 
+ Container readyroad-mysql Started 
+ Container readyroad-mysql Waiting 
+ Container readyroad-mysql Healthy 
+ Container readyroad-backend Starting 
+ Container readyroad-backend Started 

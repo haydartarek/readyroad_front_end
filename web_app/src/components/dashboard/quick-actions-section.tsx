@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ClipboardList, Target, BarChart2, ArrowRight } from 'lucide-react';
+import { ClipboardList, Target, BarChart2, BookOpen, ArrowRight, TrendingDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/language-context';
@@ -36,25 +36,39 @@ export function QuickActionsSection() {
       variant:     'secondary' as const,
     },
     {
-      title:       t('dashboard.action_analytics_title'),
-      description: t('dashboard.action_analytics_desc'),
+      title:       t('dashboard.action_error_patterns_title'),
+      description: t('dashboard.action_error_patterns_desc'),
       icon:        BarChart2,
       href:        '/analytics/error-patterns',
       variant:     'muted' as const,
     },
+    {
+      title:       t('dashboard.action_weak_areas_title'),
+      description: t('dashboard.action_weak_areas_desc'),
+      icon:        TrendingDown,
+      href:        '/analytics/weak-areas',
+      variant:     'muted' as const,
+    },
+    {
+      title:       t('dashboard.action_lessons_title'),
+      description: t('dashboard.action_lessons_desc'),
+      icon:        BookOpen,
+      href:        '/lessons',
+      variant:     'secondary' as const,
+    },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
       {ACTIONS.map(({ title, description, icon: Icon, href, variant }) => (
-        <Link key={href} href={href} className="group">
+        <Link key={href} href={href} className="group h-full">
           <Card
             className={cn(
-              'rounded-2xl border-2 shadow-sm transition-all duration-200 hover:shadow-md',
+              'h-full rounded-2xl border-2 shadow-sm transition-all duration-200 hover:shadow-md',
               getVariantClasses(variant)
             )}
           >
-            <CardContent className="flex items-start gap-4 p-6">
+            <CardContent className="flex h-full items-start gap-4 p-6">
               <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-background shadow-sm border border-border">
                 <Icon className="h-5 w-5 text-primary" />
               </div>

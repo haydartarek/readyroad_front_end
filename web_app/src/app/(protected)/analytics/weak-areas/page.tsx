@@ -15,14 +15,12 @@ import { PenLine, BookOpen, Target, RefreshCw, TrendingUp } from 'lucide-react';
 
 function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="text-center space-y-4">
-        <div className="relative mx-auto w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
-          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-2xl">📊</div>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
+          <RefreshCw className="w-6 h-6 text-primary animate-spin" />
         </div>
-        <p className="text-base text-muted-foreground font-medium">{message}</p>
+        <p className="text-sm text-muted-foreground">{message}</p>
       </div>
     </div>
   );
@@ -152,7 +150,7 @@ export default function WeakAreasPage() {
         <WeakAreaDetails weakAreas={data.weakAreas} />
 
         {/* Actions Card */}
-        <Card className="border border-border/50 shadow-lg">
+        <Card className="rounded-2xl border-border/50 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -168,34 +166,20 @@ export default function WeakAreasPage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-3">
-              <Button
-                asChild
-                size="lg"
-                className="h-14 shadow-md shadow-primary/20 hover:shadow-lg hover:scale-[1.01] transition-all duration-200"
-              >
-                <Link href="/practice" className="flex items-center gap-2">
+              <Button asChild className="gap-2 rounded-xl shadow-sm shadow-primary/20">
+                <Link href="/practice">
                   <PenLine className="w-4 h-4" />
                   Practice Mode
                 </Link>
               </Button>
-              <Button
-                variant="outline"
-                asChild
-                size="lg"
-                className="h-14 hover:bg-primary/5 hover:border-primary/30 hover:scale-[1.01] transition-all duration-200"
-              >
-                <Link href="/lessons" className="flex items-center gap-2">
+              <Button variant="outline" asChild className="gap-2 rounded-xl">
+                <Link href="/lessons">
                   <BookOpen className="w-4 h-4" />
                   Study Lessons
                 </Link>
               </Button>
-              <Button
-                variant="outline"
-                asChild
-                size="lg"
-                className="h-14 hover:bg-primary/5 hover:border-primary/30 hover:scale-[1.01] transition-all duration-200"
-              >
-                <Link href="/exam" className="flex items-center gap-2">
+              <Button variant="outline" asChild className="gap-2 rounded-xl">
+                <Link href="/exam">
                   <Target className="w-4 h-4" />
                   Take Full Exam
                 </Link>

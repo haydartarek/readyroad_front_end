@@ -26,6 +26,8 @@ interface Question {
   questionTextNl: string;
   questionTextFr: string;
   imageUrl?: string;
+  signImageUrl?: string;
+  showSign?: boolean;
   options: QuestionOption[];
 }
 
@@ -35,6 +37,7 @@ interface QuestionCardProps {
   onAnswerSelect: (optionNumber: number) => void;
   showCorrectAnswer?: boolean;
   correctAnswer?: number;
+  showSign?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -52,6 +55,7 @@ export function QuestionCard({
   onAnswerSelect,
   showCorrectAnswer = false,
   correctAnswer,
+  showSign,
 }: QuestionCardProps) {
   const { language, isRTL } = useLanguage();
   const lang = language as Lang;
@@ -70,6 +74,17 @@ export function QuestionCard({
     <Card className="rounded-2xl border-border/50 shadow-sm">
       <CardContent className="p-6 md:p-8">
         <div className="space-y-6">
+
+          {/* Sign Image */}
+          {showSign && question.signImageUrl && (
+            <div className="flex justify-center mb-4">
+              <img
+                src={question.signImageUrl}
+                alt="Traffic sign"
+                className="h-32 w-32 object-contain"
+              />
+            </div>
+          )}
 
           {/* Image */}
           {imageUrl && (

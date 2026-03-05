@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
-import { isServiceUnavailable, logApiError } from '@/lib/api';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
 import { toast } from 'sonner';
@@ -60,21 +59,18 @@ function LoginForm() {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      const returnUrl = searchParams.get('returnUrl');
-      const validatedReturnUrl = validateReturnUrl(returnUrl);
-      await login(formData, validatedReturnUrl);
-    } catch (err) {
-      logApiError('[Login] login', err);
-      if (isServiceUnavailable(err)) {
+    setIsLoading(true);
+    const returnUrl = searchParams.get('returnUrl');
+    const validatedReturnUrl = validateReturnUrl(returnUrl);
+    const result = await login(formData, validatedReturnUrl);
+    setIsLoading(false);
+
+    if (!result.success) {
+      if (result.status === 503) {
         setServiceUnavailable(true);
       } else {
-        const error = err as { response?: { data?: { message?: string } } };
-        setError(error.response?.data?.message || 'Login failed. Please try again.');
+        setError(result.message ?? 'Login failed. Please try again.');
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 

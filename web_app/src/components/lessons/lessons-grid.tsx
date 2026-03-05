@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
+import { Clock, BookOpen } from 'lucide-react';
 import { Lesson } from '@/lib/types';
 
 // ─── Types ───────────────────────────────────────────────
@@ -44,18 +45,15 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
       {lessons.map((lesson) => {
         const title       = getLessonTitle(lesson, lang);
         const description = getLessonDescription(lesson, lang);
-        const preview     = description.length > 150
-          ? `${description.substring(0, 150)}…`
-          : description;
 
         return (
-          <Card key={lesson.id} className="group transition-all hover:shadow-lg">
-            <CardContent className="p-6">
+          <Card key={lesson.id} className="group rounded-2xl border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 flex flex-col h-full">
+            <CardContent className="p-6 flex flex-col flex-1">
 
               {/* Badge + icon */}
               <div className="mb-4 flex items-center justify-between">
                 <Badge variant="secondary" className="text-sm">
-                  {t('lessons.lesson')} {lesson.displayOrder}
+                  {t('lessons.lesson')} {lesson.displayOrder + 1}
                 </Badge>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-xl ring-1 ring-primary/20">
                   <span aria-hidden>{lesson.icon}</span>
@@ -68,22 +66,29 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
               </h3>
 
               {/* Preview */}
-              <p className="mb-4 line-clamp-3 text-base font-medium text-foreground/70">
-                {preview}
+              <p className="mb-4 line-clamp-2 min-h-[3rem] text-base font-medium text-foreground/70">
+                {description}
               </p>
 
               {/* Meta */}
-              <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
                 {lesson.estimatedMinutes > 0 && (
-                  <span>~{lesson.estimatedMinutes} min</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />~{lesson.estimatedMinutes} min
+                  </span>
+                )}
+                {lesson.estimatedMinutes > 0 && (lesson.totalPages ?? 0) > 0 && (
+                  <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
                 )}
                 {(lesson.totalPages ?? 0) > 0 && (
-                  <span>{lesson.totalPages} {t('lessons.pages')}</span>
+                  <span className="flex items-center gap-1">
+                    <BookOpen className="w-3 h-3" />{lesson.totalPages} {t('lessons.pages')}
+                  </span>
                 )}
               </div>
 
               {/* CTA */}
-              <Button className="w-full" asChild>
+              <Button className="w-full mt-auto" asChild>
                 <Link href={`/lessons/${lesson.lessonCode}`}>
                   {t('lessons.read_lesson')}
                 </Link>

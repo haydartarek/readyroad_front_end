@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { PracticeQuestionCard, AnswerFeedback } from '@/components/practice/practice-question-card';
 import { PracticeStats } from '@/components/practice/practice-stats';
@@ -99,38 +99,56 @@ export default function PracticeQuestionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [categoryNotFound, setCategoryNotFound] = useState(false);
+  // Abort in-flight requests when category changes or component unmounts
+  const abortRef = useRef<AbortController | null>(null);
 
   const fetchData = async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const signal = controller.signal;
     try {
       setIsLoading(true);
       setError(null);
+      setCategoryNotFound(false);
       let endpoint: string;
       if (categoryCode === 'random') {
         endpoint = '/smart-quiz/random?count=20';
       } else {
         const catResp = await apiClient.get<CategoryDTO>(`/categories/${categoryCode}`);
+        if (signal.aborted) return;
         setCategory(catResp.data);
         endpoint = `/smart-quiz/category/${catResp.data.id}?count=20`;
       }
       const resp = await apiClient.get<QuizQuestionDTO[]>(endpoint);
+      if (signal.aborted) return;
       setQuestions(resp.data);
       setError(null);
     } catch (err) {
-      logApiError('Failed to fetch quiz data', err);
+      if (signal.aborted) return;
       if (isServiceUnavailable(err)) {
         setServiceUnavailable(true);
       } else {
-        const msg = t('practice.load_error');
-        setError(msg);
-        toast.error(msg);
+        // 404 → category code doesn't exist — show friendly "not found" UI (no toast, no log)
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 404) {
+          setCategoryNotFound(true);
+        } else {
+          logApiError('Failed to fetch quiz data', err);
+          const msg = t('practice.load_error');
+          setError(msg);
+          toast.error(msg);
+        }
       }
     } finally {
-      setIsLoading(false);
+      if (!signal.aborted) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
+    return () => { abortRef.current?.abort(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryCode, t]);
 
@@ -211,6 +229,30 @@ export default function PracticeQuestionsPage() {
           onRetry={() => { setServiceUnavailable(false); setError(null); fetchData(); }}
           className="max-w-md"
         />
+      </div>
+    );
+  }
+
+  if (categoryNotFound) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="max-w-sm w-full text-center space-y-4">
+          <div className="text-6xl">🔍</div>
+          <h2 className="text-2xl font-black tracking-tight">
+            {t('practice.category_not_found_title')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('practice.category_not_found_hint').replace('{code}', categoryCode)}
+          </p>
+          <Button
+            onClick={() => window.history.back()}
+            variant="outline"
+            className="gap-2 w-full"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('practice.go_back') || 'Go Back'}
+          </Button>
+        </div>
       </div>
     );
   }

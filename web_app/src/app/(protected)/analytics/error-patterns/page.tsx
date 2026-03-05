@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ErrorSummary } from '@/components/analytics/error-summary';
 import { ErrorPatternList } from '@/components/analytics/error-pattern-list';
@@ -11,16 +10,19 @@ import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { BookOpen, BarChart2, PenLine, RefreshCw } from 'lucide-react';
+import { BookOpen, BarChart2, PenLine, RefreshCw, AlertCircle, Target, Lightbulb } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 interface ErrorPattern {
   pattern: string;
+  patternKey: string;
   count: number;
   percentage: number;
   severity: 'HIGH' | 'MEDIUM' | 'LOW';
   description: string;
   affectedCategories: string[];
   recommendation: string;
+  recommendationKey: string;
   exampleQuestions: number[];
 }
 
@@ -29,16 +31,96 @@ interface AnalyticsData {
   patterns: ErrorPattern[];
 }
 
+/** Shape returned by GET /api/users/me/analytics/error-patterns */
+interface BackendPattern {
+  patternType: string;
+  count: number;
+  percentage: number;
+  description: string;
+  exampleQuestions?: Array<{
+    questionId: number;
+    categoryName?: string;
+    timesWrong?: number;
+  }>;
+}
+
+// ─── Helpers ────────────────────────────────────────────
+
+function formatPatternKey(patternType: string): string {
+  const keys: Record<string, string> = {
+    SIGN_CONFUSION:             'error_patterns.pattern_sign_confusion',
+    SUPPLEMENTARY_IGNORED:      'error_patterns.pattern_supplementary_ignored',
+    PRIORITY_MISUNDERSTANDING:  'error_patterns.pattern_priority_misunderstanding',
+    SPEED_LIMIT_ERROR:          'error_patterns.pattern_speed_limit_error',
+    ZONE_CONFUSION:             'error_patterns.pattern_zone_confusion',
+    RULE_OVERGENERALIZATION:    'error_patterns.pattern_rule_overgeneralization',
+  };
+  return keys[patternType] ?? 'error_patterns.pattern_sign_confusion';
+}
+
+function formatPatternFallback(patternType: string): string {
+  const names: Record<string, string> = {
+    SIGN_CONFUSION:             'Sign Confusion',
+    SUPPLEMENTARY_IGNORED:      'Supplementary Signs Ignored',
+    PRIORITY_MISUNDERSTANDING:  'Priority & Right-of-Way',
+    SPEED_LIMIT_ERROR:          'Speed Limit Errors',
+    ZONE_CONFUSION:             'Zone Confusion',
+    RULE_OVERGENERALIZATION:    'Rule Overgeneralization',
+  };
+  return names[patternType]
+    ?? patternType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function getRecommendationKey(patternType: string): string {
+  const keys: Record<string, string> = {
+    SIGN_CONFUSION:             'error_patterns.rec_sign_confusion',
+    SUPPLEMENTARY_IGNORED:      'error_patterns.rec_supplementary_ignored',
+    PRIORITY_MISUNDERSTANDING:  'error_patterns.rec_priority_misunderstanding',
+    SPEED_LIMIT_ERROR:          'error_patterns.rec_speed_limit_error',
+    ZONE_CONFUSION:             'error_patterns.rec_zone_confusion',
+    RULE_OVERGENERALIZATION:    'error_patterns.rec_rule_overgeneralization',
+  };
+  return keys[patternType] ?? 'error_patterns.rec_default';
+}
+
+function computeSeverity(percentage: number): 'HIGH' | 'MEDIUM' | 'LOW' {
+  if (percentage >= 30) return 'HIGH';
+  if (percentage >= 10) return 'MEDIUM';
+  return 'LOW';
+}
+
+function transformBackendPatterns(raw: BackendPattern[]): AnalyticsData {
+  // Keep only patterns where at least one wrong answer occurred
+  const active = raw.filter(p => (p.count ?? 0) > 0);
+
+  const totalErrors = active.reduce((sum, p) => sum + (p.count ?? 0), 0);
+
+  const patterns: ErrorPattern[] = active.map(p => ({
+    pattern:            formatPatternFallback(p.patternType),
+    patternKey:         formatPatternKey(p.patternType),
+    count:              p.count,
+    percentage:         p.percentage ?? 0,
+    severity:           computeSeverity(p.percentage ?? 0),
+    description:        p.description ?? '',
+    affectedCategories: [...new Set(
+      (p.exampleQuestions ?? []).map(q => q.categoryName).filter((c): c is string => Boolean(c)),
+    )],
+    recommendation:     '',
+    recommendationKey:  getRecommendationKey(p.patternType),
+    exampleQuestions:   (p.exampleQuestions ?? []).map(q => q.questionId),
+  }));
+
+  return { totalErrors, patterns };
+}
+
 function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="text-center space-y-4">
-        <div className="relative mx-auto w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
-          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-2xl">🔍</div>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
+          <RefreshCw className="w-6 h-6 text-primary animate-spin" />
         </div>
-        <p className="text-base text-muted-foreground font-medium">{message}</p>
+        <p className="text-sm text-muted-foreground">{message}</p>
       </div>
     </div>
   );
@@ -47,6 +129,7 @@ function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
 function ErrorPatternsContent() {
   const searchParams = useSearchParams();
   const examId = searchParams.get('examId');
+  const { t } = useLanguage();
 
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,8 +144,10 @@ function ErrorPatternsContent() {
         const url = examId
           ? `/users/me/analytics/error-patterns?simulationId=${examId}`
           : '/users/me/analytics/error-patterns';
-        const response = await apiClient.get<AnalyticsData>(url);
-        setData(response.data);
+        // Backend returns BackendPattern[] (array), not the AnalyticsData wrapper
+        const response = await apiClient.get<BackendPattern[]>(url);
+        const raw = Array.isArray(response.data) ? response.data : [];
+        setData(transformBackendPatterns(raw));
         setError(null);
       } catch (err) {
         logApiError('Failed to fetch analytics', err);
@@ -79,7 +164,7 @@ function ErrorPatternsContent() {
     fetchAnalytics();
   }, [examId, fetchKey]);
 
-  if (isLoading) return <LoadingSpinner message="Analyzing your errors..." />;
+  if (isLoading) return <LoadingSpinner message={t('error_patterns.loading_analyzing')} />;
 
   if (serviceUnavailable) {
     return (
@@ -97,16 +182,14 @@ function ErrorPatternsContent() {
       <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="w-full max-w-md space-y-4 text-center">
           <div className="text-6xl">⚠️</div>
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <p className="text-destructive font-medium">{error}</p>
           <Button
             variant="outline"
             onClick={() => { setError(null); setFetchKey(k => k + 1); }}
             className="gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            Try Again
+            {t('error_patterns.error_try_again')}
           </Button>
         </div>
       </div>
@@ -120,12 +203,12 @@ function ErrorPatternsContent() {
           <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-5xl">
             📊
           </div>
-          <h1 className="text-3xl font-black tracking-tight">No Error Patterns Yet</h1>
+          <h1 className="text-3xl font-black tracking-tight">{t('error_patterns.empty_title')}</h1>
           <p className="text-muted-foreground">
-            Take an exam first to see your error patterns and improve your performance.
+            {t('error_patterns.empty_desc')}
           </p>
           <Button size="lg" asChild className="shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform">
-            <Link href="/exam">Take an Exam</Link>
+            <Link href="/exam">{t('error_patterns.empty_cta')}</Link>
           </Button>
         </div>
       </div>
@@ -139,81 +222,75 @@ function ErrorPatternsContent() {
         {/* Header */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-primary border border-primary/20 shadow-sm">
-            <span className="text-xl">🔍</span>
-            <span className="font-semibold text-sm">Error Analysis</span>
+            <AlertCircle className="w-4 h-4" />
+            <span className="font-semibold text-sm">{t('error_patterns.badge')}</span>
           </div>
-          <h1 className="text-4xl font-black tracking-tight">Your Error Patterns</h1>
+          <h1 className="text-4xl font-black tracking-tight">{t('error_patterns.title')}</h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            We analyzed{' '}
+            {t('error_patterns.subtitle_before')}{' '}
             <span className="font-bold text-foreground">{data.totalErrors}</span>{' '}
-            errors and identified these patterns to help you improve
+            {t('error_patterns.subtitle_after')}
           </p>
         </div>
 
         {/* Summary Cards */}
         <ErrorSummary totalErrors={data.totalErrors} patterns={data.patterns} />
 
-        {/* Info Alert */}
-        <Alert className="border border-primary/20 bg-primary/5">
-          <AlertDescription className="space-y-1">
-            <p className="font-semibold text-foreground">💡 How to Use This Analysis</p>
-            <p className="text-sm text-muted-foreground">
-              Focus on critical patterns first. Each pattern shows affected categories,
-              recommendations, and example questions to practice. Click on any pattern to expand details.
-            </p>
-          </AlertDescription>
-        </Alert>
+        {/* Info Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-6 shadow-sm">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <div className="relative flex items-start gap-4">
+            <div className="w-9 h-9 flex-shrink-0 rounded-xl bg-primary/15 flex items-center justify-center mt-0.5">
+              <Lightbulb className="w-4 h-4 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-black text-foreground">{t('error_patterns.how_title')}</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                {t('error_patterns.how_body_prefix')}{' '}
+                <span className="font-bold text-foreground">{t('error_patterns.how_body_highlight')}</span>
+                {t('error_patterns.how_body_suffix')}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Pattern List */}
         <ErrorPatternList patterns={data.patterns} />
 
         {/* Recommended Actions */}
-        <Card className="border border-border/50 shadow-lg">
+        <Card className="rounded-2xl border-border/50 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                🎯
+                <Target className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle className="text-xl font-black">Recommended Actions</CardTitle>
+                <CardTitle className="text-xl font-black">{t('error_patterns.actions_title')}</CardTitle>
                 <CardDescription>
-                  Based on your error patterns, here&apos;s what we recommend
+                  {t('error_patterns.actions_desc')}
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-3">
-              <Button
-                asChild
-                size="lg"
-                className="h-14 shadow-md shadow-primary/20 hover:shadow-lg hover:scale-[1.01] transition-all duration-200"
-              >
-                <Link href="/practice" className="flex items-center gap-2">
+              <Button asChild className="gap-2 rounded-xl shadow-sm shadow-primary/20">
+                <Link href="/practice">
                   <PenLine className="w-4 h-4" />
-                  Practice Weak Areas
+                  {t('error_patterns.action_practice')}
                 </Link>
               </Button>
-              <Button
-                variant="outline"
-                asChild
-                size="lg"
-                className="h-14 hover:bg-primary/5 hover:border-primary/30 hover:scale-[1.01] transition-all duration-200"
-              >
-                <Link href="/analytics/weak-areas" className="flex items-center gap-2">
+              <Button variant="outline" asChild className="gap-2 rounded-xl">
+                <Link href="/analytics/weak-areas">
                   <BarChart2 className="w-4 h-4" />
-                  View Weak Categories
+                  {t('error_patterns.action_weak_areas')}
                 </Link>
               </Button>
-              <Button
-                variant="outline"
-                asChild
-                size="lg"
-                className="h-14 hover:bg-primary/5 hover:border-primary/30 hover:scale-[1.01] transition-all duration-200"
-              >
-                <Link href="/lessons" className="flex items-center gap-2">
+              <Button variant="outline" asChild className="gap-2 rounded-xl">
+                <Link href="/lessons">
                   <BookOpen className="w-4 h-4" />
-                  Study Lessons
+                  {t('error_patterns.action_lessons')}
                 </Link>
               </Button>
             </div>

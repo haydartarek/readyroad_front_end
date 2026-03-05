@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/language-context';
+import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,8 +15,64 @@ import { isValidEmail, isValidPassword } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Eye, EyeOff, User, Mail, Lock, BadgeCheck } from 'lucide-react';
 
+// ─── Field component defined OUTSIDE RegisterPage to prevent focus loss ───────
+
+function Field({
+  id,
+  label,
+  type = 'text',
+  icon: Icon,
+  value,
+  error,
+  onChange,
+  rightElement,
+  disabled,
+}: {
+  id: string;
+  label: string;
+  type?: string;
+  icon: React.ElementType;
+  value: string;
+  error?: string;
+  onChange: (v: string) => void;
+  rightElement?: React.ReactNode;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id} className="text-sm font-semibold">
+        {label}
+      </Label>
+      <div className="relative">
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          aria-invalid={!!error}
+          className={`h-11 pl-10 ${rightElement ? 'pr-10' : ''} text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${
+            error ? 'border-destructive focus:ring-destructive/20' : ''
+          }`}
+        />
+        {rightElement && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">{rightElement}</div>
+        )}
+      </div>
+      {error && (
+        <p className="text-xs text-destructive font-medium animate-in fade-in-50 slide-in-from-top-1 duration-200">
+          ⚠️ {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function RegisterPage() {
-  const router = useRouter();
+  const { login } = useAuth();
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,70 +127,25 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         fullName,
-        preferredLanguage: formData.preferredLanguage,
       });
-      toast.success('Account created successfully! Please login.');
-      router.push(ROUTES.LOGIN);
+      // Auto-login after registration → redirects to /dashboard
+      await login({ username: formData.username, password: formData.password });
     } catch (err) {
       logApiError('[Register] register', err);
       if (isServiceUnavailable(err)) {
         setServiceUnavailable(true);
       } else {
-        const error = err as { response?: { data?: { message?: string } } };
-        toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
+        const error = err as { response?: { data?: { message?: string; error?: string } } };
+        const msg =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          'Registration failed. Please try again.';
+        toast.error(msg);
       }
     } finally {
       setIsLoading(false);
     }
   };
-
-  const Field = ({
-    id,
-    label,
-    type = 'text',
-    icon: Icon,
-    value,
-    error,
-    onChange,
-    rightElement,
-  }: {
-    id: string;
-    label: string;
-    type?: string;
-    icon: React.ElementType;
-    value: string;
-    error?: string;
-    onChange: (v: string) => void;
-    rightElement?: React.ReactNode;
-  }) => (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="text-sm font-semibold">
-        {label}
-      </Label>
-      <div className="relative">
-        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          id={id}
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={isLoading}
-          aria-invalid={!!error}
-          className={`h-11 pl-10 ${rightElement ? 'pr-10' : ''} text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${
-            error ? 'border-destructive focus:ring-destructive/20' : ''
-          }`}
-        />
-        {rightElement && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">{rightElement}</div>
-        )}
-      </div>
-      {error && (
-        <p className="text-xs text-destructive font-medium animate-in fade-in-50 slide-in-from-top-1 duration-200">
-          ⚠️ {error}
-        </p>
-      )}
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background px-4 py-10">
@@ -223,6 +234,7 @@ export default function RegisterPage() {
                 value={formData.username}
                 error={errors.username}
                 onChange={(v) => setFormData({ ...formData, username: v })}
+                disabled={isLoading}
               />
 
               {/* Email */}
@@ -234,6 +246,7 @@ export default function RegisterPage() {
                 value={formData.email}
                 error={errors.email}
                 onChange={(v) => setFormData({ ...formData, email: v })}
+                disabled={isLoading}
               />
 
               {/* Password */}
@@ -245,6 +258,7 @@ export default function RegisterPage() {
                 value={formData.password}
                 error={errors.password}
                 onChange={(v) => setFormData({ ...formData, password: v })}
+                disabled={isLoading}
                 rightElement={
                   <button
                     type="button"
@@ -265,6 +279,7 @@ export default function RegisterPage() {
                 value={formData.confirmPassword}
                 error={errors.confirmPassword}
                 onChange={(v) => setFormData({ ...formData, confirmPassword: v })}
+                disabled={isLoading}
                 rightElement={
                   <button
                     type="button"

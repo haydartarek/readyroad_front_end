@@ -71,14 +71,14 @@ function normalizeExamData(backendData: BackendExamData): ExamData {
     id: backendData.examId,
     createdAt: backendData.startedAt || backendData.startTime || new Date().toISOString(),
     expiresAt: backendData.expiresAt,
-    questions: backendData.questions.map((q) => ({
+    questions: (backendData.questions ?? []).map((q) => ({
       id: q.questionId,
       questionTextEn: q.questionTextEn,
       questionTextAr: q.questionTextAr,
       questionTextNl: q.questionTextNl,
       questionTextFr: q.questionTextFr,
       imageUrl: q.imageUrl,
-      options: q.options.slice(0, 3).map((opt, optIndex) => ({
+      options: (q.options ?? []).slice(0, 3).map((opt, optIndex) => ({
         id:     opt.optionId,                   // preserve DB option ID
         number: (optIndex + 1) as 1 | 2 | 3,
         textEn: opt.optionTextEn,
@@ -164,12 +164,19 @@ export default function ExamQuestionsPage() {
         }
         const storedExam = localStorage.getItem('current_exam');
         if (storedExam) {
-          const parsedExam = JSON.parse(storedExam) as BackendExamData;
-          if (parsedExam.examId === examId) {
-            setExamData(normalizeExamData(parsedExam));
-            setError(null);
-            setIsLoading(false);
-            return;
+          let parsedExam: BackendExamData | null = null;
+          try {
+            parsedExam = JSON.parse(storedExam) as BackendExamData;
+          } catch {
+            localStorage.removeItem('current_exam');
+          }
+          if (parsedExam) {
+            if (parsedExam.examId === examId) {
+              setExamData(normalizeExamData(parsedExam));
+              setError(null);
+              setIsLoading(false);
+              return;
+            }
           }
         }
         const response = await apiClient.get<{
@@ -183,7 +190,10 @@ export default function ExamQuestionsPage() {
           setExamData(normalized);
           setError(null);
         } else {
-          throw new Error('No active exam found');
+          // No active exam in progress — redirect to exam start page gracefully
+          toast.info('No active exam found. Please start a new exam.');
+          router.replace('/exam');
+          return;
         }
       } catch (err) {
         logApiError('Failed to fetch exam data', err);

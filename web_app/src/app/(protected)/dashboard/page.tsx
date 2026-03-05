@@ -15,6 +15,7 @@ import type { CategoryProgressSummary } from '@/services/progressService';
 
 const defaultProgressData = {
   totalExamsTaken: 0,
+  totalAttempted: 0,
   averageScore: 0,
   passRate: 0,
   currentStreak: 0,
@@ -42,7 +43,7 @@ function GreetingHeader({ name, subtitle }: { name: string; subtitle: string }) 
         <h1 className="text-3xl font-black tracking-tight">
           {name}!
         </h1>
-        <p className="text-muted-foreground text-sm">{subtitle}</p>
+        <p className="text-muted-foreground text-sm font-medium">{subtitle}</p>
       </div>
     </div>
   );
@@ -59,31 +60,31 @@ function MostStudiedWidget({
   if (!categories || categories.length === 0) return null;
 
   function getAccuracyColor(accuracy: number): string {
-    if (accuracy >= 85) return 'text-green-600 dark:text-green-400';
-    if (accuracy >= 70) return 'text-blue-600 dark:text-blue-400';
-    return 'text-orange-500 dark:text-orange-400';
+    if (accuracy >= 85) return 'text-secondary';
+    if (accuracy >= 70) return 'text-primary';
+    return 'text-destructive';
   }
 
   function getMasteryBadge(accuracy: number): { label: string; color: string } {
     if (accuracy >= 85) return {
       label: t('dashboard.mastery_strong'),
-      color: 'bg-green-500 text-white dark:bg-green-600 dark:text-white',
+      color: 'bg-secondary text-secondary-foreground',
     };
     if (accuracy >= 70) return {
       label: t('dashboard.mastery_good'),
-      color: 'bg-blue-500 text-white dark:bg-blue-600 dark:text-white',
+      color: 'bg-primary/20 text-primary',
     };
     return {
       label: t('dashboard.mastery_needs_work'),
-      color: 'bg-orange-500 text-white dark:bg-orange-600 dark:text-white',
+      color: 'bg-destructive/15 text-destructive',
     };
   }
 
   return (
     <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-          <Star className="w-4 h-4 text-yellow-500" />
+        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Star className="w-4 h-4 text-primary" />
         </div>
         <h3 className="font-black text-secondary">{t('dashboard.most_studied')}</h3>
       </div>
@@ -142,7 +143,21 @@ export default function DashboardPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
 
+  // Reset all dashboard state when the user changes (login / logout).
+  // Without this, a previous user's data stays visible while the new
+  // user's data is loading — or worse, after logout.
+  const currentUserId = user?.userId ?? null;
   useEffect(() => {
+    setProgressData(defaultProgressData);
+    setMostStudied([]);
+    setWeakAreas([]);
+    setRecentActivities([]);
+  }, [currentUserId]);
+
+  useEffect(() => {
+    // Don't fetch if not authenticated (avoids leaking data between sessions)
+    if (!user) return;
+
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
@@ -154,11 +169,10 @@ export default function DashboardPage() {
         ]);
 
         setProgressData({
-          totalExamsTaken: progress.totalAttempted ?? 0,
+          totalExamsTaken: progress.totalExamsTaken ?? 0,
+          totalAttempted:  progress.totalAttempted  ?? 0,
           averageScore:    progress.overallAccuracy ?? 0,
-          passRate:        progress.overallAccuracy >= 82
-                             ? 100
-                             : (progress.overallAccuracy / 82) * 100,
+          passRate:        progress.passRate ?? 0,
           currentStreak:   progress.studyStreak ?? 0,
         });
 
@@ -177,9 +191,14 @@ export default function DashboardPage() {
           setRecentActivities([
             {
               id:    '1',
-              type:  'practice',
+              type:  (progress.totalExamsTaken ?? 0) > 0 ? 'exam' : 'practice',
               date:  progress.lastActivityDate,
               score: Math.round(progress.overallAccuracy),
+              // For exam activities: passed if score >= 82% (41/50 Dutch driving exam threshold)
+              // For practice activities: no pass/fail badge
+              passed: (progress.totalExamsTaken ?? 0) > 0
+                        ? Math.round(progress.overallAccuracy) >= 82
+                        : undefined,
             },
           ]);
         }
@@ -194,7 +213,10 @@ export default function DashboardPage() {
     };
 
     fetchDashboardData();
-  }, [fetchKey]);
+  // currentUserId is included so the effect re-runs when auth loads after mount
+  // (user starts as null → effect bails out → user loads → re-runs with actual data)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchKey, currentUserId]);
 
   const firstName = user?.firstName || 'User';
 
@@ -240,30 +262,30 @@ export default function DashboardPage() {
           {
             icon:  <Trophy   className="w-4 h-4" />,
             label: t('dashboard.stat_questions_done'),
-            value: progressData.totalExamsTaken,
-            color: 'text-yellow-500',
-            bg:    'bg-yellow-500/10',
+            value: progressData.totalAttempted,
+            color: 'text-primary',
+            bg:    'bg-primary/10',
           },
           {
             icon:  <Target   className="w-4 h-4" />,
             label: t('dashboard.stat_avg_score'),
             value: `${Math.round(progressData.averageScore)}%`,
-            color: 'text-blue-500',
-            bg:    'bg-blue-500/10',
+            color: 'text-secondary',
+            bg:    'bg-secondary/10',
           },
           {
             icon:  <BookOpen className="w-4 h-4" />,
             label: t('dashboard.stat_pass_rate'),
             value: `${Math.round(progressData.passRate)}%`,
-            color: 'text-green-500',
-            bg:    'bg-green-500/10',
+            color: 'text-secondary',
+            bg:    'bg-secondary/10',
           },
           {
             icon:  <Flame    className="w-4 h-4" />,
             label: t('dashboard.stat_streak'),
             value: `${progressData.currentStreak} ${t('dashboard.stat_streak_days')}`,
-            color: 'text-orange-500',
-            bg:    'bg-orange-500/10',
+            color: 'text-primary',
+            bg:    'bg-primary/10',
           },
         ].map((stat, i) => (
           <div

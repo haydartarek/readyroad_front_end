@@ -193,6 +193,19 @@ export const API_ENDPOINTS = {
     COUNT:  '/lessons/count',
   },
 
+
+  SIGN_QUIZ: {
+    SIGNS:           '/sign-quiz/signs',
+    START_PRACTICE:  (signCode: string) => `/sign-quiz/practice/${signCode}`,
+    SUBMIT_ANSWER:   (sessionId: number, questionId: number) =>
+      `/sign-quiz/practice/${sessionId}/questions/${questionId}/answer`,
+    PRACTICE_RESULTS: (sessionId: number) => `/sign-quiz/practice/${sessionId}/results`,
+    EXAM_QUESTIONS:  (signCode: string, examNumber: number) =>
+      `/sign-quiz/exam/${signCode}/${examNumber}`,
+    SUBMIT_EXAM:     (signCode: string, examNumber: number) =>
+      `/sign-quiz/exam/${signCode}/${examNumber}/submit`,
+  },
+
   HEALTH: '/actuator/health',
 
   ADMIN: {

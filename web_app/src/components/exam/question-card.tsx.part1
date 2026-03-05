@@ -1,0 +1,43 @@
+'use client';
+
+import Image from 'next/image';
+import { CheckCircle2, XCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { useLanguage } from '@/contexts/language-context';
+import { cn } from '@/lib/utils';
+import { convertToPublicImageUrl } from '@/lib/image-utils';
+
+// ─── Types ──────────────────────────────────────────────
+
+type Lang = 'en' | 'ar' | 'nl' | 'fr';
+
+interface QuestionOption {
+  number: 1 | 2 | 3;
+  textEn: string;
+  textAr: string;
+  textNl: string;
+  textFr: string;
+}
+
+interface Question {
+  id: number;
+  questionTextEn: string;
+  questionTextAr: string;
+  questionTextNl: string;
+  questionTextFr: string;
+  imageUrl?: string;
+  signImageUrl?: string;
+  showSign?: boolean;
+  options: QuestionOption[];
+}
+
+interface QuestionCardProps {
+  question: Question;
+  selectedAnswer?: number;
+  onAnswerSelect: (optionNumber: number) => void;
+  showCorrectAnswer?: boolean;
+  correctAnswer?: number;
+  showSign?: boolean;
+}
+
+// ─── Helpers ───────────────────────────────────────────────

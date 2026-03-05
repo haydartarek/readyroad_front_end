@@ -42,14 +42,18 @@ const SEGMENT_LABELS: Record<string, string> = {
 
 const SIGN_CODE_RE  = /^[A-Z][0-9]/i;
 const NUMERIC_RE    = /^[0-9]+$/;
+const LESSON_CODE_RE = /^les-(\d+)$/i;
 
 // ─── Helpers ─────────────────────────────────────────────
 
 function resolveSegmentLabel(segment: string, t: (key: string) => string): string {
   const key = SEGMENT_LABELS[segment];
-  if (key)                         return t(key);
-  if (NUMERIC_RE.test(segment))    return `#${segment}`;
-  if (SIGN_CODE_RE.test(segment))  return segment.toUpperCase();
+  if (key)                          return t(key);
+  if (NUMERIC_RE.test(segment))     return `#${segment}`;
+  if (SIGN_CODE_RE.test(segment))   return segment.toUpperCase();
+
+  const lessonMatch = LESSON_CODE_RE.exec(segment);
+  if (lessonMatch)                  return `${t('lessons.lesson')} ${parseInt(lessonMatch[1], 10) + 1}`;
 
   return segment
     .split('-')

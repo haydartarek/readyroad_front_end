@@ -95,9 +95,9 @@ export default function ProgressPage() {
           apiClient.get<Array<{
             categoryCode: string;
             categoryName: string;
-            totalAttempted: number;
-            totalCorrect: number;
-            accuracy: number;
+            questionsAttempted: number;
+            correctAnswers: number;
+            accuracyRate: number;
             masteryLevel: string;
             lastPracticed: string | null;
           }>>('/users/me/progress/categories'),
@@ -106,23 +106,30 @@ export default function ProgressPage() {
         const overall = overallResponse.data;
         const categories = categoriesResponse.data;
 
+        // Guard against null/undefined/NaN from backend (BigDecimal can serialize strangely)
+        const safeAccuracy = Number.isFinite(Number(overall.overallAccuracy))
+          ? Number(overall.overallAccuracy)
+          : 0;
+        const safeStreak = Number.isFinite(Number(overall.studyStreak))
+          ? Number(overall.studyStreak)
+          : 0;
         setData({
           overallStats: {
-            totalExams: overall.totalAttempts,
-            totalQuestions: overall.totalAttempts,
-            averageScore: overall.overallAccuracy,
-            passRate: overall.overallAccuracy >= 82 ? 100 : (overall.overallAccuracy / 82) * 100,
-            currentStreak: overall.studyStreak,
-            bestScore: overall.overallAccuracy,
+            totalExams:     overall.totalAttempts  ?? 0,
+            totalQuestions: overall.totalAttempts  ?? 0,
+            averageScore:   safeAccuracy,
+            passRate:       safeAccuracy >= 82 ? 100 : (safeAccuracy / 82) * 100,
+            currentStreak:  safeStreak,
+            bestScore:      safeAccuracy,
           },
           examHistory: [],
           categoryProgress: categories.map(cat => ({
             categoryCode: cat.categoryCode,
             categoryName: cat.categoryName,
-            questionsAttempted: cat.totalAttempted,
-            correctAnswers: cat.totalCorrect,
-            accuracy: cat.accuracy,
-            trend: cat.accuracy >= 70 ? 'improving' : cat.accuracy >= 50 ? 'stable' : 'declining',
+            questionsAttempted: cat.questionsAttempted ?? 0,
+            correctAnswers: cat.correctAnswers ?? 0,
+            accuracy: Number(cat.accuracyRate ?? 0),
+            trend: Number(cat.accuracyRate ?? 0) >= 70 ? 'improving' : Number(cat.accuracyRate ?? 0) >= 50 ? 'stable' : 'declining',
           })),
         });
         setError(null);
@@ -202,14 +209,14 @@ export default function ProgressPage() {
             {
               icon: <Target className="w-5 h-5" />,
               label: 'Average Score',
-              value: `${overallStats.averageScore.toFixed(1)}%`,
-              sub: `Best: ${overallStats.bestScore}%`,
+              value: `${(overallStats.averageScore ?? 0).toFixed(1)}%`,
+              sub: `Best: ${(overallStats.bestScore ?? 0).toFixed(1)}%`,
               color: 'text-blue-500', bg: 'bg-blue-500/10',
             },
             {
               icon: <Star className="w-5 h-5" />,
               label: 'Pass Rate',
-              value: `${overallStats.passRate.toFixed(0)}%`,
+              value: `${(overallStats.passRate ?? 0).toFixed(0)}%`,
               sub: 'of all exams',
               color: 'text-green-500', bg: 'bg-green-500/10',
             },
@@ -273,7 +280,7 @@ export default function ProgressPage() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-sm flex-shrink-0 ${exam.passed ? 'bg-green-500' : 'bg-destructive'}`}>
-                          {exam.percentage.toFixed(0)}%
+                          {(exam.percentage ?? 0).toFixed(0)}%
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1">
@@ -384,16 +391,16 @@ export default function ProgressPage() {
 
         {/* Motivation Card */}
         {overallStats.totalExams > 0 && (
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/70 p-6 text-white shadow-lg shadow-primary/25">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
             <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Rocket className="w-5 h-5" />
-                  <h2 className="text-xl font-black">Keep Going!</h2>
+                  <Rocket className="w-5 h-5 text-primary" />
+                  <h2 className="text-xl font-black text-foreground">Keep Going!</h2>
                 </div>
-                <p className="text-white/80 text-sm max-w-md">
+                <p className="text-muted-foreground text-sm max-w-md">
                   {overallStats.averageScore >= 82
                     ? "Great job! You're consistently passing. Keep practicing to maintain your skills!"
                     : "You're making progress! Keep practicing and you'll reach the pass threshold soon."}
@@ -401,7 +408,7 @@ export default function ProgressPage() {
               </div>
               <Button
                 asChild
-                className="bg-white text-primary hover:bg-white/90 font-bold shadow-md flex-shrink-0 hover:scale-[1.02] transition-all duration-200"
+                className="font-bold flex-shrink-0 hover:scale-[1.02] transition-all duration-200"
                 size="lg"
               >
                 <Link href="/exam">Take Another Exam</Link>

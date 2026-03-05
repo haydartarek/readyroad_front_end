@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/auth-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { toast } from 'sonner';
-import { Shuffle, BookOpen, ChevronRight, RefreshCw } from 'lucide-react';
+import { Shuffle, BookOpen, ChevronRight, ChevronLeft, RefreshCw } from 'lucide-react';
 
 interface CategoryDTO {
   id: number;
@@ -83,18 +83,25 @@ export default function PracticePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  // AbortController ref so we can cancel in-flight requests on unmount / re-fetch
+  const abortRef = useRef<AbortController | null>(null);
 
   const fetchData = async () => {
+    // Cancel any previous in-flight request
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    const signal = abortRef.current.signal;
     try {
       setIsLoading(true);
       setError(null);
 
       const catResp = await apiClient.get<CategoryDTO[]>('/categories');
+      if (signal.aborted) return;
       setCategories(catResp.data);
 
       try {
         const statsResp = await apiClient.get<QuizStatsDTO>('/quiz/stats');
-        setTotalQuestions(statsResp.data.totalQuestions);
+        if (!signal.aborted) setTotalQuestions(statsResp.data.totalQuestions);
       } catch { /* optional */ }
 
       const counts: Record<number, number> = {};
@@ -126,9 +133,12 @@ export default function PracticePage() {
           }
         })
       );
+      if (signal.aborted) return;
       setQuestionCounts(counts);
       setTotalCounts(totals);
     } catch (err) {
+      // Ignore calls cancelled by component unmount or re-fetch
+      if (signal.aborted) return;
       logApiError('Failed to fetch categories', err);
       if (isServiceUnavailable(err)) {
         setServiceUnavailable(true);
@@ -138,12 +148,13 @@ export default function PracticePage() {
         toast.error(msg);
       }
     } finally {
-      setIsLoading(false);
+      if (!signal.aborted) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
+    return () => { abortRef.current?.abort(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t]);
 
@@ -164,8 +175,11 @@ export default function PracticePage() {
 
   if (isLoading) return <LoadingSpinner message={t('practice.loading')} />;
 
+  const isRtl = language === 'ar';
+  const ChevDir = isRtl ? ChevronLeft : ChevronRight;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background">
       <div className="container mx-auto max-w-5xl px-4 py-10 space-y-8">
 
         {/* Header */}
@@ -175,7 +189,7 @@ export default function PracticePage() {
             <span className="font-semibold text-sm">Practice Mode</span>
           </div>
           <h1 className="text-4xl font-black tracking-tight">{t('practice.title')}</h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto font-medium">
             {t('practice.subtitle')}
           </p>
         </div>
@@ -190,7 +204,7 @@ export default function PracticePage() {
           <Alert variant="destructive" className="animate-in fade-in-50 duration-300">
             <AlertDescription className="flex items-center justify-between">
               <span>⚠️ {error}</span>
-              <Button size="sm" variant="outline" onClick={fetchData} className="gap-1 ml-4">
+              <Button size="sm" variant="outline" onClick={fetchData} className={`gap-1 ${isRtl ? 'mr-4' : 'ml-4'}`}>
                 <RefreshCw className="w-3 h-3" /> Retry
               </Button>
             </AlertDescription>
@@ -198,22 +212,22 @@ export default function PracticePage() {
         )}
 
         {/* Random Practice Card */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/70 p-6 text-white shadow-lg shadow-primary/25">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
           <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Shuffle className="w-5 h-5" />
-                <h2 className="text-xl font-black">{t('practice.random')}</h2>
+                <Shuffle className="w-5 h-5 text-primary" />
+                <h2 className="text-xl font-black text-foreground">{t('practice.random')}</h2>
               </div>
-              <p className="text-white/80 text-sm">
+              <p className="text-muted-foreground text-sm font-medium">
                 {t('practice.random_desc') || `${totalQuestions} ${t('practice.questions_available')}`}
               </p>
             </div>
             <Button
               onClick={() => router.push('/practice/random')}
-              className="bg-white text-primary hover:bg-white/90 font-bold shadow-md flex-shrink-0 gap-2 hover:scale-[1.02] transition-all duration-200"
+              className="font-bold flex-shrink-0 gap-2 hover:scale-[1.02] transition-all duration-200"
               size="lg"
             >
               <Shuffle className="w-4 h-4" />
@@ -250,7 +264,7 @@ export default function PracticePage() {
                             {getCategoryName(cat)}
                           </CardTitle>
                           {getCategoryDescription(cat) && (
-                            <CardDescription className="mt-1 text-xs line-clamp-2">
+                            <CardDescription className="mt-1 text-xs line-clamp-2 font-medium">
                               {getCategoryDescription(cat)}
                             </CardDescription>
                           )}
@@ -279,7 +293,7 @@ export default function PracticePage() {
                   <CardContent className="pt-0">
                     <div className="flex items-center justify-between">
                       {/* Mini progress bar - shows fresh vs total */}
-                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden mr-4">
+                      <div className={`flex-1 h-1.5 bg-muted rounded-full overflow-hidden ${isRtl ? 'ml-4' : 'mr-4'}`}>
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
                             allOnCooldown ? 'bg-amber-400/60' : 'bg-primary/50'
@@ -289,7 +303,7 @@ export default function PracticePage() {
                       </div>
                       <span className="text-xs text-primary font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
                         {t('practice.start_practice')}
-                        <ChevronRight className="w-3 h-3" />
+                        <ChevDir className="w-3 h-3" />
                       </span>
                     </div>
                   </CardContent>

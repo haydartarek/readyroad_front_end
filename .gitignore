@@ -18,3 +18,8 @@ coverage/
 .env
 .env.local
 
+
+# logs and text files
+*.log
+*.txt
+

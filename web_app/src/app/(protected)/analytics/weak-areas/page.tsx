@@ -12,6 +12,7 @@ import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-ba
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { PenLine, BookOpen, Target, RefreshCw, TrendingUp } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   return (
@@ -27,6 +28,7 @@ function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
 }
 
 export default function WeakAreasPage() {
+  const { t } = useLanguage();
   const [data, setData] = useState<WeakAreasData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export default function WeakAreasPage() {
     fetchWeakAreas();
   }, [fetchKey]);
 
-  if (isLoading) return <LoadingSpinner message="Analyzing your weak areas..." />;
+  if (isLoading) return <LoadingSpinner message={t('weak_areas.loading')} />;
 
   if (serviceUnavailable) {
     return (
@@ -82,7 +84,7 @@ export default function WeakAreasPage() {
             className="gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            Try Again
+            {t('weak_areas.try_again')}
           </Button>
         </div>
       </div>
@@ -96,16 +98,16 @@ export default function WeakAreasPage() {
           <div className="w-24 h-24 bg-green-500/10 rounded-3xl flex items-center justify-center mx-auto text-5xl">
             💪
           </div>
-          <h1 className="text-3xl font-black tracking-tight">No Weak Areas Identified</h1>
+          <h1 className="text-3xl font-black tracking-tight">{t('weak_areas.no_weak_areas_title')}</h1>
           <p className="text-muted-foreground">
-            Take more exams to identify areas that need improvement and track your progress.
+            {t('weak_areas.no_weak_areas_desc')}
           </p>
           <Button
             size="lg"
             asChild
             className="shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform"
           >
-            <Link href="/exam">Take an Exam</Link>
+            <Link href="/exam">{t('weak_areas.take_exam')}</Link>
           </Button>
         </div>
       </div>
@@ -120,11 +122,11 @@ export default function WeakAreasPage() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-primary border border-primary/20 shadow-sm">
             <TrendingUp className="w-4 h-4" />
-            <span className="font-semibold text-sm">Weak Areas Analysis</span>
+            <span className="font-semibold text-sm">{t('weak_areas.badge')}</span>
           </div>
-          <h1 className="text-4xl font-black tracking-tight">Areas for Improvement</h1>
+          <h1 className="text-4xl font-black tracking-tight">{t('weak_areas.title')}</h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Focused analysis to help you target and strengthen weak categories
+            {t('weak_areas.subtitle')}
           </p>
         </div>
 
@@ -138,10 +140,9 @@ export default function WeakAreasPage() {
         {/* Info Alert */}
         <Alert className="border border-primary/20 bg-primary/5">
           <AlertDescription className="space-y-1">
-            <p className="font-semibold text-foreground">🎯 Smart Improvement Strategy</p>
+            <p className="font-semibold text-foreground">🎯 {t('weak_areas.strategy_title')}</p>
             <p className="text-sm text-muted-foreground">
-              Focus on critical areas first (below 50% accuracy). Practice these categories daily
-              and review related lessons. Track your progress and celebrate small improvements!
+              {t('weak_areas.strategy_desc')}
             </p>
           </AlertDescription>
         </Alert>
@@ -157,9 +158,9 @@ export default function WeakAreasPage() {
                 🚀
               </div>
               <div>
-                <CardTitle className="text-xl font-black">Start Improving Today</CardTitle>
+                <CardTitle className="text-xl font-black">{t('weak_areas.start_improving_title')}</CardTitle>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  Choose your learning path based on your current needs
+                  {t('weak_areas.start_improving_desc')}
                 </p>
               </div>
             </div>
@@ -169,19 +170,19 @@ export default function WeakAreasPage() {
               <Button asChild className="gap-2 rounded-xl shadow-sm shadow-primary/20">
                 <Link href="/practice">
                   <PenLine className="w-4 h-4" />
-                  Practice Mode
+                  {t('weak_areas.practice_mode')}
                 </Link>
               </Button>
               <Button variant="outline" asChild className="gap-2 rounded-xl">
                 <Link href="/lessons">
                   <BookOpen className="w-4 h-4" />
-                  Study Lessons
+                  {t('weak_areas.study_lessons')}
                 </Link>
               </Button>
               <Button variant="outline" asChild className="gap-2 rounded-xl">
                 <Link href="/exam">
                   <Target className="w-4 h-4" />
-                  Take Full Exam
+                  {t('weak_areas.take_full_exam')}
                 </Link>
               </Button>
             </div>

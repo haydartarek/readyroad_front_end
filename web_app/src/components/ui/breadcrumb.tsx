@@ -23,7 +23,6 @@ const BREADCRUMB_ENABLED_ROUTES = [
   '/lessons',
   '/traffic-signs',
   '/exam',
-  '/progress',
 ] as const;
 
 const SEGMENT_LABELS: Record<string, string> = {
@@ -32,7 +31,6 @@ const SEGMENT_LABELS: Record<string, string> = {
   'lessons':        'nav.lessons',
   'traffic-signs':  'nav.traffic_signs',
   'exam':           'nav.exam',
-  'progress':       'nav.progress',
   'dashboard':      'nav.dashboard',
   'profile':        'nav.profile',
   'results':        'exam.results',

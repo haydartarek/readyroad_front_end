@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLanguage } from '@/contexts/language-context';
 import Link from 'next/link';
 import { ChevronDown, ChevronRight, ClipboardList, XCircle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,6 +61,7 @@ const SEVERITY_STYLES: Record<ErrorPattern['severity'], string> = {
 // ─── Component ───────────────────────────────────────────
 
 export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
+  const { t } = useLanguage();
   const [showExamples, setShowExamples] = useState(false);
 
   return (
@@ -80,13 +82,13 @@ export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
 
         {/* Frequency */}
         <p className="text-sm text-muted-foreground">
-          Frequency:{' '}
-          <span className="font-bold text-foreground">{pattern.frequency} times</span>
+          {t('analytics.error_pattern_frequency')}{' '}
+          <span className="font-bold text-foreground">{pattern.frequency} {t('analytics.error_pattern_times')}</span>
         </p>
 
         {/* Affected categories */}
         <div>
-          <p className="text-sm font-semibold text-foreground mb-2">Affected Categories</p>
+          <p className="text-sm font-semibold text-foreground mb-2">{t('analytics.error_pattern_affected')}</p>
           <div className="flex flex-wrap gap-2">
             {pattern.affectedCategories.map(cat => (
               <Badge key={cat} variant="secondary" className="rounded-full text-xs">
@@ -98,7 +100,7 @@ export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
 
         {/* Recommendations */}
         <div>
-          <p className="text-sm font-semibold text-foreground mb-2">Recommendations</p>
+          <p className="text-sm font-semibold text-foreground mb-2">{t('analytics.error_pattern_recommendations')}</p>
           <ul className="space-y-1.5">
             {pattern.recommendations.map((rec, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -113,7 +115,7 @@ export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
         <Button asChild className="w-full rounded-xl gap-2 shadow-sm shadow-primary/20">
           <Link href={getPracticeUrl(pattern.patternType, pattern.affectedCategories)}>
             <ClipboardList className="w-4 h-4" />
-            Practice This Area
+            {t('analytics.error_pattern_practice')}
           </Link>
         </Button>
 
@@ -126,8 +128,8 @@ export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
             className="w-full rounded-xl gap-2"
           >
             {showExamples
-              ? <><ChevronDown  className="w-4 h-4" /> Hide Example Questions</>
-              : <><ChevronRight className="w-4 h-4" /> Show Example Questions</>
+              ? <><ChevronDown  className="w-4 h-4" /> {t('analytics.error_pattern_hide_examples')}</>
+              : <><ChevronRight className="w-4 h-4" /> {t('analytics.error_pattern_show_examples')}</>
             }
           </Button>
 

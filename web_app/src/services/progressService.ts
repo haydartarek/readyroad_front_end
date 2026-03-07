@@ -50,6 +50,9 @@ export interface OverallProgress {
   totalStudyHours?:        number;
   currentStreak?:          number;
   longestStreak?:          number;
+  signPracticeCount?:      number;
+  signExamCount?:          number;
+  signPassedCount?:        number;
 }
 
 export interface CategoryProgress {

@@ -13,7 +13,8 @@ import { API_ENDPOINTS } from '@/lib/constants';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lock, CheckCircle2, BookOpen, Trophy, ChevronRight } from 'lucide-react';
+import { getSignStatus, type SignUserProgress } from '@/services';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -106,6 +107,8 @@ export default function TrafficSignDetailPage() {
   const [error, setError]       = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
+  const [signProgress, setSignProgress] = useState<SignUserProgress | null>(null);
+  const [progressLoading, setProgressLoading] = useState(false);
   useEffect(() => {
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -129,6 +132,17 @@ export default function TrafficSignDetailPage() {
 
     return () => { cancelled = true; };
   }, [signCode, fetchKey]);
+
+  // Fetch quiz progress for this sign
+  useEffect(() => {
+    let cancelled = false;
+    setProgressLoading(true);
+    getSignStatus(signCode)
+      .then(p => { if (!cancelled) setSignProgress(p); })
+      .catch(() => { /* not logged in or no data — keep null */ })
+      .finally(() => { if (!cancelled) setProgressLoading(false); });
+    return () => { cancelled = true; };
+  }, [signCode]);
 
   // ── Helpers ──
   const getCategoryColor = (code: string) =>
@@ -254,6 +268,124 @@ export default function TrafficSignDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* ── Sign Quiz Section ── */}
+            <Card className="rounded-2xl border-border/50 shadow-sm">
+              <CardHeader>
+                <CardTitle className="font-black flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-primary" />
+                  {t('sign_quiz.quiz_section_title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+
+                {/* ── Practice Card ── */}
+                <div className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/60 transition-colors">
+                  <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-background border border-border/40 flex items-center justify-center">
+                    <SignImage src={sign.imageUrl} alt={getSignName(sign)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm">{t('sign_quiz.practice_mode')}</span>
+                      {!progressLoading && signProgress?.practiceCompleted && (
+                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs border">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />{t('sign_quiz.practice_done')}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{t('sign_quiz.practice_desc')}</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="flex-shrink-0 rounded-lg" asChild>
+                    <Link href={`/traffic-signs/${signCode}/practice`}>
+                      {signProgress?.practiceStarted && !signProgress.practiceCompleted
+                        ? t('sign_quiz.continue_practice')
+                        : signProgress?.practiceCompleted
+                          ? t('sign_quiz.view_results')
+                          : t('sign_quiz.start_practice')}
+                      <ChevronRight className="w-3 h-3 ml-1" />
+                    </Link>
+                  </Button>
+                </div>
+
+                {/* ── Exam 1 Card ── */}
+                <div className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/60 transition-colors">
+                  <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-background border border-border/40 flex items-center justify-center">
+                    <SignImage src={sign.imageUrl} alt={getSignName(sign)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm">{t('sign_quiz.exam_1')}</span>
+                      {!progressLoading && signProgress?.exam1Passed && (
+                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs border">
+                          {t('sign_quiz.passed_badge')}
+                        </Badge>
+                      )}
+                      {!progressLoading && signProgress?.exam1Attempted && !signProgress.exam1Passed && (
+                        <Badge className="bg-red-100 text-red-800 border-red-200 text-xs border">
+                          {t('sign_quiz.failed_badge')}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('sign_quiz.questions_count').replace('{n}', '15')}
+                      {' · '}{t('sign_quiz.pass_score')}
+                      {signProgress?.exam1BestScorePct != null && ` · ${t('sign_quiz.best_score').replace('{score}', Math.round(signProgress.exam1BestScorePct).toString())}`}
+                    </p>
+                  </div>
+                  <Button size="sm" className="flex-shrink-0 rounded-lg" asChild>
+                    <Link href={`/traffic-signs/${signCode}/exam/1`}>
+                      {signProgress?.exam1Attempted ? t('sign_quiz.retake_exam') : t('sign_quiz.start_exam')}
+                      <ChevronRight className="w-3 h-3 ml-1" />
+                    </Link>
+                  </Button>
+                </div>
+
+                {/* ── Exam 2 Card ── */}
+                <div className={cn(
+                  "flex items-center gap-4 p-4 rounded-xl border border-border/50 transition-colors",
+                  signProgress?.exam2Unlocked ? "bg-muted/30 hover:bg-muted/60" : "bg-muted/10 opacity-75"
+                )}>
+                  <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-background border border-border/40 flex items-center justify-center">
+                    {signProgress?.exam2Unlocked
+                      ? <SignImage src={sign.imageUrl} alt={getSignName(sign)} />
+                      : <Lock className="w-6 h-6 text-muted-foreground" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm">{t('sign_quiz.exam_2')}</span>
+                      {!signProgress?.exam2Unlocked && (
+                        <Badge variant="outline" className="text-xs">
+                          <Lock className="w-3 h-3 mr-1" />{t('sign_quiz.locked')}
+                        </Badge>
+                      )}
+                      {signProgress?.exam2Passed && (
+                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs border">
+                          {t('sign_quiz.passed_badge')}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {signProgress?.exam2Unlocked
+                        ? `${t('sign_quiz.questions_count').replace('{n}', '15')} · ${t('sign_quiz.pass_score')}`
+                        : t('sign_quiz.exam_locked_desc')}
+                    </p>
+                  </div>
+                  {signProgress?.exam2Unlocked ? (
+                    <Button size="sm" className="flex-shrink-0 rounded-lg" asChild>
+                      <Link href={`/traffic-signs/${signCode}/exam/2`}>
+                        {signProgress.exam2Attempted ? t('sign_quiz.retake_exam') : t('sign_quiz.start_exam')}
+                        <ChevronRight className="w-3 h-3 ml-1" />
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button size="sm" className="flex-shrink-0 rounded-lg" disabled>
+                      <Lock className="w-3 h-3 mr-1" />{t('sign_quiz.locked')}
+                    </Button>
+                  )}
+                </div>
+
+              </CardContent>
+            </Card>
           </div>
 
           {/* ── Sidebar ── */}
@@ -307,10 +439,16 @@ export default function TrafficSignDetailPage() {
             {/* Actions */}
             <div className="space-y-2">
               <Button className="w-full rounded-xl shadow-md shadow-primary/20" asChild>
-                <Link href="/practice">{t('sign_detail.practice_questions')}</Link>
+                <Link href={`/traffic-signs/${signCode}/practice`}>
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  {t('sign_quiz.start_practice')}
+                </Link>
               </Button>
               <Button className="w-full rounded-xl" variant="outline" asChild>
-                <Link href="/exam">{t('sign_detail.take_exam')}</Link>
+                <Link href={`/traffic-signs/${signCode}/exam/1`}>
+                  <Trophy className="w-4 h-4 mr-2" />
+                  {t('sign_quiz.exam_1')}
+                </Link>
               </Button>
             </div>
           </div>

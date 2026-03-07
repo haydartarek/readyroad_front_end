@@ -17,7 +17,7 @@ type Language = 'en' | 'ar' | 'nl' | 'fr';
 interface LanguageContextType {
   language:    Language;
   setLanguage: (lang: Language) => void;
-  t:           (key: string) => string;
+  t:           (key: string, params?: Record<string, string | number>) => string;
   isRTL:       boolean;
 }
 
@@ -85,8 +85,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [language]);
 
-  const t = useCallback((key: string): string => {
-    return translations[key] ?? key;
+  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
+    let str = translations[key] ?? key;
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        str = str.replaceAll(`{${k}}`, String(v));
+      });
+    }
+    return str;
   }, [translations]);
 
   return (

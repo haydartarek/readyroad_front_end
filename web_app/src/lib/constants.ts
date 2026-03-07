@@ -44,7 +44,6 @@ export const ROUTES = {
   REGISTER:  '/register',
   DASHBOARD: '/dashboard',
   PROFILE:   '/profile',
-  PROGRESS:  '/progress',
 
   EXAM:           '/exam',
   EXAM_QUESTIONS: (id: number)      => `/exam/${id}`,
@@ -195,15 +194,17 @@ export const API_ENDPOINTS = {
 
 
   SIGN_QUIZ: {
-    SIGNS:           '/sign-quiz/signs',
-    START_PRACTICE:  (signCode: string) => `/sign-quiz/practice/${signCode}`,
-    SUBMIT_ANSWER:   (sessionId: number, questionId: number) =>
+    SIGNS:            '/sign-quiz/signs',
+    START_PRACTICE:   (signCode: string) => `/sign-quiz/practice/${signCode}`,
+    SUBMIT_ANSWER:    (sessionId: number, questionId: number) =>
       `/sign-quiz/practice/${sessionId}/questions/${questionId}/answer`,
     PRACTICE_RESULTS: (sessionId: number) => `/sign-quiz/practice/${sessionId}/results`,
-    EXAM_QUESTIONS:  (signCode: string, examNumber: number) =>
+    EXAM_QUESTIONS:   (signCode: string, examNumber: number) =>
       `/sign-quiz/exam/${signCode}/${examNumber}`,
-    SUBMIT_EXAM:     (signCode: string, examNumber: number) =>
+    SUBMIT_EXAM:      (signCode: string, examNumber: number) =>
       `/sign-quiz/exam/${signCode}/${examNumber}/submit`,
+    SIGN_STATUS:      (signCode: string) => `/sign-quiz/signs/${signCode}/status`,
+    USER_PROGRESS:    '/sign-quiz/user-progress',
   },
 
   HEALTH: '/actuator/health',

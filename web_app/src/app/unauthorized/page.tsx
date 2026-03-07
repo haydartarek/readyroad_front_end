@@ -6,10 +6,12 @@ import { ArrowLeft, ArrowRight, Home, LogOut, AlertCircle, ShieldOff } from 'luc
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/language-context';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function UnauthorizedPage() {
   const router = useRouter();
   const { t, isRTL } = useLanguage();
+  const { logout } = useAuth();
 
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
@@ -71,12 +73,10 @@ export default function UnauthorizedPage() {
           <Button
             variant="ghost"
             className="w-full rounded-xl gap-2 text-red-600 hover:text-red-700 hover:bg-red-500/10"
-            asChild
+            onClick={() => logout()}
           >
-            <Link href="/auth/logout">
-              <LogOut className="w-4 h-4" />
-              {t('unauthorized.logout')}
-            </Link>
+            <LogOut className="w-4 h-4" />
+            {t('unauthorized.logout')}
           </Button>
         </div>
 

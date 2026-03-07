@@ -20,14 +20,16 @@ export interface NotificationCount {
 }
 
 export interface AppNotification {
-  id:        number;
-  type:      string;   // EXAM_PASSED | EXAM_FAILED | WEAK_AREA | STREAK_ACHIEVED | SYSTEM …
-  title:     string;
-  message:   string;
-  link?:     string;
-  isRead:    boolean;
-  createdAt: string;   // ISO-8601 Instant
-  readAt?:   string;
+  id:             number;
+  type:           string;   // EXAM_PASSED | EXAM_FAILED | WEAK_AREA | STREAK_ACHIEVED | SYSTEM …
+  title:          string;
+  message:        string;
+  messageKey?:    string;   // i18n key for translated message (if set by backend)
+  messageParams?: string;   // JSON string of interpolation params, e.g. {"score":43,"total":50}
+  link?:          string;
+  isRead:         boolean;
+  createdAt:      string;   // ISO-8601 Instant
+  readAt?:        string;
 }
 
 export interface UserStats {

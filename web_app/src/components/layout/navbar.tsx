@@ -40,7 +40,6 @@ const SECONDARY_NAV = [
   { name: 'nav.traffic_signs', href: ROUTES.TRAFFIC_SIGNS        },
   { name: 'nav.lessons',       href: ROUTES.LESSONS               },
   { name: 'nav.analytics',     href: ROUTES.ANALYTICS_WEAK_AREAS  },
-  { name: 'nav.progress',      href: ROUTES.PROGRESS              },
   { name: 'nav.profile',       href: ROUTES.PROFILE               },
 ] as const;
 
@@ -391,13 +390,6 @@ export function Navbar() {
                       {t('nav.profile')}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link href={ROUTES.PROGRESS} className="flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                      {t('nav.progress')}
-                    </Link>
-                  </DropdownMenuItem>
-
                   <div className="my-1 border-t border-border" />
                   <DropdownMenuItem
                     onClick={logout}

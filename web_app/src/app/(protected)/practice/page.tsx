@@ -186,7 +186,7 @@ export default function PracticePage() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-primary border border-primary/20 shadow-sm">
             <BookOpen className="w-4 h-4" />
-            <span className="font-semibold text-sm">Practice Mode</span>
+            <span className="font-semibold text-sm">{t('practice.mode_badge')}</span>
           </div>
           <h1 className="text-4xl font-black tracking-tight">{t('practice.title')}</h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto font-medium">
@@ -205,7 +205,7 @@ export default function PracticePage() {
             <AlertDescription className="flex items-center justify-between">
               <span>⚠️ {error}</span>
               <Button size="sm" variant="outline" onClick={fetchData} className={`gap-1 ${isRtl ? 'mr-4' : 'ml-4'}`}>
-                <RefreshCw className="w-3 h-3" /> Retry
+                <RefreshCw className="w-3 h-3" /> {t('practice.retry')}
               </Button>
             </AlertDescription>
           </Alert>

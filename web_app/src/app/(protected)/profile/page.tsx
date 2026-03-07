@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useLanguage } from '@/contexts/language-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,9 +13,10 @@ import { toast } from 'sonner';
 import { LANGUAGES } from '@/lib/constants';
 import { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
+import { getOverallProgress } from '@/services';
 import {
   User, Mail, AtSign, Globe, BarChart2,
-  ShieldCheck, Pencil, Save, X, Trophy, Target, Flame, Trash2,
+  ShieldCheck, Pencil, Save, X, Trophy, Target, Flame, Trash2, AlertTriangle,
 } from 'lucide-react';
 
 // ─── Section Header ──────────────────────────────────────
@@ -51,10 +52,26 @@ function StatPill({ icon, value, label, color, bg }: {
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const { language, setLanguage } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving]   = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Dynamic stats fetched from the backend
+  const [stats, setStats] = useState({ examsCount: 0, avgScore: 0, practiceCount: 0 });
+
+  useEffect(() => {
+    getOverallProgress()
+      .then(data => {
+        setStats({
+          examsCount:    data.totalExamsTaken  ?? 0,
+          avgScore:      data.overallAccuracy  ?? 0,
+          practiceCount: data.totalAttempted   ?? 0,
+        });
+      })
+      .catch(() => { /* keep defaults */ });
+  }, []);
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -96,7 +113,7 @@ export default function ProfilePage() {
             <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
             <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
           </div>
-          <p className="text-sm text-muted-foreground font-medium">Loading profile…</p>
+          <p className="text-sm text-muted-foreground font-medium">{t('profile.loading')}</p>
         </div>
       </div>
     );
@@ -140,17 +157,17 @@ export default function ProfilePage() {
               <p className="text-muted-foreground text-sm font-medium">@{user.username}</p>
               <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary ring-1 ring-primary/20">
-                  Free Account
+                  {t('profile.badge_free')}
                 </span>
                 <span className="inline-flex items-center rounded-full bg-green-500/10 px-3 py-0.5 text-xs font-semibold text-green-600 dark:text-green-400 ring-1 ring-green-500/20">
-                  ✓ Verified
+                  {t('profile.badge_verified')}
                 </span>
               </div>
             </div>
 
             {/* Member since */}
             <div className="hidden sm:block text-end">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Member since</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{t('profile.member_since_label')}</p>
               <p className="text-foreground font-bold mt-0.5">{memberSince}</p>
             </div>
           </div>
@@ -165,25 +182,25 @@ export default function ProfilePage() {
             {/* Stats */}
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="pb-3">
-                <SectionHeader icon={<BarChart2 className="w-4 h-4" />} title="Statistics" />
+                <SectionHeader icon={<BarChart2 className="w-4 h-4" />} title={t('profile.section_statistics')} />
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-3">
-                <StatPill icon={<Trophy className="w-4 h-4" />} value="12"  label="Exams Taken"        color="text-amber-500" bg="bg-amber-500/10" />
-                <StatPill icon={<Target className="w-4 h-4" />} value="85%" label="Average Score"      color="text-green-500" bg="bg-green-500/10" />
-                <StatPill icon={<Flame  className="w-4 h-4" />} value="245" label="Practice Questions" color="text-blue-500"  bg="bg-blue-500/10"  />
+                <StatPill icon={<Trophy className="w-4 h-4" />} value={String(stats.examsCount)}             label={t('profile.stat_exams_taken')} color="text-amber-500" bg="bg-amber-500/10" />
+                <StatPill icon={<Target className="w-4 h-4" />} value={`${Math.round(stats.avgScore)}%`}      label={t('profile.stat_avg_score')}   color="text-green-500" bg="bg-green-500/10" />
+                <StatPill icon={<Flame  className="w-4 h-4" />} value={String(stats.practiceCount)}          label={t('profile.stat_practice_qs')} color="text-blue-500"  bg="bg-blue-500/10"  />
               </CardContent>
             </Card>
 
             {/* Account Status */}
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="pb-3">
-                <SectionHeader icon={<ShieldCheck className="w-4 h-4" />} title="Account Status" />
+                <SectionHeader icon={<ShieldCheck className="w-4 h-4" />} title={t('profile.section_account_status')} />
               </CardHeader>
               <CardContent className="space-y-2">
                 {[
-                  { label: 'Account Type',  value: <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">Free Account</Badge> },
-                  { label: 'Member Since',  value: <span className="text-xs font-semibold text-foreground">{memberSince}</span> },
-                  { label: 'Email Verified', value: <Badge className="bg-green-500/10 text-green-600 border-green-200 text-xs">✓ Verified</Badge> },
+                  { label: t('profile.account_type'),  value: <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">{t('profile.badge_free')}</Badge> },
+                  { label: t('profile.member_since'),  value: <span className="text-xs font-semibold text-foreground">{memberSince}</span> },
+                  { label: t('profile.email_verified'), value: <Badge className="bg-green-500/10 text-green-600 border-green-200 text-xs">{t('profile.badge_verified')}</Badge> },
                 ].map((row, i) => (
                   <div key={i} className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2.5">
                     <span className="text-xs text-muted-foreground font-medium">{row.label}</span>
@@ -202,14 +219,14 @@ export default function ProfilePage() {
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <SectionHeader icon={<User className="w-4 h-4" />} title="Personal Information" />
+                  <SectionHeader icon={<User className="w-4 h-4" />} title={t('profile.section_personal_info')} />
                   {!isEditing && (
                     <Button
                       variant="outline" size="sm"
                       onClick={() => setIsEditing(true)}
                       className="gap-1.5 text-xs h-8 hover:bg-primary/5 hover:border-primary/30 transition-all"
                     >
-                      <Pencil className="w-3 h-3" /> Edit
+                      <Pencil className="w-3 h-3" /> {t('profile.edit')}
                     </Button>
                   )}
                 </div>
@@ -217,8 +234,8 @@ export default function ProfilePage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   {[
-                    { id: 'firstName', label: 'First Name', key: 'firstName' },
-                    { id: 'lastName',  label: 'Last Name',  key: 'lastName'  },
+                    { id: 'firstName', label: t('profile.label_first_name'), key: 'firstName' },
+                    { id: 'lastName',  label: t('profile.label_last_name'),  key: 'lastName'  },
                   ].map(({ id, label, key }) => (
                     <div key={id} className="space-y-1.5">
                       <Label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
@@ -237,7 +254,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Email</Label>
+                  <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('profile.label_email')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                     <Input
@@ -251,25 +268,25 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="username" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Username</Label>
+                  <Label htmlFor="username" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('profile.label_username')}</Label>
                   <div className="relative">
                     <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                     <Input id="username" value={formData.username} disabled className="pl-9 h-10 bg-muted/50 text-muted-foreground" />
                   </div>
-                  <p className="text-xs text-muted-foreground">Username cannot be changed</p>
+                  <p className="text-xs text-muted-foreground">{t('profile.username_cannot_change')}</p>
                 </div>
 
                 {isEditing && (
                   <div className="flex gap-2 pt-1">
                     <Button onClick={handleSave} disabled={isSaving} size="sm" className="gap-2 shadow-md shadow-primary/20">
                       {isSaving ? (
-                        <><svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>Saving…</>
-                      ) : (
-                        <><Save className="w-3.5 h-3.5" />Save Changes</>
+                          <><svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>{t('profile.saving')}</>
+                        ) : (
+                          <><Save className="w-3.5 h-3.5" />{t('profile.save_changes')}</>
                       )}
                     </Button>
                     <Button variant="outline" size="sm" onClick={handleCancel} className="gap-2">
-                      <X className="w-3.5 h-3.5" /> Cancel
+                      <X className="w-3.5 h-3.5" /> {t('profile.cancel')}
                     </Button>
                   </div>
                 )}
@@ -279,11 +296,11 @@ export default function ProfilePage() {
             {/* Language Preferences */}
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="pb-4">
-                <SectionHeader icon={<Globe className="w-4 h-4" />} title="Language Preferences" />
+                <SectionHeader icon={<Globe className="w-4 h-4" />} title={t('profile.section_language_prefs')} />
               </CardHeader>
               <CardContent className="space-y-3">
                 <Label htmlFor="language" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Preferred Language
+                  {t('profile.label_preferred_language')}
                 </Label>
                 <Select value={language} onValueChange={(v) => setLanguage(v as 'en' | 'ar' | 'nl' | 'fr')}>
                   <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
@@ -293,25 +310,59 @@ export default function ProfilePage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">This language will be used for questions and interface</p>
+                <p className="text-xs text-muted-foreground">{t('profile.language_help')}</p>
               </CardContent>
             </Card>
 
             {/* Danger Zone */}
             <Card className="border-destructive/25 shadow-sm">
               <CardHeader className="pb-4">
-                <SectionHeader icon={<Trash2 className="w-4 h-4" />} title="Danger Zone" color="bg-destructive/10 text-destructive" />
+                <SectionHeader icon={<Trash2 className="w-4 h-4" />} title={t('profile.section_danger_zone')} color="bg-destructive/10 text-destructive" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <div className="flex items-center justify-between rounded-2xl border border-destructive/20 bg-destructive/5 px-5 py-4">
                   <div>
-                    <p className="font-bold text-destructive text-sm">Delete Account</p>
-                    <p className="text-xs text-destructive/60 mt-0.5">Permanently delete your account and all data</p>
+                    <p className="font-bold text-destructive text-sm">{t('profile.delete_account')}</p>
+                    <p className="text-xs text-destructive/60 mt-0.5">{t('profile.delete_account_desc')}</p>
                   </div>
-                  <Button variant="destructive" size="sm" className="gap-1.5 flex-shrink-0 text-xs">
-                    <Trash2 className="w-3 h-3" /> Delete
+                  <Button
+                    variant="destructive" size="sm"
+                    className="gap-1.5 flex-shrink-0 text-xs"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    <Trash2 className="w-3 h-3" /> {t('profile.delete')}
                   </Button>
                 </div>
+
+                {/* Confirmation panel */}
+                {showDeleteConfirm && (
+                  <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 space-y-3">
+                    <div className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      <p className="text-sm font-bold">{t('profile.delete_confirm_title') || 'Are you sure?'}</p>
+                    </div>
+                    <p className="text-xs text-destructive/70">{t('profile.delete_confirm_desc') || 'This action cannot be undone. All your data will be permanently deleted.'}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="destructive" size="sm"
+                        className="gap-1.5 text-xs"
+                        onClick={() => {
+                          setShowDeleteConfirm(false);
+                          toast.error(t('profile.delete_not_available') || 'Account deletion is not available yet. Please contact support.');
+                        }}
+                      >
+                        <Trash2 className="w-3 h-3" /> {t('profile.delete_confirm_btn') || 'Yes, delete my account'}
+                      </Button>
+                      <Button
+                        variant="outline" size="sm"
+                        className="text-xs"
+                        onClick={() => setShowDeleteConfirm(false)}
+                      >
+                        <X className="w-3 h-3 mr-1" /> {t('profile.cancel') || 'Cancel'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

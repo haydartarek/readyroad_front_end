@@ -8,7 +8,6 @@ const PROTECTED_ROUTES = [
   '/exam',
   '/practice',
   '/analytics',
-  '/progress',
   '/profile',
 ];
 
@@ -144,7 +143,6 @@ export const config = {
     '/exam/:path*',
     '/practice/:path*',
     '/analytics/:path*',
-    '/progress/:path*',
     '/profile/:path*',
     '/admin/:path*',
     '/login',

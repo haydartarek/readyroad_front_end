@@ -19,7 +19,7 @@ const STAT_CARDS = [
   { labelKey: 'analytics.overall_accuracy', subKey: 'analytics.across_all_categories', key: 'overall'   as const, color: 'text-primary',     format: (v: number) => `${v.toFixed(0)}%` },
   { labelKey: 'analytics.critical_areas',   subKey: 'analytics.below_50_accuracy',     key: 'critical'  as const, color: 'text-destructive', format: (v: number) => `${v}` },
   { labelKey: 'analytics.needs_practice',   subKey: 'analytics.between_50_70_accuracy',key: 'improving' as const, color: 'text-primary',     format: (v: number) => `${v}` },
-  { labelKey: 'analytics.strong_areas',     subKey: 'analytics.above_70_accuracy',     key: 'strong'    as const, color: 'text-secondary',   format: (v: number) => `${v}` },
+  { labelKey: 'analytics.strong_areas',     subKey: 'analytics.above_80_accuracy',     key: 'strong'    as const, color: 'text-secondary',   format: (v: number) => `${v}` },
 ] as const;
 
 // ─── Component ───────────────────────────────────────────
@@ -38,7 +38,7 @@ export function WeakAreaSummary({
   const stats = useMemo(() => ({
     overall:   overallAccuracy,
     critical:  weakAreas.filter(a => a.accuracy < 50).length,
-    improving: weakAreas.filter(a => a.accuracy >= 50 && a.accuracy < 70).length,
+    improving: weakAreas.filter(a => a.accuracy >= 50).length, // 50–<80% (all weakAreas are <80)
     strong:    totalCategories - weakAreas.length,
   }), [weakAreas, totalCategories, overallAccuracy]);
 

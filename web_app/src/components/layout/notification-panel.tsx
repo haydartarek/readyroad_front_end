@@ -43,6 +43,18 @@ function getTypeCfg(type: NotifType): TypeConfig {
   return TYPE_CONFIG[type] ?? DEFAULT_CFG;
 }
 
+/** Maps backend notification type → i18n key for translated title */
+const TYPE_I18N: Record<string, string> = {
+  EXAM_PASSED:     'notif.type.exam_passed',
+  EXAM_FAILED:     'notif.type.exam_failed',
+  EXAM_RESULT:     'notif.type.exam_result',
+  WEAK_AREA:       'notif.type.weak_area',
+  STREAK_ACHIEVED: 'notif.type.streak',
+  ACHIEVEMENT:     'notif.type.achievement',
+  STUDY_REMINDER:  'notif.type.reminder',
+  SYSTEM:          'notif.type.system',
+};
+
 // ─── Props ────────────────────────────────────────────────
 
 interface NotificationPanelProps {
@@ -153,7 +165,7 @@ export function NotificationPanel({ unreadCount, onAllRead }: NotificationPanelP
       {/* ── Panel ── */}
       {isOpen && (
         <div className={cn(
-          'absolute right-0 top-11 z-50 w-80 sm:w-96',
+          'absolute end-0 top-11 z-50 w-80 sm:w-96 max-w-[calc(100vw-1rem)]',
           'rounded-2xl border border-border/60 bg-popover shadow-xl',
           'animate-in fade-in-0 zoom-in-95 duration-150',
         )}>
@@ -202,8 +214,21 @@ export function NotificationPanel({ unreadCount, onAllRead }: NotificationPanelP
               // Notification list
               <ul className="divide-y divide-border/40" role="list">
                 {items.map(notif => {
-                  const cfg  = getTypeCfg(notif.type);
-                  const Icon = cfg.icon;
+                  const cfg           = getTypeCfg(notif.type);
+                  const Icon          = cfg.icon;
+                  const typeKey       = TYPE_I18N[notif.type];
+                  const displayTitle  = typeKey ? t(typeKey) : notif.title;
+                  const displayMessage = (() => {
+                    if (!notif.messageKey) return notif.message;
+                    try {
+                      const params = notif.messageParams
+                        ? JSON.parse(notif.messageParams) as Record<string, string | number>
+                        : undefined;
+                      return t(notif.messageKey, params);
+                    } catch {
+                      return notif.message;
+                    }
+                  })();
 
                   const content = (
                     <div
@@ -234,10 +259,10 @@ export function NotificationPanel({ unreadCount, onAllRead }: NotificationPanelP
                           'text-sm leading-tight',
                           notif.isRead ? 'font-medium text-foreground/80' : 'font-bold text-foreground',
                         )}>
-                          {notif.title}
+                          {displayTitle}
                         </p>
-                        <p className="mt-0.5 text-xs leading-snug text-muted-foreground line-clamp-2">
-                          {notif.message}
+                        <p dir="auto" className="mt-0.5 text-xs leading-snug text-muted-foreground line-clamp-2">
+                          {displayMessage}
                         </p>
                         <p className="mt-1 text-[10px] text-muted-foreground/70">
                           {timeAgo(notif.createdAt)}

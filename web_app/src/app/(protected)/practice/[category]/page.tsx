@@ -1,45 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'next/navigation';
-import { PracticeQuestionCard, AnswerFeedback } from '@/components/practice/practice-question-card';
-import { PracticeStats } from '@/components/practice/practice-stats';
-import { PracticeComplete } from '@/components/practice/practice-complete';
+import { useState, useEffect, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { SignImage } from '@/components/traffic-signs/sign-image';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { RefreshCw, ArrowLeft, BookOpen, Trophy, Lock, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
+import { getAllSignProgress, type SignUserProgress } from '@/services';
+import type { TrafficSign } from '@/lib/types';
 import { toast } from 'sonner';
-
-interface QuizAnswerOptionDTO {
-  id: number;
-  optionTextEn: string;
-  optionTextAr: string;
-  optionTextNl: string;
-  optionTextFr: string;
-  displayOrder: number;
-}
-
-interface QuizQuestionDTO {
-  id: number;
-  questionEn: string;
-  questionAr: string;
-  questionNl: string;
-  questionFr: string;
-  questionType: string;
-  difficultyLevel: string;
-  categoryId: number;
-  categoryCode: string;
-  categoryNameEn: string;
-  categoryNameAr: string;
-  categoryNameNl: string;
-  categoryNameFr: string;
-  contentImageUrl: string | null;
-  options: QuizAnswerOptionDTO[];
-}
 
 interface CategoryDTO {
   id: number;
@@ -48,26 +24,25 @@ interface CategoryDTO {
   nameAr: string;
   nameNl: string;
   nameFr: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  descriptionNl?: string;
+  descriptionFr?: string;
 }
 
-interface SubmitAnswerResponse {
-  questionId: number;
-  isCorrect: boolean;
-  selectedOptionId: number;
-  correctOptionId: number;
-  correctOptionTextEn: string;
-  correctOptionTextAr: string;
-  correctOptionTextNl: string;
-  correctOptionTextFr: string;
-  explanationEn: string | null;
-  explanationAr: string | null;
-  explanationNl: string | null;
-  explanationFr: string | null;
-  updatedAccuracy: number | null;
-  totalAttempts: number | null;
-  correctAttempts: number | null;
-  masteryLevel: string | null;
-}
+type Lang = 'en' | 'ar' | 'nl' | 'fr';
+
+const CATEGORY_LABELS: Record<string, Record<Lang, string>> = {
+  A: { en: 'Danger Signs',      ar: 'علامات الخطر',     nl: 'Gevaarsborden',        fr: 'Panneaux de danger' },
+  B: { en: 'Priority Signs',    ar: 'علامات الأولوية',   nl: 'Voorrangsborden',      fr: 'Panneaux de priorité' },
+  C: { en: 'Prohibition Signs', ar: 'علامات المنع',      nl: 'Verbodsborden',        fr: "Panneaux d'interdiction" },
+  D: { en: 'Mandatory Signs',   ar: 'علامات الإلزام',    nl: 'Gebodsborden',         fr: "Panneaux d'obligation" },
+  E: { en: 'Parking Signs',     ar: 'علامات الوقوف',     nl: 'Stilstaan en parkeren', fr: 'Stationnement' },
+  F: { en: 'Information Signs', ar: 'علامات المعلومات',  nl: 'Aanwijzingsborden',    fr: "Panneaux d'indication" },
+  G: { en: 'Zone Signs',        ar: 'علامات المناطق',    nl: 'Zoneborden',           fr: 'Panneaux de zone' },
+  M: { en: 'Additional Signs',  ar: 'لوحات إضافية',      nl: 'Onderborden',          fr: 'Panneaux additionnels' },
+  Z: { en: 'Delineation Signs', ar: 'علامات التحديد',    nl: 'Afbakeningsborden',    fr: 'Panneaux de délimitation' },
+};
 
 function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   return (
@@ -76,7 +51,7 @@ function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
         <div className="relative mx-auto w-16 h-16">
           <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
           <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-2xl">🧠</div>
+          <div className="absolute inset-0 flex items-center justify-center text-2xl">🚦</div>
         </div>
         <p className="text-base text-muted-foreground font-medium">{message}</p>
       </div>
@@ -84,65 +59,65 @@ function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   );
 }
 
-export default function PracticeQuestionsPage() {
+export default function PracticeSignsPage() {
   const params = useParams();
-  const categoryCode = params.category as string;
+  const router = useRouter();
+  const categoryCode = (params.category as string).toUpperCase();
   const { language, t } = useLanguage();
   const { isAuthenticated } = useAuth();
 
-  const [questions, setQuestions] = useState<QuizQuestionDTO[]>([]);
-  const [category, setCategory] = useState<CategoryDTO | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [category, setCategory]     = useState<CategoryDTO | null>(null);
+  const [signs, setSigns]           = useState<TrafficSign[]>([]);
+  const [progress, setProgress]     = useState<Record<string, SignUserProgress>>({});
+  const [isLoading, setIsLoading]   = useState(true);
+  const [error, setError]           = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
-  const [categoryNotFound, setCategoryNotFound] = useState(false);
-  // Abort in-flight requests when category changes or component unmounts
   const abortRef = useRef<AbortController | null>(null);
 
   const fetchData = async () => {
     abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    const signal = controller.signal;
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    const sig = ctrl.signal;
     try {
       setIsLoading(true);
       setError(null);
-      setCategoryNotFound(false);
-      let endpoint: string;
-      if (categoryCode === 'random') {
-        endpoint = '/smart-quiz/random?count=20';
-      } else {
-        const catResp = await apiClient.get<CategoryDTO>(`/categories/${categoryCode}`);
-        if (signal.aborted) return;
-        setCategory(catResp.data);
-        endpoint = `/smart-quiz/category/${catResp.data.id}?count=20`;
+
+      // 1. Fetch category info
+      const catResp = await apiClient.get<CategoryDTO>(`/categories/${categoryCode}`);
+      if (sig.aborted) return;
+      setCategory(catResp.data);
+
+      // 2. Fetch signs in this category
+      const signsResp = await apiClient.get<TrafficSign[]>(
+        `/traffic-signs/category/${catResp.data.id}`
+      );
+      if (sig.aborted) return;
+      setSigns(signsResp.data);
+
+      // 3. Optionally fetch user progress (only for logged-in users)
+      if (isAuthenticated) {
+        try {
+          const progressList = await getAllSignProgress();
+          if (!sig.aborted) {
+            const map: Record<string, SignUserProgress> = {};
+            progressList.forEach((p) => { map[p.signCode] = p; });
+            setProgress(map);
+          }
+        } catch {
+          // progress is optional — ignore failures
+        }
       }
-      const resp = await apiClient.get<QuizQuestionDTO[]>(endpoint);
-      if (signal.aborted) return;
-      setQuestions(resp.data);
-      setError(null);
     } catch (err) {
-      if (signal.aborted) return;
+      if (sig.aborted) return;
       if (isServiceUnavailable(err)) {
         setServiceUnavailable(true);
       } else {
-        // 404 → category code doesn't exist — show friendly "not found" UI (no toast, no log)
-        const status = (err as { response?: { status?: number } })?.response?.status;
-        if (status === 404) {
-          setCategoryNotFound(true);
-        } else {
-          logApiError('Failed to fetch quiz data', err);
-          const msg = t('practice.load_error');
-          setError(msg);
-          toast.error(msg);
-        }
+        logApiError('Failed to load signs for category', err);
+        setError('Failed to load signs. Please try again.');
       }
     } finally {
-      if (!signal.aborted) setIsLoading(false);
+      if (!sig.aborted) setIsLoading(false);
     }
   };
 
@@ -150,249 +125,191 @@ export default function PracticeQuestionsPage() {
     fetchData();
     return () => { abortRef.current?.abort(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryCode, t]);
-
-  const getQuestionText = (q: QuizQuestionDTO): string => {
-    const map: Record<string, string> = {
-      en: q.questionEn, ar: q.questionAr, nl: q.questionNl, fr: q.questionFr,
-    };
-    return map[language] || q.questionEn || '';
-  };
-
-  const getOptionText = (opt: QuizAnswerOptionDTO): string => {
-    const map: Record<string, string> = {
-      en: opt.optionTextEn, ar: opt.optionTextAr, nl: opt.optionTextNl, fr: opt.optionTextFr,
-    };
-    return map[language] || opt.optionTextEn || '';
-  };
-
-  const getExplanationFromResponse = (resp: SubmitAnswerResponse): string | undefined => {
-    const map: Record<string, string | null> = {
-      en: resp.explanationEn, ar: resp.explanationAr,
-      nl: resp.explanationNl, fr: resp.explanationFr,
-    };
-    return (map[language] || resp.explanationEn) ?? undefined;
-  };
+  }, [categoryCode, isAuthenticated]);
 
   const getCategoryName = (): string => {
-    if (categoryCode === 'random') return t('practice.random');
-    const src = category ?? (questions[0] ? {
-      nameEn: questions[0].categoryNameEn, nameAr: questions[0].categoryNameAr,
-      nameNl: questions[0].categoryNameNl, nameFr: questions[0].categoryNameFr,
-    } : null);
-    if (!src) return categoryCode;
-    const map: Record<string, string> = {
-      en: src.nameEn, ar: src.nameAr, nl: src.nameNl, fr: src.nameFr,
-    };
-    return map[language] || src.nameEn;
+    if (category) {
+      const map: Record<string, string | undefined> = {
+        en: category.nameEn, ar: category.nameAr,
+        nl: category.nameNl, fr: category.nameFr,
+      };
+      return map[language] || category.nameEn;
+    }
+    return CATEGORY_LABELS[categoryCode]?.[language as Lang] ?? categoryCode;
   };
 
-  const getCategoryCode = (): string =>
-    category?.code ?? questions[0]?.categoryCode ?? categoryCode;
-
-  const submitAnswer = useCallback(async (
-    questionId: number,
-    selectedOptionId: number,
-  ): Promise<AnswerFeedback> => {
-    const resp = await apiClient.post<SubmitAnswerResponse>(
-      `/quiz/questions/${questionId}/answer`,
-      { selectedOptionId },
-    );
-    const data = resp.data;
-    if (data.isCorrect) setCorrectCount((prev) => prev + 1);
-    else setWrongCount((prev) => prev + 1);
-    setTimeout(() => {
-      if (currentIndex < questions.length - 1) setCurrentIndex((prev) => prev + 1);
-      else setIsComplete(true);
-    }, 2000);
-    return {
-      isCorrect: data.isCorrect,
-      correctOptionId: String(data.correctOptionId),
-      explanation: getExplanationFromResponse(data),
+  const getSignName = (sign: TrafficSign): string => {
+    const map: Record<string, string> = {
+      en: sign.nameEn, ar: sign.nameAr, nl: sign.nameNl, fr: sign.nameFr,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, questions.length, language]);
+    return map[language] || sign.nameEn || sign.signCode;
+  };
 
-  const handleRestart = useCallback(() => {
-    setCurrentIndex(0);
-    setCorrectCount(0);
-    setWrongCount(0);
-    setIsComplete(false);
-  }, []);
-
-  if (isLoading) return <LoadingSpinner message={t('practice.loading')} />;
+  if (isLoading) return <LoadingSpinner message="Loading signs..." />;
 
   if (serviceUnavailable) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="flex min-h-screen items-center justify-center px-4">
         <ServiceUnavailableBanner
-          onRetry={() => { setServiceUnavailable(false); setError(null); fetchData(); }}
+          onRetry={() => { setServiceUnavailable(false); fetchData(); }}
           className="max-w-md"
         />
       </div>
     );
   }
 
-  if (categoryNotFound) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="max-w-sm w-full text-center space-y-4">
-          <div className="text-6xl">🔍</div>
-          <h2 className="text-2xl font-black tracking-tight">
-            {t('practice.category_not_found_title')}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t('practice.category_not_found_hint').replace('{code}', categoryCode)}
-          </p>
-          <Button
-            onClick={() => window.history.back()}
-            variant="outline"
-            className="gap-2 w-full"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('practice.go_back') || 'Go Back'}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="flex min-h-screen items-center justify-center px-4">
         <div className="max-w-md w-full text-center space-y-4">
           <div className="text-6xl">⚠️</div>
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
           <Button onClick={fetchData} className="gap-2 w-full">
-            <RefreshCw className="w-4 h-4" />
-            {t('practice.retry') || 'Try Again'}
+            <RefreshCw className="w-4 h-4" /> Try Again
           </Button>
         </div>
       </div>
     );
   }
 
-  if (questions.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="max-w-sm w-full text-center space-y-4">
-          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 flex items-center justify-center mx-auto">
-            <span className="text-4xl">🔄</span>
-          </div>
-          <h2 className="text-2xl font-black tracking-tight">
-            {t('practice.no_questions_title') || 'No Questions Available'}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t('practice.no_questions_hint') || 'There are no deliverable questions in this category right now. Please try another category or check back later.'}
-          </p>
-          <div className="rounded-xl border border-amber-300/40 bg-amber-500/10 px-4 py-3 text-left">
-            <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-              💡 <strong>Tip:</strong> Try the <strong>Random Practice</strong> for questions across all categories, or come back after 24 hours for fresh questions.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Button
-              onClick={() => window.location.href = '/practice/random'}
-              className="gap-2 w-full"
-            >
-              <RefreshCw className="w-4 h-4" />
-              {'Try Random Practice'}
-            </Button>
-            <Button
-              onClick={() => window.history.back()}
-              variant="outline"
-              className="gap-2 w-full"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {t('practice.go_back') || 'Go Back'}
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const totalAttempted = correctCount + wrongCount;
-  const accuracy = totalAttempted > 0 ? (correctCount / totalAttempted) * 100 : 0;
-
-  if (isComplete) {
-    return (
-      <PracticeComplete
-        categoryName={getCategoryName()}
-        totalQuestions={questions.length}
-        correctAnswers={correctCount}
-        wrongAnswers={wrongCount}
-        accuracy={accuracy}
-        onRestart={handleRestart}
-      />
-    );
-  }
-
-  const currentQuestion = questions[currentIndex];
-
-  const mappedQuestion = {
-    id: String(currentQuestion.id),
-    text: getQuestionText(currentQuestion),
-    imageUrl: currentQuestion.contentImageUrl ?? undefined,
-    options: (currentQuestion.options || [])
-      .map((opt) => ({ id: String(opt.id), text: getOptionText(opt) }))
-      .filter((opt) => opt.text.trim() !== ''),
-    categoryCode: getCategoryCode(),
-    categoryName: getCategoryName(),
-  };
+  const isRtl = language === 'ar';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background py-8">
-      <div className="container mx-auto max-w-4xl px-4">
-        <div className="space-y-5">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background">
+      <div className="container mx-auto max-w-6xl px-4 py-10 space-y-8">
 
-          {/* Guest Banner */}
-          {!isAuthenticated && (
-            <div className="rounded-2xl border border-amber-300/50 bg-amber-500/10 px-4 py-3 flex items-start gap-3">
-              <span className="text-xl flex-shrink-0">👋</span>
-              <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
-                {t('practice.guest_banner')}
-              </p>
-            </div>
-          )}
-
-          {/* Progress Header */}
-          <div className="flex items-center justify-between rounded-2xl bg-card border border-border/40 px-5 py-3 shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🧠</span>
-              <div>
-                <p className="text-xs text-muted-foreground">Category</p>
-                <p className="text-sm font-bold leading-tight">{getCategoryName()}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-sm">
-              <span className="font-black text-primary text-lg">{currentIndex + 1}</span>
-              <span className="text-muted-foreground">/</span>
-              <span className="font-semibold text-muted-foreground">{questions.length}</span>
-            </div>
+        {/* Header */}
+        <div className="space-y-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/practice')}
+            className="gap-2 text-muted-foreground hover:text-foreground -ml-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('practice.signs.back')}
+          </Button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-black tracking-tight">{getCategoryName()}</h1>
+            <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+              {t('practice.signs.count', { count: signs.length })}
+            </span>
           </div>
-
-          {/* Stats */}
-          <PracticeStats
-            totalQuestions={questions.length}
-            currentQuestion={currentIndex + 1}
-            correctAnswers={correctCount}
-            wrongAnswers={wrongCount}
-            accuracy={accuracy}
-          />
-
-          {/* Question Card */}
-          <PracticeQuestionCard
-            key={currentQuestion.id}
-            question={mappedQuestion}
-            onSubmitAnswer={(selectedOptionId) =>
-              submitAnswer(currentQuestion.id, Number(selectedOptionId))
-            }
-          />
-
+          <p className="text-muted-foreground">
+            {t('practice.signs.choose')}
+          </p>
         </div>
+
+        {/* Signs Grid */}
+        {signs.length === 0 ? (
+          <div className="text-center py-20 space-y-3">
+            <div className="text-6xl">🔍</div>
+            <p className="text-muted-foreground">{t('practice.signs.none')}</p>
+            <Button variant="outline" onClick={() => router.push('/practice')}>
+              <ArrowLeft className="w-4 h-4 mr-2" /> {t('practice.signs.none_back')}
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {signs.map((sign) => {
+              const prog = progress[sign.signCode];
+              const exam1Passed   = prog?.exam1Passed   ?? false;
+              const exam2Unlocked = prog?.exam2Unlocked ?? false;
+              const practiceCompleted = prog?.practiceCompleted ?? false;
+
+              return (
+                <Card
+                  key={sign.signCode}
+                  className="group flex flex-col rounded-2xl border border-border/40 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-primary/30 transition-all duration-200 bg-card overflow-hidden"
+                >
+                  {/* Sign image */}
+                  <div className="relative flex items-center justify-center bg-muted/20 h-32">
+                    <div className="w-24 h-24 flex items-center justify-center">
+                      <SignImage
+                        src={sign.imageUrl}
+                        alt={getSignName(sign)}
+                        className="object-contain w-full h-full drop-shadow-sm"
+                      />
+                    </div>
+                    {practiceCompleted && isAuthenticated && (
+                      <div className="absolute top-2.5 right-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      </div>
+                    )}
+                  </div>
+
+                  <CardContent className="flex flex-col flex-1 gap-4 p-4 pt-3">
+                    {/* Sign name + code */}
+                    <div className="space-y-1.5">
+                      <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0 tracking-wide">
+                        {sign.signCode}
+                      </Badge>
+                      <p className="text-sm font-semibold leading-snug line-clamp-2 text-foreground min-h-[2.75rem]">
+                        {getSignName(sign)}
+                      </p>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex flex-col gap-2 mt-auto">
+                      <Link href={`/traffic-signs/${sign.signCode}/practice`} className="w-full">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="w-full gap-2 text-sm h-9 rounded-xl font-semibold transition-all duration-150 hover:shadow-sm"
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                          {t('practice.signs.practice_btn')}
+                        </Button>
+                      </Link>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link href={`/traffic-signs/${sign.signCode}/exam/1`} className="w-full">
+                          <Button
+                            size="sm"
+                            variant={exam1Passed ? 'outline' : 'secondary'}
+                            className="w-full gap-1.5 text-xs h-8 rounded-xl font-semibold transition-all duration-150 hover:shadow-sm"
+                          >
+                            {exam1Passed
+                              ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                              : <Trophy className="w-3 h-3" />
+                            }
+                            {t('practice.signs.exam1')}
+                          </Button>
+                        </Link>
+
+                        {exam2Unlocked ? (
+                          <Link href={`/traffic-signs/${sign.signCode}/exam/2`} className="w-full">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="w-full gap-1.5 text-xs h-8 rounded-xl font-semibold transition-all duration-150 hover:shadow-sm"
+                            >
+                              <Trophy className="w-3 h-3" />
+                              {t('practice.signs.exam2')}
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled
+                            className="w-full gap-1.5 text-xs h-8 rounded-xl font-medium opacity-40 cursor-not-allowed"
+                          >
+                            <Lock className="w-3 h-3" />
+                            {t('practice.signs.exam2')}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
       </div>
     </div>
   );

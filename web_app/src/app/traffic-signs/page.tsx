@@ -9,6 +9,7 @@ import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-ba
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { RefreshCw } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 // ─── Constants ──────────────────────────────────────────
 
@@ -19,12 +20,10 @@ const CODE_TO_KEY: Record<string, string> = {
   Z: 'ZONE',
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  DANGER:      'Danger Signs',        PRIORITY:    'Priority Signs',
-  PROHIBITION: 'Prohibition Signs',   MANDATORY:   'Mandatory Signs',
-  PARKING:     'Parking Signs',       INFORMATION: 'Information Signs',
-  ADDITIONAL:  'Supplementary Signs', TEMPORARY:   'Temporary Signs',
-  ZONE:        'Zone Signs',          DELINEATION: 'Delineation Signs',
+const CATEGORY_KEY_SUFFIX: Record<string, string> = {
+  DANGER:      'danger',   PRIORITY:    'priority',  PROHIBITION: 'prohibition',
+  MANDATORY:   'mandatory', PARKING:    'parking',   INFORMATION: 'information',
+  ADDITIONAL:  'supplementary', TEMPORARY: 'temporary', ZONE: 'zone', DELINEATION: 'delineation',
 };
 
 const KEY_TO_CODES: Record<string, string[]> = {};
@@ -65,13 +64,14 @@ export default function TrafficSignsPage() {
 // ─── Shared states ───────────────────────────────────────
 
 function LoadingState() {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
           <RefreshCw className="w-6 h-6 text-primary animate-spin" />
         </div>
-        <p className="text-sm text-muted-foreground">Loading traffic signs...</p>
+        <p className="text-sm text-muted-foreground">{t('traffic_signs.loading')}</p>
       </div>
     </div>
   );
@@ -80,6 +80,7 @@ function LoadingState() {
 // ─── Content ─────────────────────────────────────────────
 
 function TrafficSignsContent() {
+  const { t }    = useLanguage();
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
@@ -151,12 +152,16 @@ function TrafficSignsContent() {
       counts[key] = (counts[key] || 0) + 1;
     }
     return [
-      { value: 'all', label: 'All Signs', count: allSigns.length },
+      { value: 'all', label: t('traffic_signs.category_all_signs'), count: allSigns.length },
       ...Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
-        .map(([key, count]) => ({ value: key, label: CATEGORY_LABELS[key] || key, count })),
+        .map(([key, count]) => ({
+          value: key,
+          label: CATEGORY_KEY_SUFFIX[key] ? t(`traffic_signs.category_${CATEGORY_KEY_SUFFIX[key]}`) : key,
+          count,
+        })),
     ];
-  }, [allSigns]);
+  }, [allSigns, t]);
 
   // ── States ──
   if (serviceUnavailable) {
@@ -178,11 +183,10 @@ function TrafficSignsContent() {
         {/* Header */}
         <div className="mb-12 text-center space-y-3">
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
-            Belgian Traffic Signs
+            {t('traffic_signs.page_title')}
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Learn all Belgian traffic signs with detailed explanations in 4 languages.
-            Essential for passing your driving license exam.
+            {t('traffic_signs.page_subtitle')}
           </p>
         </div>
 
@@ -202,15 +206,15 @@ function TrafficSignsContent() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {filteredSigns.length} signs
+            {t('traffic_signs.results_count', { count: filteredSigns.length })}
           </span>
           {filteredSigns.length !== allSigns.length && (
             <span className="text-sm text-muted-foreground">
-              filtered from <span className="font-medium text-foreground">{allSigns.length}</span> total
+              {t('traffic_signs.filtered_from')} <span className="font-medium text-foreground">{allSigns.length}</span> {t('traffic_signs.total')}
             </span>
           )}
           {filteredSigns.length === allSigns.length && (
-            <span className="text-sm text-muted-foreground">showing all signs</span>
+            <span className="text-sm text-muted-foreground">{t('traffic_signs.showing_all')}</span>
           )}
         </div>
 
@@ -221,9 +225,9 @@ function TrafficSignsContent() {
         {filteredSigns.length === 0 && (
           <div className="py-20 text-center space-y-2">
             <div className="text-5xl mb-4">🚧</div>
-            <p className="text-lg font-semibold text-foreground">No signs found</p>
+            <p className="text-lg font-semibold text-foreground">{t('traffic_signs.no_results_title')}</p>
             <p className="text-sm text-muted-foreground">
-              Try adjusting your filters or search query.
+              {t('traffic_signs.no_results_desc')}
             </p>
           </div>
         )}

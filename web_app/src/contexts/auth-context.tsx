@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ROUTES } from '@/lib/constants';
+import { useLanguage } from '@/contexts/language-context';
 import { type User, type LoginRequest } from '@/lib/types';
 import { isUnavailableStatus, logApiError } from '@/lib/api';
 
@@ -74,6 +75,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
 // ─── Provider ────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   const [user,               setUser]               = useState<User | null>(null);
   const [isLoading,          setIsLoading]          = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
@@ -155,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const raw = await response.json();
       setUser(normalizeUser(raw));
-      toast.success('Welcome back!');
+      toast.success(t('auth.toast.welcome_back'));
 
       // Full reload so middleware sees the new HttpOnly cookie
       window.location.href = redirectPath ?? ROUTES.DASHBOARD;
@@ -177,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // we navigate away — otherwise the middleware still sees a valid
     // token and lets any subsequent /dashboard request through.
     await clearAuth();
-    toast.info('You have been logged out');
+    toast.info(t('auth.toast.logged_out'));
     // Full page reload (not client-side push) so:
     //  1. All React state is wiped (no stale dashboard data)
     //  2. Middleware re-evaluates the request fresh (no cookie → redirects to login)

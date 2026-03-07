@@ -14,13 +14,15 @@ export interface WeakArea {
   totalCount:         number;
   /** Accuracy 0-100 (mapped from backend currentAccuracy) */
   accuracy:           number;
-  averageTime:        string;
+  /** Estimated practice time (e.g., "11 min") — recommended time, not avg session time */
+  estimatedTime:      string;
   commonMistakes:     string[];
   recommendedLessons: Array<{ code: string; title: string }>;
   /** Extra fields from backend for rich display */
   accuracyGap?:          number;
   recommendedQuestions?: number;
   estimatedTimeMinutes?: number;
+  recommendedDifficulty?: string;
   priority?:             number;
   categoryId?:           number;
 }
@@ -34,20 +36,30 @@ export interface WeakAreasData {
 
 /**
  * Raw shape returned by backend GET /users/me/analytics/weak-areas
- * The endpoint returns a plain JSON array of these objects.
+ * The endpoint returns a WeakAreasOverviewResponse wrapper object.
  */
 interface WeakAreaRecommendationResponse {
-  categoryId:           number;
-  categoryCode:         string;
-  categoryName:         string;
-  currentAccuracy:      number;   // backend field name (NOT "accuracy")
-  targetAccuracy:       number;
-  accuracyGap:          number;
-  recommendedQuestions: number;
+  categoryId:            number;
+  categoryCode:          string;
+  categoryName:          string;
+  currentAccuracy:       number;
+  targetAccuracy:        number;
+  accuracyGap:           number;
+  recommendedQuestions:  number;
   recommendedDifficulty: string;
-  estimatedTimeMinutes: number;
-  priority:             number;
-  questionsAttempted:   number;   // added in latest backend fix
+  estimatedTimeMinutes:  number;
+  priority:              number;
+  questionsAttempted:    number;
+}
+
+/**
+ * Wrapper returned by backend GET /users/me/analytics/weak-areas
+ * Contains weak-area list plus accurate summary statistics.
+ */
+interface WeakAreasOverviewResponse {
+  weakAreas:               WeakAreaRecommendationResponse[];
+  totalPracticedCategories: number;
+  overallAccuracy:         number;
 }
 
 export interface ErrorPattern {
@@ -91,45 +103,46 @@ const ERROR_PATTERNS_FALLBACK: ErrorPatternsData = {
 // ─── Helpers ─────────────────────────────────────────────
 
 /**
- * Transform backend WeakAreaRecommendationResponse[] (plain array)
- * into the WeakAreasData shape that frontend components expect.
+ * Transform backend WeakAreasOverviewResponse into the WeakAreasData shape
+ * that frontend components expect.
  *
  * Key mappings:
- *   backend.currentAccuracy    → frontend.accuracy
- *   backend.questionsAttempted → frontend.totalCount
+ *   backend.weakAreas[*].currentAccuracy    → frontend.accuracy
+ *   backend.weakAreas[*].questionsAttempted → frontend.totalCount
+ *   backend.overallAccuracy                 → WeakAreasData.overallAccuracy (real value)
+ *   backend.totalPracticedCategories        → WeakAreasData.totalCategories  (real value)
  */
-function transformWeakAreas(backendList: WeakAreaRecommendationResponse[]): WeakAreasData {
-  if (!Array.isArray(backendList) || backendList.length === 0) {
+function transformWeakAreas(backend: WeakAreasOverviewResponse): WeakAreasData {
+  if (!backend || !Array.isArray(backend.weakAreas)) {
     return WEAK_AREAS_FALLBACK;
   }
 
-  const weakAreas: WeakArea[] = backendList.map((item) => ({
-    categoryCode:        item.categoryCode        ?? '',
-    categoryName:        item.categoryName        ?? '',
-    accuracy:            item.currentAccuracy     ?? 0,   // ← key fix
-    totalCount:          item.questionsAttempted  ?? 0,   // ← key fix
-    correctCount:        Math.round(
-                           ((item.currentAccuracy ?? 0) / 100) *
-                           (item.questionsAttempted ?? 0)
-                         ),
-    averageTime:         `${item.estimatedTimeMinutes ?? 0} min`,
-    commonMistakes:      [],
-    recommendedLessons:  [],
-    accuracyGap:          item.accuracyGap,
-    recommendedQuestions: item.recommendedQuestions,
-    estimatedTimeMinutes: item.estimatedTimeMinutes,
-    priority:             item.priority,
-    categoryId:           item.categoryId,
+  const weakAreas: WeakArea[] = backend.weakAreas.map((item) => ({
+    categoryCode:         item.categoryCode        ?? '',
+    categoryName:         item.categoryName        ?? '',
+    accuracy:             item.currentAccuracy     ?? 0,
+    totalCount:           item.questionsAttempted  ?? 0,
+    correctCount:         Math.round(
+                            ((item.currentAccuracy ?? 0) / 100) *
+                            (item.questionsAttempted ?? 0)
+                          ),
+    estimatedTime:        `${item.estimatedTimeMinutes ?? 0} min`,
+    commonMistakes:       [],
+    recommendedLessons:   [],
+    accuracyGap:           item.accuracyGap,
+    recommendedQuestions:  item.recommendedQuestions,
+    estimatedTimeMinutes:  item.estimatedTimeMinutes,
+    recommendedDifficulty: item.recommendedDifficulty,
+    priority:              item.priority,
+    categoryId:            item.categoryId,
   }));
-
-  // Overall accuracy = average of weak-area accuracies
-  const overallAccuracy =
-    weakAreas.reduce((sum, a) => sum + a.accuracy, 0) / weakAreas.length;
 
   return {
     weakAreas,
-    overallAccuracy: Math.round(overallAccuracy * 10) / 10,
-    totalCategories: weakAreas.length,
+    // Use the real overall accuracy supplied by the backend (all practiced categories)
+    overallAccuracy: Math.round((backend.overallAccuracy ?? 0) * 10) / 10,
+    // Use the real total from backend so "Strong Areas" = total - weak.length is correct
+    totalCategories: backend.totalPracticedCategories ?? weakAreas.length,
     recommendations: [],
   };
 }
@@ -139,13 +152,12 @@ function transformWeakAreas(backendList: WeakAreaRecommendationResponse[]): Weak
 /**
  * GET /api/users/me/analytics/weak-areas
  *
- * Backend returns: WeakAreaRecommendationResponse[] (plain JSON array)
+ * Backend returns: WeakAreasOverviewResponse { weakAreas[], totalPracticedCategories, overallAccuracy }
  * Frontend expects: WeakAreasData { weakAreas[], overallAccuracy, totalCategories }
  */
 export async function getWeakAreas(): Promise<WeakAreasData> {
   try {
-    // Backend returns a plain array – type it correctly
-    const response = await apiClient.get<WeakAreaRecommendationResponse[]>(ENDPOINTS.WEAK_AREAS);
+    const response = await apiClient.get<WeakAreasOverviewResponse>(ENDPOINTS.WEAK_AREAS);
     return transformWeakAreas(response.data);
   } catch (error) {
     if (isServiceUnavailable(error)) throw error;

@@ -31,7 +31,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export function Footer() {
   const { t, language, setLanguage, isRTL } = useLanguage();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const learnLinks = [
     { label: t('home.footer.exam_sim'),   href: '/exam',          icon: GraduationCap },
@@ -42,13 +42,12 @@ export function Footer() {
 
   const accountLinks = user
     ? [
-        { label: t('home.footer.profile'),  href: '/profile',     icon: UserCircle },
-        { label: t('home.footer.progress'), href: '/progress',    icon: BarChart3 },
-        { label: t('home.footer.logout'),   href: '/auth/logout', icon: LogOut },
+        { label: t('home.footer.profile'),  href: '/profile',   icon: UserCircle },
+        { label: t('home.footer.progress'), href: '/dashboard', icon: BarChart3 },
       ]
     : [
-        { label: t('home.footer.login'),    href: '/auth/login',    icon: LogIn },
-        { label: t('home.footer.register'), href: '/auth/register', icon: UserPlus },
+        { label: t('home.footer.login'),    href: '/login',    icon: LogIn },
+        { label: t('home.footer.register'), href: '/register', icon: UserPlus },
       ];
 
   const popularLinks = [
@@ -179,6 +178,19 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              {user && (
+                <li>
+                  <button
+                    onClick={() => logout()}
+                    className="group inline-flex items-center gap-2 text-sm text-secondary-foreground/65 transition-colors hover:text-secondary-foreground"
+                  >
+                    <span className="inline-flex w-5 justify-center">
+                      <LogOut className="h-3.5 w-3.5 text-primary/70 transition-colors group-hover:text-primary" />
+                    </span>
+                    {t('home.footer.logout')}
+                  </button>
+                </li>
+              )}
             </ul>
           </nav>
 

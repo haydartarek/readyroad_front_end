@@ -4,9 +4,9 @@ import {
   TrendingUp,
   TrendingDown,
   ClipboardList,
-  BarChart2,
   CheckCircle2,
-  Flame,
+  XCircle,
+  Award,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,8 @@ interface ProgressData {
   averageScore: number;
   passRate: number;
   currentStreak: number;
+  passedExams: number;
+  failedExams: number;
 }
 
 type Trend = 'up' | 'down' | 'neutral';
@@ -86,27 +88,31 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
       icon: ClipboardList,
     },
     {
-      label:      t('dashboard.metric_avg_score'),
-      value:      `${data.averageScore.toFixed(1)}%`,
-      icon:       BarChart2,
-      trend:      data.averageScore >= 82 ? 'up' : 'neutral',
+      label:      t('dashboard.metric_passed') || 'Passed',
+      value:      data.passedExams,
+      icon:       CheckCircle2,
+      trend:      data.passedExams > 0 ? 'up' : 'neutral',
       trendLabel: trendUp.label,
       trendClass: trendUp.className,
       TrendIcon:  trendUp.icon,
     },
     {
+      label:      t('dashboard.metric_failed') || 'Failed',
+      value:      data.failedExams,
+      icon:       XCircle,
+      trend:      data.failedExams > 0 ? 'down' : 'neutral',
+      trendLabel: trendDown.label,
+      trendClass: trendDown.className,
+      TrendIcon:  trendDown.icon,
+    },
+    {
       label:      t('dashboard.metric_pass_rate'),
       value:      `${data.passRate.toFixed(1)}%`,
-      icon:       CheckCircle2,
-      trend:      data.passRate >= 70 ? 'up' : 'down',
+      icon:       Award,
+      trend:      data.passRate >= 70 ? 'up' : data.passRate > 0 ? 'down' : 'neutral',
       trendLabel: data.passRate >= 70 ? trendUp.label : trendDown.label,
       trendClass: data.passRate >= 70 ? trendUp.className : trendDown.className,
       TrendIcon:  data.passRate >= 70 ? trendUp.icon : trendDown.icon,
-    },
-    {
-      label: t('dashboard.metric_current_streak'),
-      value: `${data.currentStreak} ${t('dashboard.stat_streak_days')}`,
-      icon:  Flame,
     },
   ];
 
@@ -114,7 +120,7 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
     <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-extrabold tracking-tight text-secondary">
-          {t('dashboard.progress_title')}
+          {t('dashboard.exam_performance_title') || 'Exam Performance'}
         </CardTitle>
       </CardHeader>
 

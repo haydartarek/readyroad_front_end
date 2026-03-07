@@ -21,10 +21,13 @@ const nextConfig: NextConfig = {
   output: 'standalone',
 
   async rewrites() {
+    const backendBase =
+      process.env.BACKEND_URL?.replace('/api', '') ??
+      'http://localhost:8890';
     return [
       {
         source: '/images/:path*',
-        destination: 'http://localhost:8890/images/:path*',
+        destination: `${backendBase}/images/:path*`,
       },
     ];
   },

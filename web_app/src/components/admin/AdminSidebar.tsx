@@ -18,6 +18,7 @@ import {
 // ─── Sidebar ─────────────────────────────────────────────
 
 export default function AdminSidebar() {
+  const { logout: authLogout } = useAuth();
   const pathname = usePathname();
   const router   = useRouter();
   const { user } = useAuth();
@@ -124,7 +125,7 @@ export default function AdminSidebar() {
           {t('admin.sidebar.back_to_site')}
         </Link>
         <button
-          onClick={() => router.push('/auth/logout')}
+          onClick={() => authLogout()}
           className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
         >
           <LogOut className="h-4 w-4 flex-shrink-0" />

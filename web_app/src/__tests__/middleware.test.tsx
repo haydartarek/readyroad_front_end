@@ -15,14 +15,12 @@ describe('Middleware Logic', () => {
             '/exam',
             '/practice',
             '/analytics',
-            '/progress',
             '/profile',
         ];
         expect(protectedRoutes).toContain('/dashboard');
         expect(protectedRoutes).toContain('/exam');
         expect(protectedRoutes).toContain('/analytics');
         expect(protectedRoutes).toContain('/practice');
-        expect(protectedRoutes).toContain('/progress');
         expect(protectedRoutes).toContain('/profile');
     });
 

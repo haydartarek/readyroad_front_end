@@ -18,6 +18,12 @@ const FOLDER_NAME_MAP: Record<string, string> = {
 // ─── Constants ───────────────────────────────────────────
 
 const ASSET_PREFIX_MAP: [prefix: string, replacement: string][] = [
+  // Backend API image URLs (stored incorrectly in DB) — strip the API prefix
+  ['/api/traffic-signs/image/assets/signs/', '/images/signs/'],
+  ['/api/traffic-signs/image/signs/',        '/images/signs/'],
+  ['/api/traffic-signs/image/assets/',       '/images/'],
+  ['/api/traffic-signs/image/',              '/images/signs/'],
+  // Standard asset paths
   ['assets/traffic_signs/', '/images/signs/'],
   ['assets/signs/',         '/images/signs/'],
   ['assets/',               '/images/'],
@@ -59,6 +65,10 @@ export function convertToPublicImageUrl(src: string | undefined): string | undef
       break;
     }
   }
+
+  // Percent-encode special characters in each path segment (commas, &, +, apostrophes, etc.)
+  // so Next.js static file server can resolve filenames with these characters.
+  path = path.split('/').map(segment => encodeURIComponent(segment)).join('/');
 
   return path;
 }

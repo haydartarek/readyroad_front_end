@@ -71,3 +71,28 @@ export { default as userService }      from './userService';
 export { default as analyticsService } from './analyticsService';
 export { default as progressService }  from './progressService';
 export { default as lessonService }    from './lessonService';
+
+// ─── Sign Quiz ────────────────────────────────────────────
+
+export {
+  getActiveSigns,
+  startPracticeSession,
+  submitPracticeAnswer,
+  getPracticeResults,
+  getExamQuestions,
+  submitExam,
+  getSignStatus,
+  getAllSignProgress,
+  type SignChoice,
+  type SignQuizQuestion,
+  type SignPracticeSession,
+  type SubmitAnswerRequest,
+  type SignPracticeAnswerResponse,
+  type PracticeAnswerDetail,
+  type SignPracticeResult,
+  type SignExamQuestions,
+  type SignExamAnswerItem,
+  type ExamQuestionResult,
+  type SignExamResult,
+  type SignUserProgress,
+} from './signQuizService';

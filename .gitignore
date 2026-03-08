@@ -1,25 +1,12 @@
-﻿*.md
-*.py
-*.ps1
-.claude
-.claude/
-claude
-claude/
-*claude*
+﻿.env
 
-# frontend build & deps
 node_modules/
 dist/
 build/
 .next/
-coverage/
 
-
-.env
-.env.local
-
-
-# logs and text files
+logs/
 *.log
 *.txt
 
+.idea/

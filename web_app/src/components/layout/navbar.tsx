@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, ChevronDown, Menu, X,
-  User, LogOut, BarChart3, Settings, Shield, LayoutDashboard,
+  User, LogOut, Settings, Shield, LayoutDashboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,21 +29,16 @@ type UserRole = 'ADMIN' | 'MODERATOR' | 'USER';
 
 // ─── Constants ───────────────────────────────────────────
 
-const PRIMARY_NAV = [
-  { name: 'nav.home',      href: '/'              },
-  { name: 'nav.dashboard', href: ROUTES.DASHBOARD },
-  { name: 'nav.exam',      href: ROUTES.EXAM      },
-  { name: 'nav.practice',  href: ROUTES.PRACTICE  },
-] as const;
-
-const SECONDARY_NAV = [
+// All nav items in learning-funnel order (Profile lives in user avatar dropdown)
+const NAV_ITEMS = [
+  { name: 'nav.home',          href: '/'                         },
+  { name: 'nav.dashboard',     href: ROUTES.DASHBOARD            },
+  { name: 'nav.lessons',       href: ROUTES.LESSONS              },
+  { name: 'nav.practice',      href: ROUTES.PRACTICE             },
+  { name: 'nav.exam',          href: ROUTES.EXAM                 },
   { name: 'nav.traffic_signs', href: ROUTES.TRAFFIC_SIGNS        },
-  { name: 'nav.lessons',       href: ROUTES.LESSONS               },
-  { name: 'nav.analytics',     href: ROUTES.ANALYTICS_WEAK_AREAS  },
-  { name: 'nav.profile',       href: ROUTES.PROFILE               },
+  { name: 'nav.analytics',     href: ROUTES.ANALYTICS_WEAK_AREAS },
 ] as const;
-
-const ALL_NAV  = [...PRIMARY_NAV, ...SECONDARY_NAV];
 
 const MAX_ERRORS   = 3;
 const BASE_POLL_MS = 30_000;
@@ -84,10 +79,10 @@ function NavLink({ href, label, pathname }: { href: string; label: string; pathn
     <Link
       href={href}
       className={cn(
-        'px-4 py-2 text-sm font-medium transition-colors relative',
+        'px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150 whitespace-nowrap',
         isActive
-          ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
-          : 'text-muted-foreground hover:text-foreground',
+          ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted',
       )}
     >
       {label}
@@ -109,8 +104,7 @@ export function Navbar() {
   const lastFetchRef    = useRef(0);
   const searchContainer = useRef<HTMLDivElement>(null);
 
-  const currentLanguage      = LANGUAGES.find(l => l.code === language);
-  const isSecondaryNavActive = SECONDARY_NAV.some(item => pathname.startsWith(item.href));
+  const currentLanguage = LANGUAGES.find(l => l.code === language);
 
   const role     = (user?.role ?? 'USER') as UserRole;
   const roleKey  = role in ROLE_STYLES ? role : 'USER';
@@ -210,38 +204,18 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between gap-6">
 
           {/* Brand */}
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <Image src="/images/logo.png" alt="ReadyRoad Logo" width={32} height={32} className="rounded-md" />
-            <span className="text-lg font-black text-foreground">ReadyRoad</span>
+          <Link href="/" className="flex shrink-0 items-center gap-3">
+            <Image src="/images/logo.png" alt="ReadyRoad Logo" width={40} height={40} className="rounded-xl" />
+            <span className="text-2xl font-black tracking-tight">
+              <span className="text-primary">R</span><span className="text-foreground">eady</span><span className="text-primary">R</span><span className="text-foreground">oad</span>
+            </span>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
-            {PRIMARY_NAV.map(item => (
+          {/* Desktop nav — all items flat, no dropdown */}
+          <div className="hidden flex-1 items-center justify-center gap-0.5 lg:flex">
+            {NAV_ITEMS.map(item => (
               <NavLink key={item.href} href={item.href} label={t(item.name)} pathname={pathname} />
             ))}
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={cn(
-                  'relative inline-flex items-center gap-1 px-4 py-2 text-sm font-medium transition-colors',
-                  isSecondaryNavActive
-                    ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}>
-                  {t('nav.more')} <ChevronDown className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                {SECONDARY_NAV.map(item => (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link href={item.href} className={cn(pathname.startsWith(item.href) && 'bg-primary/8 font-semibold text-primary')}>
-                      {t(item.name)}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
 
           {/* Mobile menu */}
@@ -251,9 +225,13 @@ export function Navbar() {
                 <Button variant="ghost" size="sm"><Menu className="h-5 w-5" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align={isRTL ? 'start' : 'end'}>
-                {ALL_NAV.map(item => (
+                {NAV_ITEMS.map(item => (
                   <DropdownMenuItem key={item.href} asChild>
-                    <Link href={item.href} className={cn(pathname.startsWith(item.href) && 'bg-primary/8 font-semibold text-primary')}>
+                    <Link href={item.href} className={cn(
+                      'font-medium',
+                      (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href))
+                        && 'bg-primary/8 font-semibold text-primary'
+                    )}>
                       {t(item.name)}
                     </Link>
                   </DropdownMenuItem>
@@ -275,7 +253,7 @@ export function Navbar() {
                 onChange={e => handleQueryChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 className={cn(
-                  'w-48 rounded-full border border-border bg-muted py-2 text-sm transition-all focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20',
+                  'w-52 rounded-full border border-border bg-muted py-2 text-sm transition-all focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20',
                   isRTL ? 'pl-10 pr-9' : 'pl-9 pr-10',
                 )}
               />
@@ -310,8 +288,8 @@ export function Navbar() {
             {/* Language selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                  <span className="text-base">{currentLanguage?.flag}</span>
+                <Button variant="ghost" size="sm" className="h-9 min-w-[2.75rem] px-2.5 text-sm font-semibold">
+                  {currentLanguage?.flag}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align={isRTL ? 'start' : 'end'}>

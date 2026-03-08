@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 // ─── Constants ───────────────────────────────────────────
 
 const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
 
 const PASS_THRESHOLD = 82;
 const WARN_THRESHOLD = 70;
@@ -84,7 +84,7 @@ export function isValidEmail(email: string): boolean {
   return EMAIL_RE.test(email);
 }
 
-/** Validates password: min 8 chars, 1 uppercase, 1 lowercase, 1 number */
+/** Validates password: min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character */
 export function isValidPassword(password: string): boolean {
   return PASSWORD_RE.test(password);
 }

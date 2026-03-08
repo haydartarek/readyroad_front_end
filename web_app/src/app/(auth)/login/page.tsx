@@ -7,13 +7,13 @@ import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ROUTES } from '@/lib/constants';
 import { toast } from 'sonner';
-import { Eye, EyeOff, User, Lock } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, BookOpen, BarChart3, ShieldCheck, Trophy } from 'lucide-react';
 
 function validateReturnUrl(returnUrl: string | null): string | undefined {
   if (!returnUrl) return undefined;
@@ -75,139 +75,172 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background px-4">
-      <div className="w-full max-w-md">
-        <Card className="border border-border/50 shadow-2xl backdrop-blur-sm bg-card/95">
-          <CardHeader className="space-y-4 pb-6">
-            <div className="flex justify-center">
+    <div className="min-h-screen flex">
+
+      {/* ── Left branding panel (hidden on mobile) ── */}
+      <div className="hidden lg:flex lg:w-[46%] flex-col justify-between relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-orange-600 p-12 text-white">
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/5" />
+        <div className="absolute top-1/2 -right-32 w-80 h-80 rounded-full bg-white/5" />
+        <div className="absolute -bottom-20 left-1/4 w-64 h-64 rounded-full bg-black/10" />
+
+        <div className="relative z-10 flex items-center gap-3">
+          <Image src="/images/logo.png" alt="ReadyRoad Logo" width={64} height={64} className="rounded-2xl" priority />
+          <span className="text-2xl font-black tracking-tight text-white">ReadyRoad</span>
+        </div>
+
+        <div className="relative z-10 space-y-6">
+          <div className="space-y-3">
+            <div className="text-sm font-semibold uppercase tracking-widest text-white/60">Welcome back</div>
+            <h1 className="text-4xl font-black leading-tight">
+              Continue your journey<br /><span className="text-white/80">to the road.</span>
+            </h1>
+            <p className="text-white/70 text-base leading-relaxed max-w-xs">
+              Pick up right where you left off and keep building toward your driving theory exam.
+            </p>
+          </div>
+          <div className="space-y-4 pt-2">
+            {[
+              { icon: BookOpen,   text: 'Resume lessons across 4 languages' },
+              { icon: BarChart3,  text: 'Your progress is saved and waiting' },
+              { icon: Trophy,     text: 'Check your scores and beat your best' },
+              { icon: ShieldCheck, text: 'Exam-ready mock tests anytime' },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-sm text-white/85 font-medium">{text}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 pt-2">
+            <div className="flex -space-x-2">
+              {['H','A','M','L'].map((l, i) => (
+                <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-primary flex items-center justify-center text-xs font-bold">{l}</div>
+              ))}
+            </div>
+            <p className="text-sm text-white/70"><span className="font-semibold text-white">4,200+</span> learners already on board</p>
+          </div>
+        </div>
+
+        <div className="relative z-10 border-t border-white/20 pt-6">
+          <p className="text-sm text-white/60 italic">"I passed with 92% — the mock exams felt exactly like the real thing."</p>
+          <p className="text-xs text-white/40 mt-1">— Ahmed K., Brussels</p>
+        </div>
+      </div>
+
+      {/* ── Right form panel ── */}
+      <div className="flex-1 flex flex-col items-center justify-center bg-background px-6 py-10 overflow-y-auto">
+
+        {/* Mobile logo */}
+        <div className="flex lg:hidden items-center gap-2 mb-8">
+          <Image src="/images/logo.png" alt="ReadyRoad Logo" width={48} height={48} className="rounded-xl" priority />
+          <span className="text-xl font-black tracking-tight">ReadyRoad</span>
+        </div>
+
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            <h2 className="text-3xl font-black tracking-tight text-foreground">{t('auth.login')}</h2>
+            <p className="text-muted-foreground text-sm mt-1.5">
+              Welcome back to <span className="text-primary font-semibold">ReadyRoad</span> 🚗
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} noValidate className="space-y-5">
+            {serviceUnavailable && (
+              <ServiceUnavailableBanner onRetry={() => setServiceUnavailable(false)} />
+            )}
+            {error && (
+              <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300 text-sm">
+                ⚠️ {error}
+              </Alert>
+            )}
+
+            {/* Username */}
+            <div className="space-y-1.5">
+              <Label htmlFor="username" className="text-sm font-semibold">{t('auth.username')}</Label>
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/70 rounded-3xl flex items-center justify-center shadow-lg shadow-primary/25 rotate-3 transition-transform hover:rotate-0 duration-300">
-                  <span className="text-4xl font-black text-white tracking-tight">R</span>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-card" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  disabled={isLoading}
+                  required
+                  className="h-11 pl-10"
+                />
               </div>
             </div>
 
-            <div className="text-center space-y-1">
-              <CardTitle className="text-3xl font-black tracking-tight">
-                {t('auth.login')}
-              </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">
-                Welcome back to{' '}
-                <span className="text-primary font-semibold">ReadyRoad</span> 🚗
-              </CardDescription>
-            </div>
-          </CardHeader>
-
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-5">
-              {serviceUnavailable && (
-                <ServiceUnavailableBanner onRetry={() => setServiceUnavailable(false)} />
-              )}
-              {error && (
-                <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300 text-sm">
-                  ⚠️ {error}
-                </Alert>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-semibold">
-                  {t('auth.username')}
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username or email"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    disabled={isLoading}
-                    required
-                    className="h-11 pl-10 text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-semibold">
-                    {t('auth.password')}
-                  </Label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs text-primary hover:underline transition-colors"
-                  >
-                    {t('auth.forgot_password')}
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    disabled={isLoading}
-                    required
-                    className="h-11 pl-10 pr-10 text-base transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-
-            <CardFooter className="flex-col space-y-4 pt-2">
-              <Button
-                type="submit"
-                className="w-full h-11 text-base font-semibold shadow-md shadow-primary/20 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.01]"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                    </svg>
-                    {t('common.loading')}
-                  </span>
-                ) : (
-                  t('auth.sign_in')
-                )}
-              </Button>
-
-              <div className="relative w-full">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/50" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-card px-2 text-muted-foreground">or</span>
-                </div>
-              </div>
-
-              <p className="text-sm text-center text-muted-foreground">
-                {t('auth.no_account')}{' '}
-                <Link
-                  href={ROUTES.REGISTER}
-                  className="text-primary font-semibold hover:underline transition-colors"
-                >
-                  {t('auth.sign_up')}
+            {/* Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-semibold">{t('auth.password')}</Label>
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline transition-colors">
+                  {t('auth.forgot_password')}
                 </Link>
-              </p>
-            </CardFooter>
-          </form>
-        </Card>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  disabled={isLoading}
+                  required
+                  className="h-11 pl-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6 opacity-60">
-          © {new Date().getFullYear()} ReadyRoad. All rights reserved.
-        </p>
+            {/* Submit */}
+            <Button
+              type="submit"
+              className="w-full h-11 text-base font-semibold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.01] transition-all duration-200 mt-2"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  {t('common.loading')}
+                </span>
+              ) : t('auth.sign_in')}
+            </Button>
+
+            <div className="relative my-1">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/50" /></div>
+              <div className="relative flex justify-center">
+                <span className="bg-background px-3 text-xs text-muted-foreground">or</span>
+              </div>
+            </div>
+
+            <p className="text-sm text-center text-muted-foreground">
+              {t('auth.no_account')}{' '}
+              <Link href={ROUTES.REGISTER} className="text-primary font-semibold hover:underline transition-colors">
+                {t('auth.sign_up')}
+              </Link>
+            </p>
+          </form>
+
+          <p className="text-center text-xs text-muted-foreground mt-8 opacity-50">
+            © {new Date().getFullYear()} ReadyRoad. All rights reserved.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -216,9 +249,10 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background">
-        <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/70 rounded-3xl flex items-center justify-center shadow-lg animate-pulse">
-          <span className="text-4xl font-black text-white">R</span>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex items-center gap-3">
+          <Image src="/images/logo.png" alt="ReadyRoad Logo" width={48} height={48} className="rounded-xl animate-pulse" />
+          <span className="text-xl font-black tracking-tight">ReadyRoad</span>
         </div>
       </div>
     }>
@@ -226,3 +260,4 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+

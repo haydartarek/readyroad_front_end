@@ -12,7 +12,7 @@ const PROTECTED_ROUTES = [
 ];
 
 const ADMIN_ROUTES = ['/admin'];
-const AUTH_ROUTES  = ['/login', '/register'];
+const AUTH_ROUTES  = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 // ─── JWT Utilities (edge-runtime compatible) ─────────────
 

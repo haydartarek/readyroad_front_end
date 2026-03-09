@@ -14,6 +14,7 @@ import {
   Plus, RotateCcw, Search, ChevronDown, ChevronUp,
   Pencil, Trash2, CheckCircle2, AlertTriangle, X,
   ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight,
+  BookOpen, FileQuestion, Star,
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────
@@ -37,6 +38,25 @@ interface PageResponse {
 }
 interface CategoryOption {
   code: string; nameEn: string; nameAr: string; nameNl: string; nameFr: string;
+}
+
+// ─── Exam Question Types ────────────────────────────────
+interface ExamQuestion {
+  id: number; categoryCode: string; categoryNameEn: string; categoryNameAr: string; categoryNameNl: string; categoryNameFr: string;
+  difficulty: string;
+  questionEn: string; questionAr: string; questionNl: string; questionFr: string;
+  option1En: string; option1Ar: string; option1Nl: string; option1Fr: string;
+  option2En: string; option2Ar: string; option2Nl: string; option2Fr: string;
+  option3En: string | null; option3Ar: string | null; option3Nl: string | null; option3Fr: string | null;
+  correctAnswer: number;
+  explanationEn: string | null;
+  imageUrl: string | null;
+  isImportant: boolean; isActive: boolean;
+  createdAt: string; updatedAt: string;
+}
+interface ExamPageResponse {
+  items: ExamQuestion[]; page: number; size: number;
+  totalItems: number; totalPages: number;
 }
 
 // ─── Constants ─────────────────────────────────────────
@@ -91,6 +111,10 @@ export default function AdminQuizzesPage() {
   const pathname   = usePathname();
   const searchParams = useSearchParams();
 
+  // ─── Question Bank selector ────────────────────────────────────────
+  const [bank, setBank] = useState<'quiz' | 'exam'>('quiz');
+
+  // ─── Quiz question state ────────────────────────────────────────────
   const [questions, setQuestions]   = useState<QuizQuestion[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
@@ -121,15 +145,65 @@ export default function AdminQuizzesPage() {
   const [resetting, setResetting]             = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
+  // ─── Exam question state ────────────────────────────────────────────
+  const [examQuestions, setExamQuestions] = useState<ExamQuestion[]>([]);
+  const [examLoading, setExamLoading]     = useState(false);
+  const [examError, setExamError]         = useState<string | null>(null);
+  const [examPage, setExamPage]           = useState(0);
+  const [examSize]                        = useState(20);
+  const [examTotalItems, setExamTotalItems] = useState(0);
+  const [examTotalPages, setExamTotalPages] = useState(0);
+  const [examExpandedId, setExamExpandedId] = useState<number | null>(null);
+  const [examDeleteId, setExamDeleteId]     = useState<number | null>(null);
+  const [examDeleting, setExamDeleting]     = useState(false);
+  const [examDifficultyFilter, setExamDifficultyFilter] = useState('');
+
   const fetchIdRef = useRef(0);
   const tRef = useRef(t);
   tRef.current = t;
+
+  const fetchExamQuestions = useCallback(async () => {
+    try {
+      setExamLoading(true); setExamError(null);
+      const params: Record<string, string | number> = { page: examPage, size: examSize, sortBy: 'id', sortDir: 'desc' };
+      if (examDifficultyFilter) params.difficulty = examDifficultyFilter;
+      const res = await apiClient.get<ExamPageResponse>(API_ENDPOINTS.ADMIN.EXAM_QUESTIONS.LIST, params);
+      setExamQuestions(res.data.items);
+      setExamTotalItems(res.data.totalItems);
+      setExamTotalPages(res.data.totalPages);
+    } catch (err) {
+      logApiError('Failed to fetch exam questions', err);
+      if (isServiceUnavailable(err)) setServiceUnavailable(true);
+      else setExamError('Failed to load exam questions');
+    } finally {
+      setExamLoading(false);
+    }
+  }, [examPage, examSize, examDifficultyFilter]);
+
+  const handleExamDelete = async (id: number) => {
+    try {
+      setExamDeleting(true);
+      await apiClient.delete(API_ENDPOINTS.ADMIN.EXAM_QUESTIONS.DELETE(id));
+      setExamDeleteId(null);
+      setToast({ message: 'Exam question deleted successfully', type: 'success' });
+      fetchExamQuestions();
+    } catch (err: unknown) {
+      logApiError('Failed to delete exam question', err);
+      if (isServiceUnavailable(err)) setServiceUnavailable(true);
+      else setToast({ message: 'Failed to delete exam question.', type: 'error' });
+      setExamDeleteId(null);
+    } finally {
+      setExamDeleting(false);
+    }
+  };
 
   useEffect(() => {
     apiClient.get<CategoryOption[]>('/categories')
       .then(res => setCategories(res.data))
       .catch(() => {});
   }, []);
+
+  useEffect(() => { if (bank === 'exam') fetchExamQuestions(); }, [bank, fetchExamQuestions]);
 
   const updateUrl = useCallback((params: Record<string, string | number>) => {
     const sp = new URLSearchParams();
@@ -265,6 +339,17 @@ export default function AdminQuizzesPage() {
   const getQuestionText   = (q: QuizQuestion) => ({ en: q.questionEn, ar: q.questionAr, nl: q.questionNl, fr: q.questionFr })[language] || q.questionEn || `Question #${q.id}`;
   const getOptionText     = (o: OptionResponse) => ({ en: o.textEn, ar: o.textAr, nl: o.textNl, fr: o.textFr })[language] || o.textEn;
 
+  const getExamQuestionText = (q: ExamQuestion) => ({ en: q.questionEn, ar: q.questionAr, nl: q.questionNl, fr: q.questionFr })[language] || q.questionEn || `Question #${q.id}`;
+  const getExamCategoryLabel = (q: ExamQuestion) => ({ en: q.categoryNameEn, ar: q.categoryNameAr, nl: q.categoryNameNl, fr: q.categoryNameFr })[language] || q.categoryNameEn || q.categoryCode;
+  const getExamOptionText = (q: ExamQuestion, idx: 1 | 2 | 3): string => {
+    const map: Record<number, Record<string, string | null>> = {
+      1: { en: q.option1En, ar: q.option1Ar, nl: q.option1Nl, fr: q.option1Fr },
+      2: { en: q.option2En, ar: q.option2Ar, nl: q.option2Nl, fr: q.option2Fr },
+      3: { en: q.option3En, ar: q.option3Ar, nl: q.option3Nl, fr: q.option3Fr },
+    };
+    return (map[idx][language] || map[idx]['en'] || '') as string;
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => (
     sortField === field
       ? <span className="text-primary ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>
@@ -306,7 +391,7 @@ export default function AdminQuizzesPage() {
       {/* Toast */}
       {toast && (
         <div className={cn(
-          'fixed top-4 right-4 z-50 max-w-md rounded-2xl shadow-xl text-sm font-semibold animate-in fade-in slide-in-from-top-2 duration-300',
+          'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-max max-w-md rounded-2xl shadow-2xl text-sm font-semibold animate-in fade-in slide-in-from-bottom-2 duration-300',
           toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-destructive text-white'
         )}>
           <div className="flex items-start gap-3 px-4 py-3">
@@ -338,7 +423,7 @@ export default function AdminQuizzesPage() {
           <h1 className="text-3xl font-black tracking-tight">{t('admin.quizzes.title') || 'Quiz Questions'}</h1>
           <p className="text-muted-foreground mt-1">
             {t('admin.quizzes.total_count') || 'Total'}:{' '}
-            <span className="font-bold text-foreground">{totalItems}</span>
+            <span className="font-bold text-foreground">{bank === 'quiz' ? totalItems : examTotalItems}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -359,6 +444,36 @@ export default function AdminQuizzesPage() {
         </div>
       </div>
 
+      {/* Question Bank Tabs */}
+      <div className="flex rounded-2xl border border-border/50 bg-muted/30 p-1 gap-1 w-fit">
+        <button
+          type="button"
+          onClick={() => { setBank('quiz'); setExpandedId(null); }}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all',
+            bank === 'quiz' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          <BookOpen className="w-4 h-4" />
+          Quiz → /quiz
+          {totalItems > 0 && <span className={cn('text-xs px-1.5 py-0.5 rounded-full font-bold', bank === 'quiz' ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground')}>{totalItems}</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => { setBank('exam'); setExamExpandedId(null); }}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all',
+            bank === 'exam' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          <FileQuestion className="w-4 h-4" />
+          Exam Simulation → /exam
+          {examTotalItems > 0 && <span className={cn('text-xs px-1.5 py-0.5 rounded-full font-bold', bank === 'exam' ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground')}>{examTotalItems}</span>}
+        </button>
+      </div>
+
+      {/* ─── QUIZ Questions section ─── */}
+      {bank === 'quiz' && (<>
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -682,6 +797,189 @@ export default function AdminQuizzesPage() {
           </div>
         </div>
       )}
+      </> )} {/* end bank === 'quiz' */}
+
+      {/* ─── EXAM Questions section ─── */}
+      {bank === 'exam' && (
+      <div className="space-y-4">
+        {/* Exam Filters */}
+        <div className="flex flex-wrap gap-3 items-center">
+          <select
+            value={examDifficultyFilter} onChange={e => { setExamDifficultyFilter(e.target.value); setExamPage(0); }}
+            className="rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            <option value="">All Difficulties</option>
+            {['EASY', 'MEDIUM', 'HARD'].map(d => (
+              <option key={d} value={d}>{getDifficultyLabel(d)}</option>
+            ))}
+          </select>
+          <button onClick={fetchExamQuestions} className="px-3 py-2 rounded-xl border border-border/50 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex items-center gap-1.5">
+            <RotateCcw className="w-3.5 h-3.5" /> Refresh
+          </button>
+          {examLoading && <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+        </div>
+
+        {examError && (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
+            <AlertTriangle className="w-8 h-8 text-destructive mx-auto" />
+            <p className="text-destructive font-semibold">{examError}</p>
+            <Button variant="outline" onClick={fetchExamQuestions}>Retry</Button>
+          </div>
+        )}
+
+        {examTotalItems > 0 && (
+          <p className="text-sm text-muted-foreground">
+            Showing <span className="font-semibold text-foreground">{examPage * examSize + 1}–{Math.min(examPage * examSize + examQuestions.length, examTotalItems)}</span> of{' '}
+            <span className="font-semibold text-foreground">{examTotalItems}</span>
+          </p>
+        )}
+
+        {/* Exam Table */}
+        <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 border-b border-border/40">
+                <tr className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="px-4 py-3 text-left font-semibold w-14">ID</th>
+                  <th className="px-4 py-3 text-left font-semibold">Question</th>
+                  <th className="px-4 py-3 text-left font-semibold">Category</th>
+                  <th className="px-4 py-3 text-left font-semibold">Difficulty</th>
+                  <th className="px-4 py-3 text-center font-semibold">Opts</th>
+                  <th className="px-4 py-3 text-center font-semibold">Important</th>
+                  <th className="px-4 py-3 text-center font-semibold">Status</th>
+                  <th className="px-4 py-3 text-right font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                {examLoading && examQuestions.length === 0 ? (
+                  <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">Loading...</td></tr>
+                ) : examQuestions.length === 0 ? (
+                  <tr><td colSpan={8} className="px-4 py-16 text-center">
+                    <div className="space-y-2"><div className="text-4xl">📋</div><p className="text-muted-foreground">No exam questions found</p></div>
+                  </td></tr>
+                ) : examQuestions.map(q => (
+                  <React.Fragment key={q.id}>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3"><span className="font-mono text-xs text-muted-foreground">#{q.id}</span></td>
+                      <td className="px-4 py-3 max-w-sm"><span className="text-foreground line-clamp-2 text-sm">{getExamQuestionText(q)}</span></td>
+                      <td className="px-4 py-3"><Badge variant="outline" className="text-xs font-medium">{getExamCategoryLabel(q)}</Badge></td>
+                      <td className="px-4 py-3">
+                        <Badge className={cn('border-0 text-xs font-semibold', DIFFICULTY_COLORS[q.difficulty] || 'bg-muted text-foreground')}>
+                          {getDifficultyLabel(q.difficulty)}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs text-muted-foreground font-semibold">{q.option3En ? 3 : 2}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {q.isImportant && <Star className="w-4 h-4 text-amber-500 mx-auto fill-amber-500" />}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge className={cn('border-0 text-xs font-semibold', q.isActive ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground')}>
+                          {q.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setExamExpandedId(examExpandedId === q.id ? null : q.id)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                          >
+                            {examExpandedId === q.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </button>
+                          {examDeleteId === q.id ? (
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => handleExamDelete(q.id)} disabled={examDeleting}
+                                className="px-2 py-1 text-xs rounded-lg bg-destructive text-white hover:opacity-90 disabled:opacity-50 font-semibold transition-opacity">
+                                {examDeleting ? '...' : 'Confirm'}
+                              </button>
+                              <button onClick={() => setExamDeleteId(null)}
+                                className="px-2 py-1 text-xs rounded-lg border border-border text-foreground hover:bg-muted transition-colors">Cancel</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setExamDeleteId(q.id)}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Expanded Exam Row */}
+                    {examExpandedId === q.id && (
+                      <tr className="bg-primary/5">
+                        <td colSpan={8} className="px-6 py-4 space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <DetailLang label="English" text={q.questionEn} />
+                            <DetailLang label="العربية" text={q.questionAr} dir="rtl" />
+                            <DetailLang label="Nederlands" text={q.questionNl} />
+                            <DetailLang label="Français" text={q.questionFr} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Answer Options</p>
+                            <div className="space-y-1.5">
+                              {([1, 2, ...(q.option3En ? [3] : [])] as (1 | 2 | 3)[]).map(idx => (
+                                <div key={idx} className={cn(
+                                  'flex items-center gap-2 text-sm px-3 py-2 rounded-xl border transition-colors',
+                                  q.correctAnswer === idx ? 'bg-green-500/10 border-green-500/20 text-green-700' : 'bg-card border-border/50 text-foreground'
+                                )}>
+                                  <span className="text-xs font-bold text-muted-foreground w-5">{idx}.</span>
+                                  <span className={cn('flex-1', q.correctAnswer === idx && 'font-semibold')}>{getExamOptionText(q, idx)}</span>
+                                  {q.correctAnswer === idx && <Badge className="bg-green-500/10 text-green-600 border-0 text-xs ml-auto">✓ Correct</Badge>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {q.explanationEn && (
+                            <div className="space-y-1">
+                              <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Explanation</p>
+                              <p className="text-sm text-muted-foreground">{q.explanationEn}</p>
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/40">
+                            <span>ID: <strong>{q.id}</strong></span>
+                            <span>Active: <strong>{q.isActive ? '✓' : '✗'}</strong></span>
+                            <span>Important: <strong>{q.isImportant ? '★' : 'No'}</strong></span>
+                            {q.imageUrl && <Badge variant="outline" className="text-xs">Has Image</Badge>}
+                            {q.createdAt && <span>Created: {new Date(q.createdAt).toLocaleDateString()}</span>}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Exam Pagination */}
+          {examTotalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-muted/30">
+              <p className="text-xs text-muted-foreground font-medium">Page <strong>{examPage + 1}</strong> of <strong>{examTotalPages}</strong></p>
+              <div className="flex items-center gap-1">
+                <button onClick={() => setExamPage(0)} disabled={examPage <= 0}
+                  className="w-7 h-7 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 transition-all">
+                  <ChevronsLeft className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setExamPage(p => p - 1)} disabled={examPage <= 0}
+                  className="w-7 h-7 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 transition-all">
+                  <ChevronLeft className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setExamPage(p => p + 1)} disabled={examPage >= examTotalPages - 1}
+                  className="w-7 h-7 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 transition-all">
+                  <ChevronRight className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setExamPage(examTotalPages - 1)} disabled={examPage >= examTotalPages - 1}
+                  className="w-7 h-7 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 transition-all">
+                  <ChevronsRight className="w-3.5 h-3.5" /></button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      )} {/* end bank === 'exam' */}
+
     </div>
   );
 }

@@ -102,22 +102,6 @@ function Toggle({ label, description, value, onChange, danger }: {
   );
 }
 
-// ─── Stat Chip ─────────────────────────────────────────
-
-function StatChip({ icon, label, value }: {
-  icon: React.ReactNode; label: string; value: string | number;
-}) {
-  return (
-    <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 backdrop-blur-sm">
-      <div className="text-white/80">{icon}</div>
-      <div>
-        <p className="text-white/60 text-[10px] font-semibold uppercase tracking-wider leading-none">{label}</p>
-        <p className="text-white font-black text-sm leading-tight">{value}</p>
-      </div>
-    </div>
-  );
-}
-
 // ─── Loading Skeleton ──────────────────────────────────
 
 function LoadingSkeleton() {
@@ -200,28 +184,45 @@ export default function AdminSettingsPage() {
     <div className="space-y-6">
 
       {/* ── Hero Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 px-8 py-8 shadow-xl shadow-primary/20">
-        <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-white/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+        <div className="pointer-events-none absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
 
         <div className="relative flex flex-col sm:flex-row sm:items-center gap-5">
           <div className="flex items-center gap-4 flex-1">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center flex-shrink-0 shadow-lg">
-              <Settings2 className="w-7 h-7 text-white" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Settings2 className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight leading-none">
+              <h1 className="text-3xl font-black tracking-tight text-foreground leading-none">
                 {t('admin.settings_page.title')}
               </h1>
-              <p className="text-white/65 text-sm mt-1 font-medium">
+              <p className="text-muted-foreground text-sm mt-1 font-medium">
                 {t('admin.settings_page.description')}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 sm:justify-end">
-            <StatChip icon={<HelpCircle className="w-4 h-4" />} label="Questions" value={settings.examQuestions} />
-            <StatChip icon={<Timer className="w-4 h-4" />} label="Duration" value={`${settings.examDurationMinutes} min`} />
-            <StatChip icon={<Percent className="w-4 h-4" />} label="Pass Score" value={`${settings.passingScorePercent}%`} />
+            <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
+              <HelpCircle className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">Questions</p>
+                <p className="text-foreground font-black text-sm leading-tight">{settings.examQuestions}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
+              <Timer className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">Duration</p>
+                <p className="text-foreground font-black text-sm leading-tight">{settings.examDurationMinutes} min</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
+              <Percent className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">Pass Score</p>
+                <p className="text-foreground font-black text-sm leading-tight">{settings.passingScorePercent}%</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

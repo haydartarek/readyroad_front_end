@@ -233,6 +233,14 @@ export const API_ENDPOINTS = {
       DELETE: (id: number | string) => `/admin/quiz/questions/${id}`,
     },
 
+    EXAM_QUESTIONS: {
+      LIST:   '/admin/exam/questions',
+      DETAIL: (id: number | string) => `/admin/exam/questions/${id}`,
+      CREATE: '/admin/exam/questions',
+      UPDATE: (id: number | string) => `/admin/exam/questions/${id}`,
+      DELETE: (id: number | string) => `/admin/exam/questions/${id}`,
+    },
+
     DATA_IMPORT: {
       PREVIEW:        (type: string) => `/admin/import/${type}/preview`,
       EXECUTE:        (type: string) => `/admin/import/${type}/execute`,

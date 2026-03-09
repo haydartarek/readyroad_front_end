@@ -117,7 +117,7 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
                     </div>
 
                     <Link
-                      href={`/${activity.type}/${activity.id}`}
+                      href={activity.type === 'exam' ? `/exam/results/${activity.id}` : `/practice`}
                       className="flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
                     >
                       {t('dashboard.activity_view')}

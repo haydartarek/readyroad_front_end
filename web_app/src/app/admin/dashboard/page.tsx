@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 interface DashboardStats {
   totalSigns: number;
   totalUsers: number;
-  totalQuizzes: number;
+  totalQuizQuestions: number;
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
         />
         <StatCard
           title={t('admin.total_quizzes')}
-          value={data?.totalQuizzes ?? 0}
+          value={data?.totalQuizQuestions ?? 0}
           icon={<ClipboardList className="w-6 h-6" />}
           colorClass="text-purple-500"
           bgClass="bg-purple-500/10"

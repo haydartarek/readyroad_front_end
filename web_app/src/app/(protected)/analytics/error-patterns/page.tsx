@@ -115,13 +115,11 @@ function transformBackendPatterns(raw: BackendPattern[]): AnalyticsData {
 
 function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
-          <RefreshCw className="w-6 h-6 text-primary animate-spin" />
-        </div>
-        <p className="text-sm text-muted-foreground">{message}</p>
+    <div className="flex flex-col items-center justify-center py-32 gap-4">
+      <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
+        <RefreshCw className="w-6 h-6 text-primary animate-spin" />
       </div>
+      <p className="text-sm text-muted-foreground">{message}</p>
     </div>
   );
 }
@@ -168,7 +166,7 @@ function ErrorPatternsContent() {
 
   if (serviceUnavailable) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="flex justify-center py-24">
         <ServiceUnavailableBanner
           onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }}
           className="max-w-md"
@@ -179,59 +177,85 @@ function ErrorPatternsContent() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="w-full max-w-md space-y-4 text-center">
-          <div className="text-6xl">⚠️</div>
-          <p className="text-destructive font-medium">{error}</p>
-          <Button
-            variant="outline"
-            onClick={() => { setError(null); setFetchKey(k => k + 1); }}
-            className="gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            {t('error_patterns.error_try_again')}
-          </Button>
+      <div className="flex flex-col items-center justify-center py-24 gap-4 max-w-md mx-auto text-center">
+        <div className="w-14 h-14 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+          <AlertCircle className="w-7 h-7 text-destructive" />
         </div>
+        <p className="text-destructive font-medium">{error}</p>
+        <Button
+          variant="outline"
+          onClick={() => { setError(null); setFetchKey(k => k + 1); }}
+          className="gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          {t('error_patterns.error_try_again')}
+        </Button>
       </div>
     );
   }
 
   if (!data || !data.patterns || data.patterns.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="text-center space-y-4 max-w-sm">
-          <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-5xl">
-            📊
+      <div className="space-y-6">
+        {/* Header card — matches dashboard GreetingHeader pattern */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <div className="relative flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-6 h-6 text-primary" />
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-sm font-semibold text-primary">{t('error_patterns.badge')}</p>
+              <h1 className="text-3xl font-black tracking-tight">{t('error_patterns.title')}</h1>
+              <p className="text-sm font-medium text-muted-foreground">{t('error_patterns.empty_desc')}</p>
+            </div>
           </div>
-          <h1 className="text-3xl font-black tracking-tight">{t('error_patterns.empty_title')}</h1>
-          <p className="text-muted-foreground">
-            {t('error_patterns.empty_desc')}
-          </p>
-          <Button size="lg" asChild className="shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform">
-            <Link href="/exam">{t('error_patterns.empty_cta')}</Link>
-          </Button>
         </div>
+
+        {/* Empty state card */}
+        <Card className="rounded-2xl border border-border/50 shadow-sm">
+          <CardContent className="pt-12 pb-10 flex flex-col items-center text-center space-y-6">
+            <div className="w-20 h-20 bg-primary/10 rounded-2xl border border-primary/20 flex items-center justify-center">
+              <BarChart2 className="w-10 h-10 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black tracking-tight">{t('error_patterns.empty_title')}</h2>
+              <p className="text-sm font-medium text-muted-foreground max-w-sm">
+                {t('error_patterns.empty_desc')}
+              </p>
+            </div>
+            <Button size="lg" asChild className="shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform">
+              <Link href="/exam">{t('error_patterns.empty_cta')}</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background">
-      <div className="container mx-auto max-w-6xl px-4 py-12 space-y-8">
+    <div className="space-y-6">
 
-        {/* Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-primary border border-primary/20 shadow-sm">
-            <AlertCircle className="w-4 h-4" />
-            <span className="font-semibold text-sm">{t('error_patterns.badge')}</span>
+      {/* Header card — matches dashboard GreetingHeader pattern */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="relative flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-6 h-6 text-primary" />
           </div>
-          <h1 className="text-4xl font-black tracking-tight">{t('error_patterns.title')}</h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            {t('error_patterns.subtitle_before')}{' '}
-            <span className="font-bold text-foreground">{data.totalErrors}</span>{' '}
-            {t('error_patterns.subtitle_after')}
-          </p>
+          <div className="space-y-0.5">
+            <p className="text-sm font-semibold text-primary">{t('error_patterns.badge')}</p>
+            <h1 className="text-3xl font-black tracking-tight">{t('error_patterns.title')}</h1>
+            <p className="text-sm font-medium text-muted-foreground">
+              {t('error_patterns.subtitle_before')}{' '}
+              <span className="font-bold text-foreground">{data.totalErrors}</span>{' '}
+              {t('error_patterns.subtitle_after')}
+            </p>
+          </div>
         </div>
+      </div>
 
         {/* Summary Cards */}
         <ErrorSummary totalErrors={data.totalErrors} patterns={data.patterns} />
@@ -297,7 +321,6 @@ function ErrorPatternsContent() {
           </CardContent>
         </Card>
 
-      </div>
     </div>
   );
 }

@@ -32,11 +32,11 @@ type UserRole = 'ADMIN' | 'MODERATOR' | 'USER';
 // All nav items in learning-funnel order (Profile lives in user avatar dropdown)
 const NAV_ITEMS = [
   { name: 'nav.home',          href: '/'                         },
-  { name: 'nav.dashboard',     href: ROUTES.DASHBOARD            },
   { name: 'nav.lessons',       href: ROUTES.LESSONS              },
-  { name: 'nav.practice',      href: ROUTES.PRACTICE             },
-  { name: 'nav.exam',          href: ROUTES.EXAM                 },
   { name: 'nav.traffic_signs', href: ROUTES.TRAFFIC_SIGNS        },
+  { name: 'nav.dashboard',     href: ROUTES.DASHBOARD            },
+  { name: 'nav.exam',          href: ROUTES.EXAM                 },
+  { name: 'nav.practice',      href: ROUTES.PRACTICE             },
   { name: 'nav.analytics',     href: ROUTES.ANALYTICS_WEAK_AREAS },
 ] as const;
 

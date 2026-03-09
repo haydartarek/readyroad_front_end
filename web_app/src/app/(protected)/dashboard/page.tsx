@@ -406,7 +406,7 @@ export default function DashboardPage() {  const { user } = useAuth();
           const latestExam = mappedHistory[0]; // history is ordered newest-first from backend
           setRecentActivities([
             {
-              id:    '1',
+              id:    hasExams && latestExam ? String(latestExam.id) : '0',
               type:  hasExams ? 'exam' : 'practice',
               date:  hasExams && latestExam ? latestExam.date : progress.lastActivityDate,
               // Always show the true exam score, not practice accuracy

@@ -6,7 +6,7 @@ import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Users, TrafficCone, ClipboardList, GraduationCap, X } from 'lucide-react';
+import { RefreshCw, Users, TrafficCone, GraduationCap, TrendingUp, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type DashboardStats = {
@@ -27,11 +27,19 @@ type RecentExam = {
   examId: number; score: number; totalQuestions: number;
   scorePercentage: number; passed: boolean;
   startedAt: string; completedAt: string;
+  timeTakenSeconds: number | null;
   userId: number; username: string; fullName: string;
 };
 type RecentExamsResponse = { exams: RecentExam[]; total: number };
 
 // ─── Sub-components ────────────────────────────────────────────────────
+
+function formatDuration(seconds: number | null): string {
+  if (!seconds) return '—';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
 
 function StatCard({ icon, label, value, sub, loading, colorClass }: {
   icon: React.ReactNode; label: string; value: string | number;
@@ -199,18 +207,18 @@ export default function AdminAnalyticsPage() {
           colorClass="bg-green-500/10 text-green-500"
         />
         <StatCard
-          icon={<ClipboardList className="w-5 h-5" />}
-          label={t('admin.analytics.total_quiz_attempts')}
-          value={stats?.totalQuizAttempts ?? '-'}
-          loading={loading}
-          colorClass="bg-purple-500/10 text-purple-500"
-        />
-        <StatCard
           icon={<GraduationCap className="w-5 h-5" />}
           label={t('admin.analytics.total_exams')}
           value={recentExams?.total ?? '-'}
           loading={loading}
-          colorClass="bg-amber-500/10 text-amber-500"
+          colorClass="bg-primary/10 text-primary"
+        />
+        <StatCard
+          icon={<TrendingUp className="w-5 h-5" />}
+          label={t('admin.analytics.pass_rate')}
+          value={quizStats ? `${quizStats.passRate}%` : '-'}
+          loading={loading}
+          colorClass={quizStats && quizStats.passRate >= 50 ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-600'}
         />
       </div>
 
@@ -258,7 +266,7 @@ export default function AdminAnalyticsPage() {
         <SectionCard title={t('admin.analytics.category_performance')}>
           {loading ? <LoadingPlaceholder /> : categoryStats.length > 0 ? (
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {categoryStats.map((cat) => (
+              {[...categoryStats].sort((a, b) => b.avgAccuracy - a.avgAccuracy).map((cat) => (
                 <div
                   key={cat.categoryId}
                   className="flex items-center justify-between rounded-xl bg-muted/30 border border-border/30 px-3 py-2.5"
@@ -298,12 +306,13 @@ export default function AdminAnalyticsPage() {
                   <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_user')}</th>
                   <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_score')}</th>
                   <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_result')}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_duration')}</th>
                   <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_date')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
-                {recentExams.exams.map((exam, i) => (
-                  <tr key={i} className="hover:bg-muted/30 transition-colors">
+                {recentExams.exams.map((exam) => (
+                  <tr key={exam.examId} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
                       <span className="font-semibold text-foreground">{exam.username || '-'}</span>
                       {exam.fullName && (
@@ -325,6 +334,9 @@ export default function AdminAnalyticsPage() {
                       )}>
                         {exam.passed ? `✅ ${t('exam.passed')}` : `❌ ${t('exam.failed')}`}
                       </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
+                      {formatDuration(exam.timeTakenSeconds)}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {exam.completedAt

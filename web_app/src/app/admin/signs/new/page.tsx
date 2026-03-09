@@ -8,6 +8,7 @@ import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { Button } from '@/components/ui/button';
+import { ImageUploadField } from '@/components/admin/image-upload-field';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Save, CheckCircle2, AlertTriangle } from 'lucide-react';
 
@@ -242,14 +243,12 @@ export default function AdminAddSignPage() {
           </div>
         </SectionCard>
 
-        {/* Image URL */}
+        {/* Image */}
         <SectionCard title={t('admin.signs.form.image') || 'Image'}>
-          <FormField
-            label={t('admin.signs.form.image_url') || 'Image URL'}
-            placeholder="https://example.com/sign.png or assets/traffic_signs/..."
+          <ImageUploadField
             value={form.imageUrl}
-            error={fieldErrors.imageUrl}
             onChange={v => setField('imageUrl', v)}
+            error={fieldErrors.imageUrl}
           />
         </SectionCard>
 

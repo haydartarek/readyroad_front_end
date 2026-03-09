@@ -50,6 +50,18 @@ const CATEGORY_LABELS: Record<string, Record<string, string>> = {
   Z: { en: 'Delineation Signs', ar: 'علامات التحديد',    nl: 'Afbakeningsborden',       fr: 'Panneaux de délimitation' },
 };
 
+const CATEGORY_BADGE_CLASSES: Record<string, string> = {
+  A: 'bg-red-500/10 text-red-600 border-red-200',
+  B: 'bg-amber-500/10 text-amber-600 border-amber-200',
+  C: 'bg-orange-500/10 text-orange-600 border-orange-200',
+  D: 'bg-blue-500/10 text-blue-600 border-blue-200',
+  E: 'bg-slate-500/10 text-slate-600 border-slate-200',
+  F: 'bg-green-500/10 text-green-600 border-green-200',
+  G: 'bg-purple-500/10 text-purple-600 border-purple-200',
+  M: 'bg-gray-500/10 text-gray-600 border-gray-200',
+  Z: 'bg-yellow-500/10 text-yellow-600 border-yellow-200',
+};
+
 type SortField = 'signCode' | 'nameEn' | 'nameAr' | 'nameNl' | 'nameFr' | 'categoryCode';
 type SortDir   = 'asc' | 'desc';
 
@@ -304,7 +316,7 @@ export default function AdminSignsPage() {
           className="rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
         >
           {PAGE_SIZE_OPTIONS.map(s => (
-            <option key={s} value={s}>{s} / page</option>
+            <option key={s} value={s}>{s} {t('admin.signs.per_page')}</option>
           ))}
         </select>
         {loading && (
@@ -314,7 +326,7 @@ export default function AdminSignsPage() {
 
       {totalItems > 0 && (
         <p className="text-sm text-muted-foreground">
-          Showing <span className="font-semibold text-foreground">{startIdx}–{endIdx}</span> of{' '}
+          {t('admin.signs.showing')} <span className="font-semibold text-foreground">{startIdx}–{endIdx}</span> {t('admin.signs.of')}{' '}
           <span className="font-semibold text-foreground">{totalItems}</span>
         </p>
       )}
@@ -378,7 +390,11 @@ export default function AdminSignsPage() {
                     </td>
                     {/* Category */}
                     <td className="px-4 py-3">
-                      <Badge variant="outline" className="text-xs font-medium">
+                      <Badge className={cn(
+                        'text-xs font-semibold border',
+                        CATEGORY_BADGE_CLASSES[sign.categoryCode?.charAt(0)?.toUpperCase()] ||
+                        'bg-muted text-muted-foreground border-border'
+                      )}>
                         {getCategoryLabel(sign.categoryCode)}
                       </Badge>
                     </td>
@@ -405,13 +421,13 @@ export default function AdminSignsPage() {
                               onClick={() => handleDelete(sign.id)} disabled={deleting}
                               className="px-2 py-1 text-xs rounded-lg bg-destructive text-white hover:opacity-90 disabled:opacity-50 font-semibold transition-opacity"
                             >
-                              {deleting ? '...' : 'Confirm'}
+                              {deleting ? '...' : t('admin.signs.confirm_delete')}
                             </button>
                             <button
                               onClick={() => setDeleteId(null)}
                               className="px-2 py-1 text-xs rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
                             >
-                              Cancel
+                              {t('admin.signs.cancel')}
                             </button>
                           </div>
                         ) : (

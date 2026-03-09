@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
-import { convertToPublicImageUrl, FALLBACK_IMAGE } from '@/lib/image-utils';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { Button } from '@/components/ui/button';
+import { ImageUploadField } from '@/components/admin/image-upload-field';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Save, CheckCircle2, AlertTriangle } from 'lucide-react';
 
@@ -252,26 +251,6 @@ export default function AdminEditSignPage() {
         </div>
       </div>
 
-      {/* Image Preview */}
-      {form.imageUrl && (
-        <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 flex items-center gap-4">
-          <div className="w-20 h-20 relative rounded-xl overflow-hidden bg-muted flex-shrink-0">
-            <Image
-              src={convertToPublicImageUrl(form.imageUrl) || FALLBACK_IMAGE}
-              alt={form.signCode} fill unoptimized
-              className="object-contain p-1" sizes="80px"
-              onError={e => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-            />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">
-              {t('admin.signs.form.current_image') || 'Current Image'}
-            </p>
-            <p className="text-xs text-muted-foreground break-all mt-0.5">{form.imageUrl}</p>
-          </div>
-        </div>
-      )}
-
       <form onSubmit={onSubmit} className="space-y-5">
         {/* Error banner */}
         {errorMsg && (
@@ -313,14 +292,12 @@ export default function AdminEditSignPage() {
           </div>
         </SectionCard>
 
-        {/* Image URL */}
+        {/* Image */}
         <SectionCard title={t('admin.signs.form.image') || 'Image'}>
-          <FormField
-            label={t('admin.signs.form.image_url') || 'Image URL'}
-            placeholder="https://example.com/sign.png or assets/traffic_signs/..."
+          <ImageUploadField
             value={form.imageUrl}
-            error={fieldErrors.imageUrl}
             onChange={v => setField('imageUrl', v)}
+            error={fieldErrors.imageUrl}
           />
         </SectionCard>
 

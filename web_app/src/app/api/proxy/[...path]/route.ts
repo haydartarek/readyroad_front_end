@@ -83,8 +83,9 @@ async function proxyRequest(
   // Forward request body for mutation methods
   if (MUTATION_METHODS.has(request.method)) {
     if (contentType?.includes('multipart/form-data')) {
-      // For file uploads: let fetch auto-set boundary
-      delete headers['Content-Type'];
+      // Keep the original Content-Type including the boundary so the backend
+      // can parse the multipart body correctly.
+      headers['Content-Type'] = contentType;
       fetchOptions.body = await request.arrayBuffer();
     } else {
       try {

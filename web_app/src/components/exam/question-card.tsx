@@ -78,10 +78,13 @@ export function QuestionCard({
           {/* Sign Image */}
           {showSign && question.signImageUrl && (
             <div className="flex justify-center mb-4">
-              <img
+              <Image
                 src={question.signImageUrl}
                 alt="Traffic sign"
+                width={128}
+                height={128}
                 className="h-32 w-32 object-contain"
+                unoptimized
               />
             </div>
           )}

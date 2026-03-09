@@ -10,8 +10,6 @@ import { RecentActivityList } from '@/components/dashboard/recent-activity-list'
 import { getOverallProgress, getWeakAreas } from '@/services';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

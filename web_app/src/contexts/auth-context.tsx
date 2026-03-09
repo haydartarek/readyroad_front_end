@@ -8,10 +8,10 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { ROUTES } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
+import { AuthSuccessModal } from '@/components/ui/auth-success-modal';
+import { LogoutModal } from '@/components/ui/logout-modal';
+import { ROUTES } from '@/lib/constants';
 import { type User, type LoginRequest } from '@/lib/types';
 import { isUnavailableStatus, logApiError } from '@/lib/api';
 
@@ -33,12 +33,29 @@ interface LoginResult {
   status?:   number;
 }
 
+interface LoginOptions {
+  /** True when called immediately after a new account registration */
+  isNewUser?: boolean;
+}
+
+interface SuccessModalState {
+  open:         boolean;
+  username:     string;
+  isNewUser:    boolean;
+  redirectPath: string;
+}
+
+interface LogoutModalState {
+  open:     boolean;
+  username: string;
+}
+
 interface AuthContextType {
   user:               User | null;
   isLoading:          boolean;
   isAuthenticated:    boolean;
   serviceUnavailable: boolean;
-  login:              (credentials: LoginRequest, redirectPath?: string) => Promise<LoginResult>;
+  login:              (credentials: LoginRequest, redirectPath?: string, options?: LoginOptions) => Promise<LoginResult>;
   logout:             () => void;
   fetchUser:          () => Promise<void>;
 }
@@ -79,7 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,               setUser]               = useState<User | null>(null);
   const [isLoading,          setIsLoading]          = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
-  const router = useRouter();
+  const [successModal,       setSuccessModal]       = useState<SuccessModalState>({
+    open: false, username: '', isNewUser: false, redirectPath: '',
+  });
+  const [logoutModal,        setLogoutModal]        = useState<LogoutModalState>({
+    open: false, username: '',
+  });
 
   const isAuthenticated = !!user;
 
@@ -140,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (
     credentials: LoginRequest,
     redirectPath?: string,
+    options?: LoginOptions,
   ): Promise<LoginResult> => {
     setIsLoading(true);
     try {
@@ -151,16 +174,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const message   = errorData.message ?? 'Login failed. Please check your credentials.';
+        // Return backend message if present; otherwise undefined so the
+        // login page can apply the translated t('auth.login_failed') key.
+        const message = errorData.message as string | undefined;
         return { success: false, message, status: response.status };
       }
 
       const raw = await response.json();
-      setUser(normalizeUser(raw));
-      toast.success(t('auth.toast.welcome_back'));
+      const normalizedUser = normalizeUser(raw);
+      setUser(normalizedUser);
+      const displayName = normalizedUser.firstName
+        ?? normalizedUser.fullName?.split(' ')[0]
+        ?? normalizedUser.username;
 
-      // Full reload so middleware sees the new HttpOnly cookie
-      window.location.href = redirectPath ?? ROUTES.DASHBOARD;
+      // Show success modal — it handles the redirect after 2.8s
+      setSuccessModal({
+        open:         true,
+        username:     displayName,
+        isNewUser:    options?.isNewUser ?? false,
+        redirectPath: redirectPath ?? ROUTES.DASHBOARD,
+      });
       return { success: true };
     } catch (error) {
       // Network / server errors (ECONNREFUSED, etc.)
@@ -172,19 +205,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const logout = useCallback(async () => {
-    // MUST await clearAuth so the HttpOnly cookie is deleted BEFORE
-    // we navigate away — otherwise the middleware still sees a valid
-    // token and lets any subsequent /dashboard request through.
+    // Save display name BEFORE clearing auth state
+    const displayName = user?.firstName
+      ?? user?.fullName?.split(' ')[0]
+      ?? user?.username
+      ?? '';
+    // Clear HttpOnly cookie server-side before showing the modal
     await clearAuth();
-    toast.info(t('auth.toast.logged_out'));
-    // Full page reload (not client-side push) so:
-    //  1. All React state is wiped (no stale dashboard data)
-    //  2. Middleware re-evaluates the request fresh (no cookie → redirects to login)
-    window.location.href = ROUTES.LOGIN;
-  }, [clearAuth]);
+    // Show farewell modal — it handles the redirect after 2.5s
+    setLogoutModal({ open: true, username: displayName });
+  }, [clearAuth, user]);
 
   return (
     <AuthContext.Provider
@@ -199,6 +232,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      <AuthSuccessModal
+        isOpen={successModal.open}
+        username={successModal.username}
+        title={t(successModal.isNewUser ? 'auth.modal.thank_you' : 'auth.modal.welcome_back')}
+        subtitle={t(successModal.isNewUser ? 'auth.modal.register_subtitle' : 'auth.modal.login_subtitle')}
+        redirectingText={t('auth.modal.redirecting')}
+        onRedirect={() => { window.location.href = successModal.redirectPath; }}
+      />
+      <LogoutModal
+        isOpen={logoutModal.open}
+        username={logoutModal.username}
+        title={t('auth.modal.goodbye')}
+        subtitle={t('auth.modal.logout_subtitle')}
+        redirectingText={t('auth.modal.logout_redirecting')}
+        onRedirect={() => { window.location.href = ROUTES.LOGIN; }}
+      />
     </AuthContext.Provider>
   );
 }

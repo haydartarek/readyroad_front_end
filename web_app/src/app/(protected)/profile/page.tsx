@@ -16,8 +16,9 @@ import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-ba
 import { getOverallProgress } from '@/services';
 import {
   User, Mail, AtSign, Globe, BarChart2,
-  ShieldCheck, Pencil, Save, X, Trophy, Target, Flame, Trash2, AlertTriangle,
+  ShieldCheck, Pencil, Save, X, Trophy, Target, Flame, Trash2, AlertTriangle, Loader2,
 } from 'lucide-react';
+import { DeleteAccountModal } from '@/components/ui/delete-account-modal';
 
 // ─── Section Header ──────────────────────────────────────
 
@@ -55,8 +56,29 @@ export default function ProfilePage() {
   const { t, language, setLanguage } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving]   = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ open: false, username: '' });
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setShowDeleteConfirm(false);
+    setIsDeleting(true);
+    try {
+      const res = await fetch('/api/auth/delete-account', { method: 'DELETE' });
+      if (res.ok) {
+        setDeleteModal({ open: true, username: (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username) ?? '' });
+        return;
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error((data as { message?: string }).message || t('profile.delete_error'));
+      }
+    } catch {
+      toast.error(t('profile.delete_error'));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Dynamic stats fetched from the backend
   const [stats, setStats] = useState({ examsCount: 0, avgScore: 0, practiceCount: 0 });
@@ -133,6 +155,7 @@ export default function ProfilePage() {
     : '—';
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
       <div className="container mx-auto max-w-5xl px-4 py-10 space-y-8">
 
@@ -328,6 +351,7 @@ export default function ProfilePage() {
                   <Button
                     variant="destructive" size="sm"
                     className="gap-1.5 flex-shrink-0 text-xs"
+                    disabled={isDeleting}
                     onClick={() => setShowDeleteConfirm(true)}
                   >
                     <Trash2 className="w-3 h-3" /> {t('profile.delete')}
@@ -346,12 +370,13 @@ export default function ProfilePage() {
                       <Button
                         variant="destructive" size="sm"
                         className="gap-1.5 text-xs"
-                        onClick={() => {
-                          setShowDeleteConfirm(false);
-                          toast.error(t('profile.delete_not_available') || 'Account deletion is not available yet. Please contact support.');
-                        }}
+                        disabled={isDeleting}
+                        onClick={handleDeleteAccount}
                       >
-                        <Trash2 className="w-3 h-3" /> {t('profile.delete_confirm_btn') || 'Yes, delete my account'}
+                        {isDeleting
+                          ? <><Loader2 className="w-3 h-3 animate-spin" /> {t('profile.deleting')}</>
+                          : <><Trash2 className="w-3 h-3" /> {t('profile.delete_confirm_btn')}</>
+                        }
                       </Button>
                       <Button
                         variant="outline" size="sm"
@@ -370,5 +395,15 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+
+      <DeleteAccountModal
+        isOpen={deleteModal.open}
+        username={deleteModal.username}
+        title={t('auth.modal.account_deleted')}
+        subtitle={t('auth.modal.delete_subtitle')}
+        redirectingText={t('auth.modal.delete_redirecting')}
+        onRedirect={() => { window.location.href = '/login'; }}
+      />
+    </>
   );
 }

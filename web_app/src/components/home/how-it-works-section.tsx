@@ -37,18 +37,16 @@ export function HowItWorksSection() {
   const { t, isRTL } = useLanguage();
   const sectionRef = useRef<HTMLElement>(null);
   const hasTriggered = useRef(false);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
 
   const steps = buildSteps();
 
   useEffect(() => {
+    if (visible) return; // already visible (prefers-reduced-motion)
     const el = sectionRef.current;
     if (!el) return;
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setVisible(true);
-      return;
-    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -63,7 +61,7 @@ export function HowItWorksSection() {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [visible]);
 
   return (
     <section

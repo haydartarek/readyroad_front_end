@@ -1,11 +1,10 @@
 ﻿'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/language-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
@@ -120,15 +119,6 @@ export default function TheoryExamPage() {
       case 'MEDIUM': return t('practice_exam.difficulty_medium');
       case 'HARD':   return t('practice_exam.difficulty_hard');
       default:       return level;
-    }
-  };
-
-  const getDifficultyColor = (level: string) => {
-    switch (level) {
-      case 'EASY':   return 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'HARD':   return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400';
-      default:       return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -431,10 +421,13 @@ export default function TheoryExamPage() {
                 {/* Image */}
                 {question.contentImageUrl && (
                   <div className="flex justify-center mb-4">
-                    <img
+                    <Image
                       src={question.contentImageUrl}
                       alt="Question illustration"
+                      width={400}
+                      height={176}
                       className="max-h-44 object-contain rounded-2xl border border-border/50"
+                      unoptimized
                     />
                   </div>
                 )}

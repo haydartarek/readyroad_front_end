@@ -21,37 +21,36 @@ const USERNAME_RE = /^[a-zA-Z0-9_]+$/;
 
 type FormFields = 'firstName' | 'lastName' | 'username' | 'email' | 'password' | 'confirmPassword';
 
-function validateField(field: FormFields, value: string, password?: string): string {
+function validateField(field: FormFields, value: string, password: string | undefined, t: (key: string) => string): string {
   switch (field) {
     case 'firstName':
     case 'lastName': {
-      const label = field === 'firstName' ? 'First name' : 'Last name';
-      if (!value.trim()) return `${label} is required`;
-      if (value.trim().length < 2 || value.trim().length > 30) return `${label} must be 2–30 characters`;
-      if (!NAME_RE.test(value.trim())) return `${label} must contain letters only`;
+      if (!value.trim()) return field === 'firstName' ? t('auth.validation.first_name_required') : t('auth.validation.last_name_required');
+      if (value.trim().length < 2 || value.trim().length > 30) return field === 'firstName' ? t('auth.validation.first_name_length') : t('auth.validation.last_name_length');
+      if (!NAME_RE.test(value.trim())) return field === 'firstName' ? t('auth.validation.first_name_letters') : t('auth.validation.last_name_letters');
       return '';
     }
     case 'username':
-      if (!value.trim()) return 'Username is required';
-      if (value.length < 4 || value.length > 20) return 'Username must be 4–20 characters';
-      if (value.includes(' ')) return 'Username must not contain spaces';
-      if (!USERNAME_RE.test(value)) return 'Username can only contain letters, numbers and _';
+      if (!value.trim()) return t('auth.validation.username_required');
+      if (value.length < 4 || value.length > 20) return t('auth.validation.username_length');
+      if (value.includes(' ')) return t('auth.validation.username_spaces');
+      if (!USERNAME_RE.test(value)) return t('auth.validation.username_chars');
       return '';
     case 'email':
-      if (!value.trim()) return 'Email is required';
-      if (!EMAIL_RE.test(value)) return 'Please enter a valid email (e.g. name@example.com)';
+      if (!value.trim()) return t('auth.validation.email_required');
+      if (!EMAIL_RE.test(value)) return t('auth.validation.email_invalid');
       return '';
     case 'password':
-      if (!value) return 'Password is required';
-      if (value.length < 8) return 'Password must be at least 8 characters';
-      if (!/[A-Z]/.test(value)) return 'Password must contain an uppercase letter';
-      if (!/[a-z]/.test(value)) return 'Password must contain a lowercase letter';
-      if (!/[0-9]/.test(value)) return 'Password must contain a number';
-      if (!/[^a-zA-Z0-9]/.test(value)) return 'Password must contain a special character (e.g. !)';
+      if (!value) return t('auth.validation.password_required');
+      if (value.length < 8) return t('auth.validation.password_length');
+      if (!/[A-Z]/.test(value)) return t('auth.validation.password_upper');
+      if (!/[a-z]/.test(value)) return t('auth.validation.password_lower');
+      if (!/[0-9]/.test(value)) return t('auth.validation.password_number');
+      if (!/[^a-zA-Z0-9]/.test(value)) return t('auth.validation.password_special');
       return '';
     case 'confirmPassword':
-      if (!value) return 'Please confirm your password';
-      if (value !== password) return 'Passwords do not match';
+      if (!value) return t('auth.validation.confirm_required');
+      if (value !== password) return t('auth.validation.passwords_mismatch');
       return '';
     default:
       return '';
@@ -79,30 +78,30 @@ export default function RegisterPage() {
   // Mark field touched + validate immediately on blur
   const handleBlur = useCallback((field: FormFields) => {
     setTouched(prev => new Set(prev).add(field));
-    const err = validateField(field, formData[field], formData.password);
+    const err = validateField(field, formData[field], formData.password, t);
     setErrors(prev => ({ ...prev, [field]: err }));
-  }, [formData]);
+  }, [formData, t]);
 
   // Live validate only already-touched fields
   const handleChange = useCallback((field: FormFields, value: string) => {
     const next = { ...formData, [field]: value };
     setFormData(next);
     if (touched.has(field)) {
-      const err = validateField(field, value, field === 'confirmPassword' ? next.password : formData.password);
+      const err = validateField(field, value, field === 'confirmPassword' ? next.password : formData.password, t);
       setErrors(prev => ({ ...prev, [field]: err }));
     }
     // Re-validate confirmPassword live when password changes
     if (field === 'password' && touched.has('confirmPassword')) {
-      const err = validateField('confirmPassword', next.confirmPassword, value);
+      const err = validateField('confirmPassword', next.confirmPassword, value, t);
       setErrors(prev => ({ ...prev, confirmPassword: err }));
     }
-  }, [formData, touched]);
+  }, [formData, touched, t]);
 
   const validateAll = (): boolean => {
     const fields: FormFields[] = ['firstName', 'lastName', 'username', 'email', 'password', 'confirmPassword'];
     const newErrors: Record<string, string> = {};
     fields.forEach(f => {
-      newErrors[f] = validateField(f, formData[f], formData.password);
+      newErrors[f] = validateField(f, formData[f], formData.password, t);
     });
     setErrors(newErrors);
     setTouched(new Set(fields));
@@ -122,7 +121,11 @@ export default function RegisterPage() {
         password: formData.password,
         fullName,
       });
-      await login({ username: formData.username, password: formData.password });
+      await login(
+        { username: formData.username, password: formData.password },
+        ROUTES.DASHBOARD,
+        { isNewUser: true },
+      );
     } catch (err) {
       logApiError('[Register] register', err);
       if (isServiceUnavailable(err)) {
@@ -141,16 +144,16 @@ export default function RegisterPage() {
       // Map well-known conflict messages to field errors
       const msg = data?.error ?? data?.message ?? '';
       if (/username.*exist|username.*taken/i.test(msg)) {
-        setErrors(prev => ({ ...prev, username: 'Username already taken' }));
+        setErrors(prev => ({ ...prev, username: t('auth.validation.username_taken') }));
         setTouched(prev => new Set(prev).add('username'));
         return;
       }
       if (/email.*exist|email.*registered/i.test(msg)) {
-        setErrors(prev => ({ ...prev, email: 'Email already registered' }));
+        setErrors(prev => ({ ...prev, email: t('auth.validation.email_registered') }));
         setTouched(prev => new Set(prev).add('email'));
         return;
       }
-      toast.error(msg || 'Registration failed. Please try again.');
+      toast.error(msg || t('auth.register_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -162,11 +165,11 @@ export default function RegisterPage() {
 
   // Password strength indicators
   const pwRules = [
-    { key: 'length',  label: '8+ chars',  ok: formData.password.length >= 8 },
-    { key: 'upper',   label: 'Uppercase',  ok: /[A-Z]/.test(formData.password) },
-    { key: 'lower',   label: 'Lowercase',  ok: /[a-z]/.test(formData.password) },
-    { key: 'number',  label: 'Number',     ok: /[0-9]/.test(formData.password) },
-    { key: 'special', label: 'Symbol',     ok: /[^a-zA-Z0-9]/.test(formData.password) },
+    { key: 'length',  label: t('auth.pw_rule_length'),  ok: formData.password.length >= 8 },
+    { key: 'upper',   label: t('auth.pw_rule_upper'),   ok: /[A-Z]/.test(formData.password) },
+    { key: 'lower',   label: t('auth.pw_rule_lower'),   ok: /[a-z]/.test(formData.password) },
+    { key: 'number',  label: t('auth.pw_rule_number'),  ok: /[0-9]/.test(formData.password) },
+    { key: 'special', label: t('auth.pw_rule_special'), ok: /[^a-zA-Z0-9]/.test(formData.password) },
   ];
   const pwScore = pwRules.filter(r => r.ok).length;
 
@@ -196,25 +199,25 @@ export default function RegisterPage() {
 
         <div className="relative z-10 space-y-6">
           <div className="space-y-3">
-            <div className="text-sm font-semibold uppercase tracking-widest text-white/60">Start your journey</div>
+            <div className="text-sm font-semibold uppercase tracking-widest text-white/60">{t('auth.register_panel_badge')}</div>
             <h1 className="text-4xl font-black leading-tight">
-              Pass your driving theory<br /><span className="text-white/80">on the first try.</span>
+              {t('auth.register_panel_heading')}<br /><span className="text-white/80">{t('auth.register_panel_heading2')}</span>
             </h1>
             <p className="text-white/70 text-base leading-relaxed max-w-xs">
-              Join thousands of learners who passed their exam with ReadyRoad.
+              {t('auth.register_panel_subtitle')}
             </p>
           </div>
           <div className="space-y-4 pt-2">
             {[
-              { icon: BookOpen,    text: 'Complete theory lessons in 4 languages' },
-              { icon: BarChart3,   text: 'Track your progress with detailed analytics' },
-              { icon: ShieldCheck, text: 'Realistic mock exams & weak-area coaching' },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-3">
+              { icon: BookOpen,    k: 'auth.register_feat_1' },
+              { icon: BarChart3,   k: 'auth.register_feat_2' },
+              { icon: ShieldCheck, k: 'auth.register_feat_3' },
+            ].map(({ icon: Icon, k }) => (
+              <div key={k} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                   <Icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm text-white/85 font-medium">{text}</span>
+                <span className="text-sm text-white/85 font-medium">{t(k)}</span>
               </div>
             ))}
           </div>
@@ -224,13 +227,13 @@ export default function RegisterPage() {
                 <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-primary flex items-center justify-center text-xs font-bold">{l}</div>
               ))}
             </div>
-            <p className="text-sm text-white/70"><span className="font-semibold text-white">4,200+</span> learners already on board</p>
+            <p className="text-sm text-white/70"><span className="font-semibold text-white">4,200+</span> {t('auth.panel_learners_text')}</p>
           </div>
         </div>
 
         <div className="relative z-10 border-t border-white/20 pt-6">
-          <p className="text-sm text-white/60 italic">"I passed with 92% — the mock exams felt exactly like the real thing."</p>
-          <p className="text-xs text-white/40 mt-1">— Ahmed K., Brussels</p>
+          <p className="text-sm text-white/60 italic">&ldquo;{t('auth.panel_quote_text')}&rdquo;</p>
+          <p className="text-xs text-white/40 mt-1">{t('auth.panel_quote_author')}</p>
         </div>
       </div>
 
@@ -245,8 +248,8 @@ export default function RegisterPage() {
 
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <h2 className="text-3xl font-black tracking-tight text-foreground">Create your account</h2>
-            <p className="text-muted-foreground text-sm mt-1.5">Fill in your details to get started</p>
+            <h2 className="text-3xl font-black tracking-tight text-foreground">{t('auth.register_title')}</h2>
+            <p className="text-muted-foreground text-sm mt-1.5">{t('auth.register_subtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -409,7 +412,7 @@ export default function RegisterPage() {
               )}
               {isValid('confirmPassword') && (
                 <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Passwords match
+                  <CheckCircle2 className="w-3 h-3" /> {t('auth.passwords_match')}
                 </p>
               )}
             </div>
@@ -434,20 +437,20 @@ export default function RegisterPage() {
             <div className="relative my-1">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/50" /></div>
               <div className="relative flex justify-center">
-                <span className="bg-background px-3 text-xs text-muted-foreground">or</span>
+                <span className="bg-background px-3 text-xs text-muted-foreground">{t('auth.or')}</span>
               </div>
             </div>
 
             <p className="text-sm text-center text-muted-foreground">
-              Already have an account?{' '}
+              {t('auth.have_account')}{' '}
               <Link href={ROUTES.LOGIN} className="text-primary font-semibold hover:underline transition-colors">
-                Sign in
+                {t('auth.sign_in')}
               </Link>
             </p>
           </form>
 
           <p className="text-center text-xs text-muted-foreground mt-8 opacity-50">
-            © {new Date().getFullYear()} ReadyRoad. All rights reserved.
+            © {new Date().getFullYear()} ReadyRoad. {t('auth.copyright')}
           </p>
         </div>
       </div>

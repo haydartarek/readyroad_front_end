@@ -15,7 +15,6 @@ import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { getAllSignProgress, type SignUserProgress } from '@/services';
 import type { TrafficSign } from '@/lib/types';
-import { toast } from 'sonner';
 
 interface CategoryDTO {
   id: number;

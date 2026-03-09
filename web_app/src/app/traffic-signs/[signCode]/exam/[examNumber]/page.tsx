@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { SignImage } from '@/components/traffic-signs/sign-image';
@@ -13,7 +13,7 @@ import { apiClient, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, ArrowRight, Lock, CheckCircle2, XCircle, Trophy, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lock, CheckCircle2, XCircle, Trophy } from 'lucide-react';
 import {
   getExamQuestions,
   submitExam,
@@ -64,7 +64,6 @@ export default function ExamPage() {
   // answers: questionId → choiceId
   const [answers, setAnswers]           = useState<Map<number, number>>(new Map());
   const [currentIdx, setCurrentIdx]     = useState(0);
-  const [warnUnanswered, setWarnUnanswered] = useState(false);
   const [submitting, setSubmitting]     = useState(false);
   const [result, setResult]             = useState<SignExamResult | null>(null);
   const [showReview, setShowReview]     = useState(false);
@@ -99,11 +98,10 @@ export default function ExamPage() {
     return () => { cancelled = true; };
   }, [signCode, examNum]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const questions   = examData?.questions ?? [];
+  const questions   = useMemo(() => examData?.questions ?? [], [examData]);
   const total       = questions.length;
   const current     = questions[currentIdx];
   const answeredCnt = answers.size;
-  const unanswered  = total - answeredCnt;
 
   const handleSelect = useCallback((questionId: number, choiceId: number) => {
     setAnswers(prev => {
@@ -113,29 +111,8 @@ export default function ExamPage() {
     });
   }, []);
 
-  const handleSubmit = useCallback(async () => {
-    if (unanswered > 0) { setWarnUnanswered(true); return; }
-    if (!examData || submitting) return;
-    setWarnUnanswered(false);
-    setSubmitting(true);
-    const payload = questions.map(q => ({
-      questionId: q.id,
-      choiceId:   answers.get(q.id)!,
-    }));
-    try {
-      const res = await submitExam(signCode, examNum, payload);
-      setResult(res);
-    } catch (err) {
-      logApiError('Submit exam error', err);
-      setError(t('sign_quiz.error_load'));
-    } finally {
-      setSubmitting(false);
-    }
-  }, [unanswered, examData, submitting, questions, answers, signCode, examNum, t]);
-
   const handleForceSubmit = useCallback(async () => {
     if (!examData || submitting) return;
-    setWarnUnanswered(false);
     setSubmitting(true);
     const payload = questions.map(q => ({
       questionId: q.id,
@@ -169,7 +146,7 @@ export default function ExamPage() {
     return () => {
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     };
-  }, [currentIdx, examData, result]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentIdx, examData, result]);
 
   useEffect(() => {
     if (timeLeft !== 0) return;

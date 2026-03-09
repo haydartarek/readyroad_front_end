@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ChevronDown, Home, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/language-context';
@@ -20,7 +20,6 @@ import {
 export default function AdminSidebar() {
   const { logout: authLogout } = useAuth();
   const pathname = usePathname();
-  const router   = useRouter();
   const { user } = useAuth();
   const { t, isRTL } = useLanguage();
 

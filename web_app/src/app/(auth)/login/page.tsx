@@ -7,13 +7,13 @@ import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert } from '@/components/ui/alert';
+
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ROUTES } from '@/lib/constants';
 import { toast } from 'sonner';
-import { Eye, EyeOff, User, Lock, BookOpen, BarChart3, ShieldCheck, Trophy } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, KeyRound, BookOpen, BarChart3, ShieldCheck, Trophy, AlertCircle } from 'lucide-react';
 
 function validateReturnUrl(returnUrl: string | null): string | undefined {
   if (!returnUrl) return undefined;
@@ -55,7 +55,7 @@ function LoginForm() {
     setError('');
 
     if (!formData.username || !formData.password) {
-      setError('Please fill in all fields');
+      setError(t('auth.login_fill_all_fields'));
       return;
     }
 
@@ -69,7 +69,7 @@ function LoginForm() {
       if (result.status === 503) {
         setServiceUnavailable(true);
       } else {
-        setError(result.message ?? 'Login failed. Please try again.');
+        setError(result.message ?? t('auth.login_failed'));
       }
     }
   };
@@ -90,26 +90,26 @@ function LoginForm() {
 
         <div className="relative z-10 space-y-6">
           <div className="space-y-3">
-            <div className="text-sm font-semibold uppercase tracking-widest text-white/60">Welcome back</div>
+            <div className="text-sm font-semibold uppercase tracking-widest text-white/60">{t('auth.login_panel_badge')}</div>
             <h1 className="text-4xl font-black leading-tight">
-              Continue your journey<br /><span className="text-white/80">to the road.</span>
+              {t('auth.login_panel_heading')}<br /><span className="text-white/80">{t('auth.login_panel_heading2')}</span>
             </h1>
             <p className="text-white/70 text-base leading-relaxed max-w-xs">
-              Pick up right where you left off and keep building toward your driving theory exam.
+              {t('auth.login_panel_subtitle')}
             </p>
           </div>
           <div className="space-y-4 pt-2">
             {[
-              { icon: BookOpen,   text: 'Resume lessons across 4 languages' },
-              { icon: BarChart3,  text: 'Your progress is saved and waiting' },
-              { icon: Trophy,     text: 'Check your scores and beat your best' },
-              { icon: ShieldCheck, text: 'Exam-ready mock tests anytime' },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-3">
+              { icon: BookOpen,    k: 'auth.login_feat_1' },
+              { icon: BarChart3,   k: 'auth.login_feat_2' },
+              { icon: Trophy,      k: 'auth.login_feat_3' },
+              { icon: ShieldCheck, k: 'auth.login_feat_4' },
+            ].map(({ icon: Icon, k }) => (
+              <div key={k} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                   <Icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm text-white/85 font-medium">{text}</span>
+                <span className="text-sm text-white/85 font-medium">{t(k)}</span>
               </div>
             ))}
           </div>
@@ -119,13 +119,13 @@ function LoginForm() {
                 <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-primary flex items-center justify-center text-xs font-bold">{l}</div>
               ))}
             </div>
-            <p className="text-sm text-white/70"><span className="font-semibold text-white">4,200+</span> learners already on board</p>
+            <p className="text-sm text-white/70"><span className="font-semibold text-white">4,200+</span> {t('auth.panel_learners_text')}</p>
           </div>
         </div>
 
         <div className="relative z-10 border-t border-white/20 pt-6">
-          <p className="text-sm text-white/60 italic">"I passed with 92% — the mock exams felt exactly like the real thing."</p>
-          <p className="text-xs text-white/40 mt-1">— Ahmed K., Brussels</p>
+          <p className="text-sm text-white/60 italic">&ldquo;{t('auth.panel_quote_text')}&rdquo;</p>
+          <p className="text-xs text-white/40 mt-1">{t('auth.panel_quote_author')}</p>
         </div>
       </div>
 
@@ -140,20 +140,18 @@ function LoginForm() {
 
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <h2 className="text-3xl font-black tracking-tight text-foreground">{t('auth.login')}</h2>
-            <p className="text-muted-foreground text-sm mt-1.5">
-              Welcome back to <span className="text-primary font-semibold">ReadyRoad</span> 🚗
+            <h2 className="text-3xl font-black tracking-tight text-foreground">
+              {t('auth.login')}
+            </h2>
+            <p className="text-muted-foreground text-sm mt-2 flex items-center gap-1.5">
+              <span className="inline-block w-6 h-0.5 rounded-full bg-primary/60" />
+              {t('auth.login_form_subtitle')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             {serviceUnavailable && (
               <ServiceUnavailableBanner onRetry={() => setServiceUnavailable(false)} />
-            )}
-            {error && (
-              <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300 text-sm">
-                ⚠️ {error}
-              </Alert>
             )}
 
             {/* Username */}
@@ -178,9 +176,6 @@ function LoginForm() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-sm font-semibold">{t('auth.password')}</Label>
-                <Link href="/forgot-password" className="text-xs text-primary hover:underline transition-colors">
-                  {t('auth.forgot_password')}
-                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -205,6 +200,27 @@ function LoginForm() {
               </div>
             </div>
 
+            {/* Error card — shown below password, above submit */}
+            {error && (
+              <div className="animate-in fade-in-50 slide-in-from-top-2 duration-300 rounded-xl border border-destructive/30 bg-destructive/5 overflow-hidden">
+                {/* Error message row */}
+                <div className="flex items-start gap-3 px-4 py-3">
+                  <AlertCircle className="size-4 text-destructive mt-0.5 shrink-0" />
+                  <p className="text-sm text-destructive font-medium leading-snug">{error}</p>
+                </div>
+                {/* Sign-up suggestion row */}
+                <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-t border-destructive/15 bg-background/60">
+                  <p className="text-xs text-muted-foreground">{t('auth.no_account')}</p>
+                  <Link
+                    href="/register"
+                    className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1 whitespace-nowrap"
+                  >
+                    {t('auth.sign_up')} &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* Submit */}
             <Button
               type="submit"
@@ -222,10 +238,20 @@ function LoginForm() {
               ) : t('auth.sign_in')}
             </Button>
 
+            <div className="flex items-center justify-center gap-1.5 py-0.5">
+              <KeyRound className="w-3.5 h-3.5 text-muted-foreground" />
+              <Link
+                href="/forgot-password"
+                className="text-sm text-muted-foreground hover:text-primary font-medium transition-colors hover:underline underline-offset-4"
+              >
+                {t('auth.forgot_password')}
+              </Link>
+            </div>
+
             <div className="relative my-1">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/50" /></div>
               <div className="relative flex justify-center">
-                <span className="bg-background px-3 text-xs text-muted-foreground">or</span>
+                <span className="bg-background px-3 text-xs text-muted-foreground">{t('auth.or')}</span>
               </div>
             </div>
 
@@ -238,7 +264,7 @@ function LoginForm() {
           </form>
 
           <p className="text-center text-xs text-muted-foreground mt-8 opacity-50">
-            © {new Date().getFullYear()} ReadyRoad. All rights reserved.
+            © {new Date().getFullYear()} ReadyRoad. {t('auth.copyright')}
           </p>
         </div>
       </div>

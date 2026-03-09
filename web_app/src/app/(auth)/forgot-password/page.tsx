@@ -26,11 +26,11 @@ export default function ForgotPasswordPage() {
     setError('');
 
     if (!email.trim()) {
-      setError(t('validation.required'));
+      setError(t('auth.validation.email_required'));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address');
+      setError(t('auth.forgot_email_invalid'));
       return;
     }
 
@@ -67,26 +67,26 @@ export default function ForgotPasswordPage() {
 
         <div className="relative z-10 space-y-6">
           <div className="space-y-3">
-            <div className="text-sm font-semibold uppercase tracking-widest text-white/60">Account recovery</div>
+            <div className="text-sm font-semibold uppercase tracking-widest text-white/60">{t('auth.forgot_panel_badge')}</div>
             <h1 className="text-4xl font-black leading-tight">
-              Back on track<br /><span className="text-white/80">in seconds.</span>
+              {t('auth.forgot_panel_heading')}<br /><span className="text-white/80">{t('auth.forgot_panel_heading2')}</span>
             </h1>
             <p className="text-white/70 text-base leading-relaxed max-w-xs">
-              No worries — it happens to everyone. We'll send you a secure link to reset your password right away.
+              {t('auth.forgot_panel_subtitle')}
             </p>
           </div>
           <div className="space-y-4 pt-2">
             {[
-              { icon: Mail,       text: 'Enter your email to receive a reset link' },
-              { icon: KeyRound,   text: 'Secure, one-time link — valid for 15 minutes' },
-              { icon: ShieldCheck, text: 'Your account stays fully protected' },
-              { icon: Smartphone, text: 'Check your inbox or spam folder' },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-3">
+              { icon: Mail,        k: 'auth.forgot_feat_1' },
+              { icon: KeyRound,    k: 'auth.forgot_feat_2' },
+              { icon: ShieldCheck, k: 'auth.forgot_feat_3' },
+              { icon: Smartphone,  k: 'auth.forgot_feat_4' },
+            ].map(({ icon: Icon, k }) => (
+              <div key={k} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                   <Icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm text-white/85 font-medium">{text}</span>
+                <span className="text-sm text-white/85 font-medium">{t(k)}</span>
               </div>
             ))}
           </div>
@@ -96,13 +96,13 @@ export default function ForgotPasswordPage() {
                 <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-primary flex items-center justify-center text-xs font-bold">{l}</div>
               ))}
             </div>
-            <p className="text-sm text-white/70"><span className="font-semibold text-white">4,200+</span> learners already on board</p>
+            <p className="text-sm text-white/70"><span className="font-semibold text-white">4,200+</span> {t('auth.panel_learners_text')}</p>
           </div>
         </div>
 
         <div className="relative z-10 border-t border-white/20 pt-6">
-          <p className="text-sm text-white/60 italic">"I passed with 92% — the mock exams felt exactly like the real thing."</p>
-          <p className="text-xs text-white/40 mt-1">— Ahmed K., Brussels</p>
+          <p className="text-sm text-white/60 italic">&ldquo;{t('auth.panel_quote_text')}&rdquo;</p>
+          <p className="text-xs text-white/40 mt-1">{t('auth.panel_quote_author')}</p>
         </div>
       </div>
 
@@ -208,7 +208,7 @@ export default function ForgotPasswordPage() {
           )}
 
           <p className="text-center text-xs text-muted-foreground mt-8 opacity-50">
-            © {new Date().getFullYear()} ReadyRoad. All rights reserved.
+            © {new Date().getFullYear()} ReadyRoad. {t('auth.copyright')}
           </p>
         </div>
       </div>

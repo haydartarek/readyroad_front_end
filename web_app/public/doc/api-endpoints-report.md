@@ -1,6 +1,6 @@
 ﻿# ReadyRoad - Full API Endpoints Audit Report
 Generated: 2026-03-05 (Updated)
-Last session changes: 2026-03-06 (Session 5 — RTL Fixes, Lesson Redesign, Exam Translations & Button Order)
+Last session changes: 2026-03-09 (Session 8 — i18n Unification, Auth Page Fixes, SQL Cleanup, Docker Verification)
 
 ---
 
@@ -640,3 +640,508 @@ All user-visible strings on the `/exam` pre-start screen were hardcoded English 
 | File | Change |
 |------|--------|
 | `src/app/(protected)/exam/page.tsx` | Moved Start Exam `<Button>` before Cancel `<Button>` in JSX (~line 237) |
+
+---
+
+## 12. CHANGES LOG — 2026-03-07 (Session 6: Auth Pages Redesign + Register Validation)
+
+### 12.1 Overview
+
+Three auth pages (Register, Login, Forgot-password) were redesigned from a basic centered card layout to a modern **two-panel split layout**:
+- **Left panel**: Orange gradient background with logo, headline, 4 feature/recovery bullets, social proof row, and a short quote. Hidden below `lg` breakpoint.
+- **Right panel**: Clean white/neutral form area with the actual form widget centered.
+
+This is consistent across all three auth pages. The actual logo (`/images/logo.png`) is displayed in both panels (64×64 on desktop left panel, 48×48 on mobile top).
+
+### 12.2 Register Page (`src/app/(auth)/register/page.tsx`)
+
+**Full rewrite** — two-panel layout + complete client-side validation.
+
+| Area | Change |
+|------|--------|
+| Layout | Single centered card → two-panel split (orange left + form right) |
+| Logo | "R" box placeholder → actual `/images/logo.png` (64×64 left panel, 48×48 mobile) |
+| Left panel | Headline "Start your journey to the road" + 4 feature bullets + social proof ("10,000+ students") + quote |
+| Validation | `validateField()` per-field function covering: firstName, lastName, username, email, password, confirmPassword |
+| `handleBlur` | Triggers `validateField` on field exit — shows errors only after user leaves the field |
+| `handleChange` | Clears error on any keystroke; re-validates password-match on confirmPassword change |
+| `validateAll()` | Full validation before submit — blocks API call if any field fails |
+| `inputCls(field, ok?)` | Returns Tailwind border+ring classes: red on error, green on valid, gray on untouched. Adds `pr-10` when `ok=true` (space for green checkmark icon). |
+| Password rules bar | 5 inline rules with icons: length ≥8, uppercase, lowercase, number, special char. Icons green (CheckCircle2) when satisfied, gray (XCircle) when not. |
+| Green check icons | `CheckCircle2` shown inside input on right edge for firstName, lastName, username, email when field is valid |
+| Backend error mapping | `data.fields` object → per-field error messages. Username/email conflict detected via regex on `data.message` as fallback. |
+| i18n | All strings use `t()` translation keys |
+
+### 12.3 Login Page (`src/app/(auth)/login/page.tsx`)
+
+**Full rewrite** — two-panel layout, matching register design.
+
+| Area | Change |
+|------|--------|
+| Layout | Single centered card → two-panel split |
+| Left panel | Headline "Continue your journey to the road" + 4 bullets (multilingual, AI, offline, progress) + social proof + quote |
+| Fallback loader | Was showing a plain "R" box → now uses `<Image src="/images/logo.png">` |
+| `Suspense` | Wrapped in `Suspense` for `useSearchParams()` — fallback uses logo not text |
+
+### 12.4 Forgot-Password Page (`src/app/(auth)/forgot-password/page.tsx`)
+
+**Full rewrite** — two-panel layout, recovery theme.
+
+| Area | Change |
+|------|--------|
+| Layout | Single centered card → two-panel split |
+| Left panel | Headline "Back on track in seconds" + 4 recovery-themed bullets + social proof + quote |
+| Success state | Green `CheckCircle2` circle (48×48) + translated title/description — no plain text |
+| Email validation | Added regex check (`EMAIL_RE.test(email)`) before calling the API — prevents sending empty/invalid email |
+
+### 12.5 `utils.ts` — PASSWORD_RE + JSDoc Fix
+
+| Change | Detail |
+|--------|--------|
+| `PASSWORD_RE` updated | Old regex lacked special character requirement. New: `/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/` |
+| JSDoc fixed | `isValidPassword()` JSDoc was outdated — now accurately lists all 5 requirements including "1 special character" |
+
+### 12.6 `RegisterRequest.java` — Backend Validation Strengthened
+
+| Field | Annotations Added |
+|-------|------------------|
+| `username` | `@Size(min=4, max=20)` + `@Pattern(regexp="^[a-zA-Z0-9_]+$", message="Username can only contain letters, numbers, and underscores")` |
+| `password` | `@Size(min=8)` + `@Pattern` requiring uppercase + lowercase + number + special char |
+
+These server-side constraints mirror the frontend rules, providing defense-in-depth.
+
+### 12.7 Deep Audit — 4 Bugs Fixed (Post-Implementation)
+
+After all three auth pages were implemented, a full audit was run. Four issues found and fixed:
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 1 | `inputCls` called without second arg on firstName/lastName/username/email → `pr-10` never applied → green CheckCircle2 icons overlapped text | `register/page.tsx` | Changed `inputCls(field)` → `inputCls(field, isValid(field))` for all 4 name/email inputs |
+| 2 | No email format validation before API call on forgot-password | `forgot-password/page.tsx` | Added `EMAIL_RE.test(email)` guard before `requestPasswordReset()` |
+| 3 | Social proof block missing from forgot-password left panel | `forgot-password/page.tsx` | Added social proof row (users icon + "10,000+ students" text) matching register/login panels |
+| 4 | JSDoc on `isValidPassword` still listed only 4 requirements (missing special char) | `utils.ts` | Updated JSDoc to list all 5 requirements |
+
+---
+
+## 13. CHANGES LOG — 2026-03-08 (Session 7: Navbar Overhaul + Brand Enhancement)
+
+### 13.1 Navbar — Flat Navigation (No More "More" Dropdown)
+
+**File:** `src/components/layout/navbar.tsx`
+
+**Problem:** Previous navbar had a "More" dropdown for secondary nav items, hiding important links. Only a subset of pages were directly visible.
+
+**Solution:** All 7 nav items displayed flat in a single horizontal row.
+
+| Before | After |
+|--------|-------|
+| Primary: Home, Dashboard, Lessons, Practice + "More" dropdown | Flat: Home → Dashboard → Lessons → Practice → Exam → Traffic Signs → Analytics |
+| "More" contained: Exam, Traffic Signs, Profile, Analytics | "More" dropdown removed entirely |
+| Profile link in nav | Profile removed from nav (accessible via user avatar dropdown) |
+| Underline active style | **Pill active style**: `bg-primary text-primary-foreground rounded-md shadow-sm shadow-primary/20` |
+
+**Dead code removed:**
+- `PRIMARY_NAV` constant
+- `SECONDARY_NAV` constant
+- `ALL_NAV` constant
+- `isSecondaryNavActive()` function
+- `BarChart3` lucide import (unused after cleanup)
+
+**New `NAV_ITEMS` constant:**
+```typescript
+const NAV_ITEMS = [
+  { name: 'nav.home',          href: '/'                         },
+  { name: 'nav.dashboard',     href: ROUTES.DASHBOARD            },
+  { name: 'nav.lessons',       href: ROUTES.LESSONS              },
+  { name: 'nav.practice',      href: ROUTES.PRACTICE             },
+  { name: 'nav.exam',          href: ROUTES.EXAM                 },
+  { name: 'nav.traffic_signs', href: ROUTES.TRAFFIC_SIGNS        },
+  { name: 'nav.analytics',     href: ROUTES.ANALYTICS_WEAK_AREAS },
+] as const;
+```
+
+**New `NavLink` component:**
+```jsx
+function NavLink({ href, label, pathname }) {
+  const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
+  return (
+    <Link href={href} className={cn(
+      'px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150 whitespace-nowrap',
+      isActive
+        ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+        : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+    )}>
+      {label}
+    </Link>
+  );
+}
+```
+
+### 13.2 Navbar — Brand Enlargement + Split-Color Wordmark
+
+| Element | Before | After |
+|---------|--------|-------|
+| Logo size | `width={32} height={32}` | `width={40} height={40}` |
+| Logo border radius | `rounded-md` | `rounded-xl` |
+| Brand gap | `gap-2` | `gap-3` |
+| Brand font size | `text-lg` | `text-2xl` |
+| Brand font weight | `font-black` | `font-black` (unchanged) |
+| Brand color | `text-foreground` (plain dark) | Split-color: **R** = `text-primary` (orange), **eady** = `text-foreground`, **R** = `text-primary`, **oad** = `text-foreground` |
+| Brand tracking | none | `tracking-tight` |
+
+**Resulting JSX:**
+```jsx
+<Link href="/" className="flex shrink-0 items-center gap-3">
+  <Image src="/images/logo.png" alt="ReadyRoad Logo" width={40} height={40} className="rounded-xl" />
+  <span className="text-2xl font-black tracking-tight">
+    <span className="text-primary">R</span><span className="text-foreground">eady</span><span className="text-primary">R</span><span className="text-foreground">oad</span>
+  </span>
+</Link>
+```
+
+### 13.3 Navbar — Language Selector Button Fix
+
+| Before | After |
+|--------|-------|
+| `h-9 w-9 p-0` — fixed-size square, text cramped | `h-9 min-w-[2.75rem] px-2.5 text-sm font-semibold` — comfortable pill, text legible |
+| `<span className="text-base">{flag}</span>` inner span | Flag text rendered directly in Button with proper sizing |
+
+> Note: `LANGUAGES` constant uses 2-letter text codes (`'En'`, `'Ar'`, `'Nl'`, `'Fr'`) as "flags" (not emoji). This is intentional design.
+
+### 13.4 Navbar — Search Box Width
+
+| Before | After |
+|--------|-------|
+| `w-48` (192px) | `w-52` (208px) |
+
+Increased for better visual balance against the expanded 7-item nav and larger brand.
+
+### 13.5 Summary of All Navbar Changes (navbar.tsx)
+
+| Change | Location |
+|--------|----------|
+| `NAV_ITEMS` array — 7 flat items | Replaces `PRIMARY_NAV` + `SECONDARY_NAV` |
+| `NavLink` component — pill active style | Replaces underline active style |
+| "More" dropdown removed | ~60 lines removed |
+| Profile removed from nav | Was in secondary nav |
+| Brand logo: `32→40`, `rounded-md→rounded-xl` | `<Image>` tag |
+| Brand gap: `gap-2→gap-3` | `<Link>` className |
+| Brand wordmark: `text-lg→text-2xl`, split-color `R`/`eady`/`R`/`oad` | `<span>` inside brand Link |
+| Language button: `h-9 w-9 p-0` → `h-9 min-w-[2.75rem] px-2.5 text-sm font-semibold` | DropdownMenuTrigger Button |
+| Search: `w-48→w-52` | Search input className |
+| Dead code removed: `PRIMARY_NAV`, `SECONDARY_NAV`, `ALL_NAV`, `isSecondaryNavActive`, `BarChart3` | Top of file + function declarations |
+
+---
+
+## 14. CHANGES LOG — 2026-03-09 (Session 8: i18n Unification, Auth UX Fixes, SQL Cleanup, Docker)
+
+### 14.1 i18n Audit — Auth Pages (57 keys)
+
+All three auth pages (`/login`, `/register`, `/forgot-password`) had hardcoded English strings.  
+A full audit was run and **57 new translation keys** were added to all 4 language files.
+
+| File | Keys Added |
+|------|-----------|
+| `src/messages/en.json` | 57 keys |
+| `src/messages/ar.json` | 57 keys (Arabic) |
+| `src/messages/nl.json` | 57 keys (Dutch) |
+| `src/messages/fr.json` | 57 keys (Dutch) |
+
+**Key groups added:**
+
+| Prefix | Count | Description |
+|--------|-------|-------------|
+| `auth.login_panel_*` | 9 | Left panel: badge, heading, heading2, subtitle, feat_1–4 |
+| `auth.register_panel_*` | 8 | Left panel: badge, heading, heading2, subtitle, feat_1–3 |
+| `auth.forgot_panel_*` | 9 | Left panel: badge, heading, heading2, subtitle, feat_1–4 |
+| `auth.login_form_subtitle` | 1 | Form subtitle under login heading |
+| `auth.register_title/subtitle/failed` | 3 | Register form heading/subtitle/error |
+| `auth.forgot_email_invalid` | 1 | Inline email validation error |
+| `auth.or`, `auth.copyright` | 2 | Shared "or" separator, copyright footer |
+| `auth.panel_*` | 3 | Shared: learners_text, quote_text, quote_author |
+| `auth.validation.*` | 14 | Per-field validation messages for all register inputs |
+| `auth.pw_rule_*` | 5 | Password rule labels (length, upper, lower, number, special) |
+| `auth.passwords_match` | 1 | "Passwords match" indicator |
+
+**Files updated:**
+- `src/app/(auth)/login/page.tsx` — all hardcoded strings → `t()` calls
+- `src/app/(auth)/register/page.tsx` — all hardcoded strings → `t()` calls; `validateField()` now accepts `t` as 4th parameter
+- `src/app/(auth)/forgot-password/page.tsx` — all hardcoded strings → `t()`, broken `t('validation.required')` → `t('auth.validation.email_required')`
+
+### 14.2 i18n Unification — contact/page.tsx (21 keys)
+
+`contact/page.tsx` was using an inline `LABELS` object with all 4 languages hardcoded inside the component.  
+Migrated to the unified `t()` + message JSON files approach.
+
+| Change | Detail |
+|--------|--------|
+| Removed `const LABELS = { en: {...}, nl: {...}, fr: {...}, ar: {...} }` (~100 lines) | Inline translations deleted |
+| Removed `type Lang = keyof typeof LABELS` | Unused type deleted |
+| Removed `const lbl = LABELS[(language as Lang)] ?? LABELS.en` | Replaced with `const { t, isRTL } = useLanguage()` |
+| All 21 `lbl.xxx` references | Replaced with `t('contact.xxx')` |
+| 21 `contact.*` keys added to all 4 JSON files | `contact.title`, `contact.subtitle`, `contact.firstName`, `contact.lastName`, `contact.email`, `contact.subject`, `contact.message`, `contact.send`, `contact.sending`, `contact.successTitle`, `contact.successMsg`, `contact.errorTitle`, `contact.required`, `contact.invalidEmail`, `contact.minMessage`, `contact.placeholderFirst`, `contact.placeholderLast`, `contact.placeholderEmail`, `contact.placeholderSubject`, `contact.placeholderMsg`, `contact.direct` |
+
+> **Note on `terms/page.tsx` and `privacy-policy/page.tsx`:** These pages use `content[language].sections[]` — a structured content array with titles and long multilingual paragraphs. This approach is intentionally kept as-is because JSON keys are not appropriate for large document-style content with nested arrays.
+
+### 14.3 nl.json Bug Fix
+
+A stray extra `}` was found at the end of `src/messages/nl.json` causing invalid JSON.
+
+| File | Fix |
+|------|-----|
+| `src/messages/nl.json` | Removed duplicate closing brace after `auth.validation.email_registered` |
+
+### 14.4 Login Page — UX Improvements
+
+| Change | Detail |
+|--------|--------|
+| "Forgot password?" link moved | Was inline next to password label → now **below Sign In button** as a standalone centered row |
+| Added `KeyRound` icon | Lucide icon displayed left of "Forgot password?" link |
+| Link styling upgraded | `text-xs text-primary` → `text-sm text-muted-foreground hover:text-primary font-medium` with underline on hover |
+| Login heading subtitle | `{t('auth.login_form_subtitle')} 🚗` → emoji removed, replaced with decorative `inline-block w-6 h-0.5 bg-primary/60` accent bar before text |
+| Added `KeyRound` to lucide imports | `import { ..., KeyRound, ... }` |
+
+### 14.5 SQL Files Cleanup
+
+All `.sql` files that were in the project root were moved to the correct migration folder.
+
+| File | From | To |
+|------|------|----|
+| `add_questions.sql` | `readyroad/` (root) | `readyroad/src/main/resources/db/migration/` |
+| `add_options.sql` | `readyroad/` (root) | `readyroad/src/main/resources/db/migration/` |
+
+> These files contain `INSERT` statements for quiz questions and answer options. They are intentionally named **without** the `V##__` Flyway prefix so Flyway ignores them (prevents duplicate data insertion on re-deploy).
+
+**Verification:** `Get-ChildItem -Recurse -Filter "*.sql" | Where-Object DirectoryName -notlike "*db\migration*"` → **0 results** ✅
+
+### 14.6 Docker Configuration Summary (Verified)
+
+All 3 containers confirmed running (**green** in Docker Desktop):
+
+| Container | Image | Port | Status |
+|-----------|-------|------|--------|
+| `readyroad-mysql` | `mysql:8.0` | 3307→3306 | ✅ Running |
+| `readyroad-backend` | `readyroad-backend` | 8890→8890 | ✅ Running |
+| `readyroad-frontend` | `readyroad-frontend` | 3000→3000 | ✅ Running |
+
+**Key networking note:**
+- When running via **Docker** (all 3 containers): frontend uses `BACKEND_URL=http://backend:8890/api` (internal Docker network)
+- When running **Next.js locally** (`npm run dev`) + Docker backend: frontend uses `BACKEND_URL=http://localhost:8890/api` from `.env.local`
+- The two modes are **not interchangeable** — choose one
+
+### 14.7 .env.local Verification
+
+| Variable | Value | Used By | Status |
+|----------|-------|---------|--------|
+| `SMTP_USER` | `heydertarek2000@gmail.com` | `api/contact/route.ts` | ✅ Correct |
+| `SMTP_PASS` | `sbkbntbnblijiuxn` (App Password) | `api/contact/route.ts` | ✅ Correct |
+| `CONTACT_TO` | `heydertarek2000@gmail.com` | `api/contact/route.ts` | ✅ Correct |
+| `BACKEND_URL` | `http://localhost:8890/api` | `lib/server/auth.ts` | ✅ Correct (local dev mode) |
+
+> `.env.local` is in `.gitignore` (`.env*` pattern) — credentials are not exposed to Git ✅
+
+---
+
+## 15. CHANGES LOG — 2026-03-10 (Session 9: Auth Modals, Logout Modal, i18n Flash Fix)
+
+### 15.1 New Component — AuthSuccessModal
+
+**File:** `src/components/ui/auth-success-modal.tsx` ← NEW
+
+A centered overlay modal that replaces the previous `toast.custom()` welcome notification after login and register.
+
+| Property | Value |
+|----------|-------|
+| Rendering | `createPortal(…, document.body)` — mounts outside React tree |
+| Backdrop | Fixed overlay with `authOverlayIn 0.3s ease` fade |
+| Card animation | `authModalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)` (spring bounce) |
+| Header | Orange gradient `135deg, hsl(13 76% 53%) → hsl(25 95% 50%)` |
+| Icon area | White circle 104px, `mb-[-58px]` overlap pulled onto body, `pt-[72px]` body top padding |
+| SVG checkmark | Emerald ring (`authCircleDraw 0.55s`), check stroke (`authCheckDraw 0.3s`), pulse ring (`authPulse 2s infinite`) |
+| Username text | Gradient `hsl(13 76% 53%) → hsl(25 95% 50%)` applied via `background-clip: text` |
+| Progress bar | Orange, ticks every `TICK_MS = 30ms` over `REDIRECT_DELAY_MS = 3200ms` |
+| Redirect | `onRedirect()` callback fires when countdown reaches 0 |
+
+**Two display scenarios:**
+
+| Scenario | Title key | Subtitle key |
+|----------|-----------|-------------|
+| Login | `auth.modal.welcome_back` | `auth.modal.login_subtitle` |
+| Register (`isNewUser: true`) | `auth.modal.thank_you` | `auth.modal.register_subtitle` |
+
+**Props:** `isOpen`, `username`, `title`, `subtitle`, `redirectingText`, `onRedirect`
+
+---
+
+### 15.2 New Component — LogoutModal
+
+**File:** `src/components/ui/logout-modal.tsx` ← NEW
+
+A centered overlay modal displayed when the user logs out, replacing the previous `toast.info()` notification.
+
+| Property | Value |
+|----------|-------|
+| Rendering | `createPortal(…, document.body)` |
+| Header | Dark navy gradient `hsl(210 29% 30%) → hsl(215 40% 14%)` |
+| Icon | White circle with door-frame SVG path + exit arrow (orange stroke, sequential animation) |
+| Username text | Navy gradient `hsl(210 29% 24%) → hsl(215 40% 35%)` via `background-clip: text` |
+| Progress bar | Navy gradient `hsl(210 29% 35%) → hsl(210 40% 50%)` |
+| Countdown | `REDIRECT_DELAY_MS = 2500ms` |
+| Redirect destination | `ROUTES.LOGIN` |
+
+---
+
+### 15.3 auth-context.tsx — Major Update
+
+**File:** `src/contexts/auth-context.tsx` ← MODIFIED
+
+| Change | Detail |
+|--------|--------|
+| Removed imports | `import { toast }` from sonner, `import { WelcomeToastContent }` |
+| Added imports | `import { AuthSuccessModal }`, `import { LogoutModal }` |
+| New interface | `LoginOptions { isNewUser?: boolean }` |
+| New interface | `SuccessModalState { open, username, isNewUser, redirectPath }` |
+| New interface | `LogoutModalState { open, username }` |
+| `login()` signature | `(credentials, redirectPath?, options?: LoginOptions) => Promise<LoginResult>` |
+| `login()` on success | Sets `successModal` state (open: true, username, isNewUser, redirectPath) — no more `toast.custom()` or `window.location.href` inside login |
+| `logout()` behavior | Saves `displayName` from `user` BEFORE calling `clearAuth()`, then sets `logoutModal` state — no more `toast.info()` or `window.location.href` |
+| Provider JSX | Both `<AuthSuccessModal>` and `<LogoutModal>` rendered inside Provider after `{children}` |
+| `onRedirect` (login) | `() => { window.location.href = successModal.redirectPath; }` |
+| `onRedirect` (logout) | `() => { window.location.href = ROUTES.LOGIN; }` |
+
+---
+
+### 15.4 register/page.tsx — isNewUser Flag
+
+**File:** `src/app/(auth)/register/page.tsx` ← MODIFIED
+
+```ts
+// Before:
+login({ username, password })
+
+// After:
+login({ username, password }, ROUTES.DASHBOARD, { isNewUser: true })
+```
+
+This causes the modal to display `auth.modal.thank_you` ("Thank you, X!") instead of `auth.modal.welcome_back` ("Welcome back, X!") for new registrations.
+
+---
+
+### 15.5 language-context.tsx — i18n Flash Fix
+
+**File:** `src/contexts/language-context.tsx` ← COMPLETELY REWRITTEN
+
+**Problem:** On page load and route navigation, translation keys like `nav.dashboard` appeared as raw strings for a brief moment before resolving to their translated values.
+
+**Root cause:**
+```ts
+// OLD (broken) pattern:
+const [translations, setTranslations] = useState({});  // starts empty
+useEffect(() => {
+  import(`@/messages/${language}.json`).then(setTranslations); // async — arrives late
+}, [language]);
+// render #1: translations = {} → t('nav.dashboard') returns 'nav.dashboard' ← FLASH
+```
+
+**Fix:**
+```ts
+// NEW (fixed) pattern:
+import enMessages from '@/messages/en.json';  // static — bundled at compile time
+import arMessages from '@/messages/ar.json';
+import nlMessages from '@/messages/nl.json';
+import frMessages from '@/messages/fr.json';
+
+const ALL_MESSAGES = { en: enMessages, ar: arMessages, nl: nlMessages, fr: frMessages };
+
+const [language, setLanguageState] = useState<Language>(() => getInitialLanguage()); // lazy init reads localStorage
+const translations = ALL_MESSAGES[language]; // synchronous — always populated
+// render #1: translations already full → t('nav.dashboard') = 'Dashboard' ✓
+```
+
+| Change | Detail |
+|--------|--------|
+| Removed | `loadTranslations()` async function |
+| Removed | `readStoredLanguage()` helper |
+| Removed | `useState<{}>({})` initial empty translations state |
+| Added | 4 static `import` statements at file top |
+| Added | `ALL_MESSAGES` constant map |
+| Added | `getInitialLanguage()` — reads `localStorage` inside `useState` lazy initializer |
+| `useEffect` | Now only syncs `document.documentElement.lang` and `dir` attributes — no async work |
+| `translations` | Derived synchronously: `const translations = ALL_MESSAGES[language]` |
+
+---
+
+### 15.6 globals.css — New Keyframes
+
+**File:** `src/app/globals.css` ← MODIFIED
+
+6 new CSS `@keyframes` blocks added:
+
+| Name | Purpose |
+|------|---------|
+| `welcomeSlideIn` | Toast/notification slide-up with blur |
+| `authOverlayIn` | Modal backdrop opacity fade-in |
+| `authModalIn` | Modal card scale + translateY spring entrance |
+| `authCircleDraw` | SVG circle ring stroke-dashoffset draw |
+| `authCheckDraw` | SVG checkmark stroke-dashoffset draw |
+| `authPulse` | SVG pulse ring scale + opacity loop |
+
+---
+
+### 15.7 Translation Keys — 9 New Keys × 4 Languages
+
+**Files:** `src/messages/en.json`, `ar.json`, `nl.json`, `fr.json` ← ALL MODIFIED
+
+| Key | en value |
+|-----|----------|
+| `auth.toast.welcome_subtitle` | "Ready to hit the road?" |
+| `auth.modal.welcome_back` | "Welcome back," |
+| `auth.modal.login_subtitle` | "Login successful. Ready to go!" |
+| `auth.modal.thank_you` | "Thank you," |
+| `auth.modal.register_subtitle` | "You're now a member of ReadyRoad!" |
+| `auth.modal.redirecting` | "Taking you to your dashboard…" |
+| `auth.modal.goodbye` | "Goodbye," |
+| `auth.modal.logout_subtitle` | "You have been signed out successfully." |
+| `auth.modal.logout_redirecting` | "Redirecting to login…" |
+
+**Bug fixed:** `src/messages/fr.json` had a duplicate `auth.modal.*` block (lines 79–83 were exact duplicates of 74–78). The duplicate block was removed using a PowerShell repair script.
+
+---
+
+### 15.8 layout.tsx — Toaster Position
+
+**File:** `src/app/layout.tsx` ← MODIFIED
+
+| Before | After |
+|--------|-------|
+| `<Toaster position="top-right" richColors />` | `<Toaster position="bottom-right" richColors />` |
+
+Moved to bottom-right so Sonner toasts no longer conflict visually with the top-center auth modals.
+
+---
+
+### 15.9 Deprecated — welcome-toast.tsx
+
+**File:** `src/components/ui/welcome-toast.tsx` — Created earlier in the session, now unused.
+
+`auth-context.tsx` no longer imports or calls `WelcomeToastContent`. The component still exists on disk but is effectively superseded by `auth-success-modal.tsx`. Can be removed in a future cleanup pass.
+
+---
+
+### 15.10 Summary of All Session 9 Changes
+
+| File | Type | Description |
+|------|------|-------------|
+| `src/components/ui/auth-success-modal.tsx` | NEW | Login & register success modal with animated checkmark |
+| `src/components/ui/logout-modal.tsx` | NEW | Logout farewell modal with door icon |
+| `src/components/ui/welcome-toast.tsx` | NEW (unused) | Welcome toast — superseded; kept on disk |
+| `src/contexts/auth-context.tsx` | MODIFIED | Replaced toast calls with modal state + renders both modals |
+| `src/contexts/language-context.tsx` | REWRITTEN | Static imports fix eliminates i18n flash on render |
+| `src/app/(auth)/register/page.tsx` | MODIFIED | Passes `{ isNewUser: true }` to login() |
+| `src/app/layout.tsx` | MODIFIED | Toaster position top-right → bottom-right |
+| `src/app/globals.css` | MODIFIED | 6 new CSS keyframe animations added |
+| `src/messages/en.json` | MODIFIED | 9 new `auth.modal.*` + `auth.toast.*` keys |
+| `src/messages/ar.json` | MODIFIED | Same 9 keys in Arabic |
+| `src/messages/nl.json` | MODIFIED | Same 9 keys in Dutch |
+| `src/messages/fr.json` | MODIFIED | Same 9 keys in French + duplicate block bug fix |
+

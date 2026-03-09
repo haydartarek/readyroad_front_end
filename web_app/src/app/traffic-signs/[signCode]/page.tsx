@@ -108,7 +108,7 @@ export default function TrafficSignDetailPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
   const [signProgress, setSignProgress] = useState<SignUserProgress | null>(null);
-  const [progressLoading, setProgressLoading] = useState(false);
+  const [progressLoading, setProgressLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -136,7 +136,6 @@ export default function TrafficSignDetailPage() {
   // Fetch quiz progress for this sign
   useEffect(() => {
     let cancelled = false;
-    setProgressLoading(true);
     getSignStatus(signCode)
       .then(p => { if (!cancelled) setSignProgress(p); })
       .catch(() => { /* not logged in or no data — keep null */ })

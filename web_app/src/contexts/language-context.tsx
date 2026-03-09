@@ -9,6 +9,10 @@ import {
   type ReactNode,
 } from 'react';
 import { LANGUAGES, DEFAULT_LANGUAGE } from '@/lib/constants';
+import enMessages from '@/messages/en.json';
+import arMessages from '@/messages/ar.json';
+import frMessages from '@/messages/fr.json';
+import nlMessages from '@/messages/nl.json';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -26,6 +30,13 @@ interface LanguageContextType {
 const STORAGE_KEY = 'readyroad_locale';
 const RTL_LANGS   = new Set<Language>(['ar']);
 
+const ALL_MESSAGES: Record<Language, Record<string, string>> = {
+  en: enMessages as Record<string, string>,
+  ar: arMessages as Record<string, string>,
+  fr: frMessages as Record<string, string>,
+  nl: nlMessages as Record<string, string>,
+};
+
 // ─── Helpers ─────────────────────────────────────────────
 
 function isValidLanguage(lang: string): lang is Language {
@@ -41,6 +52,16 @@ function readStoredLanguage(): Language | null {
   }
 }
 
+// Resolve language + translations synchronously on first render
+// to avoid a flash where keys are shown before translations load.
+function getInitialLanguage(): Language {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && isValidLanguage(stored)) return stored;
+  } catch { /* SSR / private browsing */ }
+  return DEFAULT_LANGUAGE as Language;
+}
+
 // ─── Context ─────────────────────────────────────────────
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -48,32 +69,16 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 // ─── Provider ────────────────────────────────────────────
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language,     setLanguageState] = useState<Language>(DEFAULT_LANGUAGE as Language);
-  const [translations, setTranslations]  = useState<Record<string, string>>({});
+  const [language, setLanguageState] = useState<Language>(() => getInitialLanguage());
 
-  const isRTL = RTL_LANGS.has(language);
+  const translations = ALL_MESSAGES[language];
+  const isRTL        = RTL_LANGS.has(language);
 
-  // On mount: restore persisted language
+  // Sync HTML attributes on language change
   useEffect(() => {
-    const stored = readStoredLanguage();
-    if (stored) setLanguageState(stored);
-  }, []);
-
-  const loadTranslations = useCallback(async (lang: Language) => {
-    try {
-      const messages = await import(`@/messages/${lang}.json`);
-      setTranslations(messages.default);
-    } catch (error) {
-      console.error(`[LanguageProvider] Failed to load translations for "${lang}":`, error);
-    }
-  }, []);
-
-  // Sync translations + HTML attributes on language change
-  useEffect(() => {
-    loadTranslations(language);
     document.documentElement.lang = language;
     document.documentElement.dir  = isRTL ? 'rtl' : 'ltr';
-  }, [language, isRTL, loadTranslations]);
+  }, [language, isRTL]);
 
   const setLanguage = useCallback((lang: Language) => {
     if (lang === language) return;

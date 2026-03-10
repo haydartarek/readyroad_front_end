@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { SignImage } from '@/components/traffic-signs/sign-image';
@@ -13,7 +13,7 @@ import { apiClient, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, BookOpen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, BookOpen, Trophy } from 'lucide-react';
 import {
   startPracticeSession,
   submitPracticeAnswer,
@@ -31,6 +31,12 @@ type AnswerState = {
   response: SignPracticeAnswerResponse;
   selectedChoiceId: number;
   timeTaken: number;
+};
+
+type AnswerHistoryEntry = {
+  question: SignQuizQuestion;
+  selectedChoiceId: number;
+  response: SignPracticeAnswerResponse;
 };
 
 // ─── Helpers ────────────────────────────────────────────
@@ -75,6 +81,10 @@ export default function PracticePage() {
   const [startedAt, setStartedAt] = useState<number>(Date.now());
   const [correctTotal, setCorrectTotal] = useState(0);
   const [done, setDone]           = useState(false);
+  const [answerHistory, setAnswerHistory] = useState<AnswerHistoryEntry[]>([]);
+  const [showReview, setShowReview] = useState(false);
+  const reviewRef       = useRef<HTMLDivElement | null>(null);
+  const actionButtonRef = useRef<HTMLDivElement | null>(null);
 
   // Init: load sign + start session in parallel
   useEffect(() => {
@@ -101,10 +111,10 @@ export default function PracticePage() {
     return () => { cancelled = true; };
   }, [signCode]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const questions = session?.questions ?? [];
-  const total     = questions.length;
-  const current   = questions[currentIdx];
-  const progress  = total > 0 ? ((currentIdx) / total) * 100 : 0;
+  const questions   = session?.questions ?? [];
+  const total       = questions.length;
+  const current     = questions[currentIdx];
+  const answeredCnt = currentIdx + (answerState ? 1 : 0);
 
   // Handle answer submission
   const handleSubmit = useCallback(async () => {
@@ -114,8 +124,11 @@ export default function PracticePage() {
     try {
       const resp = await submitPracticeAnswer(session.sessionId, current.id, selectedChoice, timeTaken);
       setAnswerState({ response: resp, selectedChoiceId: selectedChoice, timeTaken });
+      setAnswerHistory(prev => [...prev, { question: current, selectedChoiceId: selectedChoice, response: resp }]);
       if (resp.correct) setCorrectTotal(c => c + 1);
       if (resp.sessionCompleted) setDone(true);
+      // Scroll the action button into view so the user sees "Next Question"
+      setTimeout(() => actionButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
     } catch (err) {
       logApiError('Submit answer error', err);
     } finally {
@@ -140,6 +153,8 @@ export default function PracticePage() {
     setAnswerState(null);
     setCorrectTotal(0);
     setDone(false);
+    setAnswerHistory([]);
+    setShowReview(false);
     // Re-init session
     setLoading(true);
     startPracticeSession(signCode)
@@ -170,56 +185,141 @@ export default function PracticePage() {
     );
   }
 
-  // ── Completed Screen ──
+  // ── Completed Screen — identical layout to exam result page ──
   if (done) {
-    const finalCorrect = answerState?.response.correct
-      ? correctTotal
+    const scoreAns = answerHistory.length > 0
+      ? answerHistory.filter(e => e.response.correct).length
       : correctTotal;
-    const scoreAns = session.correctCount > 0 ? session.correctCount : finalCorrect;
+    const scorePct = total > 0 ? Math.round((scoreAns / total) * 100) : 0;
+
     return (
-      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-b from-muted to-background">
-        <div className="container mx-auto px-4 py-12 max-w-2xl">
-          <Card className="rounded-2xl border-border/50 text-center shadow-lg">
-            <CardHeader>
-              <div className="flex justify-center mb-4">
-                <div className="relative w-24 h-24 mx-auto rounded-full bg-muted/50 p-3 flex items-center justify-center">
+      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-muted/30">
+        <div className="container mx-auto px-4 py-12 max-w-lg">
+
+          {/* Result card — same as exam */}
+          <Card className="rounded-3xl border border-green-200 shadow-md mb-6 text-center bg-white overflow-hidden">
+            <div className="h-1 w-full bg-green-400" />
+            <CardContent className="px-8 pt-8 pb-7 space-y-5">
+
+              {/* Sign image */}
+              <div className="flex justify-center">
+                <div className="relative w-20 h-20 rounded-2xl bg-muted/40 border border-border/30 p-2.5 flex items-center justify-center shadow-sm">
                   <SignImage src={sign.imageUrl} alt={sign.nameEn} />
                 </div>
               </div>
-              <CardTitle className="text-2xl font-black text-green-700">
-                🎉 {t('sign_quiz.practice.session_complete')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <p className="text-lg text-muted-foreground">
-                {t('sign_quiz.practice.session_score')
-                  .replace('{n}', String(scoreAns))
-                  .replace('{m}', String(total))}
-              </p>
-              <div className="flex items-center justify-center gap-2 text-3xl font-black">
-                {Math.round((scoreAns / total) * 100)}%
+
+              {/* Trophy + title */}
+              <div className="space-y-2">
+                <div className="flex justify-center">
+                  <Trophy className="w-10 h-10 text-green-500" />
+                </div>
+                <h2 className="text-xl font-bold tracking-tight text-green-700">
+                  {t('sign_quiz.practice.session_complete')}
+                </h2>
               </div>
-              <Progress value={(scoreAns / total) * 100} className="h-3 rounded-full" />
-              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                <Button variant="outline" className="rounded-xl" asChild>
+
+              {/* Score hero */}
+              <div className="text-6xl font-black tabular-nums text-green-600">{scorePct}%</div>
+
+              {/* Progress bar */}
+              <div className="space-y-1.5 px-2">
+                <Progress
+                  value={scorePct}
+                  className="h-2 rounded-full [&>div]:bg-green-500 [&>div]:transition-all [&>div]:duration-700"
+                />
+                <p className="text-xs text-muted-foreground/80">
+                  {t('sign_quiz.practice.session_score')
+                    .replace('{n}', String(scoreAns))
+                    .replace('{m}', String(total))}
+                </p>
+              </div>
+
+              {/* Action buttons — same hierarchy as exam */}
+              <div className="flex flex-col gap-2.5 pt-1">
+                <Button className="w-full rounded-xl h-10 font-semibold" onClick={handleRestart}>
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  {t('sign_quiz.practice.try_again')}
+                </Button>
+                {answerHistory.length > 0 && (
+                  <Button
+                    variant="secondary"
+                    className="w-full rounded-xl h-10 font-medium"
+                    onClick={() => {
+                      setShowReview(r => !r);
+                      setTimeout(() => reviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+                    }}
+                  >
+                    {t('sign_quiz.exam.review_answers')}
+                  </Button>
+                )}
+                <Button variant="ghost" className="w-full rounded-xl h-9 text-muted-foreground font-normal" asChild>
                   <Link href={`/traffic-signs/${signCode}`}>
                     {isRTL ? <ArrowRight className="w-4 h-4 mr-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
                     {t('sign_quiz.practice.back_to_sign')}
                   </Link>
                 </Button>
-                <Button className="rounded-xl" onClick={handleRestart}>
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  {t('sign_quiz.practice.try_again')}
-                </Button>
               </div>
+
             </CardContent>
           </Card>
+
+          {/* Answer Review — identical to exam review section */}
+          {showReview && (
+            <div ref={reviewRef} className="space-y-4 pb-10">
+              {answerHistory.map((entry, idx) => {
+                const { question, response } = entry;
+                const correctChoice = question.choices.find(c => c.id === response.correctChoiceId);
+                const correctText   = correctChoice ? cText(correctChoice, lang) : '';
+                const expl          = explanationFor(response, lang);
+
+                return (
+                  <Card key={question.id} className={cn(
+                    'rounded-xl border',
+                    response.correct ? 'border-green-300' : 'border-red-300',
+                  )}>
+                    <CardContent className="pt-4 space-y-2">
+
+                      {/* Sign image + question header */}
+                      <div className="flex items-start gap-3">
+                        <div className="relative w-10 h-10 rounded-lg bg-white border border-border/40 p-1 flex items-center justify-center flex-shrink-0">
+                          <SignImage src={sign.imageUrl} alt={sign.nameEn} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="text-xs text-muted-foreground font-semibold">
+                              {t('sign_quiz.exam.question_x').replace('{n}', String(idx + 1))}
+                            </span>
+                            <Badge className={cn('border text-xs', DIFF_COLORS[question.difficulty] || 'bg-muted text-foreground border-border')}>
+                              {t(`sign_quiz.${question.difficulty.toLowerCase()}`)}
+                            </Badge>
+                            {response.correct
+                              ? <Badge className="bg-green-100 text-green-800 border-green-200 border text-xs">{t('sign_quiz.exam.correct_label')}</Badge>
+                              : <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs">{t('sign_quiz.exam.wrong_label')}</Badge>}
+                          </div>
+                          <p className="text-sm font-medium">{qText(question, lang)}</p>
+                        </div>
+                      </div>
+
+                      {correctText && (
+                        <p className="text-sm text-green-700 font-medium">
+                          ✓ {t('sign_quiz.exam.correct_answer')}: {correctText}
+                        </p>
+                      )}
+                      {expl && <p className="text-xs text-muted-foreground">{expl}</p>}
+
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
         </div>
       </div>
     );
   }
 
-  // ── Question Screen ──
+  // ── Question Screen — uses exam visual template ──
   const isAnswered = answerState !== null;
 
   return (
@@ -234,43 +334,52 @@ export default function PracticePage() {
               {t('sign_quiz.practice.back_to_sign')}
             </Link>
           </Button>
-          <span className="text-sm font-semibold text-muted-foreground">
-            {t('sign_quiz.practice.question_of')
-              .replace('{n}', String(currentIdx + 1))
-              .replace('{m}', String(total))}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-muted-foreground">
+              {t('sign_quiz.practice_mode')}
+            </span>
+            <Badge variant="outline" className="text-xs">
+              {answeredCnt}/{total}
+            </Badge>
+          </div>
         </div>
 
-        {/* Progress bar */}
-        <Progress value={progress} className="h-2 rounded-full mb-6" />
+        {/* Progress bar — same style as exam */}
+        <Progress
+          value={(answeredCnt / total) * 100}
+          className="h-2.5 rounded-full mb-5 [&>div]:transition-all [&>div]:duration-500"
+        />
 
-        {/* Sign image prominent */}
-        <div className="flex justify-center mb-6">
-          <div className="relative w-32 h-32 rounded-2xl bg-white border border-border/50 shadow-md p-3 flex items-center justify-center">
+        {/* Sign image — large, prominent (same as exam template: w-52 h-52) */}
+        <div className="flex justify-center mb-4">
+          <div className="relative w-52 h-52 rounded-2xl bg-white border border-border/50 shadow-lg p-5 flex items-center justify-center">
             <SignImage src={sign.imageUrl} alt={sign.nameEn} />
           </div>
         </div>
 
-        {/* Question card */}
+        {/* Current question */}
         {current && (
-          <Card className="rounded-2xl border-border/50 shadow-sm">
+          <Card className="rounded-2xl border-border/50 shadow-sm mb-4">
             <CardHeader>
               <div className="flex items-start gap-3 flex-wrap">
-                <Badge className={cn('border text-xs flex-shrink-0', DIFF_COLORS[current.difficulty] || 'bg-muted text-foreground border-border')}>
+                <Badge className={cn('border text-[10px] font-normal flex-shrink-0 opacity-75', DIFF_COLORS[current.difficulty] || 'bg-muted text-foreground border-border')}>
                   {t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
                 </Badge>
-                <CardTitle className="text-base font-bold leading-snug flex-1">
+                <CardTitle className="text-lg font-semibold leading-snug flex-1">
+                  {t('sign_quiz.exam.question_x').replace('{n}', String(currentIdx + 1))}
+                  &nbsp;&mdash;&nbsp;
                   {qText(current, lang)}
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
 
-              {/* Choices */}
+              {/* Choices — radio button style (same as exam) */}
               {current.choices.map(choice => {
                 const isSelected = selectedChoice === choice.id;
-                const isCorrect  = answerState?.response.correctChoiceId === choice.id;
+                const isCorrect  = isAnswered && answerState?.response.correctChoiceId === choice.id;
                 const isWrong    = isAnswered && isSelected && !answerState?.response.correct;
+                const isNeutral  = isAnswered && !isCorrect && !isWrong;
 
                 return (
                   <button
@@ -278,58 +387,74 @@ export default function PracticePage() {
                     disabled={isAnswered}
                     onClick={() => !isAnswered && setSelectedChoice(choice.id)}
                     className={cn(
-                      'w-full text-start p-4 rounded-xl border-2 transition-all font-medium text-sm',
-                      !isAnswered && !isSelected && 'border-border hover:border-primary/50 hover:bg-muted/50',
-                      !isAnswered && isSelected && 'border-primary bg-primary/10',
-                      isAnswered && isCorrect && 'border-green-500 bg-green-50 text-green-800',
-                      isAnswered && isWrong && 'border-red-400 bg-red-50 text-red-800',
-                      isAnswered && !isCorrect && !isWrong && 'border-border opacity-60',
+                      'w-full text-start p-4 rounded-xl border-2 transition-all duration-150 font-medium text-sm group flex items-center gap-3',
+                      !isAnswered && !isSelected && 'border-border hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm active:scale-[0.99]',
+                      !isAnswered && isSelected  && 'border-primary bg-primary/10 shadow-sm scale-[1.01]',
+                      isAnswered  && isCorrect   && 'border-green-500 bg-green-50',
+                      isAnswered  && isWrong     && 'border-red-400 bg-red-50',
+                      isAnswered  && isNeutral   && 'border-border opacity-60',
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      {isAnswered && isCorrect && <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />}
-                      {isAnswered && isWrong   && <XCircle     className="w-5 h-5 text-red-500 flex-shrink-0" />}
-                      <span>{cText(choice, lang)}</span>
-                    </div>
+                    {/* Radio indicator / result icon */}
+                    {!isAnswered ? (
+                      <span className={cn(
+                        'w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all duration-150',
+                        isSelected
+                          ? 'border-primary bg-primary'
+                          : 'border-muted-foreground/40 group-hover:border-primary/60',
+                      )} />
+                    ) : isCorrect ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    ) : isWrong ? (
+                      <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                    ) : (
+                      <span className="w-4 h-4 rounded-full border-2 border-border/40 flex-shrink-0" />
+                    )}
+                    <span className={cn(
+                      'flex-1',
+                      isAnswered && isCorrect && 'text-green-800 font-semibold',
+                      isAnswered && isWrong   && 'text-red-800',
+                    )}>
+                      {cText(choice, lang)}
+                    </span>
                   </button>
                 );
               })}
 
-              {/* Feedback after answering */}
+              {/* Immediate feedback — practice mode differentiator (not in exam) */}
               {isAnswered && (
                 <div className={cn(
-                  'mt-4 p-4 rounded-xl border',
+                  'mt-2 p-4 rounded-xl border',
                   answerState.response.correct
                     ? 'border-green-200 bg-green-50'
                     : 'border-red-200 bg-red-50',
                 )}>
                   <p className={cn('font-bold text-sm mb-1', answerState.response.correct ? 'text-green-700' : 'text-red-700')}>
-                    {answerState.response.correct ? `✓ ${t('sign_quiz.exam.correct_label')}` : `✗ ${t('sign_quiz.exam.wrong_label')}`}
+                    {answerState.response.correct
+                      ? `✓ ${t('sign_quiz.exam.correct_label')}`
+                      : `✗ ${t('sign_quiz.exam.wrong_label')}`}
                   </p>
                   {explanationFor(answerState.response, lang) && (
                     <p className="text-sm text-muted-foreground">{explanationFor(answerState.response, lang)}</p>
                   )}
-                  {/* Sign image again in feedback */}
-                  <div className="flex justify-center mt-3">
-                    <div className="relative w-16 h-16 rounded-lg bg-white border border-border/40 p-1.5 flex items-center justify-center">
-                      <SignImage src={sign.imageUrl} alt={sign.nameEn} />
-                    </div>
-                  </div>
                 </div>
               )}
 
               {/* Action button */}
-              <div className="pt-2">
+              <div ref={actionButtonRef} className="pt-2">
                 {!isAnswered ? (
                   <Button
-                    className="w-full rounded-xl"
+                    className="w-full rounded-xl shadow-md shadow-primary/20"
                     disabled={selectedChoice === null || submitting}
                     onClick={handleSubmit}
                   >
                     {submitting ? t('sign_quiz.exam.submitting') : t('sign_quiz.practice.select_answer')}
                   </Button>
                 ) : (
-                  <Button className="w-full rounded-xl" onClick={handleNext}>
+                  <Button
+                    className="w-full rounded-xl transition-all duration-200 hover:shadow-md"
+                    onClick={handleNext}
+                  >
                     {currentIdx + 1 < total
                       ? t('sign_quiz.practice.next_question')
                       : t('sign_quiz.practice.session_complete')}

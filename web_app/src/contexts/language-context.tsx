@@ -31,10 +31,10 @@ const STORAGE_KEY = 'readyroad_locale';
 const RTL_LANGS   = new Set<Language>(['ar']);
 
 const ALL_MESSAGES: Record<Language, Record<string, string>> = {
-  en: enMessages as Record<string, string>,
-  ar: arMessages as Record<string, string>,
-  fr: frMessages as Record<string, string>,
-  nl: nlMessages as Record<string, string>,
+  en: enMessages as unknown as Record<string, string>,
+  ar: arMessages as unknown as Record<string, string>,
+  fr: frMessages as unknown as Record<string, string>,
+  nl: nlMessages as unknown as Record<string, string>,
 };
 
 // ─── Helpers ─────────────────────────────────────────────

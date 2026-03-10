@@ -5,7 +5,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://readyroad.be';
 export const metadata: Metadata = {
   title: 'Contact ReadyRoad – Get in Touch',
   description:
-    'Contact the ReadyRoad team for support, feedback or questions about the Belgian driving license exam preparation platform.',,
+    'Contact the ReadyRoad team for support, feedback or questions about the Belgian driving license exam preparation platform',
   keywords: [
     'contact ReadyRoad', 'ReadyRoad support',
     'rijbewijs app contact', 'contact rijbewijs oefenen',

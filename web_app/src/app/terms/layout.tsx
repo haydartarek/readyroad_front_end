@@ -5,7 +5,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://readyroad.be';
 export const metadata: Metadata = {
   title: 'Terms of Service | ReadyRoad',
   description:
-    'ReadyRoad Terms of Service. Read our usage terms for the Belgian driving license exam preparation platform.',,
+    'ReadyRoad Terms of Service. Read our usage terms for the Belgian driving license exam preparation platform.',
   alternates: {
     canonical: `${APP_URL}/terms`,
     languages: {

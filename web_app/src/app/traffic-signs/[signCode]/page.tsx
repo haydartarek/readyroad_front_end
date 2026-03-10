@@ -299,7 +299,7 @@ export default function TrafficSignDetailPage() {
                       {signProgress?.practiceStarted && !signProgress.practiceCompleted
                         ? t('sign_quiz.continue_practice')
                         : signProgress?.practiceCompleted
-                          ? t('sign_quiz.view_results')
+                          ? t('sign_quiz.practice_again')
                           : t('sign_quiz.start_practice')}
                       <ChevronRight className="w-3 h-3 ml-1" />
                     </Link>

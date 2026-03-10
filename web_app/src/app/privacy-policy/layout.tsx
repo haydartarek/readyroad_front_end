@@ -5,7 +5,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://readyroad.be';
 export const metadata: Metadata = {
   title: 'Privacy Policy | ReadyRoad',
   description:
-    'ReadyRoad Privacy Policy. Learn how we protect your personal data. GDPR compliant.',,
+    'ReadyRoad Privacy Policy. Learn how we protect your personal data. GDPR compliant.',
   alternates: {
     canonical: `${APP_URL}/privacy-policy`,
     languages: {

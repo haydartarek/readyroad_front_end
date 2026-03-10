@@ -24,6 +24,7 @@ Run an extremely deep analysis to identify the real root cause of the issue befo
 Assume worst-case scenarios so the final solution still works correctly under stress, edge cases, and failure conditions.
 
 Analyze the problem completely from all three sides:
+
 - Back-end
 - Database
 - Front-end
@@ -132,6 +133,7 @@ For every non-trivial task, you must explicitly follow this sequence:
 10. Final Result
 
 Before making any code change, explicitly state:
+
 - confirmed problem location
 - root cause
 - affected layer
@@ -139,12 +141,14 @@ Before making any code change, explicitly state:
 - expected impact
 
 During implementation:
+
 - keep changes tightly scoped
 - preserve existing logic unless a change is required by the confirmed fix
 - avoid touching unrelated files or modules
 - verify compatibility with business logic and application flow
 
 After implementation:
+
 - run relevant tests
 - inspect logs
 - verify outputs

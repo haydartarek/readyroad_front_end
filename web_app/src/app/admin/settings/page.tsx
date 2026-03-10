@@ -1,23 +1,39 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { useLanguage } from '@/contexts/language-context';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { useEffect, useState, useCallback } from "react";
+import { useLanguage } from "@/contexts/language-context";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  Globe, ClipboardList, Lock, Save, RotateCcw,
-  CheckCircle2, X, Settings2, Info, AlertTriangle,
-  Timer, HelpCircle, Percent,
-} from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import {
+  Globe,
+  ClipboardList,
+  Lock,
+  Save,
+  RotateCcw,
+  CheckCircle2,
+  X,
+  Settings2,
+  Info,
+  AlertTriangle,
+  Timer,
+  HelpCircle,
+  Percent,
+} from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────
 
 type SettingsModel = {
   siteName: string;
-  defaultLanguage: 'en' | 'ar' | 'nl' | 'fr';
+  defaultLanguage: "en" | "ar" | "nl" | "fr";
   maintenanceMode: boolean;
   allowRegistrations: boolean;
   examQuestions: number;
@@ -26,8 +42,8 @@ type SettingsModel = {
 };
 
 const DEFAULTS: SettingsModel = {
-  siteName: 'ReadyRoad',
-  defaultLanguage: 'en',
+  siteName: "ReadyRoad",
+  defaultLanguage: "en",
   maintenanceMode: false,
   allowRegistrations: true,
   examQuestions: 50,
@@ -35,16 +51,24 @@ const DEFAULTS: SettingsModel = {
   passingScorePercent: 82,
 };
 
-const STORAGE_KEY = 'readyroad_admin_settings';
+const STORAGE_KEY = "readyroad_admin_settings";
 
 // ─── Section Header ────────────────────────────────────
 
 function SectionHeader({
-  icon, title, color = 'bg-primary/10 text-primary',
-}: { icon: React.ReactNode; title: string; color?: string }) {
+  icon,
+  title,
+  color = "bg-primary/10 text-primary",
+}: {
+  icon: React.ReactNode;
+  title: string;
+  color?: string;
+}) {
   return (
     <div className="flex items-center gap-3">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+      <div
+        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}
+      >
         {icon}
       </div>
       <CardTitle className="text-base font-black">{title}</CardTitle>
@@ -54,12 +78,20 @@ function SectionHeader({
 
 // ─── Field ─────────────────────────────────────────────
 
-function Field({ label, hint, children }: {
-  label: string; hint?: string; children: React.ReactNode;
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-foreground">{label}</label>
+      <label className="block text-sm font-semibold text-foreground">
+        {label}
+      </label>
       {children}
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -68,20 +100,35 @@ function Field({ label, hint, children }: {
 
 // ─── Toggle ────────────────────────────────────────────
 
-function Toggle({ label, description, value, onChange, danger }: {
-  label: string; description: string; value: boolean;
-  onChange: (v: boolean) => void; danger?: boolean;
+function Toggle({
+  label,
+  description,
+  value,
+  onChange,
+  danger,
+}: {
+  label: string;
+  description: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  danger?: boolean;
 }) {
   return (
-    <div className={cn(
-      'flex items-center justify-between gap-4 rounded-2xl border p-4 transition-all',
-      danger && value
-        ? 'border-destructive/40 bg-destructive/5'
-        : 'border-border/50 hover:border-border',
-    )}>
+    <div
+      className={cn(
+        "flex items-center justify-between gap-4 rounded-2xl border p-4 transition-all",
+        danger && value
+          ? "border-destructive/40 bg-destructive/5"
+          : "border-border/50 hover:border-border",
+      )}
+    >
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground leading-none">{label}</p>
-        <p className="text-xs text-muted-foreground mt-1 leading-snug">{description}</p>
+        <p className="text-sm font-semibold text-foreground leading-none">
+          {label}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1 leading-snug">
+          {description}
+        </p>
       </div>
       <button
         type="button"
@@ -89,14 +136,16 @@ function Toggle({ label, description, value, onChange, danger }: {
         aria-checked={value}
         onClick={() => onChange(!value)}
         className={cn(
-          'relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30',
-          value ? (danger ? 'bg-destructive' : 'bg-green-500') : 'bg-muted',
+          "relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30",
+          value ? (danger ? "bg-destructive" : "bg-green-500") : "bg-muted",
         )}
       >
-        <span className={cn(
-          'inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-          value ? 'translate-x-6' : 'translate-x-1',
-        )} />
+        <span
+          className={cn(
+            "inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200",
+            value ? "translate-x-6" : "translate-x-1",
+          )}
+        />
       </button>
     </div>
   );
@@ -122,9 +171,9 @@ function LoadingSkeleton() {
 
 export default function AdminSettingsPage() {
   const { t } = useLanguage();
-  const [loading, setLoading]   = useState(true);
-  const [saving, setSaving]     = useState(false);
-  const [success, setSuccess]   = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
   const [settings, setSettings] = useState<SettingsModel>(DEFAULTS);
 
   const loadSettings = useCallback(() => {
@@ -133,25 +182,28 @@ export default function AdminSettingsPage() {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) setSettings({ ...DEFAULTS, ...JSON.parse(stored) });
     } catch {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[Settings] localStorage read failed, using defaults');
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[Settings] localStorage read failed, using defaults");
       }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadSettings(); }, [loadSettings]);
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const saveSettings = async () => {
-    setSaving(true); setSuccess(null);
+    setSaving(true);
+    setSuccess(null);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      setSuccess(t('admin.settings_page.save_success'));
+      setSuccess(t("admin.settings_page.save_success"));
       setTimeout(() => setSuccess(null), 3000);
     } catch {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[Settings] localStorage write failed');
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[Settings] localStorage write failed");
       }
     } finally {
       setSaving(false);
@@ -161,28 +213,29 @@ export default function AdminSettingsPage() {
   const resetSettings = () => {
     setSettings(DEFAULTS);
     localStorage.removeItem(STORAGE_KEY);
-    setSuccess(t('admin.settings_page.reset_success'));
+    setSuccess(t("admin.settings_page.reset_success"));
     setTimeout(() => setSuccess(null), 3000);
   };
 
-  const update = <K extends keyof SettingsModel>(key: K, value: SettingsModel[K]) =>
-    setSettings(prev => ({ ...prev, [key]: value }));
+  const update = <K extends keyof SettingsModel>(
+    key: K,
+    value: SettingsModel[K],
+  ) => setSettings((prev) => ({ ...prev, [key]: value }));
 
   const inputClass =
-    'w-full rounded-xl border border-border/50 bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all';
+    "w-full rounded-xl border border-border/50 bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all";
 
   const scoreColor =
     settings.passingScorePercent >= 80
-      ? 'bg-green-500/10 text-green-600 border-green-500/30'
+      ? "bg-green-500/10 text-green-600 border-green-500/30"
       : settings.passingScorePercent >= 65
-        ? 'bg-amber-500/10 text-amber-600 border-amber-500/30'
-        : 'bg-destructive/10 text-destructive border-destructive/30';
+        ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
+        : "bg-destructive/10 text-destructive border-destructive/30";
 
   if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-6">
-
       {/* ── Hero Banner ── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
         <div className="pointer-events-none absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -194,10 +247,10 @@ export default function AdminSettingsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-black tracking-tight text-foreground leading-none">
-                {t('admin.settings_page.title')}
+                {t("admin.settings_page.title")}
               </h1>
               <p className="text-muted-foreground text-sm mt-1 font-medium">
-                {t('admin.settings_page.description')}
+                {t("admin.settings_page.description")}
               </p>
             </div>
           </div>
@@ -205,22 +258,34 @@ export default function AdminSettingsPage() {
             <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
               <HelpCircle className="w-4 h-4 text-muted-foreground" />
               <div>
-                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">Questions</p>
-                <p className="text-foreground font-black text-sm leading-tight">{settings.examQuestions}</p>
+                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">
+                  Questions
+                </p>
+                <p className="text-foreground font-black text-sm leading-tight">
+                  {settings.examQuestions}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
               <Timer className="w-4 h-4 text-muted-foreground" />
               <div>
-                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">Duration</p>
-                <p className="text-foreground font-black text-sm leading-tight">{settings.examDurationMinutes} min</p>
+                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">
+                  Duration
+                </p>
+                <p className="text-foreground font-black text-sm leading-tight">
+                  {settings.examDurationMinutes} min
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
               <Percent className="w-4 h-4 text-muted-foreground" />
               <div>
-                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">Pass Score</p>
-                <p className="text-foreground font-black text-sm leading-tight">{settings.passingScorePercent}%</p>
+                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">
+                  Pass Score
+                </p>
+                <p className="text-foreground font-black text-sm leading-tight">
+                  {settings.passingScorePercent}%
+                </p>
               </div>
             </div>
           </div>
@@ -237,30 +302,39 @@ export default function AdminSettingsPage() {
             </Badge>
           )}
           {!settings.allowRegistrations && (
-            <Badge variant="outline" className="gap-1.5 px-3 py-1 border-amber-500/30 text-amber-600 bg-amber-500/5">
+            <Badge
+              variant="outline"
+              className="gap-1.5 px-3 py-1 border-amber-500/30 text-amber-600 bg-amber-500/5"
+            >
               <Lock className="w-3.5 h-3.5" />
               Registrations Disabled
             </Badge>
           )}
         </div>
         <div className="flex gap-2 ml-auto">
-          <Button variant="outline" onClick={resetSettings} disabled={saving} className="gap-2 rounded-xl">
+          <Button
+            variant="outline"
+            onClick={resetSettings}
+            disabled={saving}
+            className="gap-2 rounded-xl"
+          >
             <RotateCcw className="w-4 h-4" />
-            {t('admin.settings_page.reset')}
+            {t("admin.settings_page.reset")}
           </Button>
           <Button
-            onClick={saveSettings} disabled={saving}
+            onClick={saveSettings}
+            disabled={saving}
             className="gap-2 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg hover:scale-[1.01] transition-all disabled:shadow-none disabled:scale-100"
           >
             {saving ? (
               <>
                 <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                {t('admin.settings_page.saving')}
+                {t("admin.settings_page.saving")}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                {t('admin.settings_page.save')}
+                {t("admin.settings_page.save")}
               </>
             )}
           </Button>
@@ -274,7 +348,10 @@ export default function AdminSettingsPage() {
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
             {success}
           </span>
-          <button onClick={() => setSuccess(null)} className="hover:opacity-70 transition-opacity ml-4">
+          <button
+            onClick={() => setSuccess(null)}
+            className="hover:opacity-70 transition-opacity ml-4"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -282,26 +359,33 @@ export default function AdminSettingsPage() {
 
       {/* ── Two-column: General + Access ── */}
       <div className="grid gap-6 lg:grid-cols-2">
-
         {/* General */}
         <Card className="border-border/50 shadow-sm">
           <CardHeader className="pb-4">
-            <SectionHeader icon={<Globe className="w-4 h-4" />} title={t('admin.settings_page.section_general')} />
+            <SectionHeader
+              icon={<Globe className="w-4 h-4" />}
+              title={t("admin.settings_page.section_general")}
+            />
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field label={t('admin.settings_page.site_name')}>
+            <Field label={t("admin.settings_page.site_name")}>
               <input
                 type="text"
                 value={settings.siteName}
-                onChange={e => update('siteName', e.target.value)}
+                onChange={(e) => update("siteName", e.target.value)}
                 className={inputClass}
                 placeholder="ReadyRoad"
               />
             </Field>
-            <Field label={t('admin.settings_page.default_language')}>
+            <Field label={t("admin.settings_page.default_language")}>
               <Select
                 value={settings.defaultLanguage}
-                onValueChange={v => update('defaultLanguage', v as SettingsModel['defaultLanguage'])}
+                onValueChange={(v) =>
+                  update(
+                    "defaultLanguage",
+                    v as SettingsModel["defaultLanguage"],
+                  )
+                }
               >
                 <SelectTrigger className="w-full rounded-xl border-border/50 focus:ring-primary/30">
                   <SelectValue />
@@ -311,13 +395,19 @@ export default function AdminSettingsPage() {
                     <span className="flex items-center gap-2">🇬🇧 English</span>
                   </SelectItem>
                   <SelectItem value="ar">
-                    <span className="flex items-center gap-2">🇸🇦 Arabic — العربية</span>
+                    <span className="flex items-center gap-2">
+                      🇸🇦 Arabic — العربية
+                    </span>
                   </SelectItem>
                   <SelectItem value="nl">
-                    <span className="flex items-center gap-2">🇧🇪 Dutch — Nederlands</span>
+                    <span className="flex items-center gap-2">
+                      🇧🇪 Dutch — Nederlands
+                    </span>
                   </SelectItem>
                   <SelectItem value="fr">
-                    <span className="flex items-center gap-2">🇫🇷 French — Français</span>
+                    <span className="flex items-center gap-2">
+                      🇫🇷 French — Français
+                    </span>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -330,22 +420,22 @@ export default function AdminSettingsPage() {
           <CardHeader className="pb-4">
             <SectionHeader
               icon={<Lock className="w-4 h-4" />}
-              title={t('admin.settings_page.section_access')}
+              title={t("admin.settings_page.section_access")}
               color="bg-amber-500/10 text-amber-600"
             />
           </CardHeader>
           <CardContent className="space-y-3">
             <Toggle
-              label={t('admin.settings_page.allow_registrations')}
-              description={t('admin.settings_page.allow_registrations_desc')}
+              label={t("admin.settings_page.allow_registrations")}
+              description={t("admin.settings_page.allow_registrations_desc")}
               value={settings.allowRegistrations}
-              onChange={v => update('allowRegistrations', v)}
+              onChange={(v) => update("allowRegistrations", v)}
             />
             <Toggle
-              label={t('admin.settings_page.maintenance_mode')}
-              description={t('admin.settings_page.maintenance_mode_desc')}
+              label={t("admin.settings_page.maintenance_mode")}
+              description={t("admin.settings_page.maintenance_mode_desc")}
               value={settings.maintenanceMode}
-              onChange={v => update('maintenanceMode', v)}
+              onChange={(v) => update("maintenanceMode", v)}
               danger={settings.maintenanceMode}
             />
           </CardContent>
@@ -357,43 +447,69 @@ export default function AdminSettingsPage() {
         <CardHeader className="pb-4">
           <SectionHeader
             icon={<ClipboardList className="w-4 h-4" />}
-            title={t('admin.settings_page.section_exam')}
+            title={t("admin.settings_page.section_exam")}
             color="bg-blue-500/10 text-blue-600"
           />
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-5 sm:grid-cols-3">
-            <Field label={t('admin.settings_page.exam_questions')} hint={t('admin.settings_page.exam_questions_hint')}>
+            <Field
+              label={t("admin.settings_page.exam_questions")}
+              hint={t("admin.settings_page.exam_questions_hint")}
+            >
               <div className="relative">
                 <HelpCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
-                  type="number" min={10} max={100}
+                  type="number"
+                  min={10}
+                  max={100}
                   value={settings.examQuestions}
-                  onChange={e => update('examQuestions', Number(e.target.value))}
-                  className={cn(inputClass, 'pl-9')}
+                  onChange={(e) =>
+                    update("examQuestions", Number(e.target.value))
+                  }
+                  className={cn(inputClass, "pl-9")}
                 />
               </div>
             </Field>
-            <Field label={t('admin.settings_page.exam_duration')} hint={t('admin.settings_page.exam_duration_hint')}>
+            <Field
+              label={t("admin.settings_page.exam_duration")}
+              hint={t("admin.settings_page.exam_duration_hint")}
+            >
               <div className="relative">
                 <Timer className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
-                  type="number" min={10} max={120}
+                  type="number"
+                  min={10}
+                  max={120}
                   value={settings.examDurationMinutes}
-                  onChange={e => update('examDurationMinutes', Number(e.target.value))}
-                  className={cn(inputClass, 'pl-9')}
+                  onChange={(e) =>
+                    update("examDurationMinutes", Number(e.target.value))
+                  }
+                  className={cn(inputClass, "pl-9")}
                 />
               </div>
             </Field>
-            <Field label={t('admin.settings_page.passing_score')} hint={t('admin.settings_page.passing_score_hint')}>
+            <Field
+              label={t("admin.settings_page.passing_score")}
+              hint={t("admin.settings_page.passing_score_hint")}
+            >
               <div className="flex items-center gap-3">
                 <input
-                  type="range" min={50} max={100}
+                  type="range"
+                  min={50}
+                  max={100}
                   value={settings.passingScorePercent}
-                  onChange={e => update('passingScorePercent', Number(e.target.value))}
+                  onChange={(e) =>
+                    update("passingScorePercent", Number(e.target.value))
+                  }
                   className="flex-1 accent-primary"
                 />
-                <div className={cn('w-14 h-9 rounded-xl flex items-center justify-center text-sm font-black border flex-shrink-0', scoreColor)}>
+                <div
+                  className={cn(
+                    "w-14 h-9 rounded-xl flex items-center justify-center text-sm font-black border flex-shrink-0",
+                    scoreColor,
+                  )}
+                >
                   {settings.passingScorePercent}%
                 </div>
               </div>
@@ -407,17 +523,28 @@ export default function AdminSettingsPage() {
             </p>
             <div className="flex items-center gap-2 rounded-xl bg-background border border-border/50 px-3 py-2">
               <HelpCircle className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold">{settings.examQuestions}</span>
+              <span className="text-sm font-bold">
+                {settings.examQuestions}
+              </span>
               <span className="text-xs text-muted-foreground">questions</span>
             </div>
             <div className="flex items-center gap-2 rounded-xl bg-background border border-border/50 px-3 py-2">
               <Timer className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-bold">{settings.examDurationMinutes}</span>
+              <span className="text-sm font-bold">
+                {settings.examDurationMinutes}
+              </span>
               <span className="text-xs text-muted-foreground">minutes</span>
             </div>
-            <div className={cn('flex items-center gap-2 rounded-xl border px-3 py-2', scoreColor)}>
+            <div
+              className={cn(
+                "flex items-center gap-2 rounded-xl border px-3 py-2",
+                scoreColor,
+              )}
+            >
               <Percent className="w-4 h-4" />
-              <span className="text-sm font-bold">{settings.passingScorePercent}%</span>
+              <span className="text-sm font-bold">
+                {settings.passingScorePercent}%
+              </span>
               <span className="text-xs opacity-70">to pass</span>
             </div>
           </div>
@@ -428,10 +555,9 @@ export default function AdminSettingsPage() {
       <div className="flex items-start gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-4 py-3">
         <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-muted-foreground leading-relaxed">
-          {t('admin.settings_page.local_storage_note')}
+          {t("admin.settings_page.local_storage_note")}
         </p>
       </div>
-
     </div>
   );
 }

@@ -12,9 +12,13 @@ import {
   Trophy,
   XCircle,
   Clock,
-  ChevronRight,
+  ChevronDown,
+  ChevronUp,
   ClipboardList,
   RefreshCw,
+  CheckCircle2,
+  Lightbulb,
+  Loader2,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────
@@ -35,6 +39,37 @@ interface ExamHistoryResponse {
   exams: ExamHistoryItem[];
 }
 
+interface AllAnsweredQuestion {
+  questionId: number;
+  questionTextEn: string;
+  questionTextAr: string;
+  questionTextNl: string;
+  questionTextFr: string;
+  selectedOptionText: string;
+  correctOptionText: string;
+  explanationEn: string;
+  explanationAr: string;
+  explanationNl: string;
+  explanationFr: string;
+  categoryName: string;
+  categoryCode: string;
+  contentImageUrl?: string;
+  isCorrect: boolean;
+}
+
+interface CategoryBreakdown {
+  categoryCode: string;
+  categoryNameEn: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  accuracyPercentage: number;
+}
+
+interface ExamDetail {
+  allAnswers: AllAnsweredQuestion[];
+  categoryBreakdown: CategoryBreakdown[];
+}
+
 // ─── Component ───────────────────────────────────────────
 
 export default function ExamResultsPage() {
@@ -45,6 +80,13 @@ export default function ExamResultsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [serviceDown, setServiceDown] = useState(false);
+
+  // Accordion state
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [detailsCache, setDetailsCache] = useState<Record<number, ExamDetail>>(
+    {},
+  );
+  const [loadingDetailId, setLoadingDetailId] = useState<number | null>(null);
 
   const fetchHistory = useCallback(async () => {
     if (!user) return;
@@ -70,6 +112,46 @@ export default function ExamResultsPage() {
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
+
+  // ── Toggle accordion for an exam card ──
+  const toggleExpand = useCallback(
+    async (examId: number) => {
+      if (expandedId === examId) {
+        setExpandedId(null);
+        return;
+      }
+      setExpandedId(examId);
+      if (detailsCache[examId]) return; // already fetched
+
+      setLoadingDetailId(examId);
+      try {
+        const res = await apiClient.get<ExamDetail>(
+          `/exams/simulations/${examId}/results`,
+        );
+        setDetailsCache((prev) => ({ ...prev, [examId]: res.data }));
+      } catch (err) {
+        logApiError("ExamDetail", err);
+      } finally {
+        setLoadingDetailId(null);
+      }
+    },
+    [expandedId, detailsCache],
+  );
+
+  // ── Resolve question text for active language ──
+  function getQuestionText(q: AllAnsweredQuestion): string {
+    if (language === "ar" && q.questionTextAr) return q.questionTextAr;
+    if (language === "nl" && q.questionTextNl) return q.questionTextNl;
+    if (language === "fr" && q.questionTextFr) return q.questionTextFr;
+    return q.questionTextEn ?? "";
+  }
+
+  function getExplanation(q: AllAnsweredQuestion): string | undefined {
+    if (language === "ar" && q.explanationAr) return q.explanationAr;
+    if (language === "nl" && q.explanationNl) return q.explanationNl;
+    if (language === "fr" && q.explanationFr) return q.explanationFr;
+    return q.explanationEn || undefined;
+  }
 
   // ── Format date by active language ──
   function formatDate(iso: string | null): string {
@@ -212,19 +294,19 @@ export default function ExamResultsPage() {
               const pct = Math.round(exam.scorePercentage ?? 0);
               const isPassed = isCompleted && exam.passed;
               const isFailed = isCompleted && !exam.passed;
+              const isExpanded = expandedId === exam.examId;
+              const detail = detailsCache[exam.examId];
+              const isLoadingThis = loadingDetailId === exam.examId;
 
               return (
-                <Link
+                <div
                   key={exam.examId}
-                  href={isCompleted ? `/exam/results/${exam.examId}` : "#"}
                   className={cn(
-                    "group block rounded-2xl border bg-card shadow-sm overflow-hidden transition-all duration-200",
-                    "hover:shadow-md hover:-translate-y-[1px]",
-                    isPassed ? "border-green-200 hover:border-green-400" : "",
-                    isFailed ? "border-red-200   hover:border-red-400" : "",
-                    !isCompleted
-                      ? "border-border opacity-60 pointer-events-none"
-                      : "",
+                    "rounded-2xl border bg-card shadow-sm overflow-hidden transition-all duration-200",
+                    isPassed ? "border-green-200" : "",
+                    isFailed ? "border-red-200" : "",
+                    !isCompleted ? "border-border opacity-60" : "",
+                    isExpanded ? "shadow-md" : "",
                   )}
                 >
                   {/* Accent top strip */}
@@ -235,20 +317,27 @@ export default function ExamResultsPage() {
                         ? "bg-gradient-to-r from-green-400 to-emerald-500"
                         : "",
                       isFailed
-                        ? "bg-gradient-to-r from-red-400   to-rose-500"
+                        ? "bg-gradient-to-r from-red-400 to-rose-500"
                         : "",
                       !isCompleted ? "bg-muted" : "",
                     )}
                   />
 
-                  <div className="p-5 flex items-center gap-4">
+                  {/* Card header — clickable to expand */}
+                  <div
+                    className={cn(
+                      "p-5 flex items-center gap-4",
+                      isCompleted ? "cursor-pointer select-none" : "",
+                    )}
+                    onClick={() => isCompleted && toggleExpand(exam.examId)}
+                  >
                     {/* Icon bubble */}
                     <div
                       className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                        isPassed ? "bg-green-100  text-green-600" : "",
-                        isFailed ? "bg-red-100    text-red-600" : "",
-                        !isCompleted ? "bg-muted   text-muted-foreground" : "",
+                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
+                        isPassed ? "bg-green-100 text-green-600" : "",
+                        isFailed ? "bg-red-100 text-red-600" : "",
+                        !isCompleted ? "bg-muted text-muted-foreground" : "",
                       )}
                     >
                       {isCompleted ? (
@@ -276,7 +365,7 @@ export default function ExamResultsPage() {
                               "inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full",
                               isPassed
                                 ? "bg-green-100 text-green-700"
-                                : "bg-red-100   text-red-700",
+                                : "bg-red-100 text-red-700",
                             )}
                           >
                             {isPassed ? t("exam.passed") : t("exam.failed")}
@@ -309,7 +398,7 @@ export default function ExamResultsPage() {
                                 "h-full rounded-full transition-all duration-500",
                                 isPassed
                                   ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                  : "bg-gradient-to-r from-red-400   to-rose-500",
+                                  : "bg-gradient-to-r from-red-400 to-rose-500",
                               )}
                               style={{ width: `${pct}%` }}
                             />
@@ -324,8 +413,8 @@ export default function ExamResultsPage() {
                         className={cn(
                           "shrink-0 flex flex-col items-center justify-center w-16 h-16 rounded-2xl border-2 font-black text-xl leading-none",
                           isPassed
-                            ? "bg-green-50  border-green-200 text-green-700"
-                            : "bg-red-50    border-red-200   text-red-600",
+                            ? "bg-green-50 border-green-200 text-green-700"
+                            : "bg-red-50 border-red-200 text-red-600",
                         )}
                       >
                         <span>{pct}</span>
@@ -333,17 +422,173 @@ export default function ExamResultsPage() {
                       </div>
                     )}
 
-                    {/* Arrow */}
-                    {isCompleted && (
-                      <ChevronRight
-                        className={cn(
-                          "w-5 h-5 shrink-0 transition-all duration-150 group-hover:translate-x-1",
-                          isPassed ? "text-green-500" : "text-red-400",
-                        )}
-                      />
-                    )}
+                    {/* Expand/collapse chevron */}
+                    {isCompleted &&
+                      (isLoadingThis ? (
+                        <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
+                      ) : isExpanded ? (
+                        <ChevronUp
+                          className={cn(
+                            "w-5 h-5 shrink-0",
+                            isPassed ? "text-green-500" : "text-red-400",
+                          )}
+                        />
+                      ) : (
+                        <ChevronDown
+                          className={cn(
+                            "w-5 h-5 shrink-0",
+                            isPassed ? "text-green-500" : "text-red-400",
+                          )}
+                        />
+                      ))}
                   </div>
-                </Link>
+
+                  {/* ── Expandable question review ── */}
+                  {isExpanded && (
+                    <div
+                      className={cn(
+                        "border-t",
+                        isPassed ? "border-green-100" : "border-red-100",
+                      )}
+                    >
+                      {isLoadingThis || !detail ? (
+                        <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground text-sm">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading questions…
+                        </div>
+                      ) : (
+                        <div className="p-5 space-y-4">
+                          {/* Category breakdown pills */}
+                          {detail.categoryBreakdown &&
+                            detail.categoryBreakdown.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {detail.categoryBreakdown.map((cat) => (
+                                  <span
+                                    key={cat.categoryCode}
+                                    className={cn(
+                                      "inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border",
+                                      cat.accuracyPercentage >= 80
+                                        ? "bg-green-50 border-green-200 text-green-700"
+                                        : cat.accuracyPercentage >= 60
+                                          ? "bg-amber-50 border-amber-200 text-amber-700"
+                                          : "bg-red-50 border-red-200 text-red-700",
+                                    )}
+                                  >
+                                    {cat.categoryNameEn}: {cat.correctAnswers}/
+                                    {cat.totalQuestions}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                          {/* Question list */}
+                          {detail.allAnswers && detail.allAnswers.length > 0 ? (
+                            <div className="space-y-3">
+                              {detail.allAnswers.map((q, qi) => (
+                                <div
+                                  key={q.questionId}
+                                  className={cn(
+                                    "rounded-xl border p-4 space-y-2.5",
+                                    q.isCorrect
+                                      ? "border-green-200 bg-green-50/40"
+                                      : "border-red-200 bg-red-50/40",
+                                  )}
+                                >
+                                  {/* Header row */}
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-card border border-border/50 text-xs font-black text-foreground">
+                                        {qi + 1}
+                                      </span>
+                                      <span className="text-xs font-medium text-muted-foreground">
+                                        {q.categoryName}
+                                      </span>
+                                    </div>
+                                    {q.isCorrect ? (
+                                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                                    ) : (
+                                      <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                                    )}
+                                  </div>
+
+                                  {/* Question text */}
+                                  <p className="text-sm font-medium text-foreground leading-relaxed">
+                                    {getQuestionText(q)}
+                                  </p>
+
+                                  {/* Answer summary */}
+                                  <div className="space-y-1 text-sm">
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-muted-foreground shrink-0 text-xs">
+                                        {t("exam.your_answer") ??
+                                          "Your answer:"}
+                                      </span>
+                                      <span
+                                        className={cn(
+                                          "font-bold text-xs",
+                                          q.isCorrect
+                                            ? "text-green-600"
+                                            : "text-red-600",
+                                        )}
+                                      >
+                                        {q.selectedOptionText}
+                                      </span>
+                                    </div>
+                                    {!q.isCorrect && (
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-muted-foreground shrink-0 text-xs">
+                                          {t("exam.correct_answer") ??
+                                            "Correct answer:"}
+                                        </span>
+                                        <span className="font-bold text-xs text-green-600">
+                                          {q.correctOptionText}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Explanation */}
+                                  {getExplanation(q) && (
+                                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-2.5 flex items-start gap-2 text-xs">
+                                      <Lightbulb className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                                      <p className="text-foreground/80">
+                                        <span className="font-semibold text-primary">
+                                          {t("exam.explanation") ??
+                                            "Explanation:"}{" "}
+                                        </span>
+                                        {getExplanation(q)}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              No question details available for this exam.
+                            </p>
+                          )}
+
+                          {/* Link to full detail page */}
+                          <div className="pt-1">
+                            <Link
+                              href={`/exam/results/${exam.examId}`}
+                              className={cn(
+                                "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors",
+                                isPassed
+                                  ? "border-green-200 text-green-700 hover:bg-green-50"
+                                  : "border-red-200 text-red-700 hover:bg-red-50",
+                              )}
+                            >
+                              {t("exam.view_full_results") ??
+                                "View full results"}
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

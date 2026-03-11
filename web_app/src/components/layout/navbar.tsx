@@ -29,8 +29,8 @@ import {
   SearchDropdown,
   type SearchResult,
 } from "@/components/layout/search-dropdown";
-import { getUnreadNotificationCount } from "@/services";
 import { NotificationPanel } from "@/components/layout/notification-panel";
+import { useNotifications } from "@/contexts/notification-context";
 import { ROUTES, LANGUAGES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -49,12 +49,7 @@ const NAV_ITEMS = [
   { name: "nav.dashboard", href: ROUTES.DASHBOARD },
   { name: "nav.exam", href: ROUTES.EXAM },
   { name: "nav.practice", href: ROUTES.PRACTICE },
-  { name: "nav.analytics", href: ROUTES.ANALYTICS_WEAK_AREAS },
 ] as const;
-
-const MAX_ERRORS = 3;
-const BASE_POLL_MS = 30_000;
-const DEDUPE_MS = 2_000;
 
 const ROLE_STYLES: Record<
   string,
@@ -131,10 +126,7 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [unreadCount, setUnreadCount] = useState(0);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  const errorsRef = useRef(0);
-  const lastFetchRef = useRef(0);
+  const { unreadCount } = useNotifications();
   const searchContainer = useRef<HTMLDivElement>(null);
 
   const currentLanguage = LANGUAGES.find((l) => l.code === language);
@@ -194,72 +186,6 @@ export function Navbar() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [isSearchOpen, handleClose]);
-
-  // ── Notification polling ──
-  const restartPolling = useCallback((ms: number) => {
-    if (pollingRef.current) clearInterval(pollingRef.current);
-    pollingRef.current = setInterval(fetchUnread, ms);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchUnread = useCallback(async () => {
-    if (!user) return;
-    const now = Date.now();
-    if (now - lastFetchRef.current < DEDUPE_MS) return;
-    lastFetchRef.current = now;
-
-    if (errorsRef.current >= MAX_ERRORS) {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-      return;
-    }
-
-    try {
-      setUnreadCount(await getUnreadNotificationCount());
-      errorsRef.current = 0;
-      restartPolling(BASE_POLL_MS);
-    } catch {
-      errorsRef.current += 1;
-      setUnreadCount(0);
-      if (errorsRef.current >= MAX_ERRORS) {
-        console.warn(
-          "[Navbar] Notification polling stopped after repeated failures",
-        );
-        if (pollingRef.current) {
-          clearInterval(pollingRef.current);
-          pollingRef.current = null;
-        }
-      } else {
-        restartPolling(BASE_POLL_MS * Math.pow(2, errorsRef.current));
-      }
-    }
-  }, [user, restartPolling]);
-
-  useEffect(() => {
-    if (!user) {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-      queueMicrotask(() => setUnreadCount(0));
-      return;
-    }
-    errorsRef.current = 0;
-    lastFetchRef.current = 0;
-    queueMicrotask(fetchUnread);
-    restartPolling(BASE_POLL_MS);
-
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") fetchUnread();
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [user, fetchUnread, restartPolling]);
 
   // ── Full public navbar ──────────────────────────────────────────────────
   return (
@@ -372,12 +298,7 @@ export function Navbar() {
             </div>
 
             {/* Notifications panel */}
-            {user && (
-              <NotificationPanel
-                unreadCount={unreadCount}
-                onAllRead={() => setUnreadCount(0)}
-              />
-            )}
+            {user && <NotificationPanel />}
 
             {/* Language selector */}
             <DropdownMenu>

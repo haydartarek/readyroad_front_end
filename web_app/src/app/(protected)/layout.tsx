@@ -1,5 +1,5 @@
-import { Breadcrumb } from '@/components/ui/breadcrumb';
-import { UserSidebar } from '@/components/layout/UserSidebar';
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { UserSidebar } from "@/components/layout/UserSidebar";
 
 export default function ProtectedLayout({
   children,

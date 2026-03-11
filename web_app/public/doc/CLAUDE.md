@@ -162,3 +162,4 @@ If new evidence appears, stop and replan.
 If a proposed fix is not proven, it is not complete.
 
 You must show compliance through actions, not by claiming compliance.
+Dont write any arabic word in comment code.

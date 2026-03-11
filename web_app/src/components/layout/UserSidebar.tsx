@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
-import { getUnreadNotificationCount } from "@/services";
+import { useNotifications } from "@/contexts/notification-context";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────
@@ -141,11 +141,6 @@ const ACCOUNT_ITEMS: NavItem[] = [
   },
 ];
 
-// ─── Polling constants ────────────────────────────────────
-
-const POLL_MS = 60_000; // 1 min — less aggressive than navbar's 30s
-const MAX_ERRORS = 3;
-
 // ─── Main Component ───────────────────────────────────────
 
 function UserSidebarInner() {
@@ -160,38 +155,7 @@ function UserSidebarInner() {
     pathname.startsWith("/practice") ||
     (pathname.startsWith("/exam") && !pathname.startsWith("/exam/results"));
 
-  const [unreadCount, setUnreadCount] = useState(0);
-  const errorsRef = useRef(0);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
-
-  // ── Notification count polling ──
-  const fetchUnread = useCallback(async () => {
-    if (!user) return;
-    try {
-      const count = await getUnreadNotificationCount();
-      errorsRef.current = 0;
-      setUnreadCount(count);
-    } catch {
-      errorsRef.current += 1;
-      if (errorsRef.current >= MAX_ERRORS && pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) {
-      setUnreadCount(0);
-      return;
-    }
-    errorsRef.current = 0;
-    fetchUnread();
-    pollingRef.current = setInterval(fetchUnread, POLL_MS);
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, [user, fetchUnread]);
+  const { unreadCount } = useNotifications();
 
   // ── Avatar initial ──
   const avatarInitial = (

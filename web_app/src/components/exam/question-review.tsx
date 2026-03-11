@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { CheckCircle2, XCircle, Lightbulb } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -25,12 +25,14 @@ interface ReviewQuestion {
 export function QuestionReview({
   questions,
   showOnlyWrong = false,
+  passed = false,
 }: {
   questions: ReviewQuestion[];
   showOnlyWrong?: boolean;
+  passed?: boolean;
 }) {
   const displayQuestions = showOnlyWrong
-    ? questions.filter(q => !q.isCorrect)
+    ? questions.filter((q) => !q.isCorrect)
     : questions;
 
   const count = displayQuestions.length;
@@ -40,10 +42,10 @@ export function QuestionReview({
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
           <CardTitle className="font-black">
-            {showOnlyWrong ? 'Wrong Answers' : 'All Questions Review'}
+            {showOnlyWrong ? "Wrong Answers" : "All Questions Review"}
           </CardTitle>
           <Badge variant="secondary" className="text-xs font-semibold">
-            {count} question{count !== 1 ? 's' : ''}
+            {count} question{count !== 1 ? "s" : ""}
           </Badge>
         </div>
       </CardHeader>
@@ -52,9 +54,15 @@ export function QuestionReview({
         {/* Empty state */}
         {count === 0 && showOnlyWrong ? (
           <div className="py-12 text-center space-y-2">
-            <div className="text-4xl">🎉</div>
-            <p className="font-black text-foreground">Perfect Score!</p>
-            <p className="text-sm text-muted-foreground">No wrong answers.</p>
+            <div className="text-4xl">{passed ? "🎉" : "📭"}</div>
+            <p className="font-black text-foreground">
+              {passed ? "Perfect Score!" : "No wrong answer details available"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {passed
+                ? "You answered all questions correctly."
+                : "Answer details for this exam are not available. Take a new exam to review your mistakes."}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -62,10 +70,10 @@ export function QuestionReview({
               <div
                 key={question.id}
                 className={cn(
-                  'rounded-2xl border p-5 space-y-3 transition-colors',
+                  "rounded-2xl border p-5 space-y-3 transition-colors",
                   question.isCorrect
-                    ? 'border-green-200 bg-green-50/40   dark:bg-green-950/20'
-                    : 'border-red-200   bg-red-50/40     dark:bg-red-950/20',
+                    ? "border-green-200 bg-green-50/40   dark:bg-green-950/20"
+                    : "border-red-200   bg-red-50/40     dark:bg-red-950/20",
                 )}
               >
                 {/* Row 1: index + category + result icon */}
@@ -78,10 +86,11 @@ export function QuestionReview({
                       {question.categoryName}
                     </span>
                   </div>
-                  {question.isCorrect
-                    ? <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                    : <XCircle      className="h-5 w-5 text-red-500   flex-shrink-0" />
-                  }
+                  {question.isCorrect ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500   flex-shrink-0" />
+                  )}
                 </div>
 
                 {/* Question text */}
@@ -92,19 +101,27 @@ export function QuestionReview({
                 {/* Answer summary */}
                 <div className="space-y-1.5 text-sm">
                   <div className="flex items-start gap-2">
-                    <span className="text-muted-foreground shrink-0">Your answer:</span>
-                    <span className={cn(
-                      'font-bold',
-                      question.isCorrect ? 'text-green-600' : 'text-red-600',
-                    )}>
-                      {question.selectedOptionText || `Option ${question.selectedOption}`}
+                    <span className="text-muted-foreground shrink-0">
+                      Your answer:
+                    </span>
+                    <span
+                      className={cn(
+                        "font-bold",
+                        question.isCorrect ? "text-green-600" : "text-red-600",
+                      )}
+                    >
+                      {question.selectedOptionText ||
+                        `Option ${question.selectedOption}`}
                     </span>
                   </div>
                   {!question.isCorrect && (
                     <div className="flex items-start gap-2">
-                      <span className="text-muted-foreground shrink-0">Correct answer:</span>
+                      <span className="text-muted-foreground shrink-0">
+                        Correct answer:
+                      </span>
                       <span className="font-bold text-green-600">
-                        {question.correctOptionText || `Option ${question.correctOption}`}
+                        {question.correctOptionText ||
+                          `Option ${question.correctOption}`}
                       </span>
                     </div>
                   )}
@@ -115,7 +132,9 @@ export function QuestionReview({
                   <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-start gap-2 text-sm">
                     <Lightbulb className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                     <p className="text-foreground/80">
-                      <span className="font-semibold text-primary">Explanation: </span>
+                      <span className="font-semibold text-primary">
+                        Explanation:{" "}
+                      </span>
                       {question.explanation}
                     </p>
                   </div>

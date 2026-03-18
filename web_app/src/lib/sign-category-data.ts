@@ -4,17 +4,18 @@
 export type LangKey = 'nl' | 'en' | 'ar' | 'fr';
 
 export interface GroupInfo {
-  title:       Record<LangKey, string>;
-  description: Record<LangKey, string>;
+  title:        Record<LangKey, string>;
+  description:  Record<LangKey, string>;
+  displayKey?:  string; // override the letter shown in the section badge
 }
 
 export const GROUP_INFO: Record<string, GroupInfo> = {
   A: {
     title: {
-      nl: 'A-serie: Gevaarsborden',
-      en: 'A Series: Danger Signs',
-      ar: 'السلسلة أ: لافتات الخطر',
-      fr: 'Série A : Panneaux de danger',
+      nl: 'Gevaar',
+      en: 'Danger Signs',
+      ar: 'علامات الخطر',
+      fr: 'Panneaux de danger',
     },
     description: {
       nl: 'Waarschuwingsborden hebben wereldwijd, en vooral in Europa, een uniform ontwerp dat direct herkenbaar is. Ze zijn gebaseerd op drie essentiële elementen: een driehoekige vorm met een punt naar boven, een brede rode rand op witte achtergrond voor maximale zichtbaarheid, en een eenvoudig zwart symbool dat de aard van het gevaar weergeeft.',
@@ -25,10 +26,10 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   B: {
     title: {
-      nl: 'B-serie: Voorrangsborden',
-      en: 'B Series: Priority Signs',
-      ar: 'السلسلة ب: لافتات الأولوية',
-      fr: 'Série B : Panneaux de priorité',
+      nl: 'Voorrang',
+      en: 'Priority Signs',
+      ar: 'الأولوية',
+      fr: 'Panneaux de priorité',
     },
     description: {
       nl: 'Voorrangsborden behoren tot de belangrijkste elementen van verkeersregulering. Ze bepalen wie voorrang heeft bij kruispunten en smalle doorgangen. Deze borden spelen een essentiële rol bij het verminderen van ongevallen door haast of verkeerde inschattingen, vooral op plaatsen zonder verkeerslichten.',
@@ -39,10 +40,10 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   C: {
     title: {
-      nl: 'C-serie: Verbodsborden',
-      en: 'C Series: Prohibition Signs',
-      ar: 'السلسلة ج: لافتات الحظر',
-      fr: "Série C : Panneaux d'interdiction",
+      nl: 'Verbod',
+      en: 'Prohibition Signs',
+      ar: 'المنع',
+      fr: "Panneaux d'interdiction",
     },
     description: {
       nl: 'Verbodsborden zijn verkeersborden die duidelijke beperkingen opleggen aan bepaald gedrag of aan specifieke voertuigtypes op bepaalde plaatsen en onder bepaalde omstandigheden. Deze borden geven niet alleen richting, maar leggen een verplichting op die moet worden nageleefd om gevaar of chaos te voorkomen.',
@@ -53,10 +54,10 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   D: {
     title: {
-      nl: 'D-serie: Gebodsborden',
-      en: 'D Series: Mandatory Signs',
-      ar: 'السلسلة د: لافتات الإلزام',
-      fr: "Série D : Panneaux d'obligation",
+      nl: 'Gebod',
+      en: 'Mandatory Signs',
+      ar: 'الإلزام',
+      fr: "Panneaux d'obligation",
     },
     description: {
       nl: 'Gebodsborden zijn verkeersborden die bestuurders en weggebruikers verplichten een bepaald gedrag of een specifieke richting te volgen. Deze borden bieden geen keuze, maar zijn directe bevelen die onmiddellijk moeten worden uitgevoerd om een vlotte doorstroming van het verkeer te garanderen en de verkeersveiligheid te verbeteren.',
@@ -67,10 +68,10 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   E: {
     title: {
-      nl: 'E-serie: Stilstaan en parkeren',
-      en: 'E Series: Stopping & Parking',
-      ar: 'السلسلة هـ: الوقوف والركن',
-      fr: 'Série E : Arrêt et stationnement',
+      nl: 'Parkeren / Stilstaan',
+      en: 'Stopping & Parking',
+      ar: 'الوقوف والركن',
+      fr: 'Arrêt et stationnement',
     },
     description: {
       nl: 'Parkeer- en stilstaanborden worden gebruikt om de plaatsen en tijden te regelen waar voertuigen mogen stoppen of parkeren aan de kant van de weg. Deze borden zijn essentieel om verkeerschaos te voorkomen en een vlotte doorstroming te garanderen, vooral in drukke stedelijke gebieden.',
@@ -81,11 +82,12 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   F: {
     title: {
-      nl: 'F-serie: Aanwijzingsborden',
-      en: 'F Series: Information Signs',
-      ar: 'السلسلة و: لافتات الإرشاد',
-      fr: "Série F : Panneaux d'indication",
+      nl: 'Aanwijzing',
+      en: 'Information Signs',
+      ar: 'إرشادات',
+      fr: "Panneaux d'indication",
     },
+    // No displayKey — letter 'F' is shown in badge as-is
     description: {
       nl: 'Aanwijzingsborden worden gebruikt om weggebruikers te begeleiden en te voorzien van belangrijke informatie over bestemmingen of nabijgelegen diensten. Niet alle borden hebben een verplichtend karakter, maar sommige borden vereisen wel dat de aanwijzing in het midden van het verkeersbord wordt opgevolgd.',
       en: 'Information signs are used to guide road users and provide them with important information about destinations or nearby services. Not all signs have a mandatory nature, but some require that the instruction shown in the center of the sign be followed.',
@@ -93,12 +95,27 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
       fr: "Les panneaux d'indication sont utilisés pour guider les usagers de la route et leur fournir des informations importantes sur les destinations ou les services à proximité. Tous les panneaux n'ont pas un caractère obligatoire, mais certains exigent que l'instruction indiquée au centre soit respectée.",
     },
   },
+  FM: {
+    displayKey: 'F',
+    title: {
+      nl: 'Wegmarkering',
+      en: 'Road Marking Signs',
+      ar: 'علامات تعليمات الطريق',
+      fr: 'Panneaux de marquage routier',
+    },
+    description: {
+      nl: 'Wegmarkeringsborden duiden tijdelijke verkeersmaatregelen aan op de rijbaan, zoals rijstrookversmalling, rijstrookverlegging en omleidingen. Ze worden voornamelijk gebruikt bij wegenwerken om de rijstrookverdeling aan te passen en de veiligheid van werknemers en weggebruikers te garanderen.',
+      en: 'Road marking signs indicate temporary traffic measures on the carriageway, such as lane narrowing, lane deviation and detours. They are primarily used during roadworks to adjust the lane layout and guarantee the safety of workers and road users.',
+      ar: 'علامات تعليمات الطريق تشير إلى تدابير المرور المؤقتة على مسار السير، كتضيق المسارات وتحويلها واللتفافات. وتُستخدم بصفة رئيسية أثناء أعمال البناء لتعديل توزيع المسارات وضمان سلامة العمال ومستخدمي الطريق.',
+      fr: "Les panneaux de marquage routier indiquent des mesures de circulation temporaires sur la chaussée, comme le rétrécissement ou la déviation de voie et les détournements. Ils sont principalement utilisés lors de travaux routiers pour adapter la répartition des voies et garantir la sécurité des travailleurs et des usagers.",
+    },
+  },
   G: {
     title: {
-      nl: 'G-serie: Onderborden',
-      en: 'G Series: Supplementary Panels',
-      ar: 'السلسلة ز: اللافتات التكميلية',
-      fr: 'Série G : Panneaux additionnels',
+      nl: 'Onderborden',
+      en: 'Supplementary Panels',
+      ar: 'لوحات إضافية',
+      fr: 'Panneaux additionnels',
     },
     description: {
       nl: 'Onderborden zijn informatiepanelen die nooit alleen staan, maar altijd onder een hoofdbord worden geplaatst, zoals waarschuwings-, verbods- of gebodsborden. Hun functie is om de betekenis van het hoofdbord te specificeren of te verduidelijken, of de toepassing ervan te beperken tot bepaalde situaties.',
@@ -109,10 +126,10 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   M: {
     title: {
-      nl: 'M-serie: Onderborden fietsers',
-      en: 'M Series: Cyclist Supplementary Panels',
-      ar: 'السلسلة م: لافتات راكبي الدراجات',
-      fr: 'Série M : Panneaux additionnels cyclistes',
+      nl: 'Fiets / Bromfiets onderborden',
+      en: 'Cycle / Moped Panels',
+      ar: 'لوحات الدراجات والدراجات البخارية',
+      fr: 'Panneaux vélos / cyclomoteurs',
     },
     description: {
       nl: 'Onderborden van de M-serie geven specifieke aanvullende informatie voor fietsers, bromfietsers, speed pedelecs en andere lichte weggebruikers. Ze worden altijd onder een hoofdbord geplaatst en verduidelijken hoe dat bord van toepassing is op deze groepen.',
@@ -123,10 +140,10 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   T: {
     title: {
-      nl: 'TYPE-serie: Afbakeningsborden',
-      en: 'TYPE Series: Delineation Signs',
-      ar: 'سلسلة TYPE: لافتات الإرشاد الطرقي',
-      fr: 'Série TYPE : Panneaux de balisage',
+      nl: 'Afbakeningsborden',
+      en: 'Delineation Signs',
+      ar: 'لافتات الإرشاد الطرقي',
+      fr: 'Panneaux de balisage',
     },
     description: {
       nl: 'Afbakeningsborden worden gebruikt om de bestuurder naar het juiste pad te leiden, vooral bij bochten, wegversmallingen of obstakels. Deze borden leggen geen verkeersregel op zoals snelheid of voorrang, maar tonen duidelijk de weg die moet worden gevolgd om gevaar te vermijden.',
@@ -137,10 +154,10 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   Z: {
     title: {
-      nl: 'Z-serie: Zoneborden',
-      en: 'Z Series: Zone Signs',
-      ar: 'السلسلة ز: لافتات المناطق',
-      fr: 'Série Z : Panneaux de zone',
+      nl: 'Zoneborden',
+      en: 'Zone Signs',
+      ar: 'لافتات المناطق',
+      fr: 'Panneaux de zone',
     },
     description: {
       nl: 'Zoneborden worden gebruikt om het verkeer in een hele zone te reguleren. De aangegeven verkeersregel wordt van kracht zodra je de zone binnenrijdt en blijft geldig op alle wegen en straten binnen de zone, inclusief zijstraten en kruispunten, totdat je het einde-zonebord bereikt.',
@@ -151,4 +168,4 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
 };
 
-export const GROUP_LETTER_ORDER: string[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'M', 'T', 'Z'];
+export const GROUP_LETTER_ORDER: string[] = ['A', 'B', 'C', 'D', 'E', 'F', 'FM', 'G', 'M', 'T', 'Z'];

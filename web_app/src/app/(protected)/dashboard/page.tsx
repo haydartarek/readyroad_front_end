@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { ProgressOverviewCard } from "@/components/dashboard/progress-overview-card";
@@ -11,7 +11,6 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Flame,
@@ -28,10 +27,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import type { CategoryProgressSummary } from "@/services/progressService";
-import WeakAreasPage from "../analytics/weak-areas/page";
-import ErrorPatternsPage from "../analytics/error-patterns/page";
-import ExamResultsPage from "../exam/results/page";
-import ProfilePage from "../profile/page";
+import { QuickActionsSection } from "@/components/dashboard/quick-actions-section";
+import { RecentActivityList } from "@/components/dashboard/recent-activity-list";
 
 // ─── Progress Tracker types (inline, no extra file) ──────────────────────────
 
@@ -479,6 +476,12 @@ function DashboardHome() {
         subtitle={t("dashboard.subtitle")}
       />
 
+      {/* Quick Actions */}
+      <QuickActionsSection />
+
+      {/* Recent Activity */}
+      <RecentActivityList activities={[]} />
+
       {/* Quick Stats Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
@@ -708,22 +711,6 @@ function DashboardHome() {
   );
 }
 
-function DashboardContent() {
-  const searchParams = useSearchParams();
-  const section = searchParams.get("section");
-
-  if (section === "weak-areas") return <WeakAreasPage />;
-  if (section === "error-patterns") return <ErrorPatternsPage />;
-  if (section === "exam-results") return <ExamResultsPage />;
-  if (section === "profile") return <ProfilePage />;
-
-  return <DashboardHome />;
-}
-
 export default function DashboardPage() {
-  return (
-    <Suspense fallback={null}>
-      <DashboardContent />
-    </Suspense>
-  );
+  return <DashboardHome />;
 }

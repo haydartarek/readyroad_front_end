@@ -163,3 +163,9 @@ If a proposed fix is not proven, it is not complete.
 
 You must show compliance through actions, not by claiming compliance.
 Dont write any arabic word in comment code.
+Dont use any Paython file.
+Strict rule:
+Only use the exact sign image files I provide as the canonical source.
+Do not add anything else from your own assumptions.
+Do not auto-complete the category.
+Do not modify anything outside my exact request.

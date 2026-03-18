@@ -16,8 +16,6 @@ import {
   GROUP_LETTER_ORDER,
 } from "@/lib/sign-category-data";
 
-// ─── Constants ──────────────────────────────────────────
-
 const CODE_TO_KEY: Record<string, string> = {
   A: "DANGER",
   B: "PRIORITY",
@@ -26,8 +24,8 @@ const CODE_TO_KEY: Record<string, string> = {
   E: "PARKING",
   F: "INFORMATION",
   G: "ADDITIONAL",
-  H: "TEMPORARY",
-  M: "DELINEATION",
+  M: "CYCLIST",
+  T: "DELINEATION",
   Z: "ZONE",
 };
 
@@ -39,9 +37,9 @@ const CATEGORY_KEY_SUFFIX: Record<string, string> = {
   PARKING: "parking",
   INFORMATION: "information",
   ADDITIONAL: "supplementary",
-  TEMPORARY: "temporary",
-  ZONE: "zone",
+  CYCLIST: "cyclist",
   DELINEATION: "delineation",
+  ZONE: "zone",
 };
 
 const KEY_TO_CODES: Record<string, string[]> = {};
@@ -49,7 +47,38 @@ for (const [code, key] of Object.entries(CODE_TO_KEY)) {
   (KEY_TO_CODES[key] ??= []).push(code);
 }
 
-// ─── Fetch helper ────────────────────────────────────────
+const PARKING_SIGN_WHITELIST = new Set([
+  "E1",
+  "E3",
+  "E5",
+  "E7",
+  "E9a",
+  "E9a-electric",
+  "E9a-disabled",
+  "E9a-disc",
+  "E9b",
+  "E9c",
+  "E9d",
+  "E9e",
+  "E9f",
+  "E9g",
+  "E9h",
+  "E9i",
+  "E9j",
+  "E11",
+]);
+
+const ROAD_MARKINGS_CODES = new Set([
+  "F39",
+  "F79",
+  "F81",
+  "F83",
+  "F85",
+  "F89",
+  "F91",
+  "F95",
+  "F98",
+]);
 
 async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   try {
@@ -72,8 +101,6 @@ async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   }
 }
 
-// ─── Suspense wrapper ────────────────────────────────────
-
 export default function TrafficSignsPage() {
   return (
     <Suspense fallback={<LoadingState />}>
@@ -81,8 +108,6 @@ export default function TrafficSignsPage() {
     </Suspense>
   );
 }
-
-// ─── Shared states ───────────────────────────────────────
 
 function LoadingState() {
   const { t } = useLanguage();
@@ -100,8 +125,6 @@ function LoadingState() {
   );
 }
 
-// ─── Content ─────────────────────────────────────────────
-
 function TrafficSignsContent() {
   const { t, language } = useLanguage();
   const router = useRouter();
@@ -118,7 +141,6 @@ function TrafficSignsContent() {
 
   useEffect(() => {
     let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getAllTrafficSigns()
       .then((signs) => {
@@ -137,7 +159,6 @@ function TrafficSignsContent() {
     };
   }, [fetchKey]);
 
-  // ── URL helpers ──
   const updateUrl = useCallback(
     (params: Record<string, string>) => {
       const sp = new URLSearchParams(searchParams.toString());
@@ -164,7 +185,6 @@ function TrafficSignsContent() {
     [router, pathname],
   );
 
-  // ── Filtering ──
   const filteredSigns = useMemo(() => {
     const q = search.trim().toLowerCase();
     return allSigns.filter((sign) => {
@@ -183,15 +203,22 @@ function TrafficSignsContent() {
         sign.nameFr?.toLowerCase().includes(q) ||
         sign.descriptionEn?.toLowerCase().includes(q);
 
-      return matchesCategory && matchesSearch;
+      const isParking =
+        sign.category === "PARKING" || sign.categoryCode === "E";
+      const passesWhitelist =
+        !isParking || PARKING_SIGN_WHITELIST.has(sign.signCode ?? "");
+
+      return matchesCategory && matchesSearch && passesWhitelist;
     });
   }, [allSigns, category, search]);
 
-  // ── Alphabetical groups ──
   const groupedSigns = useMemo(() => {
     const groups: Record<string, TrafficSign[]> = {};
     for (const sign of filteredSigns) {
-      const letter = sign.signCode?.[0]?.toUpperCase() ?? "?";
+      const code = sign.signCode ?? "";
+      const letter = ROAD_MARKINGS_CODES.has(code)
+        ? "FM"
+        : (code[0]?.toUpperCase() ?? "?");
       (groups[letter] ??= []).push(sign);
     }
     const ordered = [
@@ -205,7 +232,6 @@ function TrafficSignsContent() {
       .map((l) => ({ letter: l, signs: groups[l], info: GROUP_INFO[l] }));
   }, [filteredSigns]);
 
-  // ── Category options ──
   const categories = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const sign of allSigns) {
@@ -230,7 +256,6 @@ function TrafficSignsContent() {
     ];
   }, [allSigns, t]);
 
-  // ── States ──
   if (serviceUnavailable) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
@@ -249,7 +274,6 @@ function TrafficSignsContent() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted to-background">
       <div className="container mx-auto px-4 py-12">
-        {/* Header */}
         <div className="mb-12 text-center space-y-3">
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
             {t("traffic_signs.page_title")}
@@ -259,7 +283,6 @@ function TrafficSignsContent() {
           </p>
         </div>
 
-        {/* Filters */}
         <TrafficSignsFilters
           categories={categories}
           selectedCategory={category}
@@ -269,7 +292,6 @@ function TrafficSignsContent() {
           onClearFilters={handleClearFilters}
         />
 
-        {/* Results count */}
         <div className="mb-6 flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary ring-1 ring-inset ring-primary/20">
             <svg
@@ -298,7 +320,6 @@ function TrafficSignsContent() {
           )}
         </div>
 
-        {/* Empty state */}
         {filteredSigns.length === 0 && (
           <div className="py-20 text-center space-y-2">
             <div className="text-5xl mb-4">🚧</div>
@@ -311,7 +332,6 @@ function TrafficSignsContent() {
           </div>
         )}
 
-        {/* Alphabetical grouped sections */}
         <div className="space-y-16">
           {groupedSigns.map(({ letter, signs: groupSigns, info }) => {
             const lang: LangKey = (
@@ -319,24 +339,22 @@ function TrafficSignsContent() {
             ).includes(language as LangKey)
               ? (language as LangKey)
               : "en";
-            const title = info?.title[lang] ?? `${letter}-serie`;
+            const rawTitle = info?.title["nl"] ?? `${letter}-serie`;
+            const arabicTitle = info?.title["ar"];
+            const title = arabicTitle
+              ? `${rawTitle} (${arabicTitle})`
+              : rawTitle;
             const description = info?.description[lang] ?? "";
             return (
               <section key={letter} id={`group-${letter}`}>
-                {/* Full-width group banner */}
                 <div className="relative w-full mb-8 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                  {/* Decorative gradient bar on the left */}
                   <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-primary via-primary/70 to-primary/30 rounded-l-2xl" />
-
                   <div className="flex items-center gap-6 px-8 py-6">
-                    {/* Letter badge */}
                     <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-primary shadow-lg flex items-center justify-center">
                       <span className="text-3xl font-black text-primary-foreground leading-none select-none">
-                        {letter}
+                        {info?.displayKey ?? letter}
                       </span>
                     </div>
-
-                    {/* Text block */}
                     <div className="min-w-0 flex-1">
                       <h2 className="text-xl font-black text-foreground mb-1.5 tracking-tight">
                         {title}
@@ -345,8 +363,6 @@ function TrafficSignsContent() {
                         {description}
                       </p>
                     </div>
-
-                    {/* Sign count pill */}
                     <div className="flex-shrink-0 hidden sm:flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex-col gap-0.5">
                       <span className="text-lg font-black text-primary leading-none">
                         {groupSigns.length}
@@ -357,8 +373,6 @@ function TrafficSignsContent() {
                     </div>
                   </div>
                 </div>
-
-                {/* Signs grid */}
                 <TrafficSignsGrid signs={groupSigns} />
               </section>
             );

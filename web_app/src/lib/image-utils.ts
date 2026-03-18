@@ -7,11 +7,13 @@ const FOLDER_NAME_MAP: Record<string, string> = {
   'verbodsborden':     'prohibition_signs',
   'gebodsborden':      'mandatory_signs',
   'onderborden':       'additional_signs',
+  'bicycle_signs':     'additional_signs',
   'zoneborden':        'zone_signs',
   'aanwijzingsborden': 'information_signs',
   'afbakeningsborden': 'delineation_signs',
   'parkeren':          'parking_signs',
   'Informatieborden_en_tijdelijke_verkeersmaatregelen': 'information_signs',
+  'informatieborden_en_tijdelijke_verkeersmaatregelen': 'information_signs',
   'direction_signs':   'information_signs',
 };
 

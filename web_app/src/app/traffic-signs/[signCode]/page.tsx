@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrafficSign } from '@/lib/types';
+import { resolveTrafficSignImage } from '@/lib/sign-image-resolver';
 import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
@@ -222,7 +223,7 @@ export default function TrafficSignDetailPage() {
               <CardContent>
                 <div className="flex justify-center rounded-xl bg-muted/50 p-8">
                   <div className="relative h-56 w-56 md:h-64 md:w-64">
-                    <SignImage src={sign.imageUrl} alt={getSignName(sign)} />
+                    <SignImage src={resolveTrafficSignImage(sign)} alt={getSignName(sign)} />
                   </div>
                 </div>
               </CardContent>
@@ -281,7 +282,7 @@ export default function TrafficSignDetailPage() {
                 {/* ── Practice Card ── */}
                 <div className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/60 transition-colors">
                   <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-background border border-border/40 flex items-center justify-center">
-                    <SignImage src={sign.imageUrl} alt={getSignName(sign)} />
+                    <SignImage src={resolveTrafficSignImage(sign)} alt={getSignName(sign)} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -309,7 +310,7 @@ export default function TrafficSignDetailPage() {
                 {/* ── Exam 1 Card ── */}
                 <div className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/60 transition-colors">
                   <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-background border border-border/40 flex items-center justify-center">
-                    <SignImage src={sign.imageUrl} alt={getSignName(sign)} />
+                    <SignImage src={resolveTrafficSignImage(sign)} alt={getSignName(sign)} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -346,7 +347,7 @@ export default function TrafficSignDetailPage() {
                 )}>
                   <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-background border border-border/40 flex items-center justify-center">
                     {signProgress?.exam2Unlocked
-                      ? <SignImage src={sign.imageUrl} alt={getSignName(sign)} />
+                      ? <SignImage src={resolveTrafficSignImage(sign)} alt={getSignName(sign)} />
                       : <Lock className="w-6 h-6 text-muted-foreground" />}
                   </div>
                   <div className="flex-1 min-w-0">

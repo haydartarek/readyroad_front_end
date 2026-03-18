@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   TrendingUp,
@@ -7,10 +7,11 @@ import {
   CheckCircle2,
   XCircle,
   Award,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { useLanguage } from '@/contexts/language-context';
+  Flame,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/language-context";
 
 interface ProgressData {
   totalExamsTaken: number;
@@ -21,7 +22,7 @@ interface ProgressData {
   failedExams: number;
 }
 
-type Trend = 'up' | 'down' | 'neutral';
+type Trend = "up" | "down" | "neutral";
 
 interface MetricItem {
   label: string;
@@ -33,8 +34,16 @@ interface MetricItem {
   TrendIcon?: React.ElementType;
 }
 
-function MetricCard({ label, value, icon: Icon, trend, trendLabel, trendClass, TrendIcon }: MetricItem) {
-  const showTrend = trend && trend !== 'neutral' && TrendIcon && trendLabel;
+function MetricCard({
+  label,
+  value,
+  icon: Icon,
+  trend,
+  trendLabel,
+  trendClass,
+  TrendIcon,
+}: MetricItem) {
+  const showTrend = trend && trend !== "neutral" && TrendIcon && trendLabel;
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur">
@@ -56,7 +65,12 @@ function MetricCard({ label, value, icon: Icon, trend, trendLabel, trendClass, T
           </p>
 
           {showTrend && (
-            <div className={cn('mt-1 inline-flex items-center gap-1 text-xs font-medium', trendClass)}>
+            <div
+              className={cn(
+                "mt-1 inline-flex items-center gap-1 text-xs font-medium",
+                trendClass,
+              )}
+            >
               <TrendIcon className="h-3.5 w-3.5" aria-hidden />
               {trendLabel}
             </div>
@@ -72,47 +86,57 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
 
   const trendUp = {
     icon: TrendingUp,
-    className: 'text-primary',
-    label: t('dashboard.trend_good_progress'),
+    className: "text-primary",
+    label: t("dashboard.trend_good_progress"),
   };
   const trendDown = {
     icon: TrendingDown,
-    className: 'text-destructive',
-    label: t('dashboard.trend_needs_improvement'),
+    className: "text-destructive",
+    label: t("dashboard.trend_needs_improvement"),
   };
 
   const metrics: MetricItem[] = [
     {
-      label: t('dashboard.metric_exams_taken'),
+      label: t("dashboard.metric_exams_taken"),
       value: data.totalExamsTaken,
       icon: ClipboardList,
     },
     {
-      label:      t('dashboard.metric_passed') || 'Passed',
-      value:      data.passedExams,
-      icon:       CheckCircle2,
-      trend:      data.passedExams > 0 ? 'up' : 'neutral',
+      label: t("dashboard.metric_passed") || "Passed",
+      value: data.passedExams,
+      icon: CheckCircle2,
+      trend: data.passedExams > 0 ? "up" : "neutral",
       trendLabel: trendUp.label,
       trendClass: trendUp.className,
-      TrendIcon:  trendUp.icon,
+      TrendIcon: trendUp.icon,
     },
     {
-      label:      t('dashboard.metric_failed') || 'Failed',
-      value:      data.failedExams,
-      icon:       XCircle,
-      trend:      data.failedExams > 0 ? 'down' : 'neutral',
+      label: t("dashboard.metric_failed") || "Failed",
+      value: data.failedExams,
+      icon: XCircle,
+      trend: data.failedExams > 0 ? "down" : "neutral",
       trendLabel: trendDown.label,
       trendClass: trendDown.className,
-      TrendIcon:  trendDown.icon,
+      TrendIcon: trendDown.icon,
     },
     {
-      label:      t('dashboard.metric_pass_rate'),
-      value:      `${data.passRate.toFixed(1)}%`,
-      icon:       Award,
-      trend:      data.passRate >= 70 ? 'up' : data.passRate > 0 ? 'down' : 'neutral',
+      label: t("dashboard.metric_pass_rate"),
+      value: `${data.passRate.toFixed(1)}%`,
+      icon: Award,
+      trend:
+        data.passRate >= 70 ? "up" : data.passRate > 0 ? "down" : "neutral",
       trendLabel: data.passRate >= 70 ? trendUp.label : trendDown.label,
       trendClass: data.passRate >= 70 ? trendUp.className : trendDown.className,
-      TrendIcon:  data.passRate >= 70 ? trendUp.icon : trendDown.icon,
+      TrendIcon: data.passRate >= 70 ? trendUp.icon : trendDown.icon,
+    },
+    {
+      label: t("dashboard.stat_streak") || "Study Streak",
+      value: `${data.currentStreak}d`,
+      icon: Flame,
+      trend: data.currentStreak > 0 ? "up" : "neutral",
+      trendLabel: trendUp.label,
+      trendClass: trendUp.className,
+      TrendIcon: trendUp.icon,
     },
   ];
 
@@ -120,12 +144,12 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
     <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-extrabold tracking-tight text-secondary">
-          {t('dashboard.exam_performance_title') || 'Exam Performance'}
+          {t("dashboard.exam_performance_title") || "Exam Performance"}
         </CardTitle>
       </CardHeader>
 
       <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {metrics.map((metric) => (
             <MetricCard key={metric.label} {...metric} />
           ))}

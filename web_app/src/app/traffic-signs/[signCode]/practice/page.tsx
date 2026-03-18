@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { TrafficSign } from '@/lib/types';
+import { resolveTrafficSignImage } from '@/lib/sign-image-resolver';
 import { apiClient, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
@@ -204,7 +205,7 @@ export default function PracticePage() {
               {/* Sign image */}
               <div className="flex justify-center">
                 <div className="relative w-20 h-20 rounded-2xl bg-muted/40 border border-border/30 p-2.5 flex items-center justify-center shadow-sm">
-                  <SignImage src={sign.imageUrl} alt={sign.nameEn} />
+                  <SignImage src={resolveTrafficSignImage(sign)} alt={sign.nameEn} />
                 </div>
               </div>
 
@@ -282,7 +283,7 @@ export default function PracticePage() {
                       {/* Sign image + question header */}
                       <div className="flex items-start gap-3">
                         <div className="relative w-10 h-10 rounded-lg bg-white border border-border/40 p-1 flex items-center justify-center flex-shrink-0">
-                          <SignImage src={sign.imageUrl} alt={sign.nameEn} />
+                          <SignImage src={resolveTrafficSignImage(sign)} alt={sign.nameEn} />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -353,7 +354,7 @@ export default function PracticePage() {
         {/* Sign image — large, prominent (same as exam template: w-52 h-52) */}
         <div className="flex justify-center mb-4">
           <div className="relative w-52 h-52 rounded-2xl bg-white border border-border/50 shadow-lg p-5 flex items-center justify-center">
-            <SignImage src={sign.imageUrl} alt={sign.nameEn} />
+            <SignImage src={resolveTrafficSignImage(sign)} alt={sign.nameEn} />
           </div>
         </div>
 

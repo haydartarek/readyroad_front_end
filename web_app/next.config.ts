@@ -25,9 +25,11 @@ const nextConfig: NextConfig = {
       process.env.BACKEND_URL?.replace('/api', '') ??
       'http://localhost:8890';
     return [
+      // Only proxy uploaded quiz images to the backend.
+      // Sign images (/images/signs/...) are served by Next.js from the public/ directory.
       {
-        source: '/images/:path*',
-        destination: `${backendBase}/images/:path*`,
+        source: '/images/quiz/:path*',
+        destination: `${backendBase}/images/quiz/:path*`,
       },
     ];
   },

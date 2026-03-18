@@ -1039,7 +1039,7 @@
   "traffic_signs.category_parking": "Parkeer- & Stopborden",
   "traffic_signs.category_information": "Informatieborden",
   "traffic_signs.category_supplementary": "Aanvullende Borden",
-  "traffic_signs.category_temporary": "Tijdelijke Borden",
+  "traffic_signs.category_cyclist": "Fiets- & Bromfietsborden",
   "traffic_signs.category_zone": "Zoneborden",
   "traffic_signs.category_delineation": "Afbakeningsborden",
   "progress.loading": "Voortgang laden...",

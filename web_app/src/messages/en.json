@@ -1039,7 +1039,7 @@
   "traffic_signs.category_parking": "Parking Signs",
   "traffic_signs.category_information": "Information Signs",
   "traffic_signs.category_supplementary": "Supplementary Signs",
-  "traffic_signs.category_temporary": "Temporary Signs",
+  "traffic_signs.category_cyclist": "Cycle / Moped Signs",
   "traffic_signs.category_zone": "Zone Signs",
   "traffic_signs.category_delineation": "Delineation Signs",
   "progress.loading": "Loading your progress...",

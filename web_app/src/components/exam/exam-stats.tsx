@@ -40,7 +40,7 @@ const TIME_ROWS = (t: TimeAnalysis) => [
 const NEXT_STEPS = [
   { label: 'Try Another Exam', href: '/exam',                  icon: RefreshCw,    variant: 'default'  as const },
   { label: 'Practice Mode',    href: '/practice',              icon: ClipboardList, variant: 'outline' as const },
-  { label: 'View Analytics',   href: '/analytics/weak-areas',  icon: BarChart2,    variant: 'outline'  as const },
+  { label: 'View Analytics',   href: '/dashboard?section=weak-areas',  icon: BarChart2,    variant: 'outline'  as const },
 ];
 
 // ─── Component ───────────────────────────────────────────

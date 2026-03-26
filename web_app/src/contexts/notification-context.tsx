@@ -61,17 +61,28 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   const [unreadCount, setUnreadCount] = useState(0);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const errorsRef = useRef(0);
   const lastFetchRef = useRef(0);
+  const fetchUnreadRef = useRef<(() => Promise<void>) | null>(null);
 
   // ── Stop any running interval ──────────────────────────
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
-      clearInterval(pollingRef.current);
+      clearTimeout(pollingRef.current);
       pollingRef.current = null;
     }
   }, []);
+
+  const scheduleFetch = useCallback(
+    (delayMs: number) => {
+      stopPolling();
+      pollingRef.current = setTimeout(() => {
+        void fetchUnreadRef.current?.();
+      }, delayMs);
+    },
+    [stopPolling],
+  );
 
   // ── Core fetch ────────────────────────────────────────
   const fetchUnread = useCallback(async () => {
@@ -90,6 +101,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const count = await getUnreadNotificationCount();
       setUnreadCount(count);
       errorsRef.current = 0;
+      scheduleFetch(BASE_POLL_MS);
     } catch {
       errorsRef.current += 1;
       if (errorsRef.current >= MAX_ERRORS) {
@@ -98,35 +110,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           "[NotificationContext] Polling stopped after repeated failures",
         );
       } else {
-        // restart at exponential-backoff interval
-        stopPolling();
-        pollingRef.current = setInterval(
-          fetchUnread,
-          BASE_POLL_MS * Math.pow(2, errorsRef.current),
-        );
+        scheduleFetch(BASE_POLL_MS * Math.pow(2, errorsRef.current));
       }
     }
-  }, [user, stopPolling]);
+  }, [user, stopPolling, scheduleFetch]);
+
+  useEffect(() => {
+    fetchUnreadRef.current = fetchUnread;
+  }, [fetchUnread]);
 
   // ── Mount / user-change lifecycle ─────────────────────
   useEffect(() => {
     if (!user) {
       stopPolling();
-      setUnreadCount(0);
       return;
     }
 
     errorsRef.current = 0;
     lastFetchRef.current = 0;
 
-    queueMicrotask(fetchUnread);
-    stopPolling();
-    pollingRef.current = setInterval(fetchUnread, BASE_POLL_MS);
+    queueMicrotask(() => {
+      void fetchUnreadRef.current?.();
+    });
 
     const onVisibility = () => {
       if (document.visibilityState === "visible") {
         lastFetchRef.current = 0; // bypass dedupe on tab-focus
-        fetchUnread();
+        void fetchUnreadRef.current?.();
       }
     };
     document.addEventListener("visibilitychange", onVisibility);
@@ -135,7 +145,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       stopPolling();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [user, fetchUnread, stopPolling]);
+  }, [user, stopPolling]);
 
   // ── Public API ────────────────────────────────────────
 
@@ -146,11 +156,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(() => {
     lastFetchRef.current = 0;
-    fetchUnread();
-  }, [fetchUnread]);
+    void fetchUnreadRef.current?.();
+  }, []);
 
   return (
-    <NotificationContext.Provider value={{ unreadCount, markAllRead, refresh }}>
+    <NotificationContext.Provider
+      value={{
+        unreadCount: user ? unreadCount : 0,
+        markAllRead,
+        refresh,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );

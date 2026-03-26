@@ -18,7 +18,7 @@ interface Category {
   nameAr: string;
   nameNl: string;
   nameFr: string;
-  questionCount: number;
+  signCount: number;
 }
 
 type Lang = 'en' | 'ar' | 'nl' | 'fr';
@@ -60,7 +60,13 @@ export function CategoriesPreview() {
     apiClient
       .get<Category[]>(API_ENDPOINTS.CATEGORIES.LIST)
       .then((res) => {
-        if (!cancelled) setCategories(res.data.slice(0, SKELETON_COUNT));
+        if (!cancelled) {
+          setCategories(
+            res.data
+              .filter((category) => category.signCount > 0)
+              .slice(0, SKELETON_COUNT),
+          );
+        }
       })
       .catch(() => {
         if (!cancelled) setError(true);
@@ -72,8 +78,6 @@ export function CategoriesPreview() {
       cancelled = true;
     };
   }, []);
-
-  if (error) return null;
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-muted/30 via-background to-background py-16 lg:py-24">
@@ -100,6 +104,25 @@ export function CategoriesPreview() {
               </div>
             ))}
           </div>
+        ) : error ? (
+          <div className="mx-auto max-w-2xl rounded-3xl border bg-card/80 p-8 text-center shadow-sm backdrop-blur">
+            <div className="space-y-4">
+              <h3 className="text-xl font-extrabold tracking-tight text-secondary">
+                {t('home.categories.error_title')}
+              </h3>
+              <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                {t('home.categories.error_desc')}
+              </p>
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-12 rounded-full border-border px-8 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:bg-muted/60 hover:shadow-md active:translate-y-0"
+                asChild
+              >
+                <Link href={ROUTES.TRAFFIC_SIGNS}>{t('home.categories.browse_signs')}</Link>
+              </Button>
+            </div>
+          </div>
         ) : (
           <>
             <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
@@ -124,9 +147,9 @@ export function CategoriesPreview() {
                         </div>
 
                         <span className="rounded-full border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground">
-                          {t('home.categories.questions_count').replace(
+                          {t('home.categories.signs_count').replace(
                             '{count}',
-                            String(cat.questionCount),
+                            String(cat.signCount),
                           )}
                         </span>
                       </div>

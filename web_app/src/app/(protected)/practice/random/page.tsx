@@ -506,10 +506,7 @@ export default function RandomPracticePage() {
 
                 {/* Choices */}
                 <div className="space-y-2.5">
-                  {question.choices
-                    .slice()
-                    .sort((a, b) => a.displayOrder - b.displayOrder)
-                    .map((choice, idx) => {
+                  {question.choices.map((choice, idx) => {
                       const isSelected = selectedOption === choice.id;
                       const locked =
                         isAnsweringRef.current || selectedOption !== null;

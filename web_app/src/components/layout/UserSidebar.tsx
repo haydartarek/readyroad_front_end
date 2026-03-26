@@ -25,7 +25,6 @@ interface NavItem {
   key: string;
   labelKey: string;
   href: string;
-  originalPath?: string;
   icon: React.ElementType;
   accent: AccentKey;
   exact?: boolean;
@@ -104,7 +103,6 @@ const NAV_ITEMS: NavItem[] = [
     key: "weak_areas",
     labelKey: "user_sidebar.weak_areas",
     href: "/dashboard?section=weak-areas",
-    originalPath: "/analytics/weak-areas",
     icon: TrendingDown,
     accent: "primary",
     section: "weak-areas",
@@ -113,7 +111,6 @@ const NAV_ITEMS: NavItem[] = [
     key: "error_patterns",
     labelKey: "user_sidebar.error_patterns",
     href: "/dashboard?section=error-patterns",
-    originalPath: "/analytics/error-patterns",
     icon: AlertCircle,
     accent: "primary",
     section: "error-patterns",
@@ -122,7 +119,6 @@ const NAV_ITEMS: NavItem[] = [
     key: "exam_results",
     labelKey: "user_sidebar.exam_results",
     href: "/dashboard?section=exam-results",
-    originalPath: "/exam/results",
     icon: ClipboardList,
     accent: "primary",
     section: "exam-results",
@@ -134,7 +130,6 @@ const ACCOUNT_ITEMS: NavItem[] = [
     key: "profile",
     labelKey: "user_sidebar.profile",
     href: "/dashboard?section=profile",
-    originalPath: "/profile",
     icon: User,
     accent: "primary",
     section: "profile",
@@ -229,7 +224,7 @@ function UserSidebarInner() {
 
           {/* Settings shortcut */}
           <Link
-            href="/profile"
+            href="/dashboard?section=profile"
             className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-primary/40 hover:text-primary hover:bg-primary/10 transition-colors"
             title={t("user_sidebar.profile")}
           >
@@ -252,11 +247,7 @@ function UserSidebarInner() {
           const isActive =
             item.section === null
               ? pathname === "/dashboard" && !currentSection
-              : (pathname === "/dashboard" &&
-                  currentSection === item.section) ||
-                (item.originalPath
-                  ? pathname.startsWith(item.originalPath)
-                  : false);
+              : pathname === "/dashboard" && currentSection === item.section;
 
           return (
             <Link
@@ -300,11 +291,7 @@ function UserSidebarInner() {
             const isActive =
               item.section === null
                 ? pathname === "/dashboard" && !currentSection
-                : (pathname === "/dashboard" &&
-                    currentSection === item.section) ||
-                  (item.originalPath
-                    ? pathname.startsWith(item.originalPath)
-                    : false);
+                : pathname === "/dashboard" && currentSection === item.section;
 
             return (
               <Link

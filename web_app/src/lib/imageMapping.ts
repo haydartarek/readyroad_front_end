@@ -1,4 +1,4 @@
-// ─── Image Path Mappings ─────────────────────────────────
+﻿// ─── Image Path Mappings ─────────────────────────────────
 // Maps API image filenames to actual public/ file locations.
 // Handles mismatches, version variants, and cross-folder signs.
 
@@ -6,8 +6,8 @@ const SIGNS = '/images/signs';
 
 export const IMAGE_PATH_MAPPINGS: Record<string, string> = {
   // Version variants → canonical file
-  // Note: F50b.png maps directly via canonical path (no remap needed)
-  'F45b-v2.png': `${SIGNS}/information_signs/F45b Doodlopende weg (rechts_links).png`,
+  // Note:  maps directly via canonical path (no remap needed)
+  'F45b-v2.png': `${SIGNS}/information_signs/`,
 
   // Priority signs
   'B15A-v1.png': `${SIGNS}/priority_signs/B15A Variant schuine rechts.png`,
@@ -48,7 +48,7 @@ export const IMAGE_PATH_MAPPINGS: Record<string, string> = {
   'E9a-electric.png': `${SIGNS}/parking_signs/E9a elektrisch laden Parkeerplaats voorbehouden voor het elektrisch opladen van je wagen.png`,
   'E9a-disabled.png': `${SIGNS}/parking_signs/E9a mindervaliden Parkeren enkel toegelaten voor mindervaliden.png`,
   'E9a-disc.png':     `${SIGNS}/parking_signs/E9a parkeerschijf Parkeren beperkt in tijd, parkeerschijf verplicht.png`,
-  'E9j.png':          `${SIGNS}/parking_signs/E9j wisselend parkeren Parkeerplaats voorzien voor wisselend parkeren fietsers en auto’s.png`,
+  'E9j.png':          `${SIGNS}/parking_signs/`,
 
   // Zone signs — canonical sign codes, no variant remapping needed
 
@@ -60,9 +60,9 @@ export const IMAGE_PATH_MAPPINGS: Record<string, string> = {
   // Additional signs (G-series) — canonical sign codes, no variant remapping needed
 
   // M12 sub-variants → correct additional_signs canonical files
-  'M12-30min.png':          `${SIGNS}/additional_signs/M12 30 min parkeren.png`,
-  'M12-richtingen.png':     `${SIGNS}/additional_signs/M12-richtingen.png`,
-  'M12-fiets-brom.png':     `${SIGNS}/additional_signs/M12 Uitzonderd fiets en bromfiets A_P.png`,
+  'M12-30min.png':          `${SIGNS}/additional_signs/`,
+  '':     `${SIGNS}/additional_signs/`,
+  'M12-fiets-brom.png':     `${SIGNS}/additional_signs/`,
 
   // Legacy fallbacks — signs that still have old short-name URLs in DB
   // (before V134 migration runs these may still appear)
@@ -129,3 +129,4 @@ export function getTrafficSignImagePath(originalPath: string): string {
   const filename = originalPath.split('/').pop() ?? '';
   return IMAGE_PATH_MAPPINGS[filename] ?? originalPath;
 }
+

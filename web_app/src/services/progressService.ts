@@ -84,7 +84,7 @@ export interface RecentActivity {
 const ENDPOINTS = {
   OVERALL:         '/users/me/progress/overall',
   BY_CATEGORY:     '/users/me/progress/by-category',
-  RECENT_ACTIVITY: '/users/me/progress/recent-activity',
+  EXAM_HISTORY:    '/exams/simulations/history',
 } as const;
 
 const OVERALL_FALLBACK: OverallProgress = {
@@ -162,14 +162,29 @@ export async function getProgressByCategory(): Promise<ProgressByCategory> {
   }
 }
 
-/** GET /api/users/me/progress/recent-activity */
+/** Returns recent exam activity from persisted exam history */
 export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
   try {
-    const response = await apiClient.get<RecentActivity[]>(
-      ENDPOINTS.RECENT_ACTIVITY,
-      { limit },
-    );
-    return response.data;
+    const response = await apiClient.get<{
+      totalExams?: number;
+      exams?: Array<{
+        examId: number;
+        startedAt: string;
+        completedAt: string | null;
+        scorePercentage: number;
+        passed: boolean;
+      }>;
+    }>(ENDPOINTS.EXAM_HISTORY);
+
+    return (response.data.exams ?? [])
+      .slice(0, limit)
+      .map((exam) => ({
+        id: exam.examId,
+        type: 'exam',
+        date: exam.completedAt ?? exam.startedAt,
+        score: Math.round(exam.scorePercentage ?? 0),
+        passed: exam.passed,
+      }));
   } catch (error) {
     if (isServiceUnavailable(error)) throw error;
     return [];

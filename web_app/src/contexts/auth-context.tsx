@@ -82,16 +82,21 @@ function hasSessionCookie(): boolean {
 }
 
 function normalizeUser(raw: Record<string, unknown>): User {
+  const fullName = (raw.fullName as string) ?? "";
+  const nameParts = fullName.trim().split(/\s+/).filter(Boolean);
+
   return {
     userId: (raw.userId as number) ?? 0,
     username: (raw.username as string) ?? "",
     email: (raw.email as string) ?? "",
-    fullName: (raw.fullName as string) ?? "",
+    fullName,
     firstName:
       (raw.firstName as string) ||
-      (raw.fullName as string)?.split(" ")[0] ||
+      nameParts[0] ||
       undefined,
-    lastName: (raw.lastName as string) || undefined,
+    lastName:
+      (raw.lastName as string) ||
+      (nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined),
     role: (raw.role as string) ?? "USER",
     isActive: true,
     createdAt: (raw.createdAt as string) || undefined,
@@ -235,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [t],
+    [],
   );
 
   const logout = useCallback(async () => {

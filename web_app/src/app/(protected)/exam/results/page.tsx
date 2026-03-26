@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -17,7 +18,6 @@ import {
   ClipboardList,
   RefreshCw,
   CheckCircle2,
-  Lightbulb,
   Loader2,
 } from "lucide-react";
 
@@ -47,10 +47,6 @@ interface AllAnsweredQuestion {
   questionTextFr: string;
   selectedOptionText: string;
   correctOptionText: string;
-  explanationEn: string;
-  explanationAr: string;
-  explanationNl: string;
-  explanationFr: string;
   categoryName: string;
   categoryCode: string;
   contentImageUrl?: string;
@@ -72,7 +68,7 @@ interface ExamDetail {
 
 // ─── Component ───────────────────────────────────────────
 
-export default function ExamResultsPage() {
+export function ExamResultsPageContent() {
   const { t, language } = useLanguage();
   const { user } = useAuth();
 
@@ -144,13 +140,6 @@ export default function ExamResultsPage() {
     if (language === "nl" && q.questionTextNl) return q.questionTextNl;
     if (language === "fr" && q.questionTextFr) return q.questionTextFr;
     return q.questionTextEn ?? "";
-  }
-
-  function getExplanation(q: AllAnsweredQuestion): string | undefined {
-    if (language === "ar" && q.explanationAr) return q.explanationAr;
-    if (language === "nl" && q.explanationNl) return q.explanationNl;
-    if (language === "fr" && q.explanationFr) return q.explanationFr;
-    return q.explanationEn || undefined;
   }
 
   // ── Format date by active language ──
@@ -250,9 +239,6 @@ export default function ExamResultsPage() {
           {/* Summary stats */}
           {(() => {
             const passedCount = data.exams.filter((e) => e.passed).length;
-            const failedCount = data.exams.filter(
-              (e) => !e.passed && e.status === "COMPLETED",
-            ).length;
             const passRate =
               data.totalExams > 0
                 ? Math.round((passedCount / data.totalExams) * 100)
@@ -546,20 +532,6 @@ export default function ExamResultsPage() {
                                       </div>
                                     )}
                                   </div>
-
-                                  {/* Explanation */}
-                                  {getExplanation(q) && (
-                                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-2.5 flex items-start gap-2 text-xs">
-                                      <Lightbulb className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                                      <p className="text-foreground/80">
-                                        <span className="font-semibold text-primary">
-                                          {t("exam.explanation") ??
-                                            "Explanation:"}{" "}
-                                        </span>
-                                        {getExplanation(q)}
-                                      </p>
-                                    </div>
-                                  )}
                                 </div>
                               ))}
                             </div>
@@ -596,4 +568,14 @@ export default function ExamResultsPage() {
       )}
     </div>
   );
+}
+
+export default function ExamResultsPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/dashboard?section=exam-results");
+  }, [router]);
+
+  return null;
 }

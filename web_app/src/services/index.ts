@@ -12,7 +12,7 @@ export {
   type LoginRequest,
   type LoginResponse,
   type RegisterRequest,
-} from './authService';
+} from "./authService";
 
 // ─── User ────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ export {
   type NotificationCount,
   type UserStats,
   type UpdateProfileRequest,
-} from './userService';
+} from "./userService";
 
 // ─── Analytics ───────────────────────────────────────────
 
@@ -41,7 +41,7 @@ export {
   type ErrorPattern,
   type ErrorPatternsData,
   type AnalyticsSummary,
-} from './analyticsService';
+} from "./analyticsService";
 
 // ─── Progress ────────────────────────────────────────────
 
@@ -53,7 +53,7 @@ export {
   type CategoryProgress,
   type ProgressByCategory,
   type RecentActivity,
-} from './progressService';
+} from "./progressService";
 
 // ─── Lessons ─────────────────────────────────────────────
 
@@ -62,15 +62,15 @@ export {
   getLessonByCode,
   searchLessons,
   getLessonsCount,
-} from './lessonService';
+} from "./lessonService";
 
 // ─── Service Objects ─────────────────────────────────────
 
-export { default as authService }      from './authService';
-export { default as userService }      from './userService';
-export { default as analyticsService } from './analyticsService';
-export { default as progressService }  from './progressService';
-export { default as lessonService }    from './lessonService';
+export { default as authService } from "./authService";
+export { default as userService } from "./userService";
+export { default as analyticsService } from "./analyticsService";
+export { default as progressService } from "./progressService";
+export { default as lessonService } from "./lessonService";
 
 // ─── Sign Quiz ────────────────────────────────────────────
 
@@ -95,4 +95,16 @@ export {
   type ExamQuestionResult,
   type SignExamResult,
   type SignUserProgress,
-} from './signQuizService';
+} from "./signQuizService";
+
+// ─── Assessment ──────────────────────────────────────────
+
+export {
+  getAssessmentCategories,
+  getAssessmentCategory,
+  getAssessmentQuestions,
+  type DifficultyLevel,
+  type AssessmentChoice,
+  type AssessmentQuestion,
+  type AssessmentCategory,
+} from "./assessmentService";

@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Lock, Shield, Gift } from 'lucide-react';
+import { BadgeCheck, Lock, Shield, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
@@ -63,21 +62,7 @@ export function HeroSection() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
-    <section
-      className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/30 pb-12 pt-6 lg:pb-20 lg:pt-10"
-      style={{
-        '--primary': '219 89% 52%',
-        '--primary-foreground': '0 0% 100%',
-        '--secondary': '215 28% 17%',
-        '--secondary-foreground': '0 0% 100%',
-        '--ring': '219 89% 52%',
-        '--color-primary': 'hsl(219 89% 52%)',
-        '--color-primary-foreground': 'hsl(0 0% 100%)',
-        '--color-secondary': 'hsl(215 28% 17%)',
-        '--color-secondary-foreground': 'hsl(0 0% 100%)',
-        '--color-ring': 'hsl(219 89% 52%)',
-      } as React.CSSProperties}
-    >
+    <section className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/30 pb-12 pt-6 lg:pb-20 lg:pt-10">
       <div className="container mx-auto px-4">
         <div className="relative overflow-hidden rounded-3xl border bg-card/70 p-7 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/60 lg:p-12 xl:p-14">
           <div className="pointer-events-none absolute -top-40 end-0 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-3xl ltr:translate-x-24 rtl:-translate-x-24" />
@@ -85,17 +70,9 @@ export function HeroSection() {
 
           <div className="relative grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
             <div className="space-y-6 lg:space-y-7">
-              <div className="inline-flex items-center gap-3 rounded-full border border-destructive/20 bg-destructive/5 px-4 py-2">
-                <span className="text-2xl font-extrabold text-destructive md:text-3xl">
-                  {t('home.hero.failure_stat_pct')}
-                </span>
-                <span className="text-sm font-medium leading-snug text-destructive/80">
-                  {t('home.hero.failure_stat')}
-                  <br />
-                  <strong className="font-semibold text-destructive">
-                    {t('home.hero.dont_be_one')}
-                  </strong>
-                </span>
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary shadow-sm">
+                <BadgeCheck className="h-4 w-4" aria-hidden />
+                <span>{t('home.hero.badge')}</span>
               </div>
 
               <div className="space-y-3">
@@ -130,7 +107,7 @@ export function HeroSection() {
 
               <div
                 className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-sm text-muted-foreground"
-                aria-label="Trust indicators"
+                aria-label={t('home.hero.trust_indicators_label')}
               >
                 {TRUST_ICONS.map(({ key, Icon }) => (
                   <span key={key} className="inline-flex items-center gap-2">

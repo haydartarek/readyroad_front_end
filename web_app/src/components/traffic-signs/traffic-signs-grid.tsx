@@ -1,106 +1,80 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/language-context";
 import { TrafficSign } from "@/lib/types";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import { SignImage } from "./sign-image";
-
-// ─── Types ───────────────────────────────────────────────
-
-type LangCode = "en" | "ar" | "nl" | "fr";
-
-// ─── Constants ───────────────────────────────────────────
-
-const CATEGORY_COLOR: Record<string, string> = {
-  DANGER: "bg-red-100    text-red-800",
-  PROHIBITION: "bg-red-100    text-red-800",
-  MANDATORY: "bg-blue-100   text-blue-800",
-  PRIORITY: "bg-yellow-100 text-yellow-800",
-  INFORMATION: "bg-green-100  text-green-800",
-  PARKING: "bg-purple-100 text-purple-800",
-  ADDITIONAL: "bg-orange-100 text-orange-800",
-  CYCLIST: "bg-teal-100   text-teal-800",
-  DELINEATION: "bg-slate-100  text-slate-800",
-  ZONE: "bg-indigo-100 text-indigo-800",
-};
-
-const DEFAULT_CATEGORY_COLOR = "bg-muted text-foreground";
-
-// ─── Helpers ─────────────────────────────────────────────
-
-function getSignName(sign: TrafficSign, lang: LangCode): string {
-  const map: Record<LangCode, string> = {
-    en: sign.nameEn,
-    ar: sign.nameAr,
-    nl: sign.nameNl,
-    fr: sign.nameFr,
-  };
-  return map[lang] ?? sign.nameEn;
-}
-
-function getSignDescription(sign: TrafficSign, lang: LangCode): string {
-  const map: Record<LangCode, string> = {
-    en: sign.descriptionEn,
-    ar: sign.descriptionAr,
-    nl: sign.descriptionNl,
-    fr: sign.descriptionFr,
-  };
-  return map[lang] ?? sign.descriptionEn;
-}
+import {
+  getTrafficSignDescription,
+  getTrafficSignGroupInfo,
+  getTrafficSignName,
+} from "@/lib/traffic-sign-presentation";
 
 // ─── Component ───────────────────────────────────────────
 
 export function TrafficSignsGrid({ signs }: { signs: TrafficSign[] }) {
-  const { language } = useLanguage();
-  const lang = language as LangCode;
+  const { language, t } = useLanguage();
+  const lang = language as "en" | "ar" | "nl" | "fr";
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {signs.map((sign) => {
-        const name = getSignName(sign, lang);
-        const description = getSignDescription(sign, lang);
-        const categoryClr =
-          CATEGORY_COLOR[sign.category] ?? DEFAULT_CATEGORY_COLOR;
+        const name = getTrafficSignName(sign, lang);
+        const description = getTrafficSignDescription(sign, lang);
+        const { info, style } = getTrafficSignGroupInfo(sign);
+        const routeCode = sign.routeCode ?? sign.signCode;
 
         return (
           <Link
-            key={sign.id ?? sign.signCode}
-            href={`/traffic-signs/${sign.signCode}`}
-            className="group"
+            key={routeCode}
+            href={`/traffic-signs/${routeCode}`}
+            className="group block h-full"
           >
-            <Card className="h-full transition-all hover:shadow-lg">
-              <CardContent className="p-6">
-                {/* Sign image */}
-                <div className="mb-4 flex justify-center rounded-xl bg-muted p-6">
-                  <div className="relative h-32 w-32">
+            <Card
+              className={`h-full overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/25 hover:shadow-md ${style.cardGlow}`}
+            >
+              <CardContent className="flex h-full flex-col p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    {info.title[lang]}
+                  </p>
+                  <span className="rounded-full border border-border/60 bg-background px-3 py-1 font-mono text-[11px] font-semibold tracking-wide text-muted-foreground">
+                    {sign.signCode}
+                  </span>
+                </div>
+
+                <div
+                  className={`mt-4 rounded-[1.4rem] border border-border/60 p-4 ${style.soft}`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-[1.1rem] bg-background/90">
                     <SignImage
                       src={resolveTrafficSignImage(sign)}
                       alt={name}
-                      className="object-contain transition-transform group-hover:scale-110"
+                      className="object-contain p-4 transition-transform duration-200 group-hover:scale-[1.03]"
                     />
                   </div>
                 </div>
 
-                {/* Category badge */}
-                <Badge className={`mb-2 ${categoryClr}`}>{sign.category}</Badge>
+                <div className="mt-4 flex flex-1 flex-col">
+                  <h3 className="line-clamp-2 text-lg font-black tracking-tight text-foreground sm:text-xl">
+                    {name}
+                  </h3>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    {description || info.description[lang]}
+                  </p>
 
-                {/* Name */}
-                <h3 className="mb-2 line-clamp-2 font-black text-foreground">
-                  {name}
-                </h3>
-
-                {/* Description */}
-                <p className="line-clamp-2 text-sm text-muted-foreground">
-                  {description}
-                </p>
-
-                {/* Code */}
-                <p className="mt-3 font-mono text-xs text-muted-foreground">
-                  {sign.signCode}
-                </p>
+                  <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4 text-sm">
+                    <span className="font-semibold text-primary">
+                      {t("common.view")}
+                    </span>
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/15 bg-primary/6 text-primary transition-transform duration-200 group-hover:-translate-y-0.5">
+                      <ArrowUpRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </Link>

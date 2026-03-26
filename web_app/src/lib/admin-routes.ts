@@ -16,31 +16,31 @@ import {
   BarChart2,
   Settings2,
   type LucideIcon,
-} from 'lucide-react';
+} from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────
 
 export type AdminGroupKey =
-  | 'overview'
-  | 'content'
-  | 'data'
-  | 'users'
-  | 'trust'
-  | 'insights'
-  | 'system';
+  | "overview"
+  | "content"
+  | "data"
+  | "users"
+  | "trust"
+  | "insights"
+  | "system";
 
 export interface AdminGroup {
-  key:      AdminGroupKey;
+  key: AdminGroupKey;
   labelKey: string;
-  order:    number;
+  order: number;
 }
 
 export interface AdminRoute {
-  key:      string;
-  path:     string;
+  key: string;
+  path: string;
   labelKey: string;
-  icon?:    LucideIcon;
-  group:    AdminGroupKey;
+  icon?: LucideIcon;
+  group: AdminGroupKey;
   /** Route is hidden from sidebar (scaffold / future) */
   hidden?: boolean;
   /** Route only visible when this feature flag is enabled */
@@ -52,27 +52,27 @@ export interface AdminRoute {
 }
 
 export interface AdminChildRoute {
-  key:      string;
-  path:     string;
+  key: string;
+  path: string;
   labelKey: string;
 }
 
 export interface BreadcrumbSegment {
-  label:          string;
-  href:           string;
+  label: string;
+  href?: string;
   isCurrentPage?: boolean;
 }
 
 // ─── Groups ──────────────────────────────────────────────
 
 export const ADMIN_GROUPS: AdminGroup[] = [
-  { key: 'overview',  labelKey: 'admin.group.overview',  order: 0 },
-  { key: 'content',   labelKey: 'admin.group.content',   order: 1 },
-  { key: 'data',      labelKey: 'admin.group.data',      order: 2 },
-  { key: 'users',     labelKey: 'admin.group.users',     order: 3 },
-  { key: 'trust',     labelKey: 'admin.group.trust',     order: 4 },
-  { key: 'insights',  labelKey: 'admin.group.insights',  order: 5 },
-  { key: 'system',    labelKey: 'admin.group.system',    order: 6 },
+  { key: "overview", labelKey: "admin.group.overview", order: 0 },
+  { key: "content", labelKey: "admin.group.content", order: 1 },
+  { key: "data", labelKey: "admin.group.data", order: 2 },
+  { key: "users", labelKey: "admin.group.users", order: 3 },
+  { key: "trust", labelKey: "admin.group.trust", order: 4 },
+  { key: "insights", labelKey: "admin.group.insights", order: 5 },
+  { key: "system", labelKey: "admin.group.system", order: 6 },
 ];
 
 // ─── Routes ──────────────────────────────────────────────
@@ -80,105 +80,120 @@ export const ADMIN_GROUPS: AdminGroup[] = [
 export const ADMIN_ROUTES: AdminRoute[] = [
   // ── Overview ──
   {
-    key:      'dashboard',
-    path:     '/admin/dashboard',
-    labelKey: 'admin.sidebar.dashboard',
-    icon:     Gauge,
-    group:    'overview',
-    exact:    true,
+    key: "dashboard",
+    path: "/admin/dashboard",
+    labelKey: "admin.sidebar.dashboard",
+    icon: Gauge,
+    group: "overview",
+    exact: true,
   },
 
   // ── Content ──
   {
-    key:      'signs',
-    path:     '/admin/signs',
-    labelKey: 'admin.sidebar.signs',
-    icon:     TrafficCone,
-    group:    'content',
+    key: "signs",
+    path: "/admin/signs",
+    labelKey: "admin.sidebar.signs",
+    icon: TrafficCone,
+    group: "content",
     children: [
-      { key: 'signs_all', path: '/admin/signs',     labelKey: 'admin.sidebar.signs_all' },
-      { key: 'signs_new', path: '/admin/signs/new', labelKey: 'admin.sidebar.signs_add' },
+      {
+        key: "signs_all",
+        path: "/admin/signs",
+        labelKey: "admin.sidebar.signs_all",
+      },
+      {
+        key: "signs_new",
+        path: "/admin/signs/new",
+        labelKey: "admin.sidebar.signs_add",
+      },
     ],
   },
   {
-    key:      'quizzes',
-    path:     '/admin/quizzes',
-    labelKey: 'admin.sidebar.quizzes',
-    icon:     ClipboardList,
-    group:    'content',
+    key: "quizzes",
+    path: "/admin/quizzes",
+    labelKey: "admin.sidebar.quizzes",
+    icon: ClipboardList,
+    group: "content",
     children: [
-      { key: 'quizzes_all', path: '/admin/quizzes',     labelKey: 'admin.sidebar.quizzes_all' },
-      { key: 'quizzes_new', path: '/admin/quizzes/new', labelKey: 'admin.sidebar.quizzes_add' },
+      {
+        key: "quizzes_all",
+        path: "/admin/quizzes",
+        labelKey: "admin.sidebar.quizzes_all",
+      },
+      {
+        key: "quizzes_new",
+        path: "/admin/quizzes/new",
+        labelKey: "admin.sidebar.quizzes_add",
+      },
     ],
   },
 
   // ── Data ──
   {
-    key:      'data-import',
-    path:     '/admin/data-import',
-    labelKey: 'admin.sidebar.data_import',
-    icon:     FolderUp,
-    group:    'data',
+    key: "data-import",
+    path: "/admin/data-import",
+    labelKey: "admin.sidebar.data_import",
+    icon: FolderUp,
+    group: "data",
   },
 
   // ── Users ──
   {
-    key:      'users',
-    path:     '/admin/users',
-    labelKey: 'admin.sidebar.users',
-    icon:     Users,
-    group:    'users',
+    key: "users",
+    path: "/admin/users",
+    labelKey: "admin.sidebar.users",
+    icon: Users,
+    group: "users",
   },
 
   // ── Trust ──
   {
-    key:      'moderation',
-    path:     '/admin/moderation',
-    labelKey: 'admin.sidebar.moderation',
-    icon:     ShieldCheck,
-    group:    'trust',
+    key: "moderation",
+    path: "/admin/moderation",
+    labelKey: "admin.sidebar.moderation",
+    icon: ShieldCheck,
+    group: "trust",
   },
 
   // ── Insights ──
   {
-    key:      'analytics',
-    path:     '/admin/analytics',
-    labelKey: 'admin.sidebar.analytics',
-    icon:     BarChart2,
-    group:    'insights',
+    key: "analytics",
+    path: "/admin/analytics",
+    labelKey: "admin.sidebar.analytics",
+    icon: BarChart2,
+    group: "insights",
   },
 
   // ── System ──
   {
-    key:      'settings',
-    path:     '/admin/settings',
-    labelKey: 'admin.sidebar.settings',
-    icon:     Settings2,
-    group:    'system',
+    key: "settings",
+    path: "/admin/settings",
+    labelKey: "admin.sidebar.settings",
+    icon: Settings2,
+    group: "system",
   },
 ];
 
 // ─── Legacy Redirects ────────────────────────────────────
 
 export const LEGACY_REDIRECTS: Record<string, string> = {
-  '/admin/signs/add':   '/admin/signs/new',
-  '/admin/quizzes/add': '/admin/quizzes/new',
+  "/admin/signs/add": "/admin/signs/new",
 };
 
 // ─── Segment Labels ──────────────────────────────────────
 
 const SEGMENT_LABEL_KEYS: Record<string, string> = {
-  admin:         'admin.sidebar.panel_title',
-  dashboard:     'admin.sidebar.dashboard',
-  signs:         'admin.sidebar.signs',
-  quizzes:       'admin.sidebar.quizzes',
-  users:         'admin.sidebar.users',
-  analytics:     'admin.sidebar.analytics',
-  settings:      'admin.sidebar.settings',
-  moderation:    'admin.sidebar.moderation',
-  'data-import': 'admin.sidebar.data_import',
-  new:           'admin.breadcrumb.new',
-  edit:          'admin.breadcrumb.edit',
+  admin: "admin.sidebar.panel_title",
+  dashboard: "admin.sidebar.dashboard",
+  signs: "admin.sidebar.signs",
+  quizzes: "admin.sidebar.quizzes",
+  users: "admin.sidebar.users",
+  analytics: "admin.sidebar.analytics",
+  settings: "admin.sidebar.settings",
+  moderation: "admin.sidebar.moderation",
+  "data-import": "admin.sidebar.data_import",
+  new: "admin.breadcrumb.new",
+  edit: "admin.breadcrumb.edit",
 };
 
 const NUMERIC_SEGMENT_RE = /^\d+$/;
@@ -187,22 +202,22 @@ const NUMERIC_SEGMENT_RE = /^\d+$/;
 
 /** Get a top-level route by its key */
 export function getRouteByKey(key: string): AdminRoute | undefined {
-  return ADMIN_ROUTES.find(r => r.key === key);
+  return ADMIN_ROUTES.find((r) => r.key === key);
 }
 
 /** Get a top-level route whose path matches (exact first, then longest prefix) */
 export function getRouteByPath(path: string): AdminRoute | undefined {
-  const exact = ADMIN_ROUTES.find(r => r.path === path);
+  const exact = ADMIN_ROUTES.find((r) => r.path === path);
   if (exact) return exact;
 
   return [...ADMIN_ROUTES]
     .sort((a, b) => b.path.length - a.path.length)
-    .find(r => path.startsWith(`${r.path}/`));
+    .find((r) => path.startsWith(`${r.path}/`));
 }
 
 /** Get all routes belonging to a group */
 export function getRoutesByGroup(group: AdminGroupKey): AdminRoute[] {
-  return ADMIN_ROUTES.filter(r => r.group === group);
+  return ADMIN_ROUTES.filter((r) => r.group === group);
 }
 
 /**
@@ -210,7 +225,7 @@ export function getRoutesByGroup(group: AdminGroupKey): AdminRoute[] {
  * Pass `enabledFlags` for feature flags that are currently active.
  */
 export function getVisibleRoutes(enabledFlags: string[] = []): AdminRoute[] {
-  return ADMIN_ROUTES.filter(r => {
+  return ADMIN_ROUTES.filter((r) => {
     if (!r.hidden) return true;
     return r.featureFlag ? enabledFlags.includes(r.featureFlag) : false;
   });
@@ -218,7 +233,7 @@ export function getVisibleRoutes(enabledFlags: string[] = []): AdminRoute[] {
 
 /** Check if a path is under the /admin prefix */
 export function isAdminPath(path: string): boolean {
-  return path.startsWith('/admin');
+  return path.startsWith("/admin");
 }
 
 /**
@@ -231,26 +246,29 @@ export function getBreadcrumbTrail(
 ): BreadcrumbSegment[] {
   if (!isAdminPath(pathname)) return [];
 
-  const segments = pathname.split('/').filter(Boolean);
+  const segments = pathname.split("/").filter(Boolean);
   const trail: BreadcrumbSegment[] = [
-    { label: t('admin.sidebar.dashboard'), href: '/admin/dashboard' },
+    { label: t("admin.sidebar.dashboard"), href: "/admin/dashboard" },
   ];
 
-  let currentPath = '/admin';
+  let currentPath = "/admin";
   for (let i = 1; i < segments.length; i++) {
-    const seg  = segments[i];
+    const seg = segments[i];
     currentPath += `/${seg}`;
 
     const labelKey = SEGMENT_LABEL_KEYS[seg];
-    const label    = labelKey
+    const label = labelKey
       ? t(labelKey)
       : NUMERIC_SEGMENT_RE.test(seg)
         ? `#${seg}`
-        : seg.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        : seg
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
 
     trail.push({
       label,
-      href:          currentPath,
+      href: NUMERIC_SEGMENT_RE.test(seg) ? undefined : currentPath,
       isCurrentPage: i === segments.length - 1,
     });
   }

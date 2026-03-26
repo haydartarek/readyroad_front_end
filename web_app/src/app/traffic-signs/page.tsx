@@ -1,101 +1,37 @@
 "use client";
 
+import { Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Languages, ListFilter, RefreshCw, Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
 import { TrafficSignsFilters } from "@/components/traffic-signs/traffic-signs-filters";
-import { TrafficSign } from "@/lib/types";
-import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
-import { API_ENDPOINTS } from "@/lib/constants";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import Breadcrumb from "@/components/ui/breadcrumb";
 import { useLanguage } from "@/contexts/language-context";
+import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
+import { API_ENDPOINTS, LANGUAGES } from "@/lib/constants";
 import {
-  type LangKey,
-  GROUP_INFO,
-  GROUP_LETTER_ORDER,
-} from "@/lib/sign-category-data";
+  getGroupInfo,
+  getTrafficSignDescription,
+  getTrafficSignGroup,
+  getTrafficSignName,
+  TRAFFIC_SIGN_GROUP_ORDER,
+} from "@/lib/traffic-sign-presentation";
+import type { TrafficSign } from "@/lib/types";
 
-const CODE_TO_KEY: Record<string, string> = {
-  A: "DANGER",
-  B: "PRIORITY",
-  C: "PROHIBITION",
-  D: "MANDATORY",
-  E: "PARKING",
-  F: "INFORMATION",
-  G: "ADDITIONAL",
-  M: "CYCLIST",
-  T: "DELINEATION",
-  Z: "ZONE",
-};
-
-const CATEGORY_KEY_SUFFIX: Record<string, string> = {
-  DANGER: "danger",
-  PRIORITY: "priority",
-  PROHIBITION: "prohibition",
-  MANDATORY: "mandatory",
-  PARKING: "parking",
-  INFORMATION: "information",
-  ADDITIONAL: "supplementary",
-  CYCLIST: "cyclist",
-  DELINEATION: "delineation",
-  ZONE: "zone",
-};
-
-const KEY_TO_CODES: Record<string, string[]> = {};
-for (const [code, key] of Object.entries(CODE_TO_KEY)) {
-  (KEY_TO_CODES[key] ??= []).push(code);
-}
-
-const PARKING_SIGN_WHITELIST = new Set([
-  "E1",
-  "E3",
-  "E5",
-  "E7",
-  "E9a",
-  "E9a-electric",
-  "E9a-disabled",
-  "E9a-disc",
-  "E9b",
-  "E9c",
-  "E9d",
-  "E9e",
-  "E9f",
-  "E9g",
-  "E9h",
-  "E9i",
-  "E9j",
-  "E11",
-]);
-
-const ROAD_MARKINGS_CODES = new Set([
-  "F39",
-  "F79",
-  "F81",
-  "F83",
-  "F85",
-  "F89",
-  "F91",
-  "F95",
-  "F98",
-]);
+type Lang = "en" | "ar" | "nl" | "fr";
 
 async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   try {
-    const res = await apiClient.get<TrafficSign[] | { signs: TrafficSign[] }>(
+    const response = await apiClient.get<TrafficSign[] | { signs: TrafficSign[] }>(
       API_ENDPOINTS.TRAFFIC_SIGNS.LIST,
     );
-    const data = res.data;
-    const signs = Array.isArray(data) ? data : (data.signs ?? []);
-    return signs.map((sign) => ({
-      ...sign,
-      category:
-        (sign.categoryCode ? CODE_TO_KEY[sign.categoryCode] : undefined) ??
-        sign.category ??
-        "UNKNOWN",
-    }));
+    const data = response.data;
+    return Array.isArray(data) ? data : (data.signs ?? []);
   } catch (error) {
-    if (isServiceUnavailable(error)) throw error;
+    if (isServiceUnavailable(error)) {
+      throw error;
+    }
     logApiError("Error fetching traffic signs", error);
     return [];
   }
@@ -111,6 +47,7 @@ export default function TrafficSignsPage() {
 
 function LoadingState() {
   const { t } = useLanguage();
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
@@ -130,6 +67,9 @@ function TrafficSignsContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const lang = (["nl", "en", "ar", "fr"] as Lang[]).includes(language as Lang)
+    ? (language as Lang)
+    : "en";
 
   const category = searchParams.get("category") || "all";
   const search = searchParams.get("search") || "";
@@ -142,18 +82,32 @@ function TrafficSignsContent() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+
     getAllTrafficSigns()
       .then((signs) => {
-        if (!cancelled) setAllSigns(signs);
+        if (!cancelled) {
+          setAllSigns(
+            [...signs].sort((left, right) =>
+              left.signCode.localeCompare(right.signCode, undefined, {
+                numeric: true,
+                sensitivity: "base",
+              }),
+            ),
+          );
+        }
       })
-      .catch((err) => {
-        logApiError("Failed to load signs", err);
-        if (!cancelled && isServiceUnavailable(err))
+      .catch((error) => {
+        logApiError("Failed to load traffic signs", error);
+        if (!cancelled && isServiceUnavailable(error)) {
           setServiceUnavailable(true);
+        }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       });
+
     return () => {
       cancelled = true;
     };
@@ -161,100 +115,116 @@ function TrafficSignsContent() {
 
   const updateUrl = useCallback(
     (params: Record<string, string>) => {
-      const sp = new URLSearchParams(searchParams.toString());
-      Object.entries(params).forEach(([k, v]) => {
-        if (!v || v === "all") sp.delete(k);
-        else sp.set(k, v);
+      const next = new URLSearchParams(searchParams.toString());
+      Object.entries(params).forEach(([key, value]) => {
+        if (!value || value === "all") {
+          next.delete(key);
+        } else {
+          next.set(key, value);
+        }
       });
-      const qs = sp.toString();
-      router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+
+      const query = next.toString();
+      router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
     },
-    [searchParams, pathname, router],
+    [pathname, router, searchParams],
   );
 
-  const handleCategoryChange = useCallback(
-    (v: string) => updateUrl({ category: v }),
-    [updateUrl],
-  );
-  const handleSearchChange = useCallback(
-    (v: string) => updateUrl({ search: v }),
-    [updateUrl],
-  );
-  const handleClearFilters = useCallback(
-    () => router.replace(pathname, { scroll: false }),
-    [router, pathname],
+  const groupedCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const sign of allSigns) {
+      const key = getTrafficSignGroup(sign);
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return counts;
+  }, [allSigns]);
+
+  const categories = useMemo(
+    () => [
+      {
+        value: "all",
+        label: t("traffic_signs.category_all_signs"),
+        count: allSigns.length,
+      },
+      ...TRAFFIC_SIGN_GROUP_ORDER.filter((group) => groupedCounts[group] > 0).map(
+        (group) => ({
+          value: group,
+          label: getGroupInfo(group).info.title[lang],
+          count: groupedCounts[group],
+        }),
+      ),
+    ],
+    [allSigns.length, groupedCounts, lang, t],
   );
 
   const filteredSigns = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const query = search.trim().toLowerCase();
     return allSigns.filter((sign) => {
-      const matchesCategory =
-        category === "all" ||
-        (KEY_TO_CODES[category]
-          ? KEY_TO_CODES[category].includes(sign.categoryCode ?? "")
-          : sign.category?.toLowerCase() === category.toLowerCase());
+      const group = getTrafficSignGroup(sign);
+      const matchesCategory = category === "all" || group === category;
+      if (!matchesCategory) {
+        return false;
+      }
 
-      const matchesSearch =
-        !q ||
-        sign.signCode?.toLowerCase().includes(q) ||
-        sign.nameEn?.toLowerCase().includes(q) ||
-        sign.nameAr?.includes(q) ||
-        sign.nameNl?.toLowerCase().includes(q) ||
-        sign.nameFr?.toLowerCase().includes(q) ||
-        sign.descriptionEn?.toLowerCase().includes(q);
+      if (!query) {
+        return true;
+      }
 
-      const isParking =
-        sign.category === "PARKING" || sign.categoryCode === "E";
-      const passesWhitelist =
-        !isParking || PARKING_SIGN_WHITELIST.has(sign.signCode ?? "");
+      const haystack = [
+        sign.signCode,
+        getTrafficSignName(sign, "nl"),
+        getTrafficSignName(sign, "en"),
+        getTrafficSignName(sign, "fr"),
+        getTrafficSignName(sign, "ar"),
+        getTrafficSignDescription(sign, "nl"),
+        getTrafficSignDescription(sign, "en"),
+        getTrafficSignDescription(sign, "fr"),
+        getTrafficSignDescription(sign, "ar"),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-      return matchesCategory && matchesSearch && passesWhitelist;
+      return haystack.includes(query);
     });
   }, [allSigns, category, search]);
 
   const groupedSigns = useMemo(() => {
     const groups: Record<string, TrafficSign[]> = {};
     for (const sign of filteredSigns) {
-      const code = sign.signCode ?? "";
-      const letter = ROAD_MARKINGS_CODES.has(code)
-        ? "FM"
-        : (code[0]?.toUpperCase() ?? "?");
-      (groups[letter] ??= []).push(sign);
+      const group = getTrafficSignGroup(sign);
+      (groups[group] ??= []).push(sign);
     }
-    const ordered = [
-      ...GROUP_LETTER_ORDER,
-      ...Object.keys(groups)
-        .filter((l) => !GROUP_LETTER_ORDER.includes(l))
-        .sort(),
-    ];
-    return ordered
-      .filter((l) => groups[l]?.length)
-      .map((l) => ({ letter: l, signs: groups[l], info: GROUP_INFO[l] }));
+
+    return TRAFFIC_SIGN_GROUP_ORDER.filter((group) => groups[group]?.length).map(
+      (group) => ({
+        ...getGroupInfo(group),
+        signs: groups[group],
+      }),
+    );
   }, [filteredSigns]);
 
-  const categories = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const sign of allSigns) {
-      const key = sign.category || "UNKNOWN";
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    return [
-      {
-        value: "all",
-        label: t("traffic_signs.category_all_signs"),
-        count: allSigns.length,
-      },
-      ...Object.entries(counts)
-        .sort((a, b) => b[1] - a[1])
-        .map(([key, count]) => ({
-          value: key,
-          label: CATEGORY_KEY_SUFFIX[key]
-            ? t(`traffic_signs.category_${CATEGORY_KEY_SUFFIX[key]}`)
-            : key,
-          count,
-        })),
-    ];
-  }, [allSigns, t]);
+  const activeGroup = useMemo(
+    () => (category !== "all" ? getGroupInfo(category) : null),
+    [category],
+  );
+
+  const showingSingleGroup = category !== "all" && groupedSigns.length === 1;
+
+  const handleCategoryChange = useCallback(
+    (value: string) => updateUrl({ category: value }),
+    [updateUrl],
+  );
+
+  const handleSearchChange = useCallback(
+    (value: string) => updateUrl({ search: value }),
+    [updateUrl],
+  );
+
+  const handleClearFilters = useCallback(
+    () => router.replace(pathname, { scroll: false }),
+    [pathname, router],
+  );
 
   if (serviceUnavailable) {
     return (
@@ -262,123 +232,195 @@ function TrafficSignsContent() {
         <ServiceUnavailableBanner
           onRetry={() => {
             setServiceUnavailable(false);
-            setFetchKey((k) => k + 1);
+            setFetchKey((current) => current + 1);
           }}
         />
       </div>
     );
   }
 
-  if (loading) return <LoadingState />;
+  if (loading) {
+    return <LoadingState />;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted to-background">
-      <div className="container mx-auto px-4 py-12">
-        <div className="mb-12 text-center space-y-3">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
-            {t("traffic_signs.page_title")}
-          </h1>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            {t("traffic_signs.page_subtitle")}
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
+      <div className="container mx-auto px-4 py-8 md:py-10 space-y-6 md:space-y-8">
+        <Breadcrumb />
 
-        <TrafficSignsFilters
-          categories={categories}
-          selectedCategory={category}
-          searchQuery={search}
-          onCategoryChange={handleCategoryChange}
-          onSearchChange={handleSearchChange}
-          onClearFilters={handleClearFilters}
-        />
+        <section className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/65">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-28 end-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+            <div className="absolute -bottom-28 start-0 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
+          </div>
 
-        <div className="mb-6 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary ring-1 ring-inset ring-primary/20">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3.5 w-3.5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <div className="relative space-y-6 px-6 py-7 md:px-8 md:py-8">
+            <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
+              <div className="space-y-5">
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary">
+                  <Shapes className="h-4 w-4" />
+                  {t("traffic_signs.hero_badge")}
+                </div>
+
+                <div className="space-y-3">
+                  <h1 className="max-w-3xl text-balance text-4xl font-extrabold tracking-tight text-secondary sm:text-5xl">
+                    {t("traffic_signs.page_title")}
+                  </h1>
+                  <p className="max-w-3xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
+                    {t("traffic_signs.page_subtitle")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                <HeroMetric
+                  icon={<Shapes className="h-4 w-4" />}
+                  label={t("traffic_signs.hero_metric_signs")}
+                  value={String(allSigns.length)}
+                />
+                <HeroMetric
+                  icon={<ListFilter className="h-4 w-4" />}
+                  label={t("traffic_signs.hero_metric_groups")}
+                  value={String(categories.length - 1)}
+                />
+                <HeroMetric
+                  icon={<Languages className="h-4 w-4" />}
+                  label={t("traffic_signs.hero_metric_languages")}
+                  value={String(LANGUAGES.length)}
+                />
+              </div>
+            </div>
+
+            <TrafficSignsFilters
+              categories={categories}
+              selectedCategory={category}
+              searchQuery={search}
+              onCategoryChange={handleCategoryChange}
+              onSearchChange={handleSearchChange}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+        </section>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/8 px-4 py-2 text-sm font-semibold text-primary">
+            <Shapes className="h-4 w-4" />
             {t("traffic_signs.results_count", { count: filteredSigns.length })}
           </span>
-          {filteredSigns.length !== allSigns.length && (
+
+          {filteredSigns.length !== allSigns.length ? (
             <span className="text-sm text-muted-foreground">
               {t("traffic_signs.filtered_from")}{" "}
-              <span className="font-medium text-foreground">
-                {allSigns.length}
-              </span>{" "}
+              <span className="font-semibold text-foreground">{allSigns.length}</span>{" "}
               {t("traffic_signs.total")}
             </span>
-          )}
-          {filteredSigns.length === allSigns.length && (
+          ) : (
             <span className="text-sm text-muted-foreground">
               {t("traffic_signs.showing_all")}
             </span>
           )}
         </div>
 
-        {filteredSigns.length === 0 && (
-          <div className="py-20 text-center space-y-2">
-            <div className="text-5xl mb-4">🚧</div>
-            <p className="text-lg font-semibold text-foreground">
+        {activeGroup && (
+          <section className="rounded-[1.75rem] border border-border/60 bg-card p-5 shadow-sm">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="flex items-start gap-4">
+                <div
+                  className={`grid h-14 w-14 flex-shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${activeGroup.style.accent} text-lg font-black text-white shadow-sm`}
+                >
+                  {activeGroup.info.displayKey ?? activeGroup.group}
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-black tracking-tight text-foreground">
+                    {activeGroup.info.title[lang]}
+                  </h2>
+                  <p className="max-w-4xl text-sm leading-7 text-muted-foreground md:text-base">
+                    {activeGroup.info.description[lang]}
+                  </p>
+                </div>
+              </div>
+
+              <span
+                className={`inline-flex items-center self-start rounded-full border px-3 py-1 text-xs font-semibold ${activeGroup.style.chip}`}
+              >
+                {t("traffic_signs.section_count", { count: filteredSigns.length })}
+              </span>
+            </div>
+          </section>
+        )}
+
+        {filteredSigns.length === 0 ? (
+          <div className="rounded-[2rem] border border-dashed border-border bg-card px-6 py-14 text-center shadow-sm">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Shapes className="h-8 w-8" />
+            </div>
+            <h2 className="text-2xl font-black text-foreground">
               {t("traffic_signs.no_results_title")}
-            </p>
-            <p className="text-sm text-muted-foreground">
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
               {t("traffic_signs.no_results_desc")}
             </p>
           </div>
-        )}
-
-        <div className="space-y-16">
-          {groupedSigns.map(({ letter, signs: groupSigns, info }) => {
-            const lang: LangKey = (
-              ["nl", "en", "ar", "fr"] as LangKey[]
-            ).includes(language as LangKey)
-              ? (language as LangKey)
-              : "en";
-            const rawTitle = info?.title["nl"] ?? `${letter}-serie`;
-            const arabicTitle = info?.title["ar"];
-            const title = arabicTitle
-              ? `${rawTitle} (${arabicTitle})`
-              : rawTitle;
-            const description = info?.description[lang] ?? "";
-            return (
-              <section key={letter} id={`group-${letter}`}>
-                <div className="relative w-full mb-8 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                  <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-primary via-primary/70 to-primary/30 rounded-l-2xl" />
-                  <div className="flex items-center gap-6 px-8 py-6">
-                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-primary shadow-lg flex items-center justify-center">
-                      <span className="text-3xl font-black text-primary-foreground leading-none select-none">
-                        {info?.displayKey ?? letter}
-                      </span>
+        ) : showingSingleGroup ? (
+          <TrafficSignsGrid signs={filteredSigns} />
+        ) : (
+          <div className="space-y-8">
+            {groupedSigns.map(({ group, signs, info, style }) => (
+              <section key={group} className="space-y-4">
+                <div className="flex flex-col gap-3 border-b border-border/60 pb-4 md:flex-row md:items-end md:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${style.accent} text-base font-black text-white shadow-sm`}
+                    >
+                      {info.displayKey ?? group}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-xl font-black text-foreground mb-1.5 tracking-tight">
-                        {title}
+
+                    <div className="space-y-1">
+                      <h2 className="text-xl font-black tracking-tight text-foreground md:text-2xl">
+                        {info.title[lang]}
                       </h2>
-                      <p className="text-sm font-medium text-foreground/75 leading-relaxed">
-                        {description}
+                      <p className="line-clamp-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                        {info.description[lang]}
                       </p>
                     </div>
-                    <div className="flex-shrink-0 hidden sm:flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex-col gap-0.5">
-                      <span className="text-lg font-black text-primary leading-none">
-                        {groupSigns.length}
-                      </span>
-                      <span className="text-[10px] font-medium text-primary/70 uppercase tracking-wide leading-none">
-                        signs
-                      </span>
-                    </div>
                   </div>
+
+                  <span
+                    className={`inline-flex items-center self-start rounded-full border px-3 py-1 text-xs font-semibold ${style.chip}`}
+                  >
+                    {t("traffic_signs.section_count", { count: signs.length })}
+                  </span>
                 </div>
-                <TrafficSignsGrid signs={groupSigns} />
+
+                <TrafficSignsGrid signs={signs} />
               </section>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function HeroMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="text-primary">{icon}</span>
+        {label}
+      </div>
+      <p className="mt-3 text-3xl font-black tracking-tight text-foreground">
+        {value}
+      </p>
     </div>
   );
 }

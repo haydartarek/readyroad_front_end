@@ -1,0 +1,24 @@
+﻿{
+    "code":  "C43",
+    "category":  "PROHIBITION",
+    "image_path":  "images/signs/prohibition_signs/C43 Verbod te rijden met een grotere snelheid dan is aangeduid.png",
+    "serious_violation":  true,
+    "i18n":  {
+                 "NL":  {
+                            "name":  "Verbod te rijden met een grotere snelheid dan is aangeduid",
+                            "description":  "Maximumsnelheid die niet mag worden overschreden."
+                        },
+                 "EN":  {
+                            "name":  "Speed limit",
+                            "description":  "Maximum speed limit from this sign until the next intersection."
+                        },
+                 "FR":  {
+                            "name":  "Limitation de vitesse",
+                            "description":  "Limitation de vitesse depuis ce panneau jusqu\u0027au prochain carrefour."
+                        },
+                 "AR":  {
+                            "name":  "ممنوع القيادة بسرعة تتجاوز الحد المحدد",
+                            "description":  "الحد الأقصى للسرعة من هذه اللافتة حتى التقاطع التالي."
+                        }
+             }
+}

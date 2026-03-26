@@ -35,7 +35,7 @@ export function StickyCTA() {
   return (
     <div
       role="complementary"
-      aria-label="Quick action"
+      aria-label={t('home.sticky.quick_action_label')}
       className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 shadow-lg backdrop-blur-md"
     >
       <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-3">
@@ -54,7 +54,7 @@ export function StickyCTA() {
 
           <button
             onClick={() => setDismissed(true)}
-            aria-label="Dismiss"
+            aria-label={t('home.sticky.dismiss_label')}
             className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <X className="h-4 w-4" aria-hidden />

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://readyroad.be';
 
@@ -49,9 +48,6 @@ export default function TrafficSignsLayout({
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
-        <div className="container mx-auto px-4 pt-4">
-          <Breadcrumb />
-        </div>
         {children}
       </main>
     </div>

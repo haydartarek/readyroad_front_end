@@ -19,44 +19,44 @@ interface AuthSuccessModalProps {
   onRedirect:      () => void;
 }
 
-// ─── Component ───────────────────────────────────────────
-
-export function AuthSuccessModal({
-  isOpen,
+function AuthSuccessModalContent({
   username,
   title,
   subtitle,
   redirectingText,
   onRedirect,
 }: AuthSuccessModalProps) {
-  const [mounted,  setMounted]  = useState(false);
   const [progress, setProgress] = useState(100);
   const intervalRef = useRef<ReturnType<typeof setInterval>  | null>(null);
   const timeoutRef  = useRef<ReturnType<typeof setTimeout>   | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
-
   useEffect(() => {
-    if (!isOpen) return;
-    setProgress(100);
     const step = (TICK_MS / REDIRECT_DELAY_MS) * 100;
     intervalRef.current = setInterval(() => {
       setProgress(p => {
         const next = p - step;
-        if (next <= 0) { clearInterval(intervalRef.current!); return 0; }
+        if (next <= 0) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+          }
+          return 0;
+        }
         return next;
       });
     }, TICK_MS);
     timeoutRef.current = setTimeout(onRedirect, REDIRECT_DELAY_MS);
+
     return () => {
-      clearInterval(intervalRef.current!);
-      clearTimeout(timeoutRef.current!);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [isOpen, onRedirect]);
+  }, [onRedirect]);
 
-  if (!mounted || !isOpen) return null;
-
-  return createPortal(
+  return (
     <div
       aria-modal="true"
       role="dialog"
@@ -188,7 +188,19 @@ export function AuthSuccessModal({
           </div>
         </div>
       </div>
-    </div>,
+    </div>
+  );
+}
+
+// ─── Component ───────────────────────────────────────────
+
+export function AuthSuccessModal(props: AuthSuccessModalProps) {
+  if (!props.isOpen || typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(
+    <AuthSuccessModalContent {...props} />,
     document.body,
   );
 }

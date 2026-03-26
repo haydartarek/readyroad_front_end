@@ -1,20 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { SignImage } from '@/components/traffic-signs/sign-image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { TrafficSign } from '@/lib/types';
-import { resolveTrafficSignImage } from '@/lib/sign-image-resolver';
-import { apiClient, logApiError } from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/constants';
-import { useLanguage } from '@/contexts/language-context';
-import { cn } from '@/lib/utils';
-import { ArrowLeft, ArrowRight, Lock, CheckCircle2, XCircle, Trophy } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import Breadcrumb from "@/components/ui/breadcrumb";
+import { SignImage } from "@/components/traffic-signs/sign-image";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { TrafficSign } from "@/lib/types";
+import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
+import { apiClient, logApiError } from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/constants";
+import { useLanguage } from "@/contexts/language-context";
+import { cn } from "@/lib/utils";
+import { getTrafficSignName } from "@/lib/traffic-sign-presentation";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  XCircle,
+  Lock,
+} from "lucide-react";
 import {
   getExamQuestions,
   submitExam,
@@ -22,28 +30,34 @@ import {
   type SignQuizQuestion,
   type SignChoice,
   type SignExamResult,
-} from '@/services';
+} from "@/services";
 
 // ─── Types ──────────────────────────────────────────────
 
-type Lang = 'en' | 'ar' | 'nl' | 'fr';
+type Lang = "en" | "ar" | "nl" | "fr";
 
 // ─── Helpers ────────────────────────────────────────────
 
 function qText(q: SignQuizQuestion, lang: Lang) {
-  return q[`question${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof SignQuizQuestion] as string
-    || q.questionEn || '';
+  return (
+    (q[
+      `question${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof SignQuizQuestion
+    ] as string) ||
+    q.questionEn ||
+    ""
+  );
 }
 
 function cText(c: SignChoice, lang: Lang) {
-  const key = `text${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof SignChoice;
-  return (c[key] as string) || c.textEn || '';
+  const key =
+    `text${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof SignChoice;
+  return (c[key] as string) || c.textEn || "";
 }
 
 const DIFF_COLORS: Record<string, string> = {
-  EASY:   'bg-green-100 text-green-800 border-green-200',
-  MEDIUM: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  HARD:   'bg-red-100 text-red-800 border-red-200',
+  EASY: "bg-green-100 text-green-800 border-green-200",
+  MEDIUM: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  HARD: "bg-red-100 text-red-800 border-red-200",
 };
 
 const QUESTION_TIME = 10; // seconds per question
@@ -51,26 +65,29 @@ const QUESTION_TIME = 10; // seconds per question
 // ─── Page ───────────────────────────────────────────────
 
 export default function ExamPage() {
-  const { signCode, examNumber } = useParams<{ signCode: string; examNumber: string }>();
+  const { signCode, examNumber } = useParams<{
+    signCode: string;
+    examNumber: string;
+  }>();
   const examNum = Number(examNumber) as 1 | 2;
   const { t, language, isRTL } = useLanguage();
   const lang = language as Lang;
 
-  const [sign, setSign]                 = useState<TrafficSign | null>(null);
-  const [examData, setExamData]         = useState<SignExamQuestions | null>(null);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState<string | null>(null);
-  const [locked, setLocked]             = useState(false);
+  const [sign, setSign] = useState<TrafficSign | null>(null);
+  const [examData, setExamData] = useState<SignExamQuestions | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
 
   // answers: questionId → choiceId
-  const [answers, setAnswers]           = useState<Map<number, number>>(new Map());
-  const [currentIdx, setCurrentIdx]     = useState(0);
-  const [submitting, setSubmitting]     = useState(false);
-  const [result, setResult]             = useState<SignExamResult | null>(null);
-  const [showReview, setShowReview]     = useState(false);
-  const [timeLeft, setTimeLeft]         = useState(QUESTION_TIME);
-  const timerRef                        = useRef<ReturnType<typeof setInterval> | null>(null);
-  const reviewRef                       = useRef<HTMLDivElement | null>(null);
+  const [answers, setAnswers] = useState<Map<number, number>>(new Map());
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<SignExamResult | null>(null);
+  const [showReview, setShowReview] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const reviewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,25 +104,40 @@ export default function ExamPage() {
           setExamData(exam);
         }
       })
-      .catch(err => {
-        logApiError('Exam load error', err);
+      .catch((err) => {
+        logApiError("Exam load error", err);
         if (!cancelled) {
           if (err?.response?.status === 423) setLocked(true);
-          else setError(t('sign_quiz.error_load'));
+          else setError(t("sign_quiz.error_load"));
         }
       })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    return () => { cancelled = true; };
-  }, [signCode, examNum]);  // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+    };
+  }, [signCode, examNum]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const questions   = useMemo(() => examData?.questions ?? [], [examData]);
-  const total       = questions.length;
-  const current     = questions[currentIdx];
+  const questions = useMemo(() => examData?.questions ?? [], [examData]);
+  const total = questions.length;
+  const current = questions[currentIdx];
   const answeredCnt = answers.size;
+  const routeCode = sign?.routeCode ?? signCode;
+  const signName = sign ? getTrafficSignName(sign, lang) : signCode;
+  const breadcrumbItems = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.traffic_signs"), href: "/traffic-signs" },
+    { label: signName, href: `/traffic-signs/${routeCode}` },
+    {
+      label: t("sign_quiz.exam.title").replace("{n}", String(examNum)),
+      href: `/traffic-signs/${routeCode}/exam/${examNum}`,
+    },
+  ];
 
   const handleSelect = useCallback((questionId: number, choiceId: number) => {
-    setAnswers(prev => {
+    setAnswers((prev) => {
       const next = new Map(prev);
       next.set(questionId, choiceId);
       return next;
@@ -115,15 +147,17 @@ export default function ExamPage() {
   const handleForceSubmit = useCallback(async () => {
     if (!examData || submitting) return;
     setSubmitting(true);
-    const payload = questions.map(q => ({
-      questionId: q.id,
-      choiceId:   answers.get(q.id) ?? -1,
-    })).filter(a => a.choiceId !== -1);
+    const payload = questions
+      .map((q) => ({
+        questionId: q.id,
+        choiceId: answers.get(q.id) ?? -1,
+      }))
+      .filter((a) => a.choiceId !== -1);
     try {
       const res = await submitExam(signCode, examNum, payload);
       setResult(res);
     } catch (err) {
-      logApiError('Submit exam error', err);
+      logApiError("Submit exam error", err);
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +169,7 @@ export default function ExamPage() {
     setTimeLeft(QUESTION_TIME);
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current!);
           timerRef.current = null;
@@ -145,14 +179,17 @@ export default function ExamPage() {
       });
     }, 1000);
     return () => {
-      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [currentIdx, examData, result]);
 
   useEffect(() => {
     if (timeLeft !== 0) return;
     if (currentIdx < total - 1) {
-      setCurrentIdx(i => i + 1);
+      setCurrentIdx((i) => i + 1);
     } else {
       handleForceSubmit();
     }
@@ -162,7 +199,9 @@ export default function ExamPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse">{t('sign_quiz.loading')}</p>
+        <p className="text-muted-foreground animate-pulse">
+          {t("sign_quiz.loading")}
+        </p>
       </div>
     );
   }
@@ -170,11 +209,16 @@ export default function ExamPage() {
   // ── Locked ──
   if (locked) {
     return (
-      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen flex flex-col items-center justify-center gap-6 p-6">
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen flex flex-col items-center justify-center gap-6 p-6"
+      >
         <Lock className="w-16 h-16 text-muted-foreground" />
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-black">{t('sign_quiz.locked')}</h2>
-          <p className="text-muted-foreground">{t('sign_quiz.exam_locked_desc')}</p>
+          <h2 className="text-xl font-black">{t("sign_quiz.locked")}</h2>
+          <p className="text-muted-foreground">
+            {t("sign_quiz.exam_locked_desc")}
+          </p>
         </div>
         {sign && (
           <div className="relative w-24 h-24 rounded-xl bg-white border border-border/40 p-2 shadow-md flex items-center justify-center">
@@ -184,12 +228,18 @@ export default function ExamPage() {
         <div className="flex gap-3">
           <Button variant="outline" className="rounded-xl" asChild>
             <Link href={`/traffic-signs/${signCode}`}>
-              {isRTL ? <ArrowRight className="w-4 h-4 mr-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
-              {t('sign_quiz.exam.back_to_sign')}
+              {isRTL ? (
+                <ArrowRight className="w-4 h-4 mr-2" />
+              ) : (
+                <ArrowLeft className="w-4 h-4 mr-2" />
+              )}
+              {t("sign_quiz.exam.back_to_sign")}
             </Link>
           </Button>
           <Button className="rounded-xl" asChild>
-            <Link href={`/traffic-signs/${signCode}/exam/1`}>{t('sign_quiz.start_exam')} 1</Link>
+            <Link href={`/traffic-signs/${signCode}/exam/1`}>
+              {t("sign_quiz.start_exam")} 1
+            </Link>
           </Button>
         </div>
       </div>
@@ -200,11 +250,17 @@ export default function ExamPage() {
   if (error || !sign || !examData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
-        <p className="text-muted-foreground text-center">{error || t('sign_quiz.error_load')}</p>
+        <p className="text-muted-foreground text-center">
+          {error || t("sign_quiz.error_load")}
+        </p>
         <Button variant="outline" asChild>
           <Link href={`/traffic-signs/${signCode}`}>
-            {isRTL ? <ArrowRight className="w-4 h-4 mr-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
-            {t('sign_quiz.exam.back_to_sign')}
+            {isRTL ? (
+              <ArrowRight className="w-4 h-4 mr-2" />
+            ) : (
+              <ArrowLeft className="w-4 h-4 mr-2" />
+            )}
+            {t("sign_quiz.exam.back_to_sign")}
           </Link>
         </Button>
       </div>
@@ -214,146 +270,252 @@ export default function ExamPage() {
   // ── Result Screen ──
   if (result) {
     const scorePct = Math.round(result.scorePercentage);
-    const reqPct   = result.totalLinked > 0 ? Math.round((result.passingThreshold / result.totalLinked) * 100) : 80;
+    const reqPct =
+      result.totalLinked > 0
+        ? Math.round((result.passingThreshold / result.totalLinked) * 100)
+        : 80;
 
     return (
-      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-muted/30">
-        <div className="container mx-auto px-4 py-12 max-w-lg">
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+      >
+        <div className="container mx-auto max-w-5xl px-4 py-4 md:py-6 space-y-4">
+          <Breadcrumb items={breadcrumbItems} />
 
-          {/* Result card */}
-          <Card className={cn(
-            'rounded-3xl border shadow-md mb-6 text-center bg-white overflow-hidden',
-            result.passed ? 'border-green-200' : 'border-red-200/70',
-          )}>
-            {/* Top accent bar */}
-            <div className={cn('h-1 w-full', result.passed ? 'bg-green-400' : 'bg-red-400')} />
+          <Card
+            className={cn(
+              "overflow-hidden rounded-[2rem] border bg-card shadow-sm",
+              result.passed ? "border-green-200" : "border-red-200/70",
+            )}
+          >
+            <div
+              className={cn(
+                "h-1.5 w-full",
+                result.passed ? "bg-green-400" : "bg-red-400",
+              )}
+            />
 
-            <CardContent className="px-8 pt-8 pb-7 space-y-5">
+            <CardContent className="px-5 py-5 md:px-6 md:py-6">
+              <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+                <div className="space-y-4">
+                  <div className="rounded-[1.5rem] border border-border/60 bg-background/85 p-4 shadow-sm">
+                    <div className="relative mx-auto aspect-square w-full max-w-[132px]">
+                      <SignImage
+                        src={resolveTrafficSignImage(sign)}
+                        alt={sign.nameEn}
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
 
-              {/* Sign image */}
-              <div className="flex justify-center">
-                <div className="relative w-20 h-20 rounded-2xl bg-muted/40 border border-border/30 p-2.5 flex items-center justify-center shadow-sm">
-                  <SignImage src={resolveTrafficSignImage(sign)} alt={sign.nameEn} />
+                  <div className="space-y-2 text-center lg:text-start">
+                    <Badge
+                      className={cn(
+                        "border",
+                        result.passed
+                          ? "border-green-200 bg-green-100 text-green-800"
+                          : "border-red-200 bg-red-100 text-red-700",
+                      )}
+                    >
+                      {result.passed
+                        ? t("sign_quiz.exam.passed")
+                        : t("sign_quiz.exam.failed")}
+                    </Badge>
+                    <p className="text-sm text-muted-foreground">{signName}</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      {t("sign_quiz.exam.title").replace("{n}", String(examNum))}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        {t("sign_quiz.exam.correct_of")
+                          .replace("{n}", String(result.correctAnswers))
+                          .replace("{total}", String(result.totalLinked))}
+                      </p>
+                      <h2 className="text-2xl font-black tracking-tight text-foreground md:text-3xl">
+                        {result.passed
+                          ? t("sign_quiz.exam.passed")
+                          : t("sign_quiz.exam.failed")}
+                      </h2>
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm">
+                      {result.passed ? (
+                        <CheckCircle2 className="h-8 w-8 text-green-500" />
+                      ) : (
+                        <XCircle className="h-8 w-8 text-red-400" />
+                      )}
+                      <div className="text-end">
+                        <div
+                          className={cn(
+                            "text-4xl font-black tabular-nums leading-none md:text-5xl",
+                            result.passed
+                              ? "text-green-600"
+                              : "text-foreground",
+                          )}
+                        >
+                          {scorePct}%
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t("sign_quiz.exam.required_to_pass")}: {reqPct}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 rounded-[1.5rem] border border-border/60 bg-background/80 p-4 shadow-sm">
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-semibold text-foreground">
+                        {t("sign_quiz.exam.correct_of")
+                          .replace("{n}", String(result.correctAnswers))
+                          .replace("{total}", String(result.totalLinked))}
+                      </span>
+                      <span className="font-semibold text-primary">
+                        {scorePct}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={scorePct}
+                      className={cn(
+                        "h-2.5 rounded-full bg-muted/50",
+                        result.passed
+                          ? "[&>div]:bg-green-500 [&>div]:transition-all [&>div]:duration-700"
+                          : "[&>div]:bg-red-400 [&>div]:transition-all [&>div]:duration-700",
+                      )}
+                    />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        {result.correctAnswers}/{result.totalLinked}
+                      </span>
+                      <span>{reqPct}%</span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2.5 sm:grid-cols-3">
+                    <Button
+                      className="rounded-xl h-10 font-semibold"
+                      asChild
+                    >
+                      <Link href={`/traffic-signs/${signCode}/exam/${examNum}`}>
+                        {t("sign_quiz.exam.retake")}
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="rounded-xl h-10 font-medium"
+                      onClick={() => {
+                        setShowReview((r) => !r);
+                        setTimeout(
+                          () =>
+                            reviewRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            }),
+                          50,
+                        );
+                      }}
+                    >
+                      {t("sign_quiz.exam.review_answers")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-xl h-10 font-medium"
+                      asChild
+                    >
+                      <Link href={`/traffic-signs/${signCode}`}>
+                        {isRTL ? (
+                          <ArrowRight className="mr-2 h-4 w-4" />
+                        ) : (
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                        )}
+                        {t("sign_quiz.exam.back_to_sign")}
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
-
-              {/* Status icon + title */}
-              <div className="space-y-2">
-                <div className="flex justify-center">
-                  {result.passed
-                    ? <CheckCircle2 className="w-10 h-10 text-green-500" />
-                    : <XCircle       className="w-10 h-10 text-red-400"   />}
-                </div>
-                <h2 className={cn(
-                  'text-xl font-bold tracking-tight',
-                  result.passed ? 'text-green-700' : 'text-red-500',
-                )}>
-                  {result.passed ? t('sign_quiz.exam.passed') : t('sign_quiz.exam.failed')}
-                </h2>
-              </div>
-
-              {/* Score — hero number */}
-              <div className={cn(
-                'text-6xl font-black tabular-nums',
-                result.passed ? 'text-green-600' : 'text-foreground',
-              )}>
-                {scorePct}%
-              </div>
-
-              {/* Progress bar */}
-              <div className="space-y-1.5 px-2">
-                <Progress
-                  value={scorePct}
-                  className={cn(
-                    'h-2 rounded-full bg-muted/50',
-                    result.passed ? '[&>div]:bg-green-500 [&>div]:transition-all [&>div]:duration-700' : '[&>div]:bg-red-400 [&>div]:transition-all [&>div]:duration-700',
-                  )}
-                />
-                <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                  {t('sign_quiz.exam.correct_of').replace('{n}', String(result.correctAnswers)).replace('{total}', String(result.totalLinked))}
-                  {' · '}
-                  {t('sign_quiz.exam.required_to_pass')}: {reqPct}%
-                </p>
-              </div>
-
-              {/* Action buttons — clear hierarchy */}
-              <div className="flex flex-col gap-2.5 pt-1">
-                {/* Primary CTA */}
-                {result.passed && examNum === 1 ? (
-                  <Button className="w-full rounded-xl h-10 font-semibold" asChild>
-                    <Link href={`/traffic-signs/${signCode}/exam/2`}>
-                      <Trophy className="w-4 h-4 mr-2" />
-                      {t('sign_quiz.exam.go_to_exam_2')}
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button className="w-full rounded-xl h-10 font-semibold" asChild>
-                    <Link href={`/traffic-signs/${signCode}/exam/${examNum}`}>
-                      {t('sign_quiz.exam.retake')}
-                    </Link>
-                  </Button>
-                )}
-                {/* Secondary */}
-                <Button
-                  variant="secondary"
-                  className="w-full rounded-xl h-10 font-medium"
-                  onClick={() => {
-                    setShowReview(r => !r);
-                    setTimeout(() => reviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-                  }}
-                >
-                  {t('sign_quiz.exam.review_answers')}
-                </Button>
-                {/* Ghost */}
-                <Button variant="ghost" className="w-full rounded-xl h-9 text-muted-foreground font-normal" asChild>
-                  <Link href={`/traffic-signs/${signCode}`}>
-                    {isRTL ? <ArrowRight className="w-4 h-4 mr-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
-                    {t('sign_quiz.exam.back_to_sign')}
-                  </Link>
-                </Button>
-              </div>
-
             </CardContent>
           </Card>
 
-          {/* Answer Review */}
           {showReview && (
-            <div ref={reviewRef} className="space-y-4 pb-10">
+            <div
+              ref={reviewRef}
+              className="grid gap-4 pb-6 xl:grid-cols-2 xl:items-start"
+            >
               {result.questionResults.map((qRes, idx) => {
-                const q = questions.find(q => q.id === qRes.questionId);
-                const correctText = qRes[`correctText${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes] as string
-                  || qRes.correctTextEn || '';
-                const expl = qRes[`explanation${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes] as string
-                  || qRes.explanationEn || '';
+                const q = questions.find((q) => q.id === qRes.questionId);
+                const correctText =
+                  (qRes[
+                    `correctText${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes
+                  ] as string) ||
+                  qRes.correctTextEn ||
+                  "";
+                const expl =
+                  (qRes[
+                    `explanation${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes
+                  ] as string) ||
+                  qRes.explanationEn ||
+                  "";
 
                 return (
-                  <Card key={qRes.questionId} className={cn(
-                    'rounded-xl border',
-                    !qRes.answered ? 'border-muted' : qRes.isCorrect ? 'border-green-300' : 'border-red-300',
-                  )}>
-                    <CardContent className="pt-4 space-y-2">
-                      {/* Sign image + question header */}
+                  <Card
+                    key={qRes.questionId}
+                    className={cn(
+                      "rounded-[1.35rem] border shadow-sm",
+                      !qRes.answered
+                        ? "border-muted"
+                        : qRes.isCorrect
+                          ? "border-green-300"
+                        : "border-red-300",
+                    )}
+                  >
+                    <CardContent className="space-y-3 px-5 py-5">
                       <div className="flex items-start gap-3">
-                        <div className="relative w-10 h-10 rounded-lg bg-white border border-border/40 p-1 flex items-center justify-center flex-shrink-0">
-                          <SignImage src={resolveTrafficSignImage(sign)} alt={sign.nameEn} />
+                        <div className="relative h-11 w-11 rounded-xl bg-white border border-border/40 p-1.5 flex items-center justify-center flex-shrink-0">
+                          <SignImage
+                            src={resolveTrafficSignImage(sign)}
+                            alt={sign.nameEn}
+                          />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="text-xs text-muted-foreground font-semibold">
-                              {t('sign_quiz.exam.question_x').replace('{n}', String(idx + 1))}
+                              {t("sign_quiz.exam.question_x").replace(
+                                "{n}",
+                                String(idx + 1),
+                              )}
                             </span>
                             {q && (
-                              <Badge className={cn('border text-xs', DIFF_COLORS[q.difficulty] || 'bg-muted text-foreground border-border')}>
+                              <Badge
+                                className={cn(
+                                  "border text-xs",
+                                  DIFF_COLORS[q.difficulty] ||
+                                    "bg-muted text-foreground border-border",
+                                )}
+                              >
                                 {t(`sign_quiz.${q.difficulty.toLowerCase()}`)}
                               </Badge>
                             )}
-                            {!qRes.answered
-                              ? <Badge variant="outline" className="text-xs">{t('sign_quiz.exam.not_answered')}</Badge>
-                              : qRes.isCorrect
-                                ? <Badge className="bg-green-100 text-green-800 border-green-200 border text-xs">{t('sign_quiz.exam.correct_label')}</Badge>
-                                : <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs">{t('sign_quiz.exam.wrong_label')}</Badge>}
+                            {!qRes.answered ? (
+                              <Badge variant="outline" className="text-xs">
+                                {t("sign_quiz.exam.not_answered")}
+                              </Badge>
+                            ) : qRes.isCorrect ? (
+                              <Badge className="bg-green-100 text-green-800 border-green-200 border text-xs">
+                                {t("sign_quiz.exam.correct_label")}
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs">
+                                {t("sign_quiz.exam.wrong_label")}
+                              </Badge>
+                            )}
                           </div>
-                          <p className="text-sm font-medium">
+                          <p className="text-sm font-semibold leading-6">
                             {q ? qText(q, lang) : `Question ${idx + 1}`}
                           </p>
                         </div>
@@ -361,7 +523,7 @@ export default function ExamPage() {
 
                       {correctText && (
                         <p className="text-sm text-green-700 font-medium">
-                          ✓ {t('sign_quiz.exam.correct_answer')}: {correctText}
+                          ✓ {t("sign_quiz.exam.correct_answer")}: {correctText}
                         </p>
                       )}
                       {expl && (
@@ -380,159 +542,276 @@ export default function ExamPage() {
 
   // ── Exam Screen ──
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-b from-muted to-background">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+    >
+      <div className="container mx-auto max-w-6xl px-4 py-4 md:py-6 space-y-3 md:space-y-4">
+        <Breadcrumb items={breadcrumbItems} />
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="sm" className="gap-2" asChild>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button variant="ghost" size="sm" className="gap-2 rounded-xl px-0" asChild>
             <Link href={`/traffic-signs/${signCode}`}>
-              {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-              {t('sign_quiz.exam.back_to_sign')}
+              {isRTL ? (
+                <ArrowRight className="w-4 h-4" />
+              ) : (
+                <ArrowLeft className="w-4 h-4" />
+              )}
+              {t("sign_quiz.exam.back_to_sign")}
             </Link>
           </Button>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-muted-foreground">
-              {t('sign_quiz.exam.title').replace('{n}', String(examNum))}
+          <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5 shadow-sm">
+            <span className="text-sm font-semibold text-foreground">
+              {t("sign_quiz.exam.title").replace("{n}", String(examNum))}
             </span>
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="rounded-full text-xs">
               {answeredCnt}/{total}
             </Badge>
           </div>
         </div>
 
-        {/* Progress bar */}
-        <Progress value={(answeredCnt / total) * 100} className="h-2.5 rounded-full mb-5 [&>div]:transition-all [&>div]:duration-500" />
-
-        {/* Question navigator dots */}
-        <div className="flex flex-wrap gap-1.5 mb-5 justify-center">
-          {questions.map((q, i) => {
-            // A dot is reachable if every question before it has been answered
-            const reachable = questions.slice(0, i).every(prev => answers.has(prev.id));
-            return (
-              <button
-                key={q.id}
-                onClick={() => reachable && setCurrentIdx(i)}
-                disabled={!reachable}
-                className={cn(
-                  'w-7 h-7 rounded-full text-xs font-bold transition-all border',
-                  i === currentIdx
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : answers.has(q.id)
-                      ? 'bg-green-100 text-green-700 border-green-300'
-                      : reachable
-                        ? 'bg-muted text-muted-foreground border-border'
-                        : 'bg-muted/40 text-muted-foreground/40 border-border/40 cursor-not-allowed',
-                )}
-              >
-                {i + 1}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Sign image */}
-        <div className="flex justify-center mb-4">
-          <div className="relative w-52 h-52 rounded-2xl bg-white border border-border/50 shadow-lg p-5 flex items-center justify-center">
-            <SignImage src={resolveTrafficSignImage(sign)} alt={sign.nameEn} />
-          </div>
-        </div>
-
-        {/* Per-question countdown timer */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className={cn(
-            'flex-1 h-2.5 rounded-full overflow-hidden',
-            timeLeft >= 7 ? 'bg-green-100' : timeLeft >= 4 ? 'bg-yellow-100' : 'bg-red-100',
-          )}>
-            <div
-              className={cn(
-                'h-full rounded-full',
-                timeLeft >= 7 ? 'bg-green-500' : timeLeft >= 4 ? 'bg-yellow-400' : 'bg-red-500',
-              )}
-              style={{ width: `${(timeLeft / QUESTION_TIME) * 100}%`, transition: 'width 0.95s linear' }}
-            />
-          </div>
-          <span className={cn(
-            'text-sm font-bold tabular-nums w-7 text-end shrink-0',
-            timeLeft >= 7 ? 'text-green-600' : timeLeft >= 4 ? 'text-yellow-600' : 'text-red-500',
-          )}>
-            {timeLeft}s
-          </span>
-        </div>
-
-        {/* Current question */}
-        {current && (
-          <Card className="rounded-2xl border-border/50 shadow-sm mb-4">
-            <CardHeader>
-              <div className="flex items-start gap-3 flex-wrap">
-                <Badge className={cn('border text-[10px] font-normal flex-shrink-0 opacity-75', DIFF_COLORS[current.difficulty] || 'bg-muted text-foreground border-border')}>
-                  {t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
-                </Badge>
-                <CardTitle className="text-lg font-semibold leading-snug flex-1">
-                  {t('sign_quiz.exam.question_x').replace('{n}', String(currentIdx + 1))}
-                  &nbsp;&mdash;&nbsp;
-                  {qText(current, lang)}
-                </CardTitle>
+        <div className="grid gap-3 xl:grid-cols-[220px_minmax(0,1fr)] xl:items-start">
+          <Card className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/85 shadow-sm xl:sticky xl:top-20">
+            <div className="h-1.5 w-full bg-gradient-to-r from-primary/70 via-primary to-primary/75" />
+            <CardContent className="space-y-4 px-4 py-4">
+              <div className="rounded-[1.35rem] border border-border/60 bg-background/85 p-3 shadow-sm">
+                <div className="relative mx-auto aspect-square w-full max-w-[112px]">
+                  <SignImage
+                    src={resolveTrafficSignImage(sign)}
+                    alt={sign.nameEn}
+                    className="object-contain"
+                  />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {current.choices.map(choice => {
-                const isSelected = answers.get(current.id) === choice.id;
-                return (
-                  <button
-                    key={choice.id}
-                    onClick={() => handleSelect(current.id, choice.id)}
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[11px] font-semibold text-primary">
+                    {t("sign_quiz.exam.title").replace("{n}", String(examNum))}
+                  </span>
+                  <span className="inline-flex items-center rounded-full border border-border/60 bg-background px-3 py-1 text-[11px] font-semibold text-muted-foreground">
+                    {sign.signCode}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    {t("nav.traffic_signs")}
+                  </p>
+                  <h1 className="text-[1.55rem] font-black tracking-tight text-foreground">
+                    {signName}
+                  </h1>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-[1.25rem] border border-border/60 bg-background/80 p-3.5">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-semibold text-foreground">
+                    {t("sign_quiz.exam.question_x").replace(
+                      "{n}",
+                      String(currentIdx + 1),
+                    )}{" "}
+                    / {total}
+                  </span>
+                  <span className="font-semibold text-primary">
+                    {Math.round((answeredCnt / total) * 100)}%
+                  </span>
+                </div>
+                <Progress
+                  value={(answeredCnt / total) * 100}
+                  className="h-2 rounded-full [&>div]:bg-primary [&>div]:transition-all [&>div]:duration-500"
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    {answeredCnt}/{total}
+                  </span>
+                  <span>{t("sign_quiz.exam.title").replace("{n}", String(examNum))}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 rounded-[1.25rem] border border-border/60 bg-background/80 p-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    {t("exam.time_remaining")}
+                  </span>
+                  <span
                     className={cn(
-                      'w-full text-start p-4 rounded-xl border-2 transition-all duration-150 font-medium text-sm group flex items-center gap-3',
-                      isSelected
-                        ? 'border-primary bg-primary/10 shadow-sm scale-[1.01]'
-                        : 'border-border hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm active:scale-[0.99]',
+                      "text-base font-black tabular-nums",
+                      timeLeft >= 7
+                        ? "text-green-600"
+                        : timeLeft >= 4
+                          ? "text-yellow-600"
+                          : "text-red-500",
                     )}
                   >
-                    <span className={cn(
-                      'w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all duration-150',
-                      isSelected
-                        ? 'border-primary bg-primary'
-                        : 'border-muted-foreground/40 group-hover:border-primary/60',
-                    )} />
-                    <span className="flex-1">{cText(choice, lang)}</span>
+                    {timeLeft}s
+                  </span>
+                </div>
+                <div
+                  className={cn(
+                    "h-2 rounded-full overflow-hidden",
+                    timeLeft >= 7
+                      ? "bg-green-100"
+                      : timeLeft >= 4
+                        ? "bg-yellow-100"
+                        : "bg-red-100",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-[width] duration-1000 ease-linear",
+                      timeLeft >= 7
+                        ? "bg-green-500"
+                        : timeLeft >= 4
+                          ? "bg-yellow-400"
+                          : "bg-red-500",
+                    )}
+                    style={{
+                      width: `${(timeLeft / QUESTION_TIME) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <Button variant="outline" className="w-full rounded-xl" asChild>
+                <Link href={`/traffic-signs/${signCode}`}>
+                  {isRTL ? (
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                  ) : (
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                  )}
+                  {t("sign_quiz.exam.back_to_sign")}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-1.5 justify-center xl:justify-start">
+              {questions.map((q, i) => {
+                const reachable = questions
+                  .slice(0, i)
+                  .every((prev) => answers.has(prev.id));
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => reachable && setCurrentIdx(i)}
+                    disabled={!reachable}
+                    className={cn(
+                      "h-7 min-w-7 rounded-full px-2 text-[11px] font-bold transition-all border",
+                      i === currentIdx
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : answers.has(q.id)
+                          ? "bg-green-100 text-green-700 border-green-300"
+                          : reachable
+                            ? "bg-card text-muted-foreground border-border hover:border-primary/30"
+                            : "bg-muted/40 text-muted-foreground/40 border-border/40 cursor-not-allowed",
+                    )}
+                  >
+                    {i + 1}
                   </button>
                 );
               })}
+            </div>
 
-              {/* Next (no going back) */}
-              {currentIdx < total - 1 && (
-                <div className="flex justify-end pt-1">
-                  <Button
-                    size="sm" className="rounded-xl transition-all duration-200 hover:shadow-md"
-                    disabled={!answers.has(current.id)}
-                    onClick={() => setCurrentIdx(i => i + 1)}
-                  >
-                    Next
-                    {isRTL ? <ArrowLeft className="w-4 h-4 ml-1" /> : <ArrowRight className="w-4 h-4 ml-1" />}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+            {current && (
+              <Card className="flex overflow-hidden rounded-[1.75rem] border border-border/60 bg-card shadow-sm xl:min-h-[calc(100vh-14rem)] xl:flex-col">
+                <CardHeader className="space-y-3 px-5 pb-3 pt-4 md:px-6">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge
+                      className={cn(
+                        "border text-xs font-semibold",
+                        DIFF_COLORS[current.difficulty] ||
+                          "bg-muted text-foreground border-border",
+                      )}
+                    >
+                      {t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
+                    </Badge>
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      {t("sign_quiz.exam.question_x").replace(
+                        "{n}",
+                        String(currentIdx + 1),
+                      )}{" "}
+                      / {total}
+                    </span>
+                  </div>
+                  <CardTitle className="text-xl font-black leading-snug text-foreground md:text-[1.55rem]">
+                    {qText(current, lang)}
+                  </CardTitle>
+                </CardHeader>
 
-        {/* Submit — only visible on last question */}
-        {currentIdx === total - 1 && (
-          <>
-            <Button
-              className="w-full rounded-xl shadow-md shadow-primary/20 mt-2"
-              disabled={submitting}
-              onClick={handleForceSubmit}
-            >
-              {submitting
-                ? t('sign_quiz.exam.submitting')
-                : `${t('sign_quiz.exam.submit_exam')} (${answeredCnt}/${total})`}
-            </Button>
-            <p className="text-xs text-muted-foreground text-center mt-2">{t('sign_quiz.exam.instructions')}</p>
-          </>
-        )}
+                <CardContent className="flex flex-1 flex-col space-y-3 px-5 pb-5 md:px-6 md:pb-6">
+                  <div className="space-y-2.5">
+                    {current.choices.map((choice) => {
+                      const isSelected = answers.get(current.id) === choice.id;
+                      return (
+                        <button
+                          key={choice.id}
+                          onClick={() => handleSelect(current.id, choice.id)}
+                          className={cn(
+                            "flex w-full items-start gap-3 rounded-[1.15rem] border-2 px-4 py-3 text-start transition-all duration-150",
+                            isSelected
+                              ? "border-primary bg-primary/10 shadow-sm"
+                              : "border-border/60 bg-background hover:border-primary/35 hover:bg-primary/5",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2 transition-all duration-150",
+                              isSelected
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground/40",
+                            )}
+                          />
+                          <span className="flex-1 text-base font-semibold leading-6 text-foreground">
+                            {cText(choice, lang)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
+                  <div className="sticky bottom-2 z-10 mt-auto -mx-2 bg-gradient-to-t from-card via-card to-transparent px-2 pt-3">
+                    {currentIdx < total - 1 ? (
+                      <div className="space-y-2">
+                        <Button
+                          className="h-12 w-full rounded-xl text-sm font-semibold shadow-sm"
+                          disabled={!answers.has(current.id)}
+                          onClick={() => setCurrentIdx((i) => i + 1)}
+                        >
+                          {t("sign_quiz.practice.next_question")}
+                          {isRTL ? (
+                            <ArrowLeft className="ml-2 h-4 w-4" />
+                          ) : (
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          )}
+                        </Button>
+                        <p className="text-center text-xs text-muted-foreground">
+                          {t("sign_quiz.exam.instructions")}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Button
+                          className="h-12 w-full rounded-xl text-sm font-semibold shadow-sm shadow-primary/20"
+                          disabled={submitting}
+                          onClick={handleForceSubmit}
+                        >
+                          {submitting
+                            ? t("sign_quiz.exam.submitting")
+                            : `${t("sign_quiz.exam.submit_exam")} (${answeredCnt}/${total})`}
+                        </Button>
+                        <p className="text-center text-xs text-muted-foreground">
+                          {t("sign_quiz.exam.instructions")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -39,14 +39,14 @@ export function QuickActionsSection() {
       title:       t('dashboard.action_error_patterns_title'),
       description: t('dashboard.action_error_patterns_desc'),
       icon:        BarChart2,
-      href:        '/analytics/error-patterns',
+      href:        '/dashboard?section=error-patterns',
       variant:     'muted' as const,
     },
     {
       title:       t('dashboard.action_weak_areas_title'),
       description: t('dashboard.action_weak_areas_desc'),
       icon:        TrendingDown,
-      href:        '/analytics/weak-areas',
+      href:        '/dashboard?section=weak-areas',
       variant:     'muted' as const,
     },
     {

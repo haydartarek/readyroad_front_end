@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import Link from 'next/link';
 import { PenLine, BookOpen, Target, RefreshCw, TrendingUp, Trophy, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 
-export default function WeakAreasPage() {
+export function WeakAreasPageContent() {
   const { t } = useLanguage();
   const [data, setData] = useState<WeakAreasData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -232,4 +233,14 @@ export default function WeakAreasPage() {
 
     </div>
   );
+}
+
+export default function WeakAreasPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/dashboard?section=weak-areas');
+  }, [router]);
+
+  return null;
 }

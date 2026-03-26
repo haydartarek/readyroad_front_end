@@ -42,7 +42,7 @@ export function Footer() {
 
   const accountLinks = user
     ? [
-        { label: t('home.footer.profile'),  href: '/profile',   icon: UserCircle },
+        { label: t('home.footer.profile'),  href: '/dashboard?section=profile',   icon: UserCircle },
         { label: t('home.footer.progress'), href: '/dashboard', icon: BarChart3 },
       ]
     : [

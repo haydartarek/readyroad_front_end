@@ -1,0 +1,24 @@
+{
+  "code": "E9j",
+  "category": "PARKING",
+  "image_path": "images/signs/parking_signs/E9j wisselend parkeren Parkeerplaats voorzien voor wisselend parkeren fietsers en auto's.png",
+  "serious_violation": false,
+  "i18n": {
+    "NL": {
+      "name": "Wisselend parkeren voor fietsers en auto's",
+      "description": "Parkeerplaats voorzien voor wisselend parkeren fietsers en auto's."
+    },
+    "EN": {
+      "name": "Alternating parking for cyclists and cars",
+      "description": "Parking space for alternating parking cyclists and cars."
+    },
+    "FR": {
+      "name": "Stationnement alternant pour cyclistes et voitures",
+      "description": "Place de stationnement prévue pour le stationnement alternant cyclistes et voitures."
+    },
+    "AR": {
+      "name": "ركن متناوب للدراجات والسيارات",
+      "description": "مكان لوقوف السيارات مخصص للركن المتناوب للدراجات والسيارات."
+    }
+  }
+}

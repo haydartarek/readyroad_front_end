@@ -1,0 +1,24 @@
+﻿{
+    "code":  "F4b",
+    "category":  "INFORMATION",
+    "image_path":  "images/signs/information_signs/F4b Einde zone 30 kmu.png",
+    "serious_violation":  false,
+    "i18n":  {
+                 "NL":  {
+                            "name":  "Einde zone 30",
+                            "description":  "Dit bord geeft het einde van een zone 30 aan. De maximumsnelheid van 30 km/u geldt niet meer vanaf dit punt. Vanaf hier mag u rijden volgens de snelheidslimieten die door andere borden worden aangegeven."
+                        },
+                 "EN":  {
+                            "name":  "End of 30 km/h zone",
+                            "description":  "This sign indicates the end of a 30 km/h zone. The maximum speed of 30 km/h no longer applies from this point. From here, you may drive according to the speed limits indicated by other signs."
+                        },
+                 "FR":  {
+                            "name":  "Fin de zone 30",
+                            "description":  "Ce panneau indique la fin d\u0027une zone 30. La vitesse maximale de 30 km/h ne s\u0027applique plus à partir de ce point. À partir d\u0027ici, vous pouvez rouler selon les limites de vitesse indiquées par d\u0027autres panneaux."
+                        },
+                 "AR":  {
+                            "name":  "نهاية منطقة سرعة 30 كم/س",
+                            "description":  "تشير هذه العلامة إلى نهاية منطقة السرعة 30 كم/ساعة. لم تعد السرعة القصوى البالغة 30 كم/ساعة سارية من هذه النقطة. من هنا يمكنك القيادة وفق حدود السرعة الموضحة بالعلامات الأخرى."
+                        }
+             }
+}

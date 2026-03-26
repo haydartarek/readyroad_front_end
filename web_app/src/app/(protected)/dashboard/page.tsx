@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { ProgressOverviewCard } from "@/components/dashboard/progress-overview-card";
 import { WeakAreasPreview } from "@/components/dashboard/weak-areas-preview";
-import { getOverallProgress, getWeakAreas } from "@/services";
+import {
+  getOverallProgress,
+  getRecentActivity,
+  getWeakAreas,
+} from "@/services";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
@@ -29,6 +34,10 @@ import {
 import type { CategoryProgressSummary } from "@/services/progressService";
 import { QuickActionsSection } from "@/components/dashboard/quick-actions-section";
 import { RecentActivityList } from "@/components/dashboard/recent-activity-list";
+import { WeakAreasPageContent } from "@/app/(protected)/analytics/weak-areas/page";
+import { ErrorPatternsContent } from "@/app/(protected)/analytics/error-patterns/page";
+import { ExamResultsPageContent } from "@/app/(protected)/exam/results/page";
+import { ProfilePageContent } from "@/app/(protected)/profile/page";
 
 // ─── Progress Tracker types (inline, no extra file) ──────────────────────────
 
@@ -39,6 +48,22 @@ interface CategoryProgressItem {
   correctAnswers: number;
   accuracy: number;
   trend: "improving" | "stable" | "declining";
+}
+
+type DashboardSection =
+  | "overview"
+  | "weak-areas"
+  | "error-patterns"
+  | "exam-results"
+  | "profile";
+
+interface DashboardActivityItem {
+  id: string;
+  type: "exam" | "practice";
+  date: string;
+  score?: number;
+  category?: string;
+  passed?: boolean;
 }
 
 function TrendIcon({ trend }: { trend: "improving" | "stable" | "declining" }) {
@@ -330,6 +355,9 @@ function DashboardHome() {
   const [weakAreas, setWeakAreas] = useState<
     { category: string; accuracy: number; totalQuestions: number }[]
   >([]);
+  const [recentActivities, setRecentActivities] = useState<
+    DashboardActivityItem[]
+  >([]);
   const [categoryProgress, setCategoryProgress] = useState<
     CategoryProgressItem[]
   >([]);
@@ -346,6 +374,7 @@ function DashboardHome() {
     setMostStudied([]);
     setStrongAreas([]);
     setWeakAreas([]);
+    setRecentActivities([]);
     setCategoryProgress([]);
   }, [currentUserId]);
 
@@ -358,21 +387,25 @@ function DashboardHome() {
         setIsLoading(true);
 
         // Fetch all data in parallel
-        const [progress, weakAreasData, categoriesResponse] = await Promise.all(
-          [
-            getOverallProgress(),
-            getWeakAreas(),
-            apiClient.get<
-              Array<{
-                categoryCode: string;
-                categoryName: string;
-                questionsAttempted: number;
-                correctAnswers: number;
-                accuracyRate: number;
-              }>
-            >("/users/me/progress/categories"),
-          ],
-        );
+        const [
+          progress,
+          weakAreasData,
+          recentActivityData,
+          categoriesResponse,
+        ] = await Promise.all([
+          getOverallProgress(),
+          getWeakAreas(),
+          getRecentActivity(1),
+          apiClient.get<
+            Array<{
+              categoryCode: string;
+              categoryName: string;
+              questionsAttempted: number;
+              correctAnswers: number;
+              accuracyRate: number;
+            }>
+          >("/users/me/progress/categories"),
+        ]);
 
         setProgressData({
           totalExamsTaken: progress.totalExamsTaken ?? 0,
@@ -398,6 +431,20 @@ function DashboardHome() {
             category: area.categoryName,
             accuracy: area.accuracy,
             totalQuestions: area.totalCount,
+          })),
+        );
+
+        setRecentActivities(
+          recentActivityData.map((activity) => ({
+            id: String(activity.id),
+            type:
+              String(activity.type).toLowerCase() === "practice"
+                ? "practice"
+                : "exam",
+            date: activity.date,
+            score: activity.score,
+            category: activity.category,
+            passed: activity.passed,
           })),
         );
 
@@ -480,7 +527,7 @@ function DashboardHome() {
       <QuickActionsSection />
 
       {/* Recent Activity */}
-      <RecentActivityList activities={[]} />
+      <RecentActivityList activities={recentActivities} />
 
       {/* Quick Stats Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -711,6 +758,111 @@ function DashboardHome() {
   );
 }
 
+function DashboardSectionNav({
+  activeSection,
+}: {
+  activeSection: DashboardSection;
+}) {
+  const { t } = useLanguage();
+
+  const sections: Array<{
+    section: DashboardSection;
+    label: string;
+    href: string;
+  }> = [
+    { section: "overview", label: t("nav.dashboard"), href: "/dashboard" },
+    {
+      section: "weak-areas",
+      label: t("analytics.weak_areas"),
+      href: "/dashboard?section=weak-areas",
+    },
+    {
+      section: "error-patterns",
+      label: t("analytics.error_patterns"),
+      href: "/dashboard?section=error-patterns",
+    },
+    {
+      section: "exam-results",
+      label: t("user_sidebar.exam_results"),
+      href: "/dashboard?section=exam-results",
+    },
+    {
+      section: "profile",
+      label: t("nav.profile"),
+      href: "/dashboard?section=profile",
+    },
+  ];
+
+  return (
+    <div className="px-6 pt-6">
+      <div className="flex flex-wrap gap-2">
+        {sections.map((item) => (
+          <Button
+            key={item.section}
+            asChild
+            size="sm"
+            variant={activeSection === item.section ? "default" : "outline"}
+            className="rounded-full"
+          >
+            <Link href={item.href}>{item.label}</Link>
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DashboardSectionContent() {
+  const searchParams = useSearchParams();
+  const requestedSection = searchParams.get("section");
+
+  const activeSection: DashboardSection =
+    requestedSection === "weak-areas" ||
+    requestedSection === "error-patterns" ||
+    requestedSection === "exam-results" ||
+    requestedSection === "profile"
+      ? requestedSection
+      : "overview";
+
+  return (
+    <div className="space-y-6">
+      <DashboardSectionNav activeSection={activeSection} />
+
+      {activeSection === "overview" && <DashboardHome />}
+      {activeSection === "weak-areas" && (
+        <div className="px-6 pb-6">
+          <WeakAreasPageContent />
+        </div>
+      )}
+      {activeSection === "error-patterns" && (
+        <div className="px-6 pb-6">
+          <ErrorPatternsContent />
+        </div>
+      )}
+      {activeSection === "exam-results" && (
+        <div className="px-6 pb-6">
+          <ExamResultsPageContent />
+        </div>
+      )}
+      {activeSection === "profile" && (
+        <div className="px-6 pb-6">
+          <ProfilePageContent embedded />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
-  return <DashboardHome />;
+  return (
+    <Suspense
+      fallback={
+        <div className="p-6 text-sm text-muted-foreground">
+          Loading dashboard...
+        </div>
+      }
+    >
+      <DashboardSectionContent />
+    </Suspense>
+  );
 }

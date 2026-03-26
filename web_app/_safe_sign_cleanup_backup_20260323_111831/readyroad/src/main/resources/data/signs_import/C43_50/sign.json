@@ -1,0 +1,24 @@
+﻿{
+    "code":  "C43_50",
+    "category":  "PROHIBITION",
+    "image_path":  "images/signs/prohibition_signs/C43 - Verbod te rijden met een grotere snelheid dan is aangeduid 50 km.png",
+    "serious_violation":  true,
+    "i18n":  {
+                 "NL":  {
+                            "name":  "Verbod te rijden met een grotere snelheid dan 50 km/u",
+                            "description":  "Dit verkeersbord geeft aan dat voertuigen niet sneller mogen rijden dan 50 kilometer per uur. Dit is de standaard maximumsnelheid binnen de bebouwde kom in België. Het naleven van deze snelheidslimiet is cruciaal voor de veiligheid van alle weggebruikers, vooral in woonwijken waar voetgangers en fietsers aanwezig kunnen zijn."
+                        },
+                 "EN":  {
+                            "name":  "No driving at a speed exceeding 50 km/h",
+                            "description":  "This traffic sign indicates that vehicles are not allowed to drive faster than 50 kilometers per hour. This is the standard maximum speed within built-up areas in Belgium. Compliance with this speed limit is crucial for the safety of all road users, especially in residential areas where pedestrians and cyclists may be present."
+                        },
+                 "FR":  {
+                            "name":  "Interdiction de rouler à une vitesse supérieure à 50 km/h",
+                            "description":  "Ce panneau de signalisation indique que les véhicules ne peuvent pas rouler à plus de 50 kilomètres par heure. C\u0027est la vitesse maximale standard dans les agglomérations en Belgique. Le respect de cette limite de vitesse est crucial pour la sécurité de tous les usagers de la route, en particulier dans les zones résidentielles où des piétons et des cyclistes peuvent être présents."
+                        },
+                 "AR":  {
+                            "name":  "ممنوع القيادة بسرعة تتجاوز 50 كم/س",
+                            "description":  "تشير هذه الإشارة المرورية إلى أنه لا يسمح للمركبات بالقيادة بسرعة تزيد عن 50 كيلومتراً في الساعة. هذه هي السرعة القصوى القياسية داخل المناطق المبنية في بلجيكا. يعد الالتزام بحد السرعة هذا أمرًا بالغ الأهمية لسلامة جميع مستخدمي الطريق، خاصة في المناطق السكنية التي يتواجد فيها المشاة وراكبي الدراجات."
+                        }
+             }
+}

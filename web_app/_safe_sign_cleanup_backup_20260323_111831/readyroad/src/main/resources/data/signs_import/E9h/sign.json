@@ -1,0 +1,24 @@
+﻿{
+    "code":  "E9h",
+    "category":  "PARKING",
+    "image_path":  "images/signs/parking_signs/E9h Parkeren uitsluitend voor kampeerauto\u0027s.png",
+    "serious_violation":  false,
+    "i18n":  {
+                 "NL":  {
+                            "name":  "Parkeren uitsluitend voor kampeerauto s",
+                            "description":  "Parkeren voorbehouden voor kampeerauto\u0027s."
+                        },
+                 "EN":  {
+                            "name":  "Parking for camper vans only",
+                            "description":  "Parking reserved for camper vans only."
+                        },
+                 "FR":  {
+                            "name":  "Stationnement reserve aux camping-cars",
+                            "description":  "Stationnement réservé aux camping-cars uniquement."
+                        },
+                 "AR":  {
+                            "name":  "موقف سيارات لعربات الكارافانات فقط",
+                            "description":  "وقوف السيارات مخصص للكارافانات فقط."
+                        }
+             }
+}

@@ -8,6 +8,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
+import { EXAM_RULES, LANGUAGES } from '@/lib/constants';
 
 interface FeatureItem {
   icon: React.ElementType;
@@ -26,7 +27,11 @@ export function FeaturesSection() {
       icon: FilePlus2,
       badge: t('home.features.badge_exam'),
       title: t('home.features.exam_title'),
-      description: t('home.features.exam_desc'),
+      description: t('home.features.exam_desc', {
+        questions: EXAM_RULES.TOTAL_QUESTIONS,
+        minutes: EXAM_RULES.DURATION_MINUTES,
+        score: EXAM_RULES.PASS_PERCENTAGE,
+      }),
       isPrimary: false,
       href: '/exam',
     },
@@ -66,7 +71,9 @@ export function FeaturesSection() {
       icon: Globe,
       badge: t('home.features.badge_more'),
       title: t('home.features.multilingual_title'),
-      description: t('home.features.multilingual_desc'),
+      description: t('home.features.multilingual_desc', {
+        languages: LANGUAGES.length,
+      }),
       isPrimary: false,
       href: '/dashboard',
     },

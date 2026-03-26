@@ -157,7 +157,8 @@ export interface CategoryProgress {
 export interface TrafficSign {
   id?:                       number;
   signCode:                  string;
-  category:                  string;
+  routeCode?:                string;
+  category?:                 string;
   categoryCode?:             string;
   nameEn:                    string;
   nameAr:                    string;

@@ -37,7 +37,7 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
         </CardTitle>
 
         <Button variant="ghost" size="sm" className="gap-1 text-primary" asChild>
-          <Link href="/analytics/weak-areas">
+          <Link href="/dashboard?section=weak-areas">
             {t('dashboard.view_all')}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>

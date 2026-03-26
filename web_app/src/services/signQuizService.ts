@@ -51,7 +51,7 @@ export interface SubmitAnswerRequest {
 
 export interface SignPracticeAnswerResponse {
   questionId:       number;
-  correct:          boolean;
+  isCorrect:        boolean;
 
   selectedChoiceId: number;
   selectedTextNl:   string;
@@ -70,11 +70,11 @@ export interface SignPracticeAnswerResponse {
   explanationFr?:   string;
   explanationAr?:   string;
 
-  answeredCount:    number;
+  questionsAnswered:number;
   totalQuestions:   number;
   sessionCompleted: boolean;
-  accuracy:         number;
-  totalAttempts:    number;
+  signAccuracyPercentage: number;
+  signTotalAttempts: number;
 }
 
 export interface PracticeAnswerDetail {
@@ -85,13 +85,17 @@ export interface PracticeAnswerDetail {
   questionEn:      string;
   questionFr:      string;
   questionAr:      string;
-  correct:         boolean;
+  isCorrect:       boolean;
   selectedChoiceId?: number;
   selectedTextNl?: string;
   selectedTextEn?: string;
+  selectedTextFr?: string;
+  selectedTextAr?: string;
   correctChoiceId: number;
   correctTextNl:   string;
   correctTextEn:   string;
+  correctTextFr:   string;
+  correctTextAr:   string;
   explanationNl?:  string;
   explanationEn?:  string;
   explanationFr?:  string;
@@ -101,14 +105,19 @@ export interface PracticeAnswerDetail {
 export interface SignPracticeResult {
   sessionId:      number;
   signCode:       string;
+  nameNl:         string;
+  nameEn:         string;
+  nameFr:         string;
+  nameAr:         string;
   status:         'IN_PROGRESS' | 'COMPLETED';
   totalQuestions: number;
-  answeredCount:  number;
-  correctCount:   number;
-  accuracy:       number;
+  correctAnswers: number;
+  wrongAnswers:   number;
+  scorePercentage:number;
+  passed:         boolean;
   startedAt:      string;
   completedAt?:   string;
-  answers:        PracticeAnswerDetail[];
+  questionResults: PracticeAnswerDetail[];
 }
 
 // ── Exam ─────────────────────────────────────────────────
@@ -166,6 +175,7 @@ export interface SignExamResult {
 export interface SignUserProgress {
   signId:              number;
   signCode:            string;
+  routeCode?:          string;
   category:            string;
   imagePath?:          string;
   nameNl:              string;

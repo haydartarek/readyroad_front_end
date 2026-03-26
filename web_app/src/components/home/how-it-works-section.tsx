@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Clock, Layers, FilePlus2, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
+import { EXAM_RULES } from '@/lib/constants';
 
 interface Step {
   number: string;
@@ -116,7 +117,10 @@ export function HowItWorksSection() {
                 </h3>
 
                 <p className="mb-5 flex-1 text-sm leading-relaxed text-muted-foreground">
-                  {t(step.descKey)}
+                  {t(step.descKey, {
+                    questions: EXAM_RULES.TOTAL_QUESTIONS,
+                    minutes: EXAM_RULES.DURATION_MINUTES,
+                  })}
                 </p>
 
                 <Link

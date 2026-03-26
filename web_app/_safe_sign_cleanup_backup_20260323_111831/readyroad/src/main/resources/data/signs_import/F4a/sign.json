@@ -1,0 +1,24 @@
+﻿{
+    "code":  "F4a",
+    "category":  "INFORMATION",
+    "image_path":  "images/signs/information_signs/F4a Zone 30 km u.png",
+    "serious_violation":  false,
+    "i18n":  {
+                 "NL":  {
+                            "name":  "Begin zone 30",
+                            "description":  "Dit bord geeft het begin van een zone 30 aan. In deze zone mag u niet sneller rijden dan 30 km/u. Deze zones worden vaak gebruikt in woonwijken om de verkeersveiligheid te verhogen."
+                        },
+                 "EN":  {
+                            "name":  "Start of 30 km/h zone",
+                            "description":  "This sign indicates the start of a 30 km/h zone. In this zone, you are not allowed to exceed 30 km/h. These zones are often used in residential areas to increase traffic safety."
+                        },
+                 "FR":  {
+                            "name":  "Début de zone 30",
+                            "description":  "Ce panneau indique le début d\u0027une zone 30. Dans cette zone, vous ne pouvez pas dépasser 30 km/h. Ces zones sont souvent utilisées dans les quartiers résidentiels pour améliorer la sécurité routière."
+                        },
+                 "AR":  {
+                            "name":  "بداية منطقة سرعة 30 كم/س",
+                            "description":  "تشير هذه العلامة إلى بداية منطقة بسرعة 30 كم/ساعة. في هذه المنطقة، لا يُسمح لك بتجاوز 30 كم/ساعة. غالبًا ما تستخدم هذه المناطق في المناطق السكنية لزيادة السلامة المرورية."
+                        }
+             }
+}

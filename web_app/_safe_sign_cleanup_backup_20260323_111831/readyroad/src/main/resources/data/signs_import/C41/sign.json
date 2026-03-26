@@ -1,0 +1,24 @@
+{
+  "code": "C41",
+  "category": "PROHIBITION",
+  "image_path": "images/signs/prohibition_signs/C41.png",
+  "serious_violation": true,
+  "i18n": {
+    "NL": {
+      "name": "Einde van het verbod opgelegd door het verkeersbord C39",
+      "description": "Heft het inhaalbod voor vrachtwagens (C39) op. Vrachtwagens mogen vanaf dit punt weer inhalen als de andere verkeersregels dit toelaten."
+    },
+    "EN": {
+      "name": "End of the no overtaking for lorries prohibition (C39)",
+      "description": "Lifts the overtaking prohibition for lorries (C39). Lorries may overtake again from this point provided the other traffic rules permit it."
+    },
+    "FR": {
+      "name": "Fin de l interdiction de depasser pour les camions imposee par C39",
+      "description": "Leve l interdiction de depassement pour les camions (C39). Les camions peuvent a nouveau depasser a partir de ce point si les autres regles de circulation le permettent."
+    },
+    "AR": {
+      "name": "نهاية حظر التجاوز للشاحنات المفروض بلافتة C39",
+      "description": "يرفع حظر التجاوز للشاحنات (C39). يجوز للشاحنات التجاوز مجددا من هذه النقطة اذا سمحت قواعد المرور الاخرى بذلك."
+    }
+  }
+}

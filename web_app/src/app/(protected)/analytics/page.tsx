@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
-// /analytics → redirect to weak-areas
-// Both sub-pages are directly accessible from the sidebar.
+// /analytics -> canonical dashboard section
 export default function AnalyticsPage() {
-  redirect("/analytics/weak-areas");
+  redirect("/dashboard?section=weak-areas");
 }

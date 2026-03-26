@@ -15,6 +15,14 @@ interface BreadcrumbItem {
   isCurrentPage: boolean;
 }
 
+interface BreadcrumbProps {
+  items?: Array<{
+    label: string;
+    href?: string;
+    isCurrentPage?: boolean;
+  }>;
+}
+
 // ─── Constants ───────────────────────────────────────────
 
 const BREADCRUMB_ENABLED_ROUTES = [
@@ -64,9 +72,15 @@ function buildBreadcrumbs(
   t: (key: string) => string,
 ): BreadcrumbItem[] {
   const segments = pathname.split('/').filter(Boolean);
+  const isPublicReferenceRoute =
+    pathname.startsWith('/traffic-signs') || pathname.startsWith('/lessons');
 
   const items: BreadcrumbItem[] = [
-    { label: t('nav.dashboard'), href: '/dashboard', isCurrentPage: pathname === '/dashboard' },
+    {
+      label: t(isPublicReferenceRoute ? 'nav.home' : 'nav.dashboard'),
+      href: isPublicReferenceRoute ? '/' : '/dashboard',
+      isCurrentPage: pathname === (isPublicReferenceRoute ? '/' : '/dashboard'),
+    },
   ];
 
   let currentPath = '';
@@ -118,7 +132,7 @@ function BreadcrumbLink({ item }: { item: BreadcrumbItem }) {
 
 // ─── Main Component ──────────────────────────────────────
 
-export function Breadcrumb() {
+export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
   const pathname                            = usePathname();
   const { t, isRTL }                        = useLanguage();
   const containerRef                        = useRef<HTMLDivElement>(null);
@@ -130,10 +144,18 @@ export function Breadcrumb() {
     [pathname],
   );
 
-  const items = useMemo(
-    () => isEnabled ? buildBreadcrumbs(pathname, t) : [],
-    [pathname, isEnabled, t],
-  );
+  const items = useMemo(() => {
+    if (customItems?.length) {
+      return customItems.map((item, index) => ({
+        label: item.label,
+        href: item.href ?? "#",
+        isCurrentPage:
+          item.isCurrentPage ?? index === customItems.length - 1,
+      }));
+    }
+
+    return isEnabled ? buildBreadcrumbs(pathname, t) : [];
+  }, [customItems, pathname, isEnabled, t]);
 
   const checkOverflow = useCallback(() => {
     const el = containerRef.current;
@@ -160,7 +182,7 @@ export function Breadcrumb() {
     return () => document.removeEventListener('mousedown', handler);
   }, [showDropdown]);
 
-  if (!isEnabled || items.length <= 1) return null;
+  if ((!customItems?.length && !isEnabled) || items.length <= 1) return null;
 
   const firstItem  = items[0];
   const lastItem   = items[items.length - 1];

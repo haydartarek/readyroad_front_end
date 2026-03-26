@@ -37,7 +37,7 @@ const PERFORMANCE_TIERS: PerformanceTier[] = [
 const NEXT_STEPS = [
   { href: '/lessons',             labelKey: 'practice.study_lessons' },
   { href: '/exam',                labelKey: 'practice.take_exam'     },
-  { href: '/analytics/weak-areas', labelKey: 'practice.view_analytics' },
+  { href: '/dashboard?section=weak-areas', labelKey: 'practice.view_analytics' },
 ] as const;
 
 // ─── Sub-components ──────────────────────────────────────

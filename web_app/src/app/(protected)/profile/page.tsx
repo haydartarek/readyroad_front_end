@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useLanguage } from '@/contexts/language-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +14,8 @@ import { toast } from 'sonner';
 import { LANGUAGES } from '@/lib/constants';
 import { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
-import { getOverallProgress } from '@/services';
+import { getOverallProgress, updateProfile } from '@/services';
+import { cn } from '@/lib/utils';
 import {
   User, Mail, AtSign, Globe, BarChart2,
   ShieldCheck, Pencil, Save, X, Trophy, Target, Flame, Trash2, AlertTriangle, Loader2,
@@ -49,10 +51,36 @@ function StatPill({ icon, value, label, color, bg }: {
   );
 }
 
+function splitFullName(fullName?: string): { firstName: string; lastName: string } {
+  const parts = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
+
+  return {
+    firstName: parts[0] ?? '',
+    lastName: parts.length > 1 ? parts.slice(1).join(' ') : '',
+  };
+}
+
+function buildFormData(user: {
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  email?: string;
+  username?: string;
+} | null) {
+  const parsedName = splitFullName(user?.fullName);
+
+  return {
+    firstName: user?.firstName || parsedName.firstName,
+    lastName: user?.lastName || parsedName.lastName,
+    email: user?.email || '',
+    username: user?.username || '',
+  };
+}
+
 // ─── Page ────────────────────────────────────────────────
 
-export default function ProfilePage() {
-  const { user } = useAuth();
+export function ProfilePageContent({ embedded = false }: { embedded?: boolean }) {
+  const { user, fetchUser } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving]   = useState(false);
@@ -95,35 +123,56 @@ export default function ProfilePage() {
       .catch(() => { /* keep defaults */ });
   }, []);
 
-  const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName:  user?.lastName  || '',
-    email:     user?.email     || '',
-    username:  user?.username  || '',
-  });
+  const [formData, setFormData] = useState(() => buildFormData(user));
+
+  useEffect(() => {
+    setFormData(buildFormData(user));
+  }, [user]);
 
   const handleSave = async () => {
+    const fullName = [formData.firstName.trim(), formData.lastName.trim()]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+
+    if (!fullName) {
+      toast.error(t('auth.validation.first_name_required'));
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updatedProfile = await updateProfile({
+        fullName,
+        email: formData.email.trim(),
+      });
+
+      setFormData(buildFormData({
+        fullName: updatedProfile.fullName,
+        email: updatedProfile.email,
+        username: updatedProfile.username,
+      }));
+
+      await fetchUser();
       toast.success('Profile updated successfully!');
       setIsEditing(false);
     } catch (err) {
       logApiError('Failed to update profile', err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
-      else toast.error('Failed to update profile');
+      else {
+        const errorMessage =
+          (err as { response?: { data?: { message?: string; error?: string } } })
+            .response?.data?.message ||
+          'Failed to update profile';
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData({
-      firstName: user?.firstName || '',
-      lastName:  user?.lastName  || '',
-      email:     user?.email     || '',
-      username:  user?.username  || '',
-    });
+    setFormData(buildFormData(user));
     setIsEditing(false);
   };
 
@@ -156,8 +205,13 @@ export default function ProfilePage() {
 
   return (
     <>
-    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
-      <div className="container mx-auto max-w-5xl px-4 py-10 space-y-8">
+    <div className={cn(!embedded && 'min-h-screen bg-gradient-to-b from-muted/40 to-background')}>
+      <div
+        className={cn(
+          'mx-auto max-w-5xl px-4 space-y-8',
+          embedded ? 'py-4' : 'container py-10',
+        )}
+      >
 
         {serviceUnavailable && (
           <ServiceUnavailableBanner onRetry={() => setServiceUnavailable(false)} />
@@ -406,4 +460,14 @@ export default function ProfilePage() {
       />
     </>
   );
+}
+
+export default function ProfilePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/dashboard?section=profile');
+  }, [router]);
+
+  return null;
 }

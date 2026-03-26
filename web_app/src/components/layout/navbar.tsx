@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,7 +30,6 @@ import {
   type SearchResult,
 } from "@/components/layout/search-dropdown";
 import { NotificationPanel } from "@/components/layout/notification-panel";
-import { useNotifications } from "@/contexts/notification-context";
 import { ROUTES, LANGUAGES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -126,7 +125,6 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const { unreadCount } = useNotifications();
   const searchContainer = useRef<HTMLDivElement>(null);
 
   const currentLanguage = LANGUAGES.find((l) => l.code === language);

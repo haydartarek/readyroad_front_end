@@ -3,9 +3,9 @@
 import {
   createContext,
   useContext,
-  useState,
   useEffect,
   useCallback,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { LANGUAGES, DEFAULT_LANGUAGE } from "@/lib/constants";
@@ -28,6 +28,7 @@ interface LanguageContextType {
 // ─── Constants ───────────────────────────────────────────
 
 const STORAGE_KEY = "readyroad_locale";
+const STORAGE_EVENT = "readyroad-language-change";
 const RTL_LANGS = new Set<Language>(["ar"]);
 
 const ALL_MESSAGES: Record<Language, Record<string, string>> = {
@@ -44,12 +45,34 @@ function isValidLanguage(lang: string): lang is Language {
 }
 
 function readStoredLanguage(): Language | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored && isValidLanguage(stored) ? stored : null;
   } catch {
     return null; // SSR / private browsing guard
   }
+}
+
+function subscribeToLanguage(callback: () => void): () => void {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleChange = () => callback();
+  window.addEventListener("storage", handleChange);
+  window.addEventListener(STORAGE_EVENT, handleChange);
+
+  return () => {
+    window.removeEventListener("storage", handleChange);
+    window.removeEventListener(STORAGE_EVENT, handleChange);
+  };
+}
+
+function getLanguageSnapshot(): Language {
+  return readStoredLanguage() ?? (DEFAULT_LANGUAGE as Language);
 }
 
 // ─── Context ─────────────────────────────────────────────
@@ -61,21 +84,14 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 // ─── Provider ────────────────────────────────────────────
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Always initialise with DEFAULT_LANGUAGE so SSR and the first client render
-  // produce identical HTML (fixes React hydration error #418).
-  // After hydration, apply the localStorage preference via useEffect.
-  const [language, setLanguageState] = useState<Language>(
-    DEFAULT_LANGUAGE as Language,
+  const language = useSyncExternalStore(
+    subscribeToLanguage,
+    getLanguageSnapshot,
+    () => DEFAULT_LANGUAGE as Language,
   );
 
   const translations = ALL_MESSAGES[language];
   const isRTL = RTL_LANGS.has(language);
-
-  // Apply stored language preference on the client after hydration
-  useEffect(() => {
-    const stored = readStoredLanguage();
-    if (stored) setLanguageState(stored);
-  }, []);
 
   // Sync HTML attributes on language change
   useEffect(() => {
@@ -86,11 +102,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = useCallback(
     (lang: Language) => {
       if (lang === language) return;
-      setLanguageState(lang);
       try {
         localStorage.setItem(STORAGE_KEY, lang);
       } catch {
         // Private browsing / storage quota — silently ignore
+      }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(STORAGE_EVENT));
       }
     },
     [language],

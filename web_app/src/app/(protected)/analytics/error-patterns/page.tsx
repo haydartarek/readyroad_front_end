@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ErrorSummary } from '@/components/analytics/error-summary';
@@ -124,7 +124,7 @@ function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   );
 }
 
-function ErrorPatternsContent() {
+export function ErrorPatternsContent() {
   const searchParams = useSearchParams();
   const examId = searchParams.get('examId');
   const { t } = useLanguage();
@@ -306,7 +306,7 @@ function ErrorPatternsContent() {
                 </Link>
               </Button>
               <Button variant="outline" asChild className="gap-2 rounded-xl">
-                <Link href="/analytics/weak-areas">
+                <Link href="/dashboard?section=weak-areas">
                   <BarChart2 className="w-4 h-4" />
                   {t('error_patterns.action_weak_areas')}
                 </Link>
@@ -325,10 +325,23 @@ function ErrorPatternsContent() {
   );
 }
 
+function ErrorPatternsRedirect() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('section', 'error-patterns');
+    router.replace(`/dashboard?${params.toString()}`);
+  }, [router, searchParams]);
+
+  return <LoadingSpinner message="Loading..." />;
+}
+
 export default function ErrorPatternsPage() {
   return (
     <Suspense fallback={<LoadingSpinner message="Loading..." />}>
-      <ErrorPatternsContent />
+      <ErrorPatternsRedirect />
     </Suspense>
   );
 }

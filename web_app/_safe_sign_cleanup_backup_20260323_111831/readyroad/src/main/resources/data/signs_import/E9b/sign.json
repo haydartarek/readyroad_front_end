@@ -1,0 +1,24 @@
+﻿{
+    "code":  "E9b",
+    "category":  "PARKING",
+    "image_path":  "images/signs/parking_signs/E9b Parkeren uitsluitend voor auto\u0027s.png",
+    "serious_violation":  false,
+    "i18n":  {
+                 "NL":  {
+                            "name":  "Parkeren uitsluitend voor auto s",
+                            "description":  "Parkeren enkel toegestaan voor motorfietsen, personenauto\u0027s, auto\u0027s dubbel gebruik, minibussen."
+                        },
+                 "EN":  {
+                            "name":  "Parking for cars only",
+                            "description":  "Parking only allowed for motorcycles, passenger cars, dual-use cars, minibuses."
+                        },
+                 "FR":  {
+                            "name":  "Stationnement reserve aux voitures",
+                            "description":  "Stationnement autorisé uniquement pour les motocyclettes, voitures particulières, voitures à double usage, minibus."
+                        },
+                 "AR":  {
+                            "name":  "مواقف للسيارات فقط",
+                            "description":  "وقوف السيارات مسموح به فقط للدراجات النارية والسيارات الخاصة وسيارات الاستخدام المزدوج والحافلات الصغيرة."
+                        }
+             }
+}

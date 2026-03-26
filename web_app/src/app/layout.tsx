@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   },
 
   description:
-    "ReadyRoad – the #1 platform to prepare for the Belgian driving license theory exam. Practice tests, 250+ traffic signs, lessons and progress analytics. Available in 4 languages.",
+    "ReadyRoad helps learners prepare for the Belgian driving theory exam with traffic signs, lessons, practice flows, and progress analytics.",
 
   keywords: [
     // ── English ──────────────────────────────────────────────
@@ -128,7 +128,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ReadyRoad | Belgian Driving License Exam Prep",
     description:
-      "Practice Belgian theory tests, study 250+ traffic signs, and track your progress. Available in 4 languages.",
+      "Practice Belgian theory topics, study traffic signs, and track your progress from one dashboard.",
     type: "website",
     url: APP_URL,
     siteName: "ReadyRoad",
@@ -143,7 +143,7 @@ export const metadata: Metadata = {
     creator: "@ReadyRoad",
     title: "ReadyRoad | Belgian Driving License Exam Prep",
     description:
-      "Practice theory tests, study 250+ traffic signs & track your progress. Available in 4 languages.",
+      "Practice theory topics, study traffic signs, and track your progress with ReadyRoad.",
     images: [OG_IMAGE.url],
   },
 
@@ -185,7 +185,7 @@ const organizationSchema = {
     height: 512,
   },
   description:
-    "ReadyRoad is the #1 platform to prepare for the Belgian driving license theory exam, available in 4 languages: English, Nederlands, Français & العربية.",
+    "ReadyRoad is an independent learning platform for Belgian driving theory exam preparation.",
   sameAs: ["https://readyroad.be"],
   areaServed: {
     "@type": "Country",
@@ -201,7 +201,7 @@ const websiteSchema = {
   url: APP_URL,
   name: "ReadyRoad",
   description:
-    "Belgian driving license exam preparation platform in 4 languages.",
+    "Belgian driving theory exam preparation platform.",
   publisher: {
     "@id": `${APP_URL}/#organization`,
   },
@@ -224,18 +224,11 @@ const educationalAppSchema = {
   operatingSystem: "Web",
   url: APP_URL,
   description:
-    "Prepare for the Belgian driving license exam with practice tests, 250+ traffic signs, theory lessons and progress analytics.",
+    "Prepare for the Belgian driving theory exam with practice flows, traffic signs, lessons, and progress analytics.",
   offers: {
     "@type": "Offer",
     price: "0",
     priceCurrency: "EUR",
-  },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "1200",
-    bestRating: "5",
-    worstRating: "1",
   },
   inLanguage: ["en", "nl", "fr", "ar"],
   availableOnDevice: "Desktop, Mobile",

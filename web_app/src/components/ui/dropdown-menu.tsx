@@ -8,32 +8,33 @@ import { cn } from '@/lib/utils';
 // ─── Shared Class Strings ────────────────────────────────
 
 const ITEM_BASE = [
-  'relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5',
-  'text-sm font-medium text-foreground outline-hidden select-none',
-  'transition-all duration-150',
-  'hover:bg-primary/5 hover:text-primary',
-  'focus:bg-primary/8 focus:text-primary',
-  'active:bg-primary/10 active:scale-[0.98]',
+  'relative flex cursor-pointer items-center gap-3 rounded-2xl border border-transparent px-3.5 py-3',
+  'text-sm font-semibold text-foreground/85 outline-hidden select-none',
+  'transition-all duration-200',
+  'hover:border-primary/12 hover:bg-primary/[0.07] hover:text-foreground',
+  'focus:border-primary/12 focus:bg-primary/[0.09] focus:text-foreground',
+  'active:bg-primary/[0.11] active:scale-[0.99]',
   'focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-1',
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed',
   '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4',
 ] as const;
 
 const INDICATOR_ITEM_BASE = [
-  'relative flex cursor-pointer items-center gap-3 rounded-xl py-2.5 pr-3 pl-10',
-  'text-sm font-medium text-foreground outline-hidden select-none',
-  'transition-all duration-150',
-  'hover:bg-primary/5 hover:text-primary',
-  'focus:bg-primary/8 focus:text-primary',
-  'active:bg-primary/10 active:scale-[0.98]',
+  'relative flex cursor-pointer items-center gap-3 rounded-2xl border border-transparent py-3 pr-3.5 pl-10',
+  'text-sm font-semibold text-foreground/85 outline-hidden select-none',
+  'transition-all duration-200',
+  'hover:border-primary/12 hover:bg-primary/[0.07] hover:text-foreground',
+  'focus:border-primary/12 focus:bg-primary/[0.09] focus:text-foreground',
+  'active:bg-primary/[0.11] active:scale-[0.99]',
   'focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-1',
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed',
   '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4',
 ] as const;
 
 const CONTENT_BASE = [
-  'z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-border',
-  'bg-popover p-2 text-popover-foreground shadow-lg',
+  'z-50 min-w-[13rem] overflow-hidden rounded-[1.65rem] border border-border/60',
+  'bg-gradient-to-br from-background/98 via-background/94 to-primary/[0.03] p-2.5 text-popover-foreground',
+  'shadow-[0_24px_60px_-32px_rgba(15,23,42,0.34)] ring-1 ring-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80',
   'data-[state=open]:animate-in   data-[state=open]:fade-in-0   data-[state=open]:zoom-in-95',
   'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
   'data-[side=bottom]:slide-in-from-top-2    data-[side=left]:slide-in-from-right-2',
@@ -42,8 +43,11 @@ const CONTENT_BASE = [
 
 // ─── Simple Wrappers ─────────────────────────────────────
 
-function DropdownMenu(props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
+function DropdownMenu({
+  modal = false,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal} {...props} />;
 }
 
 function DropdownMenuPortal(props: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) {
@@ -83,8 +87,6 @@ function DropdownMenuContent({
           'max-h-[calc(var(--radix-dropdown-menu-content-available-height)-16px)]',
           'origin-(--radix-dropdown-menu-content-transform-origin)',
           'overflow-x-hidden overflow-y-auto',
-          // ⚠️ backdrop-blur removed: causes rendering artifacts on some browsers
-          // and is not part of the base shadcn/ui design token system
           className,
         )}
         {...props}
@@ -133,8 +135,8 @@ function DropdownMenuItem({
         'hover:[&_svg:not([class*="text-"])]:text-primary focus:[&_svg:not([class*="text-"])]:text-primary',
         // Destructive variant
         'data-[variant=destructive]:text-destructive',
-        'data-[variant=destructive]:hover:bg-destructive/10 data-[variant=destructive]:hover:text-destructive',
-        'data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive',
+        'data-[variant=destructive]:hover:border-destructive/10 data-[variant=destructive]:hover:bg-destructive/10 data-[variant=destructive]:hover:text-destructive',
+        'data-[variant=destructive]:focus:border-destructive/10 data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive',
         'data-[variant=destructive]:[&_svg]:text-destructive',
         className,
       )}
@@ -202,7 +204,7 @@ function DropdownMenuSubTrigger({
       className={cn(
         ...ITEM_BASE,
         'data-[inset]:pl-10',
-        'data-[state=open]:bg-primary/8 data-[state=open]:text-primary',
+        'data-[state=open]:border-primary/12 data-[state=open]:bg-primary/[0.09] data-[state=open]:text-foreground',
         '[&_svg:not([class*="text-"])]:text-muted-foreground',
         'hover:[&_svg:not([class*="text-"])]:text-primary focus:[&_svg:not([class*="text-"])]:text-primary',
         className,
@@ -229,7 +231,7 @@ function DropdownMenuLabel({
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
-        'px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground',
+        'px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground',
         'data-[inset]:pl-10',
         className,
       )}
@@ -245,7 +247,7 @@ function DropdownMenuSeparator({
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn('-mx-1 my-2 h-px bg-border', className)}
+      className={cn('mx-1 my-2 h-px bg-border/60', className)}
       {...props}
     />
   );

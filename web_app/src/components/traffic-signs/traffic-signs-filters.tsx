@@ -60,19 +60,23 @@ export function TrafficSignsFilters({
   const hasActiveFilters = selectedCategory !== 'all' || search.length > 0;
 
   return (
-    <div className="rounded-[1.75rem] border border-border/60 bg-background/80 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+    <div className="rounded-[1.2rem] border border-border/60 bg-background/80 p-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70 md:p-2.5">
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5 lg:flex-row lg:items-center">
           <div className="relative flex-1">
             <Search
-              className={`pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground ${isRTL ? 'right-4' : 'left-4'}`}
+              className={`pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground ${isRTL ? 'right-3.5' : 'left-3.5'}`}
             />
             <Input
+              id="traffic-signs-search"
+              name="traffic-signs-search"
               type="search"
+              autoComplete="off"
+              aria-label={t('traffic_signs.search_placeholder')}
               placeholder={t('traffic_signs.search_placeholder')}
               value={search}
               onChange={e => handleSearchInput(e.target.value)}
-              className={`h-12 rounded-full border-border/60 bg-card/80 text-base shadow-none ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`}
+              className={`h-8 rounded-full border-border/60 bg-card/80 text-[11px] shadow-none md:h-9 md:text-xs ${isRTL ? 'pr-10 pl-3.5' : 'pl-10 pr-3.5'}`}
             />
           </div>
 
@@ -80,16 +84,16 @@ export function TrafficSignsFilters({
             <Button
               variant="outline"
               onClick={onClearFilters}
-              className="h-12 gap-2 rounded-full border-border/60 px-5"
+              className="h-8 gap-1 rounded-full border-border/60 px-3 text-[11px] md:h-9 md:text-xs"
             >
-              <X className="h-4 w-4" aria-hidden />
+              <X className="h-3.5 w-3.5" aria-hidden />
               {t('traffic_signs.clear_filters')}
             </Button>
           )}
         </div>
 
         <div
-          className="flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible"
+          className="flex gap-1 overflow-x-auto md:flex-wrap md:overflow-visible"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {categories.map((cat) => {
@@ -100,12 +104,12 @@ export function TrafficSignsFilters({
                 key={cat.value}
                 variant={isSelected ? 'default' : 'outline'}
                 onClick={() => onCategoryChange(cat.value)}
-                className="h-11 flex-shrink-0 rounded-full px-4 text-sm font-semibold whitespace-nowrap"
+                className="h-7 flex-shrink-0 rounded-full px-2.5 text-[10px] font-semibold whitespace-nowrap md:h-8 md:px-3 md:text-[11px]"
                 size="sm"
               >
                 <span>{cat.label}</span>
                 <span
-                  className={`ml-2 rounded-full px-2.5 py-0.5 text-[11px] font-black ${isSelected ? 'bg-primary-foreground/18 text-primary-foreground' : 'bg-muted text-foreground'}`}
+                  className={`ml-1 rounded-full px-1.5 py-0.5 text-[8px] font-black md:px-1.5 md:text-[9px] ${isSelected ? 'bg-primary-foreground/18 text-primary-foreground' : 'bg-muted text-foreground'}`}
                 >
                   {cat.count}
                 </span>

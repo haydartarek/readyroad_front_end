@@ -6,11 +6,27 @@ import { BadgeCheck, Lock, Shield, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
+import { ROUTES } from '@/lib/constants';
 
 const TRUST_ICONS = [
-  { key: 'trust_secure', Icon: Lock },
-  { key: 'trust_privacy', Icon: Shield },
-  { key: 'trust_free', Icon: Gift },
+  {
+    key: 'trust_secure',
+    Icon: Lock,
+    wrapClass: 'border-secondary/20 bg-secondary/10',
+    iconClass: 'text-secondary',
+  },
+  {
+    key: 'trust_privacy',
+    Icon: Shield,
+    wrapClass: 'border-primary/20 bg-primary/10',
+    iconClass: 'text-primary',
+  },
+  {
+    key: 'trust_free',
+    Icon: Gift,
+    wrapClass: 'border-amber-500/20 bg-amber-500/10',
+    iconClass: 'text-amber-600 dark:text-amber-400',
+  },
 ] as const;
 
 function CtaSkeleton() {
@@ -19,18 +35,6 @@ function CtaSkeleton() {
       <div className="h-12 w-44 animate-pulse rounded-full bg-muted" />
       <div className="h-12 w-40 animate-pulse rounded-full bg-muted" />
     </>
-  );
-}
-
-function AuthenticatedCta({ label }: { label: string }) {
-  return (
-    <Button
-      size="lg"
-      className="h-12 rounded-full px-7 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
-      asChild
-    >
-      <Link href="/dashboard">{label}</Link>
-    </Button>
   );
 }
 
@@ -57,9 +61,32 @@ function GuestCtas({ primary, secondary }: { primary: string; secondary: string 
   );
 }
 
+function MemberCtas({ primary, secondary }: { primary: string; secondary: string }) {
+  return (
+    <>
+      <Button
+        size="lg"
+        className="h-12 rounded-full px-8 text-sm font-semibold shadow-sm ring-1 ring-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+        asChild
+      >
+        <Link href={ROUTES.LESSONS}>{primary}</Link>
+      </Button>
+
+      <Button
+        size="lg"
+        variant="outline"
+        className="h-12 rounded-full border-border px-8 text-sm font-semibold text-foreground transition-all hover:-translate-y-0.5 hover:bg-muted/60 hover:shadow-sm active:translate-y-0"
+        asChild
+      >
+        <Link href={ROUTES.EXAM}>{secondary}</Link>
+      </Button>
+    </>
+  );
+}
+
 export function HeroSection() {
   const { t } = useLanguage();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/30 pb-12 pt-6 lg:pb-20 lg:pt-10">
@@ -96,7 +123,10 @@ export function HeroSection() {
                 {isLoading ? (
                   <CtaSkeleton />
                 ) : isAuthenticated ? (
-                  <AuthenticatedCta label={t('home.hero.cta_auth_primary')} />
+                  <MemberCtas
+                    primary={t('home.hero.cta_primary')}
+                    secondary={t('home.hero.cta_secondary')}
+                  />
                 ) : (
                   <GuestCtas
                     primary={t('home.hero.cta_guest_primary')}
@@ -109,10 +139,15 @@ export function HeroSection() {
                 className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-sm text-muted-foreground"
                 aria-label={t('home.hero.trust_indicators_label')}
               >
-                {TRUST_ICONS.map(({ key, Icon }) => (
+                {TRUST_ICONS.map(({ key, Icon, wrapClass, iconClass }) => (
                   <span key={key} className="inline-flex items-center gap-2">
-                    <span className="grid h-7 w-7 place-items-center rounded-full border bg-background/70">
-                      <Icon className="h-3.5 w-3.5" aria-hidden />
+                    <span
+                      className={[
+                        'grid h-7 w-7 place-items-center rounded-full border shadow-sm',
+                        wrapClass,
+                      ].join(' ')}
+                    >
+                      <Icon className={['h-3.5 w-3.5', iconClass].join(' ')} aria-hidden />
                     </span>
                     {t(`home.hero.${key}`)}
                   </span>

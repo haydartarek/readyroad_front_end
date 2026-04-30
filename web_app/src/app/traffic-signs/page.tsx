@@ -1,12 +1,19 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Languages, ListFilter, RefreshCw, Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
 import { TrafficSignsFilters } from "@/components/traffic-signs/traffic-signs-filters";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import {
+  PageHeroDescription,
+  PageHeroSurface,
+  PageMetricCard,
+  PageSectionSurface,
+  PageHeroTitle,
+} from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { API_ENDPOINTS, LANGUAGES } from "@/lib/constants";
@@ -245,113 +252,90 @@ function TrafficSignsContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
-      <div className="container mx-auto px-4 py-8 md:py-10 space-y-6 md:space-y-8">
+      <div className="container mx-auto px-4 py-6 md:py-7 space-y-5 md:space-y-6">
         <Breadcrumb />
 
-        <section className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/65">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-28 end-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-            <div className="absolute -bottom-28 start-0 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
-          </div>
-
-          <div className="relative space-y-6 px-6 py-7 md:px-8 md:py-8">
-            <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
-              <div className="space-y-5">
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary">
-                  <Shapes className="h-4 w-4" />
-                  {t("traffic_signs.hero_badge")}
-                </div>
-
-                <div className="space-y-3">
-                  <h1 className="max-w-3xl text-balance text-4xl font-extrabold tracking-tight text-secondary sm:text-5xl">
-                    {t("traffic_signs.page_title")}
-                  </h1>
-                  <p className="max-w-3xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
-                    {t("traffic_signs.page_subtitle")}
-                  </p>
-                </div>
+        <PageHeroSurface contentClassName="space-y-3">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                <Shapes className="h-4 w-4" />
+                {t("traffic_signs.hero_badge")}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                <HeroMetric
-                  icon={<Shapes className="h-4 w-4" />}
-                  label={t("traffic_signs.hero_metric_signs")}
-                  value={String(allSigns.length)}
-                />
-                <HeroMetric
-                  icon={<ListFilter className="h-4 w-4" />}
-                  label={t("traffic_signs.hero_metric_groups")}
-                  value={String(categories.length - 1)}
-                />
-                <HeroMetric
-                  icon={<Languages className="h-4 w-4" />}
-                  label={t("traffic_signs.hero_metric_languages")}
-                  value={String(LANGUAGES.length)}
-                />
+              <div className="space-y-1">
+                <PageHeroTitle className="max-w-3xl text-balance">
+                  {t("traffic_signs.page_title")}
+                </PageHeroTitle>
+                <PageHeroDescription className="max-w-3xl text-pretty">
+                  {t("traffic_signs.page_subtitle")}
+                </PageHeroDescription>
               </div>
             </div>
 
-            <TrafficSignsFilters
-              categories={categories}
-              selectedCategory={category}
-              searchQuery={search}
-              onCategoryChange={handleCategoryChange}
-              onSearchChange={handleSearchChange}
-              onClearFilters={handleClearFilters}
-            />
+            <div className="grid gap-2 sm:grid-cols-3">
+              <PageMetricCard
+                icon={<Shapes className="h-3.5 w-3.5" />}
+                label={t("traffic_signs.hero_metric_signs")}
+                value={String(allSigns.length)}
+                className="rounded-[1.05rem] p-2.5"
+              />
+              <PageMetricCard
+                icon={<ListFilter className="h-3.5 w-3.5" />}
+                label={t("traffic_signs.hero_metric_categories")}
+                value={String(categories.length - 1)}
+                className="rounded-[1.05rem] p-2.5"
+              />
+              <PageMetricCard
+                icon={<Languages className="h-3.5 w-3.5" />}
+                label={t("traffic_signs.hero_metric_languages")}
+                value={String(LANGUAGES.length)}
+                className="rounded-[1.05rem] p-2.5"
+              />
+            </div>
           </div>
-        </section>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/8 px-4 py-2 text-sm font-semibold text-primary">
-            <Shapes className="h-4 w-4" />
-            {t("traffic_signs.results_count", { count: filteredSigns.length })}
-          </span>
-
-          {filteredSigns.length !== allSigns.length ? (
-            <span className="text-sm text-muted-foreground">
-              {t("traffic_signs.filtered_from")}{" "}
-              <span className="font-semibold text-foreground">{allSigns.length}</span>{" "}
-              {t("traffic_signs.total")}
-            </span>
-          ) : (
-            <span className="text-sm text-muted-foreground">
-              {t("traffic_signs.showing_all")}
-            </span>
-          )}
-        </div>
+          <TrafficSignsFilters
+            categories={categories}
+            selectedCategory={category}
+            searchQuery={search}
+            onCategoryChange={handleCategoryChange}
+            onSearchChange={handleSearchChange}
+            onClearFilters={handleClearFilters}
+          />
+        </PageHeroSurface>
 
         {activeGroup && (
-          <section className="rounded-[1.75rem] border border-border/60 bg-card p-5 shadow-sm">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="flex items-start gap-4">
+          <PageSectionSurface>
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex items-start gap-3">
                 <div
-                  className={`grid h-14 w-14 flex-shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${activeGroup.style.accent} text-lg font-black text-white shadow-sm`}
+                  className={`grid h-12 w-12 flex-shrink-0 place-items-center rounded-[1.15rem] bg-gradient-to-br ${activeGroup.style.accent} text-base font-black text-white shadow-sm`}
                 >
                   {activeGroup.info.displayKey ?? activeGroup.group}
                 </div>
 
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-black tracking-tight text-foreground">
+                <div className="space-y-1">
+                  <h2 className="text-xl font-black tracking-tight text-foreground">
                     {activeGroup.info.title[lang]}
                   </h2>
-                  <p className="max-w-4xl text-sm leading-7 text-muted-foreground md:text-base">
+                  <p className="max-w-4xl text-xs leading-6 text-muted-foreground md:text-sm">
                     {activeGroup.info.description[lang]}
                   </p>
                 </div>
               </div>
 
               <span
-                className={`inline-flex items-center self-start rounded-full border px-3 py-1 text-xs font-semibold ${activeGroup.style.chip}`}
+                className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-[11px] font-semibold ${activeGroup.style.chip}`}
               >
                 {t("traffic_signs.section_count", { count: filteredSigns.length })}
               </span>
             </div>
-          </section>
+          </PageSectionSurface>
         )}
 
         {filteredSigns.length === 0 ? (
-          <div className="rounded-[2rem] border border-dashed border-border bg-card px-6 py-14 text-center shadow-sm">
+          <PageSectionSurface className="rounded-[2rem] border-dashed text-center">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Shapes className="h-8 w-8" />
             </div>
@@ -361,33 +345,33 @@ function TrafficSignsContent() {
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
               {t("traffic_signs.no_results_desc")}
             </p>
-          </div>
+          </PageSectionSurface>
         ) : showingSingleGroup ? (
           <TrafficSignsGrid signs={filteredSigns} />
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {groupedSigns.map(({ group, signs, info, style }) => (
-              <section key={group} className="space-y-4">
-                <div className="flex flex-col gap-3 border-b border-border/60 pb-4 md:flex-row md:items-end md:justify-between">
-                  <div className="flex items-start gap-4">
+              <section key={group} className="space-y-3">
+                <div className="flex flex-col gap-2.5 border-b border-border/60 pb-3 md:flex-row md:items-end md:justify-between">
+                  <div className="flex items-start gap-3">
                     <div
-                      className={`grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${style.accent} text-base font-black text-white shadow-sm`}
+                      className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-[1rem] bg-gradient-to-br ${style.accent} text-sm font-black text-white shadow-sm`}
                     >
                       {info.displayKey ?? group}
                     </div>
 
-                    <div className="space-y-1">
-                      <h2 className="text-xl font-black tracking-tight text-foreground md:text-2xl">
+                    <div className="space-y-0.5">
+                      <h2 className="text-lg font-black tracking-tight text-foreground md:text-xl">
                         {info.title[lang]}
                       </h2>
-                      <p className="line-clamp-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                      <p className="line-clamp-2 max-w-3xl text-xs leading-5 text-muted-foreground md:text-sm">
                         {info.description[lang]}
                       </p>
                     </div>
                   </div>
 
                   <span
-                    className={`inline-flex items-center self-start rounded-full border px-3 py-1 text-xs font-semibold ${style.chip}`}
+                    className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-[11px] font-semibold ${style.chip}`}
                   >
                     {t("traffic_signs.section_count", { count: signs.length })}
                   </span>
@@ -399,28 +383,6 @@ function TrafficSignsContent() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function HeroMetric({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        <span className="text-primary">{icon}</span>
-        {label}
-      </div>
-      <p className="mt-3 text-3xl font-black tracking-tight text-foreground">
-        {value}
-      </p>
     </div>
   );
 }

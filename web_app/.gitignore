@@ -12,6 +12,7 @@
 /.next/
 /out/
 /build
+/.swc/
 next-env.d.ts
 
 # ─── Testing ─────────────────────────────────────────────
@@ -31,6 +32,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# ─── Local Reports & Temporary Cleanup Artifacts ────────
+/_safe_sign_cleanup*
+/_sign_cleanup_reports_*
+/danger-signs-extra-references.csv
+/extra-sign-references-full.csv
 
 # ─── OS & Editor ─────────────────────────────────────────
 .DS_Store

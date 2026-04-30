@@ -256,19 +256,21 @@ export function getBreadcrumbTrail(
     const seg = segments[i];
     currentPath += `/${seg}`;
 
+    if (NUMERIC_SEGMENT_RE.test(seg)) {
+      continue;
+    }
+
     const labelKey = SEGMENT_LABEL_KEYS[seg];
     const label = labelKey
       ? t(labelKey)
-      : NUMERIC_SEGMENT_RE.test(seg)
-        ? `#${seg}`
-        : seg
-            .split("-")
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(" ");
+      : seg
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
 
     trail.push({
       label,
-      href: NUMERIC_SEGMENT_RE.test(seg) ? undefined : currentPath,
+      href: currentPath,
       isCurrentPage: i === segments.length - 1,
     });
   }

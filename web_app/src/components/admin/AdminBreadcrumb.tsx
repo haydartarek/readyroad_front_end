@@ -17,7 +17,7 @@ export default function AdminBreadcrumb() {
   const Separator = isRTL ? ChevronLeft : ChevronRight;
 
   return (
-    <nav aria-label="Breadcrumb" dir={isRTL ? "rtl" : "ltr"} className="mb-6">
+    <nav aria-label={t("common.breadcrumb")} dir={isRTL ? "rtl" : "ltr"} className="mb-6">
       <ol className="inline-flex items-center gap-1 rounded-2xl border border-border/50 bg-card px-4 py-2 shadow-sm">
         {trail.map((segment, idx) => (
           <li

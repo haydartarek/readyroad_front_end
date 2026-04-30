@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useLanguage } from '@/contexts/language-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import AdminSectionCard from '@/components/admin/AdminSectionCard';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +15,12 @@ type DashboardStats = {
   totalUsers: number; activeUsers: number;
   adminUsers: number; moderatorUsers: number;
   totalSigns: number; totalQuizAttempts: number;
+  totalSignQuestions: number;
+  totalSignPracticeSessions: number;
+  totalSignExamAttempts: number;
+  totalPassedSignExamResults: number;
+  totalRandomSignExamAttempts: number;
+  totalPassedRandomSignExamResults: number;
 };
 type QuizStats = {
   averageScore: number; totalCompleted: number;
@@ -103,17 +111,6 @@ function LoadingPlaceholder() {
   );
 }
 
-function SectionCard({ title, children, className }: {
-  title: string; children: React.ReactNode; className?: string;
-}) {
-  return (
-    <div className={cn('bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4', className)}>
-      <h3 className="text-base font-black text-foreground">{title}</h3>
-      {children}
-    </div>
-  );
-}
-
 // ─── Page ────────────────────────────────────────────────────────────────
 
 export default function AdminAnalyticsPage() {
@@ -162,22 +159,22 @@ export default function AdminAnalyticsPage() {
         <ServiceUnavailableBanner onRetry={fetchAll} />
       )}
 
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">{t('admin.analytics.title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('admin.analytics.description')}</p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={fetchAll}
-          disabled={loading}
-          className="gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all"
-        >
-          <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
-          {loading ? t('common.loading') : t('admin.analytics.refresh')}
-        </Button>
-      </div>
+      <AdminPageHeader
+        icon={<TrendingUp className="h-6 w-6" />}
+        title={t('admin.analytics.title')}
+        description={t('admin.analytics.description')}
+        actions={
+          <Button
+            variant="outline"
+            onClick={fetchAll}
+            disabled={loading}
+            className="gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all"
+          >
+            <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+            {loading ? t('common.loading') : t('admin.analytics.refresh')}
+          </Button>
+        }
+      />
 
       {/* Error Banner */}
       {error && (
@@ -197,14 +194,14 @@ export default function AdminAnalyticsPage() {
           value={stats?.totalUsers ?? '-'}
           sub={`${stats?.activeUsers ?? 0} ${t('admin.analytics.active')}`}
           loading={loading}
-          colorClass="bg-blue-500/10 text-blue-500"
+          colorClass="bg-primary/10 text-primary"
         />
         <StatCard
           icon={<TrafficCone className="w-5 h-5" />}
           label={t('admin.analytics.total_signs')}
           value={stats?.totalSigns ?? '-'}
           loading={loading}
-          colorClass="bg-green-500/10 text-green-500"
+          colorClass="bg-primary/10 text-foreground"
         />
         <StatCard
           icon={<GraduationCap className="w-5 h-5" />}
@@ -222,9 +219,46 @@ export default function AdminAnalyticsPage() {
         />
       </div>
 
+      {stats && (
+        <AdminSectionCard title={t('admin.analytics.sign_activity')}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <MiniStat
+              label={t('admin.analytics.total_sign_questions')}
+              value={String(stats.totalSignQuestions ?? 0)}
+              accent="text-primary"
+            />
+            <MiniStat
+              label={t('admin.analytics.total_sign_practice_sessions')}
+              value={String(stats.totalSignPracticeSessions ?? 0)}
+              accent="text-amber-600"
+            />
+            <MiniStat
+              label={t('admin.analytics.total_sign_exam_attempts')}
+              value={String(stats.totalSignExamAttempts ?? 0)}
+              accent="text-secondary"
+            />
+            <MiniStat
+              label={t('admin.analytics.total_passed_sign_exam_results')}
+              value={String(stats.totalPassedSignExamResults ?? 0)}
+              accent="text-green-600"
+            />
+            <MiniStat
+              label={t('admin.analytics.total_random_sign_exam_attempts')}
+              value={String(stats.totalRandomSignExamAttempts ?? 0)}
+              accent="text-orange-600"
+            />
+            <MiniStat
+              label={t('admin.analytics.total_passed_random_sign_exam_results')}
+              value={String(stats.totalPassedRandomSignExamResults ?? 0)}
+              accent="text-emerald-600"
+            />
+          </div>
+        </AdminSectionCard>
+      )}
+
       {/* Role Distribution */}
       {stats && (
-        <SectionCard title={t('admin.analytics.user_roles')}>
+        <AdminSectionCard title={t('admin.analytics.user_roles')}>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <RoleBar
               label={t('admin.analytics.role_user')}
@@ -236,24 +270,24 @@ export default function AdminAnalyticsPage() {
               label={t('admin.analytics.role_moderator')}
               count={stats.moderatorUsers}
               total={stats.totalUsers}
-              colorClass="bg-blue-500"
+              colorClass="bg-primary"
             />
             <RoleBar
               label={t('admin.analytics.role_admin')}
               count={stats.adminUsers}
               total={stats.totalUsers}
-              colorClass="bg-purple-500"
+              colorClass="bg-foreground"
             />
           </div>
-        </SectionCard>
+        </AdminSectionCard>
       )}
 
       {/* Quiz & Category Performance */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SectionCard title={t('admin.analytics.quiz_performance')}>
+        <AdminSectionCard title={t('admin.analytics.quiz_performance')}>
           {loading ? <LoadingPlaceholder /> : quizStats ? (
             <div className="grid grid-cols-2 gap-3">
-              <MiniStat label={t('admin.analytics.avg_score')} value={`${quizStats.averageScore}%`} accent="text-blue-500" />
+              <MiniStat label={t('admin.analytics.avg_score')} value={`${quizStats.averageScore}%`} accent="text-primary" />
               <MiniStat label={t('admin.analytics.pass_rate')} value={`${quizStats.passRate}%`} accent="text-green-500" />
               <MiniStat label={t('admin.analytics.total_completed')} value={String(quizStats.totalCompleted)} />
               <MiniStat label={t('admin.analytics.total_passed_count')} value={String(quizStats.totalPassed)} />
@@ -261,9 +295,9 @@ export default function AdminAnalyticsPage() {
           ) : (
             <p className="text-sm text-muted-foreground text-center py-8">{t('admin.analytics.no_data')}</p>
           )}
-        </SectionCard>
+        </AdminSectionCard>
 
-        <SectionCard title={t('admin.analytics.category_performance')}>
+        <AdminSectionCard title={t('admin.analytics.category_performance')}>
           {loading ? <LoadingPlaceholder /> : categoryStats.length > 0 ? (
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {[...categoryStats].sort((a, b) => b.avgAccuracy - a.avgAccuracy).map((cat) => (
@@ -293,11 +327,11 @@ export default function AdminAnalyticsPage() {
           ) : (
             <p className="text-sm text-muted-foreground text-center py-8">{t('admin.analytics.no_category_data')}</p>
           )}
-        </SectionCard>
+        </AdminSectionCard>
       </div>
 
       {/* Recent Exams Table */}
-      <SectionCard title={t('admin.analytics.recent_exams')}>
+        <AdminSectionCard title={t('admin.analytics.recent_exams')}>
         {loading ? <LoadingPlaceholder /> : recentExams && recentExams.exams.length > 0 ? (
           <div className="overflow-x-auto rounded-xl border border-border/40">
             <table className="min-w-full text-sm">
@@ -357,7 +391,7 @@ export default function AdminAnalyticsPage() {
             <p className="text-sm text-muted-foreground">{t('admin.analytics.no_exams')}</p>
           </div>
         )}
-      </SectionCard>
+        </AdminSectionCard>
 
     </div>
   );

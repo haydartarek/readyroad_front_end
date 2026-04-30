@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeroTitle } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -353,18 +354,14 @@ export default function ExamResultsPage() {
       <div className="container relative mx-auto max-w-5xl space-y-4 px-4 py-6">
         <div
           className={cn(
-            "overflow-hidden rounded-[2rem] border bg-card shadow-sm",
+            "relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-sm",
             results.passed ? "border-green-200" : "border-red-200/70",
           )}
         >
-          <div
-            className={cn(
-              "h-1.5 w-full",
-              results.passed ? "bg-green-400" : "bg-red-400",
-            )}
-          />
+          <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
 
-          <div className="grid gap-5 px-5 py-5 md:px-6 md:py-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+          <div className="relative grid gap-5 px-6 py-7 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
             <div className="space-y-4">
               <div
                 className={cn(
@@ -407,11 +404,11 @@ export default function ExamResultsPage() {
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     {t("exam.results_score_label")}
                   </p>
-                  <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl">
+                  <PageHeroTitle>
                     {results.passed
                       ? t("exam.results_passed_title")
                       : t("exam.results_failed_title")}
-                  </h1>
+                  </PageHeroTitle>
                   <p className="max-w-xl text-sm text-muted-foreground">
                     {results.passed
                       ? t("exam.results_passed_subtitle")
@@ -812,7 +809,7 @@ function ExamReviewCard({
           <div className="flex justify-center">
             <Image
               src={answer.contentImageUrl}
-              alt={questionText || "Question image"}
+              alt={questionText || t("practice.question_image_alt")}
               width={320}
               height={160}
               className="max-h-40 w-auto rounded-2xl border border-border/50 bg-background/80 object-contain"

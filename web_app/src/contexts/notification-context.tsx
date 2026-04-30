@@ -58,13 +58,19 @@ const NotificationContext = createContext<NotificationCtx>({
 // ─── Provider ─────────────────────────────────────────────
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const [unreadCount, setUnreadCount] = useState(0);
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const errorsRef = useRef(0);
   const lastFetchRef = useRef(0);
   const fetchUnreadRef = useRef<(() => Promise<void>) | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const cancelInFlight = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }, []);
 
   // ── Stop any running interval ──────────────────────────
   const stopPolling = useCallback(() => {
@@ -72,7 +78,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       clearTimeout(pollingRef.current);
       pollingRef.current = null;
     }
-  }, []);
+    cancelInFlight();
+  }, [cancelInFlight]);
 
   const scheduleFetch = useCallback(
     (delayMs: number) => {
@@ -86,7 +93,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // ── Core fetch ────────────────────────────────────────
   const fetchUnread = useCallback(async () => {
-    if (!user) return;
+    if (!user || !isAuthenticated || isLoading || document.visibilityState === "hidden") {
+      return;
+    }
 
     const now = Date.now();
     if (now - lastFetchRef.current < DEDUPE_MS) return;
@@ -97,12 +106,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    cancelInFlight();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const count = await getUnreadNotificationCount();
+      const count = await getUnreadNotificationCount(controller.signal);
+      if (controller.signal.aborted) return;
       setUnreadCount(count);
       errorsRef.current = 0;
       scheduleFetch(BASE_POLL_MS);
     } catch {
+      if (controller.signal.aborted) return;
       errorsRef.current += 1;
       if (errorsRef.current >= MAX_ERRORS) {
         stopPolling();
@@ -112,8 +127,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       } else {
         scheduleFetch(BASE_POLL_MS * Math.pow(2, errorsRef.current));
       }
+    } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
     }
-  }, [user, stopPolling, scheduleFetch]);
+  }, [user, isAuthenticated, isLoading, stopPolling, scheduleFetch, cancelInFlight]);
 
   useEffect(() => {
     fetchUnreadRef.current = fetchUnread;
@@ -121,8 +140,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // ── Mount / user-change lifecycle ─────────────────────
   useEffect(() => {
-    if (!user) {
+    if (!user || !isAuthenticated || isLoading) {
       stopPolling();
+      setUnreadCount(0);
       return;
     }
 
@@ -137,15 +157,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (document.visibilityState === "visible") {
         lastFetchRef.current = 0; // bypass dedupe on tab-focus
         void fetchUnreadRef.current?.();
+      } else {
+        cancelInFlight();
       }
     };
+    const onPageHide = () => {
+      stopPolling();
+    };
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
 
     return () => {
       stopPolling();
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
     };
-  }, [user, stopPolling]);
+  }, [user, isAuthenticated, isLoading, stopPolling, cancelInFlight]);
 
   // ── Public API ────────────────────────────────────────
 

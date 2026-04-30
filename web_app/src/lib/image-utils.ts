@@ -70,12 +70,11 @@ export function convertToPublicImageUrl(
     }
   }
 
-  // Percent-encode special characters in each path segment (commas, &, +, apostrophes, etc.)
-  // so Next.js static file server can resolve filenames with these characters.
-  path = path
-    .split("/")
-    .map((segment) => encodeURIComponent(segment))
-    .join("/");
+  // Local public assets with long names or punctuation are served through a
+  // dedicated route to avoid static path edge cases on Windows/Docker builds.
+  if (path.startsWith("/images/")) {
+    return `/api/assets/public-file?path=${encodeURIComponent(path)}`;
+  }
 
   return path;
 }

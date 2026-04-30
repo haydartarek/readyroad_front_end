@@ -8,11 +8,13 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { LANGUAGES, DEFAULT_LANGUAGE } from "@/lib/constants";
-import enMessages from "@/messages/en.json";
-import arMessages from "@/messages/ar.json";
-import frMessages from "@/messages/fr.json";
-import nlMessages from "@/messages/nl.json";
+import { DEFAULT_LANGUAGE, STORAGE_KEYS } from "@/lib/constants";
+import {
+  ALL_MESSAGES,
+  getInitialClientLanguage,
+  isValidLanguage,
+  readLanguageFromCookieString,
+} from "@/lib/messages";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -27,21 +29,19 @@ interface LanguageContextType {
 
 // ─── Constants ───────────────────────────────────────────
 
-const STORAGE_KEY = "readyroad_locale";
+const STORAGE_KEY = STORAGE_KEYS.LANGUAGE;
+const LEGACY_STORAGE_KEY = "readyroad_language";
 const STORAGE_EVENT = "readyroad-language-change";
 const RTL_LANGS = new Set<Language>(["ar"]);
 
-const ALL_MESSAGES: Record<Language, Record<string, string>> = {
-  en: enMessages as unknown as Record<string, string>,
-  ar: arMessages as unknown as Record<string, string>,
-  fr: frMessages as unknown as Record<string, string>,
-  nl: nlMessages as unknown as Record<string, string>,
-};
-
 // ─── Helpers ─────────────────────────────────────────────
 
-function isValidLanguage(lang: string): lang is Language {
-  return LANGUAGES.some((l) => l.code === lang);
+function readLanguageFromCookie(): Language | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return readLanguageFromCookieString(document.cookie);
 }
 
 function readStoredLanguage(): Language | null {
@@ -49,10 +49,16 @@ function readStoredLanguage(): Language | null {
     return null;
   }
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored && isValidLanguage(stored) ? stored : null;
+    const stored =
+      localStorage.getItem(STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (stored && isValidLanguage(stored)) {
+      return stored;
+    }
+
+    return readLanguageFromCookie();
   } catch {
-    return null; // SSR / private browsing guard
+    return readLanguageFromCookie(); // SSR / private browsing guard
   }
 }
 
@@ -72,7 +78,7 @@ function subscribeToLanguage(callback: () => void): () => void {
 }
 
 function getLanguageSnapshot(): Language {
-  return readStoredLanguage() ?? (DEFAULT_LANGUAGE as Language);
+  return readStoredLanguage() ?? getInitialClientLanguage();
 }
 
 // ─── Context ─────────────────────────────────────────────
@@ -83,11 +89,17 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 
 // ─── Provider ────────────────────────────────────────────
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+export function LanguageProvider({
+  children,
+  initialLanguage,
+}: {
+  children: ReactNode;
+  initialLanguage?: Language;
+}) {
   const language = useSyncExternalStore(
     subscribeToLanguage,
     getLanguageSnapshot,
-    () => DEFAULT_LANGUAGE as Language,
+    () => initialLanguage ?? (DEFAULT_LANGUAGE as Language),
   );
 
   const translations = ALL_MESSAGES[language];
@@ -97,6 +109,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = isRTL ? "rtl" : "ltr";
+
+    try {
+      localStorage.setItem(STORAGE_KEY, language);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      document.cookie = `${STORAGE_KEY}=${language}; path=/; max-age=31536000; samesite=lax`;
+    } catch {
+      // Ignore storage failures in restricted browser contexts.
+    }
   }, [language, isRTL]);
 
   const setLanguage = useCallback(

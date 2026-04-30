@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLanguage } from '@/contexts/language-context';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -58,43 +59,63 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (fallback)  return fallback;
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-lg border-2">
-          <CardHeader>
-            <CardTitle className="text-2xl text-destructive">
-              Something went wrong
-            </CardTitle>
-            <CardDescription>
-              An unexpected error occurred. Please try again.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            {IS_DEV && error && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  <pre className="overflow-auto text-xs">
-                    {error.message}
-                  </pre>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="flex gap-3">
-              <Button onClick={this.handleReset} className="flex-1">
-                Try Again
-              </Button>
-              <Button
-                variant="outline"
-                onClick={this.handleGoHome}
-                className="flex-1"
-              >
-                Go Home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <LocalizedErrorFallback
+        error={error}
+        handleGoHome={this.handleGoHome}
+        handleReset={this.handleReset}
+      />
     );
   }
+}
+
+function LocalizedErrorFallback({
+  error,
+  handleGoHome,
+  handleReset,
+}: {
+  error?: Error;
+  handleGoHome: () => void;
+  handleReset: () => void;
+}) {
+  const { t } = useLanguage();
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-lg border-2">
+        <CardHeader>
+          <CardTitle className="text-2xl text-destructive">
+            {t('common.error_title')}
+          </CardTitle>
+          <CardDescription>
+            {t('common.error_desc')}
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {IS_DEV && error && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                <pre className="overflow-auto text-xs">
+                  {error.message}
+                </pre>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex gap-3">
+            <Button onClick={handleReset} className="flex-1">
+              {t('common.retry')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleGoHome}
+              className="flex-1"
+            >
+              {t('common.go_home')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

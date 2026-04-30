@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Clock, Layers, FilePlus2, ArrowRight } from 'lucide-react';
+import { Target, SignpostBig, FileText, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { EXAM_RULES } from '@/lib/constants';
 
@@ -10,6 +10,9 @@ interface Step {
   number: string;
   href: string;
   icon: React.ElementType;
+  iconWrap: string;
+  iconTone: string;
+  glow: string;
   titleKey: string;
   descKey: string;
   ctaKey: string;
@@ -20,9 +23,30 @@ const STAGGER_MS = 120;
 const HEADING_ID = 'how-it-works-heading';
 
 const STEP_BASES = [
-  { number: '01', href: '/practice', icon: Clock },
-  { number: '02', href: '/traffic-signs', icon: Layers },
-  { number: '03', href: '/exam', icon: FilePlus2 },
+  {
+    number: '01',
+    href: '/practice',
+    icon: Target,
+    iconWrap: 'border-secondary/20 bg-secondary/10 ring-1 ring-secondary/10',
+    iconTone: 'text-secondary',
+    glow: 'bg-secondary/10',
+  },
+  {
+    number: '02',
+    href: '/traffic-signs',
+    icon: SignpostBig,
+    iconWrap: 'border-emerald-500/20 bg-emerald-500/10 ring-1 ring-emerald-500/10',
+    iconTone: 'text-emerald-600 dark:text-emerald-400',
+    glow: 'bg-emerald-500/10',
+  },
+  {
+    number: '03',
+    href: '/exam',
+    icon: FileText,
+    iconWrap: 'border-primary/20 bg-primary/10 ring-1 ring-primary/10',
+    iconTone: 'text-primary',
+    glow: 'bg-primary/10',
+  },
 ] as const;
 
 function buildSteps(): Step[] {
@@ -107,8 +131,13 @@ export function HowItWorksSection() {
                     {step.number}
                   </span>
 
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border bg-background/60 shadow-sm transition-transform duration-200 group-hover:scale-[1.03]">
-                    <Icon className="h-5 w-5 text-primary" aria-hidden />
+                  <div
+                    className={[
+                      'flex h-12 w-12 items-center justify-center rounded-2xl border shadow-sm transition-transform duration-200 group-hover:scale-[1.03]',
+                      step.iconWrap,
+                    ].join(' ')}
+                  >
+                    <Icon className={['h-5 w-5', step.iconTone].join(' ')} aria-hidden />
                   </div>
                 </div>
 
@@ -137,7 +166,12 @@ export function HowItWorksSection() {
                   />
                 </Link>
 
-                <div className="pointer-events-none absolute -bottom-12 -end-12 h-40 w-40 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity group-hover:opacity-100" />
+                <div
+                  className={[
+                    'pointer-events-none absolute -bottom-12 -end-12 h-40 w-40 rounded-full blur-3xl opacity-0 transition-opacity group-hover:opacity-100',
+                    step.glow,
+                  ].join(' ')}
+                />
               </article>
             );
           })}

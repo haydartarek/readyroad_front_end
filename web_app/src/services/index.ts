@@ -83,6 +83,10 @@ export {
   submitExam,
   getSignStatus,
   getAllSignProgress,
+  startRandomPracticeSession,
+  submitRandomPracticeSession,
+  getRandomPracticeHistory,
+  getRandomPracticeResult,
   type SignChoice,
   type SignQuizQuestion,
   type SignPracticeSession,
@@ -95,6 +99,12 @@ export {
   type ExamQuestionResult,
   type SignExamResult,
   type SignUserProgress,
+  type SignRandomPracticeSession,
+  type SignRandomPracticeAnswerItem,
+  type SignRandomPracticeQuestionResult,
+  type SignRandomPracticeResult,
+  type SignRandomPracticeHistoryItem,
+  type SignRandomPracticeHistoryResponse,
 } from "./signQuizService";
 
 // ─── Assessment ──────────────────────────────────────────

@@ -10,9 +10,15 @@ import { WeakAreaDetails } from '@/components/analytics/weak-area-details';
 import { getWeakAreas, type WeakAreasData } from '@/services';
 import { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
+import {
+  PageHeroDescription,
+  PageHeroEyebrow,
+  PageHeroSurface,
+  PageHeroTitle,
+} from '@/components/ui/page-surface';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { PenLine, BookOpen, Target, RefreshCw, TrendingUp, Trophy, AlertCircle } from 'lucide-react';
+import { PenLine, BookOpen, Target, RefreshCw, Trophy, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 
 export function WeakAreasPageContent() {
@@ -35,15 +41,15 @@ export function WeakAreasPageContent() {
         if (isServiceUnavailable(err)) {
           setServiceUnavailable(true);
         } else {
-          setError('Failed to load weak areas');
-          toast.error('Failed to load analytics');
+          setError(t('common.load_error'));
+          toast.error(t('common.load_error'));
         }
       } finally {
         setIsLoading(false);
       }
     };
     fetchWeakAreas();
-  }, [fetchKey]);
+  }, [fetchKey, t]);
 
   // ── Loading ──────────────────────────────────────
   if (isLoading) {
@@ -85,7 +91,7 @@ export function WeakAreasPageContent() {
           className="gap-2"
         >
           <RefreshCw className="w-4 h-4" />
-          {t('weak_areas.try_again')}
+          {t('common.retry')}
         </Button>
       </div>
     );
@@ -93,16 +99,15 @@ export function WeakAreasPageContent() {
 
   // ── Shared page header ───────────────────────────
   const pageHeader = (
-    <div className="space-y-3">
-      <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-primary border border-primary/20 shadow-sm">
-        <TrendingUp className="w-4 h-4" />
-        <span className="font-semibold text-sm">{t('weak_areas.badge')}</span>
+    <PageHeroSurface>
+      <div className="space-y-1">
+        <PageHeroEyebrow>{t('weak_areas.badge')}</PageHeroEyebrow>
+        <PageHeroTitle>{t('weak_areas.title')}</PageHeroTitle>
+        <PageHeroDescription className="max-w-xl">
+          {t('weak_areas.subtitle')}
+        </PageHeroDescription>
       </div>
-      <h1 className="text-4xl font-black tracking-tight">{t('weak_areas.title')}</h1>
-      <p className="text-lg text-muted-foreground max-w-xl">
-        {t('weak_areas.subtitle')}
-      </p>
-    </div>
+    </PageHeroSurface>
   );
 
   // ── Empty state ──────────────────────────────────

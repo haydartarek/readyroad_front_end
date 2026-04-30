@@ -3,8 +3,13 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useLanguage } from '@/contexts/language-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { Button } from '@/components/ui/button';
+import {
+  NATIVE_SELECT_COMPACT_CLASS,
+  NATIVE_SELECT_DISABLED_CLASS,
+} from '@/lib/native-select-styles';
 import { cn } from '@/lib/utils';
 import {
   Users, UserCheck, UserX, Search, RefreshCw,
@@ -21,6 +26,7 @@ type UserRow = {
 };
 type UsersResponse = {
   users: UserRow[]; total: number; page: number; size: number;
+  totalPages?: number; query?: string;
 };
 
 const ROLES = ['USER', 'STUDENT', 'MODERATOR', 'ADMIN'] as const;
@@ -75,6 +81,7 @@ export default function AdminUsersPage() {
   const [users, setUsers]       = useState<UserRow[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [page, setPage]         = useState(0);
@@ -87,10 +94,23 @@ export default function AdminUsersPage() {
   const clearAction = (id: number) =>
     setActionLoading(prev => { const n = { ...prev }; delete n[id]; return n; });
 
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 250);
+    return () => window.clearTimeout(id);
+  }, [searchInput]);
+
   const fetchUsers = useCallback(async (pageNum = 0) => {
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setServiceUnavailable(false);
     try {
-      const res  = await apiClient.get<UsersResponse>('/admin/users', { page: pageNum, size: pageSize });
+      const res  = await apiClient.get<UsersResponse>('/admin/users', {
+        page: pageNum,
+        size: pageSize,
+        q: searchQuery,
+        sortField: 'createdAt',
+        sortDir: 'desc',
+      });
       const data = res.data;
       const list = Array.isArray(data) ? data : (data.users ?? []);
       setUsers(list);
@@ -103,7 +123,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, searchQuery]);
 
   useEffect(() => { fetchUsers(0); }, [fetchUsers]);
 
@@ -135,16 +155,7 @@ export default function AdminUsersPage() {
     } finally { clearAction(user.id); }
   };
 
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
-    const q = searchQuery.toLowerCase();
-    return users.filter(u =>
-      u.username?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q) ||
-      u.fullName?.toLowerCase().includes(q) ||
-      u.role?.toLowerCase().includes(q)
-    );
-  }, [users, searchQuery]);
+  const filteredUsers = useMemo(() => users, [users]);
 
   const activeCount = useMemo(() => users.filter(u => u.isActive && !u.isLocked).length, [users]);
   const lockedCount = useMemo(() => users.filter(u => u.isLocked).length, [users]);
@@ -153,17 +164,17 @@ export default function AdminUsersPage() {
     <div className="space-y-5">
       {serviceUnavailable && <ServiceUnavailableBanner onRetry={() => fetchUsers(page)} />}
 
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">{t('admin.users.title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('admin.users.description')}</p>
-        </div>
-        <Button variant="outline" onClick={() => fetchUsers(page)} disabled={loading} className="gap-2">
-          <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
-          {loading ? t('common.loading') : t('admin.users.refresh')}
-        </Button>
-      </div>
+      <AdminPageHeader
+        icon={<Users className="h-6 w-6" />}
+        title={t('admin.users.title')}
+        description={t('admin.users.description')}
+        actions={
+          <Button variant="outline" onClick={() => fetchUsers(page)} disabled={loading} className="gap-2">
+            <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+            {loading ? t('common.loading') : t('admin.users.refresh')}
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -205,10 +216,13 @@ export default function AdminUsersPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
+            id="admin-users-search"
+            name="usersSearch"
             type="text"
+            autoComplete="off"
             placeholder={t('admin.users.search_placeholder')}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-xl border border-border/50 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
         </div>
@@ -285,11 +299,15 @@ export default function AdminUsersPage() {
                     {/* Role */}
                     <td className="px-4 py-3">
                       <select
+                        id={`admin-user-role-${user.id}`}
+                        name={`role-${user.id}`}
                         value={user.role}
                         onChange={e => changeRole(user, e.target.value)}
                         disabled={isLoading}
                         className={cn(
-                          'rounded-lg border px-2 py-1 text-xs font-semibold outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-60 transition-all cursor-pointer',
+                          NATIVE_SELECT_COMPACT_CLASS,
+                          NATIVE_SELECT_DISABLED_CLASS,
+                          'px-2.5 text-xs shadow-none disabled:opacity-60',
                           ROLE_SELECT[user.role] || ROLE_SELECT.USER
                         )}
                       >

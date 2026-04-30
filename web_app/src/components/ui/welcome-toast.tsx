@@ -2,6 +2,7 @@
 
 import { X, Car } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/language-context';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -14,6 +15,7 @@ interface WelcomeToastProps {
 // ─── Component ───────────────────────────────────────────
 
 export function WelcomeToastContent({ toastId, firstName, subtitle }: WelcomeToastProps) {
+  const { t } = useLanguage();
   const initial = firstName?.[0]?.toUpperCase() ?? 'U';
 
   return (
@@ -61,8 +63,7 @@ export function WelcomeToastContent({ toastId, firstName, subtitle }: WelcomeToa
       {/* Text */}
       <div className="flex-1 min-w-0 pl-0.5">
         <p className="text-sm font-semibold text-foreground leading-tight truncate">
-          Welcome back,{' '}
-          <span className="text-primary">{firstName}</span>!
+          <span className="text-primary">{t('auth.toast.welcome_back_name', { name: firstName })}</span>
         </p>
         <div className="flex items-center gap-1 mt-0.5">
           <Car className="w-3 h-3 text-muted-foreground shrink-0" />
@@ -75,7 +76,7 @@ export function WelcomeToastContent({ toastId, firstName, subtitle }: WelcomeToa
       {/* Dismiss */}
       <button
         onClick={() => toast.dismiss(toastId)}
-        aria-label="Dismiss notification"
+        aria-label={t('auth.toast.dismiss')}
         className="
           shrink-0 ml-1 p-1 rounded-md
           text-muted-foreground/50 hover:text-foreground

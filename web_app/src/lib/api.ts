@@ -90,8 +90,12 @@ class ApiClient {
 
   // ─── HTTP Methods ─────────────────────────────────────
 
-  get<T>(url: string, params?: Record<string, unknown>): Promise<AxiosResponse<T>> {
-    return this.instance.get<T>(url, { params });
+  get<T>(
+    url: string,
+    params?: Record<string, unknown>,
+    config?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<T>> {
+    return this.instance.get<T>(url, { ...config, params });
   }
 
   post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {

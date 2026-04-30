@@ -224,10 +224,10 @@ export function NotificationPanel() {
         variant="ghost"
         size="sm"
         className={cn(
-          "relative h-9 w-9 p-0 rounded-xl transition-all duration-200",
+          "relative h-11 w-11 rounded-full border border-border/70 bg-card p-0 shadow-sm transition-all duration-200",
           isOpen
-            ? "bg-primary/10 text-primary"
-            : "hover:bg-primary/8 text-muted-foreground hover:text-primary",
+            ? "border-primary/20 bg-primary/10 text-primary shadow-primary/10"
+            : "text-muted-foreground hover:border-primary/20 hover:bg-muted/50 hover:text-primary",
         )}
         aria-label={
           unreadCount > 0
@@ -266,20 +266,21 @@ export function NotificationPanel() {
       {isOpen && (
         <div
           className={cn(
-            "absolute end-0 top-11 z-50 w-80 sm:w-96 max-w-[calc(100vw-1rem)]",
-            "rounded-2xl border border-border/60 bg-popover shadow-xl",
+            "absolute end-0 top-[calc(100%+10px)] z-50 w-80 sm:w-96 max-w-[calc(100vw-1rem)]",
+            "rounded-[1.65rem] border border-border/60 bg-gradient-to-br from-background/98 via-background/94 to-primary/[0.03]",
+            "p-2.5 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.34)] ring-1 ring-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80",
             "animate-in fade-in-0 zoom-in-95 duration-150",
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+          <div className="mb-2 flex items-center justify-between rounded-[1.25rem] border border-border/60 bg-muted/35 px-3.5 py-3">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">
+              <span className="text-sm font-black text-foreground">
                 {t("notif.title")}
               </span>
               {unreadCount > 0 && (
-                <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+                <span className="rounded-full border border-red-200/70 bg-red-50 px-2 py-0.5 text-[10px] font-black text-red-600">
                   {badgeCount} {t("notif.badge_new")}
                 </span>
               )}
@@ -287,7 +288,7 @@ export function NotificationPanel() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 rounded-full border border-border/60 bg-background/80 p-0 text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-background hover:text-primary"
               onClick={() => setIsOpen(false)}
               aria-label={t("notif.close")}
             >
@@ -296,16 +297,16 @@ export function NotificationPanel() {
           </div>
 
           {/* Body */}
-          <div className="max-h-[400px] overflow-y-auto">
+          <div className="max-h-[420px] overflow-y-auto px-0.5">
             {isLoading ? (
               // Loading state
-              <div className="flex items-center justify-center py-10">
+              <div className="flex items-center justify-center rounded-[1.2rem] border border-border/50 bg-background/70 py-10">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
             ) : items.length === 0 ? (
               // Empty state
-              <div className="flex flex-col items-center gap-2 py-10 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <div className="flex flex-col items-center gap-2 rounded-[1.2rem] border border-border/50 bg-background/70 py-10 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-muted/60 shadow-sm">
                   <CheckCheck className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm font-semibold text-foreground">
@@ -317,7 +318,7 @@ export function NotificationPanel() {
               </div>
             ) : (
               // Notification list
-              <ul className="divide-y divide-border/40" role="list">
+              <ul className="space-y-1.5" role="list">
                 {items.map((notif) => {
                   const cfg = getTypeCfg(notif.type);
                   const Icon = cfg.icon;
@@ -341,17 +342,17 @@ export function NotificationPanel() {
                   const content = (
                     <div
                       className={cn(
-                        "flex gap-3 px-4 py-3 transition-colors",
-                        "hover:bg-muted/60 cursor-pointer",
-                        !notif.isRead && "bg-primary/5",
+                        "flex gap-3 rounded-[1.2rem] border border-transparent px-3.5 py-3 transition-all duration-200",
+                        "cursor-pointer hover:border-primary/10 hover:bg-primary/[0.04]",
+                        !notif.isRead && "border-primary/10 bg-primary/[0.06] shadow-sm",
                       )}
                       onClick={() => handleItemClick(notif)}
                     >
                       {/* Icon */}
                       <div
                         className={cn(
-                          "relative flex h-9 w-9 shrink-0 items-center justify-center",
-                          "rounded-full bg-muted",
+                          "relative flex h-10 w-10 shrink-0 items-center justify-center",
+                          "rounded-2xl border border-border/60 bg-background/90 shadow-sm",
                         )}
                       >
                         <Icon className={cn("h-4 w-4", cfg.iconClass)} />
@@ -372,7 +373,7 @@ export function NotificationPanel() {
                           className={cn(
                             "text-sm leading-tight",
                             notif.isRead
-                              ? "font-medium text-foreground/80"
+                              ? "font-semibold text-foreground/80"
                               : "font-bold text-foreground",
                           )}
                         >
@@ -412,7 +413,7 @@ export function NotificationPanel() {
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-border/50 px-4 py-2">
+            <div className="mt-2 rounded-[1.15rem] border border-border/60 bg-muted/30 px-3 py-2.5">
               <p className="text-center text-xs text-muted-foreground">
                 {footerText(items.length)}
               </p>

@@ -25,12 +25,7 @@ export function StickyCTA() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (dismissed || isLoading || !visible) return null;
-
-  const ctaHref  = isAuthenticated ? '/dashboard' : '/practice';
-  const ctaLabel = isAuthenticated
-    ? t('home.hero.cta_auth_primary')
-    : t('home.sticky.cta_text');
+  if (dismissed || isLoading || !visible || isAuthenticated) return null;
 
   return (
     <div
@@ -49,7 +44,7 @@ export function StickyCTA() {
             className="rounded-full px-6 text-sm font-black shadow-md transition-all hover:shadow-lg"
             asChild
           >
-            <Link href={ctaHref}>{ctaLabel}</Link>
+            <Link href="/practice">{t('home.sticky.cta_text')}</Link>
           </Button>
 
           <button

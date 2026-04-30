@@ -60,11 +60,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Scenario: Allow admin users to access admin routes
   return (
     <div
-      className="flex min-h-screen bg-muted"
+      className="flex min-h-screen bg-gradient-to-br from-background via-muted/10 to-background"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <AdminSidebar />
-      <main className="flex-1 p-6 md:p-8 transition-all duration-300 min-w-0">
+      <main className="min-w-0 flex-1 px-5 pb-8 pt-6 transition-all duration-300 md:px-8 md:pt-8">
         <div className="max-w-7xl mx-auto space-y-4">
           <AdminBreadcrumb />
           {children}

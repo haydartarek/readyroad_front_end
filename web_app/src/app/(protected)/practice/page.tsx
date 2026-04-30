@@ -6,48 +6,48 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+  PageSectionSurface,
+} from '@/components/ui/page-surface';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
 import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
+import { getCategoryVisual } from '@/lib/category-visuals';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { getAllSignProgress, type SignUserProgress } from '@/services';
+import { getGroupInfo, getTrafficSignGroup, TRAFFIC_SIGN_GROUP_ORDER } from '@/lib/traffic-sign-presentation';
 import type { TrafficSign } from '@/lib/types';
-import { BookOpen, CheckCircle2, ChevronLeft, ChevronRight, RefreshCw, Trophy } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  BookOpen,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Languages,
+  RefreshCw,
+  Shapes,
+  Shuffle,
+  Trophy,
+} from 'lucide-react';
 
-interface CategoryDTO {
-  id: number;
+type Lang = 'en' | 'ar' | 'nl' | 'fr';
+
+interface CategoryCardData {
   code: string;
-  nameEn: string;
-  nameAr: string;
-  nameNl: string;
-  nameFr: string;
-  descriptionEn?: string;
-  descriptionAr?: string;
-  descriptionNl?: string;
-  descriptionFr?: string;
-}
-
-interface CategoryCardData extends CategoryDTO {
+  title: string;
+  description: string;
   signCount: number;
   practiceCompleted: number;
-  exam1Passed: number;
+  passedSigns: number;
 }
 
-const CATEGORY_EMOJIS: Record<string, string> = {
-  A: '⚠️',
-  B: '⚡',
-  C: '⛔',
-  D: '➡️',
-  E: '🅿️',
-  F: 'ℹ️',
-  G: '➕',
-  M: '🚲',
-  T: '🛣️',
-  Z: '🗺️',
-};
+function LoadingSpinner({ message }: { message?: string }) {
+  const { t } = useLanguage();
 
-function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
       <div className="text-center space-y-4">
@@ -56,7 +56,9 @@ function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
           <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
           <div className="absolute inset-0 flex items-center justify-center text-2xl">🚦</div>
         </div>
-        <p className="text-base text-muted-foreground font-medium">{message}</p>
+        <p className="text-base text-muted-foreground font-medium">
+          {message ?? t('common.loading')}
+        </p>
       </div>
     </div>
   );
@@ -66,6 +68,9 @@ export default function PracticePage() {
   const router = useRouter();
   const { language, t } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const lang = (['en', 'ar', 'nl', 'fr'] as Lang[]).includes(language as Lang)
+    ? (language as Lang)
+    : 'en';
 
   const [categories, setCategories] = useState<CategoryCardData[]>([]);
   const [totalSigns, setTotalSigns] = useState(0);
@@ -81,48 +86,59 @@ export default function PracticePage() {
       setIsLoading(true);
       setError(null);
 
-      const [catResp, progressList] = await Promise.all([
-        apiClient.get<CategoryDTO[]>(API_ENDPOINTS.CATEGORIES.LIST),
+      const [signsResp, progressList] = await Promise.all([
+        apiClient.get<TrafficSign[]>(API_ENDPOINTS.TRAFFIC_SIGNS.LIST),
         isAuthenticated ? getAllSignProgress() : Promise.resolve<SignUserProgress[]>([]),
       ]);
 
       if (requestId !== requestIdRef.current) return;
 
+      const allSigns = Array.isArray(signsResp.data) ? signsResp.data : [];
       const progressMap = new Map(
         progressList.map((item) => [item.routeCode ?? item.signCode, item]),
       );
 
-      const categoryCards = await Promise.all(
-        catResp.data.map(async (cat) => {
-          const signsResp = await apiClient.get<TrafficSign[]>(
-            API_ENDPOINTS.TRAFFIC_SIGNS.BY_CATEGORY(cat.id),
-          );
-          const signs = signsResp.data;
+      const groupedSigns = new Map<string, TrafficSign[]>();
+      allSigns.forEach((sign) => {
+        const group = getTrafficSignGroup(sign);
+        const current = groupedSigns.get(group) ?? [];
+        current.push(sign);
+        groupedSigns.set(group, current);
+      });
+
+      const categoryCards: CategoryCardData[] = TRAFFIC_SIGN_GROUP_ORDER
+        .map((group) => {
+          const signs = groupedSigns.get(group) ?? [];
+          if (signs.length === 0) {
+            return null;
+          }
 
           let practiceCompleted = 0;
-          let exam1Passed = 0;
+          let passedSigns = 0;
 
           signs.forEach((sign) => {
             const progressKey = sign.routeCode ?? sign.signCode;
             const signProgress = progressMap.get(progressKey);
             if (signProgress?.practiceCompleted) practiceCompleted += 1;
-            if (signProgress?.exam1Passed) exam1Passed += 1;
+            if (signProgress?.exam1Passed) passedSigns += 1;
           });
 
+          const info = getGroupInfo(group).info;
           return {
-            ...cat,
+            code: group,
+            title: info.title[lang],
+            description: info.description[lang],
             signCount: signs.length,
             practiceCompleted,
-            exam1Passed,
+            passedSigns,
           };
-        }),
-      );
+        })
+        .filter((card): card is CategoryCardData => card !== null);
 
       if (requestId !== requestIdRef.current) return;
 
-      const filteredCards = categoryCards.filter((cat) => cat.signCount > 0);
-      setCategories(filteredCards);
-      setTotalSigns(filteredCards.reduce((sum, cat) => sum + cat.signCount, 0));
+      setCategories(categoryCards);
+      setTotalSigns(categoryCards.reduce((sum, cat) => sum + cat.signCount, 0));
     } catch (err) {
       if (requestId !== requestIdRef.current) return;
 
@@ -147,26 +163,6 @@ export default function PracticePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, language]);
 
-  const getCategoryName = (cat: CategoryDTO): string => {
-    const map: Record<string, string> = {
-      en: cat.nameEn,
-      ar: cat.nameAr,
-      nl: cat.nameNl,
-      fr: cat.nameFr,
-    };
-    return map[language] || cat.nameEn;
-  };
-
-  const getCategoryDescription = (cat: CategoryDTO): string => {
-    const map: Record<string, string | undefined> = {
-      en: cat.descriptionEn,
-      ar: cat.descriptionAr,
-      nl: cat.descriptionNl,
-      fr: cat.descriptionFr,
-    };
-    return map[language] || cat.descriptionEn || '';
-  };
-
   if (isLoading) return <LoadingSpinner message={t('practice.loading')} />;
 
   const isRtl = language === 'ar';
@@ -178,16 +174,70 @@ export default function PracticePage() {
       className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background"
     >
       <div className="container mx-auto max-w-6xl px-4 py-10 space-y-8">
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-primary border border-primary/20 shadow-sm">
-            <BookOpen className="w-4 h-4" />
-            <span className="font-semibold text-sm">{t('practice.mode_badge')}</span>
+        <PageHeroSurface contentClassName="space-y-4">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary">
+                <BookOpen className="w-4 h-4" />
+                {t('practice.mode_badge')}
+                </div>
+
+                <PageHeroTitle className="max-w-3xl text-balance">
+                  {t('practice.title')}
+                </PageHeroTitle>
+                <PageHeroDescription className="max-w-3xl text-pretty">
+                  {t('practice.hub.subtitle')}
+                </PageHeroDescription>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary" className="rounded-full border-0 bg-primary/10 text-primary">
+                    {t('practice.hub.per_sign_questions')}
+                  </Badge>
+                  <Badge variant="secondary" className="rounded-full border-0 bg-amber-500/10 text-amber-700">
+                    {t('practice.hub.three_levels')}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-3 xl:w-[360px]">
+                {[
+                  {
+                    icon: <BookOpen className="h-4 w-4" />,
+                    value: String(totalSigns),
+                    label: t('practice.hub.metric_signs'),
+                  },
+                  {
+                    icon: <Shapes className="h-4 w-4" />,
+                    value: String(categories.length),
+                    label: t('practice.hub.metric_categories'),
+                  },
+                  {
+                    icon: <Languages className="h-4 w-4" />,
+                    value: '4',
+                    label: t('practice.hub.metric_languages'),
+                  },
+                ].map((metric) => (
+                  <div
+                    key={metric.label}
+                    className="rounded-[1.35rem] border border-border/60 bg-background/80 px-3 py-3 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-muted/70 text-foreground/70 ring-1 ring-border/50 dark:bg-muted/40 dark:text-foreground/80">
+                        {metric.icon}
+                      </div>
+                      <p className="text-2xl font-black tracking-tight text-foreground">
+                        {metric.value}
+                      </p>
+                    </div>
+                    <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      {metric.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <h1 className="text-4xl font-black tracking-tight">{t('practice.title')}</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
-            {t('practice.hub.subtitle')}
-          </p>
-        </div>
+        </PageHeroSurface>
 
         {serviceUnavailable && (
           <ServiceUnavailableBanner
@@ -215,10 +265,8 @@ export default function PracticePage() {
           </Alert>
         )}
 
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+        <PageSectionSurface>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-primary" />
@@ -241,20 +289,32 @@ export default function PracticePage() {
                 </Badge>
               </div>
             </div>
-            <Button
-              onClick={() => router.push('/traffic-signs')}
-              className="font-bold flex-shrink-0 gap-2 hover:scale-[1.02] transition-all duration-200"
-              size="lg"
-            >
-              <BookOpen className="w-4 h-4" />
-              {t('practice.hub.browse_all')}
-            </Button>
+            <div className="flex flex-col gap-3 lg:w-[240px]">
+              <Button
+                onClick={() => router.push('/traffic-signs')}
+                className="font-bold flex-shrink-0 gap-2 hover:scale-[1.02] transition-all duration-200"
+                size="lg"
+              >
+                <BookOpen className="w-4 h-4" />
+                {t('practice.hub.browse_all')}
+              </Button>
+              <Button
+                onClick={() => router.push('/practice/random')}
+                variant="outline"
+                className="font-semibold flex-shrink-0 gap-2 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary"
+                size="lg"
+              >
+                <Shuffle className="w-4 h-4" />
+                {t('practice.start_random')}
+              </Button>
+            </div>
           </div>
-        </div>
+        </PageSectionSurface>
 
-        <div className="space-y-4">
-          <h2 className="text-2xl font-black tracking-tight">{t('practice.by_category')}</h2>
-
+        <PageSectionSurface
+          title={t('practice.by_category')}
+          description={t('practice.subtitle')}
+        >
           {categories.length === 0 ? (
             <Card className="border border-border/50 shadow-sm bg-card/80">
               <CardContent className="py-14 text-center space-y-3">
@@ -268,32 +328,56 @@ export default function PracticePage() {
                 const practicePct = cat.signCount > 0
                   ? Math.round((cat.practiceCompleted / cat.signCount) * 100)
                   : 0;
-                const emoji = CATEGORY_EMOJIS[cat.code] ?? '🚦';
+                const groupMeta = getGroupInfo(cat.code);
+                const visual = getCategoryVisual(cat.code);
+                const CategoryIcon = visual.icon;
 
                 return (
                   <Card
                     key={cat.code}
-                    className="group cursor-pointer border border-border/50 shadow-sm hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5 transition-all duration-200 bg-card/80"
+                    className={cn(
+                      "group relative overflow-hidden cursor-pointer border border-border/50 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg",
+                      groupMeta.style.cardBorder,
+                      groupMeta.style.cardGlow,
+                    )}
                     onClick={() => router.push(`/practice/${cat.code}`)}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0 group-hover:bg-primary/15 transition-colors">
-                            {emoji}
+                          <div
+                            className={cn(
+                              "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-[1.03]",
+                              visual.iconWrap,
+                            )}
+                          >
+                            <CategoryIcon className={cn("h-5 w-5", visual.iconTone)} />
                           </div>
                           <div className="flex-1 min-w-0">
+                            <div className="mb-1 flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[10px] font-black uppercase tracking-[0.14em]",
+                                  visual.countBadge,
+                                )}
+                              >
+                                {cat.code}
+                              </span>
+                            </div>
                             <CardTitle className="text-base font-black leading-tight">
-                              {getCategoryName(cat)}
+                              {cat.title}
                             </CardTitle>
                             <CardDescription className="mt-1 text-xs line-clamp-2 font-medium">
-                              {getCategoryDescription(cat) || t('practice.hub.all_signs_desc')}
+                              {cat.description || t('practice.hub.all_signs_desc')}
                             </CardDescription>
                           </div>
                         </div>
                         <Badge
                           variant="secondary"
-                          className="text-xs font-semibold border-0 bg-primary/10 text-primary"
+                          className={cn(
+                            "border-0 text-xs font-semibold",
+                            visual.countBadge,
+                          )}
                         >
                           {t('practice.signs.count', { count: cat.signCount })}
                         </Badge>
@@ -315,10 +399,10 @@ export default function PracticePage() {
                           <div className="rounded-xl border border-amber-200/70 bg-amber-50/70 px-3 py-2">
                             <div className="flex items-center gap-2 text-amber-700">
                               <Trophy className="w-4 h-4" />
-                              <span className="text-xs font-semibold">{t('practice.hub.passed_exam1')}</span>
+                              <span className="text-xs font-semibold">{t('practice.hub.passed_signs')}</span>
                             </div>
                             <p className="mt-1 text-lg font-black text-amber-800">
-                              {cat.exam1Passed}
+                              {cat.passedSigns}
                             </p>
                           </div>
                         </div>
@@ -327,22 +411,29 @@ export default function PracticePage() {
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-primary/60 transition-all duration-500"
+                            className={cn("h-full rounded-full transition-all duration-500", visual.progressBar)}
                             style={{ width: `${practicePct}%` }}
                           />
                         </div>
-                        <span className="text-xs text-primary font-semibold flex items-center gap-1 group-hover:gap-2 transition-all whitespace-nowrap">
+                        <span className={cn("flex items-center gap-1 whitespace-nowrap text-xs font-semibold transition-all group-hover:gap-2", visual.actionTone)}>
                           {t('practice.start_practice')}
                           <ChevDir className="w-3 h-3" />
                         </span>
                       </div>
                     </CardContent>
+
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute -bottom-14 -end-12 h-36 w-36 rounded-full blur-3xl opacity-0 transition-opacity duration-200 group-hover:opacity-100",
+                        visual.cardGlow,
+                      )}
+                    />
                   </Card>
                 );
               })}
             </div>
           )}
-        </div>
+        </PageSectionSurface>
       </div>
     </div>
   );

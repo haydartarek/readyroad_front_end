@@ -102,7 +102,7 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
       icon: ClipboardList,
     },
     {
-      label: t("dashboard.metric_passed") || "Passed",
+      label: t("dashboard.metric_passed"),
       value: data.passedExams,
       icon: CheckCircle2,
       trend: data.passedExams > 0 ? "up" : "neutral",
@@ -111,7 +111,7 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
       TrendIcon: trendUp.icon,
     },
     {
-      label: t("dashboard.metric_failed") || "Failed",
+      label: t("dashboard.metric_failed"),
       value: data.failedExams,
       icon: XCircle,
       trend: data.failedExams > 0 ? "down" : "neutral",
@@ -130,7 +130,7 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
       TrendIcon: data.passRate >= 70 ? trendUp.icon : trendDown.icon,
     },
     {
-      label: t("dashboard.stat_streak") || "Study Streak",
+      label: t("dashboard.stat_streak"),
       value: `${data.currentStreak}d`,
       icon: Flame,
       trend: data.currentStreak > 0 ? "up" : "neutral",
@@ -144,7 +144,7 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
     <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-extrabold tracking-tight text-secondary">
-          {t("dashboard.exam_performance_title") || "Exam Performance"}
+          {t("dashboard.exam_performance_title")}
         </CardTitle>
       </CardHeader>
 

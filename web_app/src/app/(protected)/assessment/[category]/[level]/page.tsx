@@ -84,7 +84,7 @@ function ResultsScreen({
   passPercent: number;
   slug: string;
   onRetry: () => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const correct = attempts.filter((a) => a.answerState === "correct").length;
   const total = attempts.length;
@@ -145,7 +145,8 @@ function ResultsScreen({
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">
-                  Q{i + 1}. {a.question.question}
+                  {t("assessment.result.question_number", { number: i + 1 })}.{" "}
+                  {a.question.question}
                 </p>
                 {a.answerState !== "correct" && (
                   <p className="text-xs text-muted-foreground mt-1">
@@ -202,7 +203,7 @@ function AssessmentQuizSession({
   slug: string;
   level: DifficultyLevel;
   language: AssessmentQuizLanguage;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   isRTL: boolean;
 }) {
 
@@ -361,7 +362,7 @@ function AssessmentQuizSession({
             {current + 1} / {questions.length}
           </span>
           <Badge variant="outline" className="capitalize">
-            {level.toLowerCase()}
+            {t(`assessment.level.${level.toLowerCase()}`)}
           </Badge>
         </div>
         <Progress value={progress} className="h-1.5" />

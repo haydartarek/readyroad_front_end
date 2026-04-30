@@ -8,11 +8,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   AUTH_COOKIE_NAME,
-  AUTH_COOKIE_OPTIONS,
   CSRF_COOKIE_NAME,
-  CSRF_COOKIE_OPTIONS,
   getBackendUrl,
   generateCsrfToken,
+  getAuthCookieOptions,
+  getCsrfCookieOptions,
 } from '@/lib/server/auth';
 
 export async function POST(request: NextRequest) {
@@ -43,10 +43,10 @@ export async function POST(request: NextRequest) {
     }
 
     const response = NextResponse.json(userData);
-    response.cookies.set(AUTH_COOKIE_NAME, token, AUTH_COOKIE_OPTIONS);
+    response.cookies.set(AUTH_COOKIE_NAME, token, getAuthCookieOptions(request));
 
     const csrfToken = generateCsrfToken();
-    response.cookies.set(CSRF_COOKIE_NAME, csrfToken, CSRF_COOKIE_OPTIONS);
+    response.cookies.set(CSRF_COOKIE_NAME, csrfToken, getCsrfCookieOptions(request));
 
     return response;
   } catch (error) {

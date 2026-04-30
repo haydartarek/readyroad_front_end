@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import AdminSectionCard from '@/components/admin/AdminSectionCard';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,11 +26,10 @@ interface HistoryRecord {
   skippedCount: number; status: string;
   errorSummary: string | null; warningSummary: string | null;
 }
-type ImportType = 'signs' | 'lessons' | 'categories' | 'quiz_questions';
+type ImportType = 'signs' | 'categories' | 'quiz_questions';
 
 const IMPORT_TYPES: { key: ImportType; icon: string; labelKey: string }[] = [
   { key: 'signs',          icon: '🚦', labelKey: 'admin.import.type_signs' },
-  { key: 'lessons',        icon: '📚', labelKey: 'admin.import.type_lessons' },
   { key: 'categories',     icon: '📋', labelKey: 'admin.import.type_categories' },
   { key: 'quiz_questions', icon: '❓', labelKey: 'admin.import.type_quiz' },
 ];
@@ -42,17 +43,6 @@ function Spinner({ className }: { className?: string }) {
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
-  );
-}
-
-function SectionCard({ title, children, className }: {
-  title: string; children: React.ReactNode; className?: string;
-}) {
-  return (
-    <div className={cn('bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4', className)}>
-      <h2 className="text-base font-black text-foreground">{title}</h2>
-      {children}
-    </div>
   );
 }
 
@@ -70,7 +60,6 @@ function CountCard({ label, count, colorClass, bgClass }: {
 function TypeBadge({ type, t }: { type: string; t: (k: string) => string }) {
   const map: Record<string, { icon: string; key: string }> = {
     signs:          { icon: '🚦', key: 'admin.import.type_signs' },
-    lessons:        { icon: '📚', key: 'admin.import.type_lessons' },
     categories:     { icon: '📋', key: 'admin.import.type_categories' },
     quiz_questions: { icon: '❓', key: 'admin.import.type_quiz' },
   };
@@ -223,7 +212,7 @@ export default function AdminDataImportPage() {
       if (isServiceUnavailable(err)) {
         setServiceUnavailable(true);
       } else {
-        const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Request failed';
+        const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || t('admin.import.request_failed');
         setReport({
           type: selectedType, mode: dryRun ? 'PREVIEW' : 'IMPORT', dryRun,
           recordsTotal: 0, created: 0, updated: 0, skipped: 0,
@@ -243,20 +232,20 @@ export default function AdminDataImportPage() {
 
       {serviceUnavailable && <ServiceUnavailableBanner onRetry={loadHistory} />}
 
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">{t('admin.import.title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('admin.import.description')}</p>
-        </div>
-        <Button variant="outline" onClick={loadHistory} disabled={historyLoading} className="gap-2">
-          <RefreshCw className={cn('w-4 h-4', historyLoading && 'animate-spin')} />
-          {t('admin.analytics.refresh')}
-        </Button>
-      </div>
+      <AdminPageHeader
+        icon={<Upload className="h-6 w-6" />}
+        title={t('admin.import.title')}
+        description={t('admin.import.description')}
+        actions={
+          <Button variant="outline" onClick={loadHistory} disabled={historyLoading} className="gap-2">
+            <RefreshCw className={cn('w-4 h-4', historyLoading && 'animate-spin')} />
+            {t('admin.analytics.refresh')}
+          </Button>
+        }
+      />
 
       {/* Type Selector */}
-      <SectionCard title={t('admin.import.select_type')}>
+      <AdminSectionCard title={t('admin.import.select_type')}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {IMPORT_TYPES.map(({ key, icon, labelKey }) => (
             <button
@@ -274,10 +263,10 @@ export default function AdminDataImportPage() {
             </button>
           ))}
         </div>
-      </SectionCard>
+      </AdminSectionCard>
 
       {/* Upload Zone */}
-      <SectionCard title={t('admin.import.upload_title')}>
+      <AdminSectionCard title={t('admin.import.upload_title')}>
         <div
           onDragEnter={handleDragIn} onDragLeave={handleDragOut}
           onDragOver={handleDrag} onDrop={handleDrop}
@@ -290,6 +279,8 @@ export default function AdminDataImportPage() {
           )}
         >
           <input
+            id="admin-import-file"
+            name="importFile"
             ref={fileInputRef} type="file" accept=".json" className="hidden"
             onChange={e => handleFileSelect(e.target.files?.[0] ?? null)}
           />
@@ -345,13 +336,13 @@ export default function AdminDataImportPage() {
             {executing ? t('admin.import.executing') : t('admin.import.execute')}
           </Button>
         </div>
-      </SectionCard>
+      </AdminSectionCard>
 
       {/* Results */}
       {report && <ResultsPanel report={report} t={t} />}
 
       {/* History */}
-      <SectionCard title={t('admin.import.history_title')}>
+      <AdminSectionCard title={t('admin.import.history_title')}>
         {historyLoading ? (
           <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
             <Spinner /> {t('admin.import.loading')}
@@ -464,7 +455,7 @@ export default function AdminDataImportPage() {
             </table>
           </div>
         )}
-      </SectionCard>
+      </AdminSectionCard>
     </div>
   );
 }

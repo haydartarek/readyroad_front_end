@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
 
 // ─── Types ───────────────────────────────────────────────
@@ -26,21 +27,20 @@ function getTier(pct: number): Tier {
   return 'weak';
 }
 
-const TIER_CONFIG = {
-  strong:  { bar: '[&>div]:bg-green-600', badge: 'bg-green-100 text-green-800 border-green-200', label: 'Strong'         },
-  average: { bar: '',                      badge: '',                                             label: ''               },
-  weak:    { bar: '[&>div]:bg-red-500',   badge: 'bg-red-100   text-red-800   border-red-200',   label: 'Needs Practice' },
-} as const;
-
-const SUMMARY_CELLS = [
-  { tier: 'strong'  as Tier, label: 'Strong Areas',  color: 'text-green-600'  },
-  { tier: 'average' as Tier, label: 'Average Areas', color: 'text-orange-500' },
-  { tier: 'weak'    as Tier, label: 'Weak Areas',    color: 'text-red-600'    },
-];
-
 // ─── Component ───────────────────────────────────────────
 
 export function ScoreBreakdown({ categoryBreakdown }: { categoryBreakdown: CategoryBreakdown[] }) {
+  const { t } = useLanguage();
+  const tierConfig = {
+    strong:  { bar: '[&>div]:bg-green-600', badge: 'bg-green-100 text-green-800 border-green-200', label: t('exam.breakdown.strong_badge') },
+    average: { bar: '', badge: '', label: '' },
+    weak:    { bar: '[&>div]:bg-red-500', badge: 'bg-red-100 text-red-800 border-red-200', label: t('exam.breakdown.needs_practice') },
+  } as const;
+  const summaryCells = [
+    { tier: 'strong' as Tier, label: t('exam.breakdown.strong'), color: 'text-green-600' },
+    { tier: 'average' as Tier, label: t('exam.breakdown.average'), color: 'text-orange-500' },
+    { tier: 'weak' as Tier, label: t('exam.breakdown.weak'), color: 'text-red-600' },
+  ];
 
   const tierCounts = useMemo(() => ({
     strong:  categoryBreakdown.filter(c => getTier(c.percentage) === 'strong').length,
@@ -51,7 +51,7 @@ export function ScoreBreakdown({ categoryBreakdown }: { categoryBreakdown: Categ
   return (
     <Card className="rounded-2xl border-border/50 shadow-sm">
       <CardHeader>
-        <CardTitle className="font-black">Score by Category</CardTitle>
+        <CardTitle className="font-black">{t('exam.results_category_title')}</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -60,7 +60,7 @@ export function ScoreBreakdown({ categoryBreakdown }: { categoryBreakdown: Categ
         <div className="space-y-4">
           {categoryBreakdown.map(category => {
             const tier = getTier(category.percentage);
-            const cfg  = TIER_CONFIG[tier];
+            const cfg  = tierConfig[tier];
 
             return (
               <div key={category.categoryCode} className="space-y-1.5">
@@ -97,7 +97,7 @@ export function ScoreBreakdown({ categoryBreakdown }: { categoryBreakdown: Categ
 
         {/* Summary */}
         <div className="grid grid-cols-3 gap-3 rounded-2xl bg-muted/60 p-4">
-          {SUMMARY_CELLS.map(({ tier, label, color }) => (
+          {summaryCells.map(({ tier, label, color }) => (
             <div key={tier} className="text-center">
               <p className={cn('text-2xl font-black', color)}>{tierCounts[tier]}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{label}</p>

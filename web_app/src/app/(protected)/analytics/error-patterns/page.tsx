@@ -8,6 +8,11 @@ import { ErrorSummary } from '@/components/analytics/error-summary';
 import { ErrorPatternList } from '@/components/analytics/error-pattern-list';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
+import {
+  PageHeroDescription,
+  PageHeroEyebrow,
+  PageHeroTitle,
+} from '@/components/ui/page-surface';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { BookOpen, BarChart2, PenLine, RefreshCw, AlertCircle, Target, Lightbulb } from 'lucide-react';
@@ -113,13 +118,14 @@ function transformBackendPatterns(raw: BackendPattern[]): AnalyticsData {
   return { totalErrors, patterns };
 }
 
-function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
+function LoadingSpinner({ message }: { message?: string }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center py-32 gap-4">
       <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
         <RefreshCw className="w-6 h-6 text-primary animate-spin" />
       </div>
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <p className="text-sm text-muted-foreground">{message ?? t('common.loading')}</p>
     </div>
   );
 }
@@ -152,15 +158,15 @@ export function ErrorPatternsContent() {
         if (isServiceUnavailable(err)) {
           setServiceUnavailable(true);
         } else {
-          setError('Failed to load error patterns');
-          toast.error('Failed to load analytics');
+          setError(t('common.load_error'));
+          toast.error(t('common.load_error'));
         }
       } finally {
         setIsLoading(false);
       }
     };
     fetchAnalytics();
-  }, [examId, fetchKey]);
+  }, [examId, fetchKey, t]);
 
   if (isLoading) return <LoadingSpinner message={t('error_patterns.loading_analyzing')} />;
 
@@ -188,7 +194,7 @@ export function ErrorPatternsContent() {
           className="gap-2"
         >
           <RefreshCw className="w-4 h-4" />
-          {t('error_patterns.error_try_again')}
+          {t('common.retry')}
         </Button>
       </div>
     );
@@ -206,9 +212,9 @@ export function ErrorPatternsContent() {
               <AlertCircle className="w-6 h-6 text-primary" />
             </div>
             <div className="space-y-0.5">
-              <p className="text-sm font-semibold text-primary">{t('error_patterns.badge')}</p>
-              <h1 className="text-3xl font-black tracking-tight">{t('error_patterns.title')}</h1>
-              <p className="text-sm font-medium text-muted-foreground">{t('error_patterns.empty_desc')}</p>
+              <PageHeroEyebrow>{t('error_patterns.badge')}</PageHeroEyebrow>
+              <PageHeroTitle>{t('error_patterns.title')}</PageHeroTitle>
+              <PageHeroDescription>{t('error_patterns.empty_desc')}</PageHeroDescription>
             </div>
           </div>
         </div>
@@ -246,13 +252,13 @@ export function ErrorPatternsContent() {
             <AlertCircle className="w-6 h-6 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <p className="text-sm font-semibold text-primary">{t('error_patterns.badge')}</p>
-            <h1 className="text-3xl font-black tracking-tight">{t('error_patterns.title')}</h1>
-            <p className="text-sm font-medium text-muted-foreground">
+            <PageHeroEyebrow>{t('error_patterns.badge')}</PageHeroEyebrow>
+            <PageHeroTitle>{t('error_patterns.title')}</PageHeroTitle>
+            <PageHeroDescription>
               {t('error_patterns.subtitle_before')}{' '}
               <span className="font-bold text-foreground">{data.totalErrors}</span>{' '}
               {t('error_patterns.subtitle_after')}
-            </p>
+            </PageHeroDescription>
           </div>
         </div>
       </div>
@@ -261,7 +267,7 @@ export function ErrorPatternsContent() {
         <ErrorSummary totalErrors={data.totalErrors} patterns={data.patterns} />
 
         {/* Info Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-6 shadow-sm">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
           <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
           <div className="relative flex items-start gap-4">
@@ -335,12 +341,12 @@ function ErrorPatternsRedirect() {
     router.replace(`/dashboard?${params.toString()}`);
   }, [router, searchParams]);
 
-  return <LoadingSpinner message="Loading..." />;
+  return <LoadingSpinner />;
 }
 
 export default function ErrorPatternsPage() {
   return (
-    <Suspense fallback={<LoadingSpinner message="Loading..." />}>
+    <Suspense fallback={<LoadingSpinner />}>
       <ErrorPatternsRedirect />
     </Suspense>
   );

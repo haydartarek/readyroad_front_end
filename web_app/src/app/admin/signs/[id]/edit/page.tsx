@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useLanguage } from '@/contexts/language-context';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import AdminSectionCard from '@/components/admin/AdminSectionCard';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { Button } from '@/components/ui/button';
 import { ImageUploadField } from '@/components/admin/image-upload-field';
+import { NATIVE_SELECT_CLASS } from '@/lib/native-select-styles';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, Save, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle2, AlertTriangle, TrafficCone } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────
 
@@ -39,24 +42,19 @@ function isValidUrl(str: string): boolean {
 
 // ─── Reusable components ────────────────────────────────
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
-      <h2 className="text-base font-black text-foreground">{title}</h2>
-      {children}
-    </div>
-  );
-}
-
 function FormField({ label, placeholder, value, error, onChange, dir }: {
   label: string; placeholder?: string; value: string;
   error?: string; onChange: (v: string) => void; dir?: string;
 }) {
+  const fieldId = useId();
   return (
     <div className="space-y-1">
-      <label className="block text-xs font-semibold text-foreground">{label}</label>
+      <label htmlFor={fieldId} className="block text-xs font-semibold text-foreground">{label}</label>
       <input
+        id={fieldId}
+        name={fieldId}
         value={value} placeholder={placeholder}
+        autoComplete="off"
         onChange={e => onChange(e.target.value)} dir={dir}
         className={cn(
           'w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all',
@@ -72,11 +70,15 @@ function FormTextarea({ label, placeholder, value, onChange, dir }: {
   label: string; placeholder?: string; value: string;
   onChange: (v: string) => void; dir?: string;
 }) {
+  const fieldId = useId();
   return (
     <div className="space-y-1">
-      <label className="block text-xs font-semibold text-foreground">{label}</label>
+      <label htmlFor={fieldId} className="block text-xs font-semibold text-foreground">{label}</label>
       <textarea
+        id={fieldId}
+        name={fieldId}
         value={value} placeholder={placeholder}
+        autoComplete="off"
         onChange={e => onChange(e.target.value)} dir={dir} rows={3}
         className="w-full rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all"
       />
@@ -232,24 +234,20 @@ export default function AdminEditSignPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link
-          href="/admin/signs"
-          className="w-9 h-9 rounded-xl border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">
-            {t('admin.signs.edit_title') || 'Edit Sign'}
-            {originalCode && <span className="text-primary ml-2">: {originalCode}</span>}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            {t('admin.signs.edit_desc') || 'Update traffic sign details'}
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={<TrafficCone className="h-6 w-6" />}
+        title={t('admin.signs.edit_title') || 'Edit Sign'}
+        description={t('admin.signs.edit_desc') || 'Update traffic sign details'}
+        metrics={originalCode ? [{ label: t('admin.signs.form.sign_code') || 'Sign Code', value: originalCode, tone: 'primary' }] : undefined}
+        actions={
+          <Button variant="outline" asChild className="gap-2">
+            <Link href="/admin/signs">
+              <ArrowLeft className="w-4 h-4" />
+              {t('common.back') || 'Back'}
+            </Link>
+          </Button>
+        }
+      />
 
       <form onSubmit={onSubmit} className="space-y-5">
         {/* Error banner */}
@@ -261,24 +259,27 @@ export default function AdminEditSignPage() {
         )}
 
         {/* Basic Info */}
-        <SectionCard title={t('admin.signs.form.basic_info') || 'Basic Information'}>
+        <AdminSectionCard title={t('admin.signs.form.basic_info')}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
-              label={(t('admin.signs.form.sign_code') || 'Sign Code') + ' *'}
-              placeholder="A1a"
+              label={`${t('admin.signs.form.sign_code')} *`}
+              placeholder={t('admin.signs.form.sign_code_placeholder')}
               value={form.signCode}
               error={fieldErrors.signCode}
               onChange={v => setField('signCode', v)}
             />
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-foreground">
-                {t('admin.signs.form.category') || 'Category'} *
+              <label htmlFor="admin-sign-edit-category" className="block text-xs font-semibold text-foreground">
+                {t('admin.signs.form.category')} *
               </label>
               <select
+                id="admin-sign-edit-category"
+                name="categoryCode"
                 value={form.categoryCode}
                 onChange={e => setField('categoryCode', e.target.value)}
                 className={cn(
-                  'w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all',
+                  'w-full',
+                  NATIVE_SELECT_CLASS,
                   fieldErrors.categoryCode ? 'border-destructive/50' : 'border-border/50'
                 )}
               >
@@ -290,43 +291,43 @@ export default function AdminEditSignPage() {
               {fieldErrors.categoryCode && <p className="text-xs text-destructive">{fieldErrors.categoryCode}</p>}
             </div>
           </div>
-        </SectionCard>
+        </AdminSectionCard>
 
         {/* Image */}
-        <SectionCard title={t('admin.signs.form.image') || 'Image'}>
+        <AdminSectionCard title={t('admin.signs.form.image') || 'Image'}>
           <ImageUploadField
             value={form.imageUrl}
             onChange={v => setField('imageUrl', v)}
             error={fieldErrors.imageUrl}
           />
-        </SectionCard>
+        </AdminSectionCard>
 
         {/* Names */}
-        <SectionCard title={t('admin.signs.form.names') || 'Names (Multilingual)'}>
+        <AdminSectionCard title={t('admin.signs.form.names')}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label={(t('admin.signs.form.name_en') || 'English Name') + ' *'} placeholder="Dangerous curve"  value={form.nameEn} error={fieldErrors.nameEn} onChange={v => setField('nameEn', v)} />
-            <FormField label={t('admin.signs.form.name_ar') || 'Arabic Name'}   placeholder="منحنى خطير"          value={form.nameAr} onChange={v => setField('nameAr', v)} dir="rtl" />
-            <FormField label={t('admin.signs.form.name_nl') || 'Dutch Name'}    placeholder="Gevaarlijke bocht"   value={form.nameNl} onChange={v => setField('nameNl', v)} />
-            <FormField label={t('admin.signs.form.name_fr') || 'French Name'}   placeholder="Virage dangereux"    value={form.nameFr} onChange={v => setField('nameFr', v)} />
+            <FormField label={`${t('admin.signs.form.name_en')} *`} placeholder={t('admin.signs.form.name_en_placeholder')} value={form.nameEn} error={fieldErrors.nameEn} onChange={v => setField('nameEn', v)} />
+            <FormField label={t('admin.signs.form.name_ar')} placeholder={t('admin.signs.form.name_ar_placeholder')} value={form.nameAr} onChange={v => setField('nameAr', v)} dir="rtl" />
+            <FormField label={t('admin.signs.form.name_nl')} placeholder={t('admin.signs.form.name_nl_placeholder')} value={form.nameNl} onChange={v => setField('nameNl', v)} />
+            <FormField label={t('admin.signs.form.name_fr')} placeholder={t('admin.signs.form.name_fr_placeholder')} value={form.nameFr} onChange={v => setField('nameFr', v)} />
           </div>
-        </SectionCard>
+        </AdminSectionCard>
 
         {/* Descriptions */}
-        <SectionCard title={t('admin.signs.form.descriptions') || 'Descriptions (Multilingual)'}>
+        <AdminSectionCard title={t('admin.signs.form.descriptions')}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormTextarea label={t('admin.signs.form.desc_en') || 'English Description'} placeholder="Description in English..." value={form.descriptionEn} onChange={v => setField('descriptionEn', v)} />
-            <FormTextarea label={t('admin.signs.form.desc_ar') || 'Arabic Description'}  placeholder="الوصف بالعربية..."         value={form.descriptionAr} onChange={v => setField('descriptionAr', v)} dir="rtl" />
-            <FormTextarea label={t('admin.signs.form.desc_nl') || 'Dutch Description'}   placeholder="Beschrijving..."           value={form.descriptionNl} onChange={v => setField('descriptionNl', v)} />
-            <FormTextarea label={t('admin.signs.form.desc_fr') || 'French Description'}  placeholder="Description en français..." value={form.descriptionFr} onChange={v => setField('descriptionFr', v)} />
+            <FormTextarea label={t('admin.signs.form.desc_en')} placeholder={t('admin.signs.form.desc_en_placeholder')} value={form.descriptionEn} onChange={v => setField('descriptionEn', v)} />
+            <FormTextarea label={t('admin.signs.form.desc_ar')} placeholder={t('admin.signs.form.desc_ar_placeholder')} value={form.descriptionAr} onChange={v => setField('descriptionAr', v)} dir="rtl" />
+            <FormTextarea label={t('admin.signs.form.desc_nl')} placeholder={t('admin.signs.form.desc_nl_placeholder')} value={form.descriptionNl} onChange={v => setField('descriptionNl', v)} />
+            <FormTextarea label={t('admin.signs.form.desc_fr')} placeholder={t('admin.signs.form.desc_fr_placeholder')} value={form.descriptionFr} onChange={v => setField('descriptionFr', v)} />
           </div>
-        </SectionCard>
+        </AdminSectionCard>
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-1">
-          <p className="text-xs text-muted-foreground">* Required fields</p>
+          <p className="text-xs text-muted-foreground">{t('admin.signs.form.required_note')}</p>
           <div className="flex items-center gap-3">
             <Button variant="outline" asChild>
-              <Link href="/admin/signs">{t('admin.signs.cancel') || 'Cancel'}</Link>
+              <Link href="/admin/signs">{t('admin.signs.cancel')}</Link>
             </Button>
             <Button
               type="submit"
@@ -334,8 +335,8 @@ export default function AdminEditSignPage() {
               className="gap-2 shadow-md shadow-primary/20 hover:shadow-lg hover:scale-[1.01] transition-all disabled:shadow-none disabled:scale-100"
             >
               {submitting
-                ? <><span className="animate-spin">⏳</span> {t('admin.signs.form.updating') || 'Updating...'}</>
-                : <><Save className="w-4 h-4" /> {t('admin.signs.form.update') || 'Update Sign'}</>}
+                ? <><span className="animate-spin">⏳</span> {t('admin.signs.form.updating')}</>
+                : <><Save className="w-4 h-4" /> {t('admin.signs.form.update')}</>}
             </Button>
           </div>
         </div>

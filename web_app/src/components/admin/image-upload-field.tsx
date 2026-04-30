@@ -110,8 +110,11 @@ export function ImageUploadField({ value, onChange, error }: Props) {
       {mode === 'url' && (
         <div className="space-y-1">
           <input
+            id="admin-image-url"
+            name="imageUrl"
             value={value}
-            placeholder="https://example.com/sign.png  or  assets/traffic_signs/..."
+            autoComplete="url"
+            placeholder={t('admin.signs.form.url_placeholder')}
             onChange={e => onChange(e.target.value)}
             className={cn(
               'w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all',
@@ -126,6 +129,8 @@ export function ImageUploadField({ value, onChange, error }: Props) {
       {mode === 'upload' && (
         <div className="space-y-2">
           <input
+            id="admin-image-file"
+            name="imageFile"
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -172,7 +177,7 @@ export function ImageUploadField({ value, onChange, error }: Props) {
                 <p className="text-sm font-semibold text-foreground text-center">
                   {t('admin.signs.form.drop_or_click')}
                 </p>
-                <p className="text-xs text-muted-foreground">JPG · PNG · WEBP · max 5 MB</p>
+                <p className="text-xs text-muted-foreground">{t('admin.signs.form.upload_formats_hint')}</p>
               </>
             )}
           </div>
@@ -191,7 +196,7 @@ export function ImageUploadField({ value, onChange, error }: Props) {
           <div className="w-16 h-16 relative rounded-xl overflow-hidden bg-muted flex-shrink-0 border border-border/40">
             <Image
               src={resolvePreviewSrc(value)}
-              alt="preview" fill unoptimized
+              alt={t('admin.signs.form.preview_alt')} fill unoptimized
               className="object-contain p-1"
               sizes="64px"
               onError={e => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}

@@ -8,7 +8,6 @@ import { TrafficSign } from "@/lib/types";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import { SignImage } from "./sign-image";
 import {
-  getTrafficSignDescription,
   getTrafficSignGroupInfo,
   getTrafficSignName,
 } from "@/lib/traffic-sign-presentation";
@@ -23,7 +22,6 @@ export function TrafficSignsGrid({ signs }: { signs: TrafficSign[] }) {
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {signs.map((sign) => {
         const name = getTrafficSignName(sign, lang);
-        const description = getTrafficSignDescription(sign, lang);
         const { info, style } = getTrafficSignGroupInfo(sign);
         const routeCode = sign.routeCode ?? sign.signCode;
 
@@ -59,14 +57,11 @@ export function TrafficSignsGrid({ signs }: { signs: TrafficSign[] }) {
                 </div>
 
                 <div className="mt-4 flex flex-1 flex-col">
-                  <h3 className="line-clamp-2 text-lg font-black tracking-tight text-foreground sm:text-xl">
+                  <h3 className="min-h-[3.1rem] line-clamp-2 text-base font-black leading-6 tracking-tight text-foreground sm:min-h-[3.3rem] sm:text-[1.1rem]">
                     {name}
                   </h3>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                    {description || info.description[lang]}
-                  </p>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4 text-sm">
+                  <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-3 text-sm">
                     <span className="font-semibold text-primary">
                       {t("common.view")}
                     </span>

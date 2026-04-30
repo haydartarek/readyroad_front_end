@@ -1,59 +1,79 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import {
+  CheckCircle,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Lock,
+  ShieldCheck,
+} from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
-import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
 import { apiClient } from '@/lib/api';
-import { Lock, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { AuthPageFrame } from '@/components/auth/auth-page-frame';
+import { AuthShowcasePanel } from '@/components/auth/auth-showcase-panel';
+import { cn } from '@/lib/utils';
 
 function ResetPasswordForm() {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const searchParams = useSearchParams();
 
-  const [token, setToken]             = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading]     = useState(false);
-  const [success, setSuccess]         = useState(false);
-  const [error, setError]             = useState('');
-  const [showNew, setShowNew]         = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    const t = searchParams.get('token');
-    setToken(t);
+    setToken(searchParams.get('token'));
   }, [searchParams]);
 
-  // No token in URL
   if (token === null && typeof window !== 'undefined') {
-    // still mounting — render nothing to avoid flash
     return null;
   }
 
+  const showcase = (
+    <AuthShowcasePanel
+      badge={t('auth.forgot_panel_badge')}
+      title={t('auth.reset_panel_heading')}
+      titleAccent={t('auth.reset_panel_heading2')}
+      description={t('auth.reset_panel_subtitle')}
+      supportingText={t('auth.panel_learners_text')}
+      features={[
+        { icon: KeyRound, label: t('auth.reset_feat_1') },
+        { icon: ShieldCheck, label: t('auth.reset_feat_2') },
+        { icon: Lock, label: t('auth.reset_feat_3') },
+      ]}
+    />
+  );
+
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background px-4">
-        <div className="w-full max-w-md">
-          <Card className="border border-border/50 shadow-2xl backdrop-blur-sm bg-card/95">
-            <CardContent className="py-12 flex flex-col items-center gap-4 text-center">
-              <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
-                <Lock className="w-7 h-7 text-destructive" />
-              </div>
-              <h2 className="text-lg font-semibold">{t('auth.reset_password_invalid_token')}</h2>
-              <Button asChild variant="outline">
-                <Link href={ROUTES.FORGOT_PASSWORD}>{t('auth.forgot_password_back')}</Link>
-              </Button>
-            </CardContent>
-          </Card>
+      <AuthPageFrame
+        showcase={showcase}
+        title={t('auth.reset_password_invalid_token')}
+        subtitle={t('auth.reset_password_invalid_token')}
+      >
+        <div className="space-y-5 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <Lock className="h-9 w-9" />
+          </div>
+          <Button asChild variant="outline" className="h-12 w-full rounded-2xl font-semibold">
+            <Link href={ROUTES.FORGOT_PASSWORD}>{t('auth.forgot_password_back')}</Link>
+          </Button>
         </div>
-      </div>
+      </AuthPageFrame>
     );
   }
 
@@ -79,126 +99,137 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background px-4">
-      <div className="w-full max-w-md">
-        <Card className="border border-border/50 shadow-2xl backdrop-blur-sm bg-card/95">
-          <CardHeader className="space-y-4 pb-6">
-            <div className="flex justify-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/70 rounded-3xl flex items-center justify-center shadow-lg shadow-primary/25 rotate-3 transition-transform hover:rotate-0 duration-300">
-                <span className="text-4xl font-black text-white tracking-tight">R</span>
-              </div>
+    <AuthPageFrame
+      showcase={showcase}
+      title={success ? t('auth.reset_password_success_title') : t('auth.reset_password_title')}
+      subtitle={success ? t('auth.reset_password_success_desc') : t('auth.reset_password_desc')}
+      maxWidthClassName="max-w-md"
+      footer={
+        <p className="text-center text-xs text-muted-foreground/80">
+          © {new Date().getFullYear()} {t('app.name')}. {t('auth.copyright')}
+        </p>
+      }
+    >
+      {success ? (
+        <div className="space-y-6 text-center">
+          <div className="flex justify-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+              <CheckCircle className="h-10 w-10 text-green-500" />
             </div>
-            <div className="text-center space-y-1">
-              <CardTitle className="text-3xl font-black tracking-tight">
-                {t('auth.reset_password_title')}
-              </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">
-                {t('auth.reset_password_desc')}
-              </CardDescription>
-            </div>
-          </CardHeader>
+          </div>
+          <Button asChild className="h-12 w-full rounded-2xl text-base font-bold">
+            <Link href={ROUTES.LOGIN}>{t('auth.reset_password_go_login')}</Link>
+          </Button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error ? (
+            <Alert
+              variant="destructive"
+              className="rounded-2xl border-destructive/20 bg-destructive/5 text-sm"
+            >
+              {error}
+            </Alert>
+          ) : null}
 
-          {success ? (
-            <CardContent className="space-y-5 pb-6">
-              <div className="flex flex-col items-center gap-4 py-4 text-center">
-                <CheckCircle className="w-14 h-14 text-green-500" />
-                <h3 className="text-lg font-semibold">
-                  {t('auth.reset_password_success_title')}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {t('auth.reset_password_success_desc')}
-                </p>
-              </div>
-              <Button asChild className="w-full">
-                <Link href={ROUTES.LOGIN}>
-                  {t('auth.reset_password_go_login')}
-                </Link>
-              </Button>
-            </CardContent>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-5">
-                {error && (
-                  <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2 duration-300 text-sm">
-                    ⚠️ {error}
-                  </Alert>
+          <div className="space-y-2">
+            <Label htmlFor="newPassword" className="text-sm font-semibold">
+              {t('auth.reset_password_new_label')}
+            </Label>
+            <div className="relative">
+              <Lock
+                className={cn(
+                  "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground",
+                  isRTL ? "right-3" : "left-3",
                 )}
+              />
+              <Input
+                id="newPassword"
+                name="newPassword"
+                type={showNew ? 'text' : 'password'}
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className={cn(
+                  "h-12 rounded-2xl border-border/60 shadow-sm",
+                  isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
+                )}
+                disabled={isLoading}
+                minLength={8}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew((value) => !value)}
+                aria-label={showNew ? t('auth.hide_password') : t('auth.show_password')}
+                className={cn(
+                  "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground",
+                  isRTL ? "left-3" : "right-3",
+                )}
+                tabIndex={-1}
+              >
+                {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-sm font-semibold">
-                    {t('auth.reset_password_new_label')}
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="newPassword"
-                      type={showNew ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      disabled={isLoading}
-                      minLength={8}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNew(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword" className="text-sm font-semibold">
+              {t('auth.reset_password_confirm_label')}
+            </Label>
+            <div className="relative">
+              <Lock
+                className={cn(
+                  "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground",
+                  isRTL ? "right-3" : "left-3",
+                )}
+              />
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirm ? 'text' : 'password'}
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={cn(
+                  "h-12 rounded-2xl border-border/60 shadow-sm",
+                  isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
+                )}
+                disabled={isLoading}
+                minLength={8}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((value) => !value)}
+                aria-label={showConfirm ? t('auth.hide_password') : t('auth.show_password')}
+                className={cn(
+                  "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground",
+                  isRTL ? "left-3" : "right-3",
+                )}
+                tabIndex={-1}
+              >
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-sm font-semibold">
-                    {t('auth.reset_password_confirm_label')}
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirm ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      disabled={isLoading}
-                      minLength={8}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-              </CardContent>
-
-              <CardFooter className="flex flex-col gap-3 pt-2 pb-6">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? t('auth.reset_password_updating') : t('auth.reset_password_submit')}
-                </Button>
-              </CardFooter>
-            </form>
-          )}
-        </Card>
-      </div>
-    </div>
+          <Button
+            type="submit"
+            className="h-12 w-full rounded-2xl text-base font-bold shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25"
+            disabled={isLoading}
+          >
+            {isLoading ? t('auth.reset_password_updating') : t('auth.reset_password_submit')}
+          </Button>
+        </form>
+      )}
+    </AuthPageFrame>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background" />
-    }>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <ResetPasswordForm />
     </Suspense>
   );

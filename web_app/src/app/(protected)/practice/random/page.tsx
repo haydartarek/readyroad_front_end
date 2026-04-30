@@ -3,12 +3,29 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  PageHeroEyebrow,
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+  PageMetricCard,
+  PageSectionSurface,
+} from "@/components/ui/page-surface";
+import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
+import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
 import { useLanguage } from "@/contexts/language-context";
-import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
+import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { SignImage } from "@/components/traffic-signs/sign-image";
 import { cn } from "@/lib/utils";
+import {
+  startRandomPracticeSession,
+  submitRandomPracticeSession,
+  type SignQuizQuestion,
+  type SignRandomPracticeResult,
+  type SignRandomPracticeQuestionResult,
+} from "@/services/signQuizService";
 import {
   Timer,
   Trophy,
@@ -20,74 +37,51 @@ import {
   Home,
   ChevronDown,
   ChevronUp,
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  Zap,
-  Target,
+  RefreshCw,
+  Shuffle,
+  Shapes,
+  Info,
 } from "lucide-react";
 
 // --- Types ---
 
-interface SignChoice {
-  id: number;
-  displayOrder: number;
-  textNl: string;
-  textEn: string;
-  textFr: string;
-  textAr: string;
-}
-
-interface SignPracticeQuestion {
-  id: number;
-  questionNl: string;
-  questionEn: string;
-  questionFr: string;
-  questionAr: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-  showSign: boolean;
-  signCode: string | null;
-  signImagePath: string | null;
-  choices: SignChoice[];
-}
-
-interface QuestionResult {
-  questionId: number;
-  questionNl: string;
-  questionEn: string;
-  questionFr: string;
-  questionAr: string;
-  selectedChoiceId: number | null;
-  correctChoiceId: number | null;
-  correctChoiceNl: string | null;
-  correctChoiceEn: string | null;
-  correctChoiceFr: string | null;
-  correctChoiceAr: string | null;
-  isCorrect: boolean;
-  wasTimeout: boolean;
-  explanationNl: string | null;
-  explanationEn: string | null;
-  explanationFr: string | null;
-  explanationAr: string | null;
-  signCode: string | null;
-  signImagePath: string | null;
-  difficulty: string | null;
-}
-
-interface PracticeResult {
-  totalQuestions: number;
-  correctAnswers: number;
-  wrongAnswers: number;
-  unanswered: number;
-  scorePercentage: number;
-  passed: boolean;
-  passingScore: number;
-  questions: QuestionResult[];
-}
+type QuestionResult = SignRandomPracticeQuestionResult;
 
 type Phase = "intro" | "loading" | "exam" | "submitting" | "results";
 
 const SECONDS_PER_QUESTION = 15;
+
+function getRandomPracticeCategoryLabel(signCode: string | null | undefined, t: (key: string) => string) {
+  const prefix = (signCode ?? "").trim().toUpperCase();
+  if (prefix.startsWith("A")) return t("traffic_signs.category_danger");
+  if (prefix.startsWith("B")) return t("traffic_signs.category_priority");
+  if (prefix.startsWith("C")) return t("traffic_signs.category_prohibition");
+  if (prefix.startsWith("D")) return t("traffic_signs.category_mandatory");
+  if (prefix.startsWith("E")) return t("traffic_signs.category_parking");
+  return t("nav.traffic_signs");
+}
+
+function LoadingState({ message }: { message: string }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
+      <div className="container mx-auto max-w-5xl px-4 py-8 md:py-10">
+        <div className="flex min-h-[55vh] items-center justify-center">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-[1.6rem] border border-primary/15 bg-primary/10 text-primary shadow-sm">
+              <RotateCcw className="h-6 w-6 animate-spin" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-foreground">{message}</p>
+              <p className="text-sm text-muted-foreground">...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // --- Main Component ---
 
@@ -95,20 +89,23 @@ export default function RandomPracticePage() {
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
 
+  const [sessionId, setSessionId] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("intro");
-  const [questions, setQuestions] = useState<SignPracticeQuestion[]>([]);
+  const [questions, setQuestions] = useState<SignQuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
-  const [result, setResult] = useState<PracticeResult | null>(null);
+  const [result, setResult] = useState<SignRandomPracticeResult | null>(null);
   const [serviceUnavailable, setSvcError] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [reviewFilter, setReviewFilter] = useState<"all" | "wrong" | "correct">(
     "all",
   );
+  const [startError, setStartError] = useState<string | null>(null);
+  const [isLockedUi, setIsLockedUi] = useState(false);
 
   const answersRef = useRef<(number | null)[]>([]);
-  const isAnsweringRef = useRef(false);
+  const isAdvancingRef = useRef(false);
 
   const localize = useCallback(
     (
@@ -161,18 +158,19 @@ export default function RandomPracticePage() {
 
   const startExam = async () => {
     setSvcError(false);
+    setStartError(null);
     setPhase("loading");
     try {
-      const res = await apiClient.get<SignPracticeQuestion[]>(
-        "/sign-quiz/random-practice",
-      );
-      if (res.data && res.data.length > 0) {
-        answersRef.current = new Array(res.data.length).fill(null);
-        setQuestions(res.data);
+      const session = await startRandomPracticeSession();
+      if (session.questions && session.questions.length > 0) {
+        answersRef.current = new Array(session.questions.length).fill(null);
+        setSessionId(session.sessionId);
+        setQuestions(session.questions);
         setCurrentIndex(0);
         setSelectedOption(null);
         setTimeLeft(SECONDS_PER_QUESTION);
-        isAnsweringRef.current = false;
+        setIsLockedUi(false);
+        isAdvancingRef.current = false;
         setPhase("exam");
       } else {
         setPhase("intro");
@@ -180,86 +178,117 @@ export default function RandomPracticePage() {
     } catch (err) {
       logApiError("Failed to load sign practice questions", err);
       if (isServiceUnavailable(err)) setSvcError(true);
+      else setStartError(t("sign_practice.cooldown_error"));
       setPhase("intro");
     }
   };
 
-  const handleAnswer = useCallback(
-    (choiceId: number | null) => {
-      if (isAnsweringRef.current) return;
-      isAnsweringRef.current = true;
-      setSelectedOption(choiceId);
-      answersRef.current[currentIndex] = choiceId;
-      const nextIndex = currentIndex + 1;
-      setTimeout(() => {
-        if (nextIndex >= questions.length) {
-          submitAll();
-        } else {
-          setCurrentIndex(nextIndex);
-        }
-      }, 280);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentIndex, questions.length],
-  );
-
-  useEffect(() => {
-    if (phase === "exam") {
-      setSelectedOption(null);
-      setTimeLeft(SECONDS_PER_QUESTION);
-      isAnsweringRef.current = false;
-    }
-  }, [currentIndex, phase]);
-
-  useEffect(() => {
-    if (phase !== "exam") return;
-    if (isAnsweringRef.current) return;
-    if (timeLeft <= 0) {
-      handleAnswer(null);
+  const submitAll = useCallback(async () => {
+    if (!sessionId) {
+      setPhase("intro");
       return;
     }
-    const tick = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
-    return () => clearTimeout(tick);
-  }, [phase, timeLeft, handleAnswer]);
 
-  const submitAll = async () => {
     setPhase("submitting");
     const payload = questions.map((q, i) => ({
       questionId: q.id,
       selectedChoiceId: answersRef.current[i] ?? null,
     }));
     try {
-      const res = await apiClient.post<PracticeResult>(
-        "/sign-quiz/random-practice/check",
+      const res = await submitRandomPracticeSession(
+        sessionId,
         payload,
       );
-      setResult(res.data);
+      setResult(res);
       setPhase("results");
     } catch (err) {
       logApiError("Failed to check sign practice answers", err);
+      if (isServiceUnavailable(err)) {
+        setSvcError(true);
+      } else {
+        setStartError(t("sign_practice.submit_error"));
+      }
       setPhase("intro");
     }
-  };
+  }, [questions, sessionId, t]);
+
+  const selectOption = useCallback((choiceId: number) => {
+    if (isAdvancingRef.current) return;
+    setSelectedOption(choiceId);
+  }, []);
+
+  const advanceToNext = useCallback(
+    (answerToSave: number | null) => {
+      if (isAdvancingRef.current) return;
+      isAdvancingRef.current = true;
+      setIsLockedUi(true);
+
+      answersRef.current[currentIndex] = answerToSave;
+
+      const nextIndex = currentIndex + 1;
+      if (nextIndex >= questions.length) {
+        void submitAll();
+      } else {
+        setSelectedOption(null);
+        setTimeLeft(SECONDS_PER_QUESTION);
+        setIsLockedUi(false);
+        isAdvancingRef.current = false;
+        setCurrentIndex(nextIndex);
+      }
+    },
+    [currentIndex, questions.length, submitAll],
+  );
+
+  useEffect(() => {
+    if (phase !== "exam") return;
+    if (isAdvancingRef.current) return;
+
+    if (timeLeft <= 0) {
+      const autoAdvance = setTimeout(() => {
+        advanceToNext(selectedOption);
+      }, 0);
+      return () => clearTimeout(autoAdvance);
+    }
+
+    const tick = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
+    return () => clearTimeout(tick);
+  }, [phase, timeLeft, advanceToNext, selectedOption]);
 
   const handleRetry = () => {
+    setSessionId(null);
     setResult(null);
     setShowReview(false);
     setReviewFilter("all");
+    setStartError(null);
     setPhase("intro");
   };
+
+  const backToPracticeContent = isRTL ? (
+    <>
+      <span>{t("practice_exam.back_practice")}</span>
+      <ArrowRight className="ms-2 h-4 w-4" />
+    </>
+  ) : (
+    <>
+      <ArrowLeft className="me-2 h-4 w-4" />
+      <span>{t("practice_exam.back_practice")}</span>
+    </>
+  );
 
   // --- Screens ---
 
   if (serviceUnavailable) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <ServiceUnavailableBanner
-          onRetry={() => {
-            setSvcError(false);
-            startExam();
-          }}
-          className="max-w-md"
-        />
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
+        <div className="container mx-auto max-w-4xl px-4 py-8 md:py-10">
+          <ServiceUnavailableBanner
+            onRetry={() => {
+              setSvcError(false);
+              void startExam();
+            }}
+            className="mx-auto max-w-xl"
+          />
+        </div>
       </div>
     );
   }
@@ -267,91 +296,244 @@ export default function RandomPracticePage() {
   if (phase === "intro") {
     return (
       <div
-        className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background"
+        className="relative min-h-screen overflow-hidden bg-gradient-to-b from-background via-background to-muted/35"
         dir={isRTL ? "rtl" : "ltr"}
       >
-        <div className="container mx-auto max-w-xl px-4 py-10">
-          {/* ── Hero header ── */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-8 shadow-sm mb-6 text-center">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(13_76%_53%/0.08),transparent_60%)] pointer-events-none" />
-            <div className="relative">
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-primary border border-primary/20 mb-4">
-                <ClipboardList className="w-3.5 h-3.5" />
-                <span className="font-bold text-xs tracking-wide">
-                  {t("sign_practice.badge")}
-                </span>
-              </div>
-              <h1 className="text-3xl font-black tracking-tight mb-2">
-                {t("sign_practice.intro_title")}
-              </h1>
-              <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                {t("sign_practice.intro_subtitle")}
-              </p>
-            </div>
-          </div>
+        <div className="pointer-events-none absolute -top-32 right-[-8rem] h-[24rem] w-[24rem] rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-[-8rem] h-[20rem] w-[20rem] rounded-full bg-secondary/10 blur-3xl" />
 
-          {/* ── Rules card ── */}
-          <Card className="rounded-2xl border-border/50 shadow-sm mb-5">
-            <CardContent className="pt-5 pb-5 space-y-3">
-              {[
-                {
-                  icon: <ClipboardList className="w-4 h-4 text-primary" />,
-                  bg: "bg-primary/10",
-                  key: "sign_practice.rule_questions",
-                },
-                {
-                  icon: <Timer className="w-4 h-4 text-orange-500" />,
-                  bg: "bg-orange-500/10",
-                  key: "practice_exam.rule_time",
-                },
-                {
-                  icon: <Trophy className="w-4 h-4 text-yellow-500" />,
-                  bg: "bg-yellow-500/10",
-                  key: "practice_exam.rule_pass",
-                },
-                {
-                  icon: <CheckCircle2 className="w-4 h-4 text-green-500" />,
-                  bg: "bg-green-500/10",
-                  key: "practice_exam.rule_choices",
-                },
-                {
-                  icon: <AlertTriangle className="w-4 h-4 text-destructive" />,
-                  bg: "bg-destructive/10",
-                  key: "practice_exam.rule_timer",
-                },
-              ].map((rule) => (
-                <div key={rule.key} className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
-                      rule.bg,
-                    )}
-                  >
-                    {rule.icon}
+        <div className="container relative mx-auto max-w-6xl px-4 py-6 md:py-8">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+            <section className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-sm">
+              <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
+              <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
+              <div className="relative space-y-4 px-6 py-7">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-primary shadow-sm">
+                    <Shuffle className="h-3.5 w-3.5" />
+                    <span className="text-xs font-semibold">
+                      {t("sign_practice.badge")}
+                    </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{t(rule.key)}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
 
-          {/* ── Start button ── */}
-          <Button
-            size="lg"
-            className="w-full rounded-xl text-base font-bold shadow-md shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.01] transition-all"
-            onClick={startExam}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            {t("practice_exam.start_btn")}
-          </Button>
-          <div className="mt-4 text-center">
-            <Link
-              href="/practice"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isRTL ? <></> : null}
-              &larr; {t("practice_exam.back_practice")}
-            </Link>
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-[1.3rem] bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
+                      <Shuffle className="h-8 w-8 text-primary-foreground" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <PageHeroTitle>{t("sign_practice.intro_title")}</PageHeroTitle>
+                      <PageHeroDescription className="max-w-2xl">
+                        {t("sign_practice.intro_subtitle")}
+                      </PageHeroDescription>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    {
+                      value: "50",
+                      label: t("sign_practice.rule_questions"),
+                      color: "text-primary",
+                    },
+                    {
+                      value: "15s",
+                      label: t("practice_exam.rule_time"),
+                      color: "text-orange-500",
+                    },
+                    {
+                      value: "41/50",
+                      label: t("practice_exam.rule_pass"),
+                      color: "text-green-600",
+                    },
+                  ].map((stat) => (
+                    <div
+                      key={stat.value}
+                      className="rounded-[1.2rem] border border-border/60 bg-background/80 px-3.5 py-3 shadow-sm"
+                    >
+                      <p
+                        className={`text-2xl font-black tabular-nums ${stat.color}`}
+                      >
+                        {stat.value}
+                      </p>
+                      <p className="mt-1.5 text-xs font-semibold leading-5 text-foreground/80">
+                        {stat.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  {[
+                    {
+                      icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+                      text: t("practice_exam.rule_choices"),
+                    },
+                    {
+                      icon: <RefreshCw className="h-5 w-5 text-sky-500" />,
+                      text: t("sign_practice.rule_freshness"),
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.text}
+                      className="flex items-start gap-2.5 rounded-[1.1rem] border border-border/60 bg-background/80 px-3.5 py-3 shadow-sm"
+                    >
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.95rem] bg-primary/10 ring-1 ring-primary/10">
+                        {item.icon}
+                      </div>
+                      <p className="text-xs font-bold leading-5 text-foreground">
+                        {item.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {startError ? (
+                  <Alert className="rounded-2xl border-amber-200 bg-amber-50/70 text-amber-900">
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="font-medium">
+                      {startError}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    size="lg"
+                    className="h-11 flex-1 rounded-full text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25"
+                    onClick={() => void startExam()}
+                  >
+                    <Timer className="me-2 h-4 w-4" />
+                    {t("practice_exam.start_btn")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-11 rounded-full px-5 text-sm font-semibold"
+                    asChild
+                  >
+                    <Link href="/practice">{backToPracticeContent}</Link>
+                  </Button>
+                </div>
+              </div>
+            </section>
+
+            <aside className="space-y-4">
+              <div className="rounded-[1.75rem] border border-border/60 bg-card/85 p-4 shadow-sm">
+                <div className="mb-3 flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-primary/10 text-primary ring-1 ring-primary/10">
+                    <ClipboardList className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-foreground">
+                      {t("practice_exam.overview_title")}
+                    </h2>
+                    <p className="text-xs font-semibold text-foreground/75">
+                      {t("practice_exam.overview_desc")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    {
+                      icon: <ClipboardList className="h-4 w-4 text-primary" />,
+                      text: t("sign_practice.rule_questions"),
+                    },
+                    {
+                      icon: <Timer className="h-4 w-4 text-orange-500" />,
+                      text: t("practice_exam.rule_time"),
+                    },
+                    {
+                      icon: <Trophy className="h-4 w-4 text-green-500" />,
+                      text: t("practice_exam.rule_pass"),
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.text}
+                      className="flex items-start gap-2.5 rounded-[1.05rem] bg-background/80 px-3 py-2.5"
+                    >
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem] bg-primary/10 ring-1 ring-primary/10">
+                        {item.icon}
+                      </div>
+                      <p className="text-xs font-bold leading-5 text-foreground">
+                        {item.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[1.75rem] border border-border/60 bg-card/85 p-4 shadow-sm">
+                <div className="mb-3 flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-primary/10 text-primary ring-1 ring-primary/10">
+                    <Shapes className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-foreground">
+                      {t("practice_exam.rules_title")}
+                    </h2>
+                    <p className="text-xs font-semibold text-foreground/75">
+                      {t("practice_exam.rules_desc")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.15rem] border border-border/60 bg-background/80 p-3 shadow-sm">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground">
+                      {t("practice_exam.difficulty_mix")}
+                    </span>
+                    <span className="text-[11px] font-semibold text-muted-foreground">
+                      20 · 20 · 10
+                    </span>
+                  </div>
+                  <div className="grid gap-1.5">
+                    {[
+                      {
+                        value: 20,
+                        total: 50,
+                        label: t("practice_exam.difficulty_easy"),
+                        bar: "bg-green-500",
+                        tone: "text-green-700",
+                      },
+                      {
+                        value: 20,
+                        total: 50,
+                        label: t("practice_exam.difficulty_medium"),
+                        bar: "bg-orange-500",
+                        tone: "text-orange-600",
+                      },
+                      {
+                        value: 10,
+                        total: 50,
+                        label: t("practice_exam.difficulty_hard"),
+                        bar: "bg-red-500",
+                        tone: "text-red-600",
+                      },
+                    ].map((item) => (
+                      <div key={item.label} className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-semibold">
+                          <span className={item.tone}>{item.label}</span>
+                          <span className="text-muted-foreground">
+                            {item.value}/50
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted/70">
+                          <div
+                            className={`h-full rounded-full ${item.bar}`}
+                            style={{
+                              width: `${(item.value / item.total) * 100}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </aside>
           </div>
         </div>
       </div>
@@ -360,211 +542,150 @@ export default function RandomPracticePage() {
 
   if (phase === "loading" || phase === "submitting") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-5 text-center">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center shadow-sm">
-              <RotateCcw className="w-8 h-8 text-primary animate-spin" />
-            </div>
-            <div className="absolute -inset-1 rounded-3xl border-2 border-primary/10 animate-pulse" />
-          </div>
-          <div>
-            <p className="font-bold text-foreground mb-1">
-              {phase === "loading"
-                ? t("practice_exam.loading")
-                : t("practice_exam.submitting")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {phase === "loading" ? "..." : "..."}
-            </p>
-          </div>
-        </div>
-      </div>
+      <LoadingState
+        message={
+          phase === "loading"
+            ? t("practice_exam.loading")
+            : t("practice_exam.submitting")
+        }
+      />
     );
   }
 
   if (phase === "exam" && questions.length > 0) {
     const question = questions[currentIndex];
-    const progressPct = (currentIndex / questions.length) * 100;
+    const progressPct =
+      questions.length > 0 ? (currentIndex / questions.length) * 100 : 0;
     const timerPct = (timeLeft / SECONDS_PER_QUESTION) * 100;
-    const timerUrgent = timeLeft <= 5;
-    const timerWarn = timeLeft <= 10;
-    const timerBarCls = timerUrgent
-      ? "bg-red-500"
-      : timerWarn
-        ? "bg-orange-400"
-        : "bg-primary";
-    const letters = ["A", "B", "C", "D"];
+    const timerPillClass =
+      timeLeft <= 5
+        ? "bg-destructive/10 border-destructive/30 text-destructive animate-pulse"
+        : timeLeft <= 10
+          ? "bg-orange-500/10 border-orange-400/30 text-orange-500"
+          : "bg-muted border-border text-muted-foreground";
+    const timerBarColor =
+      timeLeft <= 5 ? "#ef4444" : timeLeft <= 10 ? "#f97316" : "#22c55e";
 
     return (
-      <div
+      <FocusedExamShell
         dir={isRTL ? "rtl" : "ltr"}
-        className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background"
+        backControl={
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 rounded-full px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+            asChild
+          >
+            <Link href="/practice">{backToPracticeContent}</Link>
+          </Button>
+        }
+        timerPill={
+          <div
+            className={cn(
+              "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold tabular-nums transition-colors",
+              timerPillClass,
+            )}
+          >
+            <Clock className="h-3.5 w-3.5" />
+            {timeLeft}s
+          </div>
+        }
+        progressLabel={t("practice_exam.question_of")
+          .replace("{n}", String(currentIndex + 1))
+          .replace("{m}", String(questions.length))}
+        progressPercent={progressPct}
       >
-        <div className="container mx-auto px-4 py-6 max-w-xl">
-          {/* ── Top bar ── */}
-          <div className="flex items-center justify-between mb-5">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground hover:text-foreground -ml-2 rounded-xl"
-              onClick={handleRetry}
-            >
-              {isRTL ? (
-                <ArrowRight className="w-4 h-4" />
-              ) : (
-                <ArrowLeft className="w-4 h-4" />
-              )}
-              <span className="text-sm">
-                {t("practice_exam.back_practice")}
+        <FocusedQuestionCard
+          headerBadges={
+            <>
+              <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
+                {currentIndex + 1}
               </span>
-            </Button>
-            <div
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-bold tabular-nums transition-colors",
-                timerUrgent
-                  ? "bg-red-50 border-red-200 text-red-600 dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-400 animate-pulse"
-                  : timerWarn
-                    ? "bg-orange-50 border-orange-200 text-orange-600 dark:bg-orange-950/30 dark:border-orange-900/50 dark:text-orange-400"
-                    : "bg-muted/60 border-border/50 text-muted-foreground",
-              )}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              {timeLeft}s
-            </div>
-          </div>
-
-          {/* ── Progress ── */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground">
-                {t("practice_exam.question_of")
-                  .replace("{n}", String(currentIndex + 1))
-                  .replace("{m}", String(questions.length))}
+              <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                {getRandomPracticeCategoryLabel(question.signCode, t)}
               </span>
-              <span className="text-xs font-bold text-primary">
-                {Math.round(progressPct)}%
-              </span>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-          </div>
-
-          {/* ── Question card ── */}
-          {question && (
-            <Card className="rounded-2xl border-border/50 shadow-sm overflow-hidden">
-              <div className="h-[3px] bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
-              <CardContent className="pt-5 pb-5 space-y-5">
-                {/* Badges row */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  {question.signCode && (
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-muted/70 border border-border/50 text-muted-foreground font-medium">
-                      {question.signCode}
-                    </span>
-                  )}
-                  <span
-                    className={cn(
-                      "text-xs px-2.5 py-1 rounded-full border font-semibold",
-                      getDifficultyColor(question.difficulty),
-                    )}
-                  >
-                    {getDifficultyLabel(question.difficulty)}
-                  </span>
-                </div>
-
-                {/* Sign image */}
-                {question.showSign && question.signImagePath && (
-                  <div className="flex justify-center">
-                    <div className="relative w-28 h-28 rounded-2xl bg-gradient-to-br from-muted/60 to-muted/30 border border-border/40 p-3 shadow-sm">
-                      <SignImage
-                        src={question.signImagePath}
-                        alt={question.signCode ?? "traffic sign"}
-                        className="object-contain"
-                      />
-                    </div>
-                  </div>
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold",
+                  question.difficulty === "EASY" && "bg-green-500 text-white",
+                  question.difficulty === "MEDIUM" && "bg-orange-500 text-white",
+                  question.difficulty === "HARD" && "bg-red-500 text-white",
                 )}
-
-                {/* Question text */}
-                <p
-                  className={cn(
-                    "text-base font-bold leading-snug",
-                    isRTL && "text-right",
-                  )}
-                >
-                  {localize(
-                    question.questionEn,
-                    question.questionAr,
-                    question.questionNl,
-                    question.questionFr,
-                  )}
-                </p>
-
-                {/* Choices */}
-                <div className="space-y-2.5">
-                  {question.choices.map((choice, idx) => {
-                      const isSelected = selectedOption === choice.id;
-                      const locked =
-                        isAnsweringRef.current || selectedOption !== null;
-                      return (
-                        <button
-                          key={choice.id}
-                          disabled={locked}
-                          onClick={() => handleAnswer(choice.id)}
-                          className={cn(
-                            "w-full text-start px-4 py-3 rounded-xl border-2 transition-all duration-150 text-sm font-medium flex items-center gap-3",
-                            !locked &&
-                              !isSelected &&
-                              "border-border/60 hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm",
-                            isSelected &&
-                              "border-primary bg-primary/8 shadow-sm shadow-primary/15",
-                            locked &&
-                              !isSelected &&
-                              "border-border/40 opacity-50",
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0 transition-colors",
-                              isSelected
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted/80 text-muted-foreground",
-                            )}
-                          >
-                            {letters[idx] ?? idx + 1}
-                          </span>
-                          <span className={cn("flex-1", isRTL && "text-right")}>
-                            {localize(
-                              choice.textEn,
-                              choice.textAr,
-                              choice.textNl,
-                              choice.textFr,
-                            )}
-                          </span>
-                        </button>
-                      );
-                    })}
-                </div>
-
-                {/* Timer bar */}
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-[width] duration-1000",
-                      timerBarCls,
-                    )}
-                    style={{ width: `${timerPct}%` }}
+              >
+                {getDifficultyLabel(question.difficulty)}
+              </span>
+            </>
+          }
+          media={
+            question.showSign && question.signImagePath ? (
+              <div className="rounded-2xl border border-border/50 bg-background/70 p-2 shadow-sm">
+                <div className="relative h-[6.5rem] w-[6.5rem] md:h-28 md:w-28">
+                  <SignImage
+                    src={question.signImagePath}
+                    alt={question.signCode ?? "traffic sign"}
+                    className="object-contain"
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            ) : null
+          }
+          title={localize(
+            question.questionEn,
+            question.questionAr,
+            question.questionNl,
+            question.questionFr,
           )}
-        </div>
-      </div>
+          options={question.choices.map((choice, idx) => ({
+            key: choice.id,
+            marker: idx + 1,
+            text: localize(
+              choice.textEn,
+              choice.textAr,
+              choice.textNl,
+              choice.textFr,
+            ),
+            selected: selectedOption === choice.id,
+            disabled: isLockedUi,
+            onSelect: () => selectOption(choice.id),
+          }))}
+          footer={
+            <>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${timerPct}%`,
+                    transition: "width 1s linear, background-color 0.5s ease",
+                    backgroundColor: timerBarColor,
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => advanceToNext(selectedOption)}
+                  disabled={isLockedUi}
+                  className={cn(
+                    "h-10 gap-2 rounded-full px-5 font-semibold shadow-md transition-all",
+                    selectedOption !== null
+                      ? "shadow-primary/20 hover:-translate-y-0.5"
+                      : "opacity-80",
+                  )}
+                >
+                  {currentIndex + 1 === questions.length
+                    ? t("practice_exam.submit_btn")
+                    : t("practice_exam.next_btn")}
+                  {isRTL ? (
+                    <ArrowLeft className="h-4 w-4" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </>
+          }
+        />
+      </FocusedExamShell>
     );
   }
 
@@ -577,204 +698,219 @@ export default function RandomPracticePage() {
 
     return (
       <div
-        className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background pb-12"
+        className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35 pb-12"
         dir={isRTL ? "rtl" : "ltr"}
       >
-        <div className="container mx-auto max-w-xl px-4 py-8 space-y-5">
-          {/* ── Result hero header ── */}
-          <div
+        <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10 space-y-6">
+          <PageHeroSurface
             className={cn(
-              "relative overflow-hidden rounded-2xl border px-6 py-8 shadow-sm text-center",
-              result.passed
-                ? "bg-gradient-to-br from-green-500/10 via-green-500/5 to-background border-green-500/15"
-                : "bg-gradient-to-br from-red-500/10 via-red-500/5 to-background border-red-500/15",
+              "border",
+              result.passed ? "border-green-200/70" : "border-red-200/70",
             )}
           >
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.03),transparent_70%)] pointer-events-none" />
-            <div className="relative">
-              <div
-                className={cn(
-                  "inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-sm font-bold mb-4",
-                  result.passed
-                    ? "bg-green-500/10 text-green-600 border-green-200 dark:border-green-800"
-                    : "bg-red-500/10 text-red-600 border-red-200 dark:border-red-800",
-                )}
-              >
-                {result.passed ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    {t("practice_exam.score_passed")}
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="w-4 h-4" />
-                    {t("practice_exam.score_failed")}
-                  </>
-                )}
-              </div>
-              <p className="text-6xl font-black tabular-nums leading-none mb-1">
-                {result.correctAnswers}
-                <span className="text-3xl font-semibold text-muted-foreground">
-                  {" "}
-                  / {result.totalQuestions}
-                </span>
-              </p>
-              <p
-                className={cn(
-                  "text-2xl font-black tabular-nums mb-1",
-                  result.passed ? "text-green-500" : "text-red-500",
-                )}
-              >
-                {result.scorePercentage.toFixed(1)}%
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t("practice_exam.score_pass_threshold").replace(
-                  "{n}",
-                  String(result.passingScore),
-                )}
-              </p>
-            </div>
-          </div>
-
-          {/* ── Stats cards ── */}
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              {
-                icon: <CheckCircle2 className="w-4 h-4" />,
-                label: t("practice_exam.score_correct"),
-                value: result.correctAnswers,
-                color: "text-green-600",
-                bg: "bg-green-500/10",
-                bar: "#22c55e",
-              },
-              {
-                icon: <XCircle className="w-4 h-4" />,
-                label: t("practice_exam.score_wrong"),
-                value: result.wrongAnswers,
-                color: "text-red-600",
-                bg: "bg-red-500/10",
-                bar: "#ef4444",
-              },
-              {
-                icon: <Clock className="w-4 h-4" />,
-                label: t("practice_exam.score_timeout"),
-                value: result.unanswered,
-                color: "text-orange-600",
-                bg: "bg-orange-500/10",
-                bar: "#fb923c",
-              },
-            ].map((stat) => (
-              <Card
-                key={stat.label}
-                className="rounded-xl border-border/50 overflow-hidden"
-              >
-                <div className="h-[3px]" style={{ background: stat.bar }} />
-                <div className="flex flex-col items-center gap-1.5 py-4 px-2">
-                  <div
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
                     className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center",
-                      stat.bg,
-                      stat.color,
+                      "inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold",
+                      result.passed
+                        ? "border-green-200 bg-green-100 text-green-700"
+                        : "border-red-200 bg-red-100 text-red-700",
                     )}
                   >
-                    {stat.icon}
+                    {result.passed
+                      ? t("practice_exam.score_passed")
+                      : t("practice_exam.score_failed")}
+                  </span>
+                  <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
+                    {t("sign_practice.badge")}
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  <PageHeroEyebrow>
+                    {t("sign_practice.result_heading")}
+                  </PageHeroEyebrow>
+                  <PageHeroTitle>
+                    {t("sign_quiz.practice.session_complete")}
+                  </PageHeroTitle>
+                  <PageHeroDescription className="max-w-2xl">
+                    {t("sign_practice.result_description")}
+                  </PageHeroDescription>
+                </div>
+
+                <div className="space-y-2 rounded-[1.35rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-semibold text-foreground">
+                      {t("practice_exam.score_correct")}
+                    </span>
+                    <span className="font-semibold text-primary">
+                      {result.correctAnswers}/{result.totalQuestions}
+                    </span>
                   </div>
-                  <p
+                  <div className="h-2 overflow-hidden rounded-full bg-muted/60">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-700",
+                        result.passed ? "bg-green-500" : "bg-primary",
+                      )}
+                      style={{ width: `${result.scorePercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <PageMetricCard
+                  icon={
+                    result.passed ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : (
+                      <XCircle className="h-4 w-4" />
+                    )
+                  }
+                  label={t("practice.progress")}
+                  value={`${result.scorePercentage.toFixed(1)}%`}
+                  tone={result.passed ? "success" : "danger"}
+                  hint={`${result.correctAnswers}/${result.totalQuestions}`}
+                />
+                <PageMetricCard
+                  icon={<CheckCircle2 className="h-4 w-4" />}
+                  label={t("practice_exam.score_correct")}
+                  value={String(result.correctAnswers)}
+                  tone="success"
+                />
+                <PageMetricCard
+                  icon={<XCircle className="h-4 w-4" />}
+                  label={t("practice_exam.score_wrong")}
+                  value={String(result.wrongAnswers + result.unanswered)}
+                  tone={result.wrongAnswers + result.unanswered > 0 ? "danger" : "default"}
+                />
+              </div>
+            </div>
+          </PageHeroSurface>
+
+          <PageSectionSurface
+            title={t("practice_exam.review_title")}
+            description={t("practice_exam.score_pass_threshold").replace(
+              "{n}",
+              String(result.passingScore),
+            )}
+            actions={
+              <div className="flex flex-wrap gap-2">
+                {(["all", "wrong", "correct"] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setReviewFilter(filter)}
                     className={cn(
-                      "text-2xl font-black tabular-nums",
-                      stat.color,
+                      "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                      reviewFilter === filter
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                        : "border-border/60 bg-background text-muted-foreground hover:border-primary/25 hover:text-foreground",
                     )}
                   >
-                    {stat.value}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground text-center leading-tight px-1">
-                    {stat.label}
-                  </p>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {/* ── Action buttons ── */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              onClick={handleRetry}
-              variant="outline"
-              className="gap-2 rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5"
-            >
-              <RotateCcw className="w-4 h-4" />
-              {t("practice_exam.retry_btn")}
-            </Button>
-            <Button
-              asChild
-              className="gap-2 rounded-xl shadow-sm shadow-primary/20"
-            >
-              <Link href="/practice">
-                <Home className="w-4 h-4" />
-                {t("practice_exam.home_btn")}
-              </Link>
-            </Button>
-          </div>
-
-          {/* ── Review accordion ── */}
-          <Card className="rounded-2xl border-border/50 shadow-sm overflow-hidden">
-            <button
-              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/30 transition-colors"
-              onClick={() => setShowReview((v) => !v)}
-            >
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                <span className="font-bold text-sm">
-                  {t("practice_exam.review_title")}
-                </span>
+                    {t(`practice_exam.filter_${filter}`)}
+                  </button>
+                ))}
               </div>
-              {showReview ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              )}
-            </button>
-            {showReview && (
-              <div className="border-t border-border/50 px-4 pb-5 pt-4 space-y-4">
-                <div className="flex gap-2 flex-wrap">
-                  {(["all", "wrong", "correct"] as const).map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => setReviewFilter(f)}
-                      className={cn(
-                        "text-xs px-3 py-1.5 rounded-full border font-semibold transition-colors",
-                        reviewFilter === f
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20"
-                          : "border-border/50 text-muted-foreground hover:bg-muted hover:border-border",
-                      )}
-                    >
-                      {t(`practice_exam.filter_${f}`)}
-                    </button>
-                  ))}
-                </div>
-                <div className="space-y-3">
-                  {filteredQs.map((qr) => {
-                    const qNum =
-                      result.questions.findIndex(
-                        (q) => q.questionId === qr.questionId,
-                      ) + 1;
-                    return (
-                      <SignReviewCard
-                        key={qr.questionId}
-                        qr={qr}
-                        qNum={qNum}
-                        localize={localize}
-                        isRTL={isRTL}
-                        t={t}
-                        getDifficultyColor={getDifficultyColor}
-                        getDifficultyLabel={getDifficultyLabel}
-                      />
-                    );
-                  })}
-                </div>
+            }
+          >
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                {
+                  icon: <CheckCircle2 className="h-4 w-4" />,
+                  label: t("practice_exam.score_correct"),
+                  value: result.correctAnswers,
+                  tone: "success" as const,
+                },
+                {
+                  icon: <XCircle className="h-4 w-4" />,
+                  label: t("practice_exam.score_wrong"),
+                  value: result.wrongAnswers,
+                  tone: "danger" as const,
+                },
+                {
+                  icon: <Clock className="h-4 w-4" />,
+                  label: t("practice_exam.score_timeout"),
+                  value: result.unanswered,
+                  tone: "warning" as const,
+                },
+              ].map((stat) => (
+                <PageMetricCard
+                  key={stat.label}
+                  icon={stat.icon}
+                  label={stat.label}
+                  value={String(stat.value)}
+                  tone={stat.tone}
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button onClick={handleRetry} className="h-12 rounded-[1.15rem]">
+                <RotateCcw className="me-2 h-4 w-4" />
+                {t("practice_exam.retry_btn")}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 rounded-[1.15rem]"
+                asChild
+              >
+                <Link
+                  href={`/dashboard?section=exam-results&randomSignExamId=${result.sessionId}`}
+                >
+                  <Trophy className="me-2 h-4 w-4" />
+                  {t("sign_practice.result_cta")}
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 rounded-[1.15rem]"
+                asChild
+              >
+                <Link href="/practice">
+                  <Home className="me-2 h-4 w-4" />
+                  {t("practice_exam.home_btn")}
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-12 rounded-[1.15rem]"
+                onClick={() => setShowReview((value) => !value)}
+              >
+                {showReview ? (
+                  <ChevronUp className="me-2 h-4 w-4" />
+                ) : (
+                  <ChevronDown className="me-2 h-4 w-4" />
+                )}
+                {t("practice_exam.review_title")}
+              </Button>
+            </div>
+
+            {showReview ? (
+              <div className="space-y-3">
+                {filteredQs.map((qr) => {
+                  const qNum =
+                    result.questions.findIndex(
+                      (q) => q.questionId === qr.questionId,
+                    ) + 1;
+                  return (
+                    <SignReviewCard
+                      key={qr.questionId}
+                      qr={qr}
+                      qNum={qNum}
+                      localize={localize}
+                      isRTL={isRTL}
+                      t={t}
+                      getDifficultyColor={getDifficultyColor}
+                      getDifficultyLabel={getDifficultyLabel}
+                    />
+                  );
+                })}
               </div>
-            )}
-          </Card>
+            ) : null}
+          </PageSectionSurface>
         </div>
       </div>
     );

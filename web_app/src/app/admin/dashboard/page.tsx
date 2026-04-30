@@ -5,14 +5,21 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiClient, isServiceUnavailable, logApiError } from '@/lib/api';
 import { useLanguage } from '@/contexts/language-context';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import Link from 'next/link';
-import { Users, TrafficCone, ClipboardList, PlusCircle, BarChart2, Settings, RefreshCw } from 'lucide-react';
+import { Users, TrafficCone, ClipboardList, PlusCircle, BarChart2, Settings, RefreshCw, Gauge } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface DashboardStats {
   totalSigns: number;
   totalUsers: number;
   totalQuizQuestions: number;
+}
+
+function getRoleLabelKey(role?: string) {
+  if (role === 'ADMIN') return 'nav.role_admin';
+  if (role === 'MODERATOR') return 'nav.role_moderator';
+  return 'nav.role_member';
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -110,7 +117,7 @@ export default function AdminDashboard() {
           className="flex items-center gap-2 text-sm font-semibold text-destructive hover:underline"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          Try Again
+          {t('common.retry')}
         </button>
       </div>
     );
@@ -123,26 +130,18 @@ export default function AdminDashboard() {
         <ServiceUnavailableBanner onRetry={fetchDashboard} />
       )}
 
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight">{t('admin.dashboard')}</h1>
-            <p className="text-muted-foreground mt-1">
-              {t('admin.welcome')},{' '}
-              <span className="font-semibold text-foreground">
-                {user?.fullName || t('admin.system_admin')}
-              </span>
-            </p>
-          </div>
-          {user?.role && (
-            <Badge className="bg-amber-500/15 text-amber-600 border-0 font-bold px-3 py-1 text-sm">
-              {user.role}
+      <AdminPageHeader
+        icon={<Gauge className="h-6 w-6" />}
+        title={t('admin.dashboard')}
+        description={`${t('admin.welcome')}, ${user?.fullName || t('admin.system_admin')}`}
+        badge={
+          user?.role ? (
+            <Badge className="border-0 bg-amber-500/15 px-3 py-1 text-sm font-bold text-amber-600">
+              {t(getRoleLabelKey(user.role))}
             </Badge>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -150,24 +149,24 @@ export default function AdminDashboard() {
           title={t('admin.total_users')}
           value={data?.totalUsers ?? 0}
           icon={<Users className="w-6 h-6" />}
-          colorClass="text-blue-500"
-          bgClass="bg-blue-500/10"
+          colorClass="text-primary"
+          bgClass="bg-primary/10"
           description={t('admin.total_users_desc')}
         />
         <StatCard
           title={t('admin.total_signs')}
           value={data?.totalSigns ?? 0}
           icon={<TrafficCone className="w-6 h-6" />}
-          colorClass="text-green-500"
-          bgClass="bg-green-500/10"
+          colorClass="text-foreground"
+          bgClass="bg-primary/10"
           description={t('admin.total_signs_desc')}
         />
         <StatCard
           title={t('admin.total_quizzes')}
           value={data?.totalQuizQuestions ?? 0}
           icon={<ClipboardList className="w-6 h-6" />}
-          colorClass="text-purple-500"
-          bgClass="bg-purple-500/10"
+          colorClass="text-foreground"
+          bgClass="bg-primary/10"
           description={t('admin.total_quizzes_desc')}
         />
       </div>

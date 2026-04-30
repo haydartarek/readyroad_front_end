@@ -6,11 +6,15 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useLanguage } from "@/contexts/language-context";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { convertToPublicImageUrl } from "@/lib/image-utils";
+import { NATIVE_SELECT_COMPACT_CLASS } from "@/lib/native-select-styles";
 import { cn } from "@/lib/utils";
 import {
+  ClipboardList,
   Plus,
   Search,
   ChevronDown,
@@ -40,7 +44,6 @@ interface QuizQuestion {
   questionFr: string;
   contentImageUrl: string | null;
   isActive: boolean;
-  status: string;
   optionsCount: number;
   options: OptionResponse[];
   isReferenced: boolean;
@@ -256,10 +259,7 @@ export default function AdminQuizzesPage() {
       logApiError("Failed to fetch admin quiz questions", err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
       else
-        setError(
-          tRef.current("admin.quizzes.fetch_error") ||
-            "Failed to load quiz questions",
-        );
+        setError(tRef.current("admin.quizzes.fetch_error"));
     } finally {
       if (id === fetchIdRef.current) setLoading(false);
     }
@@ -336,8 +336,7 @@ export default function AdminQuizzesPage() {
       await apiClient.delete(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.DELETE(id));
       setDeleteId(null);
       setToast({
-        message:
-          t("admin.quizzes.delete_success") || "Question deleted successfully",
+        message: t("admin.quizzes.delete_success"),
         type: "success",
       });
       if (questions.length === 1 && page > 0) handlePageChange(page - 1);
@@ -351,25 +350,21 @@ export default function AdminQuizzesPage() {
           ?.status;
         if (status === 409) {
           setToast({
-            message:
-              t("admin.quizzes.delete_conflict") ||
-              "Cannot delete — referenced by quiz attempts.",
-            detail:
-              t("admin.quizzes.delete_conflict_hint") ||
-              "Deactivate the question instead.",
-            actionLabel: t("admin.quizzes.edit") || "Edit",
+            message: t("admin.quizzes.delete_conflict"),
+            detail: t("admin.quizzes.delete_conflict_hint"),
+            actionLabel: t("admin.quizzes.edit"),
             actionHref: `/admin/quizzes/${id}/edit`,
             type: "error",
           });
         } else if (status === 404) {
           setToast({
-            message: "Question not found — already deleted.",
+            message: t("admin.quizzes.delete_not_found"),
             type: "error",
           });
           fetchQuestions();
         } else {
           setToast({
-            message: "Failed to delete question. Please try again.",
+            message: t("admin.quizzes.delete_failed"),
             type: "error",
           });
         }
@@ -400,10 +395,14 @@ export default function AdminQuizzesPage() {
       fr: q.questionFr,
     })[language] ||
     q.questionEn ||
-    `Question #${q.id}`;
+    t("admin.quizzes.untitled");
   const getOptionText = (o: OptionResponse) =>
     ({ en: o.textEn, ar: o.textAr, nl: o.textNl, fr: o.textFr })[language] ||
     o.textEn;
+  const getImageUrl = (url: string | null) =>
+    url ? convertToPublicImageUrl(url) ?? "" : "";
+  const getAvailabilityLabel = (isActive: boolean) =>
+    isActive ? t("admin.quizzes.active") : t("admin.quizzes.inactive");
 
   const SortIcon = ({ field }: { field: SortField }) =>
     sortField === field ? (
@@ -439,7 +438,7 @@ export default function AdminQuizzesPage() {
         <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
         <p className="text-destructive font-semibold">{error}</p>
         <Button variant="outline" onClick={fetchQuestions}>
-          Retry
+          {t("admin.quizzes.retry")}
         </Button>
       </div>
     );
@@ -491,34 +490,29 @@ export default function AdminQuizzesPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">
-            {t("admin.quizzes.title") || "Theory Questions"}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("admin.quizzes.description") ||
-              "Manage the active theory-question bank used by the current learner exam flow."}
-          </p>
-          <p className="text-muted-foreground text-sm mt-1">
-            {t("admin.quizzes.total_count") || "Total"}:{" "}
-            <span className="font-bold text-foreground">{totalItems}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <AdminPageHeader
+        icon={<ClipboardList className="h-6 w-6" />}
+        title={t("admin.quizzes.title")}
+        description={t("admin.quizzes.description")}
+        metrics={[
+          {
+            label: t("admin.quizzes.total_count"),
+            value: totalItems.toLocaleString(),
+            tone: "primary",
+          },
+        ]}
+        actions={
           <Button asChild className="gap-2 shadow-md shadow-primary/20">
             <Link href="/admin/quizzes/new">
               <Plus className="w-4 h-4" />
-              {t("admin.quizzes.add_new") || "Add Question"}
+              {t("admin.quizzes.add_new")}
             </Link>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
-        {t("admin.quizzes.bank_theory_desc") ||
-          "Used by the current learner exam flow at /exam and /api/quiz/theory-exam."}
+        {t("admin.quizzes.bank_theory_desc")}
       </div>
 
       {/* ─── QUIZ Questions section ─── */}
@@ -527,22 +521,25 @@ export default function AdminQuizzesPage() {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
+            id="admin-quizzes-search"
+            name="quizzesSearch"
             type="text"
-            placeholder={
-              t("admin.quizzes.search_placeholder") || "Search questions..."
-            }
+            autoComplete="off"
+            placeholder={t("admin.quizzes.search_placeholder")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-xl border border-border/50 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
         </div>
         <select
+          id="admin-quizzes-category-filter"
+          name="categoryFilter"
           value={categoryFilter}
           onChange={(e) => handleCategoryChange(e.target.value)}
-          className="rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className={NATIVE_SELECT_COMPACT_CLASS}
         >
           <option value="">
-            {t("admin.quizzes.all_categories") || "All Categories"}
+            {t("admin.quizzes.all_categories")}
           </option>
           {categories.map((cat) => (
             <option key={cat.code} value={cat.code}>
@@ -551,12 +548,14 @@ export default function AdminQuizzesPage() {
           ))}
         </select>
         <select
+          id="admin-quizzes-difficulty-filter"
+          name="difficultyFilter"
           value={difficultyFilter}
           onChange={(e) => handleDifficultyChange(e.target.value)}
-          className="rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className={NATIVE_SELECT_COMPACT_CLASS}
         >
           <option value="">
-            {t("admin.quizzes.all_difficulties") || "All Difficulties"}
+            {t("admin.quizzes.all_difficulties")}
           </option>
           {["EASY", "MEDIUM", "HARD"].map((d) => (
             <option key={d} value={d}>
@@ -565,22 +564,32 @@ export default function AdminQuizzesPage() {
           ))}
         </select>
         <select
+          id="admin-quizzes-image-filter"
+          name="imageFilter"
           value={imageFilter}
           onChange={(e) => handleImageChange(e.target.value)}
-          className="rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className={NATIVE_SELECT_COMPACT_CLASS}
         >
-          <option value="">All Images</option>
-          <option value="yes">Has Image</option>
-          <option value="no">No Image</option>
+          <option value="">
+            {t("admin.quizzes.all_images")}
+          </option>
+          <option value="yes">
+            {t("admin.quizzes.has_image")}
+          </option>
+          <option value="no">
+            {t("admin.quizzes.no_image")}
+          </option>
         </select>
         <select
+          id="admin-quizzes-page-size"
+          name="pageSize"
           value={size}
           onChange={(e) => handleSizeChange(Number(e.target.value))}
-          className="rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className={NATIVE_SELECT_COMPACT_CLASS}
         >
           {PAGE_SIZE_OPTIONS.map((s) => (
             <option key={s} value={s}>
-              {s} / page
+              {s} {t("admin.quizzes.per_page")}
             </option>
           ))}
         </select>
@@ -591,11 +600,12 @@ export default function AdminQuizzesPage() {
 
       {totalItems > 0 && (
         <p className="text-sm text-muted-foreground">
-          Showing{" "}
+          {t("admin.quizzes.showing")}{" "}
           <span className="font-semibold text-foreground">
             {startIdx}–{endIdx}
           </span>{" "}
-          of <span className="font-semibold text-foreground">{totalItems}</span>
+          {t("admin.quizzes.of")}{" "}
+          <span className="font-semibold text-foreground">{totalItems}</span>
         </p>
       )}
 
@@ -609,31 +619,41 @@ export default function AdminQuizzesPage() {
                   className="px-4 py-3 text-left font-semibold cursor-pointer select-none w-14"
                   onClick={() => handleSort("id")}
                 >
-                  ID
+                  {t("admin.quizzes.col_no")}
                   <SortIcon field="id" />
                 </th>
                 <th
                   className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
                   onClick={() => handleSort("questionEn")}
                 >
-                  {t("admin.quizzes.col_question") || "Question"}
+                  {t("admin.quizzes.col_question")}
                   <SortIcon field="questionEn" />
                 </th>
                 <th className="px-4 py-3 text-left font-semibold">
-                  {t("admin.quizzes.col_category") || "Category"}
+                  {t("admin.quizzes.col_category")}
                 </th>
                 <th
                   className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
                   onClick={() => handleSort("difficultyLevel")}
                 >
-                  {t("admin.quizzes.col_difficulty") || "Difficulty"}
+                  {t("admin.quizzes.col_difficulty")}
                   <SortIcon field="difficultyLevel" />
                 </th>
-                <th className="px-4 py-3 text-center font-semibold">Type</th>
-                <th className="px-4 py-3 text-center font-semibold">Image</th>
-                <th className="px-4 py-3 text-center font-semibold">Opts</th>
-                <th className="px-4 py-3 text-center font-semibold">Status</th>
-                <th className="px-4 py-3 text-right font-semibold">Actions</th>
+                <th className="px-4 py-3 text-center font-semibold">
+                  {t("admin.quizzes.col_type")}
+                </th>
+                <th className="px-4 py-3 text-center font-semibold">
+                  {t("admin.quizzes.col_image")}
+                </th>
+                <th className="px-4 py-3 text-center font-semibold">
+                  {t("admin.quizzes.col_options")}
+                </th>
+                <th className="px-4 py-3 text-center font-semibold">
+                  {t("admin.quizzes.col_availability")}
+                </th>
+                <th className="px-4 py-3 text-right font-semibold">
+                  {t("admin.quizzes.col_actions")}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
@@ -643,19 +663,18 @@ export default function AdminQuizzesPage() {
                     <div className="space-y-2">
                       <div className="text-4xl">📋</div>
                       <p className="text-muted-foreground">
-                        {t("admin.quizzes.no_results") ||
-                          "No quiz questions found"}
+                        {t("admin.quizzes.no_results")}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                questions.map((q) => (
+                questions.map((q, index) => (
                   <React.Fragment key={q.id}>
                     <tr className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
-                        <span className="font-mono text-xs text-muted-foreground">
-                          #{q.id}
+                        <span className="text-xs font-semibold text-foreground">
+                          {page * size + index + 1}
                         </span>
                       </td>
                       <td className="px-4 py-3 max-w-sm">
@@ -696,7 +715,9 @@ export default function AdminQuizzesPage() {
                               : "bg-muted text-muted-foreground",
                           )}
                         >
-                          {q.contentImageUrl ? "Yes" : "No"}
+                          {q.contentImageUrl
+                            ? t("admin.quizzes.has_image")
+                            : t("admin.quizzes.no_image")}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -708,12 +729,12 @@ export default function AdminQuizzesPage() {
                         <Badge
                           className={cn(
                             "border-0 text-xs font-semibold",
-                            q.status === "PUBLISHED"
-                              ? "bg-blue-500/10 text-blue-600"
+                            q.isActive
+                              ? "bg-green-500/10 text-green-600"
                               : "bg-muted text-muted-foreground",
                           )}
                         >
-                          {q.status}
+                          {getAvailabilityLabel(Boolean(q.isActive))}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
@@ -746,13 +767,13 @@ export default function AdminQuizzesPage() {
                                 disabled={deleting}
                                 className="px-2 py-1 text-xs rounded-lg bg-destructive text-white hover:opacity-90 disabled:opacity-50 font-semibold transition-opacity"
                               >
-                                {deleting ? "..." : "Confirm"}
+                                {deleting ? t("common.loading") : t("common.confirm")}
                               </button>
                               <button
                                 onClick={() => setDeleteId(null)}
                                 className="px-2 py-1 text-xs rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
                               >
-                                Cancel
+                                {t("common.cancel")}
                               </button>
                             </div>
                           ) : (
@@ -771,24 +792,44 @@ export default function AdminQuizzesPage() {
                     {expandedId === q.id && (
                       <tr className="bg-primary/5">
                         <td colSpan={9} className="px-6 py-4 space-y-4">
+                          {q.contentImageUrl && (
+                            <div className="rounded-2xl border border-border/40 bg-card/80 p-4">
+                              <p className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3">
+                                {t("admin.quizzes.col_image")}
+                              </p>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={getImageUrl(q.contentImageUrl)}
+                                alt={getQuestionText(q)}
+                                className="max-h-48 rounded-xl border border-border/50 bg-background object-contain"
+                              />
+                            </div>
+                          )}
+
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                            <DetailLang label="English" text={q.questionEn} />
                             <DetailLang
-                              label="العربية"
+                              label={t("admin.settings_page.language_en")}
+                              text={q.questionEn}
+                            />
+                            <DetailLang
+                              label={t("admin.settings_page.language_ar")}
                               text={q.questionAr}
                               dir="rtl"
                             />
                             <DetailLang
-                              label="Nederlands"
+                              label={t("admin.settings_page.language_nl")}
                               text={q.questionNl}
                             />
-                            <DetailLang label="Français" text={q.questionFr} />
+                            <DetailLang
+                              label={t("admin.settings_page.language_fr")}
+                              text={q.questionFr}
+                            />
                           </div>
 
                           {q.options?.length > 0 && (
                             <div className="space-y-2">
                               <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">
-                                Answer Options
+                                {t("admin.quizzes.answer_options")}
                               </p>
                               <div className="space-y-1.5">
                                 {q.options
@@ -818,7 +859,7 @@ export default function AdminQuizzesPage() {
                                       </span>
                                       {opt.isCorrect && (
                                         <Badge className="bg-green-500/10 text-green-600 border-0 text-xs ml-auto">
-                                          ✓ Correct
+                                          {t("admin.quizzes.correct_badge")}
                                         </Badge>
                                       )}
                                     </div>
@@ -829,25 +870,23 @@ export default function AdminQuizzesPage() {
 
                           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/40">
                             <span>
-                              ID: <strong>{q.id}</strong>
-                            </span>
-                            <span>
-                              Active: <strong>{q.isActive ? "✓" : "✗"}</strong>
+                              {t("admin.quizzes.col_availability")}
+                              : <strong>{getAvailabilityLabel(Boolean(q.isActive))}</strong>
                             </span>
                             {q.contentImageUrl && (
                               <Badge variant="outline" className="text-xs">
-                                Has Image
+                                {t("admin.quizzes.has_image")}
                               </Badge>
                             )}
                             {q.createdAt && (
                               <span>
-                                Created:{" "}
+                                {t("admin.quizzes.meta_created")}:{" "}
                                 {new Date(q.createdAt).toLocaleDateString()}
                               </span>
                             )}
                             {q.updatedAt && (
                               <span>
-                                Updated:{" "}
+                                {t("admin.quizzes.meta_updated")}:{" "}
                                 {new Date(q.updatedAt).toLocaleDateString()}
                               </span>
                             )}
@@ -866,7 +905,9 @@ export default function AdminQuizzesPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-muted/30">
             <p className="text-xs text-muted-foreground font-medium">
-              Page <strong>{page + 1}</strong> of <strong>{totalPages}</strong>
+              {t("admin.quizzes.page_info")
+                .replace("{current}", String(page + 1))
+                .replace("{total}", String(totalPages))}
             </p>
             <div className="flex items-center gap-1">
               <button

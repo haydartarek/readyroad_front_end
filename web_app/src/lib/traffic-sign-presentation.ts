@@ -143,6 +143,18 @@ export function getTrafficSignDescription(sign: TrafficSign, language: LangKey):
   );
 }
 
+export function getTrafficSignMeaning(sign: TrafficSign, language: LangKey): string {
+  return (
+    {
+      nl: sign.meaningNl,
+      en: sign.meaningEn,
+      ar: sign.meaningAr,
+      fr: sign.meaningFr,
+    }[language] ||
+    getTrafficSignDescription(sign, language)
+  );
+}
+
 export function getTrafficSignLongDescription(sign: TrafficSign, language: LangKey): string {
   return (
     {
@@ -153,6 +165,33 @@ export function getTrafficSignLongDescription(sign: TrafficSign, language: LangK
     }[language] ||
     ""
   );
+}
+
+export function getTrafficSignGuidance(sign: TrafficSign, language: LangKey): string {
+  return (
+    {
+      nl: sign.guidanceNl,
+      en: sign.guidanceEn,
+      ar: sign.guidanceAr,
+      fr: sign.guidanceFr,
+    }[language] ||
+    getTrafficSignLongDescription(sign, language)
+  );
+}
+
+function normalizeNarrative(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+export function hasDistinctTrafficSignGuidance(meaning: string, guidance: string): boolean {
+  if (!meaning.trim() || !guidance.trim()) {
+    return false;
+  }
+
+  return normalizeNarrative(meaning) !== normalizeNarrative(guidance);
 }
 
 export function getTrafficSignGroup(sign: TrafficSign): string {

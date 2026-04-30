@@ -53,3 +53,5 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 CMD ["node", "server.js"]
+
+CMD ["node", "server.js"]

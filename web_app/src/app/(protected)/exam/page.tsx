@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageHeroDescription, PageHeroTitle } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -238,6 +239,18 @@ export default function TheoryExamPage() {
     setPhase("intro");
   };
 
+  const backToPracticeContent = isRTL ? (
+    <>
+      <span>{t("practice_exam.back_practice")}</span>
+      <ArrowRight className="ms-2 h-4 w-4" />
+    </>
+  ) : (
+    <>
+      <ArrowLeft className="me-2 h-4 w-4" />
+      <span>{t("practice_exam.back_practice")}</span>
+    </>
+  );
+
   // ─── Screens ──────────────────────────────────────────────────────────────
 
   if (serviceUnavailable) {
@@ -266,28 +279,27 @@ export default function TheoryExamPage() {
 
         <div className="container relative mx-auto max-w-6xl px-4 py-6 md:py-8">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
-            <section className="overflow-hidden rounded-[2rem] border border-border/60 bg-card/85 shadow-sm">
-              <div className="h-1.5 w-full bg-gradient-to-r from-primary via-primary/80 to-primary/20" />
-              <div className="space-y-6 px-6 py-6 md:px-8 md:py-8">
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-primary shadow-sm">
-                    <ClipboardList className="h-4 w-4" />
-                    <span className="text-sm font-semibold">
+            <section className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-sm">
+              <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
+              <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
+              <div className="relative space-y-4 px-6 py-7">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-primary shadow-sm">
+                    <ClipboardList className="h-3.5 w-3.5" />
+                    <span className="text-xs font-semibold">
                       {t("practice_exam.badge")}
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-5">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-gradient-to-br from-primary to-primary/70 shadow-xl shadow-primary/20">
-                      <ClipboardList className="h-10 w-10 text-primary-foreground" />
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-[1.3rem] bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
+                      <ClipboardList className="h-8 w-8 text-primary-foreground" />
                     </div>
-                    <div className="space-y-2">
-                      <h1 className="text-3xl font-black tracking-tight text-foreground md:text-5xl">
-                        {t("practice_exam.intro_title")}
-                      </h1>
-                      <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
+                    <div className="space-y-1.5">
+                      <PageHeroTitle>{t("practice_exam.intro_title")}</PageHeroTitle>
+                      <PageHeroDescription className="max-w-2xl">
                         {t("practice_exam.intro_subtitle")}
-                      </p>
+                      </PageHeroDescription>
                     </div>
                   </div>
                 </div>
@@ -312,14 +324,14 @@ export default function TheoryExamPage() {
                   ].map((stat) => (
                     <div
                       key={stat.value}
-                      className="rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm"
+                      className="rounded-[1.2rem] border border-border/60 bg-background/80 px-3.5 py-3 shadow-sm"
                     >
                       <p
-                        className={`text-3xl font-black tabular-nums ${stat.color}`}
+                        className={`text-2xl font-black tabular-nums ${stat.color}`}
                       >
                         {stat.value}
                       </p>
-                      <p className="mt-2 text-sm font-semibold leading-6 text-foreground/80">
+                      <p className="mt-1.5 text-xs font-semibold leading-5 text-foreground/80">
                         {stat.label}
                       </p>
                     </div>
@@ -341,12 +353,12 @@ export default function TheoryExamPage() {
                   ].map((item) => (
                     <div
                       key={item.text}
-                      className="flex items-start gap-3 rounded-[1.4rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm"
+                      className="flex items-start gap-2.5 rounded-[1.1rem] border border-border/60 bg-background/80 px-3.5 py-3 shadow-sm"
                     >
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.95rem] bg-primary/10 ring-1 ring-primary/10">
                         {item.icon}
                       </div>
-                      <p className="text-sm font-bold leading-6 text-foreground">
+                      <p className="text-xs font-bold leading-5 text-foreground">
                         {item.text}
                       </p>
                     </div>
@@ -356,48 +368,41 @@ export default function TheoryExamPage() {
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
                     size="lg"
-                    className="h-13 flex-1 rounded-full text-base font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25"
+                    className="h-11 flex-1 rounded-full text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25"
                     onClick={startExam}
                   >
-                    <Timer className="me-2 h-5 w-5" />
+                    <Timer className="me-2 h-4 w-4" />
                     {t("practice_exam.start_btn")}
                   </Button>
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-13 rounded-full px-6 text-base font-semibold"
+                    className="h-11 rounded-full px-5 text-sm font-semibold"
                     asChild
                   >
-                    <Link href="/practice">
-                      {isRTL ? (
-                        <ArrowRight className="me-2 h-4 w-4" />
-                      ) : (
-                        <ArrowLeft className="me-2 h-4 w-4" />
-                      )}
-                      {t("practice_exam.back_practice")}
-                    </Link>
+                    <Link href="/practice">{backToPracticeContent}</Link>
                   </Button>
                 </div>
               </div>
             </section>
 
             <aside className="space-y-4">
-              <div className="rounded-[2rem] border border-border/60 bg-card/85 p-5 shadow-sm">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">
-                    <ClipboardList className="h-5 w-5" />
+              <div className="rounded-[1.75rem] border border-border/60 bg-card/85 p-4 shadow-sm">
+                <div className="mb-3 flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-primary/10 text-primary ring-1 ring-primary/10">
+                    <ClipboardList className="h-4 w-4" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-foreground">
+                    <h2 className="text-base font-black text-foreground">
                       {t("practice_exam.overview_title")}
                     </h2>
-                    <p className="text-sm font-semibold text-foreground/75">
+                    <p className="text-xs font-semibold text-foreground/75">
                       {t("practice_exam.overview_desc")}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {[
                     {
                       icon: <ClipboardList className="h-4 w-4 text-primary" />,
@@ -414,12 +419,12 @@ export default function TheoryExamPage() {
                   ].map((item) => (
                     <div
                       key={item.text}
-                      className="flex items-start gap-3 rounded-[1.25rem] bg-background/80 px-3.5 py-3.5"
+                      className="flex items-start gap-2.5 rounded-[1.05rem] bg-background/80 px-3 py-2.5"
                     >
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem] bg-primary/10 ring-1 ring-primary/10">
                         {item.icon}
                       </div>
-                      <p className="text-sm font-bold leading-6 text-foreground">
+                      <p className="text-xs font-bold leading-5 text-foreground">
                         {item.text}
                       </p>
                     </div>
@@ -427,31 +432,31 @@ export default function TheoryExamPage() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-border/60 bg-card/85 p-5 shadow-sm">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">
-                    <Timer className="h-5 w-5" />
+              <div className="rounded-[1.75rem] border border-border/60 bg-card/85 p-4 shadow-sm">
+                <div className="mb-3 flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-primary/10 text-primary ring-1 ring-primary/10">
+                    <Timer className="h-4 w-4" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-foreground">
+                    <h2 className="text-base font-black text-foreground">
                       {t("practice_exam.rules_title")}
                     </h2>
-                    <p className="text-sm font-semibold text-foreground/75">
+                    <p className="text-xs font-semibold text-foreground/75">
                       {t("practice_exam.rules_desc")}
                     </p>
                   </div>
                 </div>
 
-                <div className="mb-4 rounded-[1.4rem] border border-border/60 bg-background/80 p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-foreground">
+                <div className="rounded-[1.15rem] border border-border/60 bg-background/80 p-3 shadow-sm">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground">
                       {t("practice_exam.difficulty_mix")}
                     </span>
-                    <span className="text-xs font-semibold text-muted-foreground">
+                    <span className="text-[11px] font-semibold text-muted-foreground">
                       20 · 20 · 10
                     </span>
                   </div>
-                  <div className="grid gap-2">
+                  <div className="grid gap-1.5">
                     {[
                       {
                         value: 20,
@@ -475,14 +480,14 @@ export default function TheoryExamPage() {
                         tone: "text-red-600",
                       },
                     ].map((item) => (
-                      <div key={item.label} className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs font-semibold">
+                      <div key={item.label} className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-semibold">
                           <span className={item.tone}>{item.label}</span>
                           <span className="text-muted-foreground">
                             {item.value}/50
                           </span>
                         </div>
-                        <div className="h-2 rounded-full bg-muted/70">
+                        <div className="h-1.5 rounded-full bg-muted/70">
                           <div
                             className={`h-full rounded-full ${item.bar}`}
                             style={{
@@ -495,32 +500,6 @@ export default function TheoryExamPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
-                  {[
-                    {
-                      icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
-                      text: t("practice_exam.rule_choices"),
-                    },
-                    {
-                      icon: (
-                        <AlertTriangle className="h-4 w-4 text-destructive" />
-                      ),
-                      text: t("practice_exam.rule_timer"),
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.text}
-                      className="flex items-start gap-3 rounded-[1.25rem] bg-background/80 px-3.5 py-3.5"
-                    >
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10">
-                        {item.icon}
-                      </div>
-                      <p className="text-sm font-bold leading-6 text-foreground">
-                        {item.text}
-                      </p>
-                    </div>
-                  ))}
-                </div>
               </div>
             </aside>
           </div>
@@ -584,14 +563,7 @@ export default function TheoryExamPage() {
               className="gap-2 rounded-full text-muted-foreground hover:text-foreground"
               asChild
             >
-              <Link href="/practice">
-                {isRTL ? (
-                  <ArrowRight className="w-4 h-4" />
-                ) : (
-                  <ArrowLeft className="w-4 h-4" />
-                )}
-                {t("practice_exam.back_practice")}
-              </Link>
+              <Link href="/practice">{backToPracticeContent}</Link>
             </Button>
             <div
               className={cn(
@@ -807,18 +779,14 @@ export default function TheoryExamPage() {
         <div className="container relative mx-auto max-w-5xl px-4 py-6 space-y-4">
           <div
             className={cn(
-              "overflow-hidden rounded-[2rem] border bg-card shadow-sm",
+              "relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-sm",
               result.passed ? "border-green-200" : "border-red-200/70",
             )}
           >
-            <div
-              className={cn(
-                "h-1.5 w-full",
-                result.passed ? "bg-green-400" : "bg-red-400",
-              )}
-            />
+            <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
+            <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
 
-            <div className="grid gap-5 px-5 py-5 md:px-6 md:py-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+            <div className="relative grid gap-5 px-6 py-7 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
               <div className="space-y-4">
                 <div
                   className={cn(
@@ -864,11 +832,11 @@ export default function TheoryExamPage() {
                       {t("practice_exam.score_correct")} /{" "}
                       {result.totalQuestions}
                     </p>
-                    <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl">
+                    <PageHeroTitle>
                       {result.passed
                         ? t("practice_exam.score_passed")
                         : t("practice_exam.score_failed")}
-                    </h1>
+                    </PageHeroTitle>
                   </div>
 
                   <div className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm">

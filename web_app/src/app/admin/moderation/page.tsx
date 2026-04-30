@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/contexts/language-context';
 import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -272,17 +273,17 @@ export default function AdminModerationPage() {
     <div className="space-y-5">
       {serviceUnavailable && <ServiceUnavailableBanner onRetry={fetchUsers} />}
 
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">{t('admin.moderation.title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('admin.moderation.description')}</p>
-        </div>
-        <Button variant="outline" onClick={fetchUsers} disabled={loading} className="gap-2">
-          <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
-          {loading ? t('common.loading') : t('admin.moderation.refresh')}
-        </Button>
-      </div>
+      <AdminPageHeader
+        icon={<ShieldCheck className="h-6 w-6" />}
+        title={t('admin.moderation.title')}
+        description={t('admin.moderation.description')}
+        actions={
+          <Button variant="outline" onClick={fetchUsers} disabled={loading} className="gap-2">
+            <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+            {loading ? t('common.loading') : t('admin.moderation.refresh')}
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

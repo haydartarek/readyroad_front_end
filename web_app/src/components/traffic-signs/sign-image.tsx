@@ -13,9 +13,9 @@ interface SignImageProps {
 
 // ─── Helpers ─────────────────────────────────────────────
 
-function resolveImageUrl(src: string): string {
-  if (!src) return FALLBACK_IMAGE;
-  return convertToPublicImageUrl(src) ?? FALLBACK_IMAGE;
+function resolveImageUrl(src: string): string | null {
+  if (!src || src === FALLBACK_IMAGE) return null;
+  return convertToPublicImageUrl(src) ?? null;
 }
 
 // ─── Component ───────────────────────────────────────────
@@ -37,13 +37,17 @@ export function SignImage({ src, alt, className = 'object-contain' }: SignImageP
     return <div className={`bg-muted ${sharedClass}`} aria-label={alt} />;
   }
 
+  if (!imgSrc) {
+    return <div className={`bg-muted ${sharedClass}`} aria-label={alt} />;
+  }
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={imgSrc}
       alt={alt}
       className={sharedClass}
-      onError={() => setImgSrc(FALLBACK_IMAGE)}
+      onError={() => setImgSrc(null)}
     />
   );
 }

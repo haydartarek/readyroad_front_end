@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  AlertTriangle, Octagon, Ban, ArrowRightCircle,
-  Info, ArrowRight,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 import { apiClient } from '@/lib/api';
+import { getCategoryVisual } from '@/lib/category-visuals';
 import { API_ENDPOINTS, ROUTES } from '@/lib/constants';
 
 interface Category {
@@ -22,20 +22,9 @@ interface Category {
 }
 
 type Lang = 'en' | 'ar' | 'nl' | 'fr';
-
-const CATEGORY_ICONS: Record<string, React.ElementType> = {
-  A: AlertTriangle,
-  B: Octagon,
-  C: Ban,
-  D: ArrowRightCircle,
-};
-
-const DEFAULT_ICON = Info;
 const SKELETON_COUNT = 6;
-
-function getCategoryIcon(code: string): React.ElementType {
-  return CATEGORY_ICONS[code] ?? DEFAULT_ICON;
-}
+const SECTION_OUTLINE_CTA_CLASS =
+  'h-12 rounded-full border-primary/15 bg-background/85 px-8 text-sm font-semibold text-secondary shadow-sm ring-1 ring-primary/10 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/5 hover:text-primary hover:shadow-md active:translate-y-0';
 
 function getCategoryName(cat: Category, lang: Lang): string {
   const map: Record<Lang, string> = {
@@ -116,7 +105,7 @@ export function CategoriesPreview() {
               <Button
                 variant="outline"
                 size="lg"
-                className="h-12 rounded-full border-border px-8 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:bg-muted/60 hover:shadow-md active:translate-y-0"
+                className={SECTION_OUTLINE_CTA_CLASS}
                 asChild
               >
                 <Link href={ROUTES.TRAFFIC_SIGNS}>{t('home.categories.browse_signs')}</Link>
@@ -127,7 +116,8 @@ export function CategoriesPreview() {
           <>
             <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
               {categories.map((cat) => {
-                const Icon = getCategoryIcon(cat.code);
+                const visual = getCategoryVisual(cat.code);
+                const Icon = visual.icon;
                 return (
                   <Link
                     key={cat.id}
@@ -142,11 +132,16 @@ export function CategoriesPreview() {
 
                     <div className="relative">
                       <div className="mb-4 flex items-center justify-between">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border bg-background/60 shadow-sm transition-transform duration-200 group-hover:scale-[1.03]">
-                          <Icon className="h-6 w-6 text-primary" aria-hidden />
+                        <div
+                          className={[
+                            'flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-[1.03]',
+                            visual.iconWrap,
+                          ].join(' ')}
+                        >
+                          <Icon className={['h-5 w-5', visual.iconTone].join(' ')} aria-hidden />
                         </div>
 
-                        <span className="rounded-full border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground">
+                        <span className={['rounded-full border px-3 py-1 text-xs font-medium', visual.countBadge].join(' ')}>
                           {t('home.categories.signs_count').replace(
                             '{count}',
                             String(cat.signCount),
@@ -160,7 +155,7 @@ export function CategoriesPreview() {
                     </div>
 
                     <div className="relative mt-5">
-                      <div className="inline-flex w-fit items-center gap-2 rounded-full border bg-background/60 px-4 py-2 text-sm font-semibold text-primary shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md">
+                      <div className={['inline-flex w-fit items-center gap-2 rounded-full border bg-background/60 px-4 py-2 text-sm font-semibold shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md', visual.actionTone].join(' ')}>
                         {t('home.categories.start_practice')}
                         <ArrowRight
                           className={[
@@ -172,7 +167,12 @@ export function CategoriesPreview() {
                       </div>
                     </div>
 
-                    <div className="pointer-events-none absolute -bottom-12 -end-12 h-44 w-44 rounded-full bg-primary/10 blur-3xl opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div
+                      className={[
+                        'pointer-events-none absolute -bottom-12 -end-12 h-44 w-44 rounded-full blur-3xl opacity-0 transition-opacity group-hover:opacity-100',
+                        visual.cardGlow,
+                      ].join(' ')}
+                    />
                   </Link>
                 );
               })}
@@ -182,7 +182,7 @@ export function CategoriesPreview() {
               <Button
                 variant="outline"
                 size="lg"
-                className="h-12 rounded-full border-border px-8 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:bg-muted/60 hover:shadow-md active:translate-y-0"
+                className={SECTION_OUTLINE_CTA_CLASS}
                 asChild
               >
                 <Link href={ROUTES.PRACTICE}>{t('home.categories.view_all')}</Link>

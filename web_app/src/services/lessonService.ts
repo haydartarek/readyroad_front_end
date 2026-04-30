@@ -5,6 +5,17 @@ import apiClient from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import type { Lesson, LessonDetail } from '@/lib/types';
 
+export interface LessonProgress {
+  lessonId: number;
+  pagesRead: number;
+  totalPages?: number;
+  currentPage?: number;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  completed: boolean;
+  completedAt?: string | null;
+  lastSeenAt?: string | null;
+}
+
 // ─── Service ─────────────────────────────────────────────
 
 /** Fetch all active lessons (summary list, no pages). */
@@ -35,6 +46,27 @@ export async function getLessonsCount(): Promise<number> {
   return data.count;
 }
 
+/** Get the authenticated user's progress for one lesson. */
+export async function getLessonProgress(code: string): Promise<LessonProgress> {
+  const { data } = await apiClient.get<LessonProgress>(
+    API_ENDPOINTS.LESSONS.PROGRESS(code),
+  );
+  return data;
+}
+
+/** Mark one lesson page as read for the authenticated user. */
+export async function markLessonPageRead(
+  code: string,
+  totalPages: number,
+  pageNumber: number,
+): Promise<LessonProgress> {
+  const { data } = await apiClient.post<LessonProgress>(
+    API_ENDPOINTS.LESSONS.PROGRESS(code),
+    { totalPages, pageNumber },
+  );
+  return data;
+}
+
 // ─── Service Object ──────────────────────────────────────
 
 export const lessonService = {
@@ -42,6 +74,8 @@ export const lessonService = {
   getLessonByCode,
   searchLessons,
   getLessonsCount,
+  getLessonProgress,
+  markLessonPageRead,
 };
 
 export default lessonService;

@@ -63,13 +63,16 @@ export async function getCurrentUser(): Promise<UserProfile> {
 }
 
 /** GET /api/users/me/notifications/unread-count */
-export async function getUnreadNotificationCount(): Promise<number> {
+export async function getUnreadNotificationCount(signal?: AbortSignal): Promise<number> {
   try {
     const response = await apiClient.get<NotificationCount>(
       API_ENDPOINTS.USERS.NOTIFICATIONS_COUNT,
+      undefined,
+      { signal },
     );
     return response.data.unreadCount;
   } catch (error) {
+    if (signal?.aborted) return 0;
     const status = (error as { response?: { status?: number } }).response?.status;
     if (status === 401 || status === 403) throw error;
     return 0;

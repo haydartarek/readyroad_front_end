@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
 
 // ─── Types ───────────────────────────────────────────────
@@ -30,6 +31,7 @@ export function OverviewDialog({
   currentIndex,
   onQuestionSelect,
 }: OverviewDialogProps) {
+  const { t } = useLanguage();
   const answeredCount   = Object.keys(answers).length;
   const unansweredCount = questions.length - answeredCount;
 
@@ -37,9 +39,12 @@ export function OverviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="font-black">Exam Overview</DialogTitle>
+          <DialogTitle className="font-black">{t('exam.overview')}</DialogTitle>
           <DialogDescription>
-            {answeredCount}/{questions.length} questions answered
+            {t('exam.overview.description', {
+              answered: answeredCount,
+              total: questions.length,
+            })}
           </DialogDescription>
         </DialogHeader>
 
@@ -50,13 +55,13 @@ export function OverviewDialog({
             <div className="flex items-center gap-2">
               <div className="h-3.5 w-3.5 rounded-full bg-green-500" />
               <span className="text-sm text-muted-foreground">
-                Answered <span className="font-bold text-foreground">({answeredCount})</span>
+                {t('exam.overview.answered')} <span className="font-bold text-foreground">({answeredCount})</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-3.5 w-3.5 rounded-full bg-muted-foreground/30" />
               <span className="text-sm text-muted-foreground">
-                Unanswered <span className="font-bold text-foreground">({unansweredCount})</span>
+                {t('exam.overview.unanswered')} <span className="font-bold text-foreground">({unansweredCount})</span>
               </span>
             </div>
           </div>

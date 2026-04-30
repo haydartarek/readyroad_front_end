@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,6 +12,10 @@ import {
   Trophy,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import {
+  PageHeroSurface,
+  PageHeroTitle,
+} from "@/components/ui/page-surface";
 import { SignImage } from "@/components/traffic-signs/sign-image";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Badge } from "@/components/ui/badge";
@@ -19,13 +23,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
-import { API_ENDPOINTS } from "@/lib/constants";
+import {
+  API_ENDPOINTS,
+  isRemovedLegacyTrafficSignCode,
+  resolveLegacyTrafficSignCode,
+} from "@/lib/constants";
+import { getSignExamStatus, getSignExamStatusClasses } from "@/lib/sign-exam-status";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import {
   getTrafficSignDescription,
+  getTrafficSignGuidance,
   getTrafficSignGroupInfo,
   getTrafficSignLongDescription,
+  getTrafficSignMeaning,
   getTrafficSignName,
+  hasDistinctTrafficSignGuidance,
 } from "@/lib/traffic-sign-presentation";
 import type { TrafficSign } from "@/lib/types";
 import { getSignStatus, type SignUserProgress } from "@/services";
@@ -41,7 +53,7 @@ const LANGUAGE_FIELD_SUFFIX: Record<Lang, "Nl" | "En" | "Ar" | "Fr"> = {
 
 function localizedValue(
   sign: TrafficSign,
-  field: "name" | "description" | "longDescription",
+  field: "name" | "description" | "longDescription" | "meaning" | "guidance",
   language: Lang,
 ): string {
   const suffix = LANGUAGE_FIELD_SUFFIX[language];
@@ -87,6 +99,7 @@ function LoadingState() {
 export default function TrafficSignDetailPage() {
   const params = useParams<{ signCode: string }>();
   const routeParam = params.signCode;
+  const router = useRouter();
   const { t, language, isRTL } = useLanguage();
   const currentLanguage = (["nl", "en", "ar", "fr"] as Lang[]).includes(
     language as Lang,
@@ -101,12 +114,26 @@ export default function TrafficSignDetailPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [error, setError] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
+  const requestedCode = resolveLegacyTrafficSignCode(routeParam);
+  const removedLegacyCode = isRemovedLegacyTrafficSignCode(routeParam);
 
   useEffect(() => {
+    if (!removedLegacyCode) {
+      return;
+    }
+
+    router.replace("/traffic-signs");
+  }, [removedLegacyCode, router]);
+
+  useEffect(() => {
+    if (removedLegacyCode) {
+      return;
+    }
+
     let cancelled = false;
 
     apiClient
-      .get<TrafficSign>(API_ENDPOINTS.TRAFFIC_SIGNS.DETAIL(routeParam))
+      .get<TrafficSign>(API_ENDPOINTS.TRAFFIC_SIGNS.DETAIL(requestedCode))
       .then((response) => {
         if (!cancelled) {
           setSignProgress(null);
@@ -133,7 +160,7 @@ export default function TrafficSignDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [fetchKey, routeParam]);
+  }, [fetchKey, removedLegacyCode, requestedCode]);
 
   useEffect(() => {
     if (!sign) {
@@ -166,9 +193,23 @@ export default function TrafficSignDetailPage() {
     };
   }, [routeParam, sign]);
 
+  useEffect(() => {
+    if (!sign) {
+      return;
+    }
+
+    const canonicalCode = sign.routeCode ?? sign.signCode;
+    if (!canonicalCode || routeParam === canonicalCode) {
+      return;
+    }
+
+    router.replace(`/traffic-signs/${canonicalCode}`);
+  }, [routeParam, router, sign]);
+
   const routeCode = sign?.routeCode ?? sign?.signCode ?? routeParam;
   const isCurrentSignLoaded = !!sign &&
-    (sign.routeCode === routeParam || sign.signCode === routeParam);
+    (resolveLegacyTrafficSignCode(routeParam) === routeCode ||
+      resolveLegacyTrafficSignCode(routeParam) === sign.signCode);
   const { info, style } = sign ? getTrafficSignGroupInfo(sign) : getTrafficSignGroupInfo({
     signCode: routeParam,
     imageUrl: "",
@@ -190,11 +231,11 @@ export default function TrafficSignDetailPage() {
     );
   }
 
-  if (loading || !isCurrentSignLoaded) {
+  if (loading) {
     return <LoadingState />;
   }
 
-  if (error || !sign) {
+  if (error || !sign || !isCurrentSignLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="max-w-md rounded-[2rem] border border-border/60 bg-card p-8 text-center shadow-sm">
@@ -222,33 +263,49 @@ export default function TrafficSignDetailPage() {
   }
 
   const currentName = getTrafficSignName(sign, currentLanguage);
-  const currentDescription =
+  const currentMeaning =
+    localizedValue(sign, "meaning", currentLanguage) ||
     localizedValue(sign, "description", currentLanguage) ||
+    getTrafficSignMeaning(sign, currentLanguage) ||
     getTrafficSignDescription(sign, currentLanguage);
-  const currentLongDescription =
-    localizedValue(
-      sign,
-      "longDescription",
-      currentLanguage,
-    ) || getTrafficSignLongDescription(sign, currentLanguage);
+  const currentGuidance =
+    localizedValue(sign, "guidance", currentLanguage) ||
+    localizedValue(sign, "longDescription", currentLanguage) ||
+    getTrafficSignGuidance(sign, currentLanguage) ||
+    getTrafficSignLongDescription(sign, currentLanguage);
+  const showGuidance = hasDistinctTrafficSignGuidance(
+    currentMeaning,
+    currentGuidance,
+  );
   const breadcrumbItems = [
     { label: t("nav.home"), href: "/" },
     { label: t("nav.traffic_signs"), href: "/traffic-signs" },
     { label: currentName, href: `/traffic-signs/${routeCode}` },
   ];
+  const examStatus = getSignExamStatus(signProgress);
+  const examQuestionsCount =
+    sign.exam1TotalQuestions ?? signProgress?.exam1TotalQuestions ?? null;
+  const examPassingScore =
+    sign.exam1PassingScore ?? signProgress?.exam1PassingScore ?? null;
+  const examPassingPercentage =
+    examQuestionsCount && examPassingScore != null
+      ? Math.round((examPassingScore / examQuestionsCount) * 100)
+      : null;
+  const examSummaryText = examQuestionsCount && examPassingPercentage != null
+      ? `${currentLanguage === "ar"
+          ? `${examQuestionsCount} اسئلة والنجاح من ${examPassingPercentage}%`
+          : `${t("sign_quiz.questions_count").replace("{n}", examQuestionsCount.toString())} • ${t("sign_quiz.pass_score").replace("{score}", examPassingPercentage.toString())}`}${signProgress?.exam1BestScorePct != null ? ` • ${t("sign_quiz.best_score").replace("{score}", Math.round(signProgress.exam1BestScorePct).toString())}` : ""}`
+      : progressLoading
+        ? t("common.loading")
+        : t("sign_quiz.exam_config_pending");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
       <div className="container mx-auto px-4 py-8 md:py-10 space-y-6 md:space-y-8">
         <Breadcrumb items={breadcrumbItems} />
 
-        <section className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/65">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-24 end-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-            <div className="absolute -bottom-20 start-0 h-64 w-64 rounded-full bg-secondary/10 blur-3xl" />
-          </div>
-
-          <div className="relative grid gap-8 px-6 py-7 md:px-8 md:py-8 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-center">
+        <PageHeroSurface>
+          <div className="grid gap-8 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-center">
             <div className="rounded-[1.9rem] border border-border/60 bg-background/80 p-5 shadow-sm">
               <div className="rounded-[1.5rem] border border-border/60 bg-muted/20 p-5">
                 <div className="relative mx-auto aspect-square w-full max-w-[280px]">
@@ -269,68 +326,69 @@ export default function TrafficSignDetailPage() {
               </span>
 
               <div className="space-y-3">
-                <h1 className="max-w-4xl text-balance text-3xl font-extrabold tracking-tight text-secondary md:text-5xl">
+                <PageHeroTitle className="max-w-4xl text-balance">
                   {currentName}
-                </h1>
+                </PageHeroTitle>
               </div>
             </div>
           </div>
-        </section>
+        </PageHeroSurface>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_360px]">
           <div className="space-y-6">
             <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="text-xl font-black">
-                  {t("sign_detail.description")}
+                  {t("sign_detail.overview")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  {currentDescription ? (
+                <div className="rounded-[1.5rem] border border-border/60 bg-muted/20 p-5 md:p-6">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+                    {t("sign_detail.meaning")}
+                  </p>
+                  {currentMeaning ? (
                     <p
                       dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                      className="text-base leading-8 text-foreground"
+                      className="mt-3 text-lg font-semibold leading-9 text-foreground md:text-xl"
                     >
-                      {currentDescription}
+                      {currentMeaning}
                     </p>
                   ) : (
                     <p className="text-sm italic text-muted-foreground">
-                      {t("sign_detail.no_description")}
+                      {t("sign_detail.no_meaning")}
                     </p>
                   )}
                 </div>
 
-                <div className="border-t border-border/60 pt-6">
-                  <h2 className="text-lg font-black text-foreground">
-                    {t("sign_detail.long_description")}
-                  </h2>
-                  {currentLongDescription ? (
+                {showGuidance ? (
+                  <div className="space-y-3 border-t border-border/60 pt-6">
+                    <h2 className="text-lg font-black text-foreground">
+                      {t("sign_detail.guidance")}
+                    </h2>
                     <p
                       dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                      className="mt-3 whitespace-pre-line text-base leading-8 text-foreground"
+                      className="whitespace-pre-line text-base leading-8 text-foreground"
                     >
-                      {currentLongDescription}
+                      {currentGuidance}
                     </p>
-                  ) : (
-                    <p className="mt-3 text-sm italic text-muted-foreground">
-                      {t("sign_detail.no_long_description")}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                ) : null}
 
-            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl font-black">
-                  {info.title[currentLanguage]}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-base leading-8 text-muted-foreground">
-                  {info.description[currentLanguage]}
-                </p>
+                <div className="rounded-[1.5rem] border border-border/60 bg-background/70 p-5 md:p-6">
+                  <div className="flex items-center gap-2">
+                    <Shapes className="h-4 w-4 text-primary" />
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+                      {t("sign_detail.sign_family")}
+                    </p>
+                  </div>
+                  <h2 className="mt-3 text-lg font-black text-foreground">
+                    {info.title[currentLanguage]}
+                  </h2>
+                  <p className="mt-3 text-base leading-8 text-muted-foreground">
+                    {info.description[currentLanguage]}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -381,24 +439,18 @@ export default function TrafficSignDetailPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-2">
                       <p className="font-semibold text-foreground">
-                        {t("sign_quiz.exam_1")}
+                        {t("sign_quiz.exam_label")}
                       </p>
                       <p className="text-sm leading-6 text-muted-foreground">
-                        {t("sign_quiz.questions_count").replace("{n}", "15")} •{" "}
-                        {t("sign_quiz.pass_score")}
-                        {signProgress?.exam1BestScorePct != null
-                          ? ` • ${t("sign_quiz.best_score").replace("{score}", Math.round(signProgress.exam1BestScorePct).toString())}`
-                          : ""}
+                        {examSummaryText}
                       </p>
                     </div>
 
-                    {!progressLoading && signProgress?.exam1Passed ? (
-                      <Badge className="border border-green-200 bg-green-100 text-green-800">
-                        {t("sign_quiz.passed_badge")}
-                      </Badge>
-                    ) : !progressLoading && signProgress?.exam1Attempted ? (
-                      <Badge className="border border-red-200 bg-red-100 text-red-800">
-                        {t("sign_quiz.failed_badge")}
+                    {!progressLoading ? (
+                      <Badge
+                        className={`border ${getSignExamStatusClasses(examStatus.tone)}`}
+                      >
+                        {t(examStatus.labelKey)}
                       </Badge>
                     ) : null}
                   </div>

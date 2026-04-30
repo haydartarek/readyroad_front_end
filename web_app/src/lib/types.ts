@@ -33,6 +33,9 @@ export interface LoginResponse {
   email?:     string;
   fullName?:  string;
   role?:      string;
+  linkedProviders?: string[];
+  googleLinked?: boolean;
+  newUser?: boolean;
 }
 
 export interface RegisterRequest {
@@ -57,6 +60,8 @@ export interface User {
   isActive:           boolean;
   preferredLanguage?: Language;
   createdAt?:         string;
+  linkedProviders?:   string[];
+  googleLinked?:      boolean;
 }
 
 // ─── Exam ────────────────────────────────────────────────
@@ -160,6 +165,8 @@ export interface TrafficSign {
   routeCode?:                string;
   category?:                 string;
   categoryCode?:             string;
+  exam1TotalQuestions?:      number | null;
+  exam1PassingScore?:        number | null;
   nameEn:                    string;
   nameAr:                    string;
   nameNl:                    string;
@@ -168,10 +175,18 @@ export interface TrafficSign {
   descriptionAr:             string;
   descriptionNl:             string;
   descriptionFr:             string;
+  meaningEn?:                string;
+  meaningAr?:                string;
+  meaningNl?:                string;
+  meaningFr?:                string;
   longDescriptionEn?:        string;
   longDescriptionNl?:        string;
   longDescriptionFr?:        string;
   longDescriptionAr?:        string;
+  guidanceEn?:               string;
+  guidanceNl?:               string;
+  guidanceFr?:               string;
+  guidanceAr?:               string;
   isLongDescriptionComplete?: boolean;
   imageUrl:                  string;
   meaning?:                  string;

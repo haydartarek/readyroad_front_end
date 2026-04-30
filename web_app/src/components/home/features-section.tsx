@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import {
-  FilePlus2, Clock, BarChart2,
-  Layers, BookOpen, Globe, ExternalLink,
+  FileText, Target, BarChart3,
+  SignpostBig, BookOpen, Languages, ExternalLink,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import { EXAM_RULES, LANGUAGES } from '@/lib/constants';
 
 interface FeatureItem {
   icon: React.ElementType;
+  iconWrap: string;
+  iconTone: string;
   badge: string;
   title: string;
   description: string;
@@ -24,7 +26,9 @@ export function FeaturesSection() {
 
   const features: FeatureItem[] = [
     {
-      icon: FilePlus2,
+      icon: FileText,
+      iconWrap: 'border-primary/20 bg-primary/10 ring-1 ring-primary/10',
+      iconTone: 'text-primary',
       badge: t('home.features.badge_exam'),
       title: t('home.features.exam_title'),
       description: t('home.features.exam_desc', {
@@ -36,7 +40,9 @@ export function FeaturesSection() {
       href: '/exam',
     },
     {
-      icon: Clock,
+      icon: Target,
+      iconWrap: 'border-secondary/20 bg-secondary/10 ring-1 ring-secondary/10',
+      iconTone: 'text-secondary',
       badge: t('home.features.badge_practice'),
       title: t('home.features.practice_title'),
       description: t('home.features.practice_desc'),
@@ -44,7 +50,9 @@ export function FeaturesSection() {
       href: '/practice',
     },
     {
-      icon: BarChart2,
+      icon: BarChart3,
+      iconWrap: 'border-sky-500/20 bg-sky-500/10 ring-1 ring-sky-500/10',
+      iconTone: 'text-sky-600 dark:text-sky-400',
       badge: t('home.features.badge_analytics'),
       title: t('home.features.analytics_title'),
       description: t('home.features.analytics_desc'),
@@ -52,7 +60,9 @@ export function FeaturesSection() {
       href: '/dashboard',
     },
     {
-      icon: Layers,
+      icon: SignpostBig,
+      iconWrap: 'border-emerald-500/20 bg-emerald-500/10 ring-1 ring-emerald-500/10',
+      iconTone: 'text-emerald-600 dark:text-emerald-400',
       badge: t('home.features.badge_signs'),
       title: t('home.features.signs_title'),
       description: t('home.features.signs_desc'),
@@ -61,6 +71,8 @@ export function FeaturesSection() {
     },
     {
       icon: BookOpen,
+      iconWrap: 'border-amber-500/20 bg-amber-500/10 ring-1 ring-amber-500/10',
+      iconTone: 'text-amber-600 dark:text-amber-400',
       badge: t('home.features.badge_lessons'),
       title: t('home.features.lessons_title'),
       description: t('home.features.lessons_desc'),
@@ -68,7 +80,9 @@ export function FeaturesSection() {
       href: '/lessons',
     },
     {
-      icon: Globe,
+      icon: Languages,
+      iconWrap: 'border-teal-500/20 bg-teal-500/10 ring-1 ring-teal-500/10',
+      iconTone: 'text-teal-600 dark:text-teal-400',
       badge: t('home.features.badge_more'),
       title: t('home.features.multilingual_title'),
       description: t('home.features.multilingual_desc', {
@@ -132,10 +146,11 @@ export function FeaturesSection() {
                     className={[
                       'mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border bg-background/60 shadow-sm',
                       'transition-transform duration-200 group-hover:scale-[1.03]',
-                      feature.isPrimary ? 'border-primary/25 ring-1 ring-primary/15' : 'border-border/80',
+                      feature.isPrimary ? 'shadow-sm shadow-primary/10' : 'border-border/80',
+                      feature.iconWrap,
                     ].join(' ')}
                   >
-                    <Icon className="h-5 w-5 text-primary" aria-hidden />
+                    <Icon className={['h-5 w-5', feature.iconTone].join(' ')} aria-hidden />
                   </div>
 
                   <CardTitle className="text-lg font-extrabold tracking-tight text-secondary sm:text-xl">

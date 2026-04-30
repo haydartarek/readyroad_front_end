@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Home, LogOut, AlertCircle, ShieldOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+} from '@/components/ui/page-surface';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -22,18 +27,21 @@ export default function UnauthorizedPage() {
     >
       <div className="max-w-md w-full space-y-6">
 
-        {/* Icon + heading */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-red-500/10 rounded-2xl mx-auto">
-            <ShieldOff className="w-10 h-10 text-red-600" />
+        <PageHeroSurface>
+          <div className="space-y-3 text-center">
+            <div className="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-red-500/10">
+              <ShieldOff className="h-10 w-10 text-red-600" />
+            </div>
+            <div className="space-y-1">
+              <PageHeroTitle>
+                {t('unauthorized.title')}
+              </PageHeroTitle>
+              <PageHeroDescription>
+                {t('unauthorized.subtitle')}
+              </PageHeroDescription>
+            </div>
           </div>
-          <h1 className="text-3xl font-black text-foreground">
-            {t('unauthorized.title')}
-          </h1>
-          <p className="text-muted-foreground">
-            {t('unauthorized.subtitle')}
-          </p>
-        </div>
+        </PageHeroSurface>
 
         {/* Reason card */}
         <Card className="rounded-2xl border-red-500/20 bg-red-500/5 shadow-sm">

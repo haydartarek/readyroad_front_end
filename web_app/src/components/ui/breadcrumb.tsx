@@ -3,8 +3,9 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, ChevronLeft, MoreHorizontal } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home, MoreHorizontal } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
+import { GROUP_INFO, type LangKey } from '@/lib/sign-category-data';
 import { cn } from '@/lib/utils';
 
 // ─── Types ───────────────────────────────────────────────
@@ -36,6 +37,7 @@ const BREADCRUMB_ENABLED_ROUTES = [
 const SEGMENT_LABELS: Record<string, string> = {
   'analytics':      'nav.analytics',
   'practice':       'nav.practice',
+  'random':         'practice.random',
   'lessons':        'nav.lessons',
   'traffic-signs':  'nav.traffic_signs',
   'exam':           'nav.exam',
@@ -52,8 +54,18 @@ const LESSON_CODE_RE = /^les-(\d+)$/i;
 
 // ─── Helpers ─────────────────────────────────────────────
 
-function resolveSegmentLabel(segment: string, t: (key: string) => string): string {
+function resolveSegmentLabel(
+  segment: string,
+  t: (key: string) => string,
+  language: LangKey,
+  previousSegment?: string,
+): string {
   const key = SEGMENT_LABELS[segment];
+  const upperSegment = segment.toUpperCase();
+
+  if (previousSegment === 'practice' && GROUP_INFO[upperSegment]) {
+    return GROUP_INFO[upperSegment].title[language];
+  }
   if (key)                          return t(key);
   if (NUMERIC_RE.test(segment))     return `#${segment}`;
   if (SIGN_CODE_RE.test(segment))   return segment.toUpperCase();
@@ -70,6 +82,7 @@ function resolveSegmentLabel(segment: string, t: (key: string) => string): strin
 function buildBreadcrumbs(
   pathname: string,
   t: (key: string) => string,
+  language: LangKey,
 ): BreadcrumbItem[] {
   const segments = pathname.split('/').filter(Boolean);
   const isPublicReferenceRoute =
@@ -87,7 +100,7 @@ function buildBreadcrumbs(
   segments.forEach((segment, index) => {
     currentPath += `/${segment}`;
     items.push({
-      label:         resolveSegmentLabel(segment, t),
+      label:         resolveSegmentLabel(segment, t, language, segments[index - 1]),
       href:          currentPath,
       isCurrentPage: index === segments.length - 1,
     });
@@ -100,19 +113,25 @@ function buildBreadcrumbs(
 
 function Separator({ isRTL }: { isRTL: boolean }) {
   return (
-    <span className="mx-2 flex-shrink-0 text-muted-foreground" aria-hidden="true">
+    <span className="mx-0.5 flex-shrink-0 text-muted-foreground/40" aria-hidden="true">
       {isRTL
-        ? <ChevronLeft  className="h-4 w-4" />
-        : <ChevronRight className="h-4 w-4" />}
+        ? <ChevronLeft className="h-3 w-3" />
+        : <ChevronRight className="h-3 w-3" />}
     </span>
   );
 }
 
-function BreadcrumbLink({ item }: { item: BreadcrumbItem }) {
+function BreadcrumbLink({
+  item,
+  isFirst,
+}: {
+  item: BreadcrumbItem;
+  isFirst?: boolean;
+}) {
   if (item.isCurrentPage) {
     return (
       <span
-        className="max-w-[200px] truncate font-medium text-foreground"
+        className="inline-flex max-w-[200px] items-center gap-1.5 rounded-xl bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary"
         aria-current="page"
       >
         {item.label}
@@ -123,8 +142,12 @@ function BreadcrumbLink({ item }: { item: BreadcrumbItem }) {
   return (
     <Link
       href={item.href}
-      className="max-w-[150px] truncate text-muted-foreground transition-colors hover:text-primary hover:underline"
+      className={cn(
+        'inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground',
+        isFirst && 'gap-1.5',
+      )}
     >
+      {isFirst ? <Home className="h-3.5 w-3.5 flex-shrink-0" /> : null}
       {item.label}
     </Link>
   );
@@ -134,8 +157,8 @@ function BreadcrumbLink({ item }: { item: BreadcrumbItem }) {
 
 export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
   const pathname                            = usePathname();
-  const { t, isRTL }                        = useLanguage();
-  const containerRef                        = useRef<HTMLDivElement>(null);
+  const { t, isRTL, language }              = useLanguage();
+  const containerRef                        = useRef<HTMLOListElement>(null);
   const [isCollapsed, setIsCollapsed]       = useState(false);
   const [showDropdown, setShowDropdown]     = useState(false);
 
@@ -154,8 +177,8 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
       }));
     }
 
-    return isEnabled ? buildBreadcrumbs(pathname, t) : [];
-  }, [customItems, pathname, isEnabled, t]);
+    return isEnabled ? buildBreadcrumbs(pathname, t, language as LangKey) : [];
+  }, [customItems, pathname, isEnabled, language, t]);
 
   const checkOverflow = useCallback(() => {
     const el = containerRef.current;
@@ -189,22 +212,23 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
   const middleItems = items.slice(1, -1);
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-4" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div
+    <nav aria-label={t('common.breadcrumb')} className="mb-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <ol
         ref={containerRef}
-        className="flex flex-wrap items-center overflow-hidden text-sm text-muted-foreground"
+        className="inline-flex max-w-full flex-wrap items-center gap-1 overflow-hidden rounded-2xl border border-border/50 bg-card px-4 py-2 shadow-sm"
       >
         {isCollapsed ? (
           <>
-            <BreadcrumbLink item={firstItem} />
+            <li className="flex items-center gap-1">
+              <BreadcrumbLink item={firstItem} isFirst />
+            </li>
             <Separator isRTL={isRTL} />
 
-            {/* Collapsed middle items */}
-            <div className="relative">
+            <li className="relative flex items-center gap-1">
               <button
                 onClick={() => setShowDropdown(prev => !prev)}
-                className="flex items-center rounded px-2 py-1 text-muted-foreground hover:bg-muted"
-                aria-label="Show more breadcrumbs"
+                className="inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                aria-label={t('common.show_more_breadcrumbs')}
                 aria-expanded={showDropdown}
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -213,7 +237,7 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
               {showDropdown && (
                 <div
                   className={cn(
-                    'absolute top-full z-50 mt-1 min-w-[150px] rounded-md border border-border bg-popover py-1 shadow-lg',
+                    'absolute top-full z-50 mt-2 min-w-[180px] rounded-2xl border border-border/60 bg-popover p-1 shadow-lg',
                     isRTL ? 'right-0' : 'left-0',
                   )}
                 >
@@ -221,7 +245,7 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
+                      className="block rounded-xl px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                       onClick={() => setShowDropdown(false)}
                     >
                       {item.label}
@@ -229,20 +253,22 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
                   ))}
                 </div>
               )}
-            </div>
+            </li>
 
             <Separator isRTL={isRTL} />
-            <BreadcrumbLink item={lastItem} />
+            <li className="flex items-center gap-1">
+              <BreadcrumbLink item={lastItem} />
+            </li>
           </>
         ) : (
           items.map((item, index) => (
-            <span key={item.href} className="flex items-center">
+            <li key={item.href} className="flex items-center gap-1">
               {index > 0 && <Separator isRTL={isRTL} />}
-              <BreadcrumbLink item={item} />
-            </span>
+              <BreadcrumbLink item={item} isFirst={index === 0} />
+            </li>
           ))
         )}
-      </div>
+      </ol>
     </nav>
   );
 }

@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { getCsrfToken } from "@/lib/auth-token";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useLanguage } from "@/contexts/language-context";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { convertToPublicImageUrl } from "@/lib/image-utils";
+import { NATIVE_SELECT_CLASS } from "@/lib/native-select-styles";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -20,6 +24,7 @@ import {
   Save,
   CheckCircle2,
   AlertTriangle,
+  ClipboardList,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────
@@ -90,6 +95,7 @@ function FormField({
   error,
   onChange,
   dir,
+  disabled = false,
 }: {
   label: string;
   placeholder?: string;
@@ -97,19 +103,28 @@ function FormField({
   error?: string;
   onChange: (v: string) => void;
   dir?: string;
+  disabled?: boolean;
 }) {
+  const fieldId = useId();
   return (
     <div className="space-y-1">
-      <label className="block text-xs font-semibold text-foreground">
+      <label
+        htmlFor={fieldId}
+        className="block text-xs font-semibold text-foreground"
+      >
         {label}
       </label>
       <input
+        id={fieldId}
+        name={fieldId}
         value={value}
         placeholder={placeholder}
+        autoComplete="off"
         onChange={(e) => onChange(e.target.value)}
         dir={dir}
+        disabled={disabled}
         className={cn(
-          "w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all",
+          "w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all disabled:cursor-not-allowed disabled:bg-muted/50 disabled:text-muted-foreground",
           error
             ? "border-destructive/50 focus:ring-destructive/20"
             : "border-border/50",
@@ -127,6 +142,7 @@ function FormTextarea({
   error,
   onChange,
   dir,
+  disabled = false,
 }: {
   label: string;
   placeholder?: string;
@@ -134,41 +150,35 @@ function FormTextarea({
   error?: string;
   onChange: (v: string) => void;
   dir?: string;
+  disabled?: boolean;
 }) {
+  const fieldId = useId();
   return (
     <div className="space-y-1">
-      <label className="block text-xs font-semibold text-foreground">
+      <label
+        htmlFor={fieldId}
+        className="block text-xs font-semibold text-foreground"
+      >
         {label}
       </label>
       <textarea
+        id={fieldId}
+        name={fieldId}
         value={value}
         placeholder={placeholder}
+        autoComplete="off"
         onChange={(e) => onChange(e.target.value)}
         dir={dir}
         rows={3}
+        disabled={disabled}
         className={cn(
-          "w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all",
+          "w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none transition-all disabled:cursor-not-allowed disabled:bg-muted/50 disabled:text-muted-foreground",
           error
             ? "border-destructive/50 focus:ring-destructive/20"
             : "border-border/50",
         )}
       />
       {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
-  );
-}
-
-function SectionCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
-      <h2 className="text-base font-black text-foreground">{title}</h2>
-      {children}
     </div>
   );
 }
@@ -245,6 +255,21 @@ export default function AdminAddQuizQuestionPage() {
     });
   };
 
+  const setCorrectOption = (idx: number) => {
+    setForm((prev) => ({
+      ...prev,
+      options: prev.options.map((option, optionIdx) => ({
+        ...option,
+        isCorrect: optionIdx === idx,
+      })),
+    }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.correct;
+      return next;
+    });
+  };
+
   const addOption = () => {
     if (form.options.length >= 3) return;
     setForm((prev) => ({
@@ -275,17 +300,33 @@ export default function AdminAddQuizQuestionPage() {
       errors.questionEn =
         t("admin.quizzes.form.error_question") ||
         "English question text is required";
+    if (form.questionType === "IMAGE_BASED" && !form.contentImageUrl.trim()) {
+      errors.contentImageUrl =
+        t("admin.quizzes.form.error_image_required") ||
+        "An image is required for image-based questions";
+    }
     if (form.options.length < 2)
-      errors.options = "At least 2 options are required";
-    if (form.options.length > 3) errors.options = "Maximum 3 options allowed";
+      errors.options =
+        t("admin.quizzes.form.error_min_options") ||
+        "At least 2 options are required";
+    if (form.options.length > 3)
+      errors.options =
+        t("admin.quizzes.form.error_max_options") ||
+        "Maximum 3 options allowed";
     const correctCount = form.options.filter((o) => o.isCorrect).length;
     if (correctCount === 0)
-      errors.correct = "Exactly one option must be marked as correct";
+      errors.correct =
+        t("admin.quizzes.form.error_exactly_one_correct") ||
+        "Exactly one option must be marked as correct";
     if (correctCount > 1)
-      errors.correct = "Only one option can be marked as correct";
+      errors.correct =
+        t("admin.quizzes.form.error_only_one_correct") ||
+        "Only one option can be marked as correct";
     form.options.forEach((o, i) => {
       if (!o.textEn.trim())
-        errors[`option_${i}`] = "English option text is required";
+        errors[`option_${i}`] =
+          t("admin.quizzes.form.error_option_en") ||
+          "English option text is required";
     });
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -314,7 +355,7 @@ export default function AdminAddQuizQuestionPage() {
     }
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
       setToast({
-        message: `File too large. Max ${MAX_FILE_SIZE_MB}MB`,
+        message: `${t("admin.quizzes.upload.too_large")} ${MAX_FILE_SIZE_MB}MB`,
         type: "error",
       });
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -341,12 +382,19 @@ export default function AdminAddQuizQuestionPage() {
       }
       const data = (await res.json()) as { url: string };
       setField("contentImageUrl", data.url);
-      setToast({ message: "Image uploaded successfully", type: "success" });
+      setToast({
+        message:
+          t("admin.quizzes.upload.success") || "Image uploaded successfully",
+        type: "success",
+      });
     } catch (err: unknown) {
       logApiError("Failed to upload image", err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
       else {
-        const msg = (err as { message?: string })?.message || "Upload failed";
+        const msg =
+          (err as { message?: string })?.message ||
+          t("admin.quizzes.upload.failed") ||
+          "Upload failed";
         setToast({ message: String(msg), type: "error" });
       }
     } finally {
@@ -357,8 +405,7 @@ export default function AdminAddQuizQuestionPage() {
 
   const resolveImageUrl = (url: string): string => {
     if (!url) return "";
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `http://localhost:8890${url}`;
+    return convertToPublicImageUrl(url) ?? "";
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -405,7 +452,13 @@ export default function AdminAddQuizQuestionPage() {
           axiosErr?.response?.data?.error ||
           axiosErr?.response?.data?.message ||
           axiosErr?.message;
-        setErrorMsg(String(msg || "Failed to create question"));
+        setErrorMsg(
+          String(
+            msg ||
+              t("admin.quizzes.form.error_generic") ||
+              "Failed to create question",
+          ),
+        );
       }
     } finally {
       setSubmitting(false);
@@ -439,24 +492,22 @@ export default function AdminAddQuizQuestionPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link
-          href="/admin/quizzes"
-          className="w-9 h-9 rounded-xl border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">
-            {t("admin.quizzes.add_new") || "Add Question"}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            {t("admin.quizzes.add_new_desc") ||
-              "Create a new theory-bank question with 2 or 3 answer options."}
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={<ClipboardList className="h-6 w-6" />}
+        title={t("admin.quizzes.add_new") || "Add Question"}
+        description={
+          t("admin.quizzes.add_new_desc") ||
+          "Create a new theory-bank question with 2 or 3 answer options."
+        }
+        actions={
+          <Button variant="outline" asChild className="gap-2">
+            <Link href="/admin/quizzes">
+              <ArrowLeft className="w-4 h-4" />
+              {t("common.back") || "Back"}
+            </Link>
+          </Button>
+        }
+      />
 
       <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
         {t("admin.quizzes.bank_theory_desc") ||
@@ -474,20 +525,26 @@ export default function AdminAddQuizQuestionPage() {
         )}
 
         {/* Basic Info */}
-        <SectionCard
+        <AdminSectionCard
           title={t("admin.quizzes.form.basic_info") || "Basic Information"}
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Category */}
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-foreground">
+              <label
+                htmlFor="admin-quiz-new-category"
+                className="block text-xs font-semibold text-foreground"
+              >
                 {t("admin.quizzes.form.category") || "Category"} *
               </label>
               <select
+                id="admin-quiz-new-category"
+                name="categoryCode"
                 value={form.categoryCode}
                 onChange={(e) => setField("categoryCode", e.target.value)}
                 className={cn(
-                  "w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all",
+                  "w-full",
+                  NATIVE_SELECT_CLASS,
                   fieldErrors.categoryCode
                     ? "border-destructive/50"
                     : "border-border/50",
@@ -512,41 +569,62 @@ export default function AdminAddQuizQuestionPage() {
 
             {/* Difficulty */}
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-foreground">
+              <label
+                htmlFor="admin-quiz-new-difficulty"
+                className="block text-xs font-semibold text-foreground"
+              >
                 {t("admin.quizzes.form.difficulty") || "Difficulty"}
               </label>
               <select
+                id="admin-quiz-new-difficulty"
+                name="difficultyLevel"
                 value={form.difficultyLevel}
                 onChange={(e) => setField("difficultyLevel", e.target.value)}
-                className="w-full rounded-xl border border-border/50 px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className={cn("w-full", NATIVE_SELECT_CLASS)}
               >
-                <option value="EASY">Easy</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HARD">Hard</option>
+                <option value="EASY">{t("difficulty.easy")}</option>
+                <option value="MEDIUM">{t("difficulty.medium")}</option>
+                <option value="HARD">{t("difficulty.hard")}</option>
               </select>
             </div>
 
             {/* Question Type */}
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-foreground">
+              <label
+                htmlFor="admin-quiz-new-question-type"
+                className="block text-xs font-semibold text-foreground"
+              >
                 {t("admin.quizzes.form.question_type") || "Question Type"}
               </label>
               <select
+                id="admin-quiz-new-question-type"
+                name="questionType"
                 value={form.questionType}
                 onChange={(e) => setField("questionType", e.target.value)}
-                className="w-full rounded-xl border border-border/50 px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className={cn("w-full", NATIVE_SELECT_CLASS)}
               >
-                <option value="MULTIPLE_CHOICE">Multiple Choice</option>
-                <option value="TRUE_FALSE">True / False</option>
-                <option value="IMAGE_BASED">Image Based</option>
+                <option value="MULTIPLE_CHOICE">
+                  {t("admin.quizzes.type_multiple_choice")}
+                </option>
+                <option value="TRUE_FALSE">
+                  {t("admin.quizzes.type_true_false")}
+                </option>
+                <option value="IMAGE_BASED">
+                  {t("admin.quizzes.type_image_based")}
+                </option>
               </select>
             </div>
           </div>
 
           {/* Active Toggle */}
           <label className="flex items-center gap-3 cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(e) => setField("isActive", e.target.checked)}
+              className="sr-only"
+            />
             <div
-              onClick={() => setField("isActive", !form.isActive)}
               className={cn(
                 "w-10 h-6 rounded-full transition-colors duration-200 flex items-center px-1 cursor-pointer",
                 form.isActive ? "bg-green-500" : "bg-muted",
@@ -560,13 +638,17 @@ export default function AdminAddQuizQuestionPage() {
               />
             </div>
             <span className="text-sm font-semibold text-foreground">
-              {form.isActive ? "Active" : "Inactive"}
+              {form.isActive
+                ? t("admin.quizzes.active")
+                : t("admin.quizzes.inactive")}
             </span>
           </label>
-        </SectionCard>
+        </AdminSectionCard>
 
         {/* Image Upload */}
-        <SectionCard title={t("admin.quizzes.upload.title") || "Content Image"}>
+        <AdminSectionCard
+          title={t("admin.quizzes.upload.title") || "Content Image"}
+        >
           {form.contentImageUrl && (
             <div className="relative inline-block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -593,18 +675,36 @@ export default function AdminAddQuizQuestionPage() {
 
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 space-y-1">
-              <label className="block text-xs font-semibold text-foreground">
-                {t("admin.quizzes.form.image_url") || "Content Image URL"}
+              <label
+                htmlFor="admin-quiz-new-image-url"
+                className="block text-xs font-semibold text-foreground"
+              >
+                {t("admin.quizzes.form.image_url")}
               </label>
               <input
+                id="admin-quiz-new-image-url"
+                name="contentImageUrl"
                 value={form.contentImageUrl}
-                placeholder="https://example.com/image.png or /images/quiz/..."
+                autoComplete="url"
+                placeholder={t("admin.quizzes.form.image_url_placeholder")}
                 onChange={(e) => setField("contentImageUrl", e.target.value)}
-                className="w-full rounded-xl border border-border/50 px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className={cn(
+                  "w-full rounded-xl border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30",
+                  fieldErrors.contentImageUrl
+                    ? "border-destructive/50"
+                    : "border-border/50",
+                )}
               />
+              {fieldErrors.contentImageUrl && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.contentImageUrl}
+                </p>
+              )}
             </div>
             <div className="flex items-end">
               <input
+                id="admin-quiz-new-image-file"
+                name="contentImageFile"
                 ref={fileInputRef}
                 type="file"
                 accept=".jpg,.jpeg,.png,.webp"
@@ -620,68 +720,60 @@ export default function AdminAddQuizQuestionPage() {
               >
                 {uploading ? (
                   <>
-                    <span className="animate-spin">⏳</span> Uploading...
+                    <span className="animate-spin">⏳</span>{" "}
+                    {t("admin.quizzes.upload.uploading")}
                   </>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4" /> Upload Image
+                    <Upload className="w-4 h-4" />{" "}
+                    {t("admin.quizzes.upload.action")}
                   </>
                 )}
               </Button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            {t("admin.quizzes.upload.hint") ||
-              "Accepted: JPG, JPEG, PNG, WEBP. Max 5MB."}
+            {t("admin.quizzes.upload.hint")}
           </p>
-        </SectionCard>
+        </AdminSectionCard>
 
         {/* Question Text */}
-        <SectionCard
-          title={
-            t("admin.quizzes.form.questions") || "Question Text (Multilingual)"
-          }
-        >
+        <AdminSectionCard title={t("admin.quizzes.form.questions")}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormTextarea
-              label={
-                (t("admin.quizzes.form.question_en") || "Question (English)") +
-                " *"
-              }
-              placeholder="What does this sign mean?"
+              label={`${t("admin.quizzes.form.question_en")} *`}
+              placeholder={t("admin.quizzes.form.question_en_placeholder")}
               value={form.questionEn}
               error={fieldErrors.questionEn}
               onChange={(v) => setField("questionEn", v)}
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_ar") || "Question (Arabic)"}
-              placeholder="ماذا تعني هذه العلامة؟"
+              label={t("admin.quizzes.form.question_ar")}
+              placeholder={t("admin.quizzes.form.question_ar_placeholder")}
               value={form.questionAr}
               onChange={(v) => setField("questionAr", v)}
               dir="rtl"
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_nl") || "Question (Dutch)"}
-              placeholder="Wat betekent dit verkeersbord?"
+              label={t("admin.quizzes.form.question_nl")}
+              placeholder={t("admin.quizzes.form.question_nl_placeholder")}
               value={form.questionNl}
               onChange={(v) => setField("questionNl", v)}
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_fr") || "Question (French)"}
-              placeholder="Que signifie ce panneau?"
+              label={t("admin.quizzes.form.question_fr")}
+              placeholder={t("admin.quizzes.form.question_fr_placeholder")}
               value={form.questionFr}
               onChange={(v) => setField("questionFr", v)}
             />
           </div>
-        </SectionCard>
+        </AdminSectionCard>
 
         {/* Answer Options */}
-        <SectionCard
-          title={`${t("admin.quizzes.form.options_title") || "Answer Options"} *`}
-        >
+        <AdminSectionCard title={`${t("admin.quizzes.form.options_title")} *`}>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              Belgian standard: 2–3 options, exactly 1 correct
+              {t("admin.quizzes.form.rule_note")}
             </p>
             <Button
               type="button"
@@ -692,9 +784,11 @@ export default function AdminAddQuizQuestionPage() {
               className="gap-1.5 text-xs h-8"
             >
               <Plus className="w-3.5 h-3.5" />
-              {t("admin.quizzes.form.add_option") || "Add Option"}
+              {t("admin.quizzes.form.add_option")}
               {form.options.length >= 3 && (
-                <span className="text-muted-foreground">(max 3)</span>
+                <span className="text-muted-foreground">
+                  {t("admin.quizzes.form.max_options")}
+                </span>
               )}
             </Button>
           </div>
@@ -730,26 +824,28 @@ export default function AdminAddQuizQuestionPage() {
                       {idx + 1}
                     </div>
                     <span className="text-sm font-bold text-foreground">
-                      Option {idx + 1}
+                      {t("admin.quizzes.form.option_number").replace(
+                        "{number}",
+                        String(idx + 1),
+                      )}
                     </span>
                     {opt.isCorrect && (
                       <Badge className="bg-green-500/10 text-green-600 border-0 text-xs">
-                        ✓ Correct
+                        {t("admin.quizzes.correct_badge")}
                       </Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
-                        type="checkbox"
+                        type="radio"
+                        name="correctOption"
                         checked={opt.isCorrect}
-                        onChange={(e) =>
-                          setOptionField(idx, "isCorrect", e.target.checked)
-                        }
+                        onChange={() => setCorrectOption(idx)}
                         className="rounded border-border"
                       />
                       <span className="text-xs text-muted-foreground font-medium">
-                        Mark Correct
+                        {t("admin.quizzes.form.mark_correct")}
                       </span>
                     </label>
                     {form.options.length > 2 && (
@@ -766,28 +862,36 @@ export default function AdminAddQuizQuestionPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField
-                    label="Option (English) *"
-                    placeholder="Answer option..."
+                    label={`${t("admin.quizzes.form.option_text_en")} *`}
+                    placeholder={t(
+                      "admin.quizzes.form.option_text_en_placeholder",
+                    )}
                     value={opt.textEn}
                     error={fieldErrors[`option_${idx}`]}
                     onChange={(v) => setOptionField(idx, "textEn", v)}
                   />
                   <FormField
-                    label="Option (Arabic)"
-                    placeholder="خيار الإجابة..."
+                    label={t("admin.quizzes.form.option_text_ar")}
+                    placeholder={t(
+                      "admin.quizzes.form.option_text_ar_placeholder",
+                    )}
                     value={opt.textAr}
                     onChange={(v) => setOptionField(idx, "textAr", v)}
                     dir="rtl"
                   />
                   <FormField
-                    label="Option (Dutch)"
-                    placeholder="Antwoordmogelijkheid..."
+                    label={t("admin.quizzes.form.option_text_nl")}
+                    placeholder={t(
+                      "admin.quizzes.form.option_text_nl_placeholder",
+                    )}
                     value={opt.textNl}
                     onChange={(v) => setOptionField(idx, "textNl", v)}
                   />
                   <FormField
-                    label="Option (French)"
-                    placeholder="Option de réponse..."
+                    label={t("admin.quizzes.form.option_text_fr")}
+                    placeholder={t(
+                      "admin.quizzes.form.option_text_fr_placeholder",
+                    )}
                     value={opt.textFr}
                     onChange={(v) => setOptionField(idx, "textFr", v)}
                   />
@@ -795,11 +899,13 @@ export default function AdminAddQuizQuestionPage() {
               </div>
             ))}
           </div>
-        </SectionCard>
+        </AdminSectionCard>
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-2">
-          <p className="text-xs text-muted-foreground">* Required fields</p>
+          <p className="text-xs text-muted-foreground">
+            {t("admin.quizzes.form.required_note")}
+          </p>
           <div className="flex items-center gap-3">
             <Button variant="outline" asChild>
               <Link href="/admin/quizzes">
@@ -813,11 +919,12 @@ export default function AdminAddQuizQuestionPage() {
             >
               {submitting ? (
                 <>
-                  <span className="animate-spin">⏳</span> Saving...
+                  <span className="animate-spin">⏳</span>{" "}
+                  {t("admin.quizzes.form.saving")}
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" /> Save Question
+                  <Save className="w-4 h-4" /> {t("admin.quizzes.form.save")}
                 </>
               )}
             </Button>

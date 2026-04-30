@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLanguage } from '@/contexts/language-context';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ export function SubmitConfirmDialog({
   onConfirm,
   isSubmitting,
 }: SubmitConfirmDialogProps) {
+  const { t } = useLanguage();
   const unansweredCount = totalQuestions - answeredCount;
   const allAnswered     = unansweredCount === 0;
 
@@ -40,13 +42,12 @@ export function SubmitConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="font-black">Submit Exam?</DialogTitle>
+          <DialogTitle className="font-black">{t('exam.submit.title')}</DialogTitle>
           <DialogDescription>
-            You have answered{' '}
-            <span className="font-bold text-foreground">
-              {answeredCount}/{totalQuestions}
-            </span>{' '}
-            questions.
+            {t('exam.submit.description', {
+              answered: answeredCount,
+              total: totalQuestions,
+            })}
           </DialogDescription>
         </DialogHeader>
 
@@ -56,17 +57,19 @@ export function SubmitConfirmDialog({
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="space-y-1">
                 <p className="font-semibold">
-                  {unansweredCount} question{unansweredCount > 1 ? 's are' : ' is'} unanswered
+                  {unansweredCount === 1
+                    ? t('exam.submit.unanswered_one')
+                    : t('exam.submit.unanswered_many', { count: unansweredCount })}
                 </p>
                 <p className="text-xs opacity-90">
-                  Unanswered questions will be marked as incorrect.
+                  {t('exam.submit.unanswered_hint')}
                 </p>
               </AlertDescription>
             </Alert>
           )}
 
           <p className="text-sm text-muted-foreground">
-            Once submitted, you cannot change your answers. Are you sure?
+            {t('exam.submit.warning')}
           </p>
         </div>
 
@@ -77,8 +80,8 @@ export function SubmitConfirmDialog({
             className="rounded-xl gap-2 shadow-sm shadow-primary/20"
           >
             {isSubmitting
-              ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-              : 'Submit Exam'
+              ? <><Loader2 className="h-4 w-4 animate-spin" /> {t('exam.submit.submitting')}</>
+              : t('exam.submit.confirm')
             }
           </Button>
           <Button
@@ -87,7 +90,7 @@ export function SubmitConfirmDialog({
             disabled={isSubmitting}
             className="rounded-xl"
           >
-            Cancel
+            {t('exam.cancel')}
           </Button>
         </DialogFooter>
       </DialogContent>

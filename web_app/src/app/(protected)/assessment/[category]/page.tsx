@@ -10,6 +10,11 @@ import {
 } from "@/services/assessmentService";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import {
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+} from "@/components/ui/page-surface";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, ChevronRight, Zap, BookOpen, Trophy } from "lucide-react";
@@ -51,7 +56,7 @@ function CategoryContent({
 }: {
   slug: string;
   language: CategoryLanguage;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   isRTL: boolean;
 }) {
   const router = useRouter();
@@ -112,34 +117,43 @@ function CategoryContent({
     >
       {unavailable && <ServiceUnavailableBanner />}
 
-      {/* Back + header */}
-      <div className="space-y-1">
-        <Link
-          href="/assessment"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {t("assessment.back_to_categories")}
-        </Link>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {category?.name ?? slug}
-        </h1>
-        {category?.description && (
-          <p className="text-muted-foreground text-sm">
-            {category.description}
-          </p>
-        )}
-        <div className="flex gap-2 pt-1">
-          {category && (
-            <>
-              <Badge variant="secondary">{category.timeLimitMinutes}min</Badge>
-              <Badge variant="secondary">
-                {category.passingScorePercent}% {t("assessment.to_pass")}
-              </Badge>
-            </>
-          )}
+      <PageHeroSurface>
+        <div className="space-y-3">
+          <Link
+            href="/assessment"
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t("assessment.back_to_categories")}
+          </Link>
+          <div className="space-y-1">
+            <PageHeroTitle>
+              {category?.name ?? slug}
+            </PageHeroTitle>
+            {category?.description && (
+              <PageHeroDescription>
+                {category.description}
+              </PageHeroDescription>
+            )}
+          </div>
+          <div className="flex gap-2 pt-1">
+            {category && (
+              <>
+                <Badge variant="secondary">
+                  {t("assessment.badge_minutes", {
+                    count: category.timeLimitMinutes,
+                  })}
+                </Badge>
+                <Badge variant="secondary">
+                  {t("assessment.badge_pass", {
+                    count: category.passingScorePercent,
+                  })}
+                </Badge>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </PageHeroSurface>
 
       {/* Level cards */}
       <p className="text-sm font-medium text-muted-foreground">

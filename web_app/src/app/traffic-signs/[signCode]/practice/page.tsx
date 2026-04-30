@@ -3,13 +3,17 @@
 import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  ChartNoAxesColumn,
   CheckCircle2,
+  RotateCcw,
   Shapes,
+  Target,
+  Trophy,
   XCircle,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -17,11 +21,23 @@ import { SignImage } from "@/components/traffic-signs/sign-image";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  PageHeroEyebrow,
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+  PageMetricCard,
+  PageSectionSurface,
+} from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
-import { API_ENDPOINTS } from "@/lib/constants";
+import {
+  API_ENDPOINTS,
+  isRemovedLegacyTrafficSignCode,
+  resolveLegacyTrafficSignCode,
+} from "@/lib/constants";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import {
   getTrafficSignGroupInfo,
@@ -135,11 +151,11 @@ function getApiErrorStatusAndMessage(error: unknown): {
 function LoadingState() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
-      <div className="container mx-auto px-4 py-8 md:py-10 space-y-6">
+      <div className="container mx-auto max-w-7xl px-4 py-5 md:py-6 space-y-4">
         <div className="h-5 w-56 animate-pulse rounded-full bg-muted" />
-        <div className="rounded-[2rem] border border-border/60 bg-card p-8 shadow-sm">
-          <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
-            <div className="mx-auto h-52 w-52 animate-pulse rounded-[2rem] bg-muted" />
+        <div className="rounded-[1.75rem] border border-border/60 bg-card p-5 shadow-sm md:p-6">
+          <div className="grid gap-4 lg:grid-cols-[190px_minmax(0,1fr)] lg:items-center">
+            <div className="mx-auto h-40 w-40 animate-pulse rounded-[1.5rem] bg-muted" />
             <div className="space-y-4">
               <div className="h-8 w-40 animate-pulse rounded-full bg-muted" />
               <div className="h-12 w-2/3 animate-pulse rounded-2xl bg-muted" />
@@ -147,7 +163,7 @@ function LoadingState() {
             </div>
           </div>
         </div>
-        <div className="h-96 animate-pulse rounded-[2rem] bg-card" />
+        <div className="h-80 animate-pulse rounded-[1.75rem] bg-card" />
       </div>
     </div>
   );
@@ -156,6 +172,7 @@ function LoadingState() {
 export default function TrafficSignPracticePage() {
   const params = useParams<{ signCode: string }>();
   const routeParam = params.signCode;
+  const router = useRouter();
   const { t, language, isRTL } = useLanguage();
   const currentLanguage = (["nl", "en", "ar", "fr"] as Lang[]).includes(
     language as Lang,
@@ -181,6 +198,8 @@ export default function TrafficSignPracticePage() {
 
   const reviewRef = useRef<HTMLDivElement | null>(null);
   const actionRef = useRef<HTMLDivElement | null>(null);
+  const requestedCode = resolveLegacyTrafficSignCode(routeParam);
+  const removedLegacyCode = isRemovedLegacyTrafficSignCode(routeParam);
 
   const routeCode = sign?.routeCode ?? sign?.signCode ?? routeParam;
   const signName = sign ? getTrafficSignName(sign, currentLanguage) : routeParam;
@@ -250,12 +269,18 @@ export default function TrafficSignPracticePage() {
   );
 
   useEffect(() => {
+    if (removedLegacyCode) {
+      router.replace("/traffic-signs");
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setLoadError(null);
     setSubmissionError(null);
+    setServiceUnavailable(false);
 
-    initializeSession(routeParam)
+    initializeSession(requestedCode)
       .catch((apiError) => {
         logApiError("Failed to initialize sign practice session", apiError);
         if (!cancelled) {
@@ -275,7 +300,20 @@ export default function TrafficSignPracticePage() {
     return () => {
       cancelled = true;
     };
-  }, [initializeSession, routeParam, t]);
+  }, [initializeSession, removedLegacyCode, requestedCode, router, t]);
+
+  useEffect(() => {
+    if (!sign) {
+      return;
+    }
+
+    const canonicalCode = sign.routeCode ?? sign.signCode;
+    if (!canonicalCode || routeParam === canonicalCode) {
+      return;
+    }
+
+    router.replace(`/traffic-signs/${canonicalCode}/practice`);
+  }, [routeParam, router, sign]);
 
   const questions = session?.questions ?? [];
   const currentQuestion = questions[currentIndex];
@@ -408,7 +446,7 @@ export default function TrafficSignPracticePage() {
             setLoadError(null);
             setSubmissionError(null);
             setLoading(true);
-            initializeSession(routeParam)
+            initializeSession(requestedCode)
               .catch((apiError) => {
                 logApiError("Retry failed for sign practice", apiError);
                 if (isServiceUnavailable(apiError)) {
@@ -460,169 +498,336 @@ export default function TrafficSignPracticePage() {
     const correctAnswers = answerHistory.filter(
       (entry) => entry.response.isCorrect,
     ).length;
+    const wrongAnswers = Math.max(0, session.totalQuestions - correctAnswers);
     const scorePercentage =
       session.totalQuestions > 0
         ? Math.round((correctAnswers / session.totalQuestions) * 100)
         : 0;
+    const scoreTone =
+      scorePercentage >= 85
+        ? "success"
+        : scorePercentage >= 60
+          ? "warning"
+          : "danger";
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
-        <div className="container mx-auto px-4 py-8 md:py-10 space-y-6">
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+      >
+        <div className="container mx-auto max-w-7xl px-4 py-5 md:py-6 space-y-4">
           <Breadcrumb items={breadcrumbItems} />
 
-          <Card className="overflow-hidden rounded-[2rem] border border-border/60 shadow-sm">
-            <div className={`h-1.5 w-full bg-gradient-to-r ${style.accent}`} />
-            <CardContent className="px-6 py-8 md:px-8">
-              <div className="mx-auto max-w-xl text-center space-y-6">
-                <div className="flex justify-center">
-                  <div className="rounded-[1.5rem] border border-border/60 bg-background/80 p-5 shadow-sm">
-                    <div className="relative h-28 w-28">
-                      <SignImage
-                        src={resolveTrafficSignImage(sign)}
-                        alt={signName}
-                        className="object-contain"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Badge className={`border ${style.chip}`}>
-                    {t("sign_quiz.practice_mode")}
+          <PageHeroSurface
+            className={cn(
+              scorePercentage === 100
+                ? "border-green-200/80"
+                : scorePercentage >= 70
+                  ? "border-primary/20"
+                  : "border-amber-200/80",
+            )}
+            contentClassName="space-y-0 p-5 md:p-6"
+          >
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.18fr)_280px] xl:items-center">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="border border-primary/15 bg-primary/10 text-primary">
+                    {t("sign_quiz.practice_done")}
                   </Badge>
-                  <h1 className="text-3xl font-black tracking-tight text-foreground">
-                    {t("sign_quiz.practice.session_complete")}
-                  </h1>
-                  <p className="text-sm leading-6 text-muted-foreground md:text-base">
-                    {signName}
-                  </p>
+                  <Badge className={`border ${style.chip}`}>
+                    {info.title[currentLanguage]}
+                  </Badge>
+                  <Badge className="border border-border/60 bg-background/80 text-foreground/80">
+                    {sign.signCode}
+                  </Badge>
                 </div>
 
-                <div className="space-y-3">
-                  <p className="text-6xl font-black tracking-tight text-primary">
-                    {scorePercentage}%
-                  </p>
-                  <Progress
-                    value={scorePercentage}
-                    className="mx-auto h-2.5 max-w-md rounded-full [&>div]:bg-primary"
-                  />
-                  <p className="text-sm text-muted-foreground">
+                <div className="space-y-2">
+                  <PageHeroEyebrow>
+                    {t("sign_quiz.practice.result_heading")}
+                  </PageHeroEyebrow>
+                  <PageHeroTitle>{signName}</PageHeroTitle>
+                  <PageHeroDescription className="max-w-2xl text-sm leading-6 md:text-[15px]">
+                    {t("sign_quiz.practice.result_description")}
+                  </PageHeroDescription>
+                  <PageHeroDescription className="max-w-2xl text-sm font-semibold text-foreground/80 md:text-[15px]">
                     {t("sign_quiz.practice.session_score")
                       .replace("{n}", String(correctAnswers))
                       .replace("{m}", String(session.totalQuestions))}
-                  </p>
+                  </PageHeroDescription>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Button className="rounded-xl" onClick={handleRestart}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    {t("sign_quiz.practice.try_again")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="rounded-xl"
-                    onClick={() => {
-                      setShowReview((value) => !value);
-                      setTimeout(() => {
-                        reviewRef.current?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        });
-                      }, 80);
-                    }}
-                  >
-                    {t("sign_quiz.exam.review_answers")}
-                  </Button>
-                </div>
+                <div className="grid gap-2.5 md:grid-cols-2">
+                  <div className="rounded-[1.2rem] border border-border/60 bg-background/80 p-3.5 shadow-sm">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        {t("sign_quiz.exam.score_label")}
+                      </p>
+                      <p
+                        className={cn(
+                          "text-lg font-black",
+                          scorePercentage >= 85
+                            ? "text-green-600"
+                            : scorePercentage >= 60
+                              ? "text-amber-600"
+                              : "text-destructive",
+                        )}
+                      >
+                        {scorePercentage}%
+                      </p>
+                    </div>
+                    <Progress
+                      value={scorePercentage}
+                      className="h-2.5 bg-muted/70"
+                    />
+                    <p className="mt-2 text-xs font-medium text-foreground/75">
+                      {t("sign_quiz.exam.correct_of")
+                        .replace("{n}", String(correctAnswers))
+                        .replace("{total}", String(session.totalQuestions))}
+                    </p>
+                  </div>
 
-                <Button variant="ghost" className="rounded-xl" asChild>
-                  <Link href={`/traffic-signs/${routeCode}`}>
-                    {isRTL ? (
-                      <ArrowRight className="mr-2 h-4 w-4" />
-                    ) : (
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                    )}
-                    {t("sign_quiz.practice.back_to_sign")}
-                  </Link>
-                </Button>
+                  <div className="rounded-[1.2rem] border border-border/60 bg-background/80 p-3.5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      {t("sign_quiz.exam.review_answers")}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-foreground">
+                      {t("sign_quiz.practice.session_complete")}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {t("sign_quiz.practice.result_description")}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="rounded-[1.4rem] border border-border/60 bg-background/82 p-3.5 shadow-sm">
+                <div className="rounded-[1.25rem] border border-border/50 bg-card/90 p-3 shadow-sm">
+                  <div className="relative mx-auto aspect-square w-full max-w-[144px]">
+                    <SignImage
+                      src={resolveTrafficSignImage(sign)}
+                      alt={signName}
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
+                  <PageMetricCard
+                    icon={<Trophy className="h-4 w-4" />}
+                    label={t("sign_quiz.exam.score_label")}
+                    value={`${scorePercentage}%`}
+                    hint={t("sign_quiz.exam.correct_of")
+                      .replace("{n}", String(correctAnswers))
+                      .replace("{total}", String(session.totalQuestions))}
+                    tone={scoreTone}
+                    className="p-2.5"
+                  />
+                  <PageMetricCard
+                    icon={<CheckCircle2 className="h-4 w-4" />}
+                    label={t("sign_quiz.exam.correct_answers_label")}
+                    value={`${correctAnswers}/${session.totalQuestions}`}
+                    hint={t("sign_quiz.practice.group_label")}
+                    tone="primary"
+                    className="p-2.5"
+                  />
+                </div>
+              </div>
+            </div>
+          </PageHeroSurface>
+
+          <PageSectionSurface contentClassName="space-y-3">
+            <div className="grid gap-2.5 md:grid-cols-4">
+              <PageMetricCard
+                icon={<Target className="h-4 w-4" />}
+                label={t("sign_quiz.exam.score_label")}
+                value={`${scorePercentage}%`}
+                hint={t("sign_quiz.exam.correct_of")
+                  .replace("{n}", String(correctAnswers))
+                  .replace("{total}", String(session.totalQuestions))}
+                tone={scoreTone}
+                className="p-2.5"
+              />
+              <PageMetricCard
+                icon={<CheckCircle2 className="h-4 w-4" />}
+                label={t("sign_quiz.exam.correct_answers_label")}
+                value={`${correctAnswers}/${session.totalQuestions}`}
+                hint={t("sign_practice.metric_questions")}
+                tone="success"
+                className="p-2.5"
+              />
+              <PageMetricCard
+                icon={<XCircle className="h-4 w-4" />}
+                label={t("sign_quiz.exam.wrong_label")}
+                value={wrongAnswers}
+                hint={`${wrongAnswers}/${session.totalQuestions}`}
+                tone={wrongAnswers === 0 ? "success" : "danger"}
+                className="p-2.5"
+              />
+              <PageMetricCard
+                icon={<BookOpen className="h-4 w-4" />}
+                label={t("sign_quiz.practice.group_label")}
+                value={info.title[currentLanguage]}
+                hint={sign.signCode}
+                tone="primary"
+                className="p-2.5"
+              />
+            </div>
+
+            <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px]">
+              <Button
+                className="h-11 rounded-xl font-semibold shadow-sm shadow-primary/20"
+                onClick={handleRestart}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                {t("sign_quiz.practice.try_again")}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl border-primary/15 bg-background/80 font-semibold text-foreground hover:border-primary/25 hover:bg-primary/5 hover:text-primary"
+                onClick={() => {
+                  setShowReview((value) => !value);
+                  setTimeout(() => {
+                    reviewRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }, 80);
+                }}
+              >
+                <ChartNoAxesColumn className="mr-2 h-4 w-4" />
+                {showReview
+                  ? t("common.close")
+                  : t("sign_quiz.exam.review_answers")}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl border-border/60 bg-background/80 font-semibold"
+                asChild
+              >
+                <Link href={`/traffic-signs/${routeCode}`}>
+                  {isRTL ? (
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                  ) : (
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                  )}
+                  {t("sign_quiz.practice.back_to_sign")}
+                </Link>
+              </Button>
+            </div>
+          </PageSectionSurface>
 
           {showReview && (
-            <div ref={reviewRef} className="space-y-4">
-              {answerHistory.map((entry, index) => {
-                const correctChoice = entry.question.choices.find(
-                  (choice) => choice.id === entry.response.correctChoiceId,
-                );
+            <div ref={reviewRef}>
+              <PageSectionSurface
+                title={t("sign_quiz.exam.review_answers")}
+                description={t("sign_quiz.practice.result_description")}
+                contentClassName="space-y-3"
+              >
+                <div className="space-y-3">
+                  {answerHistory.map((entry, index) => {
+                    const correctChoice = entry.question.choices.find(
+                      (choice) => choice.id === entry.response.correctChoiceId,
+                    );
 
-                return (
-                  <Card
-                    key={entry.question.id}
-                    className={cn(
-                      "rounded-[1.5rem] border shadow-sm",
-                      entry.response.isCorrect
-                        ? "border-green-200"
-                        : "border-red-200",
-                    )}
-                  >
-                    <CardContent className="px-5 py-5">
-                      <div className="flex items-start gap-4">
-                        <div className="rounded-2xl border border-border/60 bg-background/80 p-2 shadow-sm">
-                          <div className="relative h-14 w-14">
-                            <SignImage
-                              src={resolveTrafficSignImage(sign)}
-                              alt={signName}
-                              className="object-contain"
-                            />
+                    return (
+                      <Card
+                        key={entry.question.id}
+                        className={cn(
+                          "rounded-[1.3rem] border border-border/60 bg-card/90 shadow-sm",
+                          entry.response.isCorrect
+                            ? "shadow-[inset_0_0_0_1px_rgba(34,197,94,0.18)]"
+                            : "shadow-[inset_0_0_0_1px_rgba(239,68,68,0.18)]",
+                        )}
+                      >
+                        <CardContent className="px-4 py-4">
+                          <div className="flex flex-col gap-3 md:flex-row md:items-start">
+                            <div className="rounded-xl border border-border/60 bg-background/80 p-2 shadow-sm md:w-fit">
+                              <div className="relative h-12 w-12">
+                                <SignImage
+                                  src={resolveTrafficSignImage(sign)}
+                                  alt={signName}
+                                  className="object-contain"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="min-w-0 flex-1 space-y-2.5">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                  {t("sign_quiz.practice.question_of")
+                                    .replace("{n}", String(index + 1))
+                                    .replace("{m}", String(session.totalQuestions))}
+                                </span>
+                                <Badge
+                                  className={`border ${DIFFICULTY_STYLES[entry.question.difficulty] || "border-border bg-muted text-foreground"}`}
+                                >
+                                  {t(`sign_quiz.${entry.question.difficulty.toLowerCase()}`)}
+                                </Badge>
+                                {entry.response.isCorrect ? (
+                                  <Badge className="border border-green-200 bg-green-100 text-green-800">
+                                    {t("sign_quiz.exam.correct_label")}
+                                  </Badge>
+                                ) : (
+                                  <Badge className="border border-red-200 bg-red-100 text-red-800">
+                                    {t("sign_quiz.exam.wrong_label")}
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <p className="text-sm font-semibold leading-6 text-foreground md:text-[15px]">
+                                {getQuestionText(entry.question, currentLanguage)}
+                              </p>
+
+                              <div className="grid gap-2 md:grid-cols-2">
+                                <div className="rounded-[0.95rem] border border-border/60 bg-background/80 px-3 py-2.5">
+                                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                    {t("sign_quiz.practice.your_answer")}
+                                  </p>
+                                  <p
+                                    className={cn(
+                                      "mt-1 text-sm font-semibold leading-6",
+                                      entry.response.isCorrect ? "text-green-700" : "text-red-700",
+                                    )}
+                                  >
+                                    {getChoiceText(
+                                      entry.question.choices.find(
+                                        (choice) => choice.id === entry.selectedChoiceId,
+                                      ) ?? entry.question.choices[0],
+                                      currentLanguage,
+                                    )}
+                                  </p>
+                                </div>
+                                {correctChoice && (
+                                  <div className="rounded-[0.95rem] border border-green-200 bg-green-50 px-3 py-2.5">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-green-700/80">
+                                      {t("sign_quiz.practice.correct_answer")}
+                                    </p>
+                                    <p className="mt-1 text-sm font-semibold leading-6 text-green-700">
+                                      {getChoiceText(correctChoice, currentLanguage)}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {getExplanation(entry.response, currentLanguage) && (
+                                <div className="rounded-[0.95rem] border border-border/60 bg-muted/30 px-3 py-2.5">
+                                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                    {t("sign_quiz.practice.explanation")}
+                                  </p>
+                                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                                    {getExplanation(entry.response, currentLanguage)}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-
-                        <div className="min-w-0 flex-1 space-y-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                              {t("sign_quiz.practice.question_of")
-                                .replace("{n}", String(index + 1))
-                                .replace("{m}", String(session.totalQuestions))}
-                            </span>
-                            <Badge
-                              className={`border ${DIFFICULTY_STYLES[entry.question.difficulty] || "border-border bg-muted text-foreground"}`}
-                            >
-                              {t(`sign_quiz.${entry.question.difficulty.toLowerCase()}`)}
-                            </Badge>
-                            {entry.response.isCorrect ? (
-                              <Badge className="border border-green-200 bg-green-100 text-green-800">
-                                {t("sign_quiz.exam.correct_label")}
-                              </Badge>
-                            ) : (
-                              <Badge className="border border-red-200 bg-red-100 text-red-800">
-                                {t("sign_quiz.exam.wrong_label")}
-                              </Badge>
-                            )}
-                          </div>
-
-                          <p className="text-base font-semibold leading-7 text-foreground">
-                            {getQuestionText(entry.question, currentLanguage)}
-                          </p>
-
-                          {correctChoice && (
-                            <p className="text-sm font-medium text-green-700">
-                              {t("sign_quiz.practice.correct_answer")}:{" "}
-                              {getChoiceText(correctChoice, currentLanguage)}
-                            </p>
-                          )}
-
-                          {getExplanation(entry.response, currentLanguage) && (
-                            <p className="text-sm leading-6 text-muted-foreground">
-                              {getExplanation(entry.response, currentLanguage)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </PageSectionSurface>
             </div>
           )}
         </div>
@@ -631,16 +836,18 @@ export default function TrafficSignPracticePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
-      <div className="container mx-auto max-w-6xl px-4 py-4 md:py-6 space-y-3 md:space-y-4">
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+    >
+      <div className="container mx-auto max-w-7xl px-4 py-3 md:py-4 space-y-3">
         <Breadcrumb items={breadcrumbItems} />
 
-        <div className="grid gap-3 xl:grid-cols-[220px_minmax(0,1fr)] xl:items-start">
-          <Card className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/80 shadow-sm xl:sticky xl:top-20">
-            <div className={`h-1.5 w-full bg-gradient-to-r ${style.accent}`} />
-            <CardContent className="space-y-4 px-4 py-4">
-              <div className="rounded-[1.35rem] border border-border/60 bg-background/85 p-3 shadow-sm">
-                <div className="relative mx-auto aspect-square w-full max-w-[112px]">
+        <PageHeroSurface contentClassName="p-5 md:p-6">
+          <div className="grid gap-4 lg:grid-cols-[190px_minmax(0,1fr)] lg:items-center">
+            <div className="space-y-3">
+              <div className="rounded-[1.4rem] border border-border/60 bg-background/85 p-3 shadow-sm">
+                <div className="relative mx-auto aspect-square w-full max-w-[128px]">
                   <SignImage
                     src={resolveTrafficSignImage(sign)}
                     alt={signName}
@@ -649,7 +856,20 @@ export default function TrafficSignPracticePage() {
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <Button variant="outline" className="h-11 w-full rounded-xl" asChild>
+                <Link href={`/traffic-signs/${routeCode}`}>
+                  {isRTL ? (
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                  ) : (
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                  )}
+                  {t("sign_quiz.practice.back_to_sign")}
+                </Link>
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <span
                     className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold ${style.chip}`}
@@ -661,72 +881,65 @@ export default function TrafficSignPracticePage() {
                   </span>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {t("nav.traffic_signs")}
-                  </p>
-                  <h1 className="text-[1.7rem] font-black tracking-tight text-foreground">
+                <div className="space-y-2">
+                  <h1 className="text-[1.85rem] font-black tracking-tight text-foreground md:text-[2.35rem]">
                     {signName}
                   </h1>
-                </div>
-              </div>
-
-              <div className="space-y-2.5 rounded-[1.25rem] border border-border/60 bg-background/80 p-3.5">
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="font-semibold text-foreground">
+                  <p className="text-sm leading-6 text-muted-foreground">
                     {t("sign_quiz.practice.question_of")
                       .replace("{n}", String(displayQuestionNumber))
                       .replace("{m}", String(session.totalQuestions))}
-                  </span>
-                  <span className="font-semibold text-primary">
-                    {Math.round(progressPercentage)}%
-                  </span>
+                  </p>
                 </div>
-                <Progress
-                  value={progressPercentage}
-                  className="h-2 rounded-full [&>div]:bg-primary"
+              </div>
+
+              <div className="grid gap-2.5 md:grid-cols-3">
+                <PageMetricCard
+                  icon={<Shapes className="h-5 w-5" />}
+                  label={t("sign_quiz.practice.group_label")}
+                  value={info.title[currentLanguage]}
+                  hint={sign.signCode}
+                  className="p-3"
                 />
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{answeredCount}/{session.totalQuestions}</span>
-                  <span>{sign.signCode}</span>
-                </div>
+                <PageMetricCard
+                  icon={<BookOpen className="h-5 w-5" />}
+                  label={t("sign_practice.metric_questions")}
+                  value={`${displayQuestionNumber}/${session.totalQuestions}`}
+                  hint={`${answeredCount}/${session.totalQuestions}`}
+                  className="p-3"
+                />
+                <PageMetricCard
+                  icon={<CheckCircle2 className="h-5 w-5" />}
+                  label={t("sign_quiz.practice.progress_label")}
+                  value={`${Math.round(progressPercentage)}%`}
+                  hint={t("sign_quiz.practice.question_of")
+                    .replace("{n}", String(displayQuestionNumber))
+                    .replace("{m}", String(session.totalQuestions))}
+                  tone={progressPercentage >= 80 ? "success" : "primary"}
+                  className="p-3"
+                />
               </div>
+            </div>
+          </div>
+        </PageHeroSurface>
 
-              <Button variant="outline" className="w-full rounded-xl" asChild>
-                <Link href={`/traffic-signs/${routeCode}`}>
-                  {isRTL ? (
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                  ) : (
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                  )}
-                  {t("sign_quiz.practice.back_to_sign")}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {currentQuestion && (
-            <Card className="flex overflow-hidden rounded-[1.75rem] border border-border/60 bg-card shadow-sm xl:min-h-[calc(100vh-14rem)] xl:flex-col">
-              <CardHeader className="space-y-3 px-5 pb-3 pt-4 md:px-6">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge
-                    className={`border ${DIFFICULTY_STYLES[currentQuestion.difficulty] || "border-border bg-muted text-foreground"}`}
-                  >
-                    {t(`sign_quiz.${currentQuestion.difficulty.toLowerCase()}`)}
-                  </Badge>
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    {t("sign_quiz.practice.question_of")
-                      .replace("{n}", String(displayQuestionNumber))
-                      .replace("{m}", String(session.totalQuestions))}
-                    </span>
-                </div>
-                <CardTitle className="text-xl font-black leading-snug text-foreground md:text-[1.55rem]">
-                  {getQuestionText(currentQuestion, currentLanguage)}
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent className="flex flex-1 flex-col space-y-3 px-5 pb-5 md:px-6 md:pb-6">
-                <div className="space-y-2.5">
+        {currentQuestion && (
+          <PageSectionSurface
+            title={getQuestionText(currentQuestion, currentLanguage)}
+            description={t("sign_quiz.practice.question_of")
+              .replace("{n}", String(displayQuestionNumber))
+              .replace("{m}", String(session.totalQuestions))}
+            actions={
+              <Badge
+                className={`border ${DIFFICULTY_STYLES[currentQuestion.difficulty] || "border-border bg-muted text-foreground"}`}
+              >
+                {t(`sign_quiz.${currentQuestion.difficulty.toLowerCase()}`)}
+              </Badge>
+            }
+            className="xl:min-h-[calc(100vh-17.5rem)]"
+            contentClassName="flex flex-col gap-2.5"
+          >
+                <div className="space-y-2">
                 {currentQuestion.choices.map((choice) => {
                   const isSelected = selectedChoice === choice.id;
                   const isCorrect =
@@ -746,7 +959,7 @@ export default function TrafficSignPracticePage() {
                         setSubmissionError(null);
                       }}
                       className={cn(
-                        "flex w-full items-start gap-3 rounded-[1.15rem] border-2 px-4 py-3 text-start transition-all duration-150",
+                        "flex w-full items-start gap-3 rounded-[1rem] border-2 px-3.5 py-2.5 text-start transition-all duration-150",
                         !answerState &&
                           !isSelected &&
                           "border-border/60 bg-background hover:border-primary/35 hover:bg-primary/5",
@@ -784,7 +997,7 @@ export default function TrafficSignPracticePage() {
 
                       <span
                         className={cn(
-                          "flex-1 text-base font-semibold leading-6 text-foreground",
+                          "flex-1 text-sm font-semibold leading-6 text-foreground md:text-[15px]",
                           answerState && isCorrect && "text-green-800",
                           answerState && isWrong && "text-red-800",
                         )}
@@ -797,7 +1010,7 @@ export default function TrafficSignPracticePage() {
                 </div>
 
                 {submissionError && !answerState && (
-                  <div className="rounded-[1.15rem] border border-red-200 bg-red-50 px-4 py-3.5">
+                  <div className="rounded-[1rem] border border-red-200 bg-red-50 px-3.5 py-3">
                     <p className="text-sm font-medium text-red-700">
                       {submissionError}
                     </p>
@@ -810,7 +1023,7 @@ export default function TrafficSignPracticePage() {
                 {answerState && (
                   <div
                     className={cn(
-                      "rounded-[1.15rem] border px-4 py-3.5",
+                      "rounded-[1rem] border px-3.5 py-3",
                       answerState.response.isCorrect
                         ? "border-green-200 bg-green-50"
                         : "border-red-200 bg-red-50",
@@ -839,11 +1052,11 @@ export default function TrafficSignPracticePage() {
 
                 <div
                   ref={actionRef}
-                  className="sticky bottom-2 z-10 mt-auto -mx-2 bg-gradient-to-t from-card via-card to-transparent px-2 pt-3"
+                  className="sticky bottom-1 z-10 mt-auto -mx-2 bg-gradient-to-t from-card via-card to-transparent px-2 pt-2.5"
                 >
                   {!answerState ? (
                     <Button
-                      className="h-12 w-full rounded-xl text-sm font-semibold shadow-sm"
+                      className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
                       disabled={selectedChoice === null || submitting}
                       onClick={handleSubmit}
                     >
@@ -853,7 +1066,7 @@ export default function TrafficSignPracticePage() {
                     </Button>
                   ) : (
                     <Button
-                      className="h-12 w-full rounded-xl text-sm font-semibold shadow-sm"
+                      className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
                       onClick={handleNext}
                     >
                       {currentIndex + 1 < questions.length
@@ -867,10 +1080,8 @@ export default function TrafficSignPracticePage() {
                     </Button>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+          </PageSectionSurface>
+        )}
       </div>
     </div>
   );

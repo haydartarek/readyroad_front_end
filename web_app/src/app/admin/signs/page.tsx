@@ -7,7 +7,9 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useLanguage } from "@/contexts/language-context";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { convertToPublicImageUrl, FALLBACK_IMAGE } from "@/lib/image-utils";
+import { NATIVE_SELECT_COMPACT_CLASS } from "@/lib/native-select-styles";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +23,7 @@ import {
   Trash2,
   CheckCircle2,
   AlertTriangle,
+  TrafficCone,
   ChevronsLeft,
   ChevronLeft,
   ChevronRight,
@@ -116,13 +119,13 @@ const CATEGORY_LABELS: Record<string, Record<string, string>> = {
   },
   T: {
     en: "Delineation Signs",
-    ar: "لافتات الإرشاد الطرقي",
+    ar: "علامات الإرشاد الطرقي",
     nl: "Afbakeningsborden",
     fr: "Panneaux de balisage",
   },
   Z: {
     en: "Zone Signs",
-    ar: "لافتات المناطق",
+    ar: "علامات المناطق",
     nl: "Zoneborden",
     fr: "Panneaux de zone",
   },
@@ -300,7 +303,7 @@ export default function AdminSignsPage() {
     } catch (err) {
       logApiError("Failed to fetch admin signs", err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
-      else setError(t("admin.signs.fetch_error") || "Failed to load signs");
+      else setError(t("admin.signs.fetch_error"));
     } finally {
       setLoading(false);
     }
@@ -363,7 +366,7 @@ export default function AdminSignsPage() {
       await apiClient.delete(API_ENDPOINTS.ADMIN.SIGNS.DELETE(id));
       setDeleteId(null);
       setToast({
-        message: t("admin.signs.delete_success") || "Sign deleted successfully",
+        message: t("admin.signs.delete_success"),
         type: "success",
       });
       if (signs.length === 1 && page > 0) handlePageChange(page - 1);
@@ -380,10 +383,10 @@ export default function AdminSignsPage() {
         const msg =
           status === 409
             ? axiosErr?.response?.data?.error ||
-              "Cannot delete — sign is referenced by other records"
+              t("admin.signs.delete_conflict")
             : status === 404
-              ? "Sign not found — already deleted"
-              : "Failed to delete sign";
+              ? t("admin.signs.delete_not_found")
+              : t("admin.signs.delete_failed");
         setToast({ message: msg, type: "error" });
       }
       setDeleteId(null);
@@ -449,7 +452,7 @@ export default function AdminSignsPage() {
         <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
         <p className="text-destructive font-semibold">{error}</p>
         <Button variant="outline" onClick={fetchSigns}>
-          {t("admin.signs.retry") || "Retry"}
+          {t("admin.signs.retry")}
         </Button>
       </div>
     );
@@ -478,47 +481,50 @@ export default function AdminSignsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">
-            {t("admin.signs.title") || "Traffic Signs"}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("admin.signs.total_count") || "Total"}:{" "}
-            <span className="font-bold text-foreground">{totalItems}</span>
-          </p>
-        </div>
-        <Button asChild className="gap-2 shadow-md shadow-primary/20">
-          <Link href="/admin/signs/new">
-            <Plus className="w-4 h-4" />
-            {t("admin.add_sign") || "Add Sign"}
-          </Link>
-        </Button>
-      </div>
+      <AdminPageHeader
+        icon={<TrafficCone className="h-6 w-6" />}
+        title={t("admin.signs.title")}
+        description={t("admin.signs.description")}
+        metrics={[
+          {
+            label: t("admin.signs.total_count"),
+            value: totalItems.toLocaleString(),
+            tone: "primary",
+          },
+        ]}
+        actions={
+          <Button asChild className="gap-2 shadow-md shadow-primary/20">
+            <Link href="/admin/signs/new">
+              <Plus className="w-4 h-4" />
+              {t("admin.add_sign")}
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
+            id="admin-signs-search"
+            name="signsSearch"
             type="text"
-            placeholder={
-              t("admin.signs.search_placeholder") || "Search signs..."
-            }
+            autoComplete="off"
+            placeholder={t("admin.signs.search_placeholder")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-xl border border-border/50 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
         </div>
         <select
+          id="admin-signs-category-filter"
+          name="categoryFilter"
           value={categoryFilter}
           onChange={(e) => handleCategoryChange(e.target.value)}
-          className="rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className={NATIVE_SELECT_COMPACT_CLASS}
         >
-          <option value="">
-            {t("admin.signs.all_categories") || "All Categories"}
-          </option>
+          <option value="">{t("admin.signs.all_categories")}</option>
           {categories.map((cat) => (
             <option key={cat.code} value={cat.code}>
               {getCategoryLabel(cat.code)} ({cat.code})
@@ -526,9 +532,11 @@ export default function AdminSignsPage() {
           ))}
         </select>
         <select
+          id="admin-signs-page-size"
+          name="pageSize"
           value={size}
           onChange={(e) => handleSizeChange(Number(e.target.value))}
-          className="rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className={NATIVE_SELECT_COMPACT_CLASS}
         >
           {PAGE_SIZE_OPTIONS.map((s) => (
             <option key={s} value={s}>
@@ -559,13 +567,13 @@ export default function AdminSignsPage() {
             <thead className="bg-muted/50 border-b border-border/40">
               <tr className="text-xs uppercase tracking-wide text-muted-foreground">
                 <th className="px-4 py-3 text-left font-semibold w-16">
-                  {t("admin.signs.col_image") || "Image"}
+                  {t("admin.signs.col_image")}
                 </th>
                 <th
                   className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
                   onClick={() => handleSort("signCode")}
                 >
-                  {t("admin.signs.col_code") || "Code"}
+                  {t("admin.signs.col_code")}
                   <SortIcon field="signCode" />
                 </th>
                 <th
@@ -574,18 +582,18 @@ export default function AdminSignsPage() {
                     handleSort(NAME_SORT_FIELD[language] || "nameEn")
                   }
                 >
-                  {t("admin.signs.col_name") || "Name"}
+                  {t("admin.signs.col_name")}
                   <SortIcon field={NAME_SORT_FIELD[language] || "nameEn"} />
                 </th>
                 <th
                   className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
                   onClick={() => handleSort("categoryCode")}
                 >
-                  {t("admin.signs.col_category") || "Category"}
+                  {t("admin.signs.col_category")}
                   <SortIcon field="categoryCode" />
                 </th>
                 <th className="px-4 py-3 text-right font-semibold">
-                  {t("admin.signs.col_actions") || "Actions"}
+                  {t("admin.signs.col_actions")}
                 </th>
               </tr>
             </thead>
@@ -596,7 +604,7 @@ export default function AdminSignsPage() {
                     <div className="space-y-2">
                       <div className="text-4xl">🚦</div>
                       <p className="text-muted-foreground">
-                        {t("admin.signs.no_results") || "No signs found"}
+                        {t("admin.signs.no_results")}
                       </p>
                     </div>
                   </td>
@@ -681,7 +689,7 @@ export default function AdminSignsPage() {
                                 className="px-2 py-1 text-xs rounded-lg bg-destructive text-white hover:opacity-90 disabled:opacity-50 font-semibold transition-opacity"
                               >
                                 {deleting
-                                  ? "..."
+                                  ? t("common.loading")
                                   : t("admin.signs.confirm_delete")}
                               </button>
                               <button
@@ -709,23 +717,23 @@ export default function AdminSignsPage() {
                         <td colSpan={5} className="px-6 py-4 space-y-3">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                             <DetailLang
-                              label="English"
+                              label={t("admin.settings_page.language_en")}
                               name={sign.nameEn}
                               desc={sign.descriptionEn}
                             />
                             <DetailLang
-                              label="العربية"
+                              label={t("admin.settings_page.language_ar")}
                               name={sign.nameAr}
                               desc={sign.descriptionAr}
                               dir="rtl"
                             />
                             <DetailLang
-                              label="Nederlands"
+                              label={t("admin.settings_page.language_nl")}
                               name={sign.nameNl}
                               desc={sign.descriptionNl}
                             />
                             <DetailLang
-                              label="Français"
+                              label={t("admin.settings_page.language_fr")}
                               name={sign.nameFr}
                               desc={sign.descriptionFr}
                             />
@@ -733,7 +741,7 @@ export default function AdminSignsPage() {
                           {sign.imageUrl && (
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground font-semibold">
-                                URL:
+                                {t("admin.signs.meta_url")}:
                               </span>
                               <code className="text-xs bg-muted px-2 py-0.5 rounded-lg text-muted-foreground break-all">
                                 {sign.imageUrl}
@@ -742,21 +750,22 @@ export default function AdminSignsPage() {
                           )}
                           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/40">
                             <span>
-                              ID: <strong>{sign.id}</strong>
-                            </span>
-                            <span>
-                              Active:{" "}
-                              <strong>{sign.isActive ? "✓" : "✗"}</strong>
+                              {t("admin.signs.meta_status")}:{" "}
+                              <strong>
+                                {sign.isActive
+                                  ? t("admin.signs.active")
+                                  : t("admin.signs.inactive")}
+                              </strong>
                             </span>
                             {sign.createdAt && (
                               <span>
-                                Created:{" "}
+                                {t("admin.signs.meta_created")}:{" "}
                                 {new Date(sign.createdAt).toLocaleDateString()}
                               </span>
                             )}
                             {sign.updatedAt && (
                               <span>
-                                Updated:{" "}
+                                {t("admin.signs.meta_updated")}:{" "}
                                 {new Date(sign.updatedAt).toLocaleDateString()}
                               </span>
                             )}
@@ -775,7 +784,9 @@ export default function AdminSignsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-muted/30">
             <p className="text-xs text-muted-foreground font-medium">
-              Page <strong>{page + 1}</strong> of <strong>{totalPages}</strong>
+              {t("admin.signs.page_info")
+                .replace("{current}", String(page + 1))
+                .replace("{total}", String(totalPages))}
             </p>
             <div className="flex items-center gap-1">
               <button

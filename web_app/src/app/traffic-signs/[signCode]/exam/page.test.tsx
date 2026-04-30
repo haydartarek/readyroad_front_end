@@ -7,7 +7,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 describe("ExamIndexPage", () => {
-  it("redirects the legacy exam route to exam 1", async () => {
+  it("redirects the legacy exam route to the default sign exam", async () => {
     await ExamIndexPage({
       params: Promise.resolve({ signCode: "A11" }),
     });

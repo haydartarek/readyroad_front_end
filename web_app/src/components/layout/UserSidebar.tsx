@@ -2,92 +2,28 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
-  LayoutDashboard,
-  TrendingDown,
   AlertCircle,
   ClipboardList,
-  User,
-  MessageCircle,
+  LayoutDashboard,
   LogOut,
-  Settings,
+  MessageCircle,
+  TrendingDown,
+  User,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { useNotifications } from "@/contexts/notification-context";
 import { cn } from "@/lib/utils";
 
-// ─── Types ────────────────────────────────────────────────
-
 interface NavItem {
   key: string;
   labelKey: string;
   href: string;
   icon: React.ElementType;
-  accent: AccentKey;
-  exact?: boolean;
   section: string | null;
 }
-
-type AccentKey = "primary" | "green" | "amber" | "violet" | "gray";
-
-// ─── Accent map ───────────────────────────────────────────
-
-const ACCENT: Record<
-  AccentKey,
-  {
-    icon: string;
-    activeBg: string;
-    activeText: string;
-    hoverBg: string;
-    activeIcon: string;
-  }
-> = {
-  primary: {
-    icon: "bg-primary/10 text-primary",
-    activeIcon: "bg-white/20 text-white",
-    activeBg:
-      "bg-gradient-to-r from-primary to-primary/85 text-primary-foreground shadow-sm shadow-primary/30",
-    activeText: "text-primary-foreground",
-    hoverBg: "hover:bg-primary/8",
-  },
-  green: {
-    icon: "bg-green-500/10 text-green-600",
-    activeIcon: "bg-white/20 text-white",
-    activeBg:
-      "bg-gradient-to-r from-green-500 to-green-400 text-white shadow-sm shadow-green-500/25",
-    activeText: "text-white",
-    hoverBg: "hover:bg-green-500/8",
-  },
-  amber: {
-    icon: "bg-amber-500/10 text-amber-600",
-    activeIcon: "bg-white/20 text-white",
-    activeBg:
-      "bg-gradient-to-r from-primary to-amber-400 text-white shadow-sm shadow-primary/30",
-    activeText: "text-white",
-    hoverBg: "hover:bg-amber-500/8",
-  },
-  violet: {
-    icon: "bg-violet-500/10 text-violet-600",
-    activeIcon: "bg-white/20 text-white",
-    activeBg:
-      "bg-gradient-to-r from-violet-600 to-violet-400 text-white shadow-sm shadow-violet-500/25",
-    activeText: "text-white",
-    hoverBg: "hover:bg-violet-500/8",
-  },
-  gray: {
-    icon: "bg-muted text-muted-foreground",
-    activeIcon: "bg-white/20 text-white",
-    activeBg:
-      "bg-gradient-to-r from-primary to-primary/85 text-white shadow-sm shadow-primary/25",
-    activeText: "text-white",
-    hoverBg: "hover:bg-muted/80",
-  },
-};
-
-// ─── Navigation definition ────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
   {
@@ -95,8 +31,6 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: "user_sidebar.dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    accent: "primary",
-    exact: true,
     section: null,
   },
   {
@@ -104,7 +38,6 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: "user_sidebar.weak_areas",
     href: "/dashboard?section=weak-areas",
     icon: TrendingDown,
-    accent: "primary",
     section: "weak-areas",
   },
   {
@@ -112,7 +45,6 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: "user_sidebar.error_patterns",
     href: "/dashboard?section=error-patterns",
     icon: AlertCircle,
-    accent: "primary",
     section: "error-patterns",
   },
   {
@@ -120,7 +52,6 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: "user_sidebar.exam_results",
     href: "/dashboard?section=exam-results",
     icon: ClipboardList,
-    accent: "primary",
     section: "exam-results",
   },
 ];
@@ -131,218 +62,203 @@ const ACCOUNT_ITEMS: NavItem[] = [
     labelKey: "user_sidebar.profile",
     href: "/dashboard?section=profile",
     icon: User,
-    accent: "primary",
     section: "profile",
   },
 ];
 
-// ─── Main Component ───────────────────────────────────────
+function SidebarSectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 px-1 pb-2 pt-3">
+      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+        {children}
+      </p>
+    </div>
+  );
+}
+
+function SidebarNavLink({
+  item,
+  isActive,
+  label,
+  isRTL,
+}: {
+  item: NavItem;
+  isActive: boolean;
+  label: string;
+  isRTL: boolean;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "group relative flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-all duration-200",
+        isActive
+          ? "border-primary/20 bg-primary/[0.07] text-foreground shadow-sm"
+          : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/60 hover:text-foreground",
+      )}
+    >
+        <span
+          className={cn(
+            "absolute bottom-3 top-3 w-1 rounded-full transition-opacity",
+            isActive ? "bg-primary opacity-100" : "opacity-0",
+            isRTL ? "right-1.5" : "left-1.5",
+          )}
+        />
+      <div
+        className={cn(
+          "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border transition-all duration-200",
+          isActive
+            ? "border-primary/20 bg-primary/10 text-primary"
+            : "border-border/60 bg-muted/35 text-muted-foreground group-hover:border-primary/15 group-hover:bg-primary/10 group-hover:text-primary",
+        )}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <span className={cn("flex-1 truncate", isActive && "font-semibold")}>
+        {label}
+      </span>
+    </Link>
+  );
+}
 
 function UserSidebarInner() {
   const { user, logout } = useAuth();
   const { t, isRTL } = useLanguage();
+  const { unreadCount } = useNotifications();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentSection = searchParams.get("section");
 
-  // Hide sidebar during exam/practice sessions; keep it on results pages
   const hideSidebar =
     pathname.startsWith("/practice") ||
     (pathname.startsWith("/exam") && !pathname.startsWith("/exam/results"));
 
-  const { unreadCount } = useNotifications();
+  if (hideSidebar) return null;
 
-  // ── Avatar initial ──
   const avatarInitial = (
     user?.firstName?.[0] ??
     user?.fullName?.[0] ??
     "U"
   ).toUpperCase();
-  const displayName = user?.firstName ?? user?.fullName ?? "";
 
-  if (hideSidebar) return null;
+  const displayName = user?.fullName ?? user?.firstName ?? t("app.name");
 
   return (
     <aside
       className={cn(
-        "w-64 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto flex flex-col shrink-0",
-        "hidden lg:flex",
-        "bg-card shadow-[2px_0_16px_rgba(0,0,0,0.07)]",
-        isRTL ? "border-l border-border/60" : "border-r border-border/60",
+        "sticky top-16 hidden h-[calc(100vh-4rem)] w-72 shrink-0 overflow-y-auto border-border/60 bg-background/95 shadow-[8px_0_28px_rgba(15,23,42,0.04)] backdrop-blur lg:flex lg:flex-col",
+        isRTL ? "border-l" : "border-r",
       )}
     >
-      {/* ── Top accent strip ─────────────────────── */}
-      <div className="h-[3px] shrink-0 bg-gradient-to-r from-primary via-primary/70 to-primary/20" />
-
-      {/* ── Brand header ─────────────────────────── */}
-      <div className="px-5 py-4 border-b border-border/50 bg-gradient-to-br from-primary/[0.07] via-primary/[0.03] to-transparent">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative shrink-0">
-            <Image
-              src="/images/logo.png"
-              alt="ReadyRoad"
-              width={36}
-              height={36}
-              className="rounded-xl ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-200"
-            />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-foreground leading-none">
-              ReadyRoad
-            </h2>
-            <p className="text-[11px] text-primary/60 mt-0.5 font-medium">
-              {t("user_sidebar.my_learning")}
-            </p>
-          </div>
-        </Link>
-      </div>
-
-      {/* ── User info card ────────────────────────── */}
-      <div className="px-4 py-3.5 border-b border-border/50 bg-gradient-to-br from-primary/[0.05] via-background/0 to-transparent">
-        <div className="flex items-center gap-3">
-          {/* Avatar */}
-          <div className="relative shrink-0">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[hsl(13,76%,53%)] to-[hsl(25,95%,50%)] text-white flex items-center justify-center font-black text-sm ring-2 ring-primary/25 ring-offset-2 ring-offset-background">
-              {avatarInitial}
-            </div>
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1 leading-none ring-2 ring-background">
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
-          </div>
-
-          {/* Name + welcome */}
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] text-muted-foreground font-medium">
-              {t("user_sidebar.welcome_back")}
-            </p>
-            <p className="text-sm font-bold text-foreground truncate">
-              {displayName}
-            </p>
-          </div>
-
-          {/* Settings shortcut */}
-          <Link
-            href="/dashboard?section=profile"
-            className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-primary/40 hover:text-primary hover:bg-primary/10 transition-colors"
-            title={t("user_sidebar.profile")}
-          >
-            <Settings className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </div>
-
-      {/* ── Main navigation ───────────────────────── */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {/* Learning section label */}
-        <div className="flex items-center gap-2 px-1 pb-2.5">
-          <span className="inline-block w-4 h-[2px] rounded-full bg-gradient-to-r from-primary/60 to-primary/20" />
-          <p className="text-[9.5px] font-black uppercase tracking-[0.13em] text-primary/60">
-            {t("user_sidebar.section_learning")}
-          </p>
-        </div>
-
-        {NAV_ITEMS.map((item) => {
-          const isActive =
-            item.section === null
-              ? pathname === "/dashboard" && !currentSection
-              : pathname === "/dashboard" && currentSection === item.section;
-
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 text-sm group",
-                isActive
-                  ? `${ACCENT[item.accent].activeBg} font-semibold`
-                  : `text-muted-foreground hover:text-foreground ${ACCENT[item.accent].hoverBg}`,
-              )}
-            >
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200",
-                  isActive
-                    ? (ACCENT[item.accent].activeIcon ??
-                        "bg-white/20 text-white")
-                    : cn(
-                        "bg-muted/70 text-muted-foreground",
-                        `group-hover:${ACCENT[item.accent].icon.split(" ")[0]}`,
-                      ),
-                )}
-              >
-                <item.icon className="w-4 h-4" />
+      <div className="border-b border-border/60 px-5 pb-5 pt-5">
+        <div className="rounded-[1.75rem] border border-border/60 bg-card p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-sm font-black text-primary">
+                {avatarInitial}
               </div>
-              <span className="flex-1 truncate">{t(item.labelKey)}</span>
-            </Link>
-          );
-        })}
+              {unreadCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground ring-2 ring-card">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              ) : null}
+            </div>
 
-        {/* Account section */}
-        <div className="pt-4">
-          <div className="flex items-center gap-2 px-1 pb-2.5">
-            <span className="inline-block w-4 h-[2px] rounded-full bg-gradient-to-r from-primary/60 to-primary/20" />
-            <p className="text-[9.5px] font-black uppercase tracking-[0.13em] text-primary/60">
-              {t("user_sidebar.section_account")}
-            </p>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-primary/80">
+                {t("user_sidebar.workspace_title")}
+              </p>
+              <p className="truncate text-sm font-bold text-foreground">
+                {displayName}
+              </p>
+              <p className="text-xs font-medium leading-5 text-muted-foreground">
+                {t("user_sidebar.workspace_subtitle")}
+              </p>
+              {user?.email ? (
+                <p className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </p>
+              ) : null}
+            </div>
           </div>
-          {ACCOUNT_ITEMS.map((item) => {
-            const isActive =
-              item.section === null
-                ? pathname === "/dashboard" && !currentSection
-                : pathname === "/dashboard" && currentSection === item.section;
+        </div>
+      </div>
 
-            return (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 text-sm group",
-                  isActive
-                    ? `${ACCENT[item.accent].activeBg} font-semibold`
-                    : `text-muted-foreground hover:text-foreground ${ACCENT[item.accent].hoverBg}`,
-                )}
-              >
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200",
-                    isActive
-                      ? (ACCENT[item.accent].activeIcon ??
-                          "bg-white/20 text-white")
-                      : "bg-muted/70 text-muted-foreground",
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                </div>
-                <span className="flex-1 truncate">{t(item.labelKey)}</span>
-              </Link>
-            );
-          })}
+      <nav className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        <div>
+          <SidebarSectionLabel>
+            {t("user_sidebar.section_learning")}
+          </SidebarSectionLabel>
+          <div className="space-y-1.5">
+            {NAV_ITEMS.map((item) => {
+              const isActive =
+                item.section === null
+                  ? pathname === "/dashboard" && !currentSection
+                  : pathname === "/dashboard" && currentSection === item.section;
+
+              return (
+                <SidebarNavLink
+                  key={item.key}
+                  item={item}
+                  isActive={isActive}
+                  label={t(item.labelKey)}
+                  isRTL={isRTL}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <SidebarSectionLabel>
+            {t("user_sidebar.section_account")}
+          </SidebarSectionLabel>
+          <div className="space-y-1.5">
+            {ACCOUNT_ITEMS.map((item) => {
+              const isActive = pathname === "/dashboard" && currentSection === item.section;
+              return (
+                <SidebarNavLink
+                  key={item.key}
+                  item={item}
+                  isActive={isActive}
+                  label={t(item.labelKey)}
+                  isRTL={isRTL}
+                />
+              );
+            })}
+          </div>
         </div>
       </nav>
 
-      {/* ── Bottom actions ────────────────────────── */}
-      <div className="px-3 py-4 border-t border-border/50 space-y-0.5 bg-gradient-to-t from-muted/30 to-transparent">
-        <Link
-          href="/contact"
-          className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-primary/8 transition-all duration-200 group"
-        >
-          <div className="w-8 h-8 rounded-xl bg-muted/70 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary flex items-center justify-center shrink-0 transition-all duration-200">
-            <MessageCircle className="w-4 h-4" />
-          </div>
-          <span className="flex-1 truncate">{t("user_sidebar.support")}</span>
-        </Link>
+      <div className="border-t border-border/60 px-4 py-4">
+        <div className="space-y-1.5">
+          <Link
+            href="/contact"
+            className="group flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:border-border/70 hover:bg-muted/70 hover:text-foreground"
+          >
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-muted/35 text-muted-foreground transition-all duration-200 group-hover:border-primary/15 group-hover:bg-primary/10 group-hover:text-primary">
+              <MessageCircle className="h-4 w-4" />
+            </div>
+            <span className="flex-1 truncate font-medium">
+              {t("user_sidebar.support")}
+            </span>
+          </Link>
 
-        <button
-          onClick={() => logout()}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-500/80 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 group"
-        >
-          <div className="w-8 h-8 rounded-xl bg-red-50/70 dark:bg-red-950/20 text-red-400 group-hover:bg-red-100 dark:group-hover:bg-red-950/40 group-hover:text-red-500 flex items-center justify-center shrink-0 transition-all duration-200">
-            <LogOut className="w-4 h-4" />
-          </div>
-          <span className="flex-1 text-start truncate">{t("auth.logout")}</span>
-        </button>
+          <button
+            onClick={() => logout()}
+            className="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-red-600/85 transition-all duration-200 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/25"
+          >
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border border-red-200/60 bg-red-50 text-red-500 transition-colors group-hover:border-red-300 group-hover:bg-red-100">
+              <LogOut className="h-4 w-4" />
+            </div>
+            <span className="flex-1 text-start font-semibold">
+              {t("auth.logout")}
+            </span>
+          </button>
+        </div>
       </div>
     </aside>
   );

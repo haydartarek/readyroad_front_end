@@ -59,7 +59,7 @@ export function QuickActionsSection() {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       {ACTIONS.map(({ title, description, icon: Icon, href, variant }) => (
         <Link key={href} href={href} className="group h-full">
           <Card
@@ -68,24 +68,25 @@ export function QuickActionsSection() {
               getVariantClasses(variant)
             )}
           >
-            <CardContent className="flex h-full items-start gap-4 p-6">
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-background shadow-sm border border-border">
-                <Icon className="h-5 w-5 text-primary" />
+            <CardContent className="flex h-full flex-col gap-3 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-background shadow-sm">
+                  <Icon className="h-4.5 w-4.5 text-primary" />
+                </div>
+
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/80 text-muted-foreground transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/20 group-hover:text-primary">
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </div>
               </div>
 
-              <div className="min-w-0 flex-1">
-                <h3 className="font-extrabold text-foreground">
+              <div className="min-w-0 space-y-1">
+                <h3 className="text-base font-extrabold leading-tight text-foreground">
                   {title}
                 </h3>
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="text-xs leading-5 text-muted-foreground">
                   {description}
                 </p>
               </div>
-
-              <ArrowRight
-                className="h-4 w-4 flex-shrink-0 self-center text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
-                aria-hidden
-              />
             </CardContent>
           </Card>
         </Link>

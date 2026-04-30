@@ -71,6 +71,7 @@ export const ROUTES = {
 
   PRACTICE: "/practice",
   PRACTICE_CATEGORY: (category: string) => `/practice/${category}`,
+  PRACTICE_RANDOM: "/practice/random",
 
   ANALYTICS_ERROR_PATTERNS: "/dashboard?section=error-patterns",
   ANALYTICS_WEAK_AREAS: "/dashboard?section=weak-areas",
@@ -82,11 +83,41 @@ export const ROUTES = {
   LESSON_DETAIL: (code: string) => `/lessons/${code}`,
 } as const;
 
+const LEGACY_TRAFFIC_SIGN_CODE_ALIASES: Record<string, string> = {
+  c11a: "C11",
+  c11b: "C11",
+  c22a: "C22",
+  c43_10: "C43",
+  c43_30: "C43",
+  c43_50: "C43",
+  c43_70: "C43",
+  c43_90: "C43",
+};
+
+const LEGACY_TRAFFIC_SIGN_CODES_WITHOUT_DIRECT_REPLACEMENT = new Set([
+  "c28a",
+]);
+
+export function resolveLegacyTrafficSignCode(code: string): string {
+  const raw = code.trim();
+  if (!raw) {
+    return raw;
+  }
+
+  return LEGACY_TRAFFIC_SIGN_CODE_ALIASES[raw.toLowerCase()] ?? raw;
+}
+
+export function isRemovedLegacyTrafficSignCode(code: string): boolean {
+  return LEGACY_TRAFFIC_SIGN_CODES_WITHOUT_DIRECT_REPLACEMENT.has(
+    code.trim().toLowerCase(),
+  );
+}
+
 // ─── Storage Keys ────────────────────────────────────────
 
 export const STORAGE_KEYS = {
   AUTH_COOKIE_NAME: "token",
-  LANGUAGE: "readyroad_language",
+  LANGUAGE: "readyroad_locale",
   THEME: "readyroad_theme",
   EXAM_STATE: "readyroad_exam_state",
 } as const;
@@ -201,14 +232,15 @@ export const API_ENDPOINTS = {
   },
 
   ANALYTICS: {
-    ERROR_PATTERNS: "/analytics/error-patterns",
-    WEAK_AREAS: "/analytics/weak-areas",
-    PROGRESS: "/analytics/progress",
+    ERROR_PATTERNS: "/users/me/analytics/error-patterns",
+    WEAK_AREAS: "/users/me/analytics/weak-areas",
+    PROGRESS: "/users/me/progress/overall",
   },
 
   LESSONS: {
     LIST: "/lessons",
     DETAIL: (code: string) => `/lessons/${code}`,
+    PROGRESS: (code: string) => `/lessons/${code}/progress`,
     SEARCH: "/lessons/search",
     COUNT: "/lessons/count",
   },
@@ -216,6 +248,7 @@ export const API_ENDPOINTS = {
   SIGN_QUIZ: {
     SIGNS: "/sign-quiz/signs",
     START_PRACTICE: (signCode: string) => `/sign-quiz/practice/${signCode}`,
+    PRACTICE_HISTORY: "/sign-quiz/practice/history",
     SUBMIT_ANSWER: (sessionId: number, questionId: number) =>
       `/sign-quiz/practice/${sessionId}/questions/${questionId}/answer`,
     PRACTICE_RESULTS: (sessionId: number) =>
@@ -226,6 +259,14 @@ export const API_ENDPOINTS = {
       `/sign-quiz/exam/${signCode}/${examNumber}/submit`,
     SIGN_STATUS: (signCode: string) => `/sign-quiz/signs/${signCode}/status`,
     USER_PROGRESS: "/sign-quiz/user-progress",
+    EXAM_HISTORY: "/sign-quiz/exam-history",
+    EXAM_RESULT_BY_ID: (resultId: number) =>
+      `/sign-quiz/exam-results/${resultId}`,
+    RANDOM_PRACTICE: "/sign-quiz/random-practice",
+    RANDOM_PRACTICE_CHECK: "/sign-quiz/random-practice/check",
+    RANDOM_PRACTICE_HISTORY: "/sign-quiz/random-practice/history",
+    RANDOM_PRACTICE_RESULTS: (sessionId: number) =>
+      `/sign-quiz/random-practice/${sessionId}/results`,
   },
 
   HEALTH: "/actuator/health",
@@ -233,6 +274,7 @@ export const API_ENDPOINTS = {
   ADMIN: {
     DASHBOARD: "/admin/dashboard",
     USERS: "/admin/users",
+    SETTINGS: "/admin/settings",
     UPLOAD_IMAGE: "/admin/upload/image",
 
     SIGNS: {
@@ -258,27 +300,6 @@ export const API_ENDPOINTS = {
       HISTORY_DETAIL: (id: number) => `/admin/import/history/${id}`,
     },
   },
-} as const;
-
-// ─── Error Messages ──────────────────────────────────────
-
-export const ERROR_MESSAGES = {
-  NETWORK_ERROR: "Network error. Please check your connection.",
-  UNAUTHORIZED: "You are not authorized. Please login again.",
-  FORBIDDEN: "You do not have permission to access this resource.",
-  NOT_FOUND: "The requested resource was not found.",
-  SERVER_ERROR: "Server error. Please try again later.",
-  TIMEOUT: "Request timeout. Please try again.",
-  UNKNOWN: "An unknown error occurred.",
-} as const;
-
-// ─── Success Messages ────────────────────────────────────
-
-export const SUCCESS_MESSAGES = {
-  LOGIN: "Login successful!",
-  REGISTER: "Registration successful!",
-  EXAM_SUBMITTED: "Exam submitted successfully!",
-  PROFILE_UPDATED: "Profile updated successfully!",
 } as const;
 
 // ─── Types ───────────────────────────────────────────────

@@ -2,6 +2,11 @@
 
 import { useState } from 'react';
 import { useLanguage } from '@/contexts/language-context';
+import {
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+} from '@/components/ui/page-surface';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
@@ -46,11 +51,18 @@ export default function ContactPage() {
     try {
       const res  = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Unknown error');
+      if (!res.ok) {
+        const message =
+          typeof data?.error === 'string' &&
+          !/all fields are required|invalid email address|failed to send message|unknown error/i.test(data.error)
+            ? data.error
+            : t('common.error_desc');
+        throw new Error(message);
+      }
       setStatus('success');
       setForm({ firstName: '', lastName: '', email: '', subject: '', message: '' });
     } catch (err: unknown) {
-      setApiError(err instanceof Error ? err.message : 'Failed to send message.');
+      setApiError(err instanceof Error ? err.message : t('common.error_desc'));
       setStatus('error');
     }
   };
@@ -59,14 +71,17 @@ export default function ContactPage() {
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 py-12 max-w-2xl">
 
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <MessageSquare className="h-7 w-7 text-primary" />
+        <PageHeroSurface className="mb-8">
+          <div className="space-y-3 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+              <MessageSquare className="h-7 w-7 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <PageHeroTitle>{t('contact.title')}</PageHeroTitle>
+              <PageHeroDescription className="mx-auto max-w-md leading-relaxed">{t('contact.subtitle')}</PageHeroDescription>
+            </div>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">{t('contact.title')}</h1>
-          <p className="mt-2 max-w-md mx-auto text-sm text-muted-foreground leading-relaxed">{t('contact.subtitle')}</p>
-        </div>
+        </PageHeroSurface>
 
         {/* Form */}
         <Card className="rounded-2xl border-border/50 shadow-sm">
@@ -75,31 +90,31 @@ export default function ContactPage() {
 
               {/* First + Last name */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label={t('contact.firstName')} required error={errors.firstName} isRTL={isRTL}>
-                  <input type="text" value={form.firstName} onChange={e => handleChange('firstName', e.target.value)}
+                <Field htmlFor="contact-first-name" label={t('contact.firstName')} required error={errors.firstName} isRTL={isRTL}>
+                  <input id="contact-first-name" name="firstName" autoComplete="given-name" type="text" value={form.firstName} onChange={e => handleChange('firstName', e.target.value)}
                     placeholder={t('contact.placeholderFirst')} className={inputCls(!!errors.firstName)} maxLength={60} />
                 </Field>
-                <Field label={t('contact.lastName')} required error={errors.lastName} isRTL={isRTL}>
-                  <input type="text" value={form.lastName} onChange={e => handleChange('lastName', e.target.value)}
+                <Field htmlFor="contact-last-name" label={t('contact.lastName')} required error={errors.lastName} isRTL={isRTL}>
+                  <input id="contact-last-name" name="lastName" autoComplete="family-name" type="text" value={form.lastName} onChange={e => handleChange('lastName', e.target.value)}
                     placeholder={t('contact.placeholderLast')} className={inputCls(!!errors.lastName)} maxLength={60} />
                 </Field>
               </div>
 
               {/* Email */}
-              <Field label={t('contact.email')} required error={errors.email} isRTL={isRTL}>
-                <input type="email" value={form.email} onChange={e => handleChange('email', e.target.value)}
-                  placeholder={t('contact.placeholderEmail')} className={inputCls(!!errors.email)} maxLength={120} autoComplete="email" />
+              <Field htmlFor="contact-email" label={t('contact.email')} required error={errors.email} isRTL={isRTL}>
+                <input id="contact-email" name="email" autoComplete="email" type="email" value={form.email} onChange={e => handleChange('email', e.target.value)}
+                  placeholder={t('contact.placeholderEmail')} className={inputCls(!!errors.email)} maxLength={120} />
               </Field>
 
               {/* Subject */}
-              <Field label={t('contact.subject')} required error={errors.subject} isRTL={isRTL}>
-                <input type="text" value={form.subject} onChange={e => handleChange('subject', e.target.value)}
+              <Field htmlFor="contact-subject" label={t('contact.subject')} required error={errors.subject} isRTL={isRTL}>
+                <input id="contact-subject" name="subject" autoComplete="off" type="text" value={form.subject} onChange={e => handleChange('subject', e.target.value)}
                   placeholder={t('contact.placeholderSubject')} className={inputCls(!!errors.subject)} maxLength={120} />
               </Field>
 
               {/* Message */}
-              <Field label={t('contact.message')} required error={errors.message} isRTL={isRTL}>
-                <textarea value={form.message} onChange={e => handleChange('message', e.target.value)}
+              <Field htmlFor="contact-message" label={t('contact.message')} required error={errors.message} isRTL={isRTL}>
+                <textarea id="contact-message" name="message" autoComplete="off" value={form.message} onChange={e => handleChange('message', e.target.value)}
                   placeholder={t('contact.placeholderMsg')} rows={5}
                   className={cn(inputCls(!!errors.message), 'resize-y min-h-[120px]')} maxLength={2000} />
                 <p className="mt-1 text-end text-xs text-muted-foreground">{form.message.length}/2000</p>
@@ -146,12 +161,12 @@ export default function ContactPage() {
 
 // ─── Helpers ─────────────────────────────────────────────
 
-function Field({ label, required, error, isRTL, children }: {
-  label: string; required?: boolean; error?: string; isRTL: boolean; children: React.ReactNode;
+function Field({ htmlFor, label, required, error, isRTL, children }: {
+  htmlFor: string; label: string; required?: boolean; error?: string; isRTL: boolean; children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <label className={cn('block text-sm font-semibold text-foreground', isRTL && 'text-right')}>
+      <label htmlFor={htmlFor} className={cn('block text-sm font-semibold text-foreground', isRTL && 'text-right')}>
         {label}{required && <span className="ms-1 text-destructive">*</span>}
       </label>
       {children}

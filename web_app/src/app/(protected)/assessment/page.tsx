@@ -9,6 +9,12 @@ import {
 } from "@/services/assessmentService";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import {
+  PageHeroDescription,
+  PageHeroEyebrow,
+  PageHeroSurface,
+  PageHeroTitle,
+} from "@/components/ui/page-surface";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -71,9 +77,11 @@ const CATEGORY_COLORS: string[] = [
 function CategoryCard({
   cat,
   index,
+  t,
 }: {
   cat: AssessmentCategory;
   index: number;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const Icon = CATEGORY_ICONS[cat.slug] ?? Code2;
   const color = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
@@ -100,13 +108,13 @@ function CategoryCard({
         )}
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           <Badge variant="secondary" className="text-[10px] px-2 py-0">
-            {cat.timeLimitMinutes}min
+            {t("assessment.badge_minutes", { count: cat.timeLimitMinutes })}
           </Badge>
           <Badge variant="secondary" className="text-[10px] px-2 py-0">
-            {cat.passingScorePercent}% pass
+            {t("assessment.badge_pass", { count: cat.passingScorePercent })}
           </Badge>
           <Badge variant="secondary" className="text-[10px] px-2 py-0">
-            {cat.difficulties.length} levels
+            {t("assessment.badge_levels", { count: cat.difficulties.length })}
           </Badge>
         </div>
       </div>
@@ -122,7 +130,7 @@ function AssessmentCatalog({
   isRTL,
 }: {
   language: AssessmentLanguage;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   isRTL: boolean;
 }) {
   const [categories, setCategories] = useState<AssessmentCategory[]>([]);
@@ -163,15 +171,19 @@ function AssessmentCatalog({
     >
       {unavailable && <ServiceUnavailableBanner />}
 
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {t("assessment.title")}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {t("assessment.subtitle")}
-        </p>
-      </div>
+      <PageHeroSurface>
+        <div className="space-y-1">
+          <PageHeroEyebrow>
+            {t("assessment.badge_levels", { count: 3 })}
+          </PageHeroEyebrow>
+          <PageHeroTitle>
+            {t("assessment.title")}
+          </PageHeroTitle>
+          <PageHeroDescription>
+            {t("assessment.subtitle")}
+          </PageHeroDescription>
+        </div>
+      </PageHeroSurface>
 
       {/* Grid */}
       {loading ? (
@@ -190,7 +202,7 @@ function AssessmentCatalog({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {categories.map((cat, i) => (
-            <CategoryCard key={cat.id} cat={cat} index={i} />
+            <CategoryCard key={cat.id} cat={cat} index={i} t={t} />
           ))}
         </div>
       )}

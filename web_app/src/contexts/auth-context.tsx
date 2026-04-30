@@ -8,12 +8,14 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 import { useLanguage } from "@/contexts/language-context";
 import { AuthSuccessModal } from "@/components/ui/auth-success-modal";
 import { LogoutModal } from "@/components/ui/logout-modal";
 import { ROUTES } from "@/lib/constants";
 import { type User, type LoginRequest } from "@/lib/types";
 import { isUnavailableStatus, logApiError } from "@/lib/api";
+import { getSocialAuthSuccessMessage } from "@/lib/social-auth-feedback";
 
 /**
  * SECURITY MODEL:
@@ -31,6 +33,13 @@ interface LoginResult {
   message?: string;
   /** 503 = backend down */
   status?: number;
+}
+
+interface RegisterPayload {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
 }
 
 interface LoginOptions {
@@ -59,6 +68,10 @@ interface AuthContextType {
     credentials: LoginRequest,
     redirectPath?: string,
     options?: LoginOptions,
+  ) => Promise<LoginResult>;
+  register: (
+    payload: RegisterPayload,
+    redirectPath?: string,
   ) => Promise<LoginResult>;
   logout: () => void;
   fetchUser: () => Promise<void>;
@@ -100,6 +113,13 @@ function normalizeUser(raw: Record<string, unknown>): User {
     role: (raw.role as string) ?? "USER",
     isActive: true,
     createdAt: (raw.createdAt as string) || undefined,
+    linkedProviders: Array.isArray(raw.linkedProviders)
+      ? (raw.linkedProviders as string[])
+      : [],
+    googleLinked:
+      Boolean(raw.googleLinked) ||
+      (Array.isArray(raw.linkedProviders) &&
+        (raw.linkedProviders as string[]).includes("GOOGLE")),
   };
 }
 
@@ -190,6 +210,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, [fetchUser]);
 
+  useEffect(() => {
+    if (!user || typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const authProvider = url.searchParams.get("authProvider");
+    const authStatus = url.searchParams.get("authStatus");
+
+    if (authProvider !== "google" || !authStatus || authStatus === "linked") {
+      return;
+    }
+
+    const message = getSocialAuthSuccessMessage(t, authStatus);
+    if (message) {
+      toast.success(message);
+    }
+
+    url.searchParams.delete("authProvider");
+    url.searchParams.delete("authStatus");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [t, user]);
+
   const login = useCallback(
     async (
       credentials: LoginRequest,
@@ -233,14 +274,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logApiError("[AuthContext] login", error);
         const message =
           error instanceof TypeError && error.message.includes("fetch")
-            ? "Backend service unavailable"
-            : "An unexpected error occurred. Please try again.";
+            ? t("common.service_unavailable")
+            : t("common.error_desc");
         return { success: false, message, status: 503 };
       } finally {
         setIsLoading(false);
       }
     },
-    [],
+    [t],
+  );
+
+  const register = useCallback(
+    async (
+      payload: RegisterPayload,
+      redirectPath?: string,
+    ): Promise<LoginResult> => {
+      setIsLoading(true);
+      try {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const message =
+            (errorData.error as string | undefined) ??
+            (errorData.message as string | undefined);
+          return { success: false, message, status: response.status };
+        }
+
+        const raw = await response.json();
+        const normalizedUser = normalizeUser(raw);
+        setUser(normalizedUser);
+        const displayName =
+          normalizedUser.firstName ??
+          normalizedUser.fullName?.split(" ")[0] ??
+          normalizedUser.username;
+
+        setSuccessModal({
+          open: true,
+          username: displayName,
+          isNewUser: true,
+          redirectPath: redirectPath ?? ROUTES.DASHBOARD,
+        });
+
+        return { success: true };
+      } catch (error) {
+        logApiError("[AuthContext] register", error);
+        const message =
+          error instanceof TypeError && error.message.includes("fetch")
+            ? t("common.service_unavailable")
+            : t("common.error_desc");
+        return { success: false, message, status: 503 };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [t],
   );
 
   const logout = useCallback(async () => {
@@ -261,6 +353,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         serviceUnavailable,
         login,
+        register,
         logout,
         fetchUser,
       }}

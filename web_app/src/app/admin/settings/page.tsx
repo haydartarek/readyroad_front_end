@@ -2,9 +2,16 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/language-context";
+import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  API_ENDPOINTS,
+  EXAM_RULES,
+} from "@/lib/constants";
+import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
   Select,
   SelectContent,
@@ -46,12 +53,10 @@ const DEFAULTS: SettingsModel = {
   defaultLanguage: "en",
   maintenanceMode: false,
   allowRegistrations: true,
-  examQuestions: 50,
-  examDurationMinutes: 45,
-  passingScorePercent: 82,
+  examQuestions: EXAM_RULES.TOTAL_QUESTIONS,
+  examDurationMinutes: EXAM_RULES.DURATION_MINUTES,
+  passingScorePercent: EXAM_RULES.PASS_PERCENTAGE,
 };
-
-const STORAGE_KEY = "readyroad_admin_settings";
 
 // ─── Section Header ────────────────────────────────────
 
@@ -81,15 +86,17 @@ function SectionHeader({
 function Field({
   label,
   hint,
+  htmlFor,
   children,
 }: {
   label: string;
   hint?: string;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-foreground">
+      <label htmlFor={htmlFor} className="block text-sm font-semibold text-foreground">
         {label}
       </label>
       {children}
@@ -174,21 +181,28 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [settings, setSettings] = useState<SettingsModel>(DEFAULTS);
 
-  const loadSettings = useCallback(() => {
+  const loadSettings = useCallback(async () => {
     setLoading(true);
+    setError(null);
+    setServiceUnavailable(false);
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setSettings({ ...DEFAULTS, ...JSON.parse(stored) });
-    } catch {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[Settings] localStorage read failed, using defaults");
+      const response = await apiClient.get<SettingsModel>(API_ENDPOINTS.ADMIN.SETTINGS);
+      setSettings({ ...DEFAULTS, ...response.data });
+    } catch (err) {
+      logApiError("[AdminSettings] load", err);
+      if (isServiceUnavailable(err)) {
+        setServiceUnavailable(true);
+      } else {
+        setError(t("admin.settings_page.load_error"));
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadSettings();
@@ -197,13 +211,17 @@ export default function AdminSettingsPage() {
   const saveSettings = async () => {
     setSaving(true);
     setSuccess(null);
+    setError(null);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      await apiClient.put(API_ENDPOINTS.ADMIN.SETTINGS, settings);
       setSuccess(t("admin.settings_page.save_success"));
       setTimeout(() => setSuccess(null), 3000);
-    } catch {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[Settings] localStorage write failed");
+    } catch (err) {
+      logApiError("[AdminSettings] save", err);
+      if (isServiceUnavailable(err)) {
+        setServiceUnavailable(true);
+      } else {
+        setError(t("admin.settings_page.save_error"));
       }
     } finally {
       setSaving(false);
@@ -212,7 +230,6 @@ export default function AdminSettingsPage() {
 
   const resetSettings = () => {
     setSettings(DEFAULTS);
-    localStorage.removeItem(STORAGE_KEY);
     setSuccess(t("admin.settings_page.reset_success"));
     setTimeout(() => setSuccess(null), 3000);
   };
@@ -236,61 +253,32 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* ── Hero Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
-        <div className="pointer-events-none absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+      {serviceUnavailable && <ServiceUnavailableBanner onRetry={loadSettings} />}
 
-        <div className="relative flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Settings2 className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground leading-none">
-                {t("admin.settings_page.title")}
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1 font-medium">
-                {t("admin.settings_page.description")}
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2 sm:justify-end">
-            <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
-              <HelpCircle className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">
-                  Questions
-                </p>
-                <p className="text-foreground font-black text-sm leading-tight">
-                  {settings.examQuestions}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
-              <Timer className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">
-                  Duration
-                </p>
-                <p className="text-foreground font-black text-sm leading-tight">
-                  {settings.examDurationMinutes} min
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl bg-card border border-border/50 px-3 py-2 shadow-sm">
-              <Percent className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider leading-none">
-                  Pass Score
-                </p>
-                <p className="text-foreground font-black text-sm leading-tight">
-                  {settings.passingScorePercent}%
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={<Settings2 className="h-6 w-6" />}
+        title={t("admin.settings_page.title")}
+        description={t("admin.settings_page.description")}
+        metrics={[
+          {
+            label: t("admin.settings_page.summary_questions"),
+            value: settings.examQuestions,
+            icon: <HelpCircle className="h-4 w-4" />,
+            tone: "primary",
+          },
+          {
+            label: t("admin.settings_page.summary_duration"),
+            value: t("admin.settings_page.duration_value").replace("{value}", String(settings.examDurationMinutes)),
+            icon: <Timer className="h-4 w-4" />,
+          },
+          {
+            label: t("admin.settings_page.summary_pass_score"),
+            value: `${settings.passingScorePercent}%`,
+            icon: <Percent className="h-4 w-4" />,
+            tone: settings.passingScorePercent >= 80 ? "success" : settings.passingScorePercent >= 65 ? "warning" : "danger",
+          },
+        ]}
+      />
 
       {/* ── Action Bar ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -298,7 +286,7 @@ export default function AdminSettingsPage() {
           {settings.maintenanceMode && (
             <Badge variant="destructive" className="gap-1.5 px-3 py-1">
               <AlertTriangle className="w-3.5 h-3.5" />
-              Maintenance Mode Active
+              {t("admin.settings_page.maintenance_badge")}
             </Badge>
           )}
           {!settings.allowRegistrations && (
@@ -307,7 +295,7 @@ export default function AdminSettingsPage() {
               className="gap-1.5 px-3 py-1 border-amber-500/30 text-amber-600 bg-amber-500/5"
             >
               <Lock className="w-3.5 h-3.5" />
-              Registrations Disabled
+              {t("admin.settings_page.registration_badge")}
             </Badge>
           )}
         </div>
@@ -357,6 +345,18 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
+      {error && (
+        <div className="flex items-center justify-between rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive font-medium">
+          <span className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            {error}
+          </span>
+          <button onClick={() => setError(null)} className="hover:opacity-70 transition-opacity ml-4">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* ── Two-column: General + Access ── */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* General */}
@@ -368,16 +368,19 @@ export default function AdminSettingsPage() {
             />
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field label={t("admin.settings_page.site_name")}>
+            <Field label={t("admin.settings_page.site_name")} htmlFor="admin-settings-site-name">
               <input
+                id="admin-settings-site-name"
+                name="siteName"
                 type="text"
+                autoComplete="off"
                 value={settings.siteName}
                 onChange={(e) => update("siteName", e.target.value)}
                 className={inputClass}
-                placeholder="ReadyRoad"
+                placeholder={t("app.name")}
               />
             </Field>
-            <Field label={t("admin.settings_page.default_language")}>
+            <Field label={t("admin.settings_page.default_language")} htmlFor="admin-settings-default-language-trigger">
               <Select
                 value={settings.defaultLanguage}
                 onValueChange={(v) =>
@@ -387,27 +390,25 @@ export default function AdminSettingsPage() {
                   )
                 }
               >
-                <SelectTrigger className="w-full rounded-xl border-border/50 focus:ring-primary/30">
+                <SelectTrigger
+                  id="admin-settings-default-language-trigger"
+                  aria-label={t("admin.settings_page.default_language")}
+                  className="w-full rounded-xl border-border/50 focus:ring-primary/30"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   <SelectItem value="en">
-                    <span className="flex items-center gap-2">🇬🇧 English</span>
+                    <span className="flex items-center gap-2">{t("admin.settings_page.language_en")}</span>
                   </SelectItem>
                   <SelectItem value="ar">
-                    <span className="flex items-center gap-2">
-                      🇸🇦 Arabic — العربية
-                    </span>
+                    <span className="flex items-center gap-2">{t("admin.settings_page.language_ar")}</span>
                   </SelectItem>
                   <SelectItem value="nl">
-                    <span className="flex items-center gap-2">
-                      🇧🇪 Dutch — Nederlands
-                    </span>
+                    <span className="flex items-center gap-2">{t("admin.settings_page.language_nl")}</span>
                   </SelectItem>
                   <SelectItem value="fr">
-                    <span className="flex items-center gap-2">
-                      🇫🇷 French — Français
-                    </span>
+                    <span className="flex items-center gap-2">{t("admin.settings_page.language_fr")}</span>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -454,13 +455,17 @@ export default function AdminSettingsPage() {
         <CardContent className="space-y-5">
           <div className="grid gap-5 sm:grid-cols-3">
             <Field
+              htmlFor="admin-settings-exam-questions"
               label={t("admin.settings_page.exam_questions")}
               hint={t("admin.settings_page.exam_questions_hint")}
             >
               <div className="relative">
                 <HelpCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
+                  id="admin-settings-exam-questions"
+                  name="examQuestions"
                   type="number"
+                  autoComplete="off"
                   min={10}
                   max={100}
                   value={settings.examQuestions}
@@ -472,13 +477,17 @@ export default function AdminSettingsPage() {
               </div>
             </Field>
             <Field
+              htmlFor="admin-settings-exam-duration"
               label={t("admin.settings_page.exam_duration")}
               hint={t("admin.settings_page.exam_duration_hint")}
             >
               <div className="relative">
                 <Timer className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
+                  id="admin-settings-exam-duration"
+                  name="examDurationMinutes"
                   type="number"
+                  autoComplete="off"
                   min={10}
                   max={120}
                   value={settings.examDurationMinutes}
@@ -490,11 +499,14 @@ export default function AdminSettingsPage() {
               </div>
             </Field>
             <Field
+              htmlFor="admin-settings-passing-score"
               label={t("admin.settings_page.passing_score")}
               hint={t("admin.settings_page.passing_score_hint")}
             >
               <div className="flex items-center gap-3">
                 <input
+                  id="admin-settings-passing-score"
+                  name="passingScorePercent"
                   type="range"
                   min={50}
                   max={100}
@@ -519,21 +531,25 @@ export default function AdminSettingsPage() {
           {/* Preview chips */}
           <div className="flex flex-wrap gap-3 rounded-2xl border border-border/40 bg-muted/30 p-4">
             <p className="w-full text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Current exam config
+              {t("admin.settings_page.current_exam_config")}
             </p>
             <div className="flex items-center gap-2 rounded-xl bg-background border border-border/50 px-3 py-2">
               <HelpCircle className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold">
                 {settings.examQuestions}
               </span>
-              <span className="text-xs text-muted-foreground">questions</span>
+              <span className="text-xs text-muted-foreground">
+                {t("admin.settings_page.summary_questions").toLowerCase()}
+              </span>
             </div>
             <div className="flex items-center gap-2 rounded-xl bg-background border border-border/50 px-3 py-2">
               <Timer className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-bold">
                 {settings.examDurationMinutes}
               </span>
-              <span className="text-xs text-muted-foreground">minutes</span>
+              <span className="text-xs text-muted-foreground">
+                {t("admin.settings_page.minutes_label")}
+              </span>
             </div>
             <div
               className={cn(
@@ -545,7 +561,7 @@ export default function AdminSettingsPage() {
               <span className="text-sm font-bold">
                 {settings.passingScorePercent}%
               </span>
-              <span className="text-xs opacity-70">to pass</span>
+              <span className="text-xs opacity-70">{t("admin.settings_page.to_pass_label")}</span>
             </div>
           </div>
         </CardContent>
@@ -555,7 +571,7 @@ export default function AdminSettingsPage() {
       <div className="flex items-start gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-4 py-3">
         <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-muted-foreground leading-relaxed">
-          {t("admin.settings_page.local_storage_note")}
+          {t("admin.settings_page.database_note")}
         </p>
       </div>
     </div>

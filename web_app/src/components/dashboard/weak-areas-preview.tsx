@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/language-context';
 
 interface WeakArea {
+  categoryCode?: string;
   category: string;
   accuracy: number;
   totalQuestions: number;
@@ -82,7 +83,11 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
                 </div>
 
                 <Link
-                  href={`/practice?category=${encodeURIComponent(area.category)}`}
+                  href={
+                    area.categoryCode
+                      ? `/practice/${encodeURIComponent(area.categoryCode)}`
+                      : '/dashboard?section=weak-areas'
+                  }
                   className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80"
                 >
                   {t('dashboard.practice_this_category')}

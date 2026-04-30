@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { NotificationProvider } from "@/contexts/notification-context";
@@ -9,6 +10,18 @@ import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/navbar";
 import { ConditionalFooter } from "@/components/layout/conditional-footer";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { STORAGE_KEYS, type Language } from "@/lib/constants";
+import {
+  DEFAULT_APP_URL,
+  getAlternateOpenGraphLocales,
+  getLayoutMetadataCopy,
+  getOpenGraphLocale,
+  getSharedOgImage,
+  resolveSiteLocale,
+  createEducationalAppSchema,
+  createOrganizationSchema,
+  createWebsiteSchema,
+} from "@/lib/site-copy";
 
 // ─── Font ────────────────────────────────────────────────
 
@@ -32,218 +45,107 @@ export const viewport: Viewport = {
 // ─── Metadata ────────────────────────────────────────────
 
 export const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL || "https://readyroad.be";
-const OG_IMAGE = {
-  url: "/images/og.png",
-  width: 1200,
-  height: 630,
-  alt: "ReadyRoad – Belgian Driving License Exam Prep",
-};
+  process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const locale = resolveSiteLocale(
+    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
+  );
+  const copy = getLayoutMetadataCopy(locale);
+  const ogImage = getSharedOgImage(locale);
 
-export const metadata: Metadata = {
-  metadataBase: new URL(APP_URL),
-
-  title: {
-    default: "ReadyRoad | Belgian Driving License Exam Prep",
-    template: "%s | ReadyRoad",
-  },
-
-  description:
-    "ReadyRoad helps learners prepare for the Belgian driving theory exam with traffic signs, lessons, practice flows, and progress analytics.",
-
-  keywords: [
-    // ── English ──────────────────────────────────────────────
-    "Belgian driving license exam",
-    "Belgian driving theory test",
-    "Belgian highway code",
-    "Belgium driving test questions",
-    "traffic signs Belgium",
-    "practice driving test Belgium",
-    "how to get a driving license in Belgium",
-    "Belgium road test preparation",
-    "driving license Belgium English",
-    // ── Nederlands ───────────────────────────────────────────
-    "rijbewijs theorie examen",
-    "rijexamen oefenen",
-    "verkeerstekens België",
-    "theorie examen vragen",
-    "rijbewijs B theorie",
-    "rijtheorie halen België",
-    "rijbewijs oefenen online",
-    "theoretisch rijexamen belgie",
-    "rijbewijs leren",
-    // ── Français ─────────────────────────────────────────────
-    "permis de conduire belgique",
-    "code de la route belgique",
-    "examen théorique permis conduire",
-    "panneaux signalisation belgique",
-    "révision permis de conduire",
-    "permis B belgique exercices",
-    "questions examen théorique permis",
-    "test permis de conduire belgique",
-    // ── العربية ───────────────────────────────────────────────
-    "رخصة القيادة في بلجيكا",
-    "امتحان القيادة في بلجيكا",
-    "اختبار نظري بلجيكا",
-    "إشارات المرور البلجيكية",
-    "استعداد امتحان قيادة بلجيكا",
-    // ── Brand ────────────────────────────────────────────────
-    "ReadyRoad",
-    "readyroad.be",
-  ],
-
-  authors: [{ name: "ReadyRoad Team", url: APP_URL }],
-  creator: "ReadyRoad",
-  publisher: "ReadyRoad",
-  category: "education",
-
-  formatDetection: { email: false, address: false, telephone: false },
-
-  alternates: {
-    canonical: APP_URL,
-    languages: {
-      en: `${APP_URL}`,
-      nl: `${APP_URL}`,
-      fr: `${APP_URL}`,
-      ar: `${APP_URL}`,
-      "x-default": APP_URL,
+  return {
+    metadataBase: new URL(APP_URL),
+    title: {
+      default: copy.defaultTitle,
+      template: "%s | ReadyRoad",
     },
-  },
-
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/images/logo.png", sizes: "512x512", type: "image/png" },
-    ],
-    shortcut: [{ url: "/favicon.ico" }],
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-    ],
-  },
-
-  manifest: "/manifest.json",
-
-  openGraph: {
-    title: "ReadyRoad | Belgian Driving License Exam Prep",
-    description:
-      "Practice Belgian theory topics, study traffic signs, and track your progress from one dashboard.",
-    type: "website",
-    url: APP_URL,
-    siteName: "ReadyRoad",
-    locale: "en_BE",
-    alternateLocale: ["nl_BE", "fr_BE", "ar"],
-    images: [OG_IMAGE],
-  },
-
-  twitter: {
-    card: "summary_large_image",
-    site: "@ReadyRoad",
-    creator: "@ReadyRoad",
-    title: "ReadyRoad | Belgian Driving License Exam Prep",
-    description:
-      "Practice theory topics, study traffic signs, and track your progress with ReadyRoad.",
-    images: [OG_IMAGE.url],
-  },
-
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    description: copy.description,
+    keywords: copy.keywords,
+    authors: [{ name: "ReadyRoad Team", url: APP_URL }],
+    creator: "ReadyRoad",
+    publisher: "ReadyRoad",
+    category: "education",
+    formatDetection: { email: false, address: false, telephone: false },
+    alternates: {
+      canonical: APP_URL,
+      languages: {
+        en: `${APP_URL}`,
+        nl: `${APP_URL}`,
+        fr: `${APP_URL}`,
+        ar: `${APP_URL}`,
+        "x-default": APP_URL,
+      },
+    },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+        { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        { url: "/images/logo.png", sizes: "512x512", type: "image/png" },
+      ],
+      shortcut: [{ url: "/favicon.ico" }],
+      apple: [
+        { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      ],
+    },
+    manifest: "/manifest.json",
+    openGraph: {
+      title: copy.defaultTitle,
+      description: copy.openGraphDescription,
+      type: "website",
+      url: APP_URL,
+      siteName: "ReadyRoad",
+      locale: getOpenGraphLocale(locale),
+      alternateLocale: getAlternateOpenGraphLocales(locale),
+      images: [ogImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@ReadyRoad",
+      creator: "@ReadyRoad",
+      title: copy.defaultTitle,
+      description: copy.twitterDescription,
+      images: [ogImage.url],
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
-
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "ReadyRoad",
-  },
-
-  verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "",
-  },
-};
-
-// ─── JSON-LD Structured Data ─────────────────────────────
-
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "@id": `${APP_URL}/#organization`,
-  name: "ReadyRoad",
-  url: APP_URL,
-  logo: {
-    "@type": "ImageObject",
-    url: `${APP_URL}/images/logo.png`,
-    width: 512,
-    height: 512,
-  },
-  description:
-    "ReadyRoad is an independent learning platform for Belgian driving theory exam preparation.",
-  sameAs: ["https://readyroad.be"],
-  areaServed: {
-    "@type": "Country",
-    name: "Belgium",
-  },
-  availableLanguage: ["English", "Dutch", "French", "Arabic"],
-};
-
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": `${APP_URL}/#website`,
-  url: APP_URL,
-  name: "ReadyRoad",
-  description:
-    "Belgian driving theory exam preparation platform.",
-  publisher: {
-    "@id": `${APP_URL}/#organization`,
-  },
-  potentialAction: {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: `${APP_URL}/traffic-signs?q={search_term_string}`,
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "ReadyRoad",
     },
-    "query-input": "required name=search_term_string",
-  },
-  inLanguage: ["en", "nl", "fr", "ar"],
-};
-
-const educationalAppSchema = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "ReadyRoad",
-  applicationCategory: "EducationalApplication",
-  operatingSystem: "Web",
-  url: APP_URL,
-  description:
-    "Prepare for the Belgian driving theory exam with practice flows, traffic signs, lessons, and progress analytics.",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "EUR",
-  },
-  inLanguage: ["en", "nl", "fr", "ar"],
-  availableOnDevice: "Desktop, Mobile",
-  publisher: {
-    "@id": `${APP_URL}/#organization`,
-  },
-};
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "",
+    },
+  };
+}
 
 // ─── Layout ──────────────────────────────────────────────
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const locale = resolveSiteLocale(
+    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
+  );
+  const isRTL = locale === "ar";
+  const organizationSchema = createOrganizationSchema(APP_URL, locale);
+  const websiteSchema = createWebsiteSchema(APP_URL, locale);
+  const educationalAppSchema = createEducationalAppSchema(APP_URL, locale);
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -272,8 +174,9 @@ export default function RootLayout({
             defaultTheme="light"
             enableSystem={false}
             disableTransitionOnChange
+            storageKey={STORAGE_KEYS.THEME}
           >
-            <LanguageProvider>
+            <LanguageProvider initialLanguage={locale as Language}>
               <AuthProvider>
                 <NotificationProvider>
                   <Navbar />

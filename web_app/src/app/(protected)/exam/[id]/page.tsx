@@ -13,12 +13,7 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import {
-  RefreshCw,
-  ArrowLeft,
-  ArrowRight,
-  Clock,
-} from "lucide-react";
+import { RefreshCw, ArrowLeft, ArrowRight, Clock } from "lucide-react";
 
 /** Seconds per question — Belgian theoretical driving exam rule */
 const QUESTION_TIME = 15;
@@ -444,7 +439,7 @@ export default function ExamQuestionsPage() {
     questionTimeLeft >= 10
       ? "border-green-200 bg-green-50 text-green-700"
       : questionTimeLeft >= 5
-      ? "border-orange-200 bg-orange-50 text-orange-600"
+        ? "border-orange-200 bg-orange-50 text-orange-600"
         : "border-red-200 bg-red-50 text-red-600 animate-pulse";
   const questionText = localizeText(
     language,
@@ -454,7 +449,7 @@ export default function ExamQuestionsPage() {
     currentQuestion.questionTextFr,
   );
   const questionImageUrl = currentQuestion.imageUrl
-    ? convertToPublicImageUrl(currentQuestion.imageUrl) ?? null
+    ? (convertToPublicImageUrl(currentQuestion.imageUrl) ?? null)
     : null;
 
   return (

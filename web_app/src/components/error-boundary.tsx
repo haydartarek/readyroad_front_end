@@ -1,36 +1,39 @@
-'use client';
+"use client";
 
-import React, { Component, type ReactNode } from 'react';
+import React, { Component, type ReactNode } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useLanguage } from '@/contexts/language-context';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ───────────────────────────────────────────────
 
 interface ErrorBoundaryProps {
-  children:  ReactNode;
+  children: ReactNode;
   fallback?: ReactNode;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error?:   Error;
+  error?: Error;
 }
 
 // ─── Constants ───────────────────────────────────────────
 
-const IS_DEV = process.env.NODE_ENV === 'development';
+const IS_DEV = process.env.NODE_ENV === "development";
 
 // ─── Component ───────────────────────────────────────────
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -39,7 +42,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     if (IS_DEV) {
-      console.error('[ErrorBoundary]', error, info.componentStack);
+      console.error("[ErrorBoundary]", error, info.componentStack);
     }
   }
 
@@ -48,7 +51,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   render() {
@@ -56,7 +59,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const { fallback, children } = this.props;
 
     if (!hasError) return children;
-    if (fallback)  return fallback;
+    if (fallback) return fallback;
 
     return (
       <LocalizedErrorFallback
@@ -84,34 +87,26 @@ function LocalizedErrorFallback({
       <Card className="w-full max-w-lg border-2">
         <CardHeader>
           <CardTitle className="text-2xl text-destructive">
-            {t('common.error_title')}
+            {t("common.error_title")}
           </CardTitle>
-          <CardDescription>
-            {t('common.error_desc')}
-          </CardDescription>
+          <CardDescription>{t("common.error_desc")}</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {IS_DEV && error && (
             <Alert variant="destructive">
               <AlertDescription>
-                <pre className="overflow-auto text-xs">
-                  {error.message}
-                </pre>
+                <pre className="overflow-auto text-xs">{error.message}</pre>
               </AlertDescription>
             </Alert>
           )}
 
           <div className="flex gap-3">
             <Button onClick={handleReset} className="flex-1">
-              {t('common.retry')}
+              {t("common.retry")}
             </Button>
-            <Button
-              variant="outline"
-              onClick={handleGoHome}
-              className="flex-1"
-            >
-              {t('common.go_home')}
+            <Button variant="outline" onClick={handleGoHome} className="flex-1">
+              {t("common.go_home")}
             </Button>
           </div>
         </CardContent>

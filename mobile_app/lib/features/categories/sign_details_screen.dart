@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../shared/models/content_item.dart';
 import '../../core/providers/favorites_provider.dart';
+import '../../core/constants/api_constants.dart';
 
 /// Content Details Screen - Shows detailed information about content
 class SignDetailsScreen extends StatelessWidget {
@@ -124,14 +125,13 @@ class SignDetailsScreen extends StatelessWidget {
     );
   }
 
-  String _convertToAssetPath(String imageUrl) {
-    // Handle both API formats:
-    // 1. /images/signs/... (web format)
-    // 2. assets/traffic_signs/... (backend format)
-    if (imageUrl.startsWith('/images/signs/')) {
-      return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  String _toBackendImageUrl(String imageUrl) {
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
     }
-    // Already in correct format for Flutter assets
+    if (imageUrl.startsWith('/images/signs/')) {
+      return '${ApiConstants.baseUrl}$imageUrl';
+    }
     return imageUrl;
   }
 
@@ -140,8 +140,8 @@ class SignDetailsScreen extends StatelessWidget {
       height: 250,
       color: Colors.grey[100],
       child: content.imageUrl != null && content.imageUrl!.isNotEmpty
-          ? Image.asset(
-              _convertToAssetPath(content.imageUrl!),
+          ? Image.network(
+              _toBackendImageUrl(content.imageUrl!),
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
                 return const Center(

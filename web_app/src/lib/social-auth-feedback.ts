@@ -33,7 +33,10 @@ export function getSocialAuthErrorMessage(t: TranslateFn, code: string | null) {
   }
 }
 
-export function getSocialAuthSuccessMessage(t: TranslateFn, status: string | null) {
+export function getSocialAuthSuccessMessage(
+  t: TranslateFn,
+  status: string | null,
+) {
   switch (status) {
     case "logged_in":
       return t("auth.google_success_logged_in");

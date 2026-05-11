@@ -1,15 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import {
-  ArrowRight,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/language-context';
-import { apiClient } from '@/lib/api';
-import { getCategoryVisual } from '@/lib/category-visuals';
-import { API_ENDPOINTS, ROUTES } from '@/lib/constants';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
+import { apiClient } from "@/lib/api";
+import { getCategoryVisual } from "@/lib/category-visuals";
+import { API_ENDPOINTS, ROUTES } from "@/lib/constants";
 
 interface Category {
   id: number;
@@ -21,10 +19,10 @@ interface Category {
   signCount: number;
 }
 
-type Lang = 'en' | 'ar' | 'nl' | 'fr';
+type Lang = "en" | "ar" | "nl" | "fr";
 const SKELETON_COUNT = 6;
 const SECTION_OUTLINE_CTA_CLASS =
-  'h-12 rounded-full border-primary/15 bg-background/85 px-8 text-sm font-semibold text-secondary shadow-sm ring-1 ring-primary/10 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/5 hover:text-primary hover:shadow-md active:translate-y-0';
+  "h-12 rounded-full border-primary/15 bg-background/85 px-8 text-sm font-semibold text-secondary shadow-sm ring-1 ring-primary/10 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/5 hover:text-primary hover:shadow-md active:translate-y-0";
 
 function getCategoryName(cat: Category, lang: Lang): string {
   const map: Record<Lang, string> = {
@@ -74,10 +72,10 @@ export function CategoriesPreview() {
       <div className="container relative mx-auto px-4">
         <div className="mb-12 text-center lg:mb-16">
           <h2 className="mb-4 text-balance text-3xl font-extrabold tracking-tight text-secondary md:text-4xl lg:text-5xl">
-            {t('home.categories.title')}
+            {t("home.categories.title")}
           </h2>
           <p className="mx-auto max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-            {t('home.categories.subtitle')}
+            {t("home.categories.subtitle")}
           </p>
         </div>
 
@@ -97,10 +95,10 @@ export function CategoriesPreview() {
           <div className="mx-auto max-w-2xl rounded-3xl border bg-card/80 p-8 text-center shadow-sm backdrop-blur">
             <div className="space-y-4">
               <h3 className="text-xl font-extrabold tracking-tight text-secondary">
-                {t('home.categories.error_title')}
+                {t("home.categories.error_title")}
               </h3>
               <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-                {t('home.categories.error_desc')}
+                {t("home.categories.error_desc")}
               </p>
               <Button
                 variant="outline"
@@ -108,7 +106,9 @@ export function CategoriesPreview() {
                 className={SECTION_OUTLINE_CTA_CLASS}
                 asChild
               >
-                <Link href={ROUTES.TRAFFIC_SIGNS}>{t('home.categories.browse_signs')}</Link>
+                <Link href={ROUTES.TRAFFIC_SIGNS}>
+                  {t("home.categories.browse_signs")}
+                </Link>
               </Button>
             </div>
           </div>
@@ -123,9 +123,9 @@ export function CategoriesPreview() {
                     key={cat.id}
                     href={ROUTES.PRACTICE_CATEGORY(cat.code)}
                     className={[
-                      'group relative flex flex-col justify-between overflow-hidden rounded-3xl border bg-card/80 p-6 shadow-sm backdrop-blur',
-                      'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20',
-                    ].join(' ')}
+                      "group relative flex flex-col justify-between overflow-hidden rounded-3xl border bg-card/80 p-6 shadow-sm backdrop-blur",
+                      "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20",
+                    ].join(" ")}
                   >
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/35 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                     <div className="pointer-events-none absolute inset-0 ring-1 ring-border/60" />
@@ -134,16 +134,24 @@ export function CategoriesPreview() {
                       <div className="mb-4 flex items-center justify-between">
                         <div
                           className={[
-                            'flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-[1.03]',
+                            "flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-[1.03]",
                             visual.iconWrap,
-                          ].join(' ')}
+                          ].join(" ")}
                         >
-                          <Icon className={['h-5 w-5', visual.iconTone].join(' ')} aria-hidden />
+                          <Icon
+                            className={["h-5 w-5", visual.iconTone].join(" ")}
+                            aria-hidden
+                          />
                         </div>
 
-                        <span className={['rounded-full border px-3 py-1 text-xs font-medium', visual.countBadge].join(' ')}>
-                          {t('home.categories.signs_count').replace(
-                            '{count}',
+                        <span
+                          className={[
+                            "rounded-full border px-3 py-1 text-xs font-medium",
+                            visual.countBadge,
+                          ].join(" ")}
+                        >
+                          {t("home.categories.signs_count").replace(
+                            "{count}",
                             String(cat.signCount),
                           )}
                         </span>
@@ -155,13 +163,20 @@ export function CategoriesPreview() {
                     </div>
 
                     <div className="relative mt-5">
-                      <div className={['inline-flex w-fit items-center gap-2 rounded-full border bg-background/60 px-4 py-2 text-sm font-semibold shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md', visual.actionTone].join(' ')}>
-                        {t('home.categories.start_practice')}
+                      <div
+                        className={[
+                          "inline-flex w-fit items-center gap-2 rounded-full border bg-background/60 px-4 py-2 text-sm font-semibold shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md",
+                          visual.actionTone,
+                        ].join(" ")}
+                      >
+                        {t("home.categories.start_practice")}
                         <ArrowRight
                           className={[
-                            'h-4 w-4 transition-transform',
-                            isRTL ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5',
-                          ].join(' ')}
+                            "h-4 w-4 transition-transform",
+                            isRTL
+                              ? "rotate-180 group-hover:-translate-x-0.5"
+                              : "group-hover:translate-x-0.5",
+                          ].join(" ")}
                           aria-hidden
                         />
                       </div>
@@ -169,9 +184,9 @@ export function CategoriesPreview() {
 
                     <div
                       className={[
-                        'pointer-events-none absolute -bottom-12 -end-12 h-44 w-44 rounded-full blur-3xl opacity-0 transition-opacity group-hover:opacity-100',
+                        "pointer-events-none absolute -bottom-12 -end-12 h-44 w-44 rounded-full blur-3xl opacity-0 transition-opacity group-hover:opacity-100",
                         visual.cardGlow,
-                      ].join(' ')}
+                      ].join(" ")}
                     />
                   </Link>
                 );
@@ -185,7 +200,9 @@ export function CategoriesPreview() {
                 className={SECTION_OUTLINE_CTA_CLASS}
                 asChild
               >
-                <Link href={ROUTES.PRACTICE}>{t('home.categories.view_all')}</Link>
+                <Link href={ROUTES.PRACTICE}>
+                  {t("home.categories.view_all")}
+                </Link>
               </Button>
             </div>
           </>

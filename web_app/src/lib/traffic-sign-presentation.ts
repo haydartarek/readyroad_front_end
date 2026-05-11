@@ -1,4 +1,8 @@
-import { GROUP_INFO, GROUP_LETTER_ORDER, type LangKey } from "@/lib/sign-category-data";
+import {
+  GROUP_INFO,
+  GROUP_LETTER_ORDER,
+  type LangKey,
+} from "@/lib/sign-category-data";
 import type { TrafficSign } from "@/lib/types";
 
 const LEGACY_CATEGORY_TO_GROUP: Record<string, string> = {
@@ -117,7 +121,10 @@ export const GROUP_STYLES: Record<
   },
 };
 
-export function getTrafficSignName(sign: TrafficSign, language: LangKey): string {
+export function getTrafficSignName(
+  sign: TrafficSign,
+  language: LangKey,
+): string {
   return (
     {
       nl: sign.nameNl,
@@ -130,7 +137,10 @@ export function getTrafficSignName(sign: TrafficSign, language: LangKey): string
   );
 }
 
-export function getTrafficSignDescription(sign: TrafficSign, language: LangKey): string {
+export function getTrafficSignDescription(
+  sign: TrafficSign,
+  language: LangKey,
+): string {
   return (
     {
       nl: sign.descriptionNl,
@@ -143,39 +153,45 @@ export function getTrafficSignDescription(sign: TrafficSign, language: LangKey):
   );
 }
 
-export function getTrafficSignMeaning(sign: TrafficSign, language: LangKey): string {
+export function getTrafficSignMeaning(
+  sign: TrafficSign,
+  language: LangKey,
+): string {
   return (
     {
       nl: sign.meaningNl,
       en: sign.meaningEn,
       ar: sign.meaningAr,
       fr: sign.meaningFr,
-    }[language] ||
-    getTrafficSignDescription(sign, language)
+    }[language] || getTrafficSignDescription(sign, language)
   );
 }
 
-export function getTrafficSignLongDescription(sign: TrafficSign, language: LangKey): string {
+export function getTrafficSignLongDescription(
+  sign: TrafficSign,
+  language: LangKey,
+): string {
   return (
     {
       nl: sign.longDescriptionNl,
       en: sign.longDescriptionEn,
       ar: sign.longDescriptionAr,
       fr: sign.longDescriptionFr,
-    }[language] ||
-    ""
+    }[language] || ""
   );
 }
 
-export function getTrafficSignGuidance(sign: TrafficSign, language: LangKey): string {
+export function getTrafficSignGuidance(
+  sign: TrafficSign,
+  language: LangKey,
+): string {
   return (
     {
       nl: sign.guidanceNl,
       en: sign.guidanceEn,
       ar: sign.guidanceAr,
       fr: sign.guidanceFr,
-    }[language] ||
-    getTrafficSignLongDescription(sign, language)
+    }[language] || getTrafficSignLongDescription(sign, language)
   );
 }
 
@@ -186,7 +202,10 @@ function normalizeNarrative(value: string): string {
     .trim();
 }
 
-export function hasDistinctTrafficSignGuidance(meaning: string, guidance: string): boolean {
+export function hasDistinctTrafficSignGuidance(
+  meaning: string,
+  guidance: string,
+): boolean {
   if (!meaning.trim() || !guidance.trim()) {
     return false;
   }

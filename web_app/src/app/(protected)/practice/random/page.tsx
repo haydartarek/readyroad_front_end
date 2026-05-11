@@ -53,7 +53,10 @@ type Phase = "intro" | "loading" | "exam" | "submitting" | "results";
 
 const SECONDS_PER_QUESTION = 15;
 
-function getRandomPracticeCategoryLabel(signCode: string | null | undefined, t: (key: string) => string) {
+function getRandomPracticeCategoryLabel(
+  signCode: string | null | undefined,
+  t: (key: string) => string,
+) {
   const prefix = (signCode ?? "").trim().toUpperCase();
   if (prefix.startsWith("A")) return t("traffic_signs.category_danger");
   if (prefix.startsWith("B")) return t("traffic_signs.category_priority");
@@ -73,7 +76,9 @@ function LoadingState({ message }: { message: string }) {
               <RotateCcw className="h-6 w-6 animate-spin" />
             </div>
             <div className="space-y-1">
-              <p className="text-base font-semibold text-foreground">{message}</p>
+              <p className="text-base font-semibold text-foreground">
+                {message}
+              </p>
               <p className="text-sm text-muted-foreground">...</p>
             </div>
           </div>
@@ -195,10 +200,7 @@ export default function RandomPracticePage() {
       selectedChoiceId: answersRef.current[i] ?? null,
     }));
     try {
-      const res = await submitRandomPracticeSession(
-        sessionId,
-        payload,
-      );
+      const res = await submitRandomPracticeSession(sessionId, payload);
       setResult(res);
       setPhase("results");
     } catch (err) {
@@ -321,7 +323,9 @@ export default function RandomPracticePage() {
                       <Shuffle className="h-8 w-8 text-primary-foreground" />
                     </div>
                     <div className="space-y-1.5">
-                      <PageHeroTitle>{t("sign_practice.intro_title")}</PageHeroTitle>
+                      <PageHeroTitle>
+                        {t("sign_practice.intro_title")}
+                      </PageHeroTitle>
                       <PageHeroDescription className="max-w-2xl">
                         {t("sign_practice.intro_subtitle")}
                       </PageHeroDescription>
@@ -531,7 +535,6 @@ export default function RandomPracticePage() {
                     ))}
                   </div>
                 </div>
-
               </div>
             </aside>
           </div>
@@ -608,7 +611,8 @@ export default function RandomPracticePage() {
                 className={cn(
                   "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold",
                   question.difficulty === "EASY" && "bg-green-500 text-white",
-                  question.difficulty === "MEDIUM" && "bg-orange-500 text-white",
+                  question.difficulty === "MEDIUM" &&
+                    "bg-orange-500 text-white",
                   question.difficulty === "HARD" && "bg-red-500 text-white",
                 )}
               >
@@ -785,7 +789,11 @@ export default function RandomPracticePage() {
                   icon={<XCircle className="h-4 w-4" />}
                   label={t("practice_exam.score_wrong")}
                   value={String(result.wrongAnswers + result.unanswered)}
-                  tone={result.wrongAnswers + result.unanswered > 0 ? "danger" : "default"}
+                  tone={
+                    result.wrongAnswers + result.unanswered > 0
+                      ? "danger"
+                      : "default"
+                  }
                 />
               </div>
             </div>

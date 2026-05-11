@@ -7,10 +7,7 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  API_ENDPOINTS,
-  EXAM_RULES,
-} from "@/lib/constants";
+import { API_ENDPOINTS, EXAM_RULES } from "@/lib/constants";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
   Select,
@@ -96,7 +93,10 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-semibold text-foreground">
+      <label
+        htmlFor={htmlFor}
+        className="block text-sm font-semibold text-foreground"
+      >
         {label}
       </label>
       {children}
@@ -190,7 +190,9 @@ export default function AdminSettingsPage() {
     setError(null);
     setServiceUnavailable(false);
     try {
-      const response = await apiClient.get<SettingsModel>(API_ENDPOINTS.ADMIN.SETTINGS);
+      const response = await apiClient.get<SettingsModel>(
+        API_ENDPOINTS.ADMIN.SETTINGS,
+      );
       setSettings({ ...DEFAULTS, ...response.data });
     } catch (err) {
       logApiError("[AdminSettings] load", err);
@@ -253,7 +255,9 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      {serviceUnavailable && <ServiceUnavailableBanner onRetry={loadSettings} />}
+      {serviceUnavailable && (
+        <ServiceUnavailableBanner onRetry={loadSettings} />
+      )}
 
       <AdminPageHeader
         icon={<Settings2 className="h-6 w-6" />}
@@ -268,14 +272,22 @@ export default function AdminSettingsPage() {
           },
           {
             label: t("admin.settings_page.summary_duration"),
-            value: t("admin.settings_page.duration_value").replace("{value}", String(settings.examDurationMinutes)),
+            value: t("admin.settings_page.duration_value").replace(
+              "{value}",
+              String(settings.examDurationMinutes),
+            ),
             icon: <Timer className="h-4 w-4" />,
           },
           {
             label: t("admin.settings_page.summary_pass_score"),
             value: `${settings.passingScorePercent}%`,
             icon: <Percent className="h-4 w-4" />,
-            tone: settings.passingScorePercent >= 80 ? "success" : settings.passingScorePercent >= 65 ? "warning" : "danger",
+            tone:
+              settings.passingScorePercent >= 80
+                ? "success"
+                : settings.passingScorePercent >= 65
+                  ? "warning"
+                  : "danger",
           },
         ]}
       />
@@ -351,7 +363,10 @@ export default function AdminSettingsPage() {
             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             {error}
           </span>
-          <button onClick={() => setError(null)} className="hover:opacity-70 transition-opacity ml-4">
+          <button
+            onClick={() => setError(null)}
+            className="hover:opacity-70 transition-opacity ml-4"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -368,7 +383,10 @@ export default function AdminSettingsPage() {
             />
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field label={t("admin.settings_page.site_name")} htmlFor="admin-settings-site-name">
+            <Field
+              label={t("admin.settings_page.site_name")}
+              htmlFor="admin-settings-site-name"
+            >
               <input
                 id="admin-settings-site-name"
                 name="siteName"
@@ -380,7 +398,10 @@ export default function AdminSettingsPage() {
                 placeholder={t("app.name")}
               />
             </Field>
-            <Field label={t("admin.settings_page.default_language")} htmlFor="admin-settings-default-language-trigger">
+            <Field
+              label={t("admin.settings_page.default_language")}
+              htmlFor="admin-settings-default-language-trigger"
+            >
               <Select
                 value={settings.defaultLanguage}
                 onValueChange={(v) =>
@@ -399,16 +420,24 @@ export default function AdminSettingsPage() {
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   <SelectItem value="en">
-                    <span className="flex items-center gap-2">{t("admin.settings_page.language_en")}</span>
+                    <span className="flex items-center gap-2">
+                      {t("admin.settings_page.language_en")}
+                    </span>
                   </SelectItem>
                   <SelectItem value="ar">
-                    <span className="flex items-center gap-2">{t("admin.settings_page.language_ar")}</span>
+                    <span className="flex items-center gap-2">
+                      {t("admin.settings_page.language_ar")}
+                    </span>
                   </SelectItem>
                   <SelectItem value="nl">
-                    <span className="flex items-center gap-2">{t("admin.settings_page.language_nl")}</span>
+                    <span className="flex items-center gap-2">
+                      {t("admin.settings_page.language_nl")}
+                    </span>
                   </SelectItem>
                   <SelectItem value="fr">
-                    <span className="flex items-center gap-2">{t("admin.settings_page.language_fr")}</span>
+                    <span className="flex items-center gap-2">
+                      {t("admin.settings_page.language_fr")}
+                    </span>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -561,7 +590,9 @@ export default function AdminSettingsPage() {
               <span className="text-sm font-bold">
                 {settings.passingScorePercent}%
               </span>
-              <span className="text-xs opacity-70">{t("admin.settings_page.to_pass_label")}</span>
+              <span className="text-xs opacity-70">
+                {t("admin.settings_page.to_pass_label")}
+              </span>
             </div>
           </div>
         </CardContent>

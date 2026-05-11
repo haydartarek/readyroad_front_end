@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { apiClient, logApiError } from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/constants';
+import { useEffect, useState } from "react";
+import { apiClient, logApiError } from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/constants";
 
 export interface HomeStats {
   examQuestionCount: number;
@@ -51,7 +51,7 @@ export function useHomeStats() {
         }
       })
       .catch((err) => {
-        logApiError('[HomeStats] load', err);
+        logApiError("[HomeStats] load", err);
         if (!cancelled) {
           setError(true);
         }

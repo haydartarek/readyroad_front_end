@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/language-context';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -24,10 +24,10 @@ export function ServiceUnavailableBanner({
   return (
     <Alert className={className}>
       <AlertDescription className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-        <span>{t('common.service_unavailable')}</span>
+        <span>{t("common.service_unavailable")}</span>
         {onRetry && (
           <Button variant="outline" size="sm" onClick={onRetry}>
-            {t('common.retry')}
+            {t("common.retry")}
           </Button>
         )}
       </AlertDescription>

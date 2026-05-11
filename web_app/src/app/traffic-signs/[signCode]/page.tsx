@@ -12,10 +12,7 @@ import {
   Trophy,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import {
-  PageHeroSurface,
-  PageHeroTitle,
-} from "@/components/ui/page-surface";
+import { PageHeroSurface, PageHeroTitle } from "@/components/ui/page-surface";
 import { SignImage } from "@/components/traffic-signs/sign-image";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +25,10 @@ import {
   isRemovedLegacyTrafficSignCode,
   resolveLegacyTrafficSignCode,
 } from "@/lib/constants";
-import { getSignExamStatus, getSignExamStatusClasses } from "@/lib/sign-exam-status";
+import {
+  getSignExamStatus,
+  getSignExamStatusClasses,
+} from "@/lib/sign-exam-status";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import {
   getTrafficSignDescription,
@@ -108,7 +108,9 @@ export default function TrafficSignDetailPage() {
     : "en";
 
   const [sign, setSign] = useState<TrafficSign | null>(null);
-  const [signProgress, setSignProgress] = useState<SignUserProgress | null>(null);
+  const [signProgress, setSignProgress] = useState<SignUserProgress | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [progressLoading, setProgressLoading] = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
@@ -171,7 +173,7 @@ export default function TrafficSignDetailPage() {
 
     const progressIdentifier = sign.routeCode ?? sign.signCode ?? routeParam;
 
-    getSignStatus(progressIdentifier)
+    getSignStatus(progressIdentifier, { skipAuthRedirect: true })
       .then((progress) => {
         if (!cancelled) {
           setSignProgress(progress);
@@ -207,13 +209,16 @@ export default function TrafficSignDetailPage() {
   }, [routeParam, router, sign]);
 
   const routeCode = sign?.routeCode ?? sign?.signCode ?? routeParam;
-  const isCurrentSignLoaded = !!sign &&
+  const isCurrentSignLoaded =
+    !!sign &&
     (resolveLegacyTrafficSignCode(routeParam) === routeCode ||
       resolveLegacyTrafficSignCode(routeParam) === sign.signCode);
-  const { info, style } = sign ? getTrafficSignGroupInfo(sign) : getTrafficSignGroupInfo({
-    signCode: routeParam,
-    imageUrl: "",
-  } as TrafficSign);
+  const { info, style } = sign
+    ? getTrafficSignGroupInfo(sign)
+    : getTrafficSignGroupInfo({
+        signCode: routeParam,
+        imageUrl: "",
+      } as TrafficSign);
 
   if (serviceUnavailable) {
     return (
@@ -291,10 +296,13 @@ export default function TrafficSignDetailPage() {
     examQuestionsCount && examPassingScore != null
       ? Math.round((examPassingScore / examQuestionsCount) * 100)
       : null;
-  const examSummaryText = examQuestionsCount && examPassingPercentage != null
-      ? `${currentLanguage === "ar"
-          ? `${examQuestionsCount} اسئلة والنجاح من ${examPassingPercentage}%`
-          : `${t("sign_quiz.questions_count").replace("{n}", examQuestionsCount.toString())} • ${t("sign_quiz.pass_score").replace("{score}", examPassingPercentage.toString())}`}${signProgress?.exam1BestScorePct != null ? ` • ${t("sign_quiz.best_score").replace("{score}", Math.round(signProgress.exam1BestScorePct).toString())}` : ""}`
+  const examSummaryText =
+    examQuestionsCount && examPassingPercentage != null
+      ? `${
+          currentLanguage === "ar"
+            ? `${examQuestionsCount} اسئلة والنجاح من ${examPassingPercentage}%`
+            : `${t("sign_quiz.questions_count").replace("{n}", examQuestionsCount.toString())} • ${t("sign_quiz.pass_score").replace("{score}", examPassingPercentage.toString())}`
+        }${signProgress?.exam1BestScorePct != null ? ` • ${t("sign_quiz.best_score").replace("{score}", Math.round(signProgress.exam1BestScorePct).toString())}` : ""}`
       : progressLoading
         ? t("common.loading")
         : t("sign_quiz.exam_config_pending");
@@ -350,7 +358,7 @@ export default function TrafficSignDetailPage() {
                   {currentMeaning ? (
                     <p
                       dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                      className="mt-3 text-lg font-semibold leading-9 text-foreground md:text-xl"
+                      className="mt-3 text-sm font-medium leading-7 text-muted-foreground"
                     >
                       {currentMeaning}
                     </p>
@@ -374,21 +382,6 @@ export default function TrafficSignDetailPage() {
                     </p>
                   </div>
                 ) : null}
-
-                <div className="rounded-[1.5rem] border border-border/60 bg-background/70 p-5 md:p-6">
-                  <div className="flex items-center gap-2">
-                    <Shapes className="h-4 w-4 text-primary" />
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
-                      {t("sign_detail.sign_family")}
-                    </p>
-                  </div>
-                  <h2 className="mt-3 text-lg font-black text-foreground">
-                    {info.title[currentLanguage]}
-                  </h2>
-                  <p className="mt-3 text-base leading-8 text-muted-foreground">
-                    {info.description[currentLanguage]}
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -455,7 +448,11 @@ export default function TrafficSignDetailPage() {
                     ) : null}
                   </div>
 
-                  <Button variant="outline" className="mt-4 w-full rounded-xl" asChild>
+                  <Button
+                    variant="outline"
+                    className="mt-4 w-full rounded-xl"
+                    asChild
+                  >
                     <Link href={`/traffic-signs/${routeCode}/exam/1`}>
                       {signProgress?.exam1Attempted
                         ? t("sign_quiz.retake_exam")

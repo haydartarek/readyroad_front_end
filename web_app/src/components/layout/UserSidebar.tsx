@@ -100,13 +100,13 @@ function SidebarNavLink({
           : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/60 hover:text-foreground",
       )}
     >
-        <span
-          className={cn(
-            "absolute bottom-3 top-3 w-1 rounded-full transition-opacity",
-            isActive ? "bg-primary opacity-100" : "opacity-0",
-            isRTL ? "right-1.5" : "left-1.5",
-          )}
-        />
+      <span
+        className={cn(
+          "absolute bottom-3 top-3 w-1 rounded-full transition-opacity",
+          isActive ? "bg-primary opacity-100" : "opacity-0",
+          isRTL ? "right-1.5" : "left-1.5",
+        )}
+      />
       <div
         className={cn(
           "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border transition-all duration-200",
@@ -197,7 +197,8 @@ function UserSidebarInner() {
               const isActive =
                 item.section === null
                   ? pathname === "/dashboard" && !currentSection
-                  : pathname === "/dashboard" && currentSection === item.section;
+                  : pathname === "/dashboard" &&
+                    currentSection === item.section;
 
               return (
                 <SidebarNavLink
@@ -218,7 +219,8 @@ function UserSidebarInner() {
           </SidebarSectionLabel>
           <div className="space-y-1.5">
             {ACCOUNT_ITEMS.map((item) => {
-              const isActive = pathname === "/dashboard" && currentSection === item.section;
+              const isActive =
+                pathname === "/dashboard" && currentSection === item.section;
               return (
                 <SidebarNavLink
                   key={item.key}
@@ -248,7 +250,9 @@ function UserSidebarInner() {
           </Link>
 
           <button
-            onClick={() => logout()}
+            onClick={() => {
+              void logout();
+            }}
             className="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-red-600/85 transition-all duration-200 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/25"
           >
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border border-red-200/60 bg-red-50 text-red-500 transition-colors group-hover:border-red-300 group-hover:bg-red-100">

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/providers/favorites_provider.dart';
 import '../../core/providers/language_provider.dart';
 import '../../shared/models/content_item.dart';
@@ -21,15 +22,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   bool _isLoading = true;
   String? _error;
 
-  /// Convert backend imageUrl to asset path for Flutter
-  String _convertToAssetPath(String imageUrl) {
-    // Handle both API formats:
-    // 1. /images/signs/... (web format)
-    // 2. assets/traffic_signs/... (backend format)
-    if (imageUrl.startsWith('/images/signs/')) {
-      return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  String _toBackendImageUrl(String imageUrl) {
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
     }
-    // Already in correct format for Flutter assets
+    if (imageUrl.startsWith('/images/signs/')) {
+      return '${ApiConstants.baseUrl}$imageUrl';
+    }
     return imageUrl;
   }
 
@@ -212,8 +211,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   child: Container(
                     color: Colors.grey[200],
                     child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                        ? Image.asset(
-                            _convertToAssetPath(item.imageUrl!),
+                        ? Image.network(
+                            _toBackendImageUrl(item.imageUrl!),
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               return const Icon(

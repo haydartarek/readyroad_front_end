@@ -1,4 +1,9 @@
-import { DEFAULT_LANGUAGE, LANGUAGES, STORAGE_KEYS, type Language } from "@/lib/constants";
+import {
+  DEFAULT_LANGUAGE,
+  LANGUAGES,
+  STORAGE_KEYS,
+  type Language,
+} from "@/lib/constants";
 import arMessages from "@/messages/ar.json";
 import enMessages from "@/messages/en.json";
 import frMessages from "@/messages/fr.json";
@@ -15,7 +20,9 @@ export const ALL_MESSAGES: Record<Language, MessageDictionary> = {
 
 const LEGACY_LANGUAGE_STORAGE_KEY = "readyroad_language";
 
-export function isValidLanguage(language: string | null | undefined): language is Language {
+export function isValidLanguage(
+  language: string | null | undefined,
+): language is Language {
   return !!language && LANGUAGES.some((entry) => entry.code === language);
 }
 
@@ -23,7 +30,9 @@ export function resolveMessageLanguage(language?: string | null): Language {
   return isValidLanguage(language) ? language : (DEFAULT_LANGUAGE as Language);
 }
 
-export function readLanguageFromCookieString(cookieValue?: string | null): Language | null {
+export function readLanguageFromCookieString(
+  cookieValue?: string | null,
+): Language | null {
   if (!cookieValue) {
     return null;
   }

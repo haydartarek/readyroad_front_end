@@ -13,8 +13,8 @@
 
 // ─── Constants ───────────────────────────────────────────
 
-const CSRF_COOKIE_NAME = 'csrf_token';
-const LOGOUT_PATH      = '/api/auth/logout';
+const CSRF_COOKIE_NAME = "csrf_token";
+const LOGOUT_PATH = "/api/auth/logout";
 
 // ─── Deprecated No-ops ───────────────────────────────────
 
@@ -49,7 +49,7 @@ export function removeAuthToken(): void {
  * Returns null in SSR environments where `document` is unavailable.
  */
 export function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
+  if (typeof document === "undefined") return null;
   const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
   return match ? decodeURIComponent(match[2]) : null;
 }
@@ -68,7 +68,7 @@ export function getCsrfToken(): string | null {
  */
 export async function logoutAndClearCookie(): Promise<void> {
   try {
-    await fetch(LOGOUT_PATH, { method: 'POST' });
+    await fetch(LOGOUT_PATH, { method: "POST" });
   } catch {
     // Best-effort — cookie will expire eventually
   }

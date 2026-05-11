@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { Timer } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Timer } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -14,13 +14,13 @@ interface ExamTimerProps {
 // ─── Helpers ─────────────────────────────────────────────
 
 function getTimerStyle(minutes: number): string {
-  if (minutes <  1) return 'bg-red-500    text-white animate-pulse';
-  if (minutes <  5) return 'bg-orange-500 text-white';
-  return                    'bg-green-500  text-white';
+  if (minutes < 1) return "bg-red-500    text-white animate-pulse";
+  if (minutes < 5) return "bg-orange-500 text-white";
+  return "bg-green-500  text-white";
 }
 
 function pad(n: number): string {
-  return String(n).padStart(2, '0');
+  return String(n).padStart(2, "0");
 }
 
 // ─── Component ───────────────────────────────────────────
@@ -33,7 +33,8 @@ export function ExamTimer({ expiresAt, onTimeExpired }: ExamTimerProps) {
     return diff <= 0 ? 0 : Math.floor(diff / 1000);
   }, [expiresAt]);
 
-  const [timeRemaining, setTimeRemaining] = useState<number>(getRemainingSeconds);
+  const [timeRemaining, setTimeRemaining] =
+    useState<number>(getRemainingSeconds);
 
   useEffect(() => {
     expiredRef.current = false;
@@ -56,13 +57,17 @@ export function ExamTimer({ expiresAt, onTimeExpired }: ExamTimerProps) {
   const seconds = timeRemaining % 60;
 
   return (
-    <div className={cn(
-      'flex items-center gap-2 rounded-full px-4 py-2',
-      'font-mono text-lg font-black transition-colors',
-      getTimerStyle(minutes),
-    )}>
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-full px-4 py-2",
+        "font-mono text-lg font-black transition-colors",
+        getTimerStyle(minutes),
+      )}
+    >
       <Timer className="h-5 w-5 flex-shrink-0" />
-      <span>{pad(minutes)}:{pad(seconds)}</span>
+      <span>
+        {pad(minutes)}:{pad(seconds)}
+      </span>
     </div>
   );
 }

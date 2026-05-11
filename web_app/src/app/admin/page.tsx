@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 
 /**
  * /admin → /admin/dashboard redirect
@@ -7,5 +7,5 @@ import { redirect } from 'next/navigation';
  * This is a server component — instant redirect, no client JS needed.
  */
 export default function AdminIndexRedirect() {
-    redirect('/admin/dashboard');
+  redirect("/admin/dashboard");
 }

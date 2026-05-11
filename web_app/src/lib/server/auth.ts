@@ -10,48 +10,57 @@
  * - CSRF double-submit cookie adds an extra layer for mutations
  */
 
-import { cookies } from 'next/headers';
-import type { NextRequest } from 'next/server';
+import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 
 // ─── Constants ───────────────────────────────────────────
 
 /** Cookie name for the JWT auth token (HttpOnly) */
-export const AUTH_COOKIE_NAME = 'token';
+export const AUTH_COOKIE_NAME = "token";
 
 /** Cookie name for the CSRF double-submit token (non-HttpOnly, readable by JS) */
-export const CSRF_COOKIE_NAME = 'csrf_token';
+export const CSRF_COOKIE_NAME = "csrf_token";
 
 /** CSRF header name that the client must send on mutation requests */
-export const CSRF_HEADER_NAME = 'x-csrf-token';
+export const CSRF_HEADER_NAME = "x-csrf-token";
 
 const COOKIE_TTL = 7 * 24 * 60 * 60; // 7 days — matches backend JWT expiry
 
-type AuthCookieRequest = Pick<NextRequest, 'url' | 'headers'> | Request;
+type AuthCookieRequest = Pick<NextRequest, "url" | "headers"> | Request;
 
 function isLocalHostname(hostname: string): boolean {
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+  return (
+    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]"
+  );
 }
 
 export function shouldUseSecureCookies(request: AuthCookieRequest): boolean {
-  const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
-  if (forwardedProto === 'https') return true;
-  if (forwardedProto === 'http') return false;
+  const forwardedProto = request.headers
+    .get("x-forwarded-proto")
+    ?.split(",")[0]
+    ?.trim();
+  if (forwardedProto === "https") return true;
+  if (forwardedProto === "http") return false;
 
   try {
     const url = new URL(request.url);
     if (isLocalHostname(url.hostname)) return false;
-    return url.protocol === 'https:';
+    return url.protocol === "https:";
   } catch {
     return false;
   }
 }
 
-function buildCookieOptions(request: AuthCookieRequest, httpOnly: boolean, maxAge: number) {
+function buildCookieOptions(
+  request: AuthCookieRequest,
+  httpOnly: boolean,
+  maxAge: number,
+) {
   return {
     httpOnly,
     secure: shouldUseSecureCookies(request),
-    sameSite: 'lax' as const,
-    path: '/',
+    sameSite: "lax" as const,
+    path: "/",
     maxAge,
   };
 }
@@ -86,7 +95,7 @@ export function getBackendUrl(): string {
   return (
     process.env.BACKEND_URL ??
     process.env.NEXT_PUBLIC_API_URL ??
-    'http://localhost:8890/api'
+    "http://localhost:8890/api"
   );
 }
 
@@ -97,35 +106,43 @@ export function getBackendUrl(): string {
  */
 export function getFrontendUrl(request?: AuthCookieRequest): string {
   if (request) {
-    const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
-    const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
-    const host = forwardedHost || request.headers.get('host')?.trim();
+    const forwardedProto = request.headers
+      .get("x-forwarded-proto")
+      ?.split(",")[0]
+      ?.trim();
+    const forwardedHost = request.headers
+      .get("x-forwarded-host")
+      ?.split(",")[0]
+      ?.trim();
+    const host = forwardedHost || request.headers.get("host")?.trim();
 
-    if (host && host !== '0.0.0.0:3000' && host !== '0.0.0.0') {
+    if (host && host !== "0.0.0.0:3000" && host !== "0.0.0.0") {
       const protocol =
         forwardedProto ||
-        (host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https');
-      return `${protocol}://${host}`.replace(/\/+$/, '');
+        (host.startsWith("localhost") || host.startsWith("127.0.0.1")
+          ? "http"
+          : "https");
+      return `${protocol}://${host}`.replace(/\/+$/, "");
     }
   }
 
   const configured =
     process.env.FRONTEND_URL ??
     process.env.NEXT_PUBLIC_APP_URL ??
-    'http://localhost:3000';
+    "http://localhost:3000";
 
   if (configured) {
-    return configured.replace(/\/+$/, '');
+    return configured.replace(/\/+$/, "");
   }
 
   if (request) {
     try {
       const url = new URL(request.url);
-      return url.origin.replace(/\/+$/, '');
+      return url.origin.replace(/\/+$/, "");
     } catch {}
   }
 
-  return 'http://localhost:3000';
+  return "http://localhost:3000";
 }
 
 /**
@@ -143,7 +160,7 @@ export async function getAuthTokenFromCookie(): Promise<string | null> {
 export function generateCsrfToken(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -151,11 +168,13 @@ export function generateCsrfToken(): string {
  * Used in middleware to read the role claim for RBAC checks.
  * The backend has already validated the token — we just need the claims.
  */
-export function decodeJwtPayload(token: string): Record<string, unknown> | null {
+export function decodeJwtPayload(
+  token: string,
+): Record<string, unknown> | null {
   try {
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const decoded = Buffer.from(parts[1], 'base64url').toString('utf-8');
+    const decoded = Buffer.from(parts[1], "base64url").toString("utf-8");
     return JSON.parse(decoded);
   } catch {
     return null;

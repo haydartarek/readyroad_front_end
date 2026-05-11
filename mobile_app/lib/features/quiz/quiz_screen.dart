@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/language_provider.dart';
+import '../../core/constants/api_constants.dart';
 import '../../shared/models/quiz_models.dart';
 import '../../shared/models/category.dart';
 import 'quiz_service.dart';
@@ -35,15 +36,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
   late DateTime _startTime;
 
-  /// Convert backend imageUrl to asset path for Flutter
-  String _convertToAssetPath(String imageUrl) {
-    // Handle both API formats:
-    // 1. /images/signs/... (web format)
-    // 2. assets/traffic_signs/... (backend format)
-    if (imageUrl.startsWith('/images/signs/')) {
-      return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  String _toBackendImageUrl(String imageUrl) {
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
     }
-    // Already in correct format for Flutter assets
+    if (imageUrl.startsWith('/images/signs/')) {
+      return '${ApiConstants.baseUrl}$imageUrl';
+    }
     return imageUrl;
   }
 
@@ -245,8 +244,8 @@ class _QuizScreenState extends State<QuizScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: question.correctContent.imageUrl != null && question.correctContent.imageUrl!.isNotEmpty
-                      ? Image.asset(
-                          _convertToAssetPath(question.correctContent.imageUrl!),
+                      ? Image.network(
+                          _toBackendImageUrl(question.correctContent.imageUrl!),
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(Icons.image, size: 100);

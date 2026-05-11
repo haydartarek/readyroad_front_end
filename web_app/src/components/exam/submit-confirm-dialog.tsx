@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,10 +8,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useLanguage } from '@/contexts/language-context';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -36,15 +36,17 @@ export function SubmitConfirmDialog({
 }: SubmitConfirmDialogProps) {
   const { t } = useLanguage();
   const unansweredCount = totalQuestions - answeredCount;
-  const allAnswered     = unansweredCount === 0;
+  const allAnswered = unansweredCount === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="font-black">{t('exam.submit.title')}</DialogTitle>
+          <DialogTitle className="font-black">
+            {t("exam.submit.title")}
+          </DialogTitle>
           <DialogDescription>
-            {t('exam.submit.description', {
+            {t("exam.submit.description", {
               answered: answeredCount,
               total: totalQuestions,
             })}
@@ -58,18 +60,20 @@ export function SubmitConfirmDialog({
               <AlertDescription className="space-y-1">
                 <p className="font-semibold">
                   {unansweredCount === 1
-                    ? t('exam.submit.unanswered_one')
-                    : t('exam.submit.unanswered_many', { count: unansweredCount })}
+                    ? t("exam.submit.unanswered_one")
+                    : t("exam.submit.unanswered_many", {
+                        count: unansweredCount,
+                      })}
                 </p>
                 <p className="text-xs opacity-90">
-                  {t('exam.submit.unanswered_hint')}
+                  {t("exam.submit.unanswered_hint")}
                 </p>
               </AlertDescription>
             </Alert>
           )}
 
           <p className="text-sm text-muted-foreground">
-            {t('exam.submit.warning')}
+            {t("exam.submit.warning")}
           </p>
         </div>
 
@@ -79,10 +83,14 @@ export function SubmitConfirmDialog({
             disabled={isSubmitting}
             className="rounded-xl gap-2 shadow-sm shadow-primary/20"
           >
-            {isSubmitting
-              ? <><Loader2 className="h-4 w-4 animate-spin" /> {t('exam.submit.submitting')}</>
-              : t('exam.submit.confirm')
-            }
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />{" "}
+                {t("exam.submit.submitting")}
+              </>
+            ) : (
+              t("exam.submit.confirm")
+            )}
           </Button>
           <Button
             variant="outline"
@@ -90,7 +98,7 @@ export function SubmitConfirmDialog({
             disabled={isSubmitting}
             className="rounded-xl"
           >
-            {t('exam.cancel')}
+            {t("exam.cancel")}
           </Button>
         </DialogFooter>
       </DialogContent>

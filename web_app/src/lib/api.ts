@@ -15,15 +15,31 @@ import axios, {
   type InternalAxiosRequestConfig,
   type AxiosResponse,
   type AxiosRequestConfig,
-} from 'axios';
-import { ROUTES } from './constants';
-import { getCsrfToken } from './auth-token';
+} from "axios";
+import { ROUTES } from "./constants";
+import { getCsrfToken } from "./auth-token";
 
 // ─── Constants ───────────────────────────────────────────
 
-const MUTATION_METHODS  = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
-const AUTH_PATHS        = ['/auth/login', '/auth/register'];
-const CSRF_HEADER       = 'x-csrf-token';
+const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+const AUTH_PATHS = ["/auth/login", "/auth/register"];
+const CSRF_HEADER = "x-csrf-token";
+
+export type ReadyRoadRequestConfig = AxiosRequestConfig & {
+  skipAuthRedirect?: boolean;
+};
+
+export function shouldRedirectOnAuthError(
+  status: number | undefined,
+  requestUrl: string,
+  config?: ReadyRoadRequestConfig,
+): boolean {
+  const isAuthError =
+    status === 401 || (status === 403 && requestUrl.includes("/users/me"));
+  const isAuthPath = AUTH_PATHS.some((p) => requestUrl.includes(p));
+
+  return isAuthError && !isAuthPath && !config?.skipAuthRedirect;
+}
 
 // ─── ApiClient ───────────────────────────────────────────
 
@@ -34,11 +50,11 @@ class ApiClient {
 
   constructor() {
     this.instance = axios.create({
-      baseURL: '/api/proxy',
+      baseURL: "/api/proxy",
       timeout: 30_000,
       headers: {
-        'Content-Type': 'application/json',
-        Accept:         'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
     });
 
@@ -49,7 +65,7 @@ class ApiClient {
     // Request: attach CSRF token on mutation requests
     this.instance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const method = config.method?.toUpperCase() ?? '';
+        const method = config.method?.toUpperCase() ?? "";
         if (MUTATION_METHODS.has(method)) {
           const csrf = getCsrfToken();
           if (csrf) config.headers[CSRF_HEADER] = csrf;
@@ -63,20 +79,23 @@ class ApiClient {
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => response,
       (error: AxiosError) => {
-        const status     = error.response?.status;
-        const requestUrl = error.config?.url ?? '';
+        const status = error.response?.status;
+        const requestUrl = error.config?.url ?? "";
+        const requestConfig = error.config as
+          | ReadyRoadRequestConfig
+          | undefined;
 
-        const isAuthError =
-          status === 401 ||
-          (status === 403 && requestUrl.includes('/users/me'));
-
-        const isAuthPath = AUTH_PATHS.some(p => requestUrl.includes(p));
-
-        if (isAuthError && !isAuthPath && !this.isRedirecting && typeof window !== 'undefined') {
+        if (
+          shouldRedirectOnAuthError(status, requestUrl, requestConfig) &&
+          !this.isRedirecting &&
+          typeof window !== "undefined"
+        ) {
           this.isRedirecting = true;
           // Clear HttpOnly cookie via BFF, then redirect
-          fetch('/api/auth/logout', { method: 'POST' })
-            .then(() => { window.location.href = ROUTES.LOGIN; })
+          fetch("/api/auth/logout", { method: "POST" })
+            .then(() => {
+              window.location.href = ROUTES.LOGIN;
+            })
             .catch(() => {
               this.isRedirecting = false;
               window.location.href = ROUTES.LOGIN;
@@ -93,25 +112,40 @@ class ApiClient {
   get<T>(
     url: string,
     params?: Record<string, unknown>,
-    config?: AxiosRequestConfig,
+    config?: ReadyRoadRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.instance.get<T>(url, { ...config, params });
   }
 
-  post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  post<T>(
+    url: string,
+    data?: unknown,
+    config?: ReadyRoadRequestConfig,
+  ): Promise<AxiosResponse<T>> {
     return this.instance.post<T>(url, data, config);
   }
 
-  put<T>(url: string, data?: unknown): Promise<AxiosResponse<T>> {
-    return this.instance.put<T>(url, data);
+  put<T>(
+    url: string,
+    data?: unknown,
+    config?: ReadyRoadRequestConfig,
+  ): Promise<AxiosResponse<T>> {
+    return this.instance.put<T>(url, data, config);
   }
 
-  patch<T>(url: string, data?: unknown): Promise<AxiosResponse<T>> {
-    return this.instance.patch<T>(url, data);
+  patch<T>(
+    url: string,
+    data?: unknown,
+    config?: ReadyRoadRequestConfig,
+  ): Promise<AxiosResponse<T>> {
+    return this.instance.patch<T>(url, data, config);
   }
 
-  delete<T>(url: string): Promise<AxiosResponse<T>> {
-    return this.instance.delete<T>(url);
+  delete<T>(
+    url: string,
+    config?: ReadyRoadRequestConfig,
+  ): Promise<AxiosResponse<T>> {
+    return this.instance.delete<T>(url, config);
   }
 
   getInstance(): AxiosInstance {
@@ -141,7 +175,7 @@ export function isServiceUnavailable(error: unknown): boolean {
   if (axios.isAxiosError(error)) {
     return isUnavailableStatus(error.response?.status);
   }
-  if (error && typeof error === 'object' && 'status' in error) {
+  if (error && typeof error === "object" && "status" in error) {
     return isUnavailableStatus((error as { status: number }).status);
   }
   return false;
@@ -157,7 +191,7 @@ export function isServiceUnavailable(error: unknown): boolean {
  */
 export function logApiError(context: string, error: unknown): void {
   if (isServiceUnavailable(error)) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(`${context} — backend unavailable`);
     }
     return;

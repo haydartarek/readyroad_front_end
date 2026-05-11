@@ -5,4 +5,4 @@ export {
   isAdmin,
   isModerator,
   canModerate,
-} from '@/contexts/auth-context';
+} from "@/contexts/auth-context";

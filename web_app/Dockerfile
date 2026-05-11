@@ -18,7 +18,9 @@ COPY . .
 
 # Build-time env: Next.js standalone output
 ARG BACKEND_URL=http://backend:8890/api
+ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8890
 ENV BACKEND_URL=$BACKEND_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build

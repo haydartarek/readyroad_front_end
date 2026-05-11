@@ -441,9 +441,12 @@ export async function getSignExamResultById(
 /** Get the progress snapshot (practice + sign exam progress) for a single sign. */
 export async function getSignStatus(
   signCode: string,
+  options?: { skipAuthRedirect?: boolean },
 ): Promise<SignUserProgress> {
   const res = await apiClient.get<SignUserProgress>(
     API_ENDPOINTS.SIGN_QUIZ.SIGN_STATUS(signCode),
+    undefined,
+    options?.skipAuthRedirect ? { skipAuthRedirect: true } : undefined,
   );
   return res.data;
 }

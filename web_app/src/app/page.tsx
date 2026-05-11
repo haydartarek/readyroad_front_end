@@ -1,14 +1,14 @@
-import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
-import { HeroSection } from '@/components/home/hero-section';
-import { StatsHighlights } from '@/components/home/stats-highlights';
-import { FeaturesSection } from '@/components/home/features-section';
-import { HowItWorksSection } from '@/components/home/how-it-works-section';
-import { CategoriesPreview } from '@/components/home/categories-preview';
-import { ExamCta } from '@/components/home/exam-cta';
-import { ContactCtaSection } from '@/components/home/contact-cta-section';
-import { StickyCTA } from '@/components/home/sticky-cta';
-import { STORAGE_KEYS } from '@/lib/constants';
+import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { HeroSection } from "@/components/home/hero-section";
+import { StatsHighlights } from "@/components/home/stats-highlights";
+import { FeaturesSection } from "@/components/home/features-section";
+import { HowItWorksSection } from "@/components/home/how-it-works-section";
+import { CategoriesPreview } from "@/components/home/categories-preview";
+import { ExamCta } from "@/components/home/exam-cta";
+import { ContactCtaSection } from "@/components/home/contact-cta-section";
+import { StickyCTA } from "@/components/home/sticky-cta";
+import { STORAGE_KEYS } from "@/lib/constants";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
@@ -17,7 +17,7 @@ import {
   getOpenGraphLocale,
   getSharedOgImage,
   resolveSiteLocale,
-} from '@/lib/site-copy';
+} from "@/lib/site-copy";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -40,18 +40,18 @@ export async function generateMetadata(): Promise<Metadata> {
         nl: APP_URL,
         fr: APP_URL,
         ar: APP_URL,
-        'x-default': APP_URL,
+        "x-default": APP_URL,
       },
     },
     openGraph: {
       title: copy.openGraphTitle,
       description: copy.openGraphDescription,
       url: APP_URL,
-      siteName: 'ReadyRoad',
+      siteName: "ReadyRoad",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [ogImage],
-      type: 'website',
+      type: "website",
     },
   };
 }
@@ -78,7 +78,6 @@ export default async function Home() {
         <ExamCta />
         <ContactCtaSection />
       </main>
-
 
       <StickyCTA />
     </div>

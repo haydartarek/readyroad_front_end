@@ -45,11 +45,7 @@ export function GoogleAuthButton({
       )}
     >
       <a href={buildHref(mode, returnTo)} onClick={handleClick}>
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          className="h-4 w-4"
-        >
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
           <path
             d="M21.805 10.023h-9.76v3.955h5.594c-.241 1.271-.965 2.348-2.058 3.069v2.545h3.327c1.948-1.793 3.067-4.438 2.897-7.57Z"
             fill="#4285F4"

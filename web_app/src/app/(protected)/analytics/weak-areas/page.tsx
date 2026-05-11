@@ -1,25 +1,32 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { WeakAreaSummary } from '@/components/analytics/weak-area-summary';
-import { WeakAreaDetails } from '@/components/analytics/weak-area-details';
-import { getWeakAreas, type WeakAreasData } from '@/services';
-import { isServiceUnavailable, logApiError } from '@/lib/api';
-import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { WeakAreaSummary } from "@/components/analytics/weak-area-summary";
+import { WeakAreaDetails } from "@/components/analytics/weak-area-details";
+import { getWeakAreas, type WeakAreasData } from "@/services";
+import { isServiceUnavailable, logApiError } from "@/lib/api";
+import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
   PageHeroDescription,
   PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
-} from '@/components/ui/page-surface';
-import { toast } from 'sonner';
-import Link from 'next/link';
-import { PenLine, BookOpen, Target, RefreshCw, Trophy, AlertCircle } from 'lucide-react';
-import { useLanguage } from '@/contexts/language-context';
+} from "@/components/ui/page-surface";
+import { toast } from "sonner";
+import Link from "next/link";
+import {
+  PenLine,
+  BookOpen,
+  Target,
+  RefreshCw,
+  Trophy,
+  AlertCircle,
+} from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
 
 export function WeakAreasPageContent() {
   const { t } = useLanguage();
@@ -37,12 +44,12 @@ export function WeakAreasPageContent() {
         setData(weakAreasData);
         setError(null);
       } catch (err) {
-        logApiError('Failed to fetch weak areas', err);
+        logApiError("Failed to fetch weak areas", err);
         if (isServiceUnavailable(err)) {
           setServiceUnavailable(true);
         } else {
-          setError(t('common.load_error'));
-          toast.error(t('common.load_error'));
+          setError(t("common.load_error"));
+          toast.error(t("common.load_error"));
         }
       } finally {
         setIsLoading(false);
@@ -58,7 +65,9 @@ export function WeakAreasPageContent() {
         <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
           <RefreshCw className="w-6 h-6 text-primary animate-spin" />
         </div>
-        <p className="text-sm text-muted-foreground">{t('weak_areas.loading')}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("weak_areas.loading")}
+        </p>
       </div>
     );
   }
@@ -68,7 +77,10 @@ export function WeakAreasPageContent() {
     return (
       <div className="flex justify-center py-24">
         <ServiceUnavailableBanner
-          onRetry={() => { setServiceUnavailable(false); setFetchKey(k => k + 1); }}
+          onRetry={() => {
+            setServiceUnavailable(false);
+            setFetchKey((k) => k + 1);
+          }}
           className="max-w-md"
         />
       </div>
@@ -87,11 +99,14 @@ export function WeakAreasPageContent() {
         </Alert>
         <Button
           variant="outline"
-          onClick={() => { setError(null); setFetchKey(k => k + 1); }}
+          onClick={() => {
+            setError(null);
+            setFetchKey((k) => k + 1);
+          }}
           className="gap-2"
         >
           <RefreshCw className="w-4 h-4" />
-          {t('common.retry')}
+          {t("common.retry")}
         </Button>
       </div>
     );
@@ -101,10 +116,10 @@ export function WeakAreasPageContent() {
   const pageHeader = (
     <PageHeroSurface>
       <div className="space-y-1">
-        <PageHeroEyebrow>{t('weak_areas.badge')}</PageHeroEyebrow>
-        <PageHeroTitle>{t('weak_areas.title')}</PageHeroTitle>
+        <PageHeroEyebrow>{t("weak_areas.badge")}</PageHeroEyebrow>
+        <PageHeroTitle>{t("weak_areas.title")}</PageHeroTitle>
         <PageHeroDescription className="max-w-xl">
-          {t('weak_areas.subtitle')}
+          {t("weak_areas.subtitle")}
         </PageHeroDescription>
       </div>
     </PageHeroSurface>
@@ -119,24 +134,25 @@ export function WeakAreasPageContent() {
         {/* Success card */}
         <Card className="rounded-3xl border-2 border-green-200 dark:border-green-900/40 bg-gradient-to-br from-green-50/80 to-emerald-50/40 dark:from-green-950/20 dark:to-emerald-950/10 shadow-sm overflow-hidden">
           <CardContent className="pt-12 pb-10 flex flex-col items-center text-center space-y-6">
-
             {/* Icon */}
             <div className="relative">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/25">
                 <Trophy className="w-10 h-10 text-white" />
               </div>
               <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-sm border-2 border-background">
-                <span className="text-white text-xs font-black leading-none">✓</span>
+                <span className="text-white text-xs font-black leading-none">
+                  ✓
+                </span>
               </div>
             </div>
 
             {/* Text */}
             <div className="space-y-2 max-w-sm">
               <h2 className="text-3xl font-black tracking-tight">
-                {t('weak_areas.no_weak_areas_title')}
+                {t("weak_areas.no_weak_areas_title")}
               </h2>
               <p className="text-muted-foreground">
-                {t('weak_areas.no_weak_areas_desc')}
+                {t("weak_areas.no_weak_areas_desc")}
               </p>
             </div>
 
@@ -149,19 +165,29 @@ export function WeakAreasPageContent() {
               >
                 <Link href="/exam">
                   <Target className="w-4 h-4" />
-                  {t('weak_areas.take_exam')}
+                  {t("weak_areas.take_exam")}
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="gap-2 rounded-xl">
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="gap-2 rounded-xl"
+              >
                 <Link href="/practice">
                   <PenLine className="w-4 h-4" />
-                  {t('weak_areas.practice_mode')}
+                  {t("weak_areas.practice_mode")}
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="gap-2 rounded-xl">
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="gap-2 rounded-xl"
+              >
                 <Link href="/lessons">
                   <BookOpen className="w-4 h-4" />
-                  {t('weak_areas.study_lessons')}
+                  {t("weak_areas.study_lessons")}
                 </Link>
               </Button>
             </div>
@@ -174,7 +200,6 @@ export function WeakAreasPageContent() {
   // ── Data state ───────────────────────────────────
   return (
     <div className="max-w-6xl mx-auto space-y-8 py-4">
-
       {pageHeader}
 
       {/* Summary Cards */}
@@ -187,9 +212,11 @@ export function WeakAreasPageContent() {
       {/* Info Alert */}
       <Alert className="border border-primary/20 bg-primary/5">
         <AlertDescription className="space-y-1">
-          <p className="font-semibold text-foreground">🎯 {t('weak_areas.strategy_title')}</p>
+          <p className="font-semibold text-foreground">
+            🎯 {t("weak_areas.strategy_title")}
+          </p>
           <p className="text-sm text-muted-foreground">
-            {t('weak_areas.strategy_desc')}
+            {t("weak_areas.strategy_desc")}
           </p>
         </AlertDescription>
       </Alert>
@@ -205,37 +232,41 @@ export function WeakAreasPageContent() {
               🚀
             </div>
             <div>
-              <CardTitle className="text-xl font-black">{t('weak_areas.start_improving_title')}</CardTitle>
+              <CardTitle className="text-xl font-black">
+                {t("weak_areas.start_improving_title")}
+              </CardTitle>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {t('weak_areas.start_improving_desc')}
+                {t("weak_areas.start_improving_desc")}
               </p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-3">
-            <Button asChild className="gap-2 rounded-xl shadow-sm shadow-primary/20">
+            <Button
+              asChild
+              className="gap-2 rounded-xl shadow-sm shadow-primary/20"
+            >
               <Link href="/practice">
                 <PenLine className="w-4 h-4" />
-                {t('weak_areas.practice_mode')}
+                {t("weak_areas.practice_mode")}
               </Link>
             </Button>
             <Button variant="outline" asChild className="gap-2 rounded-xl">
               <Link href="/lessons">
                 <BookOpen className="w-4 h-4" />
-                {t('weak_areas.study_lessons')}
+                {t("weak_areas.study_lessons")}
               </Link>
             </Button>
             <Button variant="outline" asChild className="gap-2 rounded-xl">
               <Link href="/exam">
                 <Target className="w-4 h-4" />
-                {t('weak_areas.take_full_exam')}
+                {t("weak_areas.take_full_exam")}
               </Link>
             </Button>
           </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }
@@ -244,7 +275,7 @@ export default function WeakAreasPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/dashboard?section=weak-areas');
+    router.replace("/dashboard?section=weak-areas");
   }, [router]);
 
   return null;

@@ -1,20 +1,30 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { useLanguage } from '@/contexts/language-context';
-import apiClient, { isServiceUnavailable, logApiError } from '@/lib/api';
-import AdminPageHeader from '@/components/admin/AdminPageHeader';
-import AdminSectionCard from '@/components/admin/AdminSectionCard';
-import { ServiceUnavailableBanner } from '@/components/ui/service-unavailable-banner';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Users, TrafficCone, GraduationCap, TrendingUp, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useState, useCallback } from "react";
+import { useLanguage } from "@/contexts/language-context";
+import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  RefreshCw,
+  Users,
+  TrafficCone,
+  GraduationCap,
+  TrendingUp,
+  X,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type DashboardStats = {
-  totalUsers: number; activeUsers: number;
-  adminUsers: number; moderatorUsers: number;
-  totalSigns: number; totalQuizAttempts: number;
+  totalUsers: number;
+  activeUsers: number;
+  adminUsers: number;
+  moderatorUsers: number;
+  totalSigns: number;
+  totalQuizAttempts: number;
   totalSignQuestions: number;
   totalSignPracticeSessions: number;
   totalSignExamAttempts: number;
@@ -23,48 +33,77 @@ type DashboardStats = {
   totalPassedRandomSignExamResults: number;
 };
 type QuizStats = {
-  averageScore: number; totalCompleted: number;
-  totalPassed: number; passRate: number;
+  averageScore: number;
+  totalCompleted: number;
+  totalPassed: number;
+  passRate: number;
 };
 type CategoryStat = {
-  categoryId: number; categoryCode: string; categoryName: string;
-  totalAttempted: number; totalCorrect: number;
-  avgAccuracy: number; userCount: number;
+  categoryId: number;
+  categoryCode: string;
+  categoryName: string;
+  totalAttempted: number;
+  totalCorrect: number;
+  avgAccuracy: number;
+  userCount: number;
 };
 type RecentExam = {
-  examId: number; score: number; totalQuestions: number;
-  scorePercentage: number; passed: boolean;
-  startedAt: string; completedAt: string;
+  examId: number;
+  score: number;
+  totalQuestions: number;
+  scorePercentage: number;
+  passed: boolean;
+  startedAt: string;
+  completedAt: string;
   timeTakenSeconds: number | null;
-  userId: number; username: string; fullName: string;
+  userId: number;
+  username: string;
+  fullName: string;
 };
 type RecentExamsResponse = { exams: RecentExam[]; total: number };
 
 // ─── Sub-components ────────────────────────────────────────────────────
 
 function formatDuration(seconds: number | null): string {
-  if (!seconds) return '—';
+  if (!seconds) return "—";
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-function StatCard({ icon, label, value, sub, loading, colorClass }: {
-  icon: React.ReactNode; label: string; value: string | number;
-  sub?: string; loading: boolean; colorClass: string;
+function StatCard({
+  icon,
+  label,
+  value,
+  sub,
+  loading,
+  colorClass,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  sub?: string;
+  loading: boolean;
+  colorClass: string;
 }) {
   return (
     <div className="bg-card rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-shadow p-5">
       <div className="flex items-start gap-4">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${colorClass}`}>
+        <div
+          className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${colorClass}`}
+        >
           {icon}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {label}
+          </p>
           {loading ? (
             <div className="mt-2 h-7 w-20 animate-pulse rounded-lg bg-muted" />
           ) : (
-            <p className="text-2xl font-black text-foreground mt-0.5">{value}</p>
+            <p className="text-2xl font-black text-foreground mt-0.5">
+              {value}
+            </p>
           )}
           {sub && !loading && (
             <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
@@ -75,28 +114,52 @@ function StatCard({ icon, label, value, sub, loading, colorClass }: {
   );
 }
 
-function RoleBar({ label, count, total, colorClass }: {
-  label: string; count: number; total: number; colorClass: string;
+function RoleBar({
+  label,
+  count,
+  total,
+  colorClass,
+}: {
+  label: string;
+  count: number;
+  total: number;
+  colorClass: string;
 }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-foreground">{label}</span>
-        <span className="font-bold text-foreground">{count} <span className="text-muted-foreground font-normal">({pct}%)</span></span>
+        <span className="font-bold text-foreground">
+          {count}{" "}
+          <span className="text-muted-foreground font-normal">({pct}%)</span>
+        </span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div className={`h-2 rounded-full transition-all duration-500 ${colorClass}`} style={{ width: `${pct}%` }} />
+        <div
+          className={`h-2 rounded-full transition-all duration-500 ${colorClass}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );
 }
 
-function MiniStat({ label, value, accent }: { label: string; value: string; accent?: string }) {
+function MiniStat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: string;
+}) {
   return (
     <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 space-y-0.5">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn('text-xl font-black', accent ?? 'text-foreground')}>{value}</p>
+      <p className={cn("text-xl font-black", accent ?? "text-foreground")}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -104,7 +167,7 @@ function MiniStat({ label, value, accent }: { label: string; value: string; acce
 function LoadingPlaceholder() {
   return (
     <div className="space-y-3">
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <div key={i} className="h-12 animate-pulse rounded-xl bg-muted" />
       ))}
     </div>
@@ -120,7 +183,9 @@ export default function AdminAnalyticsPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
   const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
-  const [recentExams, setRecentExams] = useState<RecentExamsResponse | null>(null);
+  const [recentExams, setRecentExams] = useState<RecentExamsResponse | null>(
+    null,
+  );
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   const fetchAll = useCallback(async () => {
@@ -128,41 +193,43 @@ export default function AdminAnalyticsPage() {
     setError(null);
     try {
       const [dashRes, quizRes, catRes, examRes] = await Promise.allSettled([
-        apiClient.get<DashboardStats>('/admin/dashboard'),
-        apiClient.get<QuizStats>('/admin/analytics/quiz-stats'),
-        apiClient.get<CategoryStat[]>('/admin/analytics/category-stats'),
-        apiClient.get<RecentExamsResponse>('/admin/analytics/recent-exams?limit=20'),
+        apiClient.get<DashboardStats>("/admin/dashboard"),
+        apiClient.get<QuizStats>("/admin/analytics/quiz-stats"),
+        apiClient.get<CategoryStat[]>("/admin/analytics/category-stats"),
+        apiClient.get<RecentExamsResponse>(
+          "/admin/analytics/recent-exams?limit=20",
+        ),
       ]);
-      if (dashRes.status === 'fulfilled') setStats(dashRes.value.data);
-      if (quizRes.status === 'fulfilled') setQuizStats(quizRes.value.data);
-      if (catRes.status === 'fulfilled') {
+      if (dashRes.status === "fulfilled") setStats(dashRes.value.data);
+      if (quizRes.status === "fulfilled") setQuizStats(quizRes.value.data);
+      if (catRes.status === "fulfilled") {
         const data = catRes.value.data;
         setCategoryStats(Array.isArray(data) ? data : []);
       }
-      if (examRes.status === 'fulfilled') setRecentExams(examRes.value.data);
-      if (dashRes.status === 'rejected') setError(t('admin.analytics.fetch_error'));
+      if (examRes.status === "fulfilled") setRecentExams(examRes.value.data);
+      if (dashRes.status === "rejected")
+        setError(t("admin.analytics.fetch_error"));
     } catch (e: unknown) {
-      logApiError('Analytics fetch error', e);
+      logApiError("Analytics fetch error", e);
       if (isServiceUnavailable(e)) setServiceUnavailable(true);
-      else setError(t('admin.analytics.fetch_error'));
+      else setError(t("admin.analytics.fetch_error"));
     } finally {
       setLoading(false);
     }
   }, [t]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   return (
     <div className="space-y-6">
-
-      {serviceUnavailable && (
-        <ServiceUnavailableBanner onRetry={fetchAll} />
-      )}
+      {serviceUnavailable && <ServiceUnavailableBanner onRetry={fetchAll} />}
 
       <AdminPageHeader
         icon={<TrendingUp className="h-6 w-6" />}
-        title={t('admin.analytics.title')}
-        description={t('admin.analytics.description')}
+        title={t("admin.analytics.title")}
+        description={t("admin.analytics.description")}
         actions={
           <Button
             variant="outline"
@@ -170,8 +237,8 @@ export default function AdminAnalyticsPage() {
             disabled={loading}
             className="gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all"
           >
-            <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
-            {loading ? t('common.loading') : t('admin.analytics.refresh')}
+            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+            {loading ? t("common.loading") : t("admin.analytics.refresh")}
           </Button>
         }
       />
@@ -180,7 +247,10 @@ export default function AdminAnalyticsPage() {
       {error && (
         <div className="flex items-center justify-between rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           <span>⚠️ {error}</span>
-          <button onClick={() => setError(null)} className="ml-3 hover:opacity-70 transition-opacity">
+          <button
+            onClick={() => setError(null)}
+            className="ml-3 hover:opacity-70 transition-opacity"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -190,65 +260,69 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={<Users className="w-5 h-5" />}
-          label={t('admin.analytics.total_users')}
-          value={stats?.totalUsers ?? '-'}
-          sub={`${stats?.activeUsers ?? 0} ${t('admin.analytics.active')}`}
+          label={t("admin.analytics.total_users")}
+          value={stats?.totalUsers ?? "-"}
+          sub={`${stats?.activeUsers ?? 0} ${t("admin.analytics.active")}`}
           loading={loading}
           colorClass="bg-primary/10 text-primary"
         />
         <StatCard
           icon={<TrafficCone className="w-5 h-5" />}
-          label={t('admin.analytics.total_signs')}
-          value={stats?.totalSigns ?? '-'}
+          label={t("admin.analytics.total_signs")}
+          value={stats?.totalSigns ?? "-"}
           loading={loading}
           colorClass="bg-primary/10 text-foreground"
         />
         <StatCard
           icon={<GraduationCap className="w-5 h-5" />}
-          label={t('admin.analytics.total_exams')}
-          value={recentExams?.total ?? '-'}
+          label={t("admin.analytics.total_exams")}
+          value={recentExams?.total ?? "-"}
           loading={loading}
           colorClass="bg-primary/10 text-primary"
         />
         <StatCard
           icon={<TrendingUp className="w-5 h-5" />}
-          label={t('admin.analytics.pass_rate')}
-          value={quizStats ? `${quizStats.passRate}%` : '-'}
+          label={t("admin.analytics.pass_rate")}
+          value={quizStats ? `${quizStats.passRate}%` : "-"}
           loading={loading}
-          colorClass={quizStats && quizStats.passRate >= 50 ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-600'}
+          colorClass={
+            quizStats && quizStats.passRate >= 50
+              ? "bg-green-500/10 text-green-500"
+              : "bg-amber-500/10 text-amber-600"
+          }
         />
       </div>
 
       {stats && (
-        <AdminSectionCard title={t('admin.analytics.sign_activity')}>
+        <AdminSectionCard title={t("admin.analytics.sign_activity")}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <MiniStat
-              label={t('admin.analytics.total_sign_questions')}
+              label={t("admin.analytics.total_sign_questions")}
               value={String(stats.totalSignQuestions ?? 0)}
               accent="text-primary"
             />
             <MiniStat
-              label={t('admin.analytics.total_sign_practice_sessions')}
+              label={t("admin.analytics.total_sign_practice_sessions")}
               value={String(stats.totalSignPracticeSessions ?? 0)}
               accent="text-amber-600"
             />
             <MiniStat
-              label={t('admin.analytics.total_sign_exam_attempts')}
+              label={t("admin.analytics.total_sign_exam_attempts")}
               value={String(stats.totalSignExamAttempts ?? 0)}
               accent="text-secondary"
             />
             <MiniStat
-              label={t('admin.analytics.total_passed_sign_exam_results')}
+              label={t("admin.analytics.total_passed_sign_exam_results")}
               value={String(stats.totalPassedSignExamResults ?? 0)}
               accent="text-green-600"
             />
             <MiniStat
-              label={t('admin.analytics.total_random_sign_exam_attempts')}
+              label={t("admin.analytics.total_random_sign_exam_attempts")}
               value={String(stats.totalRandomSignExamAttempts ?? 0)}
               accent="text-orange-600"
             />
             <MiniStat
-              label={t('admin.analytics.total_passed_random_sign_exam_results')}
+              label={t("admin.analytics.total_passed_random_sign_exam_results")}
               value={String(stats.totalPassedRandomSignExamResults ?? 0)}
               accent="text-emerald-600"
             />
@@ -258,22 +332,22 @@ export default function AdminAnalyticsPage() {
 
       {/* Role Distribution */}
       {stats && (
-        <AdminSectionCard title={t('admin.analytics.user_roles')}>
+        <AdminSectionCard title={t("admin.analytics.user_roles")}>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <RoleBar
-              label={t('admin.analytics.role_user')}
+              label={t("admin.analytics.role_user")}
               count={stats.totalUsers - stats.adminUsers - stats.moderatorUsers}
               total={stats.totalUsers}
               colorClass="bg-muted-foreground"
             />
             <RoleBar
-              label={t('admin.analytics.role_moderator')}
+              label={t("admin.analytics.role_moderator")}
               count={stats.moderatorUsers}
               total={stats.totalUsers}
               colorClass="bg-primary"
             />
             <RoleBar
-              label={t('admin.analytics.role_admin')}
+              label={t("admin.analytics.role_admin")}
               count={stats.adminUsers}
               total={stats.totalUsers}
               colorClass="bg-foreground"
@@ -284,89 +358,143 @@ export default function AdminAnalyticsPage() {
 
       {/* Quiz & Category Performance */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <AdminSectionCard title={t('admin.analytics.quiz_performance')}>
-          {loading ? <LoadingPlaceholder /> : quizStats ? (
+        <AdminSectionCard title={t("admin.analytics.quiz_performance")}>
+          {loading ? (
+            <LoadingPlaceholder />
+          ) : quizStats ? (
             <div className="grid grid-cols-2 gap-3">
-              <MiniStat label={t('admin.analytics.avg_score')} value={`${quizStats.averageScore}%`} accent="text-primary" />
-              <MiniStat label={t('admin.analytics.pass_rate')} value={`${quizStats.passRate}%`} accent="text-green-500" />
-              <MiniStat label={t('admin.analytics.total_completed')} value={String(quizStats.totalCompleted)} />
-              <MiniStat label={t('admin.analytics.total_passed_count')} value={String(quizStats.totalPassed)} />
+              <MiniStat
+                label={t("admin.analytics.avg_score")}
+                value={`${quizStats.averageScore}%`}
+                accent="text-primary"
+              />
+              <MiniStat
+                label={t("admin.analytics.pass_rate")}
+                value={`${quizStats.passRate}%`}
+                accent="text-green-500"
+              />
+              <MiniStat
+                label={t("admin.analytics.total_completed")}
+                value={String(quizStats.totalCompleted)}
+              />
+              <MiniStat
+                label={t("admin.analytics.total_passed_count")}
+                value={String(quizStats.totalPassed)}
+              />
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">{t('admin.analytics.no_data')}</p>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {t("admin.analytics.no_data")}
+            </p>
           )}
         </AdminSectionCard>
 
-        <AdminSectionCard title={t('admin.analytics.category_performance')}>
-          {loading ? <LoadingPlaceholder /> : categoryStats.length > 0 ? (
+        <AdminSectionCard title={t("admin.analytics.category_performance")}>
+          {loading ? (
+            <LoadingPlaceholder />
+          ) : categoryStats.length > 0 ? (
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {[...categoryStats].sort((a, b) => b.avgAccuracy - a.avgAccuracy).map((cat) => (
-                <div
-                  key={cat.categoryId}
-                  className="flex items-center justify-between rounded-xl bg-muted/30 border border-border/30 px-3 py-2.5"
-                >
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-foreground truncate block">
-                      {cat.categoryName || cat.categoryCode}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {cat.totalCorrect}/{cat.totalAttempted} correct • {cat.userCount} {t('admin.analytics.users_label')}
-                    </span>
+              {[...categoryStats]
+                .sort((a, b) => b.avgAccuracy - a.avgAccuracy)
+                .map((cat) => (
+                  <div
+                    key={cat.categoryId}
+                    className="flex items-center justify-between rounded-xl bg-muted/30 border border-border/30 px-3 py-2.5"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-semibold text-foreground truncate block">
+                        {cat.categoryName || cat.categoryCode}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {cat.totalCorrect}/{cat.totalAttempted} correct •{" "}
+                        {cat.userCount} {t("admin.analytics.users_label")}
+                      </span>
+                    </div>
+                    <Badge
+                      className={cn(
+                        "ml-3 flex-shrink-0 border-0 text-xs font-bold",
+                        cat.avgAccuracy >= 70
+                          ? "bg-green-500/10 text-green-600"
+                          : cat.avgAccuracy >= 50
+                            ? "bg-amber-500/10 text-amber-600"
+                            : "bg-destructive/10 text-destructive",
+                      )}
+                    >
+                      {cat.avgAccuracy.toFixed(1)}%
+                    </Badge>
                   </div>
-                  <Badge className={cn(
-                    'ml-3 flex-shrink-0 border-0 text-xs font-bold',
-                    cat.avgAccuracy >= 70 ? 'bg-green-500/10 text-green-600' :
-                    cat.avgAccuracy >= 50 ? 'bg-amber-500/10 text-amber-600' :
-                    'bg-destructive/10 text-destructive'
-                  )}>
-                    {cat.avgAccuracy.toFixed(1)}%
-                  </Badge>
-                </div>
-              ))}
+                ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">{t('admin.analytics.no_category_data')}</p>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {t("admin.analytics.no_category_data")}
+            </p>
           )}
         </AdminSectionCard>
       </div>
 
       {/* Recent Exams Table */}
-        <AdminSectionCard title={t('admin.analytics.recent_exams')}>
-        {loading ? <LoadingPlaceholder /> : recentExams && recentExams.exams.length > 0 ? (
+      <AdminSectionCard title={t("admin.analytics.recent_exams")}>
+        {loading ? (
+          <LoadingPlaceholder />
+        ) : recentExams && recentExams.exams.length > 0 ? (
           <div className="overflow-x-auto rounded-xl border border-border/40">
             <table className="min-w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/40">
                 <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_user')}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_score')}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_result')}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_duration')}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t('admin.analytics.exam_date')}</th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t("admin.analytics.exam_user")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t("admin.analytics.exam_score")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t("admin.analytics.exam_result")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t("admin.analytics.exam_duration")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t("admin.analytics.exam_date")}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
                 {recentExams.exams.map((exam) => (
-                  <tr key={exam.examId} className="hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={exam.examId}
+                    className="hover:bg-muted/30 transition-colors"
+                  >
                     <td className="px-4 py-3">
-                      <span className="font-semibold text-foreground">{exam.username || '-'}</span>
+                      <span className="font-semibold text-foreground">
+                        {exam.username || "-"}
+                      </span>
                       {exam.fullName && (
-                        <span className="text-xs text-muted-foreground ml-1.5">({exam.fullName})</span>
+                        <span className="text-xs text-muted-foreground ml-1.5">
+                          ({exam.fullName})
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3 font-semibold text-foreground">
                       {exam.score}/{exam.totalQuestions}
                       {exam.scorePercentage != null && (
-                        <span className="text-xs text-muted-foreground ml-1">({Math.round(exam.scorePercentage)}%)</span>
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({Math.round(exam.scorePercentage)}%)
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge className={cn(
-                        'text-xs font-semibold border-0',
-                        exam.passed
-                          ? 'bg-green-500/10 text-green-600'
-                          : 'bg-destructive/10 text-destructive'
-                      )}>
-                        {exam.passed ? `✅ ${t('exam.passed')}` : `❌ ${t('exam.failed')}`}
+                      <Badge
+                        className={cn(
+                          "text-xs font-semibold border-0",
+                          exam.passed
+                            ? "bg-green-500/10 text-green-600"
+                            : "bg-destructive/10 text-destructive",
+                        )}
+                      >
+                        {exam.passed
+                          ? `✅ ${t("exam.passed")}`
+                          : `❌ ${t("exam.failed")}`}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
@@ -374,11 +502,17 @@ export default function AdminAnalyticsPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {exam.completedAt
-                        ? new Date(exam.completedAt).toLocaleDateString(undefined, {
-                            year: 'numeric', month: 'short', day: 'numeric',
-                            hour: '2-digit', minute: '2-digit',
-                          })
-                        : '-'}
+                        ? new Date(exam.completedAt).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )
+                        : "-"}
                     </td>
                   </tr>
                 ))}
@@ -388,11 +522,12 @@ export default function AdminAnalyticsPage() {
         ) : (
           <div className="text-center py-12 space-y-2">
             <div className="text-4xl">📋</div>
-            <p className="text-sm text-muted-foreground">{t('admin.analytics.no_exams')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("admin.analytics.no_exams")}
+            </p>
           </div>
         )}
-        </AdminSectionCard>
-
+      </AdminSectionCard>
     </div>
   );
 }

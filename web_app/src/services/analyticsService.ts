@@ -1,4 +1,4 @@
-import { apiClient, isServiceUnavailable } from '@/lib/api';
+import { apiClient, isServiceUnavailable } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -7,30 +7,30 @@ import { apiClient, isServiceUnavailable } from '@/lib/api';
  * Populated by transforming the backend WeakAreaRecommendationResponse list.
  */
 export interface WeakArea {
-  categoryCode:       string;
-  categoryName:       string;
-  correctCount:       number;
+  categoryCode: string;
+  categoryName: string;
+  correctCount: number;
   /** Total questions attempted in this category (from backend questionsAttempted) */
-  totalCount:         number;
+  totalCount: number;
   /** Accuracy 0-100 (mapped from backend currentAccuracy) */
-  accuracy:           number;
+  accuracy: number;
   /** Estimated practice time (e.g., "11 min") — recommended time, not avg session time */
-  estimatedTime:      string;
-  commonMistakes:     string[];
+  estimatedTime: string;
+  commonMistakes: string[];
   recommendedLessons: Array<{ code: string; title: string }>;
   /** Extra fields from backend for rich display */
-  accuracyGap?:          number;
+  accuracyGap?: number;
   recommendedQuestions?: number;
   estimatedTimeMinutes?: number;
   recommendedDifficulty?: string;
-  priority?:             number;
-  categoryId?:           number;
+  priority?: number;
+  categoryId?: number;
 }
 
 export interface WeakAreasData {
-  weakAreas:        WeakArea[];
-  overallAccuracy:  number;
-  totalCategories:  number;
+  weakAreas: WeakArea[];
+  overallAccuracy: number;
+  totalCategories: number;
   recommendations?: string[];
 }
 
@@ -39,17 +39,17 @@ export interface WeakAreasData {
  * The endpoint returns a WeakAreasOverviewResponse wrapper object.
  */
 interface WeakAreaRecommendationResponse {
-  categoryId:            number;
-  categoryCode:          string;
-  categoryName:          string;
-  currentAccuracy:       number;
-  targetAccuracy:        number;
-  accuracyGap:           number;
-  recommendedQuestions:  number;
+  categoryId: number;
+  categoryCode: string;
+  categoryName: string;
+  currentAccuracy: number;
+  targetAccuracy: number;
+  accuracyGap: number;
+  recommendedQuestions: number;
   recommendedDifficulty: string;
-  estimatedTimeMinutes:  number;
-  priority:              number;
-  questionsAttempted:    number;
+  estimatedTimeMinutes: number;
+  priority: number;
+  questionsAttempted: number;
 }
 
 /**
@@ -57,46 +57,46 @@ interface WeakAreaRecommendationResponse {
  * Contains weak-area list plus accurate summary statistics.
  */
 interface WeakAreasOverviewResponse {
-  weakAreas:               WeakAreaRecommendationResponse[];
+  weakAreas: WeakAreaRecommendationResponse[];
   totalPracticedCategories: number;
-  overallAccuracy:         number;
+  overallAccuracy: number;
 }
 
 export interface ErrorPattern {
-  questionId:      number;
-  questionText:    string;
-  category:        string;
-  timesAttempted:  number;
-  timesIncorrect:  number;
+  questionId: number;
+  questionText: string;
+  category: string;
+  timesAttempted: number;
+  timesIncorrect: number;
   lastAttemptDate: string;
 }
 
 export interface ErrorPatternsData {
-  patterns:    ErrorPattern[];
+  patterns: ErrorPattern[];
   totalErrors: number;
 }
 
 export interface AnalyticsSummary {
-  weakAreas:     WeakAreasData;
+  weakAreas: WeakAreasData;
   errorPatterns: ErrorPatternsData;
 }
 
 // ─── Constants ───────────────────────────────────────────
 
 const ENDPOINTS = {
-  WEAK_AREAS:     '/users/me/analytics/weak-areas',
-  ERROR_PATTERNS: '/users/me/analytics/error-patterns',
+  WEAK_AREAS: "/users/me/analytics/weak-areas",
+  ERROR_PATTERNS: "/users/me/analytics/error-patterns",
 } as const;
 
 const WEAK_AREAS_FALLBACK: WeakAreasData = {
-  weakAreas:       [],
+  weakAreas: [],
   overallAccuracy: 0,
   totalCategories: 0,
   recommendations: [],
 };
 
 const ERROR_PATTERNS_FALLBACK: ErrorPatternsData = {
-  patterns:    [],
+  patterns: [],
   totalErrors: 0,
 };
 
@@ -118,23 +118,22 @@ function transformWeakAreas(backend: WeakAreasOverviewResponse): WeakAreasData {
   }
 
   const weakAreas: WeakArea[] = backend.weakAreas.map((item) => ({
-    categoryCode:         item.categoryCode        ?? '',
-    categoryName:         item.categoryName        ?? '',
-    accuracy:             item.currentAccuracy     ?? 0,
-    totalCount:           item.questionsAttempted  ?? 0,
-    correctCount:         Math.round(
-                            ((item.currentAccuracy ?? 0) / 100) *
-                            (item.questionsAttempted ?? 0)
-                          ),
-    estimatedTime:        `${item.estimatedTimeMinutes ?? 0} min`,
-    commonMistakes:       [],
-    recommendedLessons:   [],
-    accuracyGap:           item.accuracyGap,
-    recommendedQuestions:  item.recommendedQuestions,
-    estimatedTimeMinutes:  item.estimatedTimeMinutes,
+    categoryCode: item.categoryCode ?? "",
+    categoryName: item.categoryName ?? "",
+    accuracy: item.currentAccuracy ?? 0,
+    totalCount: item.questionsAttempted ?? 0,
+    correctCount: Math.round(
+      ((item.currentAccuracy ?? 0) / 100) * (item.questionsAttempted ?? 0),
+    ),
+    estimatedTime: `${item.estimatedTimeMinutes ?? 0} min`,
+    commonMistakes: [],
+    recommendedLessons: [],
+    accuracyGap: item.accuracyGap,
+    recommendedQuestions: item.recommendedQuestions,
+    estimatedTimeMinutes: item.estimatedTimeMinutes,
     recommendedDifficulty: item.recommendedDifficulty,
-    priority:              item.priority,
-    categoryId:            item.categoryId,
+    priority: item.priority,
+    categoryId: item.categoryId,
   }));
 
   return {
@@ -157,7 +156,9 @@ function transformWeakAreas(backend: WeakAreasOverviewResponse): WeakAreasData {
  */
 export async function getWeakAreas(): Promise<WeakAreasData> {
   try {
-    const response = await apiClient.get<WeakAreasOverviewResponse>(ENDPOINTS.WEAK_AREAS);
+    const response = await apiClient.get<WeakAreasOverviewResponse>(
+      ENDPOINTS.WEAK_AREAS,
+    );
     return transformWeakAreas(response.data);
   } catch (error) {
     if (isServiceUnavailable(error)) throw error;
@@ -168,7 +169,9 @@ export async function getWeakAreas(): Promise<WeakAreasData> {
 /** GET /api/users/me/analytics/error-patterns */
 export async function getErrorPatterns(): Promise<ErrorPatternsData> {
   try {
-    const response = await apiClient.get<ErrorPatternsData>(ENDPOINTS.ERROR_PATTERNS);
+    const response = await apiClient.get<ErrorPatternsData>(
+      ENDPOINTS.ERROR_PATTERNS,
+    );
     return response.data;
   } catch (error) {
     if (isServiceUnavailable(error)) throw error;

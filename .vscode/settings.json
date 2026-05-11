@@ -1,16 +1,20 @@
 {
-    "files.exclude": {
-        "**/mobile_app/**": true
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": false,
+  "files.exclude": {
+    "**/mobile_app/**": true
+  },
+  "dart.enabled": false,
+  "chat.tools.terminal.autoApprove": {
+    "/^netstat -ano \\| Select-String \"8890\"$/": {
+      "approve": true,
+      "matchCommandLine": true
     },
-    "dart.enabled": false,
-    "chat.tools.terminal.autoApprove": {
-        "/^netstat -ano \\| Select-String \"8890\"$/": {
-            "approve": true,
-            "matchCommandLine": true
-        },
-        "/^cd C:\\\\Users\\\\heyde\\\\Desktop\\\\end_project\\\\readyroad; mvn spring-boot:run -Dspring-boot\\.run\\.profiles=secure$/": {
-            "approve": true,
-            "matchCommandLine": true
-        }
+    "/^cd C:\\\\Users\\\\heyde\\\\Desktop\\\\end_project\\\\readyroad; mvn spring-boot:run -Dspring-boot\\.run\\.profiles=secure$/": {
+      "approve": true,
+      "matchCommandLine": true
     }
+  }
 }

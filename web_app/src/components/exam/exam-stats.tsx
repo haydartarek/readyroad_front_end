@@ -1,11 +1,18 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { RefreshCw, ClipboardList, BarChart2, Timer, Zap, Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/language-context';
-import { cn } from '@/lib/utils';
+import Link from "next/link";
+import {
+  RefreshCw,
+  ClipboardList,
+  BarChart2,
+  Timer,
+  Zap,
+  Clock,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
+import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -27,63 +34,118 @@ interface ExamStatsProps {
 // ─── Helpers ─────────────────────────────────────────────
 
 function toSafeNumber(v: unknown, fallback = 0): number {
-  const n = typeof v === 'number' ? v : Number(v);
+  const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : fallback;
 }
 
 // ─── Component ───────────────────────────────────────────
 
 export function ExamStats({
-  score, totalQuestions, passed, passingScore, timeAnalysis,
+  score,
+  totalQuestions,
+  passed,
+  passingScore,
+  timeAnalysis,
 }: ExamStatsProps) {
   const { t } = useLanguage();
-  const safeScore   = toSafeNumber(score);
-  const safeTotal   = toSafeNumber(totalQuestions);
+  const safeScore = toSafeNumber(score);
+  const safeTotal = toSafeNumber(totalQuestions);
   const safePassing = toSafeNumber(passingScore);
 
-  const percentage        = safeTotal === 0 ? '0.0' : ((safeScore  / safeTotal) * 100).toFixed(1);
-  const passingPercentage = safeTotal === 0 ? '0'   : ((safePassing / safeTotal) * 100).toFixed(0);
-  const wrongCount        = Math.max(0, safeTotal - safeScore);
+  const percentage =
+    safeTotal === 0 ? "0.0" : ((safeScore / safeTotal) * 100).toFixed(1);
+  const passingPercentage =
+    safeTotal === 0 ? "0" : ((safePassing / safeTotal) * 100).toFixed(0);
+  const wrongCount = Math.max(0, safeTotal - safeScore);
   const timeRows = [
-    { label: t('exam.stats.total_time'), value: timeAnalysis?.totalTime ?? '', color: 'text-foreground', icon: Timer },
-    { label: t('exam.stats.average_per_question'), value: timeAnalysis?.averagePerQuestion ?? '', color: 'text-foreground', icon: Clock },
-    { label: t('exam.stats.fastest'), value: timeAnalysis?.fastestQuestion ?? '', color: 'text-green-600', icon: Zap },
-    { label: t('exam.stats.slowest'), value: timeAnalysis?.slowestQuestion ?? '', color: 'text-orange-500', icon: Clock },
+    {
+      label: t("exam.stats.total_time"),
+      value: timeAnalysis?.totalTime ?? "",
+      color: "text-foreground",
+      icon: Timer,
+    },
+    {
+      label: t("exam.stats.average_per_question"),
+      value: timeAnalysis?.averagePerQuestion ?? "",
+      color: "text-foreground",
+      icon: Clock,
+    },
+    {
+      label: t("exam.stats.fastest"),
+      value: timeAnalysis?.fastestQuestion ?? "",
+      color: "text-green-600",
+      icon: Zap,
+    },
+    {
+      label: t("exam.stats.slowest"),
+      value: timeAnalysis?.slowestQuestion ?? "",
+      color: "text-orange-500",
+      icon: Clock,
+    },
   ] as const;
   const nextSteps = [
-    { label: t('exam.stats.try_another'), href: '/exam', icon: RefreshCw, variant: 'default' as const },
-    { label: t('exam.stats.practice_mode'), href: '/practice', icon: ClipboardList, variant: 'outline' as const },
-    { label: t('exam.stats.view_analytics'), href: '/dashboard?section=weak-areas', icon: BarChart2, variant: 'outline' as const },
+    {
+      label: t("exam.stats.try_another"),
+      href: "/exam",
+      icon: RefreshCw,
+      variant: "default" as const,
+    },
+    {
+      label: t("exam.stats.practice_mode"),
+      href: "/practice",
+      icon: ClipboardList,
+      variant: "outline" as const,
+    },
+    {
+      label: t("exam.stats.view_analytics"),
+      href: "/dashboard?section=weak-areas",
+      icon: BarChart2,
+      variant: "outline" as const,
+    },
   ];
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-
       {/* ── Score card ── */}
-      <Card className={cn(
-        'rounded-2xl border-2 shadow-sm',
-        passed
-          ? 'border-green-200 bg-green-50/40   dark:bg-green-950/20'
-          : 'border-red-200   bg-red-50/40     dark:bg-red-950/20',
-      )}>
+      <Card
+        className={cn(
+          "rounded-2xl border-2 shadow-sm",
+          passed
+            ? "border-green-200 bg-green-50/40   dark:bg-green-950/20"
+            : "border-red-200   bg-red-50/40     dark:bg-red-950/20",
+        )}
+      >
         <CardHeader>
-          <CardTitle className="text-center font-black">{t('exam.stats.title')}</CardTitle>
+          <CardTitle className="text-center font-black">
+            {t("exam.stats.title")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-
           {/* Big score */}
           <div className="text-center space-y-1">
             <div>
-              <span className={cn('text-6xl font-black', passed ? 'text-green-600' : 'text-red-600')}>
+              <span
+                className={cn(
+                  "text-6xl font-black",
+                  passed ? "text-green-600" : "text-red-600",
+                )}
+              >
                 {safeScore}
               </span>
-              <span className="text-3xl text-muted-foreground">/{safeTotal}</span>
+              <span className="text-3xl text-muted-foreground">
+                /{safeTotal}
+              </span>
             </div>
-            <p className={cn('text-2xl font-black', passed ? 'text-green-600' : 'text-red-600')}>
+            <p
+              className={cn(
+                "text-2xl font-black",
+                passed ? "text-green-600" : "text-red-600",
+              )}
+            >
               {percentage}%
             </p>
             <p className="text-xs text-muted-foreground">
-              {t('exam.stats.required', {
+              {t("exam.stats.required", {
                 score: safePassing,
                 total: safeTotal,
                 percentage: passingPercentage,
@@ -95,11 +157,15 @@ export function ExamStats({
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-card border border-border/50 p-3 text-center">
               <p className="text-2xl font-black text-green-600">{safeScore}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('exam.stats.correct')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t("exam.stats.correct")}
+              </p>
             </div>
             <div className="rounded-xl bg-card border border-border/50 p-3 text-center">
               <p className="text-2xl font-black text-red-600">{wrongCount}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('exam.stats.wrong')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t("exam.stats.wrong")}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -109,7 +175,9 @@ export function ExamStats({
       {timeAnalysis && (
         <Card className="rounded-2xl border-border/50 shadow-sm">
           <CardHeader>
-            <CardTitle className="font-black">{t('exam.results_time_title')}</CardTitle>
+            <CardTitle className="font-black">
+              {t("exam.results_time_title")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -122,7 +190,9 @@ export function ExamStats({
                     <Icon className="h-3.5 w-3.5 flex-shrink-0" />
                     {label}
                   </div>
-                  <span className={cn('text-sm font-bold', color)}>{value}</span>
+                  <span className={cn("text-sm font-bold", color)}>
+                    {value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -131,9 +201,16 @@ export function ExamStats({
       )}
 
       {/* ── Next steps card ── */}
-      <Card className={cn('rounded-2xl border-border/50 shadow-sm', timeAnalysis ? 'md:col-span-2' : '')}>
+      <Card
+        className={cn(
+          "rounded-2xl border-border/50 shadow-sm",
+          timeAnalysis ? "md:col-span-2" : "",
+        )}
+      >
         <CardHeader>
-          <CardTitle className="font-black">{t('exam.stats.next_steps')}</CardTitle>
+          <CardTitle className="font-black">
+            {t("exam.stats.next_steps")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-2 sm:grid-cols-3">
@@ -141,7 +218,10 @@ export function ExamStats({
               <Button
                 key={href}
                 variant={variant}
-                className={cn('w-full rounded-xl gap-2', variant === 'default' && 'shadow-sm shadow-primary/20')}
+                className={cn(
+                  "w-full rounded-xl gap-2",
+                  variant === "default" && "shadow-sm shadow-primary/20",
+                )}
                 asChild
               >
                 <Link href={href}>
@@ -153,7 +233,6 @@ export function ExamStats({
           </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }

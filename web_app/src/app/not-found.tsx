@@ -7,7 +7,9 @@ import { resolveSiteLocale } from "@/lib/site-copy";
 
 export default async function NotFound() {
   const cookieStore = await cookies();
-  const locale = resolveSiteLocale(cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value);
+  const locale = resolveSiteLocale(
+    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
+  );
   const isRTL = locale === "ar";
 
   return (

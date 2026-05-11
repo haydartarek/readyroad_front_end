@@ -258,8 +258,7 @@ export default function AdminQuizzesPage() {
       if (id !== fetchIdRef.current) return;
       logApiError("Failed to fetch admin quiz questions", err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
-      else
-        setError(tRef.current("admin.quizzes.fetch_error"));
+      else setError(tRef.current("admin.quizzes.fetch_error"));
     } finally {
       if (id === fetchIdRef.current) setLoading(false);
     }
@@ -400,7 +399,7 @@ export default function AdminQuizzesPage() {
     ({ en: o.textEn, ar: o.textAr, nl: o.textNl, fr: o.textFr })[language] ||
     o.textEn;
   const getImageUrl = (url: string | null) =>
-    url ? convertToPublicImageUrl(url) ?? "" : "";
+    url ? (convertToPublicImageUrl(url) ?? "") : "";
   const getAvailabilityLabel = (isActive: boolean) =>
     isActive ? t("admin.quizzes.active") : t("admin.quizzes.inactive");
 
@@ -538,9 +537,7 @@ export default function AdminQuizzesPage() {
           onChange={(e) => handleCategoryChange(e.target.value)}
           className={NATIVE_SELECT_COMPACT_CLASS}
         >
-          <option value="">
-            {t("admin.quizzes.all_categories")}
-          </option>
+          <option value="">{t("admin.quizzes.all_categories")}</option>
           {categories.map((cat) => (
             <option key={cat.code} value={cat.code}>
               {getCategoryLabel(cat.code)} ({cat.code})
@@ -554,9 +551,7 @@ export default function AdminQuizzesPage() {
           onChange={(e) => handleDifficultyChange(e.target.value)}
           className={NATIVE_SELECT_COMPACT_CLASS}
         >
-          <option value="">
-            {t("admin.quizzes.all_difficulties")}
-          </option>
+          <option value="">{t("admin.quizzes.all_difficulties")}</option>
           {["EASY", "MEDIUM", "HARD"].map((d) => (
             <option key={d} value={d}>
               {getDifficultyLabel(d)}
@@ -570,15 +565,9 @@ export default function AdminQuizzesPage() {
           onChange={(e) => handleImageChange(e.target.value)}
           className={NATIVE_SELECT_COMPACT_CLASS}
         >
-          <option value="">
-            {t("admin.quizzes.all_images")}
-          </option>
-          <option value="yes">
-            {t("admin.quizzes.has_image")}
-          </option>
-          <option value="no">
-            {t("admin.quizzes.no_image")}
-          </option>
+          <option value="">{t("admin.quizzes.all_images")}</option>
+          <option value="yes">{t("admin.quizzes.has_image")}</option>
+          <option value="no">{t("admin.quizzes.no_image")}</option>
         </select>
         <select
           id="admin-quizzes-page-size"
@@ -767,7 +756,9 @@ export default function AdminQuizzesPage() {
                                 disabled={deleting}
                                 className="px-2 py-1 text-xs rounded-lg bg-destructive text-white hover:opacity-90 disabled:opacity-50 font-semibold transition-opacity"
                               >
-                                {deleting ? t("common.loading") : t("common.confirm")}
+                                {deleting
+                                  ? t("common.loading")
+                                  : t("common.confirm")}
                               </button>
                               <button
                                 onClick={() => setDeleteId(null)}
@@ -870,8 +861,10 @@ export default function AdminQuizzesPage() {
 
                           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/40">
                             <span>
-                              {t("admin.quizzes.col_availability")}
-                              : <strong>{getAvailabilityLabel(Boolean(q.isActive))}</strong>
+                              {t("admin.quizzes.col_availability")}:{" "}
+                              <strong>
+                                {getAvailabilityLabel(Boolean(q.isActive))}
+                              </strong>
                             </span>
                             {q.contentImageUrl && (
                               <Badge variant="outline" className="text-xs">

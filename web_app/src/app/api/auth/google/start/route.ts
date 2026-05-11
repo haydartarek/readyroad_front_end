@@ -41,7 +41,10 @@ export async function GET(request: NextRequest) {
   if (!clientId) {
     const fallback = mode === "register" ? "/register" : "/login";
     return NextResponse.redirect(
-      new URL(`${fallback}?authProvider=google&authError=unavailable`, frontendUrl),
+      new URL(
+        `${fallback}?authProvider=google&authError=unavailable`,
+        frontendUrl,
+      ),
     );
   }
 

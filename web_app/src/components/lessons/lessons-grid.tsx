@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/language-context';
-import { ArrowRight, BookOpen, Clock } from 'lucide-react';
-import { Lesson } from '@/lib/types';
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
+import { ArrowRight, BookOpen, Clock } from "lucide-react";
+import { Lesson } from "@/lib/types";
 
 // ─── Types ───────────────────────────────────────────────
 
-type LangCode = 'en' | 'ar' | 'nl' | 'fr';
+type LangCode = "en" | "ar" | "nl" | "fr";
 
 // ─── Helpers ─────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ function getLessonDescription(lesson: Lesson, lang: LangCode): string {
     nl: lesson.descriptionNl,
     fr: lesson.descriptionFr,
   };
-  return map[lang] ?? lesson.descriptionEn ?? '';
+  return map[lang] ?? lesson.descriptionEn ?? "";
 }
 
 // ─── Component ───────────────────────────────────────────
@@ -39,12 +39,12 @@ function getLessonDescription(lesson: Lesson, lang: LangCode): string {
 export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
   const { language, t } = useLanguage();
   const lang = language as LangCode;
-  const isRtl = lang === 'ar';
+  const isRtl = lang === "ar";
 
   return (
     <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {lessons.map((lesson) => {
-        const title       = getLessonTitle(lesson, lang);
+        const title = getLessonTitle(lesson, lang);
         const description = getLessonDescription(lesson, lang);
 
         return (
@@ -60,19 +60,19 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
                     variant="outline"
                     className="rounded-full border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-bold text-primary"
                   >
-                    {t('lessons.lesson')} {lesson.displayOrder}
+                    {t("lessons.lesson")} {lesson.displayOrder}
                   </Badge>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {(lesson.totalPages ?? 0) > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
                         <BookOpen className="h-3 w-3" />
-                        {lesson.totalPages} {t('lessons.pages')}
+                        {lesson.totalPages} {t("lessons.pages")}
                       </span>
                     )}
                     {lesson.estimatedMinutes > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
                         <Clock className="h-3 w-3" />
-                        {lesson.estimatedMinutes} {t('lessons.minutes_short')}
+                        {lesson.estimatedMinutes} {t("lessons.minutes_short")}
                       </span>
                     )}
                   </div>
@@ -93,12 +93,20 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
 
               <div className="mt-auto flex items-center justify-between gap-3">
                 <div className="text-xs text-muted-foreground">
-                  {t('lessons.card_cta_hint')}
+                  {t("lessons.card_cta_hint")}
                 </div>
-                <Button className="rounded-full px-5 shadow-sm shadow-primary/15" asChild>
-                  <Link href={`/lessons/${lesson.lessonCode}`} className="inline-flex items-center gap-2">
-                    {t('lessons.read_lesson')}
-                    <ArrowRight className={`h-4 w-4 ${isRtl ? 'rotate-180' : ''}`} />
+                <Button
+                  className="rounded-full px-5 shadow-sm shadow-primary/15"
+                  asChild
+                >
+                  <Link
+                    href={`/lessons/${lesson.lessonCode}`}
+                    className="inline-flex items-center gap-2"
+                  >
+                    {t("lessons.read_lesson")}
+                    <ArrowRight
+                      className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`}
+                    />
                   </Link>
                 </Button>
               </div>

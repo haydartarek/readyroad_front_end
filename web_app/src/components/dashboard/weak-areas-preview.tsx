@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useLanguage } from '@/contexts/language-context';
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/language-context";
 
 interface WeakArea {
   categoryCode?: string;
@@ -15,15 +15,15 @@ interface WeakArea {
 }
 
 function getBarColor(accuracy: number): string {
-  if (accuracy < 60) return 'bg-destructive';
-  if (accuracy < 75) return 'bg-primary/60';
-  return 'bg-primary';
+  if (accuracy < 60) return "bg-destructive";
+  if (accuracy < 75) return "bg-primary/60";
+  return "bg-primary";
 }
 
 function getAccuracyColor(accuracy: number): string {
-  if (accuracy < 60) return 'text-destructive';
-  if (accuracy < 75) return 'text-primary';
-  return 'text-primary';
+  if (accuracy < 60) return "text-destructive";
+  if (accuracy < 75) return "text-primary";
+  return "text-primary";
 }
 
 export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
@@ -34,12 +34,17 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
     <Card className="rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="font-black text-secondary">
-          {t('analytics.weak_areas')}
+          {t("analytics.weak_areas")}
         </CardTitle>
 
-        <Button variant="ghost" size="sm" className="gap-1 text-primary" asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1 text-primary"
+          asChild
+        >
           <Link href="/dashboard?section=weak-areas">
-            {t('dashboard.view_all')}
+            {t("dashboard.view_all")}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </Button>
@@ -48,7 +53,7 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
       <CardContent>
         {topThree.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            {t('dashboard.no_weak_areas')}
+            {t("dashboard.no_weak_areas")}
           </p>
         ) : (
           <div className="space-y-5">
@@ -61,11 +66,11 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
 
                   <span
                     className={cn(
-                      'flex-shrink-0 text-xs font-bold',
-                      getAccuracyColor(area.accuracy)
+                      "flex-shrink-0 text-xs font-bold",
+                      getAccuracyColor(area.accuracy),
                     )}
                   >
-                    {area.accuracy.toFixed(1)}%{' '}
+                    {area.accuracy.toFixed(1)}%{" "}
                     <span className="font-normal text-muted-foreground">
                       ({area.totalQuestions} q)
                     </span>
@@ -75,8 +80,8 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
                     className={cn(
-                      'h-full rounded-full transition-all duration-500',
-                      getBarColor(area.accuracy)
+                      "h-full rounded-full transition-all duration-500",
+                      getBarColor(area.accuracy),
                     )}
                     style={{ width: `${area.accuracy}%` }}
                   />
@@ -86,11 +91,11 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
                   href={
                     area.categoryCode
                       ? `/practice/${encodeURIComponent(area.categoryCode)}`
-                      : '/dashboard?section=weak-areas'
+                      : "/dashboard?section=weak-areas"
                   }
                   className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80"
                 >
-                  {t('dashboard.practice_this_category')}
+                  {t("dashboard.practice_this_category")}
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>

@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**',
+        protocol: "https",
+        hostname: "**",
       },
     ],
   },
@@ -18,18 +18,19 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  output: 'standalone',
+  output: "standalone",
 
   async rewrites() {
     const backendBase =
-      process.env.BACKEND_URL?.replace('/api', '') ??
-      'http://localhost:8890';
+      process.env.BACKEND_URL?.replace("/api", "") ?? "http://localhost:8890";
     return [
-      // Only proxy uploaded quiz images to the backend.
-      // Sign images (/images/signs/...) are served by Next.js from the public/ directory.
       {
-        source: '/images/quiz/:path*',
+        source: "/images/quiz/:path*",
         destination: `${backendBase}/images/quiz/:path*`,
+      },
+      {
+        source: "/images/signs/:path*",
+        destination: `${backendBase}/images/signs/:path*`,
       },
     ];
   },
@@ -37,15 +38,21 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
-          { key: 'X-DNS-Prefetch-Control',       value: 'on' },
-          { key: 'Strict-Transport-Security',     value: 'max-age=63072000; includeSubDomains; preload' },
-          { key: 'X-Frame-Options',               value: 'SAMEORIGIN' },
-          { key: 'X-Content-Type-Options',        value: 'nosniff' },
-          { key: 'X-XSS-Protection',              value: '1; mode=block' },
-          { key: 'Referrer-Policy',               value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy',            value: 'camera=(), microphone=(), geolocation=()' },
+          { key: "X-DNS-Prefetch-Control", value: "on" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
         ],
       },
     ];

@@ -93,7 +93,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // ── Core fetch ────────────────────────────────────────
   const fetchUnread = useCallback(async () => {
-    if (!user || !isAuthenticated || isLoading || document.visibilityState === "hidden") {
+    if (
+      !user ||
+      !isAuthenticated ||
+      isLoading ||
+      document.visibilityState === "hidden"
+    ) {
       return;
     }
 
@@ -132,7 +137,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         abortRef.current = null;
       }
     }
-  }, [user, isAuthenticated, isLoading, stopPolling, scheduleFetch, cancelInFlight]);
+  }, [
+    user,
+    isAuthenticated,
+    isLoading,
+    stopPolling,
+    scheduleFetch,
+    cancelInFlight,
+  ]);
 
   useEffect(() => {
     fetchUnreadRef.current = fetchUnread;

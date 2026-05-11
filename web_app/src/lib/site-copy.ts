@@ -66,8 +66,7 @@ const SITE_COPY: Record<
       },
       {
         question: "Which languages are available on ReadyRoad?",
-        answer:
-          "ReadyRoad is available in English, Arabic, French, and Dutch.",
+        answer: "ReadyRoad is available in English, Arabic, French, and Dutch.",
       },
     ],
     homeMetadata: {
@@ -90,8 +89,7 @@ const SITE_COPY: Record<
         "Practice theory topics, study traffic signs, and track your progress with ReadyRoad.",
       organizationDescription:
         "ReadyRoad is an independent learning platform for Belgian driving theory exam preparation.",
-      websiteDescription:
-        "Belgian driving theory exam preparation platform.",
+      websiteDescription: "Belgian driving theory exam preparation platform.",
       softwareDescription:
         "Prepare for the Belgian driving theory exam with practice flows, traffic signs, lessons, and progress analytics.",
     },
@@ -111,8 +109,7 @@ const SITE_COPY: Record<
       },
       {
         question: "ما اللغات المتاحة في ReadyRoad؟",
-        answer:
-          "يتوفر ReadyRoad بالإنجليزية والعربية والفرنسية والهولندية.",
+        answer: "يتوفر ReadyRoad بالإنجليزية والعربية والفرنسية والهولندية.",
       },
     ],
     homeMetadata: {
@@ -135,8 +132,7 @@ const SITE_COPY: Record<
         "تدرّب على محاور النظرية، وادرس العلامات المرورية، وتابع تقدمك مع ReadyRoad.",
       organizationDescription:
         "ReadyRoad منصة تعليمية مستقلة للتحضير لامتحان القيادة النظري في بلجيكا.",
-      websiteDescription:
-        "منصة للتحضير لامتحان القيادة النظري في بلجيكا.",
+      websiteDescription: "منصة للتحضير لامتحان القيادة النظري في بلجيكا.",
       softwareDescription:
         "استعد لامتحان القيادة النظري في بلجيكا عبر مسارات التدريب، والعلامات المرورية، والدروس، وتحليلات التقدم.",
     },
@@ -145,7 +141,8 @@ const SITE_COPY: Record<
     sharedOgAlt: "ReadyRoad | préparation à l'examen théorique belge",
     homeFaq: [
       {
-        question: "Comment préparer l'examen théorique belge du permis de conduire ?",
+        question:
+          "Comment préparer l'examen théorique belge du permis de conduire ?",
         answer:
           "ReadyRoad vous aide à étudier les panneaux, réviser les leçons de théorie, vous entraîner par catégorie et suivre vos points faibles depuis votre tableau de bord.",
       },
@@ -210,7 +207,8 @@ const SITE_COPY: Record<
       description:
         "Bereid je voor op het Belgische theorie-examen met verkeersborden, gestructureerde lessen, gerichte oefening en een duidelijk voortgangsdashboard.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "ReadyRoad | voorbereiding op het Belgische theorie-examen",
+      openGraphTitle:
+        "ReadyRoad | voorbereiding op het Belgische theorie-examen",
       openGraphDescription:
         "Bestudeer verkeersborden, herhaal theorielessen, oefen per categorie en volg je vooruitgang op één plek.",
     },

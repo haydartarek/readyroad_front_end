@@ -4,126 +4,125 @@
  * WITHOUT mocking backend - uses localStorage stub only
  */
 
-import { LANGUAGES, DEFAULT_LANGUAGE } from '@/lib/constants';
+import { LANGUAGES, DEFAULT_LANGUAGE } from "@/lib/constants";
 
 // ✅ Contract-compliant storage key
-const STORAGE_KEY = 'readyroad_locale';
+const STORAGE_KEY = "readyroad_locale";
 
-describe('LanguageContext Logic', () => {
-    let localStorageMock: { [key: string]: string };
-    let documentLang: string;
-    let documentDir: string;
+describe("LanguageContext Logic", () => {
+  let localStorageMock: { [key: string]: string };
+  let documentLang: string;
+  let documentDir: string;
 
-    beforeEach(() => {
-        // Setup localStorage mock
-        localStorageMock = {};
+  beforeEach(() => {
+    // Setup localStorage mock
+    localStorageMock = {};
 
-        Object.defineProperty(window, 'localStorage', {
-            value: {
-                getItem: jest.fn((key: string) => localStorageMock[key] || null),
-                setItem: jest.fn((key: string, value: string) => {
-                    localStorageMock[key] = value;
-                }),
-                removeItem: jest.fn((key: string) => {
-                    delete localStorageMock[key];
-                }),
-                clear: jest.fn(() => {
-                    localStorageMock = {};
-                }),
-            },
-            writable: true,
-        });
-
-        // Setup document mock for lang and dir attributes
-        documentLang = 'en';
-        documentDir = 'ltr';
-
-        Object.defineProperty(document.documentElement, 'lang', {
-            get: () => documentLang,
-            set: (value: string) => {
-                documentLang = value;
-            },
-            configurable: true,
-        });
-
-        Object.defineProperty(document.documentElement, 'dir', {
-            get: () => documentDir,
-            set: (value: string) => {
-                documentDir = value;
-            },
-            configurable: true,
-        });
+    Object.defineProperty(window, "localStorage", {
+      value: {
+        getItem: jest.fn((key: string) => localStorageMock[key] || null),
+        setItem: jest.fn((key: string, value: string) => {
+          localStorageMock[key] = value;
+        }),
+        removeItem: jest.fn((key: string) => {
+          delete localStorageMock[key];
+        }),
+        clear: jest.fn(() => {
+          localStorageMock = {};
+        }),
+      },
+      writable: true,
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
+    // Setup document mock for lang and dir attributes
+    documentLang = "en";
+    documentDir = "ltr";
+
+    Object.defineProperty(document.documentElement, "lang", {
+      get: () => documentLang,
+      set: (value: string) => {
+        documentLang = value;
+      },
+      configurable: true,
     });
 
-    test('language storage key is contract-compliant', () => {
-        expect(STORAGE_KEY).toBe('readyroad_locale');
+    Object.defineProperty(document.documentElement, "dir", {
+      get: () => documentDir,
+      set: (value: string) => {
+        documentDir = value;
+      },
+      configurable: true,
     });
+  });
 
-    test('default language is English', () => {
-        expect(DEFAULT_LANGUAGE).toBe('en');
-    });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-    test('language switching persists to localStorage with correct key', () => {
-        const newLanguage = 'fr';
-        localStorage.setItem(STORAGE_KEY, newLanguage);
+  test("language storage key is contract-compliant", () => {
+    expect(STORAGE_KEY).toBe("readyroad_locale");
+  });
 
-        expect(window.localStorage.setItem).toHaveBeenCalledWith(STORAGE_KEY, 'fr');
-        expect(localStorageMock[STORAGE_KEY]).toBe('fr');
-    });
+  test("default language is English", () => {
+    expect(DEFAULT_LANGUAGE).toBe("en");
+  });
 
-    test('Arabic language has RTL direction in config', () => {
-        const arabicLang = LANGUAGES.find(l => l.code === 'ar');
-        expect(arabicLang).toBeDefined();
-        expect(arabicLang?.dir).toBe('rtl');
-    });
+  test("language switching persists to localStorage with correct key", () => {
+    const newLanguage = "fr";
+    localStorage.setItem(STORAGE_KEY, newLanguage);
 
-    test('English language has LTR direction in config', () => {
-        const englishLang = LANGUAGES.find(l => l.code === 'en');
-        expect(englishLang).toBeDefined();
-        expect(englishLang?.dir).toBe('ltr');
-    });
+    expect(window.localStorage.setItem).toHaveBeenCalledWith(STORAGE_KEY, "fr");
+    expect(localStorageMock[STORAGE_KEY]).toBe("fr");
+  });
 
-    test('Dutch language has LTR direction in config', () => {
-        const dutchLang = LANGUAGES.find(l => l.code === 'nl');
-        expect(dutchLang).toBeDefined();
-        expect(dutchLang?.dir).toBe('ltr');
-    });
+  test("Arabic language has RTL direction in config", () => {
+    const arabicLang = LANGUAGES.find((l) => l.code === "ar");
+    expect(arabicLang).toBeDefined();
+    expect(arabicLang?.dir).toBe("rtl");
+  });
 
-    test('French language has LTR direction in config', () => {
-        const frenchLang = LANGUAGES.find(l => l.code === 'fr');
-        expect(frenchLang).toBeDefined();
-        expect(frenchLang?.dir).toBe('ltr');
-    });
+  test("English language has LTR direction in config", () => {
+    const englishLang = LANGUAGES.find((l) => l.code === "en");
+    expect(englishLang).toBeDefined();
+    expect(englishLang?.dir).toBe("ltr");
+  });
 
-    test('RTL direction logic: Arabic should be RTL', () => {
-        const language = 'ar';
-        const isRTL = language === 'ar';
-        expect(isRTL).toBe(true);
-    });
+  test("Dutch language has LTR direction in config", () => {
+    const dutchLang = LANGUAGES.find((l) => l.code === "nl");
+    expect(dutchLang).toBeDefined();
+    expect(dutchLang?.dir).toBe("ltr");
+  });
 
-    test('RTL direction logic: English should be LTR', () => {
-        const language = 'en';
-        const isRTL = language === 'en' ? false : language === 'ar';
-        expect(isRTL).toBe(false);
-    });
+  test("French language has LTR direction in config", () => {
+    const frenchLang = LANGUAGES.find((l) => l.code === "fr");
+    expect(frenchLang).toBeDefined();
+    expect(frenchLang?.dir).toBe("ltr");
+  });
 
-    test('document direction can be set to RTL', () => {
-        document.documentElement.dir = 'rtl';
-        expect(documentDir).toBe('rtl');
-    });
+  test("RTL direction logic: Arabic should be RTL", () => {
+    const language = "ar";
+    const isRTL = language === "ar";
+    expect(isRTL).toBe(true);
+  });
 
-    test('document direction can be set to LTR', () => {
-        document.documentElement.dir = 'ltr';
-        expect(documentDir).toBe('ltr');
-    });
+  test("RTL direction logic: English should be LTR", () => {
+    const language = "en";
+    const isRTL = language === "en" ? false : language === "ar";
+    expect(isRTL).toBe(false);
+  });
 
-    test('document lang attribute can be set', () => {
-        document.documentElement.lang = 'ar';
-        expect(documentLang).toBe('ar');
-    });
+  test("document direction can be set to RTL", () => {
+    document.documentElement.dir = "rtl";
+    expect(documentDir).toBe("rtl");
+  });
+
+  test("document direction can be set to LTR", () => {
+    document.documentElement.dir = "ltr";
+    expect(documentDir).toBe("ltr");
+  });
+
+  test("document lang attribute can be set", () => {
+    document.documentElement.lang = "ar";
+    expect(documentLang).toBe("ar");
+  });
 });
-

@@ -1612,7 +1612,7 @@
   "exam.submit.warning": "Na het indienen kun je je antwoorden niet meer aanpassen. Weet je het zeker?",
   "exam.submit.confirm": "Examen indienen",
   "exam.submit.submitting": "Bezig met indienen...",
-  "admin.signs.form.url_placeholder": "https://example.com/sign.png of assets/traffic_signs/...",
+  "admin.signs.form.url_placeholder": "https://example.com/sign.png of http://localhost:8890/images/signs/...",
   "admin.signs.form.upload_formats_hint": "JPG · PNG · WEBP · max 5 MB",
   "admin.signs.form.preview_alt": "Voorbeeldafbeelding",
   "admin.signs.form.name_en_placeholder": "Dangerous curve to the left",

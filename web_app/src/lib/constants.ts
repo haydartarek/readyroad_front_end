@@ -94,9 +94,7 @@ const LEGACY_TRAFFIC_SIGN_CODE_ALIASES: Record<string, string> = {
   c43_90: "C43",
 };
 
-const LEGACY_TRAFFIC_SIGN_CODES_WITHOUT_DIRECT_REPLACEMENT = new Set([
-  "c28a",
-]);
+const LEGACY_TRAFFIC_SIGN_CODES_WITHOUT_DIRECT_REPLACEMENT = new Set(["c28a"]);
 
 export function resolveLegacyTrafficSignCode(code: string): string {
   const raw = code.trim();

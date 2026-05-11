@@ -45,7 +45,9 @@ export function AuthPageFrame({
                 />
               </div>
               <div>
-                <p className="text-xl font-black tracking-tight">{t("app.name")}</p>
+                <p className="text-xl font-black tracking-tight">
+                  {t("app.name")}
+                </p>
                 <p className="text-xs font-medium text-muted-foreground">
                   {t("auth.mobile_brand_caption")}
                 </p>

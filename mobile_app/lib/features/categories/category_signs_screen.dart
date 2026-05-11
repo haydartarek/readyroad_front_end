@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../shared/models/category.dart';
 import '../../shared/models/content_item.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/providers/language_provider.dart';
 import '../../core/providers/favorites_provider.dart';
 import '../../shared/services/content_service.dart';
@@ -24,14 +25,13 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
   bool _isLoading = true;
   String? _error;
 
-  String _convertToAssetPath(String imageUrl) {
-    // Handle both API formats:
-    // 1. /images/signs/... (web format)
-    // 2. assets/traffic_signs/... (backend format)
-    if (imageUrl.startsWith('/images/signs/')) {
-      return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  String _toBackendImageUrl(String imageUrl) {
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
     }
-    // Already in correct format for Flutter assets
+    if (imageUrl.startsWith('/images/signs/')) {
+      return '${ApiConstants.baseUrl}$imageUrl';
+    }
     return imageUrl;
   }
 
@@ -172,8 +172,8 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
                         color: Colors.grey[200],
                         child:
                             item.imageUrl != null && item.imageUrl!.isNotEmpty
-                            ? Image.asset(
-                                _convertToAssetPath(item.imageUrl!),
+                            ? Image.network(
+                                _toBackendImageUrl(item.imageUrl!),
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) {
                                   return const Icon(

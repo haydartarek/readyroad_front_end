@@ -1,68 +1,66 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { AlertCircle, CheckCircle, Loader2, XCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { convertToPublicImageUrl } from '@/lib/image-utils';
-import { useLanguage } from '@/contexts/language-context';
+import { useState } from "react";
+import Image from "next/image";
+import { AlertCircle, CheckCircle, Loader2, XCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { convertToPublicImageUrl } from "@/lib/image-utils";
+import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ───────────────────────────────────────────────
 
 export interface AnswerFeedback {
-  isCorrect:       boolean;
+  isCorrect: boolean;
   correctOptionId: string;
-  explanation?:    string;
+  explanation?: string;
 }
 
 interface QuestionOption {
-  id:        string;
-  text:      string;
+  id: string;
+  text: string;
   imageUrl?: string;
 }
 
 interface Question {
-  id:           string;
-  text:         string;
-  imageUrl?:    string;
-  options:      QuestionOption[];
+  id: string;
+  text: string;
+  imageUrl?: string;
+  options: QuestionOption[];
   categoryCode: string;
   categoryName: string;
 }
 
 interface PracticeQuestionCardProps {
-  question:       Question;
+  question: Question;
   onSubmitAnswer: (selectedOptionId: string) => Promise<AnswerFeedback>;
 }
 
 // ─── Helpers ─────────────────────────────────────────────
 
 function getOptionStyle(
-  optionId:       string,
+  optionId: string,
   selectedOption: string | null,
-  feedback:       AnswerFeedback | null,
-  isSubmitting:   boolean,
+  feedback: AnswerFeedback | null,
+  isSubmitting: boolean,
 ): string {
   if (!feedback) {
     if (isSubmitting && optionId === selectedOption)
-      return 'border-primary bg-primary/10 animate-pulse';
-    if (selectedOption === optionId)
-      return 'border-primary bg-primary/5';
-    return 'border-border hover:border-primary/50 hover:bg-muted';
+      return "border-primary bg-primary/10 animate-pulse";
+    if (selectedOption === optionId) return "border-primary bg-primary/5";
+    return "border-border hover:border-primary/50 hover:bg-muted";
   }
   if (optionId === feedback.correctOptionId)
-    return 'border-green-500 bg-green-50';
-  if (optionId === selectedOption)
-    return 'border-red-500 bg-red-50';
-  return 'border-border bg-muted';
+    return "border-green-500 bg-green-50";
+  if (optionId === selectedOption) return "border-red-500 bg-red-50";
+  return "border-border bg-muted";
 }
 
 function getOptionIcon(
-  optionId:       string,
+  optionId: string,
   selectedOption: string | null,
-  feedback:       AnswerFeedback | null,
-  isSubmitting:   boolean,
+  feedback: AnswerFeedback | null,
+  isSubmitting: boolean,
 ): React.ReactNode {
   if (isSubmitting && optionId === selectedOption)
     return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
@@ -76,19 +74,26 @@ function getOptionIcon(
 
 // ─── Sub-components ──────────────────────────────────────
 
-function StatusBadge({ isSubmitting, showResult }: { isSubmitting: boolean; showResult: boolean }) {
+function StatusBadge({
+  isSubmitting,
+  showResult,
+}: {
+  isSubmitting: boolean;
+  showResult: boolean;
+}) {
   const { t } = useLanguage();
   if (showResult) return null;
-  if (isSubmitting) return (
-    <Badge variant="secondary" className="whitespace-nowrap">
-      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-      {t('practice.submitting')}
-    </Badge>
-  );
+  if (isSubmitting)
+    return (
+      <Badge variant="secondary" className="whitespace-nowrap">
+        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+        {t("practice.submitting")}
+      </Badge>
+    );
   return (
     <Badge variant="secondary" className="whitespace-nowrap">
       <AlertCircle className="mr-1 h-3 w-3" />
-      {t('practice.select_answer')}
+      {t("practice.select_answer")}
     </Badge>
   );
 }
@@ -99,10 +104,10 @@ function SubmissionError() {
     <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-center">
       <AlertCircle className="mx-auto mb-2 h-6 w-6 text-amber-600" />
       <p className="mb-1 text-sm font-black text-amber-900">
-        {t('practice.submission_error')}
+        {t("practice.submission_error")}
       </p>
       <p className="text-xs text-amber-700">
-        {t('practice.submission_error_hint')}
+        {t("practice.submission_error_hint")}
       </p>
     </div>
   );
@@ -112,7 +117,9 @@ function ExplanationBox({ explanation }: { explanation: string }) {
   const { t } = useLanguage();
   return (
     <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-      <p className="mb-2 text-sm font-black text-blue-900">{t('practice.explanation')}</p>
+      <p className="mb-2 text-sm font-black text-blue-900">
+        {t("practice.explanation")}
+      </p>
       <p className="text-sm text-blue-800">{explanation}</p>
     </div>
   );
@@ -125,12 +132,12 @@ function ResultBadge({ isCorrect }: { isCorrect: boolean }) {
       {isCorrect ? (
         <Badge className="bg-green-600 px-4 py-2 text-base text-white">
           <CheckCircle className="mr-2 h-4 w-4" />
-          {t('practice.answer_correct')}
+          {t("practice.answer_correct")}
         </Badge>
       ) : (
         <Badge variant="destructive" className="px-4 py-2 text-base">
           <XCircle className="mr-2 h-4 w-4" />
-          {t('practice.answer_incorrect')}
+          {t("practice.answer_incorrect")}
         </Badge>
       )}
     </div>
@@ -139,12 +146,15 @@ function ResultBadge({ isCorrect }: { isCorrect: boolean }) {
 
 // ─── Main Component ──────────────────────────────────────
 
-export function PracticeQuestionCard({ question, onSubmitAnswer }: PracticeQuestionCardProps) {
+export function PracticeQuestionCard({
+  question,
+  onSubmitAnswer,
+}: PracticeQuestionCardProps) {
   const { t } = useLanguage();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [feedback,       setFeedback]       = useState<AnswerFeedback | null>(null);
-  const [isSubmitting,   setIsSubmitting]   = useState(false);
-  const [hasError,       setHasError]       = useState(false);
+  const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const showResult = feedback !== null;
 
@@ -187,13 +197,12 @@ export function PracticeQuestionCard({ question, onSubmitAnswer }: PracticeQuest
       </CardHeader>
 
       <CardContent className="space-y-4">
-
         {/* Question image */}
         {questionImageUrl && (
           <div className="overflow-hidden rounded-xl border border-border">
             <Image
               src={questionImageUrl}
-              alt={t('practice.question_image_alt')}
+              alt={t("practice.question_image_alt")}
               width={800}
               height={400}
               className="max-h-64 w-full bg-muted object-contain"
@@ -203,7 +212,7 @@ export function PracticeQuestionCard({ question, onSubmitAnswer }: PracticeQuest
 
         {/* Options */}
         <div className="space-y-3">
-          {question.options.map(option => {
+          {question.options.map((option) => {
             const optionImageUrl = option.imageUrl
               ? convertToPublicImageUrl(option.imageUrl)
               : null;
@@ -213,9 +222,12 @@ export function PracticeQuestionCard({ question, onSubmitAnswer }: PracticeQuest
                 key={option.id}
                 onClick={() => handleOptionClick(option.id)}
                 disabled={showResult || isSubmitting}
-                className={`w-full rounded-xl border-2 p-4 text-left transition-all ${
-                  getOptionStyle(option.id, selectedOption, feedback, isSubmitting)
-                } ${showResult || isSubmitting ? 'cursor-default' : 'cursor-pointer'}`}
+                className={`w-full rounded-xl border-2 p-4 text-left transition-all ${getOptionStyle(
+                  option.id,
+                  selectedOption,
+                  feedback,
+                  isSubmitting,
+                )} ${showResult || isSubmitting ? "cursor-default" : "cursor-pointer"}`}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-1">
@@ -234,7 +246,12 @@ export function PracticeQuestionCard({ question, onSubmitAnswer }: PracticeQuest
                       <p className="font-semibold">{option.text}</p>
                     )}
                   </div>
-                  {getOptionIcon(option.id, selectedOption, feedback, isSubmitting)}
+                  {getOptionIcon(
+                    option.id,
+                    selectedOption,
+                    feedback,
+                    isSubmitting,
+                  )}
                 </div>
               </button>
             );
@@ -251,7 +268,6 @@ export function PracticeQuestionCard({ question, onSubmitAnswer }: PracticeQuest
 
         {/* Result */}
         {showResult && <ResultBadge isCorrect={feedback!.isCorrect} />}
-
       </CardContent>
     </Card>
   );

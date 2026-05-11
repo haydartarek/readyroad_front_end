@@ -54,7 +54,12 @@ const NAV_ITEMS = [
   { name: "nav.practice", href: ROUTES.PRACTICE },
 ] as const;
 
-const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
+const AUTH_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+];
 
 function getRoleLabelKey(role?: string) {
   if (role === "ADMIN") return "nav.role_admin";
@@ -136,7 +141,7 @@ export function Navbar() {
 
   const handleLogout = useCallback(() => {
     setMobileMenuOpen(false);
-    logout();
+    void logout();
   }, [logout]);
 
   const handleSearchKeyDown = useCallback(
@@ -172,7 +177,11 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/92 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto flex h-[74px] w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" prefetch={false} className="flex shrink-0 items-center gap-3">
+        <Link
+          href="/"
+          prefetch={false}
+          className="flex shrink-0 items-center gap-3"
+        >
           <Image
             src="/images/logo.png"
             alt="ReadyRoad Logo"
@@ -202,7 +211,10 @@ export function Navbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <div ref={searchContainer} className="relative hidden items-center xl:flex">
+          <div
+            ref={searchContainer}
+            className="relative hidden items-center xl:flex"
+          >
             <Search
               className={cn(
                 "pointer-events-none absolute z-10 h-4 w-4 text-muted-foreground",
@@ -375,7 +387,10 @@ export function Navbar() {
                   <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-52">
+              <DropdownMenuContent
+                align={isRTL ? "start" : "end"}
+                className="w-52"
+              >
                 {LANGUAGES.map((lang) => (
                   <DropdownMenuItem
                     key={lang.code}
@@ -401,14 +416,18 @@ export function Navbar() {
                 asChild
                 className="rounded-full px-4 font-semibold"
               >
-                <Link href={ROUTES.LOGIN} prefetch={false}>{t("auth.login")}</Link>
+                <Link href={ROUTES.LOGIN} prefetch={false}>
+                  {t("auth.login")}
+                </Link>
               </Button>
               <Button
                 size="sm"
                 asChild
                 className="rounded-full px-5 font-semibold shadow-lg shadow-primary/20"
               >
-                <Link href={ROUTES.REGISTER} prefetch={false}>{t("auth.register")}</Link>
+                <Link href={ROUTES.REGISTER} prefetch={false}>
+                  {t("auth.register")}
+                </Link>
               </Button>
             </div>
           ) : null}
@@ -431,7 +450,9 @@ export function Navbar() {
                 overlayClassName="bg-secondary/35 backdrop-blur-sm supports-[backdrop-filter]:bg-secondary/20"
                 className="left-0 top-[74px] h-[calc(100dvh-74px)] max-h-[calc(100dvh-74px)] w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-x-0 border-b border-border/60 bg-background/90 p-0 shadow-2xl backdrop-blur-2xl supports-[backdrop-filter]:bg-background/78"
               >
-                <DialogTitle className="sr-only">{t("nav.open_menu")}</DialogTitle>
+                <DialogTitle className="sr-only">
+                  {t("nav.open_menu")}
+                </DialogTitle>
                 <DialogDescription className="sr-only">
                   {t("nav.mobile_menu_description")}
                 </DialogDescription>
@@ -535,7 +556,9 @@ export function Navbar() {
                             {displayName}
                           </p>
                           <p className="truncate text-xs text-muted-foreground">
-                            {isStaff ? roleLabel : user.email ?? t("nav.profile")}
+                            {isStaff
+                              ? roleLabel
+                              : (user.email ?? t("nav.profile"))}
                           </p>
                         </div>
                       </div>

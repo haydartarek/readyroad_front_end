@@ -1612,7 +1612,7 @@
   "exam.submit.warning": "Après l’envoi, vous ne pourrez plus modifier vos réponses. Confirmer ?",
   "exam.submit.confirm": "Soumettre l’examen",
   "exam.submit.submitting": "Envoi en cours...",
-  "admin.signs.form.url_placeholder": "https://example.com/sign.png ou assets/traffic_signs/...",
+  "admin.signs.form.url_placeholder": "https://example.com/sign.png ou http://localhost:8890/images/signs/...",
   "admin.signs.form.upload_formats_hint": "JPG · PNG · WEBP · max 5 Mo",
   "admin.signs.form.preview_alt": "Aperçu de l’image",
   "admin.signs.form.name_en_placeholder": "Dangerous curve to the left",

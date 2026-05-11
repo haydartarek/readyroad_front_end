@@ -1,16 +1,16 @@
 // Lesson Service — reads lessons from the backend REST API (database-backed).
 // No direct JSON loading; the frontend is a thin client.
 
-import apiClient from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/constants';
-import type { Lesson, LessonDetail } from '@/lib/types';
+import apiClient from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/constants";
+import type { Lesson, LessonDetail } from "@/lib/types";
 
 export interface LessonProgress {
   lessonId: number;
   pagesRead: number;
   totalPages?: number;
   currentPage?: number;
-  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
   completed: boolean;
   completedAt?: string | null;
   lastSeenAt?: string | null;
@@ -42,7 +42,9 @@ export async function searchLessons(query: string): Promise<Lesson[]> {
 
 /** Get total active lesson count. */
 export async function getLessonsCount(): Promise<number> {
-  const { data } = await apiClient.get<{ count: number }>(API_ENDPOINTS.LESSONS.COUNT);
+  const { data } = await apiClient.get<{ count: number }>(
+    API_ENDPOINTS.LESSONS.COUNT,
+  );
   return data.count;
 }
 

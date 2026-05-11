@@ -176,12 +176,8 @@ function AssessmentCatalog({
           <PageHeroEyebrow>
             {t("assessment.badge_levels", { count: 3 })}
           </PageHeroEyebrow>
-          <PageHeroTitle>
-            {t("assessment.title")}
-          </PageHeroTitle>
-          <PageHeroDescription>
-            {t("assessment.subtitle")}
-          </PageHeroDescription>
+          <PageHeroTitle>{t("assessment.title")}</PageHeroTitle>
+          <PageHeroDescription>{t("assessment.subtitle")}</PageHeroDescription>
         </div>
       </PageHeroSurface>
 
@@ -214,11 +210,6 @@ export default function AssessmentPage() {
   const { language, t, isRTL } = useLanguage();
 
   return (
-    <AssessmentCatalog
-      key={language}
-      language={language}
-      t={t}
-      isRTL={isRTL}
-    />
+    <AssessmentCatalog key={language} language={language} t={t} isRTL={isRTL} />
   );
 }

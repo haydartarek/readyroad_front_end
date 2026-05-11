@@ -127,13 +127,9 @@ function CategoryContent({
             {t("assessment.back_to_categories")}
           </Link>
           <div className="space-y-1">
-            <PageHeroTitle>
-              {category?.name ?? slug}
-            </PageHeroTitle>
+            <PageHeroTitle>{category?.name ?? slug}</PageHeroTitle>
             {category?.description && (
-              <PageHeroDescription>
-                {category.description}
-              </PageHeroDescription>
+              <PageHeroDescription>{category.description}</PageHeroDescription>
             )}
           </div>
           <div className="flex gap-2 pt-1">

@@ -8,56 +8,90 @@
  * ever having access to the raw JWT.
  */
 
-import { NextResponse } from 'next/server';
-import { getBackendUrl, getAuthTokenFromCookie } from '@/lib/server/auth';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  AUTH_COOKIE_NAME,
+  CSRF_COOKIE_NAME,
+  getBackendUrl,
+  getAuthTokenFromCookie,
+  getExpiredAuthCookieOptions,
+  getExpiredCsrfCookieOptions,
+} from "@/lib/server/auth";
 
-export async function GET() {
+function unauthenticatedResponse(request: NextRequest) {
+  const response = NextResponse.json({
+    authenticated: false,
+    user: null,
+  });
+
+  response.cookies.set(
+    AUTH_COOKIE_NAME,
+    "",
+    getExpiredAuthCookieOptions(request),
+  );
+  response.cookies.set(
+    CSRF_COOKIE_NAME,
+    "",
+    getExpiredCsrfCookieOptions(request),
+  );
+
+  return response;
+}
+
+export async function GET(request: NextRequest) {
   const token = await getAuthTokenFromCookie();
 
   if (!token) {
-    return NextResponse.json(
-      { message: 'Not authenticated' },
-      { status: 401 }
-    );
+    return unauthenticatedResponse(request);
   }
 
   try {
     const backendResponse = await fetch(`${getBackendUrl()}/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
+        Accept: "application/json",
       },
       // Don't cache — always check fresh auth state
-      cache: 'no-store',
+      cache: "no-store",
     });
+
+    if (backendResponse.status === 401 || backendResponse.status === 403) {
+      return unauthenticatedResponse(request);
+    }
 
     if (!backendResponse.ok) {
       return NextResponse.json(
-        { message: 'Authentication failed' },
-        { status: backendResponse.status }
+        { message: "Authentication check failed" },
+        { status: backendResponse.status },
       );
     }
 
     const userData = await backendResponse.json();
-    return NextResponse.json(userData);
+    return NextResponse.json({
+      authenticated: true,
+      user: userData,
+    });
   } catch (error) {
     const isConnectionError =
       error instanceof TypeError &&
-      (error.message.includes('fetch failed') ||
-       error.message.includes('ECONNREFUSED'));
+      (error.message.includes("fetch failed") ||
+        error.message.includes("ECONNREFUSED"));
 
     if (isConnectionError) {
-      console.warn('[BFF /api/auth/me] Backend unreachable:', (error as Error).message);
+      console.warn(
+        "[BFF /api/auth/me] Backend unreachable:",
+        (error as Error).message,
+      );
       return NextResponse.json(
-        { message: 'Backend service unavailable' },
-        { status: 503 }
+        { message: "Backend service unavailable" },
+        { status: 503 },
       );
     }
 
-    console.error('[BFF /api/auth/me] Unexpected error:', error);
+    console.error("[BFF /api/auth/me] Unexpected error:", error);
     return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
+      { message: "Internal server error" },
+      { status: 500 },
     );
   }
 }

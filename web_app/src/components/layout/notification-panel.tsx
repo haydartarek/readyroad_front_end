@@ -206,14 +206,21 @@ export function NotificationPanel() {
   }, [unreadCount, markAllRead]);
 
   // ── Mark one as read locally + on server ─────────────
-  const handleItemClick = useCallback(async (notif: AppNotification) => {
-    if (!notif.isRead) {
-      setItems((prev) =>
-        prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n)),
-      );
-      await markNotificationAsRead(notif.id).catch(() => {});
-    }
-  }, []);
+  const handleItemClick = useCallback(
+    async (notif: AppNotification, closePanel = false) => {
+      if (closePanel) {
+        setIsOpen(false);
+      }
+
+      if (!notif.isRead) {
+        setItems((prev) =>
+          prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n)),
+        );
+        await markNotificationAsRead(notif.id).catch(() => {});
+      }
+    },
+    [],
+  );
 
   const badgeCount = unreadCount > 99 ? "99+" : unreadCount;
 
@@ -344,9 +351,16 @@ export function NotificationPanel() {
                       className={cn(
                         "flex gap-3 rounded-[1.2rem] border border-transparent px-3.5 py-3 transition-all duration-200",
                         "cursor-pointer hover:border-primary/10 hover:bg-primary/[0.04]",
-                        !notif.isRead && "border-primary/10 bg-primary/[0.06] shadow-sm",
+                        !notif.isRead &&
+                          "border-primary/10 bg-primary/[0.06] shadow-sm",
                       )}
-                      onClick={() => handleItemClick(notif)}
+                      onClick={
+                        notif.link
+                          ? undefined
+                          : () => {
+                              void handleItemClick(notif);
+                            }
+                      }
                     >
                       {/* Icon */}
                       <div
@@ -397,7 +411,9 @@ export function NotificationPanel() {
                       {notif.link ? (
                         <Link
                           href={notif.link}
-                          onClick={() => handleItemClick(notif)}
+                          onClick={() => {
+                            void handleItemClick(notif, true);
+                          }}
                         >
                           {content}
                         </Link>

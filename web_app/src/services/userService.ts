@@ -1,16 +1,16 @@
-import { apiClient, isServiceUnavailable } from '@/lib/api';
-import { API_ENDPOINTS } from '@/lib/constants';
+import { apiClient, isServiceUnavailable } from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/constants";
 
 // ─── Types ───────────────────────────────────────────────
 
 export interface UserProfile {
-  id:         number;
-  userId?:    number; // Keep for backward compat
-  username:   string;
-  email:      string;
-  fullName:   string;
-  role:       'USER' | 'MODERATOR' | 'ADMIN';
-  isActive:   boolean;
+  id: number;
+  userId?: number; // Keep for backward compat
+  username: string;
+  email: string;
+  fullName: string;
+  role: "USER" | "MODERATOR" | "ADMIN";
+  isActive: boolean;
   createdAt?: string;
   lastLogin?: string;
 }
@@ -20,38 +20,38 @@ export interface NotificationCount {
 }
 
 export interface AppNotification {
-  id:             number;
-  type:           string;   // EXAM_PASSED | EXAM_FAILED | WEAK_AREA | STREAK_ACHIEVED | SYSTEM …
-  title:          string;
-  message:        string;
-  messageKey?:    string;   // i18n key for translated message (if set by backend)
-  messageParams?: string;   // JSON string of interpolation params, e.g. {"score":43,"total":50}
-  link?:          string;
-  isRead:         boolean;
-  createdAt:      string;   // ISO-8601 Instant
-  readAt?:        string;
+  id: number;
+  type: string; // EXAM_PASSED | EXAM_FAILED | WEAK_AREA | STREAK_ACHIEVED | SYSTEM …
+  title: string;
+  message: string;
+  messageKey?: string; // i18n key for translated message (if set by backend)
+  messageParams?: string; // JSON string of interpolation params, e.g. {"score":43,"total":50}
+  link?: string;
+  isRead: boolean;
+  createdAt: string; // ISO-8601 Instant
+  readAt?: string;
 }
 
 export interface UserStats {
-  totalExams:             number;
-  passedExams:            number;
-  averageScore:           number;
+  totalExams: number;
+  passedExams: number;
+  averageScore: number;
   totalPracticeQuestions: number;
-  correctAnswers:         number;
-  accuracy:               number;
+  correctAnswers: number;
+  accuracy: number;
 }
 
 export interface UpdateProfileRequest {
   fullName?: string;
-  email?:    string;
+  email?: string;
 }
 
 // ─── Constants ───────────────────────────────────────────
 
-const ROLE_HIERARCHY: Record<UserProfile['role'], number> = {
-  ADMIN:     3,
+const ROLE_HIERARCHY: Record<UserProfile["role"], number> = {
+  ADMIN: 3,
   MODERATOR: 2,
-  USER:      1,
+  USER: 1,
 };
 
 // ─── Service ─────────────────────────────────────────────
@@ -63,7 +63,9 @@ export async function getCurrentUser(): Promise<UserProfile> {
 }
 
 /** GET /api/users/me/notifications/unread-count */
-export async function getUnreadNotificationCount(signal?: AbortSignal): Promise<number> {
+export async function getUnreadNotificationCount(
+  signal?: AbortSignal,
+): Promise<number> {
   try {
     const response = await apiClient.get<NotificationCount>(
       API_ENDPOINTS.USERS.NOTIFICATIONS_COUNT,
@@ -73,7 +75,8 @@ export async function getUnreadNotificationCount(signal?: AbortSignal): Promise<
     return response.data.unreadCount;
   } catch (error) {
     if (signal?.aborted) return 0;
-    const status = (error as { response?: { status?: number } }).response?.status;
+    const status = (error as { response?: { status?: number } }).response
+      ?.status;
     if (status === 401 || status === 403) throw error;
     return 0;
   }
@@ -87,7 +90,8 @@ export async function getNotifications(): Promise<AppNotification[]> {
     );
     return response.data ?? [];
   } catch (error) {
-    const status = (error as { response?: { status?: number } }).response?.status;
+    const status = (error as { response?: { status?: number } }).response
+      ?.status;
     if (status === 401 || status === 403) throw error;
     return [];
   }
@@ -106,7 +110,7 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 /** GET /api/users/me/stats — returns null if endpoint is unavailable */
 export async function getUserStats(): Promise<UserStats | null> {
   try {
-    const response = await apiClient.get<UserStats>('/users/me/stats');
+    const response = await apiClient.get<UserStats>("/users/me/stats");
     return response.data;
   } catch (error) {
     if (isServiceUnavailable(error)) throw error;
@@ -115,24 +119,32 @@ export async function getUserStats(): Promise<UserStats | null> {
 }
 
 /** PUT /api/users/me */
-export async function updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {
-  const response = await apiClient.put<UserProfile>(API_ENDPOINTS.USERS.ME, data);
+export async function updateProfile(
+  data: UpdateProfileRequest,
+): Promise<UserProfile> {
+  const response = await apiClient.put<UserProfile>(
+    API_ENDPOINTS.USERS.ME,
+    data,
+  );
   return response.data;
 }
 
 // ─── Role Helpers ────────────────────────────────────────
 
-export function hasRole(user: UserProfile | null, role: UserProfile['role']): boolean {
+export function hasRole(
+  user: UserProfile | null,
+  role: UserProfile["role"],
+): boolean {
   if (!user) return false;
   return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[role];
 }
 
 export function isAdmin(user: UserProfile | null): boolean {
-  return user?.role === 'ADMIN';
+  return user?.role === "ADMIN";
 }
 
 export function isModerator(user: UserProfile | null): boolean {
-  return hasRole(user, 'MODERATOR');
+  return hasRole(user, "MODERATOR");
 }
 
 // ─── Service Object ──────────────────────────────────────

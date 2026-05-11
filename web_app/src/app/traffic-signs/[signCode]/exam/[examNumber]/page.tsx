@@ -124,7 +124,9 @@ export default function ExamPage() {
     setLocked(false);
 
     Promise.all([
-      apiClient.get<TrafficSign>(API_ENDPOINTS.TRAFFIC_SIGNS.DETAIL(requestedCode)),
+      apiClient.get<TrafficSign>(
+        API_ENDPOINTS.TRAFFIC_SIGNS.DETAIL(requestedCode),
+      ),
       getExamQuestions(requestedCode, examNum),
     ])
       .then(([signRes, exam]) => {
@@ -401,7 +403,9 @@ export default function ExamPage() {
                       ? t("sign_quiz.exam.passed")
                       : t("sign_quiz.exam.failed")}
                   </Badge>
-                  <PageHeroDescription className="text-primary">{signName}</PageHeroDescription>
+                  <PageHeroDescription className="text-primary">
+                    {signName}
+                  </PageHeroDescription>
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                     {t("sign_quiz.exam.title").replace("{n}", String(examNum))}
                   </p>
@@ -513,91 +517,96 @@ export default function ExamPage() {
               >
                 <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
                   {result.questionResults.map((qRes, idx) => {
-                const q = questions.find((q) => q.id === qRes.questionId);
-                const correctText =
-                  (qRes[
-                    `correctText${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes
-                  ] as string) ||
-                  qRes.correctTextEn ||
-                  "";
-                const expl =
-                  (qRes[
-                    `explanation${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes
-                  ] as string) ||
-                  qRes.explanationEn ||
-                  "";
+                    const q = questions.find((q) => q.id === qRes.questionId);
+                    const correctText =
+                      (qRes[
+                        `correctText${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes
+                      ] as string) ||
+                      qRes.correctTextEn ||
+                      "";
+                    const expl =
+                      (qRes[
+                        `explanation${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes
+                      ] as string) ||
+                      qRes.explanationEn ||
+                      "";
 
-                return (
-                  <Card
-                    key={qRes.questionId}
-                    className={cn(
-                      "rounded-[1.35rem] border shadow-sm",
-                      !qRes.answered
-                        ? "border-muted"
-                        : qRes.isCorrect
-                          ? "border-green-300"
-                        : "border-red-300",
-                    )}
-                  >
-                    <CardContent className="space-y-3 px-5 py-5">
-                      <div className="flex items-start gap-3">
-                        <div className="relative h-11 w-11 rounded-xl bg-white border border-border/40 p-1.5 flex items-center justify-center flex-shrink-0">
-                          <SignImage
-                            src={resolveTrafficSignImage(sign)}
-                            alt={sign.nameEn}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-xs text-muted-foreground font-semibold">
-                              {t("sign_quiz.exam.question_x").replace(
-                                "{n}",
-                                String(idx + 1),
-                              )}
-                            </span>
-                            {q && (
-                              <Badge
-                                className={cn(
-                                  "border text-xs",
-                                  DIFF_COLORS[q.difficulty] ||
-                                    "bg-muted text-foreground border-border",
+                    return (
+                      <Card
+                        key={qRes.questionId}
+                        className={cn(
+                          "rounded-[1.35rem] border shadow-sm",
+                          !qRes.answered
+                            ? "border-muted"
+                            : qRes.isCorrect
+                              ? "border-green-300"
+                              : "border-red-300",
+                        )}
+                      >
+                        <CardContent className="space-y-3 px-5 py-5">
+                          <div className="flex items-start gap-3">
+                            <div className="relative h-11 w-11 rounded-xl bg-white border border-border/40 p-1.5 flex items-center justify-center flex-shrink-0">
+                              <SignImage
+                                src={resolveTrafficSignImage(sign)}
+                                alt={sign.nameEn}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="text-xs text-muted-foreground font-semibold">
+                                  {t("sign_quiz.exam.question_x").replace(
+                                    "{n}",
+                                    String(idx + 1),
+                                  )}
+                                </span>
+                                {q && (
+                                  <Badge
+                                    className={cn(
+                                      "border text-xs",
+                                      DIFF_COLORS[q.difficulty] ||
+                                        "bg-muted text-foreground border-border",
+                                    )}
+                                  >
+                                    {t(
+                                      `sign_quiz.${q.difficulty.toLowerCase()}`,
+                                    )}
+                                  </Badge>
                                 )}
-                              >
-                                {t(`sign_quiz.${q.difficulty.toLowerCase()}`)}
-                              </Badge>
-                            )}
-                            {!qRes.answered ? (
-                              <Badge variant="outline" className="text-xs">
-                                {t("sign_quiz.exam.not_answered")}
-                              </Badge>
-                            ) : qRes.isCorrect ? (
-                              <Badge className="bg-green-100 text-green-800 border-green-200 border text-xs">
-                                {t("sign_quiz.exam.correct_label")}
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs">
-                                {t("sign_quiz.exam.wrong_label")}
-                              </Badge>
-                            )}
+                                {!qRes.answered ? (
+                                  <Badge variant="outline" className="text-xs">
+                                    {t("sign_quiz.exam.not_answered")}
+                                  </Badge>
+                                ) : qRes.isCorrect ? (
+                                  <Badge className="bg-green-100 text-green-800 border-green-200 border text-xs">
+                                    {t("sign_quiz.exam.correct_label")}
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs">
+                                    {t("sign_quiz.exam.wrong_label")}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm font-semibold leading-6">
+                                {q ? qText(q, lang) : `Question ${idx + 1}`}
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-sm font-semibold leading-6">
-                            {q ? qText(q, lang) : `Question ${idx + 1}`}
-                          </p>
-                        </div>
-                      </div>
 
-                      {correctText && (
-                        <p className="text-sm text-green-700 font-medium">
-                          ✓ {t("sign_quiz.exam.correct_answer")}: {correctText}
-                        </p>
-                      )}
-                      {expl && (
-                        <p className="text-xs text-muted-foreground">{expl}</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                          {correctText && (
+                            <p className="text-sm text-green-700 font-medium">
+                              ✓ {t("sign_quiz.exam.correct_answer")}:{" "}
+                              {correctText}
+                            </p>
+                          )}
+                          {expl && (
+                            <p className="text-xs text-muted-foreground">
+                              {expl}
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </PageSectionSurface>
             </div>
@@ -669,7 +678,7 @@ export default function ExamPage() {
         media={
           questionImageUrl ? (
             <div className="rounded-2xl border border-border/50 bg-background/70 p-2 shadow-sm">
-              <div className="relative h-[6.5rem] w-[6.5rem] md:h-28 md:w-28">
+              <div className="relative h-[8.25rem] w-[8.25rem] md:h-36 md:w-36">
                 <SignImage
                   src={questionImageUrl}
                   alt={sign.nameEn}

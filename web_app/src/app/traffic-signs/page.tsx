@@ -30,9 +30,9 @@ type Lang = "en" | "ar" | "nl" | "fr";
 
 async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   try {
-    const response = await apiClient.get<TrafficSign[] | { signs: TrafficSign[] }>(
-      API_ENDPOINTS.TRAFFIC_SIGNS.LIST,
-    );
+    const response = await apiClient.get<
+      TrafficSign[] | { signs: TrafficSign[] }
+    >(API_ENDPOINTS.TRAFFIC_SIGNS.LIST);
     const data = response.data;
     return Array.isArray(data) ? data : (data.signs ?? []);
   } catch (error) {
@@ -132,7 +132,9 @@ function TrafficSignsContent() {
       });
 
       const query = next.toString();
-      router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+      router.replace(`${pathname}${query ? `?${query}` : ""}`, {
+        scroll: false,
+      });
     },
     [pathname, router, searchParams],
   );
@@ -153,13 +155,13 @@ function TrafficSignsContent() {
         label: t("traffic_signs.category_all_signs"),
         count: allSigns.length,
       },
-      ...TRAFFIC_SIGN_GROUP_ORDER.filter((group) => groupedCounts[group] > 0).map(
-        (group) => ({
-          value: group,
-          label: getGroupInfo(group).info.title[lang],
-          count: groupedCounts[group],
-        }),
-      ),
+      ...TRAFFIC_SIGN_GROUP_ORDER.filter(
+        (group) => groupedCounts[group] > 0,
+      ).map((group) => ({
+        value: group,
+        label: getGroupInfo(group).info.title[lang],
+        count: groupedCounts[group],
+      })),
     ],
     [allSigns.length, groupedCounts, lang, t],
   );
@@ -203,12 +205,12 @@ function TrafficSignsContent() {
       (groups[group] ??= []).push(sign);
     }
 
-    return TRAFFIC_SIGN_GROUP_ORDER.filter((group) => groups[group]?.length).map(
-      (group) => ({
-        ...getGroupInfo(group),
-        signs: groups[group],
-      }),
-    );
+    return TRAFFIC_SIGN_GROUP_ORDER.filter(
+      (group) => groups[group]?.length,
+    ).map((group) => ({
+      ...getGroupInfo(group),
+      signs: groups[group],
+    }));
   }, [filteredSigns]);
 
   const activeGroup = useMemo(
@@ -328,7 +330,9 @@ function TrafficSignsContent() {
               <span
                 className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-[11px] font-semibold ${activeGroup.style.chip}`}
               >
-                {t("traffic_signs.section_count", { count: filteredSigns.length })}
+                {t("traffic_signs.section_count", {
+                  count: filteredSigns.length,
+                })}
               </span>
             </div>
           </PageSectionSurface>

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useRef, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Target, SignpostBig, FileText, ArrowRight } from 'lucide-react';
-import { useLanguage } from '@/contexts/language-context';
-import { EXAM_RULES } from '@/lib/constants';
+import { useRef, useEffect, useState } from "react";
+import Link from "next/link";
+import { Target, SignpostBig, FileText, ArrowRight } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
+import { EXAM_RULES } from "@/lib/constants";
 
 interface Step {
   number: string;
@@ -20,32 +20,33 @@ interface Step {
 
 const OBSERVER_THRESHOLD = 0.2;
 const STAGGER_MS = 120;
-const HEADING_ID = 'how-it-works-heading';
+const HEADING_ID = "how-it-works-heading";
 
 const STEP_BASES = [
   {
-    number: '01',
-    href: '/practice',
+    number: "01",
+    href: "/practice",
     icon: Target,
-    iconWrap: 'border-secondary/20 bg-secondary/10 ring-1 ring-secondary/10',
-    iconTone: 'text-secondary',
-    glow: 'bg-secondary/10',
+    iconWrap: "border-secondary/20 bg-secondary/10 ring-1 ring-secondary/10",
+    iconTone: "text-secondary",
+    glow: "bg-secondary/10",
   },
   {
-    number: '02',
-    href: '/traffic-signs',
+    number: "02",
+    href: "/traffic-signs",
     icon: SignpostBig,
-    iconWrap: 'border-emerald-500/20 bg-emerald-500/10 ring-1 ring-emerald-500/10',
-    iconTone: 'text-emerald-600 dark:text-emerald-400',
-    glow: 'bg-emerald-500/10',
+    iconWrap:
+      "border-emerald-500/20 bg-emerald-500/10 ring-1 ring-emerald-500/10",
+    iconTone: "text-emerald-600 dark:text-emerald-400",
+    glow: "bg-emerald-500/10",
   },
   {
-    number: '03',
-    href: '/exam',
+    number: "03",
+    href: "/exam",
     icon: FileText,
-    iconWrap: 'border-primary/20 bg-primary/10 ring-1 ring-primary/10',
-    iconTone: 'text-primary',
-    glow: 'bg-primary/10',
+    iconWrap: "border-primary/20 bg-primary/10 ring-1 ring-primary/10",
+    iconTone: "text-primary",
+    glow: "bg-primary/10",
   },
 ] as const;
 
@@ -63,7 +64,9 @@ export function HowItWorksSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const hasTriggered = useRef(false);
   const [visible, setVisible] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
 
   const steps = buildSteps();
@@ -101,10 +104,10 @@ export function HowItWorksSection() {
             id={HEADING_ID}
             className="mb-3 text-balance text-2xl font-extrabold tracking-tight text-secondary md:text-3xl lg:text-4xl"
           >
-            {t('home.how.title')}
+            {t("home.how.title")}
           </h2>
           <p className="mx-auto max-w-xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
-            {t('home.how.subtitle')}
+            {t("home.how.subtitle")}
           </p>
         </div>
 
@@ -116,12 +119,16 @@ export function HowItWorksSection() {
               <article
                 key={step.number}
                 className={[
-                  'group relative flex flex-col overflow-hidden rounded-3xl border bg-card/80 p-6 shadow-sm backdrop-blur',
-                  'transition-all duration-500 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20',
-                  'lg:p-8',
-                  visible ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0',
-                ].join(' ')}
-                style={{ transitionDelay: visible ? `${i * STAGGER_MS}ms` : '0ms' }}
+                  "group relative flex flex-col overflow-hidden rounded-3xl border bg-card/80 p-6 shadow-sm backdrop-blur",
+                  "transition-all duration-500 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20",
+                  "lg:p-8",
+                  visible
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-6 opacity-0",
+                ].join(" ")}
+                style={{
+                  transitionDelay: visible ? `${i * STAGGER_MS}ms` : "0ms",
+                }}
               >
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/35 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                 <div className="pointer-events-none absolute inset-0 ring-1 ring-border/60" />
@@ -133,19 +140,22 @@ export function HowItWorksSection() {
 
                   <div
                     className={[
-                      'flex h-12 w-12 items-center justify-center rounded-2xl border shadow-sm transition-transform duration-200 group-hover:scale-[1.03]',
+                      "flex h-12 w-12 items-center justify-center rounded-2xl border shadow-sm transition-transform duration-200 group-hover:scale-[1.03]",
                       step.iconWrap,
-                    ].join(' ')}
+                    ].join(" ")}
                   >
-                    <Icon className={['h-5 w-5', step.iconTone].join(' ')} aria-hidden />
+                    <Icon
+                      className={["h-5 w-5", step.iconTone].join(" ")}
+                      aria-hidden
+                    />
                   </div>
                 </div>
 
-                <h3 className="mb-2 text-lg font-extrabold tracking-tight text-secondary">
+                <h3 className="mb-2 text-base font-semibold tracking-tight text-secondary sm:text-lg">
                   {t(step.titleKey)}
                 </h3>
 
-                <p className="mb-5 flex-1 text-sm leading-relaxed text-muted-foreground">
+                <p className="mb-5 flex-1 text-sm font-medium leading-6 text-muted-foreground">
                   {t(step.descKey, {
                     questions: EXAM_RULES.TOTAL_QUESTIONS,
                     minutes: EXAM_RULES.DURATION_MINUTES,
@@ -159,18 +169,20 @@ export function HowItWorksSection() {
                   {t(step.ctaKey)}
                   <ArrowRight
                     className={[
-                      'h-4 w-4 transition-transform',
-                      isRTL ? 'rotate-180 group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5',
-                    ].join(' ')}
+                      "h-4 w-4 transition-transform",
+                      isRTL
+                        ? "rotate-180 group-hover:-translate-x-0.5"
+                        : "group-hover:translate-x-0.5",
+                    ].join(" ")}
                     aria-hidden
                   />
                 </Link>
 
                 <div
                   className={[
-                    'pointer-events-none absolute -bottom-12 -end-12 h-40 w-40 rounded-full blur-3xl opacity-0 transition-opacity group-hover:opacity-100',
+                    "pointer-events-none absolute -bottom-12 -end-12 h-40 w-40 rounded-full blur-3xl opacity-0 transition-opacity group-hover:opacity-100",
                     step.glow,
-                  ].join(' ')}
+                  ].join(" ")}
                 />
               </article>
             );

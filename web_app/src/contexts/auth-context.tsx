@@ -73,7 +73,7 @@ interface AuthContextType {
     payload: RegisterPayload,
     redirectPath?: string,
   ) => Promise<LoginResult>;
-  logout: () => void;
+  logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
 }
 
@@ -103,10 +103,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
     username: (raw.username as string) ?? "",
     email: (raw.email as string) ?? "",
     fullName,
-    firstName:
-      (raw.firstName as string) ||
-      nameParts[0] ||
-      undefined,
+    firstName: (raw.firstName as string) || nameParts[0] || undefined,
     lastName:
       (raw.lastName as string) ||
       (nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined),
@@ -164,7 +161,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch("/api/auth/me", { cache: "no-store" });
 
       if (response.ok) {
-        const raw = (await response.json()) as Record<string, unknown>;
+        const body = (await response.json()) as Record<string, unknown>;
+
+        if (body.authenticated === false) {
+          setUser(null);
+          setServiceUnavailable(false);
+          return;
+        }
+
+        const raw =
+          body.user && typeof body.user === "object"
+            ? (body.user as Record<string, unknown>)
+            : body;
+
         // Use normalizeUser so firstName is extracted from fullName on page refresh
         // (same normalization applied during login)
         setUser(normalizeUser(raw));
@@ -228,7 +237,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     url.searchParams.delete("authProvider");
     url.searchParams.delete("authStatus");
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    window.history.replaceState(
+      {},
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
   }, [t, user]);
 
   const login = useCallback(

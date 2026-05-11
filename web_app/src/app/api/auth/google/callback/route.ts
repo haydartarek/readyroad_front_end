@@ -58,8 +58,12 @@ function buildRedirectUrl(
 
   const successTarget =
     mode === "link"
-      ? (isValidReturnTo(returnTo) ? returnTo : "/dashboard?section=profile")
-      : (isValidReturnTo(returnTo) ? returnTo : "/dashboard");
+      ? isValidReturnTo(returnTo)
+        ? returnTo
+        : "/dashboard?section=profile"
+      : isValidReturnTo(returnTo)
+        ? returnTo
+        : "/dashboard";
 
   const target = type === "success" ? successTarget : fallback;
   const redirectUrl = new URL(target, frontendUrl);
@@ -89,7 +93,9 @@ export async function GET(request: NextRequest) {
       request,
       mode,
       "error",
-      providerError === "access_denied" ? "provider_cancelled" : "provider_denied",
+      providerError === "access_denied"
+        ? "provider_cancelled"
+        : "provider_denied",
       returnTo,
     );
     const response = NextResponse.redirect(redirectUrl);
@@ -97,7 +103,13 @@ export async function GET(request: NextRequest) {
     return response;
   }
 
-  if (!code || !returnedState || !storedState || returnedState !== storedState || !codeVerifier) {
+  if (
+    !code ||
+    !returnedState ||
+    !storedState ||
+    returnedState !== storedState ||
+    !codeVerifier
+  ) {
     const response = NextResponse.redirect(
       buildRedirectUrl(request, mode, "error", "state_mismatch", returnTo),
     );
@@ -188,7 +200,11 @@ export async function GET(request: NextRequest) {
       ),
     );
 
-    response.cookies.set(AUTH_COOKIE_NAME, token, getAuthCookieOptions(request));
+    response.cookies.set(
+      AUTH_COOKIE_NAME,
+      token,
+      getAuthCookieOptions(request),
+    );
     response.cookies.set(
       CSRF_COOKIE_NAME,
       generateCsrfToken(),

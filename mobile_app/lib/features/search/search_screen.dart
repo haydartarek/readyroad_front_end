@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/providers/language_provider.dart';
 import '../../shared/models/content_item.dart';
 import '../../shared/services/content_service.dart';
@@ -18,15 +19,13 @@ class _SearchScreenState extends State<SearchScreen> {
   final ContentService _contentService = getIt<ContentService>();
   final TextEditingController _searchController = TextEditingController();
 
-  /// Convert backend imageUrl to asset path for Flutter
-  String _convertToAssetPath(String imageUrl) {
-    // Handle both API formats:
-    // 1. /images/signs/... (web format)
-    // 2. assets/traffic_signs/... (backend format)
-    if (imageUrl.startsWith('/images/signs/')) {
-      return imageUrl.replaceFirst('/images/signs/', 'assets/traffic_signs/');
+  String _toBackendImageUrl(String imageUrl) {
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
     }
-    // Already in correct format for Flutter assets
+    if (imageUrl.startsWith('/images/signs/')) {
+      return '${ApiConstants.baseUrl}$imageUrl';
+    }
     return imageUrl;
   }
 
@@ -247,8 +246,8 @@ class _SearchScreenState extends State<SearchScreen> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-              ? Image.asset(
-                  _convertToAssetPath(item.imageUrl!),
+              ? Image.network(
+                  _toBackendImageUrl(item.imageUrl!),
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(Icons.image, color: Colors.grey);

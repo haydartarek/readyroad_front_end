@@ -5,7 +5,7 @@
  * returns user data without the raw token.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import {
   AUTH_COOKIE_NAME,
   CSRF_COOKIE_NAME,
@@ -13,21 +13,21 @@ import {
   generateCsrfToken,
   getAuthCookieOptions,
   getCsrfCookieOptions,
-} from '@/lib/server/auth';
+} from "@/lib/server/auth";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
     const backendResponse = await fetch(`${getBackendUrl()}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
     if (!backendResponse.ok) {
       const errorData = await backendResponse.json().catch(() => ({
-        message: 'Registration failed',
+        message: "Registration failed",
       }));
       return NextResponse.json(errorData, { status: backendResponse.status });
     }
@@ -37,36 +37,47 @@ export async function POST(request: NextRequest) {
 
     if (!token) {
       return NextResponse.json(
-        { message: 'No token received from server' },
-        { status: 500 }
+        { message: "No token received from server" },
+        { status: 500 },
       );
     }
 
     const response = NextResponse.json(userData);
-    response.cookies.set(AUTH_COOKIE_NAME, token, getAuthCookieOptions(request));
+    response.cookies.set(
+      AUTH_COOKIE_NAME,
+      token,
+      getAuthCookieOptions(request),
+    );
 
     const csrfToken = generateCsrfToken();
-    response.cookies.set(CSRF_COOKIE_NAME, csrfToken, getCsrfCookieOptions(request));
+    response.cookies.set(
+      CSRF_COOKIE_NAME,
+      csrfToken,
+      getCsrfCookieOptions(request),
+    );
 
     return response;
   } catch (error) {
     const isConnectionError =
       error instanceof TypeError &&
-      (error.message.includes('fetch failed') ||
-       error.message.includes('ECONNREFUSED'));
+      (error.message.includes("fetch failed") ||
+        error.message.includes("ECONNREFUSED"));
 
     if (isConnectionError) {
-      console.warn('[BFF /api/auth/register] Backend unreachable:', (error as Error).message);
+      console.warn(
+        "[BFF /api/auth/register] Backend unreachable:",
+        (error as Error).message,
+      );
       return NextResponse.json(
-        { message: 'Backend service unavailable' },
-        { status: 503 }
+        { message: "Backend service unavailable" },
+        { status: 503 },
       );
     }
 
-    console.error('[BFF /api/auth/register] Unexpected error:', error);
+    console.error("[BFF /api/auth/register] Unexpected error:", error);
     return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
+      { message: "Internal server error" },
+      { status: 500 },
     );
   }
 }

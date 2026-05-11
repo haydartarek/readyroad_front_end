@@ -8,8 +8,8 @@
  * - Zero localStorage usage for auth data
  */
 
-import { getCsrfToken } from '@/lib/auth-token';
-import { ROUTES } from '@/lib/constants';
+import { getCsrfToken } from "@/lib/auth-token";
+import { ROUTES } from "@/lib/constants";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -19,27 +19,30 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  userId?:   number;
-  username:  string;
-  email?:    string;
+  userId?: number;
+  username: string;
+  email?: string;
   fullName?: string;
-  role:      string;
+  role: string;
 }
 
 export interface RegisterRequest {
   username: string;
-  email:    string;
+  email: string;
   password: string;
   fullName: string;
 }
 
 // ─── Constants ───────────────────────────────────────────
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
+const JSON_HEADERS = { "Content-Type": "application/json" } as const;
 
 // ─── Helpers ─────────────────────────────────────────────
 
-async function parseErrorMessage(response: Response, fallback: string): Promise<string> {
+async function parseErrorMessage(
+  response: Response,
+  fallback: string,
+): Promise<string> {
   const body = await response.json().catch(() => ({}));
   return (body as { message?: string }).message ?? fallback;
 }
@@ -48,14 +51,14 @@ async function parseErrorMessage(response: Response, fallback: string): Promise<
 
 /** Login via BFF — sets HttpOnly JWT cookie, returns user data. */
 export async function login(credentials: LoginRequest): Promise<LoginResponse> {
-  const response = await fetch('/api/auth/login', {
-    method:  'POST',
+  const response = await fetch("/api/auth/login", {
+    method: "POST",
     headers: JSON_HEADERS,
-    body:    JSON.stringify(credentials),
+    body: JSON.stringify(credentials),
   });
 
   if (!response.ok) {
-    throw new Error(await parseErrorMessage(response, 'Login failed'));
+    throw new Error(await parseErrorMessage(response, "Login failed"));
   }
 
   return response.json();
@@ -63,14 +66,14 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
 
 /** Register via BFF — sets HttpOnly JWT cookie, returns user data. */
 export async function register(data: RegisterRequest): Promise<LoginResponse> {
-  const response = await fetch('/api/auth/register', {
-    method:  'POST',
+  const response = await fetch("/api/auth/register", {
+    method: "POST",
     headers: JSON_HEADERS,
-    body:    JSON.stringify(data),
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    throw new Error(await parseErrorMessage(response, 'Registration failed'));
+    throw new Error(await parseErrorMessage(response, "Registration failed"));
   }
 
   return response.json();
@@ -83,9 +86,9 @@ export async function register(data: RegisterRequest): Promise<LoginResponse> {
 export async function logout(): Promise<void> {
   try {
     const csrf = getCsrfToken();
-    await fetch('/api/auth/logout', {
-      method:  'POST',
-      headers: csrf ? { 'x-csrf-token': csrf } : {},
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: csrf ? { "x-csrf-token": csrf } : {},
     });
   } catch {
     // Best-effort — cookie will expire eventually
@@ -99,8 +102,14 @@ export async function logout(): Promise<void> {
  */
 export async function isAuthenticated(): Promise<boolean> {
   try {
-    const response = await fetch('/api/auth/me', { cache: 'no-store' });
-    return response.ok;
+    const response = await fetch("/api/auth/me", { cache: "no-store" });
+    if (!response.ok) return false;
+
+    const body = (await response.json().catch(() => null)) as {
+      authenticated?: boolean;
+    } | null;
+
+    return body?.authenticated ?? true;
   } catch {
     return false;
   }

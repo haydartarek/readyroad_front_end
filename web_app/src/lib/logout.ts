@@ -8,13 +8,13 @@
  * @see src/app/api/auth/logout/route.ts — BFF route that clears the cookie
  */
 
-import { ROUTES } from '@/lib/constants';
-import { getCsrfToken } from '@/lib/auth-token';
+import { ROUTES } from "@/lib/constants";
+import { getCsrfToken } from "@/lib/auth-token";
 
 // ─── Constants ───────────────────────────────────────────
 
-const LOGOUT_PATH  = '/api/auth/logout';
-const CSRF_HEADER  = 'x-csrf-token';
+const LOGOUT_PATH = "/api/auth/logout";
+const CSRF_HEADER = "x-csrf-token";
 
 // ─── Utilities ───────────────────────────────────────────
 
@@ -27,11 +27,11 @@ export async function logoutClientSide(): Promise<void> {
   try {
     const csrf = getCsrfToken();
     await fetch(LOGOUT_PATH, {
-      method:  'POST',
+      method: "POST",
       headers: csrf ? { [CSRF_HEADER]: csrf } : {},
     });
   } catch (error) {
-    console.warn('[logout] Request failed:', error);
+    console.warn("[logout] Request failed:", error);
   }
 
   // Always redirect — cookie will expire eventually if request failed

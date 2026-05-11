@@ -1612,7 +1612,7 @@
   "exam.submit.warning": "Once submitted, you cannot change your answers. Are you sure?",
   "exam.submit.confirm": "Submit exam",
   "exam.submit.submitting": "Submitting...",
-  "admin.signs.form.url_placeholder": "https://example.com/sign.png or assets/traffic_signs/...",
+  "admin.signs.form.url_placeholder": "https://example.com/sign.png or http://localhost:8890/images/signs/...",
   "admin.signs.form.upload_formats_hint": "JPG · PNG · WEBP · max 5 MB",
   "admin.signs.form.preview_alt": "Preview image",
   "admin.signs.form.name_en_placeholder": "Dangerous curve to the left",

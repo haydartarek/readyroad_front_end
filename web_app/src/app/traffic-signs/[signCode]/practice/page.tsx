@@ -111,12 +111,14 @@ const DIFFICULTY_STYLES: Record<string, string> = {
 };
 
 function getQuestionText(question: SignQuizQuestion, language: Lang) {
-  const key = `question${language.charAt(0).toUpperCase() + language.slice(1)}` as keyof SignQuizQuestion;
+  const key =
+    `question${language.charAt(0).toUpperCase() + language.slice(1)}` as keyof SignQuizQuestion;
   return (question[key] as string) || question.questionEn || "";
 }
 
 function getChoiceText(choice: SignChoice, language: Lang) {
-  const key = `text${language.charAt(0).toUpperCase() + language.slice(1)}` as keyof SignChoice;
+  const key =
+    `text${language.charAt(0).toUpperCase() + language.slice(1)}` as keyof SignChoice;
   return (choice[key] as string) || choice.textEn || "";
 }
 
@@ -124,7 +126,8 @@ function getExplanation(
   response: SignPracticeAnswerResponse,
   language: Lang,
 ): string {
-  const key = `explanation${language.charAt(0).toUpperCase() + language.slice(1)}` as keyof SignPracticeAnswerResponse;
+  const key =
+    `explanation${language.charAt(0).toUpperCase() + language.slice(1)}` as keyof SignPracticeAnswerResponse;
   return (response[key] as string) || response.explanationEn || "";
 }
 
@@ -202,10 +205,15 @@ export default function TrafficSignPracticePage() {
   const removedLegacyCode = isRemovedLegacyTrafficSignCode(routeParam);
 
   const routeCode = sign?.routeCode ?? sign?.signCode ?? routeParam;
-  const signName = sign ? getTrafficSignName(sign, currentLanguage) : routeParam;
+  const signName = sign
+    ? getTrafficSignName(sign, currentLanguage)
+    : routeParam;
   const { info, style } = sign
     ? getTrafficSignGroupInfo(sign)
-    : getTrafficSignGroupInfo({ signCode: routeParam, imageUrl: "" } as TrafficSign);
+    : getTrafficSignGroupInfo({
+        signCode: routeParam,
+        imageUrl: "",
+      } as TrafficSign);
   const breadcrumbItems = [
     { label: t("nav.home"), href: "/" },
     { label: t("nav.traffic_signs"), href: "/traffic-signs" },
@@ -213,60 +221,61 @@ export default function TrafficSignPracticePage() {
     { label: t("nav.practice"), href: `/traffic-signs/${routeCode}/practice` },
   ];
 
-  const initializeSession = useCallback(
-    async (identifier: string) => {
-      const [signResponse, practiceSession] = await Promise.all([
-        apiClient.get<TrafficSign>(API_ENDPOINTS.TRAFFIC_SIGNS.DETAIL(identifier)),
-        startPracticeSession(identifier),
-      ]);
+  const initializeSession = useCallback(async (identifier: string) => {
+    const [signResponse, practiceSession] = await Promise.all([
+      apiClient.get<TrafficSign>(
+        API_ENDPOINTS.TRAFFIC_SIGNS.DETAIL(identifier),
+      ),
+      startPracticeSession(identifier),
+    ]);
 
-      let answeredResults: PracticeAnswerDetail[] = [];
-      try {
-        const practiceResults = await getPracticeResults(practiceSession.sessionId);
-        answeredResults = practiceResults.questionResults;
-      } catch (apiError) {
-        logApiError("Failed to load existing sign practice results", apiError);
-      }
+    let answeredResults: PracticeAnswerDetail[] = [];
+    try {
+      const practiceResults = await getPracticeResults(
+        practiceSession.sessionId,
+      );
+      answeredResults = practiceResults.questionResults;
+    } catch (apiError) {
+      logApiError("Failed to load existing sign practice results", apiError);
+    }
 
-      const answeredQuestionIds = new Set(
-        answeredResults.map((detail) => detail.questionId),
-      );
-      const questionById = new Map(
-        practiceSession.questions.map((question) => [question.id, question]),
-      );
-      const restoredHistory = answeredResults
-        .map((detail) => {
-          const question = questionById.get(detail.questionId);
-          if (!question) {
-            return null;
-          }
-          return createHistoryEntryFromResult(
-            detail,
-            question,
-            practiceSession.totalQuestions,
-          );
-        })
-        .filter((entry): entry is AnswerHistoryEntry => entry !== null);
-      const remainingQuestions = practiceSession.questions.filter(
-        (question) => !answeredQuestionIds.has(question.id),
-      );
+    const answeredQuestionIds = new Set(
+      answeredResults.map((detail) => detail.questionId),
+    );
+    const questionById = new Map(
+      practiceSession.questions.map((question) => [question.id, question]),
+    );
+    const restoredHistory = answeredResults
+      .map((detail) => {
+        const question = questionById.get(detail.questionId);
+        if (!question) {
+          return null;
+        }
+        return createHistoryEntryFromResult(
+          detail,
+          question,
+          practiceSession.totalQuestions,
+        );
+      })
+      .filter((entry): entry is AnswerHistoryEntry => entry !== null);
+    const remainingQuestions = practiceSession.questions.filter(
+      (question) => !answeredQuestionIds.has(question.id),
+    );
 
-      setSign(signResponse.data);
-      setSession({
-        ...practiceSession,
-        questions: remainingQuestions,
-      });
-      setInitialAnsweredCount(restoredHistory.length);
-      setCurrentIndex(0);
-      setSelectedChoice(null);
-      setAnswerState(null);
-      setDone(remainingQuestions.length === 0);
-      setAnswerHistory(restoredHistory);
-      setShowReview(false);
-      setStartedAt(Date.now());
-    },
-    [],
-  );
+    setSign(signResponse.data);
+    setSession({
+      ...practiceSession,
+      questions: remainingQuestions,
+    });
+    setInitialAnsweredCount(restoredHistory.length);
+    setCurrentIndex(0);
+    setSelectedChoice(null);
+    setAnswerState(null);
+    setDone(remainingQuestions.length === 0);
+    setAnswerHistory(restoredHistory);
+    setShowReview(false);
+    setStartedAt(Date.now());
+  }, []);
 
   useEffect(() => {
     if (removedLegacyCode) {
@@ -317,11 +326,11 @@ export default function TrafficSignPracticePage() {
 
   const questions = session?.questions ?? [];
   const currentQuestion = questions[currentIndex];
-  const answeredCount = initialAnsweredCount + currentIndex + (answerState ? 1 : 0);
-  const progressPercentage =
-    session?.totalQuestions
-      ? (answeredCount / session.totalQuestions) * 100
-      : 0;
+  const answeredCount =
+    initialAnsweredCount + currentIndex + (answerState ? 1 : 0);
+  const progressPercentage = session?.totalQuestions
+    ? (answeredCount / session.totalQuestions) * 100
+    : 0;
   const displayQuestionNumber = Math.min(
     initialAnsweredCount + currentIndex + 1,
     session?.totalQuestions ?? 0,
@@ -757,12 +766,17 @@ export default function TrafficSignPracticePage() {
                                 <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                                   {t("sign_quiz.practice.question_of")
                                     .replace("{n}", String(index + 1))
-                                    .replace("{m}", String(session.totalQuestions))}
+                                    .replace(
+                                      "{m}",
+                                      String(session.totalQuestions),
+                                    )}
                                 </span>
                                 <Badge
                                   className={`border ${DIFFICULTY_STYLES[entry.question.difficulty] || "border-border bg-muted text-foreground"}`}
                                 >
-                                  {t(`sign_quiz.${entry.question.difficulty.toLowerCase()}`)}
+                                  {t(
+                                    `sign_quiz.${entry.question.difficulty.toLowerCase()}`,
+                                  )}
                                 </Badge>
                                 {entry.response.isCorrect ? (
                                   <Badge className="border border-green-200 bg-green-100 text-green-800">
@@ -776,7 +790,10 @@ export default function TrafficSignPracticePage() {
                               </div>
 
                               <p className="text-sm font-semibold leading-6 text-foreground md:text-[15px]">
-                                {getQuestionText(entry.question, currentLanguage)}
+                                {getQuestionText(
+                                  entry.question,
+                                  currentLanguage,
+                                )}
                               </p>
 
                               <div className="grid gap-2 md:grid-cols-2">
@@ -787,12 +804,15 @@ export default function TrafficSignPracticePage() {
                                   <p
                                     className={cn(
                                       "mt-1 text-sm font-semibold leading-6",
-                                      entry.response.isCorrect ? "text-green-700" : "text-red-700",
+                                      entry.response.isCorrect
+                                        ? "text-green-700"
+                                        : "text-red-700",
                                     )}
                                   >
                                     {getChoiceText(
                                       entry.question.choices.find(
-                                        (choice) => choice.id === entry.selectedChoiceId,
+                                        (choice) =>
+                                          choice.id === entry.selectedChoiceId,
                                       ) ?? entry.question.choices[0],
                                       currentLanguage,
                                     )}
@@ -804,19 +824,28 @@ export default function TrafficSignPracticePage() {
                                       {t("sign_quiz.practice.correct_answer")}
                                     </p>
                                     <p className="mt-1 text-sm font-semibold leading-6 text-green-700">
-                                      {getChoiceText(correctChoice, currentLanguage)}
+                                      {getChoiceText(
+                                        correctChoice,
+                                        currentLanguage,
+                                      )}
                                     </p>
                                   </div>
                                 )}
                               </div>
 
-                              {getExplanation(entry.response, currentLanguage) && (
+                              {getExplanation(
+                                entry.response,
+                                currentLanguage,
+                              ) && (
                                 <div className="rounded-[0.95rem] border border-border/60 bg-muted/30 px-3 py-2.5">
                                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                                     {t("sign_quiz.practice.explanation")}
                                   </p>
                                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                    {getExplanation(entry.response, currentLanguage)}
+                                    {getExplanation(
+                                      entry.response,
+                                      currentLanguage,
+                                    )}
                                   </p>
                                 </div>
                               )}
@@ -840,14 +869,14 @@ export default function TrafficSignPracticePage() {
       dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
     >
-      <div className="container mx-auto max-w-7xl px-4 py-3 md:py-4 space-y-3">
+      <div className="container mx-auto max-w-7xl px-3 py-2 md:px-4 md:py-3 space-y-2">
         <Breadcrumb items={breadcrumbItems} />
 
-        <PageHeroSurface contentClassName="p-5 md:p-6">
-          <div className="grid gap-4 lg:grid-cols-[190px_minmax(0,1fr)] lg:items-center">
-            <div className="space-y-3">
-              <div className="rounded-[1.4rem] border border-border/60 bg-background/85 p-3 shadow-sm">
-                <div className="relative mx-auto aspect-square w-full max-w-[128px]">
+        <PageHeroSurface contentClassName="p-3 md:p-3.5">
+          <div className="grid gap-2.5 md:grid-cols-[132px_minmax(0,1fr)] lg:grid-cols-[152px_minmax(0,1fr)] md:items-start">
+            <div className="space-y-1.5">
+              <div className="rounded-xl border border-border/60 bg-background/85 p-2 shadow-sm">
+                <div className="relative mx-auto aspect-square w-full max-w-[92px] md:max-w-[102px]">
                   <SignImage
                     src={resolveTrafficSignImage(sign)}
                     alt={signName}
@@ -856,36 +885,40 @@ export default function TrafficSignPracticePage() {
                 </div>
               </div>
 
-              <Button variant="outline" className="h-11 w-full rounded-xl" asChild>
+              <Button
+                variant="outline"
+                className="h-9 w-full rounded-lg px-2.5 text-[11px] font-semibold"
+                asChild
+              >
                 <Link href={`/traffic-signs/${routeCode}`}>
                   {isRTL ? (
-                    <ArrowRight className="mr-2 h-4 w-4" />
+                    <ArrowRight className="mr-1.5 h-3.5 w-3.5" />
                   ) : (
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                   )}
                   {t("sign_quiz.practice.back_to_sign")}
                 </Link>
               </Button>
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2.5">
-                <div className="flex flex-wrap items-center gap-2">
+            <div className="space-y-2.5">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <span
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold ${style.chip}`}
+                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${style.chip}`}
                   >
                     {info.title[currentLanguage]}
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[11px] font-semibold text-primary">
+                  <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
                     {t("sign_quiz.practice_mode")}
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  <h1 className="text-[1.85rem] font-black tracking-tight text-foreground md:text-[2.35rem]">
+                <div className="space-y-1">
+                  <h1 className="text-[1.22rem] font-black leading-tight tracking-tight text-foreground md:text-[1.4rem]">
                     {signName}
                   </h1>
-                  <p className="text-sm leading-6 text-muted-foreground">
+                  <p className="text-[11px] leading-4.5 text-muted-foreground">
                     {t("sign_quiz.practice.question_of")
                       .replace("{n}", String(displayQuestionNumber))
                       .replace("{m}", String(session.totalQuestions))}
@@ -893,30 +926,30 @@ export default function TrafficSignPracticePage() {
                 </div>
               </div>
 
-              <div className="grid gap-2.5 md:grid-cols-3">
+              <div className="grid gap-0.5 md:grid-cols-3">
                 <PageMetricCard
-                  icon={<Shapes className="h-5 w-5" />}
+                  icon={<Shapes className="h-3 w-3" />}
                   label={t("sign_quiz.practice.group_label")}
                   value={info.title[currentLanguage]}
                   hint={sign.signCode}
-                  className="p-3"
+                  size="sm"
                 />
                 <PageMetricCard
-                  icon={<BookOpen className="h-5 w-5" />}
+                  icon={<BookOpen className="h-3 w-3" />}
                   label={t("sign_practice.metric_questions")}
                   value={`${displayQuestionNumber}/${session.totalQuestions}`}
                   hint={`${answeredCount}/${session.totalQuestions}`}
-                  className="p-3"
+                  size="sm"
                 />
                 <PageMetricCard
-                  icon={<CheckCircle2 className="h-5 w-5" />}
+                  icon={<CheckCircle2 className="h-3 w-3" />}
                   label={t("sign_quiz.practice.progress_label")}
                   value={`${Math.round(progressPercentage)}%`}
                   hint={t("sign_quiz.practice.question_of")
                     .replace("{n}", String(displayQuestionNumber))
                     .replace("{m}", String(session.totalQuestions))}
                   tone={progressPercentage >= 80 ? "success" : "primary"}
-                  className="p-3"
+                  size="sm"
                 />
               </div>
             </div>
@@ -936,150 +969,148 @@ export default function TrafficSignPracticePage() {
                 {t(`sign_quiz.${currentQuestion.difficulty.toLowerCase()}`)}
               </Badge>
             }
-            className="xl:min-h-[calc(100vh-17.5rem)]"
-            contentClassName="flex flex-col gap-2.5"
+            className="xl:min-h-[calc(100vh-20rem)]"
+            contentClassName="flex flex-col gap-2"
           >
-                <div className="space-y-2">
-                {currentQuestion.choices.map((choice) => {
-                  const isSelected = selectedChoice === choice.id;
-                  const isCorrect =
-                    answerState?.response.correctChoiceId === choice.id;
-                  const isWrong =
-                    !!answerState &&
-                    isSelected &&
-                    !answerState.response.isCorrect;
+            <div className="space-y-2">
+              {currentQuestion.choices.map((choice) => {
+                const isSelected = selectedChoice === choice.id;
+                const isCorrect =
+                  answerState?.response.correctChoiceId === choice.id;
+                const isWrong =
+                  !!answerState &&
+                  isSelected &&
+                  !answerState.response.isCorrect;
 
-                  return (
-                    <button
-                      key={choice.id}
-                      type="button"
-                      disabled={!!answerState}
-                      onClick={() => {
-                        setSelectedChoice(choice.id);
-                        setSubmissionError(null);
-                      }}
-                      className={cn(
-                        "flex w-full items-start gap-3 rounded-[1rem] border-2 px-3.5 py-2.5 text-start transition-all duration-150",
-                        !answerState &&
-                          !isSelected &&
-                          "border-border/60 bg-background hover:border-primary/35 hover:bg-primary/5",
-                        !answerState &&
-                          isSelected &&
-                          "border-primary bg-primary/10 shadow-sm",
-                        answerState &&
-                          isCorrect &&
-                          "border-green-300 bg-green-50",
-                        answerState &&
-                          isWrong &&
-                          "border-red-300 bg-red-50",
-                        answerState &&
-                          !isCorrect &&
-                          !isWrong &&
-                          "border-border/60 bg-background/70 opacity-70",
-                      )}
-                    >
-                      {!answerState ? (
-                        <span
-                          className={cn(
-                            "mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2",
-                            isSelected
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground/40",
-                          )}
-                        />
-                      ) : isCorrect ? (
-                        <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
-                      ) : isWrong ? (
-                        <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
-                      ) : (
-                        <span className="mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2 border-border/50" />
-                      )}
-
-                      <span
-                        className={cn(
-                          "flex-1 text-sm font-semibold leading-6 text-foreground md:text-[15px]",
-                          answerState && isCorrect && "text-green-800",
-                          answerState && isWrong && "text-red-800",
-                        )}
-                      >
-                        {getChoiceText(choice, currentLanguage)}
-                      </span>
-                    </button>
-                  );
-                })}
-                </div>
-
-                {submissionError && !answerState && (
-                  <div className="rounded-[1rem] border border-red-200 bg-red-50 px-3.5 py-3">
-                    <p className="text-sm font-medium text-red-700">
-                      {submissionError}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {t("practice.submission_error_hint")}
-                    </p>
-                  </div>
-                )}
-
-                {answerState && (
-                  <div
+                return (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    disabled={!!answerState}
+                    onClick={() => {
+                      setSelectedChoice(choice.id);
+                      setSubmissionError(null);
+                    }}
                     className={cn(
-                      "rounded-[1rem] border px-3.5 py-3",
-                      answerState.response.isCorrect
-                        ? "border-green-200 bg-green-50"
-                        : "border-red-200 bg-red-50",
+                      "flex w-full items-start gap-3 rounded-[1rem] border-2 px-3.5 py-2.5 text-start transition-all duration-150",
+                      !answerState &&
+                        !isSelected &&
+                        "border-border/60 bg-background hover:border-primary/35 hover:bg-primary/5",
+                      !answerState &&
+                        isSelected &&
+                        "border-primary bg-primary/10 shadow-sm",
+                      answerState &&
+                        isCorrect &&
+                        "border-green-300 bg-green-50",
+                      answerState && isWrong && "border-red-300 bg-red-50",
+                      answerState &&
+                        !isCorrect &&
+                        !isWrong &&
+                        "border-border/60 bg-background/70 opacity-70",
                     )}
                   >
-                    <p
-                      className={cn(
-                        "text-sm font-semibold",
-                        answerState.response.isCorrect
-                          ? "text-green-700"
-                          : "text-red-700",
-                      )}
-                    >
-                      {answerState.response.isCorrect
-                        ? t("practice.answer_correct")
-                        : t("practice.answer_incorrect")}
-                    </p>
-
-                    {getExplanation(answerState.response, currentLanguage) && (
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {getExplanation(answerState.response, currentLanguage)}
-                      </p>
+                    {!answerState ? (
+                      <span
+                        className={cn(
+                          "mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2",
+                          isSelected
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground/40",
+                        )}
+                      />
+                    ) : isCorrect ? (
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
+                    ) : isWrong ? (
+                      <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
+                    ) : (
+                      <span className="mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2 border-border/50" />
                     )}
-                  </div>
-                )}
 
-                <div
-                  ref={actionRef}
-                  className="sticky bottom-1 z-10 mt-auto -mx-2 bg-gradient-to-t from-card via-card to-transparent px-2 pt-2.5"
-                >
-                  {!answerState ? (
-                    <Button
-                      className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
-                      disabled={selectedChoice === null || submitting}
-                      onClick={handleSubmit}
-                    >
-                      {submitting
-                        ? t("practice.submitting")
-                        : t("sign_quiz.practice.select_answer")}
-                    </Button>
-                  ) : (
-                    <Button
-                      className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
-                      onClick={handleNext}
-                    >
-                      {currentIndex + 1 < questions.length
-                        ? t("sign_quiz.practice.next_question")
-                        : t("sign_quiz.practice.session_complete")}
-                      {isRTL ? (
-                        <ArrowLeft className="ml-2 h-4 w-4" />
-                      ) : (
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                    <span
+                      className={cn(
+                        "flex-1 text-sm font-semibold leading-6 text-foreground md:text-[15px]",
+                        answerState && isCorrect && "text-green-800",
+                        answerState && isWrong && "text-red-800",
                       )}
-                    </Button>
+                    >
+                      {getChoiceText(choice, currentLanguage)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {submissionError && !answerState && (
+              <div className="rounded-[1rem] border border-red-200 bg-red-50 px-3.5 py-3">
+                <p className="text-sm font-medium text-red-700">
+                  {submissionError}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t("practice.submission_error_hint")}
+                </p>
+              </div>
+            )}
+
+            {answerState && (
+              <div
+                className={cn(
+                  "rounded-[1rem] border px-3.5 py-3",
+                  answerState.response.isCorrect
+                    ? "border-green-200 bg-green-50"
+                    : "border-red-200 bg-red-50",
+                )}
+              >
+                <p
+                  className={cn(
+                    "text-sm font-semibold",
+                    answerState.response.isCorrect
+                      ? "text-green-700"
+                      : "text-red-700",
                   )}
-                </div>
+                >
+                  {answerState.response.isCorrect
+                    ? t("practice.answer_correct")
+                    : t("practice.answer_incorrect")}
+                </p>
+
+                {getExplanation(answerState.response, currentLanguage) && (
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {getExplanation(answerState.response, currentLanguage)}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div
+              ref={actionRef}
+              className="sticky bottom-1 z-10 mt-auto -mx-2 bg-gradient-to-t from-card via-card to-transparent px-2 pt-2.5"
+            >
+              {!answerState ? (
+                <Button
+                  className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
+                  disabled={selectedChoice === null || submitting}
+                  onClick={handleSubmit}
+                >
+                  {submitting
+                    ? t("practice.submitting")
+                    : t("sign_quiz.practice.select_answer")}
+                </Button>
+              ) : (
+                <Button
+                  className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
+                  onClick={handleNext}
+                >
+                  {currentIndex + 1 < questions.length
+                    ? t("sign_quiz.practice.next_question")
+                    : t("sign_quiz.practice.session_complete")}
+                  {isRTL ? (
+                    <ArrowLeft className="ml-2 h-4 w-4" />
+                  ) : (
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  )}
+                </Button>
+              )}
+            </div>
           </PageSectionSurface>
         )}
       </div>

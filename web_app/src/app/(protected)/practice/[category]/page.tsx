@@ -21,9 +21,15 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { getAllSignProgress, type SignUserProgress } from "@/services";
 import type { TrafficSign } from "@/lib/types";
-import { getSignExamStatus, getSignExamStatusClasses } from "@/lib/sign-exam-status";
+import {
+  getSignExamStatus,
+  getSignExamStatusClasses,
+} from "@/lib/sign-exam-status";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
-import { getGroupInfo, getTrafficSignGroup } from "@/lib/traffic-sign-presentation";
+import {
+  getGroupInfo,
+  getTrafficSignGroup,
+} from "@/lib/traffic-sign-presentation";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -514,7 +520,9 @@ export default function PracticeSignsPage() {
                         <Button
                           asChild
                           variant={
-                            examStatus.tone === "success" ? "outline" : "secondary"
+                            examStatus.tone === "success"
+                              ? "outline"
+                              : "secondary"
                           }
                           className="h-10 w-full rounded-2xl font-semibold"
                         >

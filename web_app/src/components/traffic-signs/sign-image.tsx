@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { convertToPublicImageUrl, FALLBACK_IMAGE } from '@/lib/image-utils';
+import { useState, useEffect } from "react";
+import { FALLBACK_IMAGE, getSignImageUrl } from "@/lib/image-utils";
 
 // ─── Types ───────────────────────────────────────────────
 
 interface SignImageProps {
-  src:       string;
-  alt:       string;
+  src: string;
+  alt: string;
   className?: string;
 }
 
@@ -15,16 +15,22 @@ interface SignImageProps {
 
 function resolveImageUrl(src: string): string | null {
   if (!src || src === FALLBACK_IMAGE) return null;
-  return convertToPublicImageUrl(src) ?? null;
+  return getSignImageUrl(src);
 }
 
 // ─── Component ───────────────────────────────────────────
 
-export function SignImage({ src, alt, className = 'object-contain' }: SignImageProps) {
-  const [imgSrc,  setImgSrc]  = useState(() => resolveImageUrl(src));
+export function SignImage({
+  src,
+  alt,
+  className = "object-contain",
+}: SignImageProps) {
+  const [imgSrc, setImgSrc] = useState(() => resolveImageUrl(src));
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setImgSrc(resolveImageUrl(src));

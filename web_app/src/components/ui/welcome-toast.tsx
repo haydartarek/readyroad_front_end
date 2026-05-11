@@ -1,28 +1,34 @@
-'use client';
+"use client";
 
-import { X, Car } from 'lucide-react';
-import { toast } from 'sonner';
-import { useLanguage } from '@/contexts/language-context';
+import { X, Car } from "lucide-react";
+import { toast } from "sonner";
+import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ───────────────────────────────────────────────
 
 interface WelcomeToastProps {
-  toastId:   string | number;
+  toastId: string | number;
   firstName: string;
-  subtitle:  string;
+  subtitle: string;
 }
 
 // ─── Component ───────────────────────────────────────────
 
-export function WelcomeToastContent({ toastId, firstName, subtitle }: WelcomeToastProps) {
+export function WelcomeToastContent({
+  toastId,
+  firstName,
+  subtitle,
+}: WelcomeToastProps) {
   const { t } = useLanguage();
-  const initial = firstName?.[0]?.toUpperCase() ?? 'U';
+  const initial = firstName?.[0]?.toUpperCase() ?? "U";
 
   return (
     <div
       role="status"
       aria-live="polite"
-      style={{ animation: 'welcomeSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+      style={{
+        animation: "welcomeSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both",
+      }}
       className="
         relative flex items-center gap-3.5
         w-[340px] bg-card border border-border/60
@@ -63,7 +69,9 @@ export function WelcomeToastContent({ toastId, firstName, subtitle }: WelcomeToa
       {/* Text */}
       <div className="flex-1 min-w-0 pl-0.5">
         <p className="text-sm font-semibold text-foreground leading-tight truncate">
-          <span className="text-primary">{t('auth.toast.welcome_back_name', { name: firstName })}</span>
+          <span className="text-primary">
+            {t("auth.toast.welcome_back_name", { name: firstName })}
+          </span>
         </p>
         <div className="flex items-center gap-1 mt-0.5">
           <Car className="w-3 h-3 text-muted-foreground shrink-0" />
@@ -76,7 +84,7 @@ export function WelcomeToastContent({ toastId, firstName, subtitle }: WelcomeToa
       {/* Dismiss */}
       <button
         onClick={() => toast.dismiss(toastId)}
-        aria-label={t('auth.toast.dismiss')}
+        aria-label={t("auth.toast.dismiss")}
         className="
           shrink-0 ml-1 p-1 rounded-md
           text-muted-foreground/50 hover:text-foreground

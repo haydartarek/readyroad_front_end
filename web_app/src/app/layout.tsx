@@ -44,8 +44,7 @@ export const viewport: Viewport = {
 
 // ─── Metadata ────────────────────────────────────────────
 
-export const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = await cookies();
   const locale = resolveSiteLocale(

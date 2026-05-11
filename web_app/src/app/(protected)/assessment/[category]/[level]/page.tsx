@@ -151,8 +151,11 @@ function ResultsScreen({
                 {a.answerState !== "correct" && (
                   <p className="text-xs text-muted-foreground mt-1">
                     <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                      {a.question.choices.find((c) => c.id === a.correctChoiceId)
-                        ?.text}
+                      {
+                        a.question.choices.find(
+                          (c) => c.id === a.correctChoiceId,
+                        )?.text
+                      }
                     </span>
                   </p>
                 )}
@@ -206,7 +209,6 @@ function AssessmentQuizSession({
   t: (key: string, params?: Record<string, string | number>) => string;
   isRTL: boolean;
 }) {
-
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [attempts, setAttempts] = useState<QuestionAttempt[]>([]);
   const [current, setCurrent] = useState(0);

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -7,9 +7,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/language-context';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -30,27 +30,35 @@ export function ExitConfirmDialog({
 }: ExitConfirmDialogProps) {
   const { t } = useLanguage();
 
-  const handleStay = () => { onStay();  onOpenChange(false); };
-  const handleLeave = () => { onLeave(); onOpenChange(false); };
+  const handleStay = () => {
+    onStay();
+    onOpenChange(false);
+  };
+  const handleLeave = () => {
+    onLeave();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="font-black">{t('exam.exit_title')}</DialogTitle>
-          <DialogDescription>{t('exam.exit_message')}</DialogDescription>
+          <DialogTitle className="font-black">
+            {t("exam.exit_title")}
+          </DialogTitle>
+          <DialogDescription>{t("exam.exit_message")}</DialogDescription>
         </DialogHeader>
 
         <DialogFooter className="gap-2 sm:gap-2 sm:flex-row-reverse">
           <Button onClick={handleStay} className="rounded-xl">
-            {t('exam.exit_stay')}
+            {t("exam.exit_stay")}
           </Button>
           <Button
             variant="outline"
             onClick={handleLeave}
             className="rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
           >
-            {t('exam.exit_leave')}
+            {t("exam.exit_leave")}
           </Button>
         </DialogFooter>
       </DialogContent>

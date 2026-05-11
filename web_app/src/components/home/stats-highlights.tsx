@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLanguage } from '@/contexts/language-context';
-import { useHomeStats } from '@/hooks/use-home-stats';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
+import { useHomeStats } from "@/hooks/use-home-stats";
 
 export function StatsHighlights() {
   const { t, language } = useLanguage();
@@ -15,10 +15,13 @@ export function StatsHighlights() {
 
   const statItems = useMemo(
     () => [
-      { key: 'home.hero.stat_questions', value: stats?.examQuestionCount },
-      { key: 'home.hero.stat_signs', value: stats?.trafficSignsCount },
-      { key: 'home.hero.stat_lessons', value: stats?.lessonsCount },
-      { key: 'home.hero.stat_languages', value: stats?.supportedLanguagesCount },
+      { key: "home.hero.stat_questions", value: stats?.examQuestionCount },
+      { key: "home.hero.stat_signs", value: stats?.trafficSignsCount },
+      { key: "home.hero.stat_lessons", value: stats?.lessonsCount },
+      {
+        key: "home.hero.stat_languages",
+        value: stats?.supportedLanguagesCount,
+      },
     ],
     [stats],
   );
@@ -35,7 +38,7 @@ export function StatsHighlights() {
         }
       },
       {
-        rootMargin: '0px 0px -10% 0px',
+        rootMargin: "0px 0px -10% 0px",
         threshold: 0.2,
       },
     );
@@ -48,8 +51,8 @@ export function StatsHighlights() {
     if (!stats || !isVisible) return;
 
     const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     if (prefersReducedMotion) {
       animationFrameRef.current = window.requestAnimationFrame(() => {
@@ -90,7 +93,7 @@ export function StatsHighlights() {
     <section
       ref={sectionRef}
       className="relative overflow-hidden bg-gradient-to-b from-muted/30 via-background to-background py-12 lg:py-16"
-      aria-label={t('home.stats.title')}
+      aria-label={t("home.stats.title")}
     >
       <div className="pointer-events-none absolute -top-32 start-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
       <div className="container mx-auto px-4">
@@ -107,7 +110,7 @@ export function StatsHighlights() {
                 {loading && value == null ? (
                   <span className="inline-block h-9 w-16 animate-pulse rounded bg-muted align-middle" />
                 ) : value == null ? (
-                  '—'
+                  "—"
                 ) : (
                   formatter.format(Math.round(value * progress))
                 )}

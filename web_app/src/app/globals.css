@@ -1,29 +1,29 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background:           hsl(var(--background));
-  --color-foreground:           hsl(var(--foreground));
-  --color-card:                 hsl(var(--card));
-  --color-card-foreground:      hsl(var(--card-foreground));
-  --color-popover:              hsl(var(--popover));
-  --color-popover-foreground:   hsl(var(--popover-foreground));
-  --color-primary:              hsl(var(--primary));
-  --color-primary-foreground:   hsl(var(--primary-foreground));
-  --color-secondary:            hsl(var(--secondary));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted:                hsl(var(--muted));
-  --color-muted-foreground:     hsl(var(--muted-foreground));
-  --color-accent:               hsl(var(--accent));
-  --color-accent-foreground:    hsl(var(--accent-foreground));
-  --color-destructive:          hsl(var(--destructive));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border:               hsl(var(--border));
-  --color-input:                hsl(var(--input));
-  --color-ring:                 hsl(var(--ring));
-  --radius-sm:  calc(var(--radius) - 4px);
-  --radius-md:  calc(var(--radius) - 2px);
-  --radius-lg:  var(--radius);
-  --radius-xl:  calc(var(--radius) + 4px);
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 :root {
@@ -84,7 +84,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -107,7 +109,10 @@
     outline-offset: 3px;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     letter-spacing: -0.02em;
   }
 
@@ -129,8 +134,9 @@
     font-weight: 650;
   }
 
-  p {
-    line-height: 1.7;
+  p,
+  p[class] {
+    @apply text-sm font-medium leading-6 text-muted-foreground;
   }
 
   button,
@@ -186,14 +192,17 @@
   }
 
   .rr-card-hover {
-    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+    transition:
+      transform 160ms ease,
+      box-shadow 160ms ease,
+      border-color 160ms ease;
   }
 
   .rr-card-hover:hover {
     transform: translateY(-1px);
     box-shadow:
       0 2px 6px hsl(var(--foreground) / 0.06),
-      0 16px 40px hsl(var(--foreground) / 0.10);
+      0 16px 40px hsl(var(--foreground) / 0.1);
     border-color: hsl(var(--border) / 0.65);
   }
 
@@ -209,7 +218,11 @@
 
   .rr-btn {
     @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium;
-    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, border-color 120ms ease;
+    transition:
+      transform 120ms ease,
+      box-shadow 120ms ease,
+      background-color 120ms ease,
+      border-color 120ms ease;
   }
 
   .rr-btn:active {
@@ -274,54 +287,84 @@
 /* ── Welcome toast entrance animation ─────────────────── */
 @keyframes welcomeSlideIn {
   from {
-    opacity:   0;
+    opacity: 0;
     transform: translateY(18px) scale(0.96);
-    filter:    blur(2px);
+    filter: blur(2px);
   }
   to {
-    opacity:   1;
-    transform: translateY(0)    scale(1);
-    filter:    blur(0);
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
 /* ── Auth success modal animations ────────────────────── */
 @keyframes authOverlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes authModalIn {
   from {
-    opacity:   0;
-    transform: scale(0.80) translateY(16px);
+    opacity: 0;
+    transform: scale(0.8) translateY(16px);
   }
   to {
-    opacity:   1;
-    transform: scale(1)    translateY(0);
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
 @keyframes authCircleDraw {
-  to { stroke-dashoffset: 0; }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes authCheckDraw {
-  to { stroke-dashoffset: 0; }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes authPulse {
-  0%, 100% { transform: scale(1);    opacity: 0.6; }
-  50%       { transform: scale(1.18); opacity: 0;   }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
 }
 
 /* ── Bell wiggle (new notification) ───────────────────── */
 @keyframes wiggle {
-  0%,  100% { transform: rotate(0deg); }
-  15%        { transform: rotate(-18deg); }
-  30%        { transform: rotate(18deg); }
-  45%        { transform: rotate(-12deg); }
-  60%        { transform: rotate(12deg); }
-  75%        { transform: rotate(-6deg); }
-  90%        { transform: rotate(6deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(-18deg);
+  }
+  30% {
+    transform: rotate(18deg);
+  }
+  45% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(12deg);
+  }
+  75% {
+    transform: rotate(-6deg);
+  }
+  90% {
+    transform: rotate(6deg);
+  }
 }

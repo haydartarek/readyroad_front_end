@@ -1,85 +1,185 @@
 /**
- * API Client Tests — HttpOnly Cookie Edition
+ * API Client tests using the real Axios interceptors.
  *
- * Tests verify that:
- * - ApiClient uses /api/proxy as baseURL (NOT the backend directly)
- * - 401 response triggers BFF logout (NOT localStorage removal)
- * - No Authorization header is injected client-side (proxy handles it)
- * - CSRF token is attached on mutation requests
- * - No auth data in localStorage
+ * These tests drive requests through the singleton apiClient instance with a
+ * custom Axios adapter, so request/response interceptors run exactly as they do
+ * in the app.
  */
 
-import { ROUTES } from '@/lib/constants';
+import { AxiosError, type AxiosAdapter, type AxiosResponse } from "axios";
+import { ROUTES } from "@/lib/constants";
+import { apiClient, shouldRedirectOnAuthError } from "@/lib/api";
 
 // Mock fetch for BFF logout
 const mockFetch = jest.fn();
-global.fetch = mockFetch;
+global.fetch = mockFetch as typeof fetch;
 
-describe('API Client (HttpOnly Cookie Proxy)', () => {
-    beforeEach(() => {
-        mockFetch.mockClear();
+const client = apiClient.getInstance();
+const originalAdapter = client.defaults.adapter;
+
+function resetRedirectGuard(): void {
+  (apiClient as unknown as { isRedirecting: boolean }).isRedirecting = false;
+}
+
+function readHeader(headers: unknown, name: string): string | undefined {
+  if (!headers || typeof headers !== "object") {
+    return undefined;
+  }
+
+  const axiosHeaders = headers as {
+    get?: (headerName: string) => string | undefined;
+    [key: string]: unknown;
+  };
+
+  if (typeof axiosHeaders.get === "function") {
+    return axiosHeaders.get(name) ?? axiosHeaders.get(name.toLowerCase());
+  }
+
+  const lowerName = name.toLowerCase();
+  const matchedKey = Object.keys(axiosHeaders).find(
+    (key) => key.toLowerCase() === lowerName,
+  );
+
+  return matchedKey ? String(axiosHeaders[matchedKey]) : undefined;
+}
+
+function makeAuthFailureAdapter(status: 401 | 403, url: string): AxiosAdapter {
+  return async (config) => {
+    const response: AxiosResponse = {
+      data: { message: "auth error" },
+      status,
+      statusText: status === 401 ? "Unauthorized" : "Forbidden",
+      headers: {},
+      config: { ...config, url },
+      request: {},
+    };
+
+    throw new AxiosError(
+      response.statusText,
+      "ERR_BAD_REQUEST",
+      { ...config, url },
+      {},
+      response,
+    );
+  };
+}
+
+const echoHeadersAdapter: AxiosAdapter = async (config) => ({
+  data: {
+    csrfHeader: readHeader(config.headers, "x-csrf-token") ?? null,
+    authorizationHeader: readHeader(config.headers, "authorization") ?? null,
+  },
+  status: 200,
+  statusText: "OK",
+  headers: {},
+  config,
+  request: {},
+});
+
+describe("API Client (HttpOnly Cookie Proxy)", () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    client.defaults.adapter = originalAdapter;
+    document.cookie =
+      "csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+    resetRedirectGuard();
+  });
+
+  afterAll(() => {
+    client.defaults.adapter = originalAdapter;
+    resetRedirectGuard();
+  });
+
+  test("login route constant is correct", () => {
+    expect(ROUTES.LOGIN).toBe("/login");
+  });
+
+  test("protected 401 responses trigger logout through the real response interceptor", async () => {
+    client.defaults.adapter = makeAuthFailureAdapter(
+      401,
+      "/sign-quiz/signs/A1b/status",
+    );
+    mockFetch.mockImplementation(() => new Promise(() => {}));
+
+    await expect(
+      apiClient.get("/sign-quiz/signs/A1b/status"),
+    ).rejects.toBeInstanceOf(AxiosError);
+
+    expect(mockFetch).toHaveBeenCalledWith("/api/auth/logout", {
+      method: "POST",
     });
+  });
 
-    test('login route constant is correct', () => {
-        expect(ROUTES.LOGIN).toBe('/login');
-    });
+  test("optional public-page 401 responses skip logout when skipAuthRedirect is set", async () => {
+    client.defaults.adapter = makeAuthFailureAdapter(
+      401,
+      "/sign-quiz/signs/A1b/status",
+    );
+    mockFetch.mockImplementation(() => new Promise(() => {}));
 
-    test('401 response triggers BFF logout call', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) });
+    await expect(
+      apiClient.get("/sign-quiz/signs/A1b/status", undefined, {
+        skipAuthRedirect: true,
+      }),
+    ).rejects.toBeInstanceOf(AxiosError);
 
-        // Simulate what the 401 interceptor does now
-        const status = 401;
-        if (status === 401) {
-            await fetch('/api/auth/logout', { method: 'POST' });
-        }
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST' });
-    });
+  test("optional public-page requests can suppress auth redirect", () => {
+    expect(
+      shouldRedirectOnAuthError(401, "/sign-quiz/signs/A1b/status", {
+        skipAuthRedirect: true,
+      }),
+    ).toBe(false);
+  });
 
-    test('non-401 response does NOT trigger logout', async () => {
-        const status: number = 500;
-        if (status === 401) {
-            await fetch('/api/auth/logout', { method: 'POST' });
-        }
+  test("mutation requests can suppress auth redirect when skipAuthRedirect is set", async () => {
+    client.defaults.adapter = makeAuthFailureAdapter(
+      401,
+      "/users/me/notifications/1/read",
+    );
+    mockFetch.mockImplementation(() => new Promise(() => {}));
 
-        expect(mockFetch).not.toHaveBeenCalled();
-    });
+    await expect(
+      apiClient.patch("/users/me/notifications/1/read", undefined, {
+        skipAuthRedirect: true,
+      }),
+    ).rejects.toBeInstanceOf(AxiosError);
 
-    test('no Authorization header is set client-side (proxy handles it)', () => {
-        // The ApiClient no longer injects Authorization headers
-        // The BFF proxy reads the HttpOnly cookie and attaches it server-side
-        const mockConfig: { headers: Record<string, string> } = { headers: {} };
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 
-        // In the new model, the request interceptor only adds CSRF token, not auth
-        // Verify no Authorization header is set
-        expect(mockConfig.headers.Authorization).toBeUndefined();
-    });
+  test("normal protected requests still redirect on auth errors", () => {
+    expect(shouldRedirectOnAuthError(401, "/sign-quiz/signs/A1b/status")).toBe(
+      true,
+    );
+  });
 
-    test('CSRF token is attached on mutation requests', () => {
-        // Mock document.cookie with a CSRF token
-        Object.defineProperty(document, 'cookie', {
-            value: 'csrf_token=test-csrf-abc123',
-            writable: true,
-        });
+  test("request interceptor does not inject Authorization headers client-side", async () => {
+    client.defaults.adapter = echoHeadersAdapter;
 
-        // Simulate reading CSRF token from cookie
-        const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
-        const csrfToken = match ? decodeURIComponent(match[2]) : null;
+    const response = await apiClient.get<{
+      csrfHeader: string | null;
+      authorizationHeader: string | null;
+    }>("/traffic-signs/A1b");
 
-        expect(csrfToken).toBe('test-csrf-abc123');
+    expect(response.data.authorizationHeader).toBeNull();
+  });
 
-        // Simulate attaching to request headers
-        const headers: Record<string, string> = {};
-        if (csrfToken) {
-            headers['x-csrf-token'] = csrfToken;
-        }
+  test("CSRF token is attached on mutation requests through the real request interceptor", async () => {
+    client.defaults.adapter = echoHeadersAdapter;
+    document.cookie = "csrf_token=test-csrf-abc123; path=/";
 
-        expect(headers['x-csrf-token']).toBe('test-csrf-abc123');
-    });
+    const response = await apiClient.post<{
+      csrfHeader: string | null;
+      authorizationHeader: string | null;
+    }>("/progress/submit", { answer: 1 });
 
-    test('proxy base URL is /api/proxy (not direct backend)', () => {
-        // The ApiClient now points to the local BFF proxy
-        const expectedBaseURL = '/api/proxy';
-        expect(expectedBaseURL).toBe('/api/proxy');
-    });
+    expect(response.data.csrfHeader).toBe("test-csrf-abc123");
+  });
+
+  test("proxy base URL is /api/proxy (not direct backend)", () => {
+    expect(client.defaults.baseURL).toBe("/api/proxy");
+  });
 });

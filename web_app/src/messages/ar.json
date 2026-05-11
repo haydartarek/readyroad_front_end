@@ -1612,7 +1612,7 @@
   "exam.submit.warning": "بعد إرسال الامتحان لن تتمكن من تعديل إجاباتك. هل أنت متأكد؟",
   "exam.submit.confirm": "إرسال الامتحان",
   "exam.submit.submitting": "جارٍ الإرسال...",
-  "admin.signs.form.url_placeholder": "https://example.com/sign.png أو assets/traffic_signs/...",
+  "admin.signs.form.url_placeholder": "https://example.com/sign.png أو http://localhost:8890/images/signs/...",
   "admin.signs.form.upload_formats_hint": "JPG · PNG · WEBP · الحد الأقصى 5 ميغابايت",
   "admin.signs.form.preview_alt": "معاينة الصورة",
   "admin.signs.form.name_en_placeholder": "Dangerous curve to the left",

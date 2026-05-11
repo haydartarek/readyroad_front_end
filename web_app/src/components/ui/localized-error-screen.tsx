@@ -34,7 +34,10 @@ export function LocalizedErrorScreen({
         href: "/",
       }}
       footer={
-        <a className="font-semibold text-primary hover:underline" href="/contact">
+        <a
+          className="font-semibold text-primary hover:underline"
+          href="/contact"
+        >
           {translateMessage(language, "common.contact_support")}
         </a>
       }

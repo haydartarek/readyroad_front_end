@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -10,7 +10,11 @@ interface ProgressBarProps {
 
 // ─── Component ───────────────────────────────────────────
 
-export function ProgressBar({ current, total, showLabel = true }: ProgressBarProps) {
+export function ProgressBar({
+  current,
+  total,
+  showLabel = true,
+}: ProgressBarProps) {
   const percentage = total === 0 ? 0 : Math.min((current / total) * 100, 100);
 
   return (

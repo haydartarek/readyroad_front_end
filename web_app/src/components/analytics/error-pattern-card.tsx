@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useLanguage } from '@/contexts/language-context';
-import Link from 'next/link';
-import { ChevronDown, ChevronRight, ClipboardList, XCircle, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
+import Link from "next/link";
+import {
+  ChevronDown,
+  ChevronRight,
+  ClipboardList,
+  XCircle,
+  CheckCircle2,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -23,7 +29,7 @@ interface ErrorPattern {
   patternType: string;
   description: string;
   frequency: number;
-  severity: 'high' | 'medium' | 'low';
+  severity: "high" | "medium" | "low";
   affectedCategories: string[];
   recommendations: string[];
   exampleQuestions: ExampleQuestion[];
@@ -32,15 +38,18 @@ interface ErrorPattern {
 // ─── Helpers ─────────────────────────────────────────────
 
 const PATTERN_MAP: Record<string, { category: string; filter?: string }> = {
-  SIGN_CONFUSION:           { category: 'traffic-signs',  filter: 'confusion'    },
-  PRIORITY_MISUNDERSTANDING:{ category: 'priority-rules', filter: 'priority'     },
-  SPEED_LIMIT_ERRORS:       { category: 'speed-limits',   filter: 'speed'        },
-  PARKING_VIOLATIONS:       { category: 'parking',        filter: 'parking'      },
-  RIGHT_OF_WAY:             { category: 'priority-rules', filter: 'right-of-way' },
+  SIGN_CONFUSION: { category: "traffic-signs", filter: "confusion" },
+  PRIORITY_MISUNDERSTANDING: { category: "priority-rules", filter: "priority" },
+  SPEED_LIMIT_ERRORS: { category: "speed-limits", filter: "speed" },
+  PARKING_VIOLATIONS: { category: "parking", filter: "parking" },
+  RIGHT_OF_WAY: { category: "priority-rules", filter: "right-of-way" },
 };
 
-function getPracticeUrl(patternType: string, affectedCategories: string[]): string {
-  const key     = patternType.toUpperCase().replace(/\s+/g, '_');
+function getPracticeUrl(
+  patternType: string,
+  affectedCategories: string[],
+): string {
+  const key = patternType.toUpperCase().replace(/\s+/g, "_");
   const mapping = PATTERN_MAP[key];
 
   if (mapping) {
@@ -48,14 +57,16 @@ function getPracticeUrl(patternType: string, affectedCategories: string[]): stri
     return mapping.filter ? `${base}?filter=${mapping.filter}` : base;
   }
 
-  const fallback = affectedCategories[0]?.toLowerCase().replace(/\s+/g, '-') ?? 'traffic-signs';
+  const fallback =
+    affectedCategories[0]?.toLowerCase().replace(/\s+/g, "-") ??
+    "traffic-signs";
   return `/practice/${fallback}`;
 }
 
-const SEVERITY_STYLES: Record<ErrorPattern['severity'], string> = {
-  high:   'bg-red-100    text-red-800    border-red-200',
-  medium: 'bg-orange-100 text-orange-800 border-orange-200',
-  low:    'bg-yellow-100 text-yellow-800 border-yellow-200',
+const SEVERITY_STYLES: Record<ErrorPattern["severity"], string> = {
+  high: "bg-red-100    text-red-800    border-red-200",
+  medium: "bg-orange-100 text-orange-800 border-orange-200",
+  low: "bg-yellow-100 text-yellow-800 border-yellow-200",
 };
 
 // ─── Component ───────────────────────────────────────────
@@ -69,29 +80,45 @@ export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 space-y-1">
-            <CardTitle className="text-lg font-black">{pattern.patternType}</CardTitle>
-            <p className="text-sm text-muted-foreground">{pattern.description}</p>
+            <CardTitle className="text-lg font-black">
+              {pattern.patternType}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {pattern.description}
+            </p>
           </div>
-          <Badge className={cn('border flex-shrink-0', SEVERITY_STYLES[pattern.severity])}>
+          <Badge
+            className={cn(
+              "border flex-shrink-0",
+              SEVERITY_STYLES[pattern.severity],
+            )}
+          >
             {pattern.severity.toUpperCase()}
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-5">
-
         {/* Frequency */}
         <p className="text-sm text-muted-foreground">
-          {t('analytics.error_pattern_frequency')}{' '}
-          <span className="font-bold text-foreground">{pattern.frequency} {t('analytics.error_pattern_times')}</span>
+          {t("analytics.error_pattern_frequency")}{" "}
+          <span className="font-bold text-foreground">
+            {pattern.frequency} {t("analytics.error_pattern_times")}
+          </span>
         </p>
 
         {/* Affected categories */}
         <div>
-          <p className="text-sm font-semibold text-foreground mb-2">{t('analytics.error_pattern_affected')}</p>
+          <p className="text-sm font-semibold text-foreground mb-2">
+            {t("analytics.error_pattern_affected")}
+          </p>
           <div className="flex flex-wrap gap-2">
-            {pattern.affectedCategories.map(cat => (
-              <Badge key={cat} variant="secondary" className="rounded-full text-xs">
+            {pattern.affectedCategories.map((cat) => (
+              <Badge
+                key={cat}
+                variant="secondary"
+                className="rounded-full text-xs"
+              >
                 {cat}
               </Badge>
             ))}
@@ -100,10 +127,15 @@ export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
 
         {/* Recommendations */}
         <div>
-          <p className="text-sm font-semibold text-foreground mb-2">{t('analytics.error_pattern_recommendations')}</p>
+          <p className="text-sm font-semibold text-foreground mb-2">
+            {t("analytics.error_pattern_recommendations")}
+          </p>
           <ul className="space-y-1.5">
             {pattern.recommendations.map((rec, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+              <li
+                key={idx}
+                className="flex items-start gap-2 text-sm text-muted-foreground"
+              >
                 <span className="text-primary mt-0.5 flex-shrink-0">•</span>
                 <span>{rec}</span>
               </li>
@@ -112,10 +144,18 @@ export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
         </div>
 
         {/* Practice CTA */}
-        <Button asChild className="w-full rounded-xl gap-2 shadow-sm shadow-primary/20">
-          <Link href={getPracticeUrl(pattern.patternType, pattern.affectedCategories)}>
+        <Button
+          asChild
+          className="w-full rounded-xl gap-2 shadow-sm shadow-primary/20"
+        >
+          <Link
+            href={getPracticeUrl(
+              pattern.patternType,
+              pattern.affectedCategories,
+            )}
+          >
             <ClipboardList className="w-4 h-4" />
-            {t('analytics.error_pattern_practice')}
+            {t("analytics.error_pattern_practice")}
           </Link>
         </Button>
 
@@ -124,23 +164,35 @@ export function ErrorPatternCard({ pattern }: { pattern: ErrorPattern }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowExamples(v => !v)}
+            onClick={() => setShowExamples((v) => !v)}
             className="w-full rounded-xl gap-2"
           >
-            {showExamples
-              ? <><ChevronDown  className="w-4 h-4" /> {t('analytics.error_pattern_hide_examples')}</>
-              : <><ChevronRight className="w-4 h-4" /> {t('analytics.error_pattern_show_examples')}</>
-            }
+            {showExamples ? (
+              <>
+                <ChevronDown className="w-4 h-4" />{" "}
+                {t("analytics.error_pattern_hide_examples")}
+              </>
+            ) : (
+              <>
+                <ChevronRight className="w-4 h-4" />{" "}
+                {t("analytics.error_pattern_show_examples")}
+              </>
+            )}
           </Button>
 
           {showExamples && (
             <div className="mt-4 space-y-3">
-              {pattern.exampleQuestions.map(q => (
-                <div key={q.id} className="rounded-xl border border-border/50 bg-muted/50 p-4 space-y-3">
-                  <p className="text-sm font-semibold text-foreground">{q.text}</p>
+              {pattern.exampleQuestions.map((q) => (
+                <div
+                  key={q.id}
+                  className="rounded-xl border border-border/50 bg-muted/50 p-4 space-y-3"
+                >
+                  <p className="text-sm font-semibold text-foreground">
+                    {q.text}
+                  </p>
                   <div className="space-y-1.5 text-sm">
                     <div className="flex items-center gap-2">
-                      <XCircle      className="w-4 h-4 text-red-500   flex-shrink-0" />
+                      <XCircle className="w-4 h-4 text-red-500   flex-shrink-0" />
                       <span className="text-red-600">{q.yourAnswer}</span>
                     </div>
                     <div className="flex items-center gap-2">

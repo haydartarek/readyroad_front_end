@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { BadgeCheck, Lock, Shield, Gift } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/language-context';
-import { useAuth } from '@/contexts/auth-context';
-import { ROUTES } from '@/lib/constants';
+import Link from "next/link";
+import Image from "next/image";
+import { BadgeCheck, Lock, Shield, Gift } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/constants";
 
 const TRUST_ICONS = [
   {
-    key: 'trust_secure',
+    key: "trust_secure",
     Icon: Lock,
-    wrapClass: 'border-secondary/20 bg-secondary/10',
-    iconClass: 'text-secondary',
+    wrapClass: "border-secondary/20 bg-secondary/10",
+    iconClass: "text-secondary",
   },
   {
-    key: 'trust_privacy',
+    key: "trust_privacy",
     Icon: Shield,
-    wrapClass: 'border-primary/20 bg-primary/10',
-    iconClass: 'text-primary',
+    wrapClass: "border-primary/20 bg-primary/10",
+    iconClass: "text-primary",
   },
   {
-    key: 'trust_free',
+    key: "trust_free",
     Icon: Gift,
-    wrapClass: 'border-amber-500/20 bg-amber-500/10',
-    iconClass: 'text-amber-600 dark:text-amber-400',
+    wrapClass: "border-amber-500/20 bg-amber-500/10",
+    iconClass: "text-amber-600 dark:text-amber-400",
   },
 ] as const;
 
@@ -38,7 +38,13 @@ function CtaSkeleton() {
   );
 }
 
-function GuestCtas({ primary, secondary }: { primary: string; secondary: string }) {
+function GuestCtas({
+  primary,
+  secondary,
+}: {
+  primary: string;
+  secondary: string;
+}) {
   return (
     <>
       <Button
@@ -61,7 +67,13 @@ function GuestCtas({ primary, secondary }: { primary: string; secondary: string 
   );
 }
 
-function MemberCtas({ primary, secondary }: { primary: string; secondary: string }) {
+function MemberCtas({
+  primary,
+  secondary,
+}: {
+  primary: string;
+  secondary: string;
+}) {
   return (
     <>
       <Button
@@ -99,14 +111,16 @@ export function HeroSection() {
             <div className="space-y-6 lg:space-y-7">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary shadow-sm">
                 <BadgeCheck className="h-4 w-4" aria-hidden />
-                <span>{t('home.hero.badge')}</span>
+                <span>{t("home.hero.badge")}</span>
               </div>
 
               <div className="space-y-3">
                 <h1 className="text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-secondary sm:text-5xl lg:text-6xl">
-                  {t('home.hero.headline')}{' '}
+                  {t("home.hero.headline")}{" "}
                   <span className="relative inline-block">
-                    <span className="relative z-10">{t('home.hero.headline_highlight')}</span>
+                    <span className="relative z-10">
+                      {t("home.hero.headline_highlight")}
+                    </span>
                     <span
                       className="absolute inset-x-0 bottom-2 h-3 rounded-full bg-primary/20"
                       aria-hidden
@@ -114,8 +128,8 @@ export function HeroSection() {
                   </span>
                 </h1>
 
-                <p className="max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-                  {t('home.hero.subtitle')}
+                <p className="max-w-xl text-pretty text-sm font-medium leading-6 text-muted-foreground">
+                  {t("home.hero.subtitle")}
                 </p>
               </div>
 
@@ -124,30 +138,33 @@ export function HeroSection() {
                   <CtaSkeleton />
                 ) : isAuthenticated ? (
                   <MemberCtas
-                    primary={t('home.hero.cta_primary')}
-                    secondary={t('home.hero.cta_secondary')}
+                    primary={t("home.hero.cta_primary")}
+                    secondary={t("home.hero.cta_secondary")}
                   />
                 ) : (
                   <GuestCtas
-                    primary={t('home.hero.cta_guest_primary')}
-                    secondary={t('home.hero.cta_guest_secondary')}
+                    primary={t("home.hero.cta_guest_primary")}
+                    secondary={t("home.hero.cta_guest_secondary")}
                   />
                 )}
               </div>
 
               <div
-                className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-sm text-muted-foreground"
-                aria-label={t('home.hero.trust_indicators_label')}
+                className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-sm font-medium leading-6 text-muted-foreground"
+                aria-label={t("home.hero.trust_indicators_label")}
               >
                 {TRUST_ICONS.map(({ key, Icon, wrapClass, iconClass }) => (
                   <span key={key} className="inline-flex items-center gap-2">
                     <span
                       className={[
-                        'grid h-7 w-7 place-items-center rounded-full border shadow-sm',
+                        "grid h-7 w-7 place-items-center rounded-full border shadow-sm",
                         wrapClass,
-                      ].join(' ')}
+                      ].join(" ")}
                     >
-                      <Icon className={['h-3.5 w-3.5', iconClass].join(' ')} aria-hidden />
+                      <Icon
+                        className={["h-3.5 w-3.5", iconClass].join(" ")}
+                        aria-hidden
+                      />
                     </span>
                     {t(`home.hero.${key}`)}
                   </span>

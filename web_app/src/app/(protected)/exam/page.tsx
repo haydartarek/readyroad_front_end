@@ -5,7 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageHeroDescription, PageHeroTitle } from "@/components/ui/page-surface";
+import {
+  PageHeroDescription,
+  PageHeroTitle,
+} from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -296,7 +299,9 @@ export default function TheoryExamPage() {
                       <ClipboardList className="h-8 w-8 text-primary-foreground" />
                     </div>
                     <div className="space-y-1.5">
-                      <PageHeroTitle>{t("practice_exam.intro_title")}</PageHeroTitle>
+                      <PageHeroTitle>
+                        {t("practice_exam.intro_title")}
+                      </PageHeroTitle>
                       <PageHeroDescription className="max-w-2xl">
                         {t("practice_exam.intro_subtitle")}
                       </PageHeroDescription>
@@ -499,7 +504,6 @@ export default function TheoryExamPage() {
                     ))}
                   </div>
                 </div>
-
               </div>
             </aside>
           </div>

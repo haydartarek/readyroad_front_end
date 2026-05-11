@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/language-context';
-import { useAuth } from '@/contexts/auth-context';
-import { ROUTES } from '@/lib/constants';
-import { useHomeStats } from '@/hooks/use-home-stats';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/constants";
+import { useHomeStats } from "@/hooks/use-home-stats";
 
 const SHARED_PRIMARY_BTN =
-  'h-12 rounded-full px-8 text-sm font-semibold shadow-sm ring-1 ring-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0';
+  "h-12 rounded-full px-8 text-sm font-semibold shadow-sm ring-1 ring-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-0";
 
 const SHARED_OUTLINE_BTN =
-  'h-12 rounded-full border border-secondary-foreground/20 bg-transparent px-8 text-sm font-semibold text-secondary-foreground transition-all hover:-translate-y-0.5 hover:border-secondary-foreground/30 hover:bg-secondary-foreground/10 hover:shadow-sm active:translate-y-0';
+  "h-12 rounded-full border border-secondary-foreground/20 bg-transparent px-8 text-sm font-semibold text-secondary-foreground transition-all hover:-translate-y-0.5 hover:border-secondary-foreground/30 hover:bg-secondary-foreground/10 hover:shadow-sm active:translate-y-0";
 
 function CtaSkeleton() {
   return (
@@ -25,8 +25,12 @@ function CtaSkeleton() {
 function StatBadge({ value, label }: { value: number; label: string }) {
   return (
     <div className="rounded-2xl border border-secondary-foreground/15 bg-secondary-foreground/5 px-5 py-4 text-center">
-      <p className="text-2xl font-extrabold tracking-tight text-primary sm:text-3xl">{value}</p>
-      <p className="mt-1 text-xs font-medium text-secondary-foreground/65 sm:text-sm">{label}</p>
+      <p className="text-2xl font-extrabold tracking-tight text-primary sm:text-3xl">
+        {value}
+      </p>
+      <p className="mt-1 text-xs font-medium text-secondary-foreground/65 sm:text-sm">
+        {label}
+      </p>
     </div>
   );
 }
@@ -66,18 +70,27 @@ export function ExamCta() {
             <div className="relative space-y-6">
               <div className="space-y-3">
                 <h2 className="text-balance text-3xl font-extrabold tracking-tight text-secondary-foreground md:text-4xl lg:text-5xl">
-                  {t('home.quiz_cta.title')}
+                  {t("home.quiz_cta.title")}
                 </h2>
                 <p className="mx-auto max-w-2xl text-pretty text-base leading-relaxed text-secondary-foreground/70 sm:text-lg">
-                  {t('home.quiz_cta.subtitle')}
+                  {t("home.quiz_cta.subtitle")}
                 </p>
               </div>
 
               {stats && (
                 <div className="flex flex-wrap justify-center gap-4">
-                  <StatBadge value={stats.trafficSignsCount} label={t('home.quiz_cta.traffic_signs')} />
-                  <StatBadge value={stats.lessonsCount} label={t('home.quiz_cta.lessons_count')} />
-                  <StatBadge value={stats.categoriesCount} label={t('home.quiz_cta.categories_count')} />
+                  <StatBadge
+                    value={stats.trafficSignsCount}
+                    label={t("home.quiz_cta.traffic_signs")}
+                  />
+                  <StatBadge
+                    value={stats.lessonsCount}
+                    label={t("home.quiz_cta.lessons_count")}
+                  />
+                  <StatBadge
+                    value={stats.categoriesCount}
+                    label={t("home.quiz_cta.categories_count")}
+                  />
                 </div>
               )}
 
@@ -85,30 +98,44 @@ export function ExamCta() {
                 <CtaSkeleton />
               ) : isAuthenticated ? (
                 <div className="flex flex-wrap justify-center gap-3">
-                  <PrimaryBtn href={ROUTES.PRACTICE} label={t('home.quiz_cta.start_quiz')} />
-                  <OutlineBtn href={ROUTES.EXAM} label={t('home.quiz_cta.take_exam')} />
+                  <PrimaryBtn
+                    href={ROUTES.PRACTICE}
+                    label={t("home.quiz_cta.start_quiz")}
+                  />
+                  <OutlineBtn
+                    href={ROUTES.EXAM}
+                    label={t("home.quiz_cta.take_exam")}
+                  />
                   <Button
                     size="lg"
                     variant="ghost"
                     className="h-12 rounded-full px-7 text-sm font-semibold text-secondary-foreground/75 transition-all hover:-translate-y-0.5 hover:bg-secondary-foreground/10 hover:text-secondary-foreground hover:shadow-sm active:translate-y-0"
                     asChild
                   >
-                    <Link href={ROUTES.DASHBOARD}>{t('home.quiz_cta.view_progress')}</Link>
+                    <Link href={ROUTES.DASHBOARD}>
+                      {t("home.quiz_cta.view_progress")}
+                    </Link>
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="flex flex-wrap justify-center gap-3">
-                    <PrimaryBtn href={ROUTES.PRACTICE} label={t('home.quiz_cta.start_quiz')} />
-                    <OutlineBtn href={ROUTES.EXAM} label={t('home.quiz_cta.take_exam')} />
+                    <PrimaryBtn
+                      href={ROUTES.PRACTICE}
+                      label={t("home.quiz_cta.start_quiz")}
+                    />
+                    <OutlineBtn
+                      href={ROUTES.EXAM}
+                      label={t("home.quiz_cta.take_exam")}
+                    />
                   </div>
                   <p className="text-sm text-secondary-foreground/60">
-                    {t('home.quiz_cta.login_hint')}{' '}
+                    {t("home.quiz_cta.login_hint")}{" "}
                     <Link
                       href={ROUTES.LOGIN}
                       className="font-semibold text-primary transition-colors hover:text-primary/85"
                     >
-                      {t('home.quiz_cta.login_cta')}
+                      {t("home.quiz_cta.login_cta")}
                     </Link>
                   </p>
                 </div>

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import AdminSidebar from '@/components/admin/AdminSidebar';
-import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb';
-import { useLanguage } from '@/contexts/language-context';
-import { RefreshCw } from 'lucide-react';
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
+import { useLanguage } from "@/contexts/language-context";
+import { RefreshCw } from "lucide-react";
 
 /**
  * Admin Layout Component
@@ -22,18 +22,22 @@ import { RefreshCw } from 'lucide-react';
  * @author ReadyRoad Team
  * @since 2026-02-04
  */
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, isLoading } = useAuth();
-  const router              = useRouter();
-  const { t, isRTL }        = useLanguage();
+  const router = useRouter();
+  const { t, isRTL } = useLanguage();
 
   // Scenario: Redirect non-admin users away from admin routes
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push('/login?redirect=/admin');
-      } else if (user.role !== 'ADMIN') {
-        router.push('/unauthorized');
+        router.push("/login?redirect=/admin");
+      } else if (user.role !== "ADMIN") {
+        router.push("/unauthorized");
       }
     }
   }, [user, isLoading, router]);
@@ -47,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <RefreshCw className="w-6 h-6 text-primary animate-spin" />
           </div>
           <p className="text-sm text-muted-foreground font-medium">
-            {t('admin.sidebar.checking_permissions')}
+            {t("admin.sidebar.checking_permissions")}
           </p>
         </div>
       </div>
@@ -55,13 +59,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Don't render anything if user is not admin (will be redirected)
-  if (!user || user.role !== 'ADMIN') return null;
+  if (!user || user.role !== "ADMIN") return null;
 
   // Scenario: Allow admin users to access admin routes
   return (
     <div
       className="flex min-h-screen bg-gradient-to-br from-background via-muted/10 to-background"
-      dir={isRTL ? 'rtl' : 'ltr'}
+      dir={isRTL ? "rtl" : "ltr"}
     >
       <AdminSidebar />
       <main className="min-w-0 flex-1 px-5 pb-8 pt-6 transition-all duration-300 md:px-8 md:pt-8">

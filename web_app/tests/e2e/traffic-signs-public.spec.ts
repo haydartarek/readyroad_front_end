@@ -31,6 +31,7 @@ async function fulfillJson(route: Route, status: number, body: unknown) {
 
 async function installPublicTrafficSignMocks(page: Page) {
   let logoutCalls = 0;
+  let progressCalls = 0;
 
   await page.addInitScript(() => {
     window.localStorage.setItem("readyroad_locale", "en");
@@ -51,6 +52,7 @@ async function installPublicTrafficSignMocks(page: Page) {
     }
 
     if (path === "/sign-quiz/signs/A1b/status") {
+      progressCalls += 1;
       await fulfillJson(route, 401, { error: "Unauthorized" });
       return;
     }
@@ -60,30 +62,28 @@ async function installPublicTrafficSignMocks(page: Page) {
 
   return {
     getLogoutCalls: () => logoutCalls,
+    getProgressCalls: () => progressCalls,
   };
 }
 
 test.describe("Public traffic sign detail page", () => {
-  test("stays public when optional progress returns 401", async ({ page }) => {
+  test("stays public without requesting optional progress anonymously", async ({
+    page,
+  }) => {
     const mocks = await installPublicTrafficSignMocks(page);
-    const progressResponse = page.waitForResponse(
-      (response) =>
-        response.url().includes("/api/proxy/sign-quiz/signs/A1b/status") &&
-        response.status() === 401,
-    );
 
     await page.goto("/traffic-signs/A1b");
 
     await expect(
       page.getByRole("heading", { name: "Dangerous bend to the right" }),
     ).toBeVisible();
-    await progressResponse;
 
     await expect(page).toHaveURL(/\/traffic-signs\/A1b$/);
     await expect(page).not.toHaveURL(/\/login$/);
     await expect(
       page.getByRole("link", { name: /start practice/i }),
     ).toBeVisible();
+    expect(mocks.getProgressCalls()).toBe(0);
     expect(mocks.getLogoutCalls()).toBe(0);
   });
 });

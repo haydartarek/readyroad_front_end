@@ -7,6 +7,9 @@ import type { TrafficSign } from "@/lib/types";
 
 const replaceMock = jest.fn();
 const mockFetch = jest.fn();
+const useAuthMock = jest.fn();
+let requestUrls: string[] = [];
+let requestConfigs: Record<string, unknown>[] = [];
 
 jest.mock("next/navigation", () => ({
   useParams: () => ({ signCode: "A1b" }),
@@ -33,6 +36,10 @@ jest.mock("@/contexts/language-context", () => ({
   }),
 }));
 
+jest.mock("@/contexts/auth-context", () => ({
+  useAuth: () => useAuthMock(),
+}));
+
 jest.mock("@/components/ui/breadcrumb", () => {
   return function MockBreadcrumb() {
     return <nav data-testid="breadcrumb" />;
@@ -53,7 +60,7 @@ jest.mock("@/components/ui/page-surface", () => ({
 }));
 
 jest.mock("@/components/traffic-signs/sign-image", () => ({
-  SignImage: ({ alt }: { alt: string }) => <img alt={alt} />,
+  SignImage: ({ alt }: { alt: string }) => <span aria-label={alt} role="img" />,
 }));
 
 jest.mock("@/components/ui/service-unavailable-banner", () => ({
@@ -159,6 +166,8 @@ function resetRedirectGuard(): void {
 function pageAdapter(sign: TrafficSign): AxiosAdapter {
   return async (config) => {
     const url = config.url ?? "";
+    requestUrls.push(url);
+    requestConfigs.push(config as unknown as Record<string, unknown>);
 
     if (url.includes("/traffic-signs/") && !url.includes("/sign-quiz/")) {
       return {
@@ -198,6 +207,13 @@ describe("TrafficSignDetailPage", () => {
   beforeEach(() => {
     replaceMock.mockReset();
     mockFetch.mockReset();
+    useAuthMock.mockReset();
+    useAuthMock.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+    });
+    requestUrls = [];
+    requestConfigs = [];
     global.fetch = mockFetch as typeof fetch;
     client.defaults.adapter = pageAdapter(sampleSign);
     resetRedirectGuard();
@@ -208,7 +224,7 @@ describe("TrafficSignDetailPage", () => {
     resetRedirectGuard();
   });
 
-  it("keeps the public sign page visible when optional progress returns 401", async () => {
+  it("does not request optional progress for anonymous public sign pages", async () => {
     render(<TrafficSignDetailPage />);
 
     expect(
@@ -222,7 +238,43 @@ describe("TrafficSignDetailPage", () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
+    expect(requestUrls).toContain("/traffic-signs/A1b");
+    expect(
+      requestUrls.some(
+        (url) => url.includes("/sign-quiz/signs/") && url.includes("/status"),
+      ),
+    ).toBe(false);
     expect(replaceMock).not.toHaveBeenCalledWith("/traffic-signs");
+    expect(replaceMock).not.toHaveBeenCalledWith("/login");
+  });
+
+  it("keeps the public sign page visible when authenticated progress returns 401", async () => {
+    useAuthMock.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    render(<TrafficSignDetailPage />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Virage dangereux à droite",
+      }),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        requestUrls.some(
+          (url) =>
+            url.includes("/sign-quiz/signs/") && url.includes("/status"),
+        ),
+      ).toBe(true);
+    });
+
+    expect(
+      requestConfigs.some((config) => config.skipAuthRedirect === true),
+    ).toBe(true);
+    expect(mockFetch).not.toHaveBeenCalled();
     expect(replaceMock).not.toHaveBeenCalledWith("/login");
   });
 });

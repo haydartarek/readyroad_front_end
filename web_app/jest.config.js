@@ -12,7 +12,8 @@ const customJestConfig = {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
 
-  testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
+  testRegex: ["[/\\\\]src[/\\\\].*(?:\\.test|\\.spec)\\.[jt]sx?$"],
+  testPathIgnorePatterns: ["/node_modules/", "/tests/e2e/"],
 
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",

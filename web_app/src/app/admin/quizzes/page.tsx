@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
@@ -788,10 +789,12 @@ export default function AdminQuizzesPage() {
                               <p className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3">
                                 {t("admin.quizzes.col_image")}
                               </p>
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
+                              <Image
                                 src={getImageUrl(q.contentImageUrl)}
                                 alt={getQuestionText(q)}
+                                width={320}
+                                height={192}
+                                unoptimized
                                 className="max-h-48 rounded-xl border border-border/50 bg-background object-contain"
                               />
                             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { FALLBACK_IMAGE, getSignImageUrl } from "@/lib/image-utils";
 
 // ─── Types ───────────────────────────────────────────────
@@ -48,10 +49,12 @@ export function SignImage({
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={imgSrc}
       alt={alt}
+      fill
+      sizes="(max-width: 768px) 80vw, 320px"
+      unoptimized
       className={sharedClass}
       onError={() => setImgSrc(null)}
     />

@@ -18,6 +18,7 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import {
@@ -101,6 +102,7 @@ export default function TrafficSignDetailPage() {
   const routeParam = params.signCode;
   const router = useRouter();
   const { t, language, isRTL } = useLanguage();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const currentLanguage = (["nl", "en", "ar", "fr"] as Lang[]).includes(
     language as Lang,
   )
@@ -112,7 +114,6 @@ export default function TrafficSignDetailPage() {
     null,
   );
   const [loading, setLoading] = useState(true);
-  const [progressLoading, setProgressLoading] = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [error, setError] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
@@ -139,7 +140,6 @@ export default function TrafficSignDetailPage() {
       .then((response) => {
         if (!cancelled) {
           setSignProgress(null);
-          setProgressLoading(true);
           setSign(response.data);
         }
       })
@@ -169,6 +169,14 @@ export default function TrafficSignDetailPage() {
       return;
     }
 
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      return;
+    }
+
     let cancelled = false;
 
     const progressIdentifier = sign.routeCode ?? sign.signCode ?? routeParam;
@@ -183,17 +191,12 @@ export default function TrafficSignDetailPage() {
         if (!cancelled) {
           setSignProgress(null);
         }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setProgressLoading(false);
-        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [routeParam, sign]);
+  }, [authLoading, isAuthenticated, routeParam, sign]);
 
   useEffect(() => {
     if (!sign) {
@@ -288,6 +291,7 @@ export default function TrafficSignDetailPage() {
     { label: currentName, href: `/traffic-signs/${routeCode}` },
   ];
   const examStatus = getSignExamStatus(signProgress);
+  const progressLoading = authLoading;
   const examQuestionsCount =
     sign.exam1TotalQuestions ?? signProgress?.exam1TotalQuestions ?? null;
   const examPassingScore =

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { getCsrfToken } from "@/lib/auth-token";
@@ -651,10 +652,12 @@ export default function AdminAddQuizQuestionPage() {
         >
           {form.contentImageUrl && (
             <div className="relative inline-block">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={resolveImageUrl(form.contentImageUrl)}
                 alt="Question content"
+                width={320}
+                height={192}
+                unoptimized
                 className="max-h-48 rounded-xl border border-border/50 object-contain bg-muted"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";

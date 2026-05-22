@@ -530,7 +530,13 @@ export function ExamResultsPageContent() {
                           </span>
                         ) : (
                           <span className="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            {exam.status}
+                            {exam.status === "ABANDONED"
+                              ? t("dashboard.activity_status_abandoned")
+                              : exam.status === "EXPIRED"
+                                ? t("dashboard.activity_status_expired")
+                                : exam.status === "IN_PROGRESS"
+                                  ? t("dashboard.activity_status_in_progress")
+                                  : exam.status}
                           </span>
                         )}
                       </div>

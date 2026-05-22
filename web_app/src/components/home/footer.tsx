@@ -105,7 +105,7 @@ export function Footer() {
     { label: t("home.footer.speed_limits"), href: "/lessons/les-3" },
     {
       label: t("home.footer.priority_signs"),
-      href: "/traffic-signs?category=PRIORITY",
+      href: "/traffic-signs?category=B",
     },
     { label: t("home.footer.road_markings"), href: "/lessons" },
   ];

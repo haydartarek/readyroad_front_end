@@ -1,46 +1,12 @@
-// Services barrel export
-// Usage: import { login, getCurrentUser } from '@/services'
-
-// ─── Auth ────────────────────────────────────────────────
-
-export {
-  login,
-  register,
-  logout,
-  isAuthenticated,
-  getToken,
-  type LoginRequest,
-  type LoginResponse,
-  type RegisterRequest,
-} from "./authService";
-
 // ─── User ────────────────────────────────────────────────
 
-export {
-  getCurrentUser,
-  getUnreadNotificationCount,
-  getUserStats,
-  updateProfile,
-  hasRole,
-  isAdmin,
-  isModerator,
-  type UserProfile,
-  type NotificationCount,
-  type UserStats,
-  type UpdateProfileRequest,
-} from "./userService";
+export { updateProfile } from "./userService";
 
 // ─── Analytics ───────────────────────────────────────────
 
 export {
   getWeakAreas,
-  getErrorPatterns,
-  getAnalyticsSummary,
-  type WeakArea,
   type WeakAreasData,
-  type ErrorPattern,
-  type ErrorPatternsData,
-  type AnalyticsSummary,
 } from "./analyticsService";
 
 // ─── Progress ────────────────────────────────────────────
@@ -49,33 +15,11 @@ export {
   getOverallProgress,
   getProgressByCategory,
   getRecentActivity,
-  type OverallProgress,
-  type CategoryProgress,
-  type ProgressByCategory,
-  type RecentActivity,
 } from "./progressService";
-
-// ─── Lessons ─────────────────────────────────────────────
-
-export {
-  getAllLessons,
-  getLessonByCode,
-  searchLessons,
-  getLessonsCount,
-} from "./lessonService";
-
-// ─── Service Objects ─────────────────────────────────────
-
-export { default as authService } from "./authService";
-export { default as userService } from "./userService";
-export { default as analyticsService } from "./analyticsService";
-export { default as progressService } from "./progressService";
-export { default as lessonService } from "./lessonService";
 
 // ─── Sign Quiz ────────────────────────────────────────────
 
 export {
-  getActiveSigns,
   startPracticeSession,
   submitPracticeAnswer,
   getPracticeResults,
@@ -83,38 +27,12 @@ export {
   submitExam,
   getSignStatus,
   getAllSignProgress,
-  startRandomPracticeSession,
-  submitRandomPracticeSession,
-  getRandomPracticeHistory,
-  getRandomPracticeResult,
   type SignChoice,
   type SignQuizQuestion,
   type SignPracticeSession,
-  type SubmitAnswerRequest,
   type SignPracticeAnswerResponse,
   type PracticeAnswerDetail,
-  type SignPracticeResult,
   type SignExamQuestions,
-  type SignExamAnswerItem,
-  type ExamQuestionResult,
   type SignExamResult,
   type SignUserProgress,
-  type SignRandomPracticeSession,
-  type SignRandomPracticeAnswerItem,
-  type SignRandomPracticeQuestionResult,
-  type SignRandomPracticeResult,
-  type SignRandomPracticeHistoryItem,
-  type SignRandomPracticeHistoryResponse,
 } from "./signQuizService";
-
-// ─── Assessment ──────────────────────────────────────────
-
-export {
-  getAssessmentCategories,
-  getAssessmentCategory,
-  getAssessmentQuestions,
-  type DifficultyLevel,
-  type AssessmentChoice,
-  type AssessmentQuestion,
-  type AssessmentCategory,
-} from "./assessmentService";

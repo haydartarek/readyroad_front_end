@@ -1,19 +1,41 @@
-﻿.env
+# Environment and local secrets
+.env
+.env.*
+!.env.example
 
+# JavaScript and Next.js generated output
 node_modules/
 dist/
 build/
 .next/
+out/
+coverage/
 
+# Flutter/Dart generated output
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Logs
 logs/
 *.log
-*.txt
 
+# IDE
 .idea/
+*.iml
 
-# Backup files
+# Backup and temporary files
 *.bak
 *.backup
+*.backup-*
 *.old
+*.orig
 *.tmp
+*.temp
+*.save
+*.rej
+*~
 
+# OS files
+.DS_Store
+Thumbs.db

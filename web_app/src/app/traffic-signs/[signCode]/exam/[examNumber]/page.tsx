@@ -20,11 +20,7 @@ import {
 import { TrafficSign } from "@/lib/types";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import { apiClient, logApiError } from "@/lib/api";
-import {
-  API_ENDPOINTS,
-  isRemovedLegacyTrafficSignCode,
-  resolveLegacyTrafficSignCode,
-} from "@/lib/constants";
+import { API_ENDPOINTS } from "@/lib/constants";
 import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 import { getTrafficSignName } from "@/lib/traffic-sign-presentation";
@@ -94,8 +90,7 @@ export default function ExamPage() {
   const examNum = Number(examNumber) as 1 | 2;
   const { t, language, isRTL } = useLanguage();
   const lang = language as Lang;
-  const requestedCode = resolveLegacyTrafficSignCode(signCode);
-  const removedLegacyCode = isRemovedLegacyTrafficSignCode(signCode);
+  const requestedCode = signCode.trim();
 
   const [sign, setSign] = useState<TrafficSign | null>(null);
   const [examData, setExamData] = useState<SignExamQuestions | null>(null);
@@ -114,11 +109,6 @@ export default function ExamPage() {
   const reviewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (removedLegacyCode) {
-      router.replace("/traffic-signs");
-      return;
-    }
-
     let cancelled = false;
     setLoading(true);
     setLocked(false);
@@ -149,7 +139,7 @@ export default function ExamPage() {
     return () => {
       cancelled = true;
     };
-  }, [removedLegacyCode, requestedCode, examNum, router]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [requestedCode, examNum, t]);
 
   const questions = useMemo(() => examData?.questions ?? [], [examData]);
   const total = questions.length;

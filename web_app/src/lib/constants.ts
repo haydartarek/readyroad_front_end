@@ -10,21 +10,6 @@ export const EXAM_RULES = {
   PASSING_SCORE: 41, // 82% of 50
 } as const;
 
-// ─── Question Categories ─────────────────────────────────
-
-export const CATEGORIES = {
-  DANGER_SIGNS: "A",
-  PRIORITY_RULES: "B",
-  PROHIBITION_SIGNS: "C",
-  MANDATORY_SIGNS: "D",
-  INFORMATION_SIGNS: "F",
-  SPEED_LIMITS: "SPEED",
-  PARKING: "PARKING",
-  OVERTAKING: "OVERTAKING",
-  ROAD_MARKINGS: "MARKINGS",
-  SPECIAL_ROADS: "SPECIAL",
-} as const;
-
 // ─── Languages ───────────────────────────────────────────
 
 export const LANGUAGES = [
@@ -83,34 +68,6 @@ export const ROUTES = {
   LESSON_DETAIL: (code: string) => `/lessons/${code}`,
 } as const;
 
-const LEGACY_TRAFFIC_SIGN_CODE_ALIASES: Record<string, string> = {
-  c11a: "C11",
-  c11b: "C11",
-  c22a: "C22",
-  c43_10: "C43",
-  c43_30: "C43",
-  c43_50: "C43",
-  c43_70: "C43",
-  c43_90: "C43",
-};
-
-const LEGACY_TRAFFIC_SIGN_CODES_WITHOUT_DIRECT_REPLACEMENT = new Set(["c28a"]);
-
-export function resolveLegacyTrafficSignCode(code: string): string {
-  const raw = code.trim();
-  if (!raw) {
-    return raw;
-  }
-
-  return LEGACY_TRAFFIC_SIGN_CODE_ALIASES[raw.toLowerCase()] ?? raw;
-}
-
-export function isRemovedLegacyTrafficSignCode(code: string): boolean {
-  return LEGACY_TRAFFIC_SIGN_CODES_WITHOUT_DIRECT_REPLACEMENT.has(
-    code.trim().toLowerCase(),
-  );
-}
-
 // ─── Storage Keys ────────────────────────────────────────
 
 export const STORAGE_KEYS = {
@@ -118,56 +75,6 @@ export const STORAGE_KEYS = {
   LANGUAGE: "readyroad_locale",
   THEME: "readyroad_theme",
   EXAM_STATE: "readyroad_exam_state",
-} as const;
-
-// ─── Timer Warnings (seconds) ────────────────────────────
-
-export const TIMER_WARNINGS = {
-  TEN_MINUTES: 600,
-  FIVE_MINUTES: 300,
-  ONE_MINUTE: 60,
-} as const;
-
-// ─── Difficulty Levels ───────────────────────────────────
-
-export const DIFFICULTY_LEVELS = {
-  EASY: "EASY",
-  MEDIUM: "MEDIUM",
-  HARD: "HARD",
-} as const;
-
-// ─── Simulation Status ───────────────────────────────────
-
-export const SIMULATION_STATUS = {
-  IN_PROGRESS: "IN_PROGRESS",
-  COMPLETED: "COMPLETED",
-  EXPIRED: "EXPIRED",
-} as const;
-
-// ─── Pagination ──────────────────────────────────────────
-
-export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 20,
-  TRAFFIC_SIGNS_PAGE_SIZE: 24,
-} as const;
-
-// ─── Analytics Thresholds ────────────────────────────────
-
-export const ANALYTICS_THRESHOLDS = {
-  WEAK_AREA_ACCURACY: 60,
-  STRONG_AREA_ACCURACY: 80,
-  MIN_ATTEMPTS: 5,
-} as const;
-
-// ─── Chart Colors ────────────────────────────────────────
-
-export const CHART_COLORS = {
-  PRIMARY: "#DF5830",
-  SUCCESS: "#27AE60",
-  WARNING: "#F39C12",
-  ERROR: "#E74C3C",
-  INFO: "#3498DB",
-  NEUTRAL: "#6C757D",
 } as const;
 
 // ─── API Endpoints ───────────────────────────────────────
@@ -278,9 +185,6 @@ export const API_ENDPOINTS = {
     SIGNS: {
       LIST: "/admin/signs",
       DETAIL: (id: number | string) => `/admin/signs/${id}`,
-      CREATE: "/admin/signs",
-      UPDATE: (id: number | string) => `/admin/signs/${id}`,
-      DELETE: (id: number | string) => `/admin/signs/${id}`,
     },
 
     QUIZ_QUESTIONS: {
@@ -304,20 +208,3 @@ export const API_ENDPOINTS = {
 
 /** Language code: 'en' | 'ar' | 'nl' | 'fr' */
 export type Language = (typeof LANGUAGES)[number]["code"];
-
-/** Category value for traffic signs and questions */
-export type Category = (typeof CATEGORIES)[keyof typeof CATEGORIES];
-
-/** Difficulty level: 'EASY' | 'MEDIUM' | 'HARD' */
-export type DifficultyLevel =
-  (typeof DIFFICULTY_LEVELS)[keyof typeof DIFFICULTY_LEVELS];
-
-/** Simulation status */
-export type SimulationStatus =
-  (typeof SIMULATION_STATUS)[keyof typeof SIMULATION_STATUS];
-
-/** localStorage key */
-export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
-
-/** Chart color hex value */
-export type ChartColor = (typeof CHART_COLORS)[keyof typeof CHART_COLORS];

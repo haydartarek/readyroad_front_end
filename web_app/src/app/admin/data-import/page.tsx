@@ -48,10 +48,9 @@ interface HistoryRecord {
   errorSummary: string | null;
   warningSummary: string | null;
 }
-type ImportType = "signs" | "categories" | "quiz_questions";
+type ImportType = "categories" | "quiz_questions";
 
 const IMPORT_TYPES: { key: ImportType; icon: string; labelKey: string }[] = [
-  { key: "signs", icon: "🚦", labelKey: "admin.import.type_signs" },
   { key: "categories", icon: "📋", labelKey: "admin.import.type_categories" },
   { key: "quiz_questions", icon: "❓", labelKey: "admin.import.type_quiz" },
 ];
@@ -106,7 +105,6 @@ function CountCard({
 
 function TypeBadge({ type, t }: { type: string; t: (k: string) => string }) {
   const map: Record<string, { icon: string; key: string }> = {
-    signs: { icon: "🚦", key: "admin.import.type_signs" },
     categories: { icon: "📋", key: "admin.import.type_categories" },
     quiz_questions: { icon: "❓", key: "admin.import.type_quiz" },
   };
@@ -219,7 +217,7 @@ export default function AdminDataImportPage() {
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
 
-  const [selectedType, setSelectedType] = useState<ImportType>("signs");
+  const [selectedType, setSelectedType] = useState<ImportType>("categories");
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState(false);

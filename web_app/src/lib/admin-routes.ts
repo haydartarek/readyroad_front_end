@@ -101,11 +101,6 @@ export const ADMIN_ROUTES: AdminRoute[] = [
         path: "/admin/signs",
         labelKey: "admin.sidebar.signs_all",
       },
-      {
-        key: "signs_new",
-        path: "/admin/signs/new",
-        labelKey: "admin.sidebar.signs_add",
-      },
     ],
   },
   {
@@ -174,12 +169,6 @@ export const ADMIN_ROUTES: AdminRoute[] = [
   },
 ];
 
-// ─── Legacy Redirects ────────────────────────────────────
-
-export const LEGACY_REDIRECTS: Record<string, string> = {
-  "/admin/signs/add": "/admin/signs/new",
-};
-
 // ─── Segment Labels ──────────────────────────────────────
 
 const SEGMENT_LABEL_KEYS: Record<string, string> = {
@@ -199,26 +188,6 @@ const SEGMENT_LABEL_KEYS: Record<string, string> = {
 const NUMERIC_SEGMENT_RE = /^\d+$/;
 
 // ─── Helpers ─────────────────────────────────────────────
-
-/** Get a top-level route by its key */
-export function getRouteByKey(key: string): AdminRoute | undefined {
-  return ADMIN_ROUTES.find((r) => r.key === key);
-}
-
-/** Get a top-level route whose path matches (exact first, then longest prefix) */
-export function getRouteByPath(path: string): AdminRoute | undefined {
-  const exact = ADMIN_ROUTES.find((r) => r.path === path);
-  if (exact) return exact;
-
-  return [...ADMIN_ROUTES]
-    .sort((a, b) => b.path.length - a.path.length)
-    .find((r) => path.startsWith(`${r.path}/`));
-}
-
-/** Get all routes belonging to a group */
-export function getRoutesByGroup(group: AdminGroupKey): AdminRoute[] {
-  return ADMIN_ROUTES.filter((r) => r.group === group);
-}
 
 /**
  * Get only visible routes (filters out hidden and disabled feature-flagged routes).

@@ -1,4 +1,4 @@
-import { apiClient, isServiceUnavailable } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 
 // ─── Types ───────────────────────────────────────────────
@@ -32,35 +32,12 @@ export interface AppNotification {
   readAt?: string;
 }
 
-export interface UserStats {
-  totalExams: number;
-  passedExams: number;
-  averageScore: number;
-  totalPracticeQuestions: number;
-  correctAnswers: number;
-  accuracy: number;
-}
-
 export interface UpdateProfileRequest {
   fullName?: string;
   email?: string;
 }
 
-// ─── Constants ───────────────────────────────────────────
-
-const ROLE_HIERARCHY: Record<UserProfile["role"], number> = {
-  ADMIN: 3,
-  MODERATOR: 2,
-  USER: 1,
-};
-
 // ─── Service ─────────────────────────────────────────────
-
-/** GET /api/users/me */
-export async function getCurrentUser(): Promise<UserProfile> {
-  const response = await apiClient.get<UserProfile>(API_ENDPOINTS.USERS.ME);
-  return response.data;
-}
 
 /** GET /api/users/me/notifications/unread-count */
 export async function getUnreadNotificationCount(
@@ -107,17 +84,6 @@ export async function markAllNotificationsAsRead(): Promise<void> {
   await apiClient.patch(API_ENDPOINTS.USERS.NOTIFICATIONS_READ_ALL);
 }
 
-/** GET /api/users/me/stats — returns null if endpoint is unavailable */
-export async function getUserStats(): Promise<UserStats | null> {
-  try {
-    const response = await apiClient.get<UserStats>("/users/me/stats");
-    return response.data;
-  } catch (error) {
-    if (isServiceUnavailable(error)) throw error;
-    return null;
-  }
-}
-
 /** PUT /api/users/me */
 export async function updateProfile(
   data: UpdateProfileRequest,
@@ -128,38 +94,3 @@ export async function updateProfile(
   );
   return response.data;
 }
-
-// ─── Role Helpers ────────────────────────────────────────
-
-export function hasRole(
-  user: UserProfile | null,
-  role: UserProfile["role"],
-): boolean {
-  if (!user) return false;
-  return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[role];
-}
-
-export function isAdmin(user: UserProfile | null): boolean {
-  return user?.role === "ADMIN";
-}
-
-export function isModerator(user: UserProfile | null): boolean {
-  return hasRole(user, "MODERATOR");
-}
-
-// ─── Service Object ──────────────────────────────────────
-
-export const userService = {
-  getCurrentUser,
-  getUnreadNotificationCount,
-  getNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-  getUserStats,
-  updateProfile,
-  hasRole,
-  isAdmin,
-  isModerator,
-};
-
-export default userService;

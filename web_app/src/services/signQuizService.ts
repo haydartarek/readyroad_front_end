@@ -335,16 +335,6 @@ export interface SignUserProgress {
 // ─── Service functions ────────────────────────────────────────────────────────
 
 /**
- * Get all active road signs (lightweight summary list).
- */
-export async function getActiveSigns() {
-  const res = await apiClient.get<import("@/lib/types").TrafficSign[]>(
-    API_ENDPOINTS.SIGN_QUIZ.SIGNS,
-  );
-  return res.data;
-}
-
-/**
  * Start (or resume) a practice session for a sign.
  */
 export async function startPracticeSession(

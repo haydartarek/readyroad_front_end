@@ -11,7 +11,6 @@ import {
   Users,
   TrafficCone,
   ClipboardList,
-  PlusCircle,
   BarChart2,
   Settings,
   RefreshCw,
@@ -218,9 +217,9 @@ export default function AdminDashboard() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <QuickActionButton
-            icon={<PlusCircle className="w-5 h-5" />}
-            label={t("admin.add_sign")}
-            href="/admin/signs/new"
+            icon={<TrafficCone className="w-5 h-5" />}
+            label={t("admin.signs.title")}
+            href="/admin/signs"
           />
           <QuickActionButton
             icon={<Users className="w-5 h-5" />}

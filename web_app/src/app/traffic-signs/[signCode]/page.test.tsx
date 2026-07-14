@@ -111,8 +111,10 @@ jest.mock("@/lib/sign-exam-status", () => ({
 jest.mock("@/lib/traffic-sign-presentation", () => ({
   getTrafficSignDescription: (sign: TrafficSign, language: string) =>
     language === "fr" ? sign.descriptionFr : sign.descriptionEn,
-  getTrafficSignGuidance: (sign: TrafficSign, language: string) =>
-    language === "fr" ? sign.longDescriptionFr : sign.longDescriptionEn,
+  getTrafficSignDriverGuidance: (sign: TrafficSign, language: string) =>
+    language === "fr" ? sign.driverGuidanceFr : sign.driverGuidanceEn,
+  getTrafficSignExceptions: (sign: TrafficSign, language: string) =>
+    language === "fr" ? sign.exceptionsFr : sign.exceptionsEn,
   getTrafficSignGroupInfo: () => ({
     info: {
       title: {
@@ -126,13 +128,10 @@ jest.mock("@/lib/traffic-sign-presentation", () => ({
       chip: "chip-style",
     },
   }),
-  getTrafficSignLongDescription: (sign: TrafficSign, language: string) =>
-    language === "fr" ? sign.longDescriptionFr : sign.longDescriptionEn,
-  getTrafficSignMeaning: (sign: TrafficSign, language: string) =>
-    language === "fr" ? sign.descriptionFr : sign.descriptionEn,
   getTrafficSignName: (sign: TrafficSign, language: string) =>
     language === "fr" ? sign.nameFr : sign.nameEn,
-  hasDistinctTrafficSignGuidance: () => true,
+  getTrafficSignSummary: (sign: TrafficSign, language: string) =>
+    language === "fr" ? sign.summaryFr : sign.summaryEn,
 }));
 
 const sampleSign: TrafficSign = {
@@ -145,14 +144,22 @@ const sampleSign: TrafficSign = {
   nameAr: "منعطف خطير إلى اليمين",
   nameNl: "Gevaarlijke bocht naar rechts",
   nameFr: "Virage dangereux à droite",
+  summaryEn: "A dangerous right-hand bend lies ahead.",
+  summaryAr: "يوجد منعطف خطير إلى اليمين أمامك.",
+  summaryNl: "Verderop ligt een gevaarlijke bocht naar rechts.",
+  summaryFr: "Un virage dangereux à droite se trouve plus loin.",
   descriptionEn: "Warns about a dangerous bend to the right.",
   descriptionAr: "يحذر من منعطف خطير إلى اليمين.",
   descriptionNl: "Waarschuwt voor een gevaarlijke bocht naar rechts.",
   descriptionFr: "Avertit d'un virage dangereux à droite.",
-  longDescriptionEn: "Reduce speed before entering the bend.",
-  longDescriptionNl: "Verminder uw snelheid voor de bocht.",
-  longDescriptionFr: "Ralentissez avant d'entrer dans le virage.",
-  longDescriptionAr: "خفف السرعة قبل دخول المنعطف.",
+  driverGuidanceEn: "Reduce speed before the bend and keep control.",
+  driverGuidanceAr: "خفف السرعة قبل المنعطف وحافظ على السيطرة.",
+  driverGuidanceNl: "Verminder snelheid vóór de bocht en behoud de controle.",
+  driverGuidanceFr: "Réduisez la vitesse avant le virage et gardez le contrôle.",
+  exceptionsEn: ["A supplementary plate may specify the distance."],
+  exceptionsAr: ["قد تحدد لوحة تكميلية المسافة."],
+  exceptionsNl: ["Een onderbord kan de afstand vermelden."],
+  exceptionsFr: ["Un panneau additionnel peut préciser la distance."],
   imageUrl: "/images/signs/danger_signs/A1b.png",
 };
 
@@ -235,6 +242,17 @@ describe("TrafficSignDetailPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("sign_detail.overview")).toBeInTheDocument();
+      expect(
+        screen.getByText("Un virage dangereux à droite se trouve plus loin."),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Réduisez la vitesse avant le virage et gardez le contrôle.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Un panneau additionnel peut préciser la distance."),
+      ).toBeInTheDocument();
       expect(mockFetch).not.toHaveBeenCalled();
     });
 

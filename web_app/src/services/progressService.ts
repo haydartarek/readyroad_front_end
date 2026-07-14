@@ -472,13 +472,3 @@ export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
     return [];
   }
 }
-
-// ─── Service Object ──────────────────────────────────────
-
-export const progressService = {
-  getOverallProgress,
-  getProgressByCategory,
-  getRecentActivity,
-};
-
-export default progressService;

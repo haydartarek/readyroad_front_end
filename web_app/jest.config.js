@@ -14,6 +14,7 @@ const customJestConfig = {
 
   testRegex: ["[/\\\\]src[/\\\\].*(?:\\.test|\\.spec)\\.[jt]sx?$"],
   testPathIgnorePatterns: ["/node_modules/", "/tests/e2e/"],
+  modulePathIgnorePatterns: ["<rootDir>/.next/"],
 
   collectCoverageFrom: [
     "src/**/*.{js,jsx,ts,tsx}",

@@ -40,14 +40,6 @@ export async function searchLessons(query: string): Promise<Lesson[]> {
   return data;
 }
 
-/** Get total active lesson count. */
-export async function getLessonsCount(): Promise<number> {
-  const { data } = await apiClient.get<{ count: number }>(
-    API_ENDPOINTS.LESSONS.COUNT,
-  );
-  return data.count;
-}
-
 /** Get the authenticated user's progress for one lesson. */
 export async function getLessonProgress(code: string): Promise<LessonProgress> {
   const { data } = await apiClient.get<LessonProgress>(
@@ -68,16 +60,3 @@ export async function markLessonPageRead(
   );
   return data;
 }
-
-// ─── Service Object ──────────────────────────────────────
-
-export const lessonService = {
-  getAllLessons,
-  getLessonByCode,
-  searchLessons,
-  getLessonsCount,
-  getLessonProgress,
-  markLessonPageRead,
-};
-
-export default lessonService;

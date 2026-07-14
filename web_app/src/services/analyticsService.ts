@@ -62,42 +62,15 @@ interface WeakAreasOverviewResponse {
   overallAccuracy: number;
 }
 
-export interface ErrorPattern {
-  questionId: number;
-  questionText: string;
-  category: string;
-  timesAttempted: number;
-  timesIncorrect: number;
-  lastAttemptDate: string;
-}
-
-export interface ErrorPatternsData {
-  patterns: ErrorPattern[];
-  totalErrors: number;
-}
-
-export interface AnalyticsSummary {
-  weakAreas: WeakAreasData;
-  errorPatterns: ErrorPatternsData;
-}
-
 // ─── Constants ───────────────────────────────────────────
 
-const ENDPOINTS = {
-  WEAK_AREAS: "/users/me/analytics/weak-areas",
-  ERROR_PATTERNS: "/users/me/analytics/error-patterns",
-} as const;
+const WEAK_AREAS_ENDPOINT = "/users/me/analytics/weak-areas";
 
 const WEAK_AREAS_FALLBACK: WeakAreasData = {
   weakAreas: [],
   overallAccuracy: 0,
   totalCategories: 0,
   recommendations: [],
-};
-
-const ERROR_PATTERNS_FALLBACK: ErrorPatternsData = {
-  patterns: [],
-  totalErrors: 0,
 };
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -157,7 +130,7 @@ function transformWeakAreas(backend: WeakAreasOverviewResponse): WeakAreasData {
 export async function getWeakAreas(): Promise<WeakAreasData> {
   try {
     const response = await apiClient.get<WeakAreasOverviewResponse>(
-      ENDPOINTS.WEAK_AREAS,
+      WEAK_AREAS_ENDPOINT,
     );
     return transformWeakAreas(response.data);
   } catch (error) {
@@ -165,35 +138,3 @@ export async function getWeakAreas(): Promise<WeakAreasData> {
     return WEAK_AREAS_FALLBACK;
   }
 }
-
-/** GET /api/users/me/analytics/error-patterns */
-export async function getErrorPatterns(): Promise<ErrorPatternsData> {
-  try {
-    const response = await apiClient.get<ErrorPatternsData>(
-      ENDPOINTS.ERROR_PATTERNS,
-    );
-    return response.data;
-  } catch (error) {
-    if (isServiceUnavailable(error)) throw error;
-    return ERROR_PATTERNS_FALLBACK;
-  }
-}
-
-/** Fetch weak areas and error patterns in parallel */
-export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
-  const [weakAreas, errorPatterns] = await Promise.all([
-    getWeakAreas(),
-    getErrorPatterns(),
-  ]);
-  return { weakAreas, errorPatterns };
-}
-
-// ─── Service Object ──────────────────────────────────────
-
-export const analyticsService = {
-  getWeakAreas,
-  getErrorPatterns,
-  getAnalyticsSummary,
-};
-
-export default analyticsService;

@@ -5,19 +5,6 @@ import {
 } from "@/lib/sign-category-data";
 import type { TrafficSign } from "@/lib/types";
 
-const LEGACY_CATEGORY_TO_GROUP: Record<string, string> = {
-  DANGER: "A",
-  PRIORITY: "B",
-  PROHIBITION: "C",
-  MANDATORY: "D",
-  PARKING: "E",
-  INFORMATION: "F",
-  ADDITIONAL: "G",
-  CYCLIST: "M",
-  DELINEATION: "T",
-  ZONE: "Z",
-};
-
 export const TRAFFIC_SIGN_GROUP_ORDER = GROUP_LETTER_ORDER;
 
 export const GROUP_STYLES: Record<
@@ -125,120 +112,76 @@ export function getTrafficSignName(
   sign: TrafficSign,
   language: LangKey,
 ): string {
-  return (
-    {
-      nl: sign.nameNl,
-      en: sign.nameEn,
-      ar: sign.nameAr,
-      fr: sign.nameFr,
-    }[language] ||
-    sign.nameEn ||
-    sign.signCode
-  );
+  return {
+    nl: sign.nameNl,
+    en: sign.nameEn,
+    ar: sign.nameAr,
+    fr: sign.nameFr,
+  }[language];
 }
 
 export function getTrafficSignDescription(
   sign: TrafficSign,
   language: LangKey,
 ): string {
-  return (
-    {
-      nl: sign.descriptionNl,
-      en: sign.descriptionEn,
-      ar: sign.descriptionAr,
-      fr: sign.descriptionFr,
-    }[language] ||
-    sign.descriptionEn ||
-    ""
-  );
+  return {
+    nl: sign.descriptionNl,
+    en: sign.descriptionEn,
+    ar: sign.descriptionAr,
+    fr: sign.descriptionFr,
+  }[language];
 }
 
-export function getTrafficSignMeaning(
+export function getTrafficSignSummary(
   sign: TrafficSign,
   language: LangKey,
 ): string {
-  return (
-    {
-      nl: sign.meaningNl,
-      en: sign.meaningEn,
-      ar: sign.meaningAr,
-      fr: sign.meaningFr,
-    }[language] || getTrafficSignDescription(sign, language)
-  );
+  return {
+    nl: sign.summaryNl,
+    en: sign.summaryEn,
+    ar: sign.summaryAr,
+    fr: sign.summaryFr,
+  }[language];
 }
 
-export function getTrafficSignLongDescription(
+export function getTrafficSignDriverGuidance(
   sign: TrafficSign,
   language: LangKey,
 ): string {
-  return (
-    {
-      nl: sign.longDescriptionNl,
-      en: sign.longDescriptionEn,
-      ar: sign.longDescriptionAr,
-      fr: sign.longDescriptionFr,
-    }[language] || ""
-  );
+  return {
+    nl: sign.driverGuidanceNl,
+    en: sign.driverGuidanceEn,
+    ar: sign.driverGuidanceAr,
+    fr: sign.driverGuidanceFr,
+  }[language];
 }
 
-export function getTrafficSignGuidance(
+export function getTrafficSignExceptions(
   sign: TrafficSign,
   language: LangKey,
-): string {
-  return (
-    {
-      nl: sign.guidanceNl,
-      en: sign.guidanceEn,
-      ar: sign.guidanceAr,
-      fr: sign.guidanceFr,
-    }[language] || getTrafficSignLongDescription(sign, language)
-  );
-}
-
-function normalizeNarrative(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim();
-}
-
-export function hasDistinctTrafficSignGuidance(
-  meaning: string,
-  guidance: string,
-): boolean {
-  if (!meaning.trim() || !guidance.trim()) {
-    return false;
-  }
-
-  return normalizeNarrative(meaning) !== normalizeNarrative(guidance);
+): string[] {
+  return {
+    nl: sign.exceptionsNl,
+    en: sign.exceptionsEn,
+    ar: sign.exceptionsAr,
+    fr: sign.exceptionsFr,
+  }[language];
 }
 
 export function getTrafficSignGroup(sign: TrafficSign): string {
-  const imagePath = (sign.imageUrl || "").toLowerCase();
-  if (imagePath.includes("/road_markings/")) {
-    return "FM";
+  const categoryCode = sign.categoryCode.trim().toUpperCase();
+  if (!GROUP_INFO[categoryCode]) {
+    throw new Error(`Unsupported traffic-sign categoryCode: ${sign.categoryCode}`);
   }
-
-  const categoryCode = sign.categoryCode?.trim().toUpperCase();
-  if (categoryCode && GROUP_INFO[categoryCode]) {
-    return categoryCode;
-  }
-
-  const category = sign.category?.trim().toUpperCase();
-  if (category && LEGACY_CATEGORY_TO_GROUP[category]) {
-    return LEGACY_CATEGORY_TO_GROUP[category];
-  }
-
-  const firstLetter = sign.signCode?.trim().charAt(0).toUpperCase();
-  return firstLetter && GROUP_INFO[firstLetter] ? firstLetter : "F";
+  return categoryCode;
 }
 
 export function getTrafficSignGroupInfo(sign: TrafficSign) {
   const group = getTrafficSignGroup(sign);
   return {
     group,
-    info: GROUP_INFO[group] ?? GROUP_INFO.F,
-    style: GROUP_STYLES[group] ?? GROUP_STYLES.F,
+    info: GROUP_INFO[group],
+    style: GROUP_STYLES[group],
   };
 }
 

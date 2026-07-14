@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -61,6 +67,10 @@ const AUTH_PATHS = [
   "/reset-password",
 ];
 
+const subscribeToHydration = () => () => {};
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
+
 function getRoleLabelKey(role?: string) {
   if (role === "ADMIN") return "nav.role_admin";
   if (role === "MODERATOR") return "nav.role_moderator";
@@ -102,6 +112,11 @@ export function Navbar() {
   const router = useRouter();
   const searchContainer = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const themeMounted = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
 
   const isAuthPage = AUTH_PATHS.some(
     (route) => pathname === route || pathname.startsWith(route + "/"),
@@ -115,7 +130,6 @@ export function Navbar() {
   const roleLabel = t(getRoleLabelKey(user?.role));
   const displayName = user?.fullName ?? user?.username ?? t("nav.profile");
   const userInitial = displayName.trim().charAt(0).toUpperCase();
-  const themeMounted = typeof resolvedTheme === "string";
   const isDarkTheme = resolvedTheme === "dark";
 
   const {

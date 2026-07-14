@@ -33,11 +33,7 @@ import {
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
-import {
-  API_ENDPOINTS,
-  isRemovedLegacyTrafficSignCode,
-  resolveLegacyTrafficSignCode,
-} from "@/lib/constants";
+import { API_ENDPOINTS } from "@/lib/constants";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import {
   getTrafficSignGroupInfo,
@@ -201,25 +197,9 @@ export default function TrafficSignPracticePage() {
 
   const reviewRef = useRef<HTMLDivElement | null>(null);
   const actionRef = useRef<HTMLDivElement | null>(null);
-  const requestedCode = resolveLegacyTrafficSignCode(routeParam);
-  const removedLegacyCode = isRemovedLegacyTrafficSignCode(routeParam);
+  const requestedCode = routeParam.trim();
 
-  const routeCode = sign?.routeCode ?? sign?.signCode ?? routeParam;
-  const signName = sign
-    ? getTrafficSignName(sign, currentLanguage)
-    : routeParam;
-  const { info, style } = sign
-    ? getTrafficSignGroupInfo(sign)
-    : getTrafficSignGroupInfo({
-        signCode: routeParam,
-        imageUrl: "",
-      } as TrafficSign);
-  const breadcrumbItems = [
-    { label: t("nav.home"), href: "/" },
-    { label: t("nav.traffic_signs"), href: "/traffic-signs" },
-    { label: signName, href: `/traffic-signs/${routeCode}` },
-    { label: t("nav.practice"), href: `/traffic-signs/${routeCode}/practice` },
-  ];
+  const routeCode = sign?.routeCode ?? routeParam;
 
   const initializeSession = useCallback(async (identifier: string) => {
     const [signResponse, practiceSession] = await Promise.all([
@@ -278,11 +258,6 @@ export default function TrafficSignPracticePage() {
   }, []);
 
   useEffect(() => {
-    if (removedLegacyCode) {
-      router.replace("/traffic-signs");
-      return;
-    }
-
     let cancelled = false;
     setLoading(true);
     setLoadError(null);
@@ -309,14 +284,14 @@ export default function TrafficSignPracticePage() {
     return () => {
       cancelled = true;
     };
-  }, [initializeSession, removedLegacyCode, requestedCode, router, t]);
+  }, [initializeSession, requestedCode, t]);
 
   useEffect(() => {
     if (!sign) {
       return;
     }
 
-    const canonicalCode = sign.routeCode ?? sign.signCode;
+    const canonicalCode = sign.routeCode;
     if (!canonicalCode || routeParam === canonicalCode) {
       return;
     }
@@ -502,6 +477,15 @@ export default function TrafficSignPracticePage() {
       </div>
     );
   }
+
+  const signName = getTrafficSignName(sign, currentLanguage);
+  const { info, style } = getTrafficSignGroupInfo(sign);
+  const breadcrumbItems = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.traffic_signs"), href: "/traffic-signs" },
+    { label: signName, href: `/traffic-signs/${routeCode}` },
+    { label: t("nav.practice"), href: `/traffic-signs/${routeCode}/practice` },
+  ];
 
   if (done) {
     const correctAnswers = answerHistory.filter(

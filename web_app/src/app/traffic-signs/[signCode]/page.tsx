@@ -8,6 +8,8 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
+  CircleAlert,
+  Route,
   Shapes,
   Trophy,
 } from "lucide-react";
@@ -21,11 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
-import {
-  API_ENDPOINTS,
-  isRemovedLegacyTrafficSignCode,
-  resolveLegacyTrafficSignCode,
-} from "@/lib/constants";
+import { API_ENDPOINTS } from "@/lib/constants";
 import {
   getSignExamStatus,
   getSignExamStatusClasses,
@@ -33,35 +31,16 @@ import {
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import {
   getTrafficSignDescription,
-  getTrafficSignGuidance,
+  getTrafficSignDriverGuidance,
+  getTrafficSignExceptions,
   getTrafficSignGroupInfo,
-  getTrafficSignLongDescription,
-  getTrafficSignMeaning,
   getTrafficSignName,
-  hasDistinctTrafficSignGuidance,
+  getTrafficSignSummary,
 } from "@/lib/traffic-sign-presentation";
 import type { TrafficSign } from "@/lib/types";
 import { getSignStatus, type SignUserProgress } from "@/services";
 
 type Lang = "en" | "ar" | "nl" | "fr";
-
-const LANGUAGE_FIELD_SUFFIX: Record<Lang, "Nl" | "En" | "Ar" | "Fr"> = {
-  nl: "Nl",
-  en: "En",
-  ar: "Ar",
-  fr: "Fr",
-};
-
-function localizedValue(
-  sign: TrafficSign,
-  field: "name" | "description" | "longDescription" | "meaning" | "guidance",
-  language: Lang,
-): string {
-  const suffix = LANGUAGE_FIELD_SUFFIX[language];
-  const key = `${field}${suffix}` as keyof TrafficSign;
-  const value = sign[key];
-  return typeof value === "string" ? value.trim() : "";
-}
 
 function LoadingState() {
   return (
@@ -117,22 +96,9 @@ export default function TrafficSignDetailPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [error, setError] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
-  const requestedCode = resolveLegacyTrafficSignCode(routeParam);
-  const removedLegacyCode = isRemovedLegacyTrafficSignCode(routeParam);
+  const requestedCode = routeParam.trim();
 
   useEffect(() => {
-    if (!removedLegacyCode) {
-      return;
-    }
-
-    router.replace("/traffic-signs");
-  }, [removedLegacyCode, router]);
-
-  useEffect(() => {
-    if (removedLegacyCode) {
-      return;
-    }
-
     let cancelled = false;
 
     apiClient
@@ -162,7 +128,7 @@ export default function TrafficSignDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [fetchKey, removedLegacyCode, requestedCode]);
+  }, [fetchKey, requestedCode]);
 
   useEffect(() => {
     if (!sign) {
@@ -203,7 +169,7 @@ export default function TrafficSignDetailPage() {
       return;
     }
 
-    const canonicalCode = sign.routeCode ?? sign.signCode;
+    const canonicalCode = sign.routeCode;
     if (!canonicalCode || routeParam === canonicalCode) {
       return;
     }
@@ -211,17 +177,10 @@ export default function TrafficSignDetailPage() {
     router.replace(`/traffic-signs/${canonicalCode}`);
   }, [routeParam, router, sign]);
 
-  const routeCode = sign?.routeCode ?? sign?.signCode ?? routeParam;
+  const routeCode = sign?.routeCode ?? routeParam;
   const isCurrentSignLoaded =
     !!sign &&
-    (resolveLegacyTrafficSignCode(routeParam) === routeCode ||
-      resolveLegacyTrafficSignCode(routeParam) === sign.signCode);
-  const { info, style } = sign
-    ? getTrafficSignGroupInfo(sign)
-    : getTrafficSignGroupInfo({
-        signCode: routeParam,
-        imageUrl: "",
-      } as TrafficSign);
+    requestedCode.toLowerCase() === routeCode.toLowerCase();
 
   if (serviceUnavailable) {
     return (
@@ -270,21 +229,18 @@ export default function TrafficSignDetailPage() {
     );
   }
 
+  const { info, style } = getTrafficSignGroupInfo(sign);
   const currentName = getTrafficSignName(sign, currentLanguage);
-  const currentMeaning =
-    localizedValue(sign, "meaning", currentLanguage) ||
-    localizedValue(sign, "description", currentLanguage) ||
-    getTrafficSignMeaning(sign, currentLanguage) ||
-    getTrafficSignDescription(sign, currentLanguage);
-  const currentGuidance =
-    localizedValue(sign, "guidance", currentLanguage) ||
-    localizedValue(sign, "longDescription", currentLanguage) ||
-    getTrafficSignGuidance(sign, currentLanguage) ||
-    getTrafficSignLongDescription(sign, currentLanguage);
-  const showGuidance = hasDistinctTrafficSignGuidance(
-    currentMeaning,
-    currentGuidance,
+  const currentDescription = getTrafficSignDescription(
+    sign,
+    currentLanguage,
   );
+  const currentSummary = getTrafficSignSummary(sign, currentLanguage);
+  const currentDriverGuidance = getTrafficSignDriverGuidance(
+    sign,
+    currentLanguage,
+  );
+  const currentExceptions = getTrafficSignExceptions(sign, currentLanguage);
   const breadcrumbItems = [
     { label: t("nav.home"), href: "/" },
     { label: t("nav.traffic_signs"), href: "/traffic-signs" },
@@ -341,6 +297,14 @@ export default function TrafficSignDetailPage() {
                 <PageHeroTitle className="max-w-4xl text-balance">
                   {currentName}
                 </PageHeroTitle>
+                {currentSummary ? (
+                  <p
+                    dir={currentLanguage === "ar" ? "rtl" : "ltr"}
+                    className="max-w-3xl text-base leading-8 text-muted-foreground md:text-lg"
+                  >
+                    {currentSummary}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -354,37 +318,59 @@ export default function TrafficSignDetailPage() {
                   {t("sign_detail.overview")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="rounded-[1.5rem] border border-border/60 bg-muted/20 p-5 md:p-6">
+              <CardContent className="divide-y divide-border/60">
+                <section className="pb-6">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
                     {t("sign_detail.meaning")}
                   </p>
-                  {currentMeaning ? (
+                  {currentDescription ? (
                     <p
                       dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                      className="mt-3 text-sm font-medium leading-7 text-muted-foreground"
+                      className="mt-3 whitespace-pre-line text-base leading-8 text-foreground"
                     >
-                      {currentMeaning}
+                      {currentDescription}
                     </p>
                   ) : (
                     <p className="text-sm italic text-muted-foreground">
                       {t("sign_detail.no_meaning")}
                     </p>
                   )}
-                </div>
+                </section>
 
-                {showGuidance ? (
-                  <div className="space-y-3 border-t border-border/60 pt-6">
-                    <h2 className="text-lg font-black text-foreground">
-                      {t("sign_detail.guidance")}
-                    </h2>
-                    <p
+                <section className="py-6">
+                  <h3 className="flex items-center gap-2 text-base font-black text-foreground">
+                    <Route className="h-5 w-5 text-primary" />
+                    {t("sign_detail.guidance")}
+                  </h3>
+                  <p
+                    dir={currentLanguage === "ar" ? "rtl" : "ltr"}
+                    className="mt-3 whitespace-pre-line text-base leading-8 text-foreground"
+                  >
+                    {currentDriverGuidance}
+                  </p>
+                </section>
+
+                {currentExceptions.length > 0 ? (
+                  <section className="pt-6">
+                    <h3 className="flex items-center gap-2 text-base font-black text-foreground">
+                      <CircleAlert className="h-5 w-5 text-amber-600" />
+                      {t("sign_detail.exceptions")}
+                    </h3>
+                    <ul
                       dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                      className="whitespace-pre-line text-base leading-8 text-foreground"
+                      className="mt-3 space-y-3 text-base leading-8 text-foreground"
                     >
-                      {currentGuidance}
-                    </p>
-                  </div>
+                      {currentExceptions.map((exception) => (
+                        <li key={exception} className="flex items-start gap-3">
+                          <span
+                            aria-hidden="true"
+                            className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600"
+                          />
+                          <span>{exception}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
                 ) : null}
               </CardContent>
             </Card>

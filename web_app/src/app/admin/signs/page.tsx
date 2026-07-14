@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
@@ -15,13 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  Plus,
   Search,
   ChevronDown,
   ChevronUp,
-  Pencil,
-  Trash2,
-  CheckCircle2,
   AlertTriangle,
   TrafficCone,
   ChevronsLeft,
@@ -229,12 +224,6 @@ export default function AdminSignsPage() {
   const [totalPages, setTotalPages] = useState(0);
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   useEffect(() => {
@@ -324,13 +313,6 @@ export default function AdminSignsPage() {
     return () => clearTimeout(timer);
   }, [searchInput]); // eslint-disable-line
 
-  useEffect(() => {
-    if (toast) {
-      const id = setTimeout(() => setToast(null), 3500);
-      return () => clearTimeout(id);
-    }
-  }, [toast]);
-
   const handlePageChange = (p: number) => {
     setPage(p);
     updateUrl({ page: p });
@@ -358,41 +340,6 @@ export default function AdminSignsPage() {
     setSortDir(newDir);
     setPage(0);
     updateUrl({ sortField: field, sortDir: newDir, page: 0 });
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      setDeleting(true);
-      await apiClient.delete(API_ENDPOINTS.ADMIN.SIGNS.DELETE(id));
-      setDeleteId(null);
-      setToast({
-        message: t("admin.signs.delete_success"),
-        type: "success",
-      });
-      if (signs.length === 1 && page > 0) handlePageChange(page - 1);
-      else fetchSigns();
-    } catch (err: unknown) {
-      logApiError("Failed to delete sign", err);
-      if (isServiceUnavailable(err)) {
-        setServiceUnavailable(true);
-      } else {
-        const axiosErr = err as {
-          response?: { status?: number; data?: { error?: string } };
-        };
-        const status = axiosErr?.response?.status;
-        const msg =
-          status === 409
-            ? axiosErr?.response?.data?.error ||
-              t("admin.signs.delete_conflict")
-            : status === 404
-              ? t("admin.signs.delete_not_found")
-              : t("admin.signs.delete_failed");
-        setToast({ message: msg, type: "error" });
-      }
-      setDeleteId(null);
-    } finally {
-      setDeleting(false);
-    }
   };
 
   const getSignName = (sign: TrafficSign) =>
@@ -462,25 +409,6 @@ export default function AdminSignsPage() {
     <div className="space-y-5">
       {serviceUnavailable && <ServiceUnavailableBanner onRetry={fetchSigns} />}
 
-      {/* Toast */}
-      {toast && (
-        <div
-          className={cn(
-            "fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-sm font-semibold animate-in fade-in slide-in-from-top-2 duration-300",
-            toast.type === "success"
-              ? "bg-green-600 text-white"
-              : "bg-destructive text-white",
-          )}
-        >
-          {toast.type === "success" ? (
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          ) : (
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-          )}
-          {toast.message}
-        </div>
-      )}
-
       <AdminPageHeader
         icon={<TrafficCone className="h-6 w-6" />}
         title={t("admin.signs.title")}
@@ -492,14 +420,6 @@ export default function AdminSignsPage() {
             tone: "primary",
           },
         ]}
-        actions={
-          <Button asChild className="gap-2 shadow-md shadow-primary/20">
-            <Link href="/admin/signs/new">
-              <Plus className="w-4 h-4" />
-              {t("admin.add_sign")}
-            </Link>
-          </Button>
-        }
       />
 
       {/* Filters */}
@@ -675,38 +595,6 @@ export default function AdminSignsPage() {
                               <ChevronDown className="w-4 h-4" />
                             )}
                           </button>
-                          <Link
-                            href={`/admin/signs/${sign.id}/edit`}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 transition-all"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Link>
-                          {deleteId === sign.id ? (
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleDelete(sign.id)}
-                                disabled={deleting}
-                                className="px-2 py-1 text-xs rounded-lg bg-destructive text-white hover:opacity-90 disabled:opacity-50 font-semibold transition-opacity"
-                              >
-                                {deleting
-                                  ? t("common.loading")
-                                  : t("admin.signs.confirm_delete")}
-                              </button>
-                              <button
-                                onClick={() => setDeleteId(null)}
-                                className="px-2 py-1 text-xs rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
-                              >
-                                {t("admin.signs.cancel")}
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setDeleteId(sign.id)}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>

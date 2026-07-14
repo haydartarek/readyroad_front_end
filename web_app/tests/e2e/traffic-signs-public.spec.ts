@@ -10,14 +10,22 @@ const signPayload = {
   nameAr: "منعطف خطير إلى اليمين",
   nameNl: "Gevaarlijke bocht naar rechts",
   nameFr: "Virage dangereux a droite",
+  summaryEn: "A dangerous right-hand bend lies ahead.",
+  summaryAr: "يوجد منعطف خطير إلى اليمين أمامك.",
+  summaryNl: "Verderop ligt een gevaarlijke bocht naar rechts.",
+  summaryFr: "Un virage dangereux a droite se trouve plus loin.",
   descriptionEn: "Warns about a dangerous bend to the right.",
   descriptionAr: "يحذر من منعطف خطير إلى اليمين.",
   descriptionNl: "Waarschuwt voor een gevaarlijke bocht naar rechts.",
   descriptionFr: "Avertit d'un virage dangereux a droite.",
-  longDescriptionEn: "Reduce speed before entering the bend.",
-  longDescriptionNl: "Verminder uw snelheid voor de bocht.",
-  longDescriptionFr: "Ralentissez avant d'entrer dans le virage.",
-  longDescriptionAr: "خفف السرعة قبل دخول المنعطف.",
+  driverGuidanceEn: "Reduce speed before the bend and keep control.",
+  driverGuidanceAr: "خفف السرعة قبل المنعطف وحافظ على السيطرة.",
+  driverGuidanceNl: "Verminder snelheid voor de bocht en behoud de controle.",
+  driverGuidanceFr: "Reduisez la vitesse avant le virage et gardez le controle.",
+  exceptionsEn: ["A supplementary plate may specify the distance."],
+  exceptionsAr: ["قد تحدد لوحة تكميلية المسافة."],
+  exceptionsNl: ["Een onderbord kan de afstand vermelden."],
+  exceptionsFr: ["Un panneau additionnel peut preciser la distance."],
   imageUrl: "/images/signs/danger_signs/A1b.png",
 };
 
@@ -76,6 +84,15 @@ test.describe("Public traffic sign detail page", () => {
 
     await expect(
       page.getByRole("heading", { name: "Dangerous bend to the right" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("A dangerous right-hand bend lies ahead."),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Reduce speed before the bend and keep control."),
+    ).toBeVisible();
+    await expect(
+      page.getByText("A supplementary plate may specify the distance."),
     ).toBeVisible();
 
     await expect(page).toHaveURL(/\/traffic-signs\/A1b$/);

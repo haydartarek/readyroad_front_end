@@ -10,7 +10,6 @@ import '../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../features/auth/domain/usecases/get_current_user_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/categories/category_service.dart';
-import '../../features/signs/traffic_sign_service.dart';
 import '../../features/lessons/lesson_service.dart';
 import '../../features/exam/exam_question_service.dart';
 import '../../features/practice/practice_question_service.dart';
@@ -72,10 +71,6 @@ void setupDependencies() {
   // Existing Services (using old ApiClient for now, can migrate later)
   getIt.registerLazySingleton<CategoryService>(
     () => CategoryService(getIt<ApiClient>()),
-  );
-
-  getIt.registerLazySingleton<TrafficSignService>(
-    () => TrafficSignService(getIt<ApiClient>()),
   );
 
   getIt.registerLazySingleton<ContentService>(

@@ -1,8 +1,11 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // Uncomment the line below when Flutter SDK is installed and flutter.sdk is set in local.properties:
-    // id("dev.flutter.flutter-gradle-plugin")
+    id("dev.flutter.flutter-gradle-plugin")
+}
+
+flutter {
+    source = "../.."
 }
 
 android {

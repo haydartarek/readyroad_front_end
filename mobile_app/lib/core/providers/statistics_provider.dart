@@ -70,4 +70,3 @@ class StatisticsProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

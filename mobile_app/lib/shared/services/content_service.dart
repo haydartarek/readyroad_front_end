@@ -3,7 +3,7 @@ import '../../core/constants/api_constants.dart';
 import '../../shared/models/content_item.dart';
 
 /// Generic Content Service
-/// 
+///
 /// LAW #5 - DELIBERATE IGNORANCE
 /// This service fetches content without knowing the domain.
 /// It works for Traffic Signs, Math, Medical, or any future content.
@@ -62,10 +62,13 @@ class ContentService {
   }
 
   /// Search content by name (generic search)
-  Future<List<ContentItem>> searchContent(String query, String languageCode) async {
+  Future<List<ContentItem>> searchContent(
+    String query,
+    String languageCode,
+  ) async {
     try {
       final allContent = await getAllContent();
-      
+
       if (query.isEmpty) {
         return allContent;
       }
@@ -73,9 +76,10 @@ class ContentService {
       // Generic text search - works for any content type
       return allContent.where((item) {
         final name = item.getName(languageCode).toLowerCase();
-        final description = item.getDescription(languageCode)?.toLowerCase() ?? '';
+        final description =
+            item.getDescription(languageCode)?.toLowerCase() ?? '';
         final searchQuery = query.toLowerCase();
-        
+
         return name.contains(searchQuery) || description.contains(searchQuery);
       }).toList();
     } catch (e) {
@@ -87,12 +91,14 @@ class ContentService {
   Future<List<ContentItem>> filterByCategory(String? categoryCode) async {
     try {
       final allContent = await getAllContent();
-      
+
       if (categoryCode == null || categoryCode.isEmpty) {
         return allContent;
       }
 
-      return allContent.where((item) => item.categoryCode == categoryCode).toList();
+      return allContent
+          .where((item) => item.categoryCode == categoryCode)
+          .toList();
     } catch (e) {
       throw Exception('Error filtering content: $e');
     }
@@ -105,16 +111,16 @@ class ContentService {
     bool alphabetical = true,
   }) {
     final sorted = List<ContentItem>.from(items);
-    
+
     if (alphabetical) {
-      sorted.sort((a, b) => 
-        a.getName(languageCode).compareTo(b.getName(languageCode))
+      sorted.sort(
+        (a, b) => a.getName(languageCode).compareTo(b.getName(languageCode)),
       );
     } else {
       // Sort by ID (most recent first)
       sorted.sort((a, b) => b.id.compareTo(a.id));
     }
-    
+
     return sorted;
   }
 }

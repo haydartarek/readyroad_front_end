@@ -148,7 +148,8 @@ class _MyAppState extends State<MyApp> {
       targetScreen = const ExamScreen();
     } else if (path.startsWith('/quiz') || path.startsWith('/practice')) {
       targetScreen = const QuizScreen();
-    } else if (path.startsWith('/analytics') || path.startsWith('/statistics')) {
+    } else if (path.startsWith('/analytics') ||
+        path.startsWith('/statistics')) {
       targetScreen = const StatisticsScreen();
     } else if (path.startsWith('/lessons')) {
       targetScreen = const LessonsListScreen();
@@ -167,9 +168,7 @@ class _MyAppState extends State<MyApp> {
     }
 
     // Push the target screen
-    navigator.push(
-      MaterialPageRoute(builder: (context) => targetScreen!),
-    );
+    navigator.push(MaterialPageRoute(builder: (context) => targetScreen!));
   }
 
   @override
@@ -239,7 +238,9 @@ class _MyAppState extends State<MyApp> {
                   if (state is Authenticated && _pendingDeepLink != null) {
                     final deepLink = _pendingDeepLink!;
                     _pendingDeepLink = null;
-                    debugPrint('Processing pending deep link after auth: $deepLink');
+                    debugPrint(
+                      'Processing pending deep link after auth: $deepLink',
+                    );
 
                     // Delay navigation to ensure HomeScreen is mounted
                     WidgetsBinding.instance.addPostFrameCallback((_) {

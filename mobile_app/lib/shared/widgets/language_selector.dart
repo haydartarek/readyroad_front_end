@@ -32,18 +32,12 @@ class LanguageSelector extends StatelessWidget {
                 value: lang.code,
                 child: Row(
                   children: [
-                    Text(
-                      lang.flag,
-                      style: const TextStyle(fontSize: 20),
-                    ),
+                    Text(lang.flag, style: const TextStyle(fontSize: 20)),
                     const SizedBox(width: 12),
                     Text(lang.name),
                     if (isSelected) ...[
                       const Spacer(),
-                      Icon(
-                        Icons.check,
-                        color: Theme.of(context).primaryColor,
-                      ),
+                      Icon(Icons.check, color: Theme.of(context).primaryColor),
                     ],
                   ],
                 ),
@@ -55,4 +49,3 @@ class LanguageSelector extends StatelessWidget {
     );
   }
 }
-

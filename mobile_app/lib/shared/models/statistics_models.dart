@@ -8,20 +8,14 @@ class QuizStatistics {
 
   int get totalQuizzesTaken => results.length;
 
-  int get totalQuestionsSolved => results.fold(
-        0,
-        (sum, result) => sum + result.totalQuestions,
-      );
+  int get totalQuestionsSolved =>
+      results.fold(0, (sum, result) => sum + result.totalQuestions);
 
-  int get totalCorrectAnswers => results.fold(
-        0,
-        (sum, result) => sum + result.correctAnswers,
-      );
+  int get totalCorrectAnswers =>
+      results.fold(0, (sum, result) => sum + result.correctAnswers);
 
-  int get totalWrongAnswers => results.fold(
-        0,
-        (sum, result) => sum + result.wrongAnswers,
-      );
+  int get totalWrongAnswers =>
+      results.fold(0, (sum, result) => sum + result.wrongAnswers);
 
   double get averageScore {
     if (results.isEmpty) return 0;
@@ -29,11 +23,9 @@ class QuizStatistics {
         results.length;
   }
 
-  int get quizzesPassed =>
-      results.where((result) => result.isPassed).length;
+  int get quizzesPassed => results.where((result) => result.isPassed).length;
 
-  int get quizzesFailed =>
-      results.where((result) => !result.isPassed).length;
+  int get quizzesFailed => results.where((result) => !result.isPassed).length;
 
   double get passRate {
     if (results.isEmpty) return 0;
@@ -50,9 +42,7 @@ class QuizStatistics {
       gradeCount[grade] = (gradeCount[grade] ?? 0) + 1;
     }
 
-    return gradeCount.entries
-        .reduce((a, b) => a.value > b.value ? a : b)
-        .key;
+    return gradeCount.entries.reduce((a, b) => a.value > b.value ? a : b).key;
   }
 
   List<QuizResult> get recentResults {
@@ -61,4 +51,3 @@ class QuizStatistics {
     return sorted.take(5).toList();
   }
 }
-

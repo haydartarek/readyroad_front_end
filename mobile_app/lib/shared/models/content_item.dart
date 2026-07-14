@@ -1,12 +1,12 @@
 /// Generic Content Item Model
-/// 
+///
 /// LAW #5 - DELIBERATE IGNORANCE
 /// This model is content-agnostic. It can represent:
 /// - Traffic Signs
 /// - Math Questions
 /// - Medical Content
 /// - Any future content type
-/// 
+///
 /// The mobile app MUST NOT know what domain it's displaying.
 class ContentItem {
   final int id;
@@ -21,7 +21,8 @@ class ContentItem {
   final String? descriptionFr;
   final String? imageUrl;
   final String? categoryCode;
-  final String? contentType; // 'traffic_sign', 'math', 'medical', etc. (for UI hints only)
+  final String?
+  contentType; // 'traffic_sign', 'math', 'medical', etc. (for UI hints only)
 
   ContentItem({
     required this.id,

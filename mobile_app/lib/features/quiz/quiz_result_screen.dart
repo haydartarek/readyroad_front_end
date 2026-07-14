@@ -7,10 +7,7 @@ import '../../core/providers/statistics_provider.dart';
 class QuizResultScreen extends StatefulWidget {
   final QuizResult result;
 
-  const QuizResultScreen({
-    super.key,
-    required this.result,
-  });
+  const QuizResultScreen({super.key, required this.result});
 
   @override
   State<QuizResultScreen> createState() => _QuizResultScreenState();
@@ -48,9 +45,9 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
               Text(
                 '${widget.result.score}%',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: _getScoreColor(),
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: _getScoreColor(),
+                ),
               ),
 
               const SizedBox(height: 8),
@@ -80,8 +77,8 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
               Text(
                 widget.result.isPassed ? 'Passed!' : 'Failed',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: widget.result.isPassed ? Colors.green : Colors.red,
-                    ),
+                  color: widget.result.isPassed ? Colors.green : Colors.red,
+                ),
               ),
 
               const SizedBox(height: 32),
@@ -177,27 +174,23 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        icon,
-        size: 80,
-        color: color,
-      ),
+      child: Icon(icon, size: 80, color: color),
     );
   }
 
-  Widget _buildStatRow(IconData icon, String label, String value, [Color? color]) {
+  Widget _buildStatRow(
+    IconData icon,
+    String label,
+    String value, [
+    Color? color,
+  ]) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Icon(icon, color: color),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 16))),
           Text(
             value,
             style: TextStyle(
@@ -224,4 +217,3 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     return '${minutes}m ${seconds}s';
   }
 }
-

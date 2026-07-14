@@ -237,26 +237,26 @@ class _ExamScreenState extends State<ExamScreen> {
         }
       },
       child: Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.navExam),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _submitExam,
-            tooltip: l10n.examSubmit,
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? Center(child: Text(l10n.commonLoading))
-          : _error != null
-          ? Center(child: Text('Error: $_error'))
-          : _questions.isEmpty
-          ? const Center(child: Text('No questions available'))
-          : _buildExamView(currentLanguage),
-      bottomNavigationBar: !_isLoading && _questions.isNotEmpty
-          ? _buildNavigationBar()
-          : null,
+        appBar: AppBar(
+          title: Text(l10n.navExam),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.check),
+              onPressed: _submitExam,
+              tooltip: l10n.examSubmit,
+            ),
+          ],
+        ),
+        body: _isLoading
+            ? Center(child: Text(l10n.commonLoading))
+            : _error != null
+            ? Center(child: Text('Error: $_error'))
+            : _questions.isEmpty
+            ? const Center(child: Text('No questions available'))
+            : _buildExamView(currentLanguage),
+        bottomNavigationBar: !_isLoading && _questions.isNotEmpty
+            ? _buildNavigationBar()
+            : null,
       ),
     );
   }

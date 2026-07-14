@@ -97,9 +97,7 @@ class _SearchScreenState extends State<SearchScreen> {
           decoration: InputDecoration(
             hintText: 'Search content...',
             border: InputBorder.none,
-            hintStyle: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
                     icon: const Icon(Icons.clear, color: Colors.white),
@@ -120,9 +118,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
@@ -130,11 +126,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               'Error loading signs',
@@ -156,11 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search,
-              size: 100,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search, size: 100, color: Colors.grey[400]),
             const SizedBox(height: 24),
             Text(
               'Search for traffic signs',
@@ -169,9 +157,9 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 8),
             Text(
               'Enter sign name or code',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -183,11 +171,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 100,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search_off, size: 100, color: Colors.grey[400]),
             const SizedBox(height: 24),
             Text(
               'No results found',
@@ -196,9 +180,9 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 8),
             Text(
               'Try a different search term',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -214,9 +198,9 @@ class _SearchScreenState extends State<SearchScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 '${_filteredContent.length} results found',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
               ),
             ),
             Expanded(
@@ -224,7 +208,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 itemCount: _filteredContent.length,
                 itemBuilder: (context, index) {
                   final item = _filteredContent[index];
-                  return _buildSignListItem(item, languageProvider.currentLanguage);
+                  return _buildSignListItem(
+                    item,
+                    languageProvider.currentLanguage,
+                  );
                 },
               ),
             ),
@@ -273,4 +260,3 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 }
-

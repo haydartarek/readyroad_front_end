@@ -67,11 +67,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.bar_chart,
-            size: 100,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.bar_chart, size: 100, color: Colors.grey[400]),
           const SizedBox(height: 24),
           Text(
             'No statistics yet',
@@ -80,9 +76,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           const SizedBox(height: 8),
           Text(
             'Take a quiz to see your progress',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
           ),
         ],
       ),
@@ -98,9 +94,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           children: [
             Text(
               'Overview',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Row(
@@ -159,9 +155,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           children: [
             Text(
               'Performance',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildPerformanceRow(
@@ -202,19 +198,26 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           children: [
             Text(
               'Recent Quizzes',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            ...stats.recentResults.map((result) => _buildQuizResultItem(result)),
+            ...stats.recentResults.map(
+              (result) => _buildQuizResultItem(result),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatItem(IconData icon, String label, String value, Color color) {
+  Widget _buildStatItem(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 32),
@@ -222,17 +225,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         Text(
           value,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: color,
           ),
         ),
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
       ],
     );
   }
@@ -317,17 +314,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${result.correctAnswers}/${result.totalQuestions} correct',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 Text(
                   dateFormat.format(result.completedAt),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey[500],
-                  ),
+                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                 ),
               ],
             ),
@@ -364,7 +355,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear statistics?'),
-        content: const Text('This will delete all your quiz history and statistics.'),
+        content: const Text(
+          'This will delete all your quiz history and statistics.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -375,14 +368,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               context.read<StatisticsProvider>().clearStatistics();
               Navigator.pop(context);
             },
-            child: const Text(
-              'Clear',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Clear', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
   }
 }
-

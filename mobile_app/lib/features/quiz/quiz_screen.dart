@@ -12,11 +12,7 @@ class QuizScreen extends StatefulWidget {
   final Category? category;
   final int questionCount;
 
-  const QuizScreen({
-    super.key,
-    this.category,
-    this.questionCount = 10,
-  });
+  const QuizScreen({super.key, this.category, this.questionCount = 10});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -121,9 +117,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => QuizResultScreen(result: result),
-      ),
+      MaterialPageRoute(builder: (context) => QuizResultScreen(result: result)),
     );
   }
 
@@ -140,9 +134,11 @@ class _QuizScreenState extends State<QuizScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.category != null
-              ? '${widget.category!.getName('en')} Quiz'
-              : 'Content Quiz'),
+          title: Text(
+            widget.category != null
+                ? '${widget.category!.getName('en')} Quiz'
+                : 'Content Quiz',
+          ),
           actions: [
             if (_questions != null)
               Center(
@@ -187,10 +183,7 @@ class _QuizScreenState extends State<QuizScreen> {
             const SizedBox(height: 16),
             Text('Error: $_error'),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadQuiz,
-              child: const Text('Retry'),
-            ),
+            ElevatedButton(onPressed: _loadQuiz, child: const Text('Retry')),
           ],
         ),
       );
@@ -220,12 +213,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 'Correct',
                 _correctAnswers,
               ),
-              _buildScoreItem(
-                Icons.cancel,
-                Colors.red,
-                'Wrong',
-                _wrongAnswers,
-              ),
+              _buildScoreItem(Icons.cancel, Colors.red, 'Wrong', _wrongAnswers),
             ],
           ),
         ),
@@ -243,7 +231,9 @@ class _QuizScreenState extends State<QuizScreen> {
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: question.correctContent.imageUrl != null && question.correctContent.imageUrl!.isNotEmpty
+                  child:
+                      question.correctContent.imageUrl != null &&
+                          question.correctContent.imageUrl!.isNotEmpty
                       ? Image.network(
                           _toBackendImageUrl(question.correctContent.imageUrl!),
                           fit: BoxFit.contain,
@@ -290,17 +280,11 @@ class _QuizScreenState extends State<QuizScreen> {
           children: [
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
             Text(
               '$value',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -354,11 +338,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   ),
                 ),
               ),
-              if (icon != null)
-                Icon(
-                  icon,
-                  color: borderColor,
-                ),
+              if (icon != null) Icon(icon, color: borderColor),
             ],
           ),
         ),
@@ -379,14 +359,10 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Exit',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Exit', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
   }
 }
-

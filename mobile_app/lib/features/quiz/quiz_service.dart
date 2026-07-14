@@ -47,7 +47,10 @@ class QuizService {
   }
 
   /// Generate a single question
-  QuizQuestion _generateQuestion(ContentItem correctContent, List<ContentItem> allContent) {
+  QuizQuestion _generateQuestion(
+    ContentItem correctContent,
+    List<ContentItem> allContent,
+  ) {
     // Get 3 random wrong answers
     final wrongContent = List<ContentItem>.from(allContent)
       ..remove(correctContent)
@@ -65,4 +68,3 @@ class QuizService {
     );
   }
 }
-

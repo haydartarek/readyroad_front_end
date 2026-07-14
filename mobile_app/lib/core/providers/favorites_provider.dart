@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/models/content_item.dart';
 
 /// Favorites Provider
-/// 
+///
 /// LAW #5 - DELIBERATE IGNORANCE
 /// Stores content IDs only - no domain logic, no smart analysis
 /// Just a dumb list of favorite IDs
@@ -85,4 +85,3 @@ class FavoritesProvider extends ChangeNotifier {
     return allContent.where((item) => _favoriteIds.contains(item.id)).toList();
   }
 }
-

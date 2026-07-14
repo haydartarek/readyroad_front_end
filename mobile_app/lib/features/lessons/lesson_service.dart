@@ -8,7 +8,9 @@ class LessonService {
 
   /// Get all lessons
   Future<List<Map<String, dynamic>>> getAllLessons() async {
-    final response = await _apiClient.get('${ApiConstants.baseUrl}/api/lessons');
+    final response = await _apiClient.get(
+      '${ApiConstants.baseUrl}/api/lessons',
+    );
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(response.data);
     }
@@ -17,7 +19,9 @@ class LessonService {
 
   /// Get lesson by ID
   Future<Map<String, dynamic>> getLessonById(int id) async {
-    final response = await _apiClient.get('${ApiConstants.baseUrl}/api/lessons/$id');
+    final response = await _apiClient.get(
+      '${ApiConstants.baseUrl}/api/lessons/$id',
+    );
     if (response.statusCode == 200) {
       return response.data as Map<String, dynamic>;
     }
@@ -25,8 +29,12 @@ class LessonService {
   }
 
   /// Get lessons by category
-  Future<List<Map<String, dynamic>>> getLessonsByCategory(int categoryId) async {
-    final response = await _apiClient.get('${ApiConstants.baseUrl}/api/lessons/by-category?categoryId=$categoryId');
+  Future<List<Map<String, dynamic>>> getLessonsByCategory(
+    int categoryId,
+  ) async {
+    final response = await _apiClient.get(
+      '${ApiConstants.baseUrl}/api/lessons/by-category?categoryId=$categoryId',
+    );
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(response.data);
     }

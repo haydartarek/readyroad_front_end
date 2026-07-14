@@ -7,8 +7,12 @@ class ExamQuestionService {
   ExamQuestionService(this._apiClient);
 
   /// Get random exam questions
-  Future<List<Map<String, dynamic>>> getRandomExamQuestions({int count = 50}) async {
-    final response = await _apiClient.get('${ApiConstants.baseUrl}/api/exam-questions/random?count=$count');
+  Future<List<Map<String, dynamic>>> getRandomExamQuestions({
+    int count = 50,
+  }) async {
+    final response = await _apiClient.get(
+      '${ApiConstants.baseUrl}/api/exam-questions/random?count=$count',
+    );
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(response.data);
     }
@@ -17,7 +21,9 @@ class ExamQuestionService {
 
   /// Get exam question by ID
   Future<Map<String, dynamic>> getExamQuestionById(int id) async {
-    final response = await _apiClient.get('${ApiConstants.baseUrl}/api/exam-questions/$id');
+    final response = await _apiClient.get(
+      '${ApiConstants.baseUrl}/api/exam-questions/$id',
+    );
     if (response.statusCode == 200) {
       return response.data as Map<String, dynamic>;
     }
@@ -25,8 +31,12 @@ class ExamQuestionService {
   }
 
   /// Get exam questions by category
-  Future<List<Map<String, dynamic>>> getExamQuestionsByCategory(String categoryCode) async {
-    final response = await _apiClient.get('${ApiConstants.baseUrl}/api/exam-questions/by-category?category=$categoryCode');
+  Future<List<Map<String, dynamic>>> getExamQuestionsByCategory(
+    String categoryCode,
+  ) async {
+    final response = await _apiClient.get(
+      '${ApiConstants.baseUrl}/api/exam-questions/by-category?category=$categoryCode',
+    );
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(response.data);
     }

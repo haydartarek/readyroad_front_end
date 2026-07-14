@@ -68,11 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Logo
-                      Icon(
-                        Icons.drive_eta,
-                        size: 80,
-                        color: AppColors.primary,
-                      ),
+                      Icon(Icons.drive_eta, size: 80, color: AppColors.primary),
                       const SizedBox(height: 16),
 
                       // Title

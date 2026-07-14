@@ -20,16 +20,15 @@ class ApiClient {
 
     // Add interceptors for logging
     _dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        error: true,
-      ),
+      LogInterceptor(requestBody: true, responseBody: true, error: true),
     );
   }
 
   /// GET Request
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
       final response = await _dio.get(path, queryParameters: queryParameters);
       return response;
@@ -68,4 +67,3 @@ class ApiClient {
     }
   }
 }
-

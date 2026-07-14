@@ -98,9 +98,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
@@ -108,11 +106,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               'Error loading favorites',
@@ -143,11 +137,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.favorite_border,
-              size: 100,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.favorite_border, size: 100, color: Colors.grey[400]),
             const SizedBox(height: 24),
             Text(
               'No favorites yet',
@@ -156,9 +146,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             const SizedBox(height: 8),
             Text(
               'Add content to favorites to see them here',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -222,11 +212,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                               );
                             },
                           )
-                        : const Icon(
-                            Icons.image,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
+                        : const Icon(Icons.image, size: 48, color: Colors.grey),
                   ),
                 ),
                 // Info
@@ -239,17 +225,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       children: [
                         Text(
                           item.code,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: Colors.grey[600]),
                         ),
                         const SizedBox(height: 4),
                         Expanded(
                           child: Text(
                             item.getName(languageCode),
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -288,7 +272,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear all favorites?'),
-        content: const Text('This will remove all signs from your favorites list.'),
+        content: const Text(
+          'This will remove all signs from your favorites list.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -300,14 +286,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               Navigator.pop(context);
               _loadFavorites();
             },
-            child: const Text(
-              'Clear',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Clear', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
   }
 }
-

@@ -7,8 +7,12 @@ class PracticeQuestionService {
   PracticeQuestionService(this._apiClient);
 
   /// Get practice questions by lesson ID
-  Future<List<Map<String, dynamic>>> getPracticeQuestionsByLesson(int lessonId) async {
-    final response = await _apiClient.get('${ApiConstants.baseUrl}/api/practice-questions/by-lesson?lessonId=$lessonId');
+  Future<List<Map<String, dynamic>>> getPracticeQuestionsByLesson(
+    int lessonId,
+  ) async {
+    final response = await _apiClient.get(
+      '${ApiConstants.baseUrl}/api/practice-questions/by-lesson?lessonId=$lessonId',
+    );
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(response.data);
     }
@@ -17,7 +21,9 @@ class PracticeQuestionService {
 
   /// Get practice question by ID
   Future<Map<String, dynamic>> getPracticeQuestionById(int id) async {
-    final response = await _apiClient.get('${ApiConstants.baseUrl}/api/practice-questions/$id');
+    final response = await _apiClient.get(
+      '${ApiConstants.baseUrl}/api/practice-questions/$id',
+    );
     if (response.statusCode == 200) {
       return response.data as Map<String, dynamic>;
     }

@@ -12,72 +12,84 @@ on:
         required: false
         type: string
 
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: create-release
+  cancel-in-progress: false
+
 jobs:
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Validate version format
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          if ! [[ "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid version format. Must be X.Y.Z (e.g., 1.0.0)"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version format. Must be X.Y.Z (for example, 1.0.0)"
             exit 1
           fi
 
       - name: Check if tag exists
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          if git rev-parse "v${{ inputs.version }}" >/dev/null 2>&1; then
-            echo "Tag v${{ inputs.version }} already exists"
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists"
             exit 1
           fi
 
-      - name: Create git tag
+      - name: Prepare release notes
+        env:
+          VERSION: ${{ inputs.version }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+        run: |
+          {
+            printf '## ReadyRoad v%s\n\n' "$VERSION"
+            printf '%s\n\n' "$RELEASE_NOTES"
+            printf '### Components\n'
+            printf '%s\n' '- Web App (Next.js 16)'
+            printf '%s\n' '- Mobile App (Flutter 3.38.5)'
+            printf '\n### Artifacts\n'
+            printf '%s\n' '- Android APK and AAB: Mobile Release workflow artifacts'
+            printf '%s\n' '- Unsigned iOS application: Mobile Release workflow artifacts'
+          } > "$RUNNER_TEMP/release-notes.md"
+
+      - name: Create and push git tag
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git tag -a "v${{ inputs.version }}" -m "Release v${{ inputs.version }}"
-          git push origin "v${{ inputs.version }}"
-
-      - name: Trigger Mobile Release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'mobile-release.yml',
-              ref: 'main',
-              inputs: {
-                version: '${{ inputs.version }}'
-              }
-            })
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ inputs.version }}
-          release_name: ReadyRoad v${{ inputs.version }}
-          body: |
-            ## ReadyRoad v${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --verify-tag \
+            --title "ReadyRoad v$VERSION" \
+            --notes-file "$RUNNER_TEMP/release-notes.md"
 
-            ${{ inputs.release_notes }}
-
-            ### Components
-            - Web App (Next.js 16)
-            - Mobile App (Flutter 3.24)
-
-            ### Artifacts
-            - Android APK (see workflow artifacts)
-            - Android AAB (see workflow artifacts)
-            - iOS Archive (see workflow artifacts)
-
-            ### Installation
-            Refer to DEPLOYMENT_SMOKE_TEST.md for complete deployment checklist.
-          draft: false
-          prerelease: false
+      - name: Trigger Mobile Release workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          gh workflow run mobile-release.yml \
+            --ref "v$VERSION" \
+            -f version="$VERSION"

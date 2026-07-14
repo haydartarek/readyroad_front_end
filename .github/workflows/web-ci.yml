@@ -1,8 +1,9 @@
-name: Web CI Pipeline
+name: Web CI
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - "**"
     paths:
       - "web_app/**"
       - ".github/workflows/web-ci.yml"
@@ -10,11 +11,21 @@ on:
     branches: [main, develop]
     paths:
       - "web_app/**"
+      - ".github/workflows/web-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
-    name: Build and Test Web App
+    name: Test, build, and verify Web App
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     defaults:
       run:
@@ -22,10 +33,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -34,11 +45,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run unit tests
+        run: npm test -- --ci --coverage --runInBand
+
+      - name: Check TypeScript
+        run: npx tsc --noEmit
+
       - name: Run ESLint
         run: npm run lint
-
-      - name: Run tests
-        run: npm test -- --ci --coverage --maxWorkers=2
 
       - name: Build production
         run: npm run build
@@ -46,8 +60,14 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'https://api.readyroad.be/api' }}
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://readyroad.be' }}
 
-      - name: Check for TypeScript errors
-        run: npx tsc --noEmit
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npm run test:e2e
+
+      - name: Build Frontend Docker image
+        run: docker build --tag readyroad-frontend:ci .
 
       - name: Upload build artifacts
         if: success() && github.ref == 'refs/heads/main'
@@ -57,10 +77,22 @@ jobs:
           path: web_app/.next/standalone
           retention-days: 7
 
-      - name: Upload coverage reports
+      - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-report
+          name: coverage-report-${{ github.sha }}
           path: web_app/coverage
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-diagnostics-${{ github.sha }}
+          path: |
+            web_app/playwright-report
+            web_app/test-results
+          if-no-files-found: ignore
           retention-days: 7

@@ -8,7 +8,11 @@
 
 import { AxiosError, type AxiosAdapter, type AxiosResponse } from "axios";
 import { ROUTES } from "@/lib/constants";
-import { apiClient, shouldRedirectOnAuthError } from "@/lib/api";
+import {
+  apiClient,
+  isServiceUnavailable,
+  shouldRedirectOnAuthError,
+} from "@/lib/api";
 
 // Mock fetch for BFF logout
 const mockFetch = jest.fn();
@@ -181,5 +185,14 @@ describe("API Client (HttpOnly Cookie Proxy)", () => {
 
   test("proxy base URL is /api/proxy (not direct backend)", () => {
     expect(client.defaults.baseURL).toBe("/api/proxy");
+  });
+
+  test("request timeouts are treated as temporary service unavailability", () => {
+    const timeout = new AxiosError(
+      "timeout of 30000ms exceeded",
+      "ECONNABORTED",
+    );
+
+    expect(isServiceUnavailable(timeout)).toBe(true);
   });
 });

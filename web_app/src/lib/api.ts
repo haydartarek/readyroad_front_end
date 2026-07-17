@@ -173,7 +173,11 @@ export function isUnavailableStatus(status: number | undefined): boolean {
  */
 export function isServiceUnavailable(error: unknown): boolean {
   if (axios.isAxiosError(error)) {
-    return isUnavailableStatus(error.response?.status);
+    return (
+      isUnavailableStatus(error.response?.status) ||
+      error.code === "ECONNABORTED" ||
+      error.code === "ETIMEDOUT"
+    );
   }
   if (error && typeof error === "object" && "status" in error) {
     return isUnavailableStatus((error as { status: number }).status);

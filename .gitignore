@@ -5,6 +5,7 @@
 
 # JavaScript and Next.js generated output
 node_modules/
+.vercel/
 dist/
 build/
 .next/

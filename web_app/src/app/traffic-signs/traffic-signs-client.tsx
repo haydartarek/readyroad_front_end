@@ -24,11 +24,11 @@ import {
   getTrafficSignName,
   TRAFFIC_SIGN_GROUP_ORDER,
 } from "@/lib/traffic-sign-presentation";
-import type { TrafficSign } from "@/lib/types";
+import type { TrafficSign, TrafficSignCatalogItem } from "@/lib/types";
 
 type Lang = "en" | "ar" | "nl" | "fr";
 
-async function getAllTrafficSigns(): Promise<TrafficSign[]> {
+async function getAllTrafficSigns(): Promise<TrafficSignCatalogItem[]> {
   try {
     const response = await apiClient.get<
       TrafficSign[] | { signs: TrafficSign[] }
@@ -44,7 +44,9 @@ async function getAllTrafficSigns(): Promise<TrafficSign[]> {
   }
 }
 
-function sortTrafficSigns(signs: TrafficSign[]): TrafficSign[] {
+function sortTrafficSigns(
+  signs: TrafficSignCatalogItem[],
+): TrafficSignCatalogItem[] {
   return [...signs].sort((left, right) =>
     left.signCode.localeCompare(right.signCode, undefined, {
       numeric: true,
@@ -55,7 +57,7 @@ function sortTrafficSigns(signs: TrafficSign[]): TrafficSign[] {
 
 export default function TrafficSignsClient({
   initialSigns,
-}: Readonly<{ initialSigns: TrafficSign[] }>) {
+}: Readonly<{ initialSigns: TrafficSignCatalogItem[] }>) {
   return (
     <Suspense fallback={<LoadingState />}>
       <TrafficSignsContent initialSigns={initialSigns} />
@@ -80,7 +82,11 @@ function LoadingState() {
   );
 }
 
-function TrafficSignsContent({ initialSigns }: { initialSigns: TrafficSign[] }) {
+function TrafficSignsContent({
+  initialSigns,
+}: {
+  initialSigns: TrafficSignCatalogItem[];
+}) {
   const { t, language } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
@@ -92,7 +98,7 @@ function TrafficSignsContent({ initialSigns }: { initialSigns: TrafficSign[] }) 
   const category = searchParams.get("category") || "all";
   const search = searchParams.get("search") || "";
 
-  const [allSigns, setAllSigns] = useState<TrafficSign[]>(() =>
+  const [allSigns, setAllSigns] = useState<TrafficSignCatalogItem[]>(() =>
     sortTrafficSigns(initialSigns),
   );
   const [loading, setLoading] = useState(initialSigns.length === 0);
@@ -209,7 +215,7 @@ function TrafficSignsContent({ initialSigns }: { initialSigns: TrafficSign[] }) 
   }, [allSigns, category, search]);
 
   const groupedSigns = useMemo(() => {
-    const groups: Record<string, TrafficSign[]> = {};
+    const groups: Record<string, TrafficSignCatalogItem[]> = {};
     for (const sign of filteredSigns) {
       const group = getTrafficSignGroup(sign);
       (groups[group] ??= []).push(sign);

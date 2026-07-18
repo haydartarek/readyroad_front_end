@@ -3,7 +3,7 @@ import {
   GROUP_LETTER_ORDER,
   type LangKey,
 } from "@/lib/sign-category-data";
-import type { TrafficSign } from "@/lib/types";
+import type { TrafficSign, TrafficSignCatalogItem } from "@/lib/types";
 
 export const TRAFFIC_SIGN_GROUP_ORDER = GROUP_LETTER_ORDER;
 
@@ -109,7 +109,7 @@ export const GROUP_STYLES: Record<
 };
 
 export function getTrafficSignName(
-  sign: TrafficSign,
+  sign: TrafficSignCatalogItem,
   language: LangKey,
 ): string {
   return {
@@ -121,7 +121,7 @@ export function getTrafficSignName(
 }
 
 export function getTrafficSignDescription(
-  sign: TrafficSign,
+  sign: TrafficSignCatalogItem,
   language: LangKey,
 ): string {
   return {
@@ -168,7 +168,7 @@ export function getTrafficSignExceptions(
   }[language];
 }
 
-export function getTrafficSignGroup(sign: TrafficSign): string {
+export function getTrafficSignGroup(sign: TrafficSignCatalogItem): string {
   const categoryCode = sign.categoryCode.trim().toUpperCase();
   if (!GROUP_INFO[categoryCode]) {
     throw new Error(`Unsupported traffic-sign categoryCode: ${sign.categoryCode}`);
@@ -176,7 +176,7 @@ export function getTrafficSignGroup(sign: TrafficSign): string {
   return categoryCode;
 }
 
-export function getTrafficSignGroupInfo(sign: TrafficSign) {
+export function getTrafficSignGroupInfo(sign: TrafficSignCatalogItem) {
   const group = getTrafficSignGroup(sign);
   return {
     group,

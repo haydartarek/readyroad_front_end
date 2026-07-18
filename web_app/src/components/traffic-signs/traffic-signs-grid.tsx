@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
-import { TrafficSign } from "@/lib/types";
+import type { TrafficSignCatalogItem } from "@/lib/types";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import { SignImage } from "./sign-image";
 import {
@@ -14,7 +14,11 @@ import {
 
 // ─── Component ───────────────────────────────────────────
 
-export function TrafficSignsGrid({ signs }: { signs: TrafficSign[] }) {
+export function TrafficSignsGrid({
+  signs,
+}: {
+  signs: TrafficSignCatalogItem[];
+}) {
   const { language, t } = useLanguage();
   const lang = language as "en" | "ar" | "nl" | "fr";
 

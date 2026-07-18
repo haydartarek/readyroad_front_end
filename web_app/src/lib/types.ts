@@ -64,6 +64,22 @@ export interface TrafficSign {
   penalties?: string;
 }
 
+export type TrafficSignCatalogItem = Pick<
+  TrafficSign,
+  | "signCode"
+  | "routeCode"
+  | "categoryCode"
+  | "nameEn"
+  | "nameAr"
+  | "nameNl"
+  | "nameFr"
+  | "descriptionEn"
+  | "descriptionAr"
+  | "descriptionNl"
+  | "descriptionFr"
+  | "imageUrl"
+>;
+
 // ─── Lessons ─────────────────────────────────────────────
 
 export interface LessonPage {

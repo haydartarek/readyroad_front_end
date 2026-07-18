@@ -1,4 +1,9 @@
-import type { Lesson, LessonDetail, TrafficSign } from "@/lib/types";
+import type {
+  Lesson,
+  LessonDetail,
+  TrafficSign,
+  TrafficSignCatalogItem,
+} from "@/lib/types";
 
 const DEFAULT_BACKEND_API_URL = "http://localhost:8890/api";
 const CATALOG_REVALIDATE_SECONDS = 60 * 60;
@@ -34,6 +39,32 @@ async function fetchPublicCatalog<T>(path: string): Promise<T | null> {
 
 export async function getPublicTrafficSigns(): Promise<TrafficSign[]> {
   return (await fetchPublicCatalog<TrafficSign[]>("traffic-signs")) ?? [];
+}
+
+export function toTrafficSignCatalogItem(
+  sign: TrafficSign,
+): TrafficSignCatalogItem {
+  return {
+    signCode: sign.signCode,
+    routeCode: sign.routeCode,
+    categoryCode: sign.categoryCode,
+    nameEn: sign.nameEn,
+    nameAr: sign.nameAr,
+    nameNl: sign.nameNl,
+    nameFr: sign.nameFr,
+    descriptionEn: sign.descriptionEn,
+    descriptionAr: sign.descriptionAr,
+    descriptionNl: sign.descriptionNl,
+    descriptionFr: sign.descriptionFr,
+    imageUrl: sign.imageUrl,
+  };
+}
+
+export async function getPublicTrafficSignCatalog(): Promise<
+  TrafficSignCatalogItem[]
+> {
+  const signs = await getPublicTrafficSigns();
+  return signs.map(toTrafficSignCatalogItem);
 }
 
 export async function getPublicTrafficSign(

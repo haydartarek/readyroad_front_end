@@ -18,6 +18,7 @@ import {
   getSharedOgImage,
   resolveSiteLocale,
 } from "@/lib/site-copy";
+import { serializeJsonLd } from "@/lib/seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -35,13 +36,6 @@ export async function generateMetadata(): Promise<Metadata> {
     keywords: copy.keywords,
     alternates: {
       canonical: APP_URL,
-      languages: {
-        en: APP_URL,
-        nl: APP_URL,
-        fr: APP_URL,
-        ar: APP_URL,
-        "x-default": APP_URL,
-      },
     },
     openGraph: {
       title: copy.openGraphTitle,
@@ -67,7 +61,7 @@ export default async function Home() {
     <div className="min-h-screen bg-background text-foreground">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeFaqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(homeFaqSchema) }}
       />
       <main>
         <HeroSection />

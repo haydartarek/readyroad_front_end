@@ -8,7 +8,6 @@ const SHARED_KEYWORDS = [
   "Belgian driving theory test",
   "traffic signs Belgium",
   "ReadyRoad",
-  "readyroad.be",
   "rijbewijs theorie examen",
   "rijexamen oefenen",
   "verkeerstekens België",
@@ -22,7 +21,7 @@ const SHARED_KEYWORDS = [
 
 const OPEN_GRAPH_LOCALES: Record<SiteLocale, string> = {
   en: "en_BE",
-  ar: "ar",
+  ar: "ar_BE",
   fr: "fr_BE",
   nl: "nl_BE",
 };
@@ -272,7 +271,7 @@ export function getAlternateOpenGraphLocales(locale: SiteLocale): string[] {
 
 export function getSharedOgImage(locale: SiteLocale) {
   return {
-    url: "/images/og.png",
+    url: "/opengraph-image",
     width: 1200,
     height: 630,
     alt: SITE_COPY[locale].sharedOgAlt,
@@ -294,7 +293,6 @@ export function createOrganizationSchema(appUrl: string, locale: SiteLocale) {
       height: 512,
     },
     description: copy.organizationDescription,
-    sameAs: [DEFAULT_APP_URL],
     areaServed: {
       "@type": "Country",
       name: "Belgium",
@@ -319,7 +317,7 @@ export function createWebsiteSchema(appUrl: string, locale: SiteLocale) {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${appUrl}/traffic-signs?q={search_term_string}`,
+        urlTemplate: `${appUrl}/traffic-signs?search={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

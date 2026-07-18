@@ -3,18 +3,11 @@ import type { Metadata } from "next";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://readyroad.be";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | ReadyRoad",
+  title: "Terms of Service",
   description:
     "ReadyRoad Terms of Service. Read our usage terms for the Belgian driving license exam preparation platform.",
   alternates: {
     canonical: `${APP_URL}/terms`,
-    languages: {
-      en: `${APP_URL}/terms`,
-      nl: `${APP_URL}/terms`,
-      fr: `${APP_URL}/terms`,
-      ar: `${APP_URL}/terms`,
-      "x-default": `${APP_URL}/terms`,
-    },
   },
   openGraph: {
     title: "Terms of Service | ReadyRoad",
@@ -25,7 +18,7 @@ export const metadata: Metadata = {
     locale: "en_BE",
     images: [
       {
-        url: "/images/og.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "ReadyRoad Terms",
@@ -33,7 +26,7 @@ export const metadata: Metadata = {
     ],
     type: "website",
   },
-  robots: { index: true, follow: false },
+  robots: { index: true, follow: true },
 };
 
 export default function TermsLayout({

@@ -22,6 +22,7 @@ import {
   createOrganizationSchema,
   createWebsiteSchema,
 } from "@/lib/site-copy";
+import { serializeJsonLd } from "@/lib/seo";
 
 // ─── Font ────────────────────────────────────────────────
 
@@ -68,13 +69,6 @@ export async function generateMetadata(): Promise<Metadata> {
     formatDetection: { email: false, address: false, telephone: false },
     alternates: {
       canonical: APP_URL,
-      languages: {
-        en: `${APP_URL}`,
-        nl: `${APP_URL}`,
-        fr: `${APP_URL}`,
-        ar: `${APP_URL}`,
-        "x-default": APP_URL,
-      },
     },
     icons: {
       icon: [
@@ -101,8 +95,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      site: "@ReadyRoad",
-      creator: "@ReadyRoad",
       title: copy.defaultTitle,
       description: copy.twitterDescription,
       images: [ogImage.url],
@@ -123,9 +115,9 @@ export async function generateMetadata(): Promise<Metadata> {
       statusBarStyle: "default",
       title: "ReadyRoad",
     },
-    verification: {
-      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "",
-    },
+    verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+      : undefined,
   };
 }
 
@@ -149,17 +141,17 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
+            __html: serializeJsonLd(organizationSchema),
           }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(educationalAppSchema),
+            __html: serializeJsonLd(educationalAppSchema),
           }}
         />
       </head>

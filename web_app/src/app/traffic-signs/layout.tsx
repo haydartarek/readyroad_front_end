@@ -3,10 +3,9 @@ import type { Metadata } from "next";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://readyroad.be";
 
 export const metadata: Metadata = {
-  title:
-    "Belgian Traffic Signs – Verkeerstekens | Panneaux Belgique | إشارات المرور",
+  title: "Belgian Traffic Signs in 4 Languages",
   description:
-    "Study all 250+ official Belgian traffic signs with explanations in 4 languages. Danger, prohibition, mandatory, information, parking & zone signs. Verkeerstekens België | Panneaux signalisation Belgique | إشارات المرور بلجيكا.",
+    "Study 184 Belgian traffic signs with explanations in English, Dutch, French, and Arabic, including danger, prohibition, mandatory, parking, and zone signs.",
   keywords: [
     "Belgian traffic signs",
     "traffic signs Belgium",
@@ -21,25 +20,18 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: `${APP_URL}/traffic-signs`,
-    languages: {
-      en: `${APP_URL}/traffic-signs`,
-      nl: `${APP_URL}/traffic-signs`,
-      fr: `${APP_URL}/traffic-signs`,
-      ar: `${APP_URL}/traffic-signs`,
-      "x-default": `${APP_URL}/traffic-signs`,
-    },
   },
   openGraph: {
-    title: "250+ Belgian Traffic Signs – Study in 4 Languages | ReadyRoad",
+    title: "184 Belgian Traffic Signs in 4 Languages | ReadyRoad",
     description:
       "All official Belgian road signs with explanations in English, Nederlands, Français & العربية. Essential for passing your driving license exam.",
     url: `${APP_URL}/traffic-signs`,
     siteName: "ReadyRoad",
     locale: "en_BE",
-    alternateLocale: ["nl_BE", "fr_BE", "ar"],
+    alternateLocale: ["nl_BE", "fr_BE", "ar_BE"],
     images: [
       {
-        url: "/images/og.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Belgian Traffic Signs – ReadyRoad",
@@ -49,10 +41,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "250+ Belgian Traffic Signs | ReadyRoad",
+    title: "184 Belgian Traffic Signs | ReadyRoad",
     description:
       "Study all official Belgian road signs. Essential for passing your driving exam.",
-    images: ["/images/og.png"],
+    images: ["/opengraph-image"],
   },
 };
 

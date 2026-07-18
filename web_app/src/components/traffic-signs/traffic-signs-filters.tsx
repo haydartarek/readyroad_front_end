@@ -109,7 +109,7 @@ export function TrafficSignsFilters({
               >
                 <span>{cat.label}</span>
                 <span
-                  className={`ml-1 rounded-full px-1.5 py-0.5 text-[8px] font-black md:px-1.5 md:text-[9px] ${isSelected ? "bg-primary-foreground/18 text-primary-foreground" : "bg-muted text-foreground"}`}
+                  className={`ml-1 rounded-full px-1.5 py-0.5 text-[8px] font-black md:px-1.5 md:text-[9px] ${isSelected ? "bg-black/20 text-white" : "bg-muted text-foreground"}`}
                 >
                   {cat.count}
                 </span>

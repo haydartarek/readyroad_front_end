@@ -6,17 +6,14 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        // Allow all bots on public pages
         userAgent: "*",
         allow: [
           "/",
-          "/traffic-signs",
-          "/lessons",
+          "/traffic-signs/",
+          "/lessons/",
           "/contact",
           "/terms",
           "/privacy-policy",
-          "/register",
-          "/login",
         ],
         disallow: [
           "/dashboard",
@@ -26,11 +23,9 @@ export default function robots(): MetadataRoute.Robots {
           "/analytics",
           "/admin",
           "/api/",
-          "/_next/",
         ],
       },
       {
-        // Block AI crawlers from scraping content
         userAgent: [
           "GPTBot",
           "ChatGPT-User",

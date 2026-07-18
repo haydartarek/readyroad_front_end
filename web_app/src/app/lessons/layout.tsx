@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://readyroad.be";
 
 export const metadata: Metadata = {
-  title: "Belgian Driving Theory Lessons | ReadyRoad",
+  title: "Belgian Driving Theory Lessons",
   description:
     "Structured Belgian driving theory lessons in English, العربية, Nederlands, and Français. Study road rules, right of way, signs, safety, and exam essentials with clear explanations.",
   keywords: [
@@ -19,13 +19,6 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: `${APP_URL}/lessons`,
-    languages: {
-      en: `${APP_URL}/lessons`,
-      nl: `${APP_URL}/lessons`,
-      fr: `${APP_URL}/lessons`,
-      ar: `${APP_URL}/lessons`,
-      "x-default": `${APP_URL}/lessons`,
-    },
   },
   openGraph: {
     title: "Belgian Driving Theory Lessons | ReadyRoad",
@@ -34,10 +27,10 @@ export const metadata: Metadata = {
     url: `${APP_URL}/lessons`,
     siteName: "ReadyRoad",
     locale: "en_BE",
-    alternateLocale: ["nl_BE", "fr_BE", "ar"],
+    alternateLocale: ["nl_BE", "fr_BE", "ar_BE"],
     images: [
       {
-        url: "/images/og.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Driving Theory Lessons – ReadyRoad",
@@ -50,7 +43,7 @@ export const metadata: Metadata = {
     title: "Belgian Driving Theory Lessons | ReadyRoad",
     description:
       "Study Belgian road rules, signs, priority, and safe driving with clear theory lessons.",
-    images: ["/images/og.png"],
+    images: ["/opengraph-image"],
   },
 };
 

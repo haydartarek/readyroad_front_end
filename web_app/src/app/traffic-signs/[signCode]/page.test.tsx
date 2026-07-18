@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { AxiosError, type AxiosAdapter, type AxiosResponse } from "axios";
 
-import TrafficSignDetailPage from "./page";
+import TrafficSignDetailPage from "./sign-detail-client";
 import { apiClient } from "@/lib/api";
 import type { TrafficSign } from "@/lib/types";
 
@@ -232,7 +232,7 @@ describe("TrafficSignDetailPage", () => {
   });
 
   it("does not request optional progress for anonymous public sign pages", async () => {
-    render(<TrafficSignDetailPage />);
+    render(<TrafficSignDetailPage initialSign={null} />);
 
     expect(
       await screen.findByRole("heading", {
@@ -272,7 +272,7 @@ describe("TrafficSignDetailPage", () => {
       isLoading: false,
     });
 
-    render(<TrafficSignDetailPage />);
+    render(<TrafficSignDetailPage initialSign={null} />);
 
     expect(
       await screen.findByRole("heading", {

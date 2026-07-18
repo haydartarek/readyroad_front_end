@@ -341,6 +341,15 @@ export function Footer() {
                 <div className="flex items-center gap-2">
                   <Globe className="h-3.5 w-3.5 text-muted-foreground" />
                   <div className="relative">
+                    <label htmlFor="footer-lang" className="sr-only">
+                      {language === "ar"
+                        ? "اللغة"
+                        : language === "fr"
+                          ? "Langue"
+                          : language === "nl"
+                            ? "Taal"
+                            : "Language"}
+                    </label>
                     <select
                       id="footer-lang"
                       name="language"

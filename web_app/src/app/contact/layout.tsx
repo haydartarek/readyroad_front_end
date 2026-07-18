@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://readyroad.be";
 
 export const metadata: Metadata = {
-  title: "Contact ReadyRoad – Get in Touch",
+  title: "Contact ReadyRoad",
   description:
     "Contact the ReadyRoad team for support, feedback or questions about the Belgian driving license exam preparation platform",
   keywords: [
@@ -17,13 +17,6 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: `${APP_URL}/contact`,
-    languages: {
-      en: `${APP_URL}/contact`,
-      nl: `${APP_URL}/contact`,
-      fr: `${APP_URL}/contact`,
-      ar: `${APP_URL}/contact`,
-      "x-default": `${APP_URL}/contact`,
-    },
   },
   openGraph: {
     title: "Contact ReadyRoad | Belgian Driving License Platform",
@@ -34,7 +27,7 @@ export const metadata: Metadata = {
     locale: "en_BE",
     images: [
       {
-        url: "/images/og.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Contact ReadyRoad",

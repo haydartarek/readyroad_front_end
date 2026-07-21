@@ -1,10 +1,10 @@
 import { createPublicPageMetadata } from "@/lib/public-page-metadata";
 
 export function generateMetadata() {
-  return createPublicPageMetadata("terms", "/terms");
+  return createPublicPageMetadata("cookies", "/cookie-policy");
 }
 
-export default function TermsLayout({
+export default function CookiePolicyLayout({
   children,
 }: {
   children: React.ReactNode;

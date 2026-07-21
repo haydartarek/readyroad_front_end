@@ -27,7 +27,11 @@ describe("public sitemap", () => {
     const entries = await sitemap();
     const urls = entries.map((entry) => entry.url);
 
-    expect(urls).toHaveLength(9);
+    expect(urls).toHaveLength(13);
+    expect(urls).toContain(`${appUrl}/about`);
+    expect(urls).toContain(`${appUrl}/faq`);
+    expect(urls).toContain(`${appUrl}/cookie-policy`);
+    expect(urls).toContain(`${appUrl}/disclaimer`);
     expect(urls).toContain(`${appUrl}/traffic-signs/A1a`);
     expect(urls).toContain(`${appUrl}/traffic-signs/B1`);
     expect(urls).toContain(`${appUrl}/lessons/les-0`);

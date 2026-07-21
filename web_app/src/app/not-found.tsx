@@ -1,9 +1,21 @@
 import { SearchX } from "lucide-react";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { StatusScreen } from "@/components/ui/status-screen";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { translateMessage } from "@/lib/messages";
 import { resolveSiteLocale } from "@/lib/site-copy";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const locale = resolveSiteLocale(
+    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
+  );
+
+  return {
+    title: translateMessage(locale, "common.not_found_title"),
+  };
+}
 
 export default async function NotFound() {
   const cookieStore = await cookies();

@@ -30,7 +30,6 @@ const SITE_COPY: Record<
   SiteLocale,
   {
     sharedOgAlt: string;
-    homeFaq: Array<{ question: string; answer: string }>;
     homeMetadata: {
       title: string;
       description: string;
@@ -52,22 +51,6 @@ const SITE_COPY: Record<
 > = {
   en: {
     sharedOgAlt: "ReadyRoad | Belgian driving theory exam preparation",
-    homeFaq: [
-      {
-        question: "How can I prepare for the Belgian driving theory exam?",
-        answer:
-          "Use ReadyRoad to study traffic signs, review theory lessons, practise by category, and track weak areas from your dashboard.",
-      },
-      {
-        question: "Is ReadyRoad free to use?",
-        answer:
-          "Yes. ReadyRoad offers a free account with access to traffic signs, theory lessons, and practice flows.",
-      },
-      {
-        question: "Which languages are available on ReadyRoad?",
-        answer: "ReadyRoad is available in English, Arabic, French, and Dutch.",
-      },
-    ],
     homeMetadata: {
       title: "ReadyRoad | Belgian Driving Theory Exam Preparation",
       description:
@@ -95,22 +78,6 @@ const SITE_COPY: Record<
   },
   ar: {
     sharedOgAlt: "ReadyRoad | التحضير لامتحان القيادة النظري في بلجيكا",
-    homeFaq: [
-      {
-        question: "كيف أستعد لامتحان القيادة النظري في بلجيكا؟",
-        answer:
-          "يساعدك ReadyRoad على دراسة إشارات المرور، ومراجعة الدروس النظرية، والتدرّب حسب الفئة، ومتابعة نقاط الضعف من لوحة التحكم.",
-      },
-      {
-        question: "هل استخدام ReadyRoad مجاني؟",
-        answer:
-          "نعم، يوفّر ReadyRoad حسابًا مجانيًا يمنحك الوصول إلى العلامات المرورية والدروس النظرية ومسارات التدريب.",
-      },
-      {
-        question: "ما اللغات المتاحة في ReadyRoad؟",
-        answer: "يتوفر ReadyRoad بالإنجليزية والعربية والفرنسية والهولندية.",
-      },
-    ],
     homeMetadata: {
       title: "ReadyRoad | التحضير لامتحان القيادة النظري في بلجيكا",
       description:
@@ -138,24 +105,6 @@ const SITE_COPY: Record<
   },
   fr: {
     sharedOgAlt: "ReadyRoad | préparation à l'examen théorique belge",
-    homeFaq: [
-      {
-        question:
-          "Comment préparer l'examen théorique belge du permis de conduire ?",
-        answer:
-          "ReadyRoad vous aide à étudier les panneaux, réviser les leçons de théorie, vous entraîner par catégorie et suivre vos points faibles depuis votre tableau de bord.",
-      },
-      {
-        question: "ReadyRoad est-il gratuit ?",
-        answer:
-          "Oui. ReadyRoad propose un compte gratuit donnant accès aux panneaux, aux leçons de théorie et aux parcours d'entraînement.",
-      },
-      {
-        question: "Quelles langues sont disponibles sur ReadyRoad ?",
-        answer:
-          "ReadyRoad est disponible en anglais, en arabe, en français et en néerlandais.",
-      },
-    ],
     homeMetadata: {
       title: "ReadyRoad | préparation à l'examen théorique belge",
       description:
@@ -184,23 +133,6 @@ const SITE_COPY: Record<
   },
   nl: {
     sharedOgAlt: "ReadyRoad | voorbereiding op het Belgische theorie-examen",
-    homeFaq: [
-      {
-        question: "Hoe bereid ik me voor op het Belgische theorie-examen?",
-        answer:
-          "Met ReadyRoad bestudeer je verkeersborden, herhaal je theorielessen, oefen je per categorie en volg je zwakke punten via je dashboard.",
-      },
-      {
-        question: "Is ReadyRoad gratis te gebruiken?",
-        answer:
-          "Ja. ReadyRoad biedt een gratis account met toegang tot verkeersborden, theorielessen en oefentrajecten.",
-      },
-      {
-        question: "Welke talen zijn beschikbaar op ReadyRoad?",
-        answer:
-          "ReadyRoad is beschikbaar in het Engels, Arabisch, Frans en Nederlands.",
-      },
-    ],
     homeMetadata: {
       title: "ReadyRoad | voorbereiding op het Belgische theorie-examen",
       description:
@@ -244,21 +176,6 @@ export function getHomeMetadataCopy(locale: SiteLocale) {
   return SITE_COPY[locale].homeMetadata;
 }
 
-export function getHomeFaqSchema(locale: SiteLocale) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: SITE_COPY[locale].homeFaq.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
-    })),
-  };
-}
-
 export function getOpenGraphLocale(locale: SiteLocale): string {
   return OPEN_GRAPH_LOCALES[locale];
 }
@@ -298,6 +215,20 @@ export function createOrganizationSchema(appUrl: string, locale: SiteLocale) {
       name: "Belgium",
     },
     availableLanguage: ["English", "Dutch", "French", "Arabic"],
+    founder: {
+      "@type": "Person",
+      name: "Haydar Tarek",
+      sameAs: [
+        "https://github.com/haydartarek",
+        "https://www.linkedin.com/in/haydartarek-dev/",
+      ],
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      url: `${appUrl}/contact`,
+      availableLanguage: ["English", "Dutch", "French", "Arabic"],
+    },
   };
 }
 

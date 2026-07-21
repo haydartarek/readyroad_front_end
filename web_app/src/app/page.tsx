@@ -12,13 +12,11 @@ import { STORAGE_KEYS } from "@/lib/constants";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
-  getHomeFaqSchema,
   getHomeMetadataCopy,
   getOpenGraphLocale,
   getSharedOgImage,
   resolveSiteLocale,
 } from "@/lib/site-copy";
-import { serializeJsonLd } from "@/lib/seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -47,22 +45,23 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [ogImage],
       type: "website",
     },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
   };
 }
 
-export default async function Home() {
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  );
-  const homeFaqSchema = getHomeFaqSchema(locale);
-
+export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeJsonLd(homeFaqSchema) }}
-      />
       <main>
         <HeroSection />
         <StatsHighlights />

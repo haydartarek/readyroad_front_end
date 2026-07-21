@@ -29,12 +29,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: `${APP_URL}/about`,
+      changeFrequency: "yearly",
+      priority: 0.6,
+    },
+    {
+      url: `${APP_URL}/faq`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
       url: `${APP_URL}/terms`,
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
       url: `${APP_URL}/privacy-policy`,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${APP_URL}/cookie-policy`,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${APP_URL}/disclaimer`,
       changeFrequency: "yearly",
       priority: 0.3,
     },

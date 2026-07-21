@@ -1,10 +1,10 @@
 import { createPublicPageMetadata } from "@/lib/public-page-metadata";
 
 export function generateMetadata() {
-  return createPublicPageMetadata("terms", "/terms");
+  return createPublicPageMetadata("about", "/about");
 }
 
-export default function TermsLayout({
+export default function AboutLayout({
   children,
 }: {
   children: React.ReactNode;

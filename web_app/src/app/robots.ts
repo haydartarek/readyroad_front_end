@@ -11,9 +11,13 @@ export default function robots(): MetadataRoute.Robots {
           "/",
           "/traffic-signs/",
           "/lessons/",
+          "/about",
           "/contact",
+          "/faq",
           "/terms",
           "/privacy-policy",
+          "/cookie-policy",
+          "/disclaimer",
         ],
         disallow: [
           "/dashboard",

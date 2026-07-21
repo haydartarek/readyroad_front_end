@@ -26,6 +26,10 @@ import {
   Instagram,
   Youtube,
   KeyRound,
+  Info,
+  Cookie,
+  Scale,
+  CircleHelp,
 } from "lucide-react";
 
 type LangCode = "en" | "ar" | "nl" | "fr";
@@ -116,8 +120,6 @@ export function Footer() {
       dir={isRTL ? "rtl" : "ltr"}
       className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background"
     >
-      <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-primary/8 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-secondary/8 blur-3xl" />
       <div className="container mx-auto px-4 py-6 lg:py-8">
         <div className="relative px-0 py-1">
           <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2 md:grid-cols-4">
@@ -309,6 +311,22 @@ export function Footer() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap items-center gap-2">
                 <Link
+                  href="/about"
+                  prefetch={false}
+                  className={legalLinkClasses}
+                >
+                  <Info className="h-3 w-3" />
+                  {t("home.footer.about")}
+                </Link>
+                <Link
+                  href="/faq"
+                  prefetch={false}
+                  className={legalLinkClasses}
+                >
+                  <CircleHelp className="h-3 w-3" />
+                  {t("home.footer.faq")}
+                </Link>
+                <Link
                   href="/privacy-policy"
                   prefetch={false}
                   className={legalLinkClasses}
@@ -317,12 +335,28 @@ export function Footer() {
                   {t("home.footer.privacy")}
                 </Link>
                 <Link
+                  href="/cookie-policy"
+                  prefetch={false}
+                  className={legalLinkClasses}
+                >
+                  <Cookie className="h-3 w-3" />
+                  {t("home.footer.cookies")}
+                </Link>
+                <Link
                   href="/terms"
                   prefetch={false}
                   className={legalLinkClasses}
                 >
                   <FileText className="h-3 w-3" />
                   {t("home.footer.terms")}
+                </Link>
+                <Link
+                  href="/disclaimer"
+                  prefetch={false}
+                  className={legalLinkClasses}
+                >
+                  <Scale className="h-3 w-3" />
+                  {t("home.footer.disclaimer_link")}
                 </Link>
                 <Link
                   href="/contact"
@@ -336,7 +370,7 @@ export function Footer() {
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:justify-end">
                 <span className="text-xs font-medium text-muted-foreground">
-                  &copy; {CURRENT_YEAR} ReadyRoad - {t("home.footer.rights")}
+                  &copy; {CURRENT_YEAR} ReadyRoad. {t("home.footer.operator")} {t("home.footer.rights")}
                 </span>
                 <div className="flex items-center gap-2">
                   <Globe className="h-3.5 w-3.5 text-muted-foreground" />

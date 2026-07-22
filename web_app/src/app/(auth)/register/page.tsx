@@ -42,6 +42,21 @@ type FormFields =
   | "password"
   | "confirmPassword";
 
+const FORM_FIELDS: FormFields[] = [
+  "firstName",
+  "lastName",
+  "username",
+  "email",
+  "password",
+  "confirmPassword",
+];
+
+function focusField(field: FormFields) {
+  requestAnimationFrame(() => {
+    document.getElementById(field)?.focus();
+  });
+}
+
 function validateField(
   field: FormFields,
   value: string,
@@ -166,16 +181,8 @@ export default function RegisterPage() {
   );
 
   const validateAll = () => {
-    const fields: FormFields[] = [
-      "firstName",
-      "lastName",
-      "username",
-      "email",
-      "password",
-      "confirmPassword",
-    ];
     const newErrors: Record<string, string> = {};
-    fields.forEach((field) => {
+    FORM_FIELDS.forEach((field) => {
       newErrors[field] = validateField(
         field,
         formData[field],
@@ -184,8 +191,15 @@ export default function RegisterPage() {
       );
     });
     setErrors(newErrors);
-    setTouched(new Set(fields));
-    return Object.values(newErrors).every((value) => !value);
+    setTouched(new Set(FORM_FIELDS));
+
+    const firstInvalidField = FORM_FIELDS.find((field) => newErrors[field]);
+    if (firstInvalidField) {
+      focusField(firstInvalidField);
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -217,6 +231,7 @@ export default function RegisterPage() {
             username: t("auth.validation.username_taken"),
           }));
           setTouched((prev) => new Set(prev).add("username"));
+          focusField("username");
           return;
         }
         if (/email.*exist|email.*registered/i.test(message)) {
@@ -225,6 +240,7 @@ export default function RegisterPage() {
             email: t("auth.validation.email_registered"),
           }));
           setTouched((prev) => new Set(prev).add("email"));
+          focusField("email");
           return;
         }
 
@@ -251,16 +267,11 @@ export default function RegisterPage() {
 
       if (data?.fields) {
         setErrors((prev) => ({ ...prev, ...data.fields }));
-        setTouched(
-          new Set([
-            "firstName",
-            "lastName",
-            "username",
-            "email",
-            "password",
-            "confirmPassword",
-          ]),
+        setTouched(new Set(FORM_FIELDS));
+        const firstServerField = FORM_FIELDS.find(
+          (field) => data.fields?.[field],
         );
+        if (firstServerField) focusField(firstServerField);
         return;
       }
 
@@ -306,10 +317,10 @@ export default function RegisterPage() {
       "h-12 rounded-2xl border-border/60 shadow-sm transition-colors duration-150",
       isRTL
         ? withAction
-          ? "pl-11 pr-10"
+          ? "pl-12 pr-10"
           : "pr-10"
         : withAction
-          ? "pl-10 pr-11"
+          ? "pl-10 pr-12"
           : "pl-10",
     )} ${
       hasError(field)
@@ -380,6 +391,9 @@ export default function RegisterPage() {
                   onBlur={() => handleBlur(field)}
                   disabled={isLoading}
                   aria-invalid={hasError(field)}
+                  aria-describedby={
+                    hasError(field) ? `${field}-error` : undefined
+                  }
                   className={inputClassName(field, isValid(field))}
                 />
                 {isValid(field) && (
@@ -392,7 +406,10 @@ export default function RegisterPage() {
                 )}
               </div>
               {hasError(field) ? (
-                <p className="text-xs font-medium text-destructive">
+                <p
+                  id={`${field}-error`}
+                  className="text-xs font-medium text-destructive"
+                >
                   {errors[field]}
                 </p>
               ) : null}
@@ -420,6 +437,9 @@ export default function RegisterPage() {
               onBlur={() => handleBlur("username")}
               disabled={isLoading}
               aria-invalid={hasError("username")}
+              aria-describedby={
+                hasError("username") ? "username-error" : undefined
+              }
               className={inputClassName("username", isValid("username"))}
             />
             {isValid("username") && (
@@ -432,7 +452,10 @@ export default function RegisterPage() {
             )}
           </div>
           {hasError("username") ? (
-            <p className="text-xs font-medium text-destructive">
+            <p
+              id="username-error"
+              className="text-xs font-medium text-destructive"
+            >
               {errors.username}
             </p>
           ) : null}
@@ -459,6 +482,7 @@ export default function RegisterPage() {
               onBlur={() => handleBlur("email")}
               disabled={isLoading}
               aria-invalid={hasError("email")}
+              aria-describedby={hasError("email") ? "email-error" : undefined}
               className={inputClassName("email", isValid("email"))}
             />
             {isValid("email") && (
@@ -471,7 +495,10 @@ export default function RegisterPage() {
             )}
           </div>
           {hasError("email") ? (
-            <p className="text-xs font-medium text-destructive">
+            <p
+              id="email-error"
+              className="text-xs font-medium text-destructive"
+            >
               {errors.email}
             </p>
           ) : null}
@@ -498,6 +525,14 @@ export default function RegisterPage() {
               onBlur={() => handleBlur("password")}
               disabled={isLoading}
               aria-invalid={hasError("password")}
+              aria-describedby={
+                [
+                  formData.password ? "password-rules" : null,
+                  hasError("password") ? "password-error" : null,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined
+              }
               className={inputClassName("password", true)}
             />
             <button
@@ -506,11 +541,11 @@ export default function RegisterPage() {
               aria-label={
                 showPassword ? t("auth.hide_password") : t("auth.show_password")
               }
+              aria-pressed={showPassword}
               className={cn(
-                "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground",
-                isRTL ? "left-3" : "right-3",
+                "absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                isRTL ? "left-0.5" : "right-0.5",
               )}
-              tabIndex={-1}
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -521,7 +556,7 @@ export default function RegisterPage() {
           </div>
 
           {formData.password ? (
-            <div className="space-y-1.5 pt-0.5">
+            <div id="password-rules" className="space-y-1.5 pt-0.5">
               <div className="flex gap-1">
                 {pwRules.map((rule) => (
                   <div
@@ -550,7 +585,10 @@ export default function RegisterPage() {
           ) : null}
 
           {hasError("password") ? (
-            <p className="text-xs font-medium text-destructive">
+            <p
+              id="password-error"
+              className="text-xs font-medium text-destructive"
+            >
               {errors.password}
             </p>
           ) : null}
@@ -577,6 +615,13 @@ export default function RegisterPage() {
               onBlur={() => handleBlur("confirmPassword")}
               disabled={isLoading}
               aria-invalid={hasError("confirmPassword")}
+              aria-describedby={
+                hasError("confirmPassword")
+                  ? "confirmPassword-error"
+                  : isValid("confirmPassword")
+                    ? "confirmPassword-success"
+                    : undefined
+              }
               className={inputClassName("confirmPassword", true)}
             />
             <button
@@ -585,11 +630,11 @@ export default function RegisterPage() {
               aria-label={
                 showConfirm ? t("auth.hide_password") : t("auth.show_password")
               }
+              aria-pressed={showConfirm}
               className={cn(
-                "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground",
-                isRTL ? "left-3" : "right-3",
+                "absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                isRTL ? "left-0.5" : "right-0.5",
               )}
-              tabIndex={-1}
             >
               {showConfirm ? (
                 <EyeOff className="h-4 w-4" />
@@ -599,12 +644,18 @@ export default function RegisterPage() {
             </button>
           </div>
           {hasError("confirmPassword") ? (
-            <p className="text-xs font-medium text-destructive">
+            <p
+              id="confirmPassword-error"
+              className="text-xs font-medium text-destructive"
+            >
               {errors.confirmPassword}
             </p>
           ) : null}
           {isValid("confirmPassword") ? (
-            <p className="flex items-center gap-1 text-xs font-medium text-green-600">
+            <p
+              id="confirmPassword-success"
+              className="flex items-center gap-1 text-xs font-medium text-green-600"
+            >
               <CheckCircle2 className="h-3 w-3" />
               {t("auth.passwords_match")}
             </p>

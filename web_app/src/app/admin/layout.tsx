@@ -7,6 +7,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
 import { useLanguage } from "@/contexts/language-context";
 import { RefreshCw } from "lucide-react";
+import { PageLoading } from "@/components/ui/page-loading";
 
 /**
  * Admin Layout Component
@@ -58,8 +59,10 @@ export default function AdminLayout({
     );
   }
 
-  // Don't render anything if user is not admin (will be redirected)
-  if (!user || user.role !== "ADMIN") return null;
+  // Keep a meaningful status visible while the client-side redirect completes.
+  if (!user || user.role !== "ADMIN") {
+    return <PageLoading message={t("admin.sidebar.checking_permissions")} />;
+  }
 
   // Scenario: Allow admin users to access admin routes
   return (

@@ -43,7 +43,7 @@ const navItemClasses =
 const socialButtonClasses =
   "flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-background/80 text-muted-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-primary/5 hover:text-primary";
 const legalLinkClasses =
-  "inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all duration-200 hover:border-border/60 hover:bg-background/85 hover:text-foreground";
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all duration-200 hover:border-border/60 hover:bg-background/85 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 const languageSelectClasses =
   "h-9 min-w-[132px] cursor-pointer appearance-none rounded-full border border-border/60 bg-background/85 px-3 pe-9 text-xs font-semibold text-foreground shadow-sm transition-all duration-200 hover:border-primary/20 hover:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20";
 const iconBadgeClasses =

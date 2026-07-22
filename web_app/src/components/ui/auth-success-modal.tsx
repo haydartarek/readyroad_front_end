@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { createPortal } from "react-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 // ─── Constants ───────────────────────────────────────────
 
@@ -27,8 +33,10 @@ function AuthSuccessModalContent({
   onRedirect,
 }: AuthSuccessModalProps) {
   const [progress, setProgress] = useState(100);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const step = (TICK_MS / REDIRECT_DELAY_MS) * 100;
@@ -57,22 +65,31 @@ function AuthSuccessModalContent({
   }, [onRedirect]);
 
   return (
-    <div
-      aria-modal="true"
-      role="dialog"
-      aria-label={`${title} ${username}`}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ animation: "authOverlayIn 0.3s ease both" }}
+    <DialogContent
+      ref={dialogRef}
+      tabIndex={-1}
+      showCloseButton={false}
+      overlayClassName="z-[9998] bg-black/60 backdrop-blur-md"
+      className="z-[9999] max-w-[400px] border-0 bg-transparent p-0 shadow-none"
+      onOpenAutoFocus={(event) => {
+        event.preventDefault();
+        dialogRef.current?.focus();
+      }}
+      onEscapeKeyDown={(event) => event.preventDefault()}
+      onPointerDownOutside={(event) => event.preventDefault()}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+      <DialogTitle className="sr-only">
+        {title} {username}
+      </DialogTitle>
+      <DialogDescription className="sr-only">{subtitle}</DialogDescription>
 
       {/* Card */}
       <div
-        className="relative z-10 w-full max-w-[400px] overflow-hidden rounded-3xl shadow-2xl"
+        className="auth-redirect-animation relative z-10 w-full max-w-[400px] overflow-hidden rounded-3xl shadow-2xl"
         style={{
-          animation:
-            "authModalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s both",
+          animation: prefersReducedMotion
+            ? "none"
+            : "authModalIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s both",
           boxShadow:
             "0 32px 80px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)",
         }}
@@ -109,11 +126,13 @@ function AuthSuccessModalContent({
             {/* Outer pulse ring */}
             <span
               aria-hidden="true"
-              className="absolute inset-[-10px] rounded-full"
+              className="auth-redirect-animation absolute inset-[-10px] rounded-full"
               style={{
                 background:
                   "radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%)",
-                animation: "authPulse 2s ease-in-out 0.8s infinite",
+                animation: prefersReducedMotion
+                  ? "none"
+                  : "authPulse 2s ease-in-out 0.8s infinite",
               }}
             />
             {/* White circle container */}
@@ -141,8 +160,11 @@ function AuthSuccessModalContent({
                   style={{
                     strokeDasharray: "138",
                     strokeDashoffset: "138",
-                    animation: "authCircleDraw 0.55s ease 0.25s forwards",
+                    animation: prefersReducedMotion
+                      ? "none"
+                      : "authCircleDraw 0.55s ease 0.25s forwards",
                   }}
+                  className="auth-redirect-animation"
                 />
                 {/* Check */}
                 <path
@@ -154,8 +176,11 @@ function AuthSuccessModalContent({
                   style={{
                     strokeDasharray: "44",
                     strokeDashoffset: "44",
-                    animation: "authCheckDraw 0.3s ease 0.72s forwards",
+                    animation: prefersReducedMotion
+                      ? "none"
+                      : "authCheckDraw 0.3s ease 0.72s forwards",
                   }}
+                  className="auth-redirect-animation"
                 />
               </svg>
             </div>
@@ -191,6 +216,11 @@ function AuthSuccessModalContent({
           {/* Progress */}
           <div className="space-y-2.5">
             <div
+              role="progressbar"
+              aria-label={redirectingText}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
               className="h-1.5 rounded-full overflow-hidden"
               style={{ background: "hsl(var(--muted))" }}
             >
@@ -200,11 +230,16 @@ function AuthSuccessModalContent({
                   width: `${progress}%`,
                   background:
                     "linear-gradient(90deg, hsl(13 76% 53%), hsl(25 95% 50%), #10b981)",
-                  transition: `width ${TICK_MS}ms linear`,
+                  transition: prefersReducedMotion
+                    ? "none"
+                    : `width ${TICK_MS}ms linear`,
                 }}
               />
             </div>
-            <p className="text-xs text-muted-foreground/70 flex items-center justify-center gap-1.5">
+            <p
+              aria-live="polite"
+              className="text-xs text-muted-foreground/70 flex items-center justify-center gap-1.5"
+            >
               <svg
                 viewBox="0 0 16 16"
                 className="w-3.5 h-3.5 shrink-0"
@@ -224,16 +259,16 @@ function AuthSuccessModalContent({
           </div>
         </div>
       </div>
-    </div>
+    </DialogContent>
   );
 }
 
 // ─── Component ───────────────────────────────────────────
 
 export function AuthSuccessModal(props: AuthSuccessModalProps) {
-  if (!props.isOpen || typeof document === "undefined") {
-    return null;
-  }
-
-  return createPortal(<AuthSuccessModalContent {...props} />, document.body);
+  return (
+    <Dialog open={props.isOpen} onOpenChange={() => {}}>
+      {props.isOpen ? <AuthSuccessModalContent {...props} /> : null}
+    </Dialog>
+  );
 }

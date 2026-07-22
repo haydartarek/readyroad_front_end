@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import { PageLoading } from "@/components/ui/page-loading";
 import { ROUTES } from "@/lib/constants";
 import { AuthPageFrame } from "@/components/auth/auth-page-frame";
 import { AuthShowcasePanel } from "@/components/auth/auth-showcase-panel";
@@ -46,6 +47,9 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [invalidFields, setInvalidFields] = useState<
+    Set<"username" | "password">
+  >(new Set());
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -74,10 +78,19 @@ function LoginForm() {
     e.preventDefault();
     setError("");
 
-    if (!formData.username || !formData.password) {
+    const missingFields = (["username", "password"] as const).filter(
+      (field) => !formData[field].trim(),
+    );
+    if (missingFields.length > 0) {
+      setInvalidFields(new Set(missingFields));
       setError(t("auth.login_fill_all_fields"));
+      requestAnimationFrame(() => {
+        document.getElementById(missingFields[0])?.focus();
+      });
       return;
     }
+
+    setInvalidFields(new Set());
 
     setIsLoading(true);
     const returnUrl = searchParams.get("returnUrl");
@@ -144,11 +157,20 @@ function LoginForm() {
               type="text"
               autoComplete="username"
               value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, username: e.target.value });
+                setInvalidFields((current) => {
+                  const next = new Set(current);
+                  next.delete("username");
+                  return next;
+                });
+              }}
               disabled={isLoading}
               required
+              aria-invalid={invalidFields.has("username")}
+              aria-describedby={
+                invalidFields.has("username") ? "login-form-error" : undefined
+              }
               className={cn(
                 "h-12 rounded-2xl border-border/60 shadow-sm",
                 isRTL ? "pr-10" : "pl-10",
@@ -174,14 +196,23 @@ function LoginForm() {
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, password: e.target.value });
+                setInvalidFields((current) => {
+                  const next = new Set(current);
+                  next.delete("password");
+                  return next;
+                });
+              }}
               disabled={isLoading}
               required
+              aria-invalid={invalidFields.has("password")}
+              aria-describedby={
+                invalidFields.has("password") ? "login-form-error" : undefined
+              }
               className={cn(
                 "h-12 rounded-2xl border-border/60 shadow-sm",
-                isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
+                isRTL ? "pl-12 pr-10" : "pl-10 pr-12",
               )}
             />
             <button
@@ -190,11 +221,11 @@ function LoginForm() {
               aria-label={
                 showPassword ? t("auth.hide_password") : t("auth.show_password")
               }
+              aria-pressed={showPassword}
               className={cn(
-                "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground",
-                isRTL ? "left-3" : "right-3",
+                "absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                isRTL ? "left-0.5" : "right-0.5",
               )}
-              tabIndex={-1}
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -206,7 +237,12 @@ function LoginForm() {
         </div>
 
         {displayedError && (
-          <div className="overflow-hidden rounded-2xl border border-destructive/25 bg-destructive/5 shadow-sm">
+          <div
+            id="login-form-error"
+            role="alert"
+            aria-live="assertive"
+            className="overflow-hidden rounded-2xl border border-destructive/25 bg-destructive/5 shadow-sm"
+          >
             <div className="flex items-start gap-3 px-4 py-3.5">
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -303,7 +339,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+    <Suspense fallback={<PageLoading />}>
       <LoginForm />
     </Suspense>
   );

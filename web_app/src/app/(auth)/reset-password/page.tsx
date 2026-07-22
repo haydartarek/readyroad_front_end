@@ -20,13 +20,14 @@ import { ROUTES } from "@/lib/constants";
 import { apiClient } from "@/lib/api";
 import { AuthPageFrame } from "@/components/auth/auth-page-frame";
 import { AuthShowcasePanel } from "@/components/auth/auth-showcase-panel";
+import { PageLoading } from "@/components/ui/page-loading";
 import { cn } from "@/lib/utils";
 
 function ResetPasswordForm() {
   const { t, isRTL } = useLanguage();
   const searchParams = useSearchParams();
 
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null | undefined>(undefined);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -34,13 +35,16 @@ function ResetPasswordForm() {
   const [error, setError] = useState("");
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [errorField, setErrorField] = useState<
+    "newPassword" | "confirmPassword" | null
+  >(null);
 
   useEffect(() => {
     setToken(searchParams.get("token"));
   }, [searchParams]);
 
-  if (token === null && typeof window !== "undefined") {
-    return null;
+  if (token === undefined) {
+    return <PageLoading />;
   }
 
   const showcase = (
@@ -86,9 +90,14 @@ function ResetPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setErrorField(null);
 
     if (newPassword !== confirmPassword) {
       setError(t("auth.reset_password_mismatch"));
+      setErrorField("confirmPassword");
+      requestAnimationFrame(() => {
+        document.getElementById("confirmPassword")?.focus();
+      });
       return;
     }
 
@@ -126,7 +135,11 @@ function ResetPasswordForm() {
       }
     >
       {success ? (
-        <div className="space-y-6 text-center">
+        <div
+          role="status"
+          aria-live="polite"
+          className="space-y-6 text-center"
+        >
           <div className="flex justify-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
               <CheckCircle className="h-10 w-10 text-green-500" />
@@ -143,6 +156,7 @@ function ResetPasswordForm() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {error ? (
             <Alert
+              id="reset-password-error"
               variant="destructive"
               className="rounded-2xl border-destructive/20 bg-destructive/5 text-sm"
             >
@@ -167,14 +181,26 @@ function ResetPasswordForm() {
                 type={showNew ? "text" : "password"}
                 autoComplete="new-password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  if (errorField === "newPassword") {
+                    setError("");
+                    setErrorField(null);
+                  }
+                }}
                 className={cn(
                   "h-12 rounded-2xl border-border/60 shadow-sm",
-                  isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
+                  isRTL ? "pl-12 pr-10" : "pl-10 pr-12",
                 )}
                 disabled={isLoading}
                 minLength={8}
                 required
+                aria-invalid={errorField === "newPassword"}
+                aria-describedby={
+                  errorField === "newPassword"
+                    ? "reset-password-error"
+                    : undefined
+                }
               />
               <button
                 type="button"
@@ -182,11 +208,11 @@ function ResetPasswordForm() {
                 aria-label={
                   showNew ? t("auth.hide_password") : t("auth.show_password")
                 }
+                aria-pressed={showNew}
                 className={cn(
-                  "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground",
-                  isRTL ? "left-3" : "right-3",
+                  "absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  isRTL ? "left-0.5" : "right-0.5",
                 )}
-                tabIndex={-1}
               >
                 {showNew ? (
                   <EyeOff className="h-4 w-4" />
@@ -214,14 +240,26 @@ function ResetPasswordForm() {
                 type={showConfirm ? "text" : "password"}
                 autoComplete="new-password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (errorField === "confirmPassword") {
+                    setError("");
+                    setErrorField(null);
+                  }
+                }}
                 className={cn(
                   "h-12 rounded-2xl border-border/60 shadow-sm",
-                  isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
+                  isRTL ? "pl-12 pr-10" : "pl-10 pr-12",
                 )}
                 disabled={isLoading}
                 minLength={8}
                 required
+                aria-invalid={errorField === "confirmPassword"}
+                aria-describedby={
+                  errorField === "confirmPassword"
+                    ? "reset-password-error"
+                    : undefined
+                }
               />
               <button
                 type="button"
@@ -231,11 +269,11 @@ function ResetPasswordForm() {
                     ? t("auth.hide_password")
                     : t("auth.show_password")
                 }
+                aria-pressed={showConfirm}
                 className={cn(
-                  "absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground",
-                  isRTL ? "left-3" : "right-3",
+                  "absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  isRTL ? "left-0.5" : "right-0.5",
                 )}
-                tabIndex={-1}
               >
                 {showConfirm ? (
                   <EyeOff className="h-4 w-4" />
@@ -263,7 +301,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+    <Suspense fallback={<PageLoading />}>
       <ResetPasswordForm />
     </Suspense>
   );

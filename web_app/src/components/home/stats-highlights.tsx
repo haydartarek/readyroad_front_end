@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
 import { useHomeStats } from "@/hooks/use-home-stats";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 export function StatsHighlights() {
   const { t, language } = useLanguage();
@@ -12,6 +13,7 @@ export function StatsHighlights() {
   const animationFrameRef = useRef<number | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [progress, setProgress] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const statItems = useMemo(
     () => [
@@ -29,6 +31,10 @@ export function StatsHighlights() {
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
+    if (typeof IntersectionObserver === "undefined") {
+      const frame = window.requestAnimationFrame(() => setIsVisible(true));
+      return () => window.cancelAnimationFrame(frame);
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -49,10 +55,6 @@ export function StatsHighlights() {
 
   useEffect(() => {
     if (!stats || !isVisible) return;
-
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     if (prefersReducedMotion) {
       animationFrameRef.current = window.requestAnimationFrame(() => {
@@ -87,7 +89,7 @@ export function StatsHighlights() {
         animationFrameRef.current = null;
       }
     };
-  }, [stats, isVisible]);
+  }, [isVisible, prefersReducedMotion, stats]);
 
   return (
     <section

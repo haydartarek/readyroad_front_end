@@ -36,11 +36,13 @@ export default function ForgotPasswordPage() {
 
     if (!email.trim()) {
       setError(t("auth.validation.email_required"));
+      requestAnimationFrame(() => document.getElementById("email")?.focus());
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError(t("auth.forgot_email_invalid"));
+      requestAnimationFrame(() => document.getElementById("email")?.focus());
       return;
     }
 
@@ -96,7 +98,11 @@ export default function ForgotPasswordPage() {
       }
     >
       {submitted ? (
-        <div className="space-y-6 text-center">
+        <div
+          role="status"
+          aria-live="polite"
+          className="space-y-6 text-center"
+        >
           <div className="flex justify-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
               <CheckCircle className="h-10 w-10 text-green-500" />
@@ -130,6 +136,7 @@ export default function ForgotPasswordPage() {
 
           {error && (
             <Alert
+              id="forgot-password-error"
               variant="destructive"
               className="rounded-2xl border-destructive/20 bg-destructive/5 text-sm"
             >
@@ -154,13 +161,18 @@ export default function ForgotPasswordPage() {
                 type="email"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError("");
+                }}
                 className={cn(
                   "h-12 rounded-2xl border-border/60 shadow-sm",
                   isRTL ? "pr-10" : "pl-10",
                 )}
                 disabled={isLoading}
                 required
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "forgot-password-error" : undefined}
               />
             </div>
           </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Target, SignpostBig, FileText, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { EXAM_RULES } from "@/lib/constants";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 interface Step {
   number: string;
@@ -63,16 +64,18 @@ export function HowItWorksSection() {
   const { t, isRTL } = useLanguage();
   const sectionRef = useRef<HTMLElement>(null);
   const hasTriggered = useRef(false);
-  const [visible, setVisible] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
+  const [visible, setVisible] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const steps = buildSteps();
 
   useEffect(() => {
-    if (visible) return; // already visible (prefers-reduced-motion)
+    if (visible) return;
+    if (prefersReducedMotion || typeof IntersectionObserver === "undefined") {
+      const frame = window.requestAnimationFrame(() => setVisible(true));
+      return () => window.cancelAnimationFrame(frame);
+    }
+
     const el = sectionRef.current;
     if (!el) return;
 
@@ -89,7 +92,7 @@ export function HowItWorksSection() {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [visible]);
+  }, [prefersReducedMotion, visible]);
 
   return (
     <section

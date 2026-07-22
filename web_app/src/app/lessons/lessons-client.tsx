@@ -5,6 +5,8 @@ import { LessonsGrid } from "@/components/lessons/lessons-grid";
 import { getAllLessons, searchLessons } from "@/services/lessonService";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import { LoadErrorState } from "@/components/ui/load-error-state";
+import { PageLoading } from "@/components/ui/page-loading";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +19,10 @@ import {
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import {
-  AlertTriangle,
   BookOpen,
   FileText,
   Languages,
   MapPinned,
-  RefreshCw,
   Search,
   Sparkles,
   X,
@@ -96,26 +96,18 @@ export default function LessonsClient({
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/50 bg-card shadow-sm">
-            <RefreshCw className="h-6 w-6 animate-spin text-primary" />
-          </div>
-          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-        </div>
-      </div>
-    );
+    return <PageLoading />;
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="flex items-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">
-          <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
-      </div>
+      <LoadErrorState
+        message={error}
+        onRetry={() => {
+          setError(null);
+          setFetchKey((current) => current + 1);
+        }}
+      />
     );
   }
 

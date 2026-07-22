@@ -27,5 +27,10 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      ...process.env,
+      BACKEND_URL: "http://127.0.0.1:1/api",
+      NEXT_PUBLIC_API_BASE_URL: "http://127.0.0.1:1",
+    },
   },
 });

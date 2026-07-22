@@ -61,9 +61,9 @@ export function AuthPageFrame({
               )}
             >
               <div className={cn("mb-8 space-y-2", headerClassName)}>
-                <h2 className="text-3xl font-black tracking-tight text-foreground">
+                <h1 className="text-3xl font-black tracking-tight text-foreground">
                   {title}
-                </h2>
+                </h1>
                 {subtitle ? (
                   <p className="max-w-md text-sm font-medium leading-6 text-muted-foreground">
                     {subtitle}

@@ -22,6 +22,8 @@ import {
 } from "@/services/lessonService";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import { LoadErrorState } from "@/components/ui/load-error-state";
+import { PageLoading } from "@/components/ui/page-loading";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
@@ -32,7 +34,6 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  RefreshCw,
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
@@ -274,19 +275,27 @@ export default function LessonDetailClient({
   }
 
   if (loading) {
+    return <PageLoading />;
+  }
+
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/50 bg-card shadow-sm">
-            <RefreshCw className="h-6 w-6 animate-spin text-primary" />
-          </div>
-          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-        </div>
-      </div>
+      <LoadErrorState
+        message={error}
+        onRetry={() => {
+          setError(null);
+          setFetchKey((current) => current + 1);
+        }}
+        secondaryAction={
+          <Button variant="outline" asChild>
+            <Link href="/lessons">{t("lessons.back_to_all")}</Link>
+          </Button>
+        }
+      />
     );
   }
 
-  if (error || !lesson) {
+  if (!lesson) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-lg text-muted-foreground">

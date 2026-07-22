@@ -343,6 +343,14 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .auth-redirect-animation,
+  .auth-redirect-animation * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* ── Bell wiggle (new notification) ───────────────────── */
 @keyframes wiggle {
   0%,

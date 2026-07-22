@@ -6,6 +6,8 @@ import { Languages, ListFilter, RefreshCw, Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
 import { TrafficSignsFilters } from "@/components/traffic-signs/traffic-signs-filters";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import { LoadErrorState } from "@/components/ui/load-error-state";
+import { PageLoading } from "@/components/ui/page-loading";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
   PageHeroDescription,
@@ -29,19 +31,11 @@ import type { TrafficSign, TrafficSignCatalogItem } from "@/lib/types";
 type Lang = "en" | "ar" | "nl" | "fr";
 
 async function getAllTrafficSigns(): Promise<TrafficSignCatalogItem[]> {
-  try {
-    const response = await apiClient.get<
-      TrafficSign[] | { signs: TrafficSign[] }
-    >(API_ENDPOINTS.TRAFFIC_SIGNS.LIST);
-    const data = response.data;
-    return Array.isArray(data) ? data : (data.signs ?? []);
-  } catch (error) {
-    if (isServiceUnavailable(error)) {
-      throw error;
-    }
-    logApiError("Error fetching traffic signs", error);
-    return [];
-  }
+  const response = await apiClient.get<
+    TrafficSign[] | { signs: TrafficSign[] }
+  >(API_ENDPOINTS.TRAFFIC_SIGNS.LIST);
+  const data = response.data;
+  return Array.isArray(data) ? data : (data.signs ?? []);
 }
 
 function sortTrafficSigns(
@@ -67,19 +61,7 @@ export default function TrafficSignsClient({
 
 function LoadingState() {
   const { t } = useLanguage();
-
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center">
-          <RefreshCw className="w-6 h-6 text-primary animate-spin" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {t("traffic_signs.loading")}
-        </p>
-      </div>
-    </div>
-  );
+  return <PageLoading message={t("traffic_signs.loading")} />;
 }
 
 function TrafficSignsContent({
@@ -103,6 +85,7 @@ function TrafficSignsContent({
   );
   const [loading, setLoading] = useState(initialSigns.length === 0);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
@@ -112,6 +95,7 @@ function TrafficSignsContent({
 
     let cancelled = false;
     setLoading(true);
+    setLoadError(false);
 
     getAllTrafficSigns()
       .then((signs) => {
@@ -121,8 +105,12 @@ function TrafficSignsContent({
       })
       .catch((error) => {
         logApiError("Failed to load traffic signs", error);
-        if (!cancelled && isServiceUnavailable(error)) {
-          setServiceUnavailable(true);
+        if (!cancelled) {
+          if (isServiceUnavailable(error)) {
+            setServiceUnavailable(true);
+          } else {
+            setLoadError(true);
+          }
         }
       })
       .finally(() => {
@@ -266,6 +254,17 @@ function TrafficSignsContent({
 
   if (loading) {
     return <LoadingState />;
+  }
+
+  if (loadError) {
+    return (
+      <LoadErrorState
+        onRetry={() => {
+          setLoadError(false);
+          setFetchKey((current) => current + 1);
+        }}
+      />
+    );
   }
 
   return (

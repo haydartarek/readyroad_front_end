@@ -17,6 +17,7 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import { PageHeroSurface, PageHeroTitle } from "@/components/ui/page-surface";
 import { SignImage } from "@/components/traffic-signs/sign-image";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import { LoadErrorState } from "@/components/ui/load-error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,8 +44,16 @@ import { getSignStatus, type SignUserProgress } from "@/services";
 type Lang = "en" | "ar" | "nl" | "fr";
 
 function LoadingState() {
+  const { t } = useLanguage();
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.10),_transparent_36%),linear-gradient(to_bottom,_hsl(var(--muted)/0.45),_transparent_24rem)]">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.10),_transparent_36%),linear-gradient(to_bottom,_hsl(var(--muted)/0.45),_transparent_24rem)]"
+    >
+      <span className="sr-only">{t("common.loading")}</span>
       <div className="container mx-auto px-4 py-8 md:py-10">
         <div className="space-y-6">
           <div className="h-5 w-56 animate-pulse rounded-full bg-muted" />
@@ -208,7 +217,24 @@ export default function TrafficSignDetailClient({
     return <LoadingState />;
   }
 
-  if (error || !sign || !isCurrentSignLoaded) {
+  if (error) {
+    return (
+      <LoadErrorState
+        onRetry={() => {
+          setError(false);
+          setLoading(true);
+          setFetchKey((current) => current + 1);
+        }}
+        secondaryAction={
+          <Button variant="outline" asChild>
+            <Link href="/traffic-signs">{t("sign_detail.back_to_all")}</Link>
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (!sign || !isCurrentSignLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="max-w-md rounded-[2rem] border border-border/60 bg-card p-8 text-center shadow-sm">

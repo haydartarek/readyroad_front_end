@@ -48,6 +48,13 @@ test.describe("Public information and legal pages", () => {
         "href",
         new RegExp(`${publicPage.path.replaceAll("/", "\\/")}$`),
       );
+      const canonical = await page
+        .locator('link[rel="canonical"]')
+        .getAttribute("href");
+      expect(canonical).toBeTruthy();
+      expect(new URL(canonical ?? "").hostname).not.toMatch(
+        /^(?:localhost|127\.0\.0\.1)$/,
+      );
       const description = await page
         .locator('meta[name="description"]')
         .getAttribute("content");
@@ -56,8 +63,31 @@ test.describe("Public information and legal pages", () => {
         "content",
         /\S+/,
       );
+      await expect(
+        page.locator('meta[property="og:description"]'),
+      ).toHaveAttribute("content", /\S+/);
+      await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+        "content",
+        /^https:\/\//,
+      );
+      await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+        "content",
+        "summary_large_image",
+      );
+      const robots = await page
+        .locator('meta[name="robots"]')
+        .getAttribute("content");
+      expect(robots).not.toMatch(/noindex/i);
       await expect(page.locator('script[type="application/ld+json"]')).not.toHaveCount(
         0,
+      );
+      const schemas = await page
+        .locator('script[type="application/ld+json"]')
+        .allTextContents();
+      const parsedSchemas = schemas.map((schema) => JSON.parse(schema));
+      expect(parsedSchemas).toHaveLength(schemas.length);
+      expect(JSON.stringify(parsedSchemas)).not.toMatch(
+        /"(?:aggregateRating|review|reviewRating)"\s*:/i,
       );
     });
   }
@@ -76,6 +106,44 @@ test.describe("Public information and legal pages", () => {
     ]) {
       await expect(page.locator(`footer a[href="${path}"]`).first()).toBeVisible();
     }
+  });
+
+  test("legacy privacy URL permanently redirects to the canonical policy", async ({
+    request,
+  }) => {
+    const response = await request.get("/privacy", { maxRedirects: 0 });
+
+    expect(response.status()).toBe(308);
+    expect(response.headers().location).toBe("/privacy-policy");
+  });
+
+  test("auth and missing pages cannot be indexed", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute(
+      "content",
+      /noindex/i,
+    );
+
+    const missingResponse = await page.goto("/missing-public-page-seo-check");
+    expect(missingResponse?.status()).toBe(404);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      /noindex/i,
+    );
+  });
+
+  test("robots keeps public assets crawlable and references the sitemap", async ({
+    request,
+  }) => {
+    const response = await request.get("/robots.txt");
+    const body = await response.text();
+
+    expect(response.status()).toBe(200);
+    expect(body).toContain("Allow: /traffic-signs/");
+    expect(body).toContain("Allow: /lessons/");
+    expect(body).toContain("Disallow: /api/");
+    expect(body).not.toContain("Disallow: /_next/");
+    expect(body).toMatch(/Sitemap: https:\/\/[^\s]+\/sitemap\.xml/);
   });
 
   test("Arabic public content uses RTL without horizontal overflow", async ({

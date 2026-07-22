@@ -3,8 +3,9 @@ import {
   getPublicLessons,
   getPublicTrafficSigns,
 } from "@/lib/server/public-catalog";
+import { DEFAULT_APP_URL } from "@/lib/site-copy";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://readyroad.be";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const publicPages: MetadataRoute.Sitemap = [

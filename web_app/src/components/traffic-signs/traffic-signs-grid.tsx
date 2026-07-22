@@ -33,7 +33,7 @@ export function TrafficSignsGrid({
           <Link
             key={routeCode}
             href={`/traffic-signs/${routeCode}`}
-            className="group block h-full"
+            className="traffic-sign-card group block h-full"
           >
             <Card
               className={`h-full overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/25 hover:shadow-md ${style.cardGlow}`}

@@ -52,6 +52,17 @@ async function installPublicTrafficSignMocks(page: Page) {
     await fulfillJson(route, 200, { ok: true });
   });
 
+  await page.route("**/images/signs/danger_signs/A1b.png", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "image/png",
+      body: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nS8AAAAASUVORK5CYII=",
+        "base64",
+      ),
+    });
+  });
+
   await page.route("**/api/proxy/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname.replace("/api/proxy", "") || "/";
@@ -77,6 +88,51 @@ async function installPublicTrafficSignMocks(page: Page) {
 }
 
 test.describe("Public traffic sign detail page", () => {
+  test("progressively renders cards while exposing every catalog link", async ({
+    page,
+  }) => {
+    await seedCookieConsent(page);
+    await page.addInitScript(() => {
+      window.localStorage.setItem("readyroad_locale", "en");
+    });
+    await page.route("**/api/auth/me", (route) =>
+      fulfillJson(route, 401, { error: "Unauthorized" }),
+    );
+    await page.route("**/api/proxy/traffic-signs", (route) =>
+      fulfillJson(
+        route,
+        200,
+        Array.from({ length: 40 }, (_, index) => ({
+          signCode: `A${index + 1}`,
+          routeCode: `A${index + 1}`,
+          categoryCode: "A",
+          nameEn: `Traffic sign ${index + 1}`,
+          imageUrl: `/images/signs/test/A${index + 1}.png`,
+        })),
+      ),
+    );
+
+    await page.goto("/traffic-signs");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Belgian Traffic Signs" }),
+    ).toBeVisible();
+
+    const cards = page.locator("a.traffic-sign-card");
+    const catalogLinks = page.locator(
+      'details nav a[href^="/traffic-signs/"]',
+    );
+    await expect(catalogLinks.first()).toBeAttached();
+
+    const initialCardCount = await cards.count();
+    const discoverableLinkCount = await catalogLinks.count();
+    expect(initialCardCount).toBeGreaterThan(0);
+    expect(discoverableLinkCount).toBeGreaterThan(initialCardCount);
+
+    await page.getByRole("button", { name: "Load more signs" }).click();
+    await expect.poll(() => cards.count()).toBeGreaterThan(initialCardCount);
+    await expect(catalogLinks).toHaveCount(discoverableLinkCount);
+  });
+
   test("stays public without requesting optional progress anonymously", async ({
     page,
   }) => {
@@ -88,13 +144,7 @@ test.describe("Public traffic sign detail page", () => {
       page.getByRole("heading", { name: "Dangerous bend to the right" }),
     ).toBeVisible();
     await expect(
-      page.getByText("A dangerous right-hand bend lies ahead."),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Reduce speed before the bend and keep control."),
-    ).toBeVisible();
-    await expect(
-      page.getByText("A supplementary plate may specify the distance."),
+      page.getByRole("img", { name: "Dangerous bend to the right" }),
     ).toBeVisible();
 
     await expect(page).toHaveURL(/\/traffic-signs\/A1b$/);

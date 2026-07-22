@@ -1,10 +1,12 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Languages, ListFilter, RefreshCw, Shapes } from "lucide-react";
+import { ChevronDown, Languages, ListFilter, Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
 import { TrafficSignsFilters } from "@/components/traffic-signs/traffic-signs-filters";
+import { Button } from "@/components/ui/button";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { LoadErrorState } from "@/components/ui/load-error-state";
 import { PageLoading } from "@/components/ui/page-loading";
@@ -29,6 +31,9 @@ import {
 import type { TrafficSign, TrafficSignCatalogItem } from "@/lib/types";
 
 type Lang = "en" | "ar" | "nl" | "fr";
+
+const DEFAULT_SIGNS_PER_GROUP = 4;
+const FILTERED_SIGNS_PER_BATCH = 24;
 
 async function getAllTrafficSigns(): Promise<TrafficSignCatalogItem[]> {
   const response = await apiClient.get<
@@ -87,6 +92,11 @@ function TrafficSignsContent({
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
+  const [visibleBatch, setVisibleBatch] = useState(1);
+
+  useEffect(() => {
+    setVisibleBatch(1);
+  }, [category, search]);
 
   useEffect(() => {
     if (fetchKey === 0 && initialSigns.length > 0) {
@@ -202,7 +212,7 @@ function TrafficSignsContent({
     });
   }, [allSigns, category, search]);
 
-  const groupedSigns = useMemo(() => {
+  const groupedFilteredSigns = useMemo(() => {
     const groups: Record<string, TrafficSignCatalogItem[]> = {};
     for (const sign of filteredSigns) {
       const group = getTrafficSignGroup(sign);
@@ -216,6 +226,25 @@ function TrafficSignsContent({
       signs: groups[group],
     }));
   }, [filteredSigns]);
+
+  const groupedSigns = useMemo(() => {
+    const perGroupLimit =
+      category === "all"
+        ? DEFAULT_SIGNS_PER_GROUP * visibleBatch
+        : FILTERED_SIGNS_PER_BATCH * visibleBatch;
+
+    return groupedFilteredSigns.map((group) => ({
+      ...group,
+      totalCount: group.signs.length,
+      signs: group.signs.slice(0, perGroupLimit),
+    }));
+  }, [category, groupedFilteredSigns, visibleBatch]);
+
+  const visibleSignsCount = useMemo(
+    () => groupedSigns.reduce((total, group) => total + group.signs.length, 0),
+    [groupedSigns],
+  );
+  const hasMoreSigns = visibleSignsCount < filteredSigns.length;
 
   const activeGroup = useMemo(
     () => (category !== "all" ? getGroupInfo(category) : null),
@@ -366,10 +395,10 @@ function TrafficSignsContent({
             </p>
           </PageSectionSurface>
         ) : showingSingleGroup ? (
-          <TrafficSignsGrid signs={filteredSigns} />
+          <TrafficSignsGrid signs={groupedSigns[0].signs} />
         ) : (
           <div className="space-y-6">
-            {groupedSigns.map(({ group, signs, info, style }) => (
+            {groupedSigns.map(({ group, signs, totalCount, info, style }) => (
               <section key={group} className="space-y-3">
                 <div className="flex flex-col gap-2.5 border-b border-border/60 pb-3 md:flex-row md:items-end md:justify-between">
                   <div className="flex items-start gap-3">
@@ -392,13 +421,64 @@ function TrafficSignsContent({
                   <span
                     className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-[11px] font-semibold ${style.chip}`}
                   >
-                    {t("traffic_signs.section_count", { count: signs.length })}
+                    {t("traffic_signs.section_count", { count: totalCount })}
                   </span>
                 </div>
 
                 <TrafficSignsGrid signs={signs} />
               </section>
             ))}
+          </div>
+        )}
+
+        {filteredSigns.length > 0 && (
+          <div className="space-y-4">
+            {hasMoreSigns && (
+              <div className="flex flex-col items-center gap-2 border-t border-border/60 pt-5">
+                <p className="text-sm text-muted-foreground">
+                  {t("traffic_signs.showing_count", {
+                    visible: visibleSignsCount,
+                    total: filteredSigns.length,
+                  })}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 gap-2 rounded-full px-5"
+                  onClick={() => setVisibleBatch((current) => current + 1)}
+                >
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  {t("traffic_signs.load_more")}
+                </Button>
+              </div>
+            )}
+
+            <details className="rounded-lg border border-border/60 bg-card/70 p-4">
+              <summary className="cursor-pointer text-sm font-bold text-foreground marker:text-primary">
+                {t("traffic_signs.all_sign_links", {
+                  count: filteredSigns.length,
+                })}
+              </summary>
+              <nav
+                aria-label={t("traffic_signs.all_sign_links", {
+                  count: filteredSigns.length,
+                })}
+                className="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              >
+                {filteredSigns.map((sign) => {
+                  const routeCode = sign.routeCode ?? sign.signCode;
+                  return (
+                    <Link
+                      key={routeCode}
+                      href={`/traffic-signs/${routeCode}`}
+                      className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      {sign.signCode}: {getTrafficSignName(sign, lang)}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </details>
           </div>
         )}
       </div>

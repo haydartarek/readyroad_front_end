@@ -10,6 +10,7 @@ interface SignImageProps {
   src: string;
   alt: string;
   className?: string;
+  preload?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -25,24 +26,15 @@ export function SignImage({
   src,
   alt,
   className = "object-contain",
+  preload = false,
 }: SignImageProps) {
   const [imgSrc, setImgSrc] = useState(() => resolveImageUrl(src));
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     setImgSrc(resolveImageUrl(src));
   }, [src]);
 
   const sharedClass = `absolute inset-0 h-full w-full ${className}`;
-
-  // SSR placeholder — avoids hydration mismatch
-  if (!mounted) {
-    return <div className={`bg-muted ${sharedClass}`} aria-label={alt} />;
-  }
 
   if (!imgSrc) {
     return <div className={`bg-muted ${sharedClass}`} aria-label={alt} />;
@@ -53,6 +45,7 @@ export function SignImage({
       src={imgSrc}
       alt={alt}
       fill
+      preload={preload}
       sizes="(max-width: 768px) 80vw, 320px"
       unoptimized
       className={sharedClass}

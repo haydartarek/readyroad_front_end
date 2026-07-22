@@ -90,6 +90,10 @@ export default function proxy(request: NextRequest) {
   const hasValidToken = isValidTokenFormat(rawToken);
   const { pathname } = request.nextUrl;
 
+  if (pathname === "/privacy") {
+    return NextResponse.redirect(new URL("/privacy-policy", request.url), 308);
+  }
+
   if (rawToken && !hasValidToken) {
     const response = NextResponse.next();
     response.cookies.delete("token");
@@ -127,5 +131,6 @@ export const config = {
     "/register",
     "/forgot-password",
     "/reset-password",
+    "/privacy",
   ],
 };

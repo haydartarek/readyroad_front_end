@@ -313,6 +313,7 @@ export default function TrafficSignDetailClient({
                     src={resolveTrafficSignImage(sign)}
                     alt={currentName}
                     className="object-contain p-4"
+                    preload
                   />
                 </div>
               </div>

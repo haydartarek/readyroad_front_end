@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { DEFAULT_APP_URL } from "@/lib/site-copy";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://readyroad.be";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
 export default function robots(): MetadataRoute.Robots {
   return {

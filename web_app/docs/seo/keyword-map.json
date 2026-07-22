@@ -1,0 +1,429 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-07-21",
+  "statusLegend": [
+    "VERIFIED",
+    "ESTIMATED_OPPORTUNITY",
+    "RECOMMENDED",
+    "IMPLEMENTED",
+    "NOT_IMPLEMENTED",
+    "REQUIRES_SEARCH_CONSOLE_DATA"
+  ],
+  "coverage": {
+    "indexableUrls": 224,
+    "staticUrls": 10,
+    "trafficSignDetailUrls": 184,
+    "lessonDetailUrls": 30,
+    "mappedUrls": 224,
+    "coveragePercent": 100
+  },
+  "staticPages": [
+    {
+      "url": "/",
+      "pageType": "home",
+      "cluster": "general-belgian-driving-theory",
+      "primaryIntent": "exam-preparation",
+      "priority": "P0",
+      "schema": ["Organization", "WebSite", "SoftwareApplication"],
+      "legalReviewRequired": false
+    },
+    {
+      "url": "/traffic-signs",
+      "pageType": "traffic-sign-index",
+      "cluster": "belgian-traffic-signs",
+      "primaryIntent": "informational-educational",
+      "priority": "P0",
+      "schema": ["WebPage"],
+      "legalReviewRequired": false
+    },
+    {
+      "url": "/lessons",
+      "pageType": "lesson-index",
+      "cluster": "category-b-theory-lessons",
+      "primaryIntent": "educational",
+      "priority": "P0",
+      "schema": ["WebPage"],
+      "legalReviewRequired": false
+    },
+    {
+      "url": "/about",
+      "pageType": "trust",
+      "cluster": "readyroad-brand-trust",
+      "primaryIntent": "navigational",
+      "priority": "P2",
+      "schema": ["AboutPage", "BreadcrumbList"],
+      "legalReviewRequired": false
+    },
+    {
+      "url": "/faq",
+      "pageType": "support",
+      "cluster": "readyroad-learning-faq",
+      "primaryIntent": "informational-support",
+      "priority": "P1",
+      "schema": ["FAQPage", "BreadcrumbList", "WebPage"],
+      "legalReviewRequired": true
+    },
+    {
+      "url": "/contact",
+      "pageType": "support",
+      "cluster": "readyroad-contact",
+      "primaryIntent": "navigational-support",
+      "priority": "P2",
+      "schema": ["ContactPage", "BreadcrumbList"],
+      "legalReviewRequired": false
+    },
+    {
+      "url": "/privacy-policy",
+      "pageType": "legal",
+      "cluster": "readyroad-privacy",
+      "primaryIntent": "legal-navigational",
+      "priority": "P2",
+      "schema": ["WebPage", "BreadcrumbList"],
+      "legalReviewRequired": true
+    },
+    {
+      "url": "/cookie-policy",
+      "pageType": "legal",
+      "cluster": "readyroad-cookies",
+      "primaryIntent": "legal-navigational",
+      "priority": "P2",
+      "schema": ["WebPage", "BreadcrumbList"],
+      "legalReviewRequired": true
+    },
+    {
+      "url": "/terms",
+      "pageType": "legal",
+      "cluster": "readyroad-terms",
+      "primaryIntent": "legal-navigational",
+      "priority": "P2",
+      "schema": ["WebPage", "BreadcrumbList"],
+      "legalReviewRequired": true
+    },
+    {
+      "url": "/disclaimer",
+      "pageType": "legal",
+      "cluster": "readyroad-disclaimer",
+      "primaryIntent": "legal-navigational",
+      "priority": "P2",
+      "schema": ["WebPage", "BreadcrumbList"],
+      "legalReviewRequired": true
+    }
+  ],
+  "dynamicPageRules": [
+    {
+      "pattern": "/traffic-signs/{signCode}",
+      "urlCount": 184,
+      "source": "public traffic-sign catalog backed by canonical sign.json files",
+      "cluster": "specific-traffic-sign-meaning",
+      "primaryKeywordTemplate": "{signCode} {localizedSignName}",
+      "secondaryKeywordTemplates": [
+        "{localizedSignName} meaning Belgium",
+        "Belgian traffic sign {signCode}",
+        "{localizedSignName} driver action"
+      ],
+      "intent": ["informational", "educational", "legal-clarification"],
+      "metadataRule": "Use localized canonical name and description, preserve sign code, and retain one canonical URL.",
+      "h1Rule": "Use the localized canonical sign name without keyword suffixes.",
+      "internalLinksIn": ["/traffic-signs", "category index within /traffic-signs"],
+      "internalLinksOut": ["/traffic-signs", "practice and exam tools when available"],
+      "schema": ["LearningResource", "BreadcrumbList"],
+      "legalReviewRequired": true,
+      "priority": "P1"
+    },
+    {
+      "pattern": "/lessons/{lessonCode}",
+      "urlCount": 30,
+      "source": "public lesson catalog backed by governed lesson content",
+      "cluster": "specific-belgian-driving-rule",
+      "primaryKeywordTemplate": "{localizedLessonTitle} Belgium",
+      "secondaryKeywordTemplates": [
+        "{localizedLessonTitle} explained",
+        "Belgian driving theory {localizedLessonTitle}",
+        "category B theory {localizedLessonTitle}"
+      ],
+      "intent": ["informational", "educational", "exam-preparation"],
+      "metadataRule": "Use localized governed title and description and retain one canonical URL.",
+      "h1Rule": "Use the localized governed lesson title without adding a second competing topic.",
+      "internalLinksIn": ["/lessons", "previous and next lesson", "topic links in the footer where relevant"],
+      "internalLinksOut": ["/lessons", "previous and next lesson"],
+      "schema": ["LearningResource", "BreadcrumbList"],
+      "legalReviewRequired": true,
+      "priority": "P1"
+    }
+  ],
+  "clusters": [
+    {
+      "id": "general-belgian-driving-theory",
+      "page": "/",
+      "priority": "P0",
+      "competition": "HIGH_QUALITATIVE",
+      "opportunity": "HIGH",
+      "intent": ["exam-preparation", "high-intent-learning"],
+      "keywords": {
+        "en": ["Belgian driving theory test practice", "Belgium category B theory test", "driving theory Belgium"],
+        "nl": ["theorie-examen rijbewijs B oefenen België", "theorie rijbewijs B België", "Belgische rijtheorie oefenen"],
+        "fr": ["examen théorique permis B Belgique", "test permis théorique Belgique", "théorie permis B Belgique"],
+        "ar": ["امتحان القيادة النظري في بلجيكا", "امتحان رخصة السياقة في بلجيكا بالعربية", "تعليم السياقة النظري في بلجيكا"]
+      }
+    },
+    {
+      "id": "category-b-theory-lessons",
+      "page": "/lessons",
+      "priority": "P0",
+      "competition": "HIGH_QUALITATIVE",
+      "opportunity": "HIGH",
+      "intent": ["educational", "exam-preparation"],
+      "keywords": {
+        "en": ["Belgian driving theory lessons", "Belgian road rules explained"],
+        "nl": ["rijtheorie lessen België", "Belgische verkeersregels leren"],
+        "fr": ["cours théorie permis B Belgique", "règles de circulation Belgique"],
+        "ar": ["دروس القيادة النظرية في بلجيكا", "قواعد المرور البلجيكية بالعربية"]
+      }
+    },
+    {
+      "id": "belgian-traffic-signs",
+      "page": "/traffic-signs",
+      "priority": "P0",
+      "competition": "MEDIUM_HIGH_QUALITATIVE",
+      "opportunity": "HIGH",
+      "intent": ["informational", "educational"],
+      "keywords": {
+        "en": ["Belgian traffic signs meanings", "road signs Belgium"],
+        "nl": ["verkeersborden België betekenis", "verkeersborden België oefenen"],
+        "fr": ["panneaux de signalisation Belgique", "signification panneaux Belgique"],
+        "ar": ["إشارات المرور في بلجيكا", "علامات المرور في بلجيكا بالعربي"]
+      }
+    },
+    {
+      "id": "priority-rules",
+      "page": "/lessons/les-19",
+      "supportingPages": ["/lessons/les-2", "/traffic-signs?category=B"],
+      "priority": "P1",
+      "competition": "MEDIUM",
+      "opportunity": "HIGH",
+      "intent": ["educational", "legal-clarification"],
+      "keywords": {
+        "en": ["priority to the right Belgium", "priority rules Belgium"],
+        "nl": ["voorrang van rechts België", "voorrangsregels België uitleg"],
+        "fr": ["priorité de droite Belgique", "règles de priorité Belgique"],
+        "ar": ["الأولوية من اليمين في بلجيكا", "قواعد الأولوية في بلجيكا"]
+      }
+    },
+    {
+      "id": "parking-rules",
+      "page": "/lessons/les-28",
+      "supportingPages": ["/lessons/les-4", "/traffic-signs?category=E"],
+      "priority": "P1",
+      "competition": "MEDIUM",
+      "opportunity": "HIGH",
+      "intent": ["educational", "legal-clarification"],
+      "keywords": {
+        "en": ["parking rules Belgium", "stopping and parking Belgium"],
+        "nl": ["parkeerregels België", "stilstaan en parkeren België"],
+        "fr": ["règles de stationnement Belgique", "arrêt et stationnement Belgique"],
+        "ar": ["قواعد الوقوف والركن في بلجيكا", "قواعد ركن السيارة في بلجيكا"]
+      }
+    },
+    {
+      "id": "speed-limits",
+      "page": "/lessons/les-3",
+      "priority": "P1",
+      "competition": "MEDIUM_HIGH_QUALITATIVE",
+      "opportunity": "HIGH",
+      "legalSensitivity": "REGIONAL_RULES",
+      "intent": ["informational", "legal-clarification"],
+      "keywords": {
+        "en": ["speed limits Belgium", "Belgium safe following distance"],
+        "nl": ["snelheidsbeperkingen België", "veilige afstand België"],
+        "fr": ["limitations de vitesse Belgique", "distance de sécurité Belgique"],
+        "ar": ["حدود السرعة في بلجيكا", "مسافة الأمان في بلجيكا"]
+      }
+    },
+    {
+      "id": "low-emission-zones",
+      "page": "/traffic-signs/Zone-F117",
+      "supportingPages": ["/traffic-signs/Zone-F118-Einde"],
+      "priority": "P2",
+      "competition": "HIGH_QUALITATIVE",
+      "opportunity": "MEDIUM",
+      "legalSensitivity": "CITY_AND_DATE_SPECIFIC",
+      "intent": ["informational", "legal-clarification"],
+      "keywords": {
+        "en": ["low emission zone Belgium rules", "Belgium LEZ sign"],
+        "nl": ["lage-emissiezone België regels", "LEZ verkeersbord België"],
+        "fr": ["zone de basses émissions Belgique", "panneau LEZ Belgique"],
+        "ar": ["منطقة الانبعاثات المنخفضة في بلجيكا", "إشارة منطقة LEZ في بلجيكا"]
+      }
+    },
+    {
+      "id": "pedestrian-rules",
+      "page": "/lessons/les-10",
+      "priority": "P2",
+      "competition": "MEDIUM",
+      "opportunity": "MEDIUM",
+      "intent": ["educational", "legal-clarification"],
+      "keywords": {
+        "en": ["pedestrian priority Belgium"],
+        "nl": ["voorrang voetgangers België"],
+        "fr": ["priorité piétons Belgique"],
+        "ar": ["أولوية المشاة في بلجيكا"]
+      }
+    },
+    {
+      "id": "cyclist-rules",
+      "page": "/lessons/les-7",
+      "priority": "P2",
+      "competition": "MEDIUM",
+      "opportunity": "MEDIUM",
+      "intent": ["educational", "legal-clarification"],
+      "keywords": {
+        "en": ["cyclist rules Belgium drivers"],
+        "nl": ["regels fietsers België automobilist"],
+        "fr": ["règles cyclistes Belgique automobiliste"],
+        "ar": ["قواعد الدراجات الهوائية في بلجيكا"]
+      }
+    },
+    {
+      "id": "motorway-rules",
+      "page": "/lessons/les-8",
+      "priority": "P2",
+      "competition": "MEDIUM",
+      "opportunity": "MEDIUM",
+      "intent": ["educational"],
+      "keywords": {
+        "en": ["motorway rules Belgium"],
+        "nl": ["autosnelweg regels België"],
+        "fr": ["règles autoroute Belgique"],
+        "ar": ["قواعد الطريق السيار في بلجيكا"]
+      }
+    },
+    {
+      "id": "overtaking-rules",
+      "page": "/lessons/les-16",
+      "supportingPages": ["/lessons/les-17"],
+      "priority": "P2",
+      "competition": "MEDIUM",
+      "opportunity": "MEDIUM",
+      "intent": ["educational", "legal-clarification"],
+      "keywords": {
+        "en": ["overtaking rules Belgium"],
+        "nl": ["inhalen regels België"],
+        "fr": ["règles dépassement Belgique"],
+        "ar": ["قواعد التجاوز في بلجيكا"]
+      }
+    },
+    {
+      "id": "alcohol-and-driving",
+      "page": "/lessons/les-24",
+      "priority": "P2",
+      "competition": "HIGH_QUALITATIVE",
+      "opportunity": "MEDIUM",
+      "legalSensitivity": "NUMERIC_LIMITS",
+      "intent": ["informational", "legal-clarification"],
+      "keywords": {
+        "en": ["alcohol limit driving Belgium"],
+        "nl": ["alcohollimiet rijden België"],
+        "fr": ["limite alcool conduite Belgique"],
+        "ar": ["نسبة الكحول المسموح بها للقيادة في بلجيكا"]
+      }
+    },
+    {
+      "id": "traffic-offences",
+      "page": "/lessons/les-25",
+      "priority": "P2",
+      "competition": "MEDIUM_HIGH_QUALITATIVE",
+      "opportunity": "MEDIUM",
+      "legalSensitivity": "SANCTIONS_CHANGE_OVER_TIME",
+      "intent": ["informational", "legal-clarification"],
+      "keywords": {
+        "en": ["traffic offences Belgium degrees"],
+        "nl": ["verkeersovertredingen graden België"],
+        "fr": ["degrés infractions routières Belgique"],
+        "ar": ["درجات المخالفات المرورية في بلجيكا"]
+      }
+    },
+    {
+      "id": "specific-traffic-sign-meaning",
+      "page": "/traffic-signs/{signCode}",
+      "priority": "P1",
+      "competition": "LOW_TO_MEDIUM_BY_SIGN",
+      "opportunity": "HIGH_LONG_TAIL",
+      "intent": ["informational", "educational", "legal-clarification"],
+      "keywords": {
+        "en": ["Belgian sign {signCode} meaning"],
+        "nl": ["verkeersbord {signCode} betekenis"],
+        "fr": ["panneau {signCode} signification"],
+        "ar": ["معنى إشارة المرور {signCode}"]
+      }
+    },
+    {
+      "id": "readyroad-learning-faq",
+      "page": "/faq",
+      "priority": "P1",
+      "competition": "LOW_BRAND_SUPPORT",
+      "opportunity": "MEDIUM",
+      "intent": ["informational", "navigational", "support"],
+      "keywords": {
+        "en": ["ReadyRoad languages", "ReadyRoad practice exam"],
+        "nl": ["ReadyRoad talen", "ReadyRoad proefexamen"],
+        "fr": ["langues ReadyRoad", "examen blanc ReadyRoad"],
+        "ar": ["لغات ReadyRoad", "اختبار ReadyRoad التجريبي"]
+      }
+    },
+    {
+      "id": "arabic-driving-theory-belgium",
+      "page": "/",
+      "supportingPages": ["/lessons", "/traffic-signs"],
+      "priority": "P0",
+      "competition": "LOW_QUALITATIVE",
+      "opportunity": "HIGH",
+      "intent": ["exam-preparation", "high-intent-learning"],
+      "keywords": {
+        "ar": [
+          "امتحان رخصة القيادة النظري في بلجيكا بالعربي",
+          "امتحان رخصة السياقة في بلجيكا بالعربية",
+          "أسئلة امتحان السياقة في بلجيكا",
+          "اختبار نظري مجاني للسياقة في بلجيكا",
+          "قواعد المرور البلجيكية بالعربية"
+        ]
+      }
+    }
+  ],
+  "cannibalizationRules": [
+    {
+      "topic": "general theory exam preparation",
+      "primaryPage": "/",
+      "supportingPage": "/lessons",
+      "resolution": "Home owns exam-preparation intent; lessons owns structured study intent."
+    },
+    {
+      "topic": "Belgian traffic signs",
+      "primaryPage": "/traffic-signs",
+      "supportingPage": "/lessons/les-1",
+      "resolution": "The catalog owns sign lookup and meanings; the lesson owns how to interpret sign families."
+    },
+    {
+      "topic": "priority rules",
+      "primaryPage": "/lessons/les-19",
+      "supportingPage": "/lessons/les-2",
+      "resolution": "les-19 owns priority-to-the-right queries; les-2 remains the broader junction-priority overview."
+    },
+    {
+      "topic": "parking rules",
+      "primaryPage": "/lessons/les-28",
+      "supportingPage": "/lessons/les-4",
+      "resolution": "les-28 owns practical parking-rule queries; les-4 explains the legal stopping-versus-parking distinction."
+    },
+    {
+      "topic": "specific sign meaning",
+      "primaryPage": "/traffic-signs/{signCode}",
+      "supportingPage": "/traffic-signs",
+      "resolution": "Each detail page owns its code and localized name; the index owns generic sign-family queries."
+    }
+  ],
+  "unresolvedCannibalization": 0,
+  "searchVolume": {
+    "status": "UNAVAILABLE",
+    "reason": "No authenticated Google Search Console or Keyword Planner dataset was provided. No numeric volume is asserted."
+  }
+}

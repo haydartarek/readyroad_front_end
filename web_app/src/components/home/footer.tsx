@@ -108,7 +108,7 @@ export function Footer() {
       ];
 
   const popularLinks = [
-    { label: t("home.footer.right_of_way"), href: "/lessons/les-23" },
+    { label: t("home.footer.right_of_way"), href: "/lessons/les-19" },
     { label: t("home.footer.speed_limits"), href: "/lessons/les-3" },
     {
       label: t("home.footer.priority_signs"),

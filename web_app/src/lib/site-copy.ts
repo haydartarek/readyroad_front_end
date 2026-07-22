@@ -1,6 +1,6 @@
 export type SiteLocale = "en" | "ar" | "fr" | "nl";
 
-export const DEFAULT_APP_URL = "https://readyroad.be";
+export const DEFAULT_APP_URL = "https://readyroad-frontend-haydar.vercel.app";
 export const DEFAULT_SITE_LOCALE: SiteLocale = "en";
 
 const SHARED_KEYWORDS = [
@@ -52,11 +52,11 @@ const SITE_COPY: Record<
   en: {
     sharedOgAlt: "ReadyRoad | Belgian driving theory exam preparation",
     homeMetadata: {
-      title: "ReadyRoad | Belgian Driving Theory Exam Preparation",
+      title: "Belgian Driving Theory Test Practice | ReadyRoad",
       description:
         "Prepare for the Belgian driving theory exam with traffic signs, structured lessons, focused practice, and one clear progress dashboard.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "ReadyRoad | Belgian Driving Theory Exam Preparation",
+      openGraphTitle: "Belgian Driving Theory Test Practice | ReadyRoad",
       openGraphDescription:
         "Study traffic signs, review theory lessons, practise by category, and track your progress in one place.",
     },
@@ -79,11 +79,11 @@ const SITE_COPY: Record<
   ar: {
     sharedOgAlt: "ReadyRoad | التحضير لامتحان القيادة النظري في بلجيكا",
     homeMetadata: {
-      title: "ReadyRoad | التحضير لامتحان القيادة النظري في بلجيكا",
+      title: "امتحان القيادة النظري في بلجيكا | ReadyRoad",
       description:
         "استعد لامتحان القيادة النظري في بلجيكا عبر إشارات المرور، والدروس المنظمة، والتدريب الموجّه، ولوحة تقدم واضحة في مكان واحد.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "ReadyRoad | التحضير لامتحان القيادة النظري في بلجيكا",
+      openGraphTitle: "امتحان القيادة النظري في بلجيكا | ReadyRoad",
       openGraphDescription:
         "ادرس إشارات المرور، وراجع الدروس النظرية، وتدرّب حسب الفئة، وتابع تقدمك من مكان واحد.",
     },
@@ -106,11 +106,11 @@ const SITE_COPY: Record<
   fr: {
     sharedOgAlt: "ReadyRoad | préparation à l'examen théorique belge",
     homeMetadata: {
-      title: "ReadyRoad | préparation à l'examen théorique belge",
+      title: "Examen théorique permis B Belgique | ReadyRoad",
       description:
         "Préparez l'examen théorique belge avec les panneaux, des leçons structurées, un entraînement ciblé et un tableau de bord clair.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "ReadyRoad | préparation à l'examen théorique belge",
+      openGraphTitle: "Examen théorique permis B Belgique | ReadyRoad",
       openGraphDescription:
         "Étudiez les panneaux, révisez la théorie, entraînez-vous par catégorie et suivez vos progrès au même endroit.",
     },
@@ -134,12 +134,12 @@ const SITE_COPY: Record<
   nl: {
     sharedOgAlt: "ReadyRoad | voorbereiding op het Belgische theorie-examen",
     homeMetadata: {
-      title: "ReadyRoad | voorbereiding op het Belgische theorie-examen",
+      title: "Theorie-examen rijbewijs B oefenen België | ReadyRoad",
       description:
         "Bereid je voor op het Belgische theorie-examen met verkeersborden, gestructureerde lessen, gerichte oefening en een duidelijk voortgangsdashboard.",
       keywords: SHARED_KEYWORDS,
       openGraphTitle:
-        "ReadyRoad | voorbereiding op het Belgische theorie-examen",
+        "Theorie-examen rijbewijs B oefenen België | ReadyRoad",
       openGraphDescription:
         "Bestudeer verkeersborden, herhaal theorielessen, oefen per categorie en volg je vooruitgang op één plek.",
     },

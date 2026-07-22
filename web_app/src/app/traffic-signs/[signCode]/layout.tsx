@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import { DEFAULT_APP_URL } from "@/lib/site-copy";
+import { cookies } from "next/headers";
+import { STORAGE_KEYS } from "@/lib/constants";
+import { getLocalizedTrafficSignSeo } from "@/lib/learning-seo-copy";
+import {
+  DEFAULT_APP_URL,
+  getAlternateOpenGraphLocales,
+  getOpenGraphLocale,
+  resolveSiteLocale,
+} from "@/lib/site-copy";
 import { buildAbsoluteUrl, serializeJsonLd, toMetadataDescription } from "@/lib/seo";
 import { getPublicTrafficSign } from "@/lib/server/public-catalog";
 
@@ -23,17 +31,23 @@ export async function generateMetadata({
     };
   }
 
+  const cookieStore = await cookies();
+  const locale = resolveSiteLocale(
+    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
+  );
+  const copy = getLocalizedTrafficSignSeo(sign, locale);
+
   const routeCode = sign.routeCode || sign.signCode;
   const canonical = buildAbsoluteUrl(
     `/traffic-signs/${encodeURIComponent(routeCode)}`,
     APP_URL,
   );
   const description = toMetadataDescription(
-    sign.descriptionEn || sign.summaryEn,
-    `Learn the meaning and correct driver response for Belgian traffic sign ${sign.signCode}.`,
+    copy.description ? `${sign.signCode}: ${copy.description}` : "",
+    copy.fallbackDescription,
   );
   const image = buildAbsoluteUrl(sign.imageUrl, APP_URL);
-  const title = `${sign.signCode}: ${sign.nameEn} | ReadyRoad`;
+  const title = copy.title;
 
   return {
     title: { absolute: title },
@@ -44,10 +58,10 @@ export async function generateMetadata({
       description,
       url: canonical,
       siteName: "ReadyRoad",
-      locale: "en_BE",
-      alternateLocale: ["nl_BE", "fr_BE", "ar_BE"],
+      locale: getOpenGraphLocale(locale),
+      alternateLocale: getAlternateOpenGraphLocales(locale),
       type: "article",
-      images: [{ url: image, alt: `${sign.signCode}: ${sign.nameEn}` }],
+      images: [{ url: image, alt: copy.imageAlt }],
     },
     twitter: {
       card: "summary_large_image",
@@ -70,13 +84,22 @@ export default async function SignLayout({
     return children;
   }
 
+  const cookieStore = await cookies();
+  const locale = resolveSiteLocale(
+    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
+  );
+  const copy = getLocalizedTrafficSignSeo(sign, locale);
+
   const routeCode = sign.routeCode || sign.signCode;
   const canonical = buildAbsoluteUrl(
     `/traffic-signs/${encodeURIComponent(routeCode)}`,
     APP_URL,
   );
   const image = buildAbsoluteUrl(sign.imageUrl, APP_URL);
-  const description = sign.descriptionEn || sign.summaryEn;
+  const description = toMetadataDescription(
+    copy.description,
+    copy.fallbackDescription,
+  );
   const schemas = [
     {
       "@context": "https://schema.org",
@@ -85,19 +108,19 @@ export default async function SignLayout({
         {
           "@type": "ListItem",
           position: 1,
-          name: "Home",
+          name: copy.homeLabel,
           item: APP_URL,
         },
         {
           "@type": "ListItem",
           position: 2,
-          name: "Belgian Traffic Signs",
+          name: copy.indexLabel,
           item: buildAbsoluteUrl("/traffic-signs", APP_URL),
         },
         {
           "@type": "ListItem",
           position: 3,
-          name: `${sign.signCode}: ${sign.nameEn}`,
+          name: `${sign.signCode}: ${copy.name}`,
           item: canonical,
         },
       ],
@@ -105,16 +128,16 @@ export default async function SignLayout({
     {
       "@context": "https://schema.org",
       "@type": "LearningResource",
-      name: `${sign.signCode}: ${sign.nameEn}`,
+      name: `${sign.signCode}: ${copy.name}`,
       description,
       url: canonical,
       image,
       inLanguage: ["en", "nl", "fr", "ar"],
-      learningResourceType: "Traffic sign reference",
-      educationalUse: "Study and revision",
+      learningResourceType: copy.learningResourceType,
+      educationalUse: copy.educationalUse,
       about: {
         "@type": "DefinedTerm",
-        name: sign.nameEn,
+        name: copy.name,
         termCode: sign.signCode,
       },
       isPartOf: { "@id": `${APP_URL}/#website` },

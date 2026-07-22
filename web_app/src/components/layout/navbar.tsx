@@ -209,7 +209,8 @@ export function Navbar() {
         >
           <Image
             src="/images/logo.png"
-            alt="ReadyRoad Logo"
+            alt=""
+            aria-hidden="true"
             width={48}
             height={48}
             className="rounded-2xl ring-1 ring-border/50"

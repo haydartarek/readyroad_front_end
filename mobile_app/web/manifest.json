@@ -1,11 +1,11 @@
 {
-  "name": "mobile_app",
-  "short_name": "mobile_app",
+  "name": "ReadyRoad - Belgian Driving Theory",
+  "short_name": "ReadyRoad",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#0175C2",
-  "theme_color": "#0175C2",
-  "description": "A new Flutter project.",
+  "background_color": "#F7F8FA",
+  "theme_color": "#DF5830",
+  "description": "Independent multilingual learning for Belgian driving theory.",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [

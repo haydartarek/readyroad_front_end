@@ -61,7 +61,8 @@ export function StatusScreen({
               <div className="flex items-center gap-3">
                 <Image
                   src="/images/logo.png"
-                  alt="ReadyRoad Logo"
+                  alt=""
+                  aria-hidden="true"
                   width={52}
                   height={52}
                   className="rounded-2xl ring-1 ring-border/60"
@@ -107,7 +108,8 @@ export function StatusScreen({
               <div className="mb-8 flex items-center justify-center gap-3 xl:hidden">
                 <Image
                   src="/images/logo.png"
-                  alt="ReadyRoad Logo"
+                  alt=""
+                  aria-hidden="true"
                   width={48}
                   height={48}
                   className="rounded-2xl ring-1 ring-border/60"

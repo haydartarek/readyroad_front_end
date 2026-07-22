@@ -37,7 +37,8 @@ export function AuthPageFrame({
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-background ring-2 ring-primary/20 shadow-sm">
                 <Image
                   src="/images/logo.png"
-                  alt="ReadyRoad Logo"
+                  alt=""
+                  aria-hidden="true"
                   width={40}
                   height={40}
                   className="rounded-full object-cover"

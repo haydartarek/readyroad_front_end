@@ -134,7 +134,8 @@ export function Footer() {
               >
                 <Image
                   src="/images/logo.png"
-                  alt={t("home.footer.logo_alt")}
+                  alt=""
+                  aria-hidden="true"
                   width={42}
                   height={42}
                   className="rounded-2xl ring-1 ring-border/50"

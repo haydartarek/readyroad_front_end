@@ -67,8 +67,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Logo
-                      Icon(Icons.drive_eta, size: 80, color: AppColors.primary),
+                      // Brand mark
+                      Semantics(
+                        image: true,
+                        label: 'ReadyRoad',
+                        child: Image.asset(
+                          'assets/branding/readyroad-app-icon.png',
+                          width: 88,
+                          height: 88,
+                        ),
+                      ),
                       const SizedBox(height: 16),
 
                       // Title

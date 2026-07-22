@@ -48,7 +48,8 @@ export function AuthShowcasePanel({
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 ring-2 ring-primary/35 shadow-[0_12px_30px_rgba(223,88,48,0.22)]">
               <Image
                 src="/images/logo.png"
-                alt="ReadyRoad Logo"
+                alt=""
+                aria-hidden="true"
                 width={40}
                 height={40}
                 className="rounded-full object-cover"

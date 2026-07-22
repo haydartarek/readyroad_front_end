@@ -41,7 +41,7 @@ const inter = Inter({
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: light)", color: "#DF5830" },
     { media: "(prefers-color-scheme: dark)", color: "#181B20" },
   ],
   width: "device-width",
@@ -80,7 +80,8 @@ export async function generateMetadata(): Promise<Metadata> {
         { url: "/favicon.ico", sizes: "any" },
         { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
         { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-        { url: "/images/logo.png", sizes: "512x512", type: "image/png" },
+        { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
       ],
       shortcut: [{ url: "/favicon.ico" }],
       apple: [

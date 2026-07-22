@@ -252,6 +252,7 @@ export function Navbar() {
               name="search"
               type="text"
               autoComplete="off"
+              aria-label={t("nav.search")}
               placeholder={t("nav.search")}
               value={searchQuery}
               onChange={(e) => handleQueryChange(e.target.value)}

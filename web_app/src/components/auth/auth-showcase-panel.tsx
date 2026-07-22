@@ -73,12 +73,12 @@ export function AuthShowcasePanel({
           </span>
 
           <div className="space-y-2.5">
-            <h1 className="max-w-xl text-[2.7rem] font-black leading-[1.02] tracking-tight text-white xl:text-[3rem]">
+            <p className="max-w-xl text-[2.7rem] font-black leading-[1.02] tracking-tight text-white xl:text-[3rem]">
               {title}
               {titleAccent ? (
                 <span className="block text-white/72">{titleAccent}</span>
               ) : null}
-            </h1>
+            </p>
             <p className="max-w-lg text-sm leading-6 text-white/78 xl:text-[15px]">
               {description}
             </p>

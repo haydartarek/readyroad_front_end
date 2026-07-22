@@ -120,6 +120,45 @@ test.describe("Milestone 4 UX and accessibility", () => {
     }
   });
 
+  test("legacy assessment routes resolve to the ReadyRoad random practice flow", async ({
+    page,
+  }) => {
+    await useAnonymousLanguage(page, "en");
+
+    await page.goto("/assessment/software-engineering/advanced");
+
+    await expect(page).toHaveURL(
+      /\/login\?returnUrl=%2Fpractice%2Frandom(?:&|$)/,
+    );
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Login" }),
+    ).toBeVisible();
+    await expect(page.getByText("software engineering knowledge")).toHaveCount(
+      0,
+    );
+  });
+
+  test("navigation search and authentication landmarks have accessible structure", async ({
+    page,
+  }) => {
+    await useAnonymousLanguage(page, "en");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+
+    await expect(page.getByRole("textbox", { name: "Search" })).toBeVisible();
+
+    for (const route of [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+    ]) {
+      await page.goto(route);
+      await expect(page.locator("main"), route).toHaveCount(1);
+      await expect(page.locator("h1"), route).toHaveCount(1);
+    }
+  });
+
   test("login validation focuses the first error and exposes the password control", async ({
     page,
   }) => {

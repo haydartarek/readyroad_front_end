@@ -94,6 +94,10 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/privacy-policy", request.url), 308);
   }
 
+  if (pathname === "/assessment" || pathname.startsWith("/assessment/")) {
+    return redirectTo("/practice/random", request);
+  }
+
   if (rawToken && !hasValidToken) {
     const response = NextResponse.next();
     response.cookies.delete("token");

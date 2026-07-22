@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { seedCookieConsent } from "./helpers/consent";
 
 const signPayload = {
   signCode: "A1b",
@@ -41,6 +42,7 @@ async function installPublicTrafficSignMocks(page: Page) {
   let logoutCalls = 0;
   let progressCalls = 0;
 
+  await seedCookieConsent(page);
   await page.addInitScript(() => {
     window.localStorage.setItem("readyroad_locale", "en");
   });

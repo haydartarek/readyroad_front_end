@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
+import { useCookieConsent } from "@/contexts/cookie-consent-context";
 import { useSearch } from "@/hooks/use-search";
 import {
   SearchDropdown,
@@ -110,6 +111,7 @@ export function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const { t, language, setLanguage, isRTL } = useLanguage();
   const { resolvedTheme, setTheme } = useTheme();
+  const { consent, openSettings } = useCookieConsent();
   const pathname = usePathname();
   const router = useRouter();
   const searchContainer = useRef<HTMLDivElement>(null);
@@ -133,6 +135,13 @@ export function Navbar() {
   const displayName = user?.fullName ?? user?.username ?? t("nav.profile");
   const userInitial = displayName.trim().charAt(0).toUpperCase();
   const isDarkTheme = resolvedTheme === "dark";
+  const toggleTheme = useCallback(() => {
+    if (!consent?.preferences) {
+      openSettings();
+      return;
+    }
+    setTheme(isDarkTheme ? "light" : "dark");
+  }, [consent?.preferences, isDarkTheme, openSettings, setTheme]);
 
   const {
     query: searchQuery,
@@ -379,7 +388,7 @@ export function Navbar() {
                   : t("nav.theme_dark")
                 : t("nav.toggle_theme")
             }
-            onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
+            onClick={toggleTheme}
             className="hidden h-11 w-11 items-center justify-center rounded-full border border-border/70 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary lg:inline-flex"
           >
             {themeMounted && isDarkTheme ? (
@@ -524,7 +533,7 @@ export function Navbar() {
                               : t("nav.theme_dark")
                             : t("nav.toggle_theme")
                         }
-                        onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
+                        onClick={toggleTheme}
                         className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border/70 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary"
                       >
                         {themeMounted && isDarkTheme ? (

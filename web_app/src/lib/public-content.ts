@@ -246,7 +246,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. Authentication and cookies",
             paragraphs: [
-              "ReadyRoad stores the signed authentication token in a Secure HttpOnly cookie in production, so client-side scripts cannot read it. A separate CSRF token protects state-changing requests. Language and theme preferences are stored in the browser. Google sign-in is optional and uses short-lived security cookies. The complete inventory is available in the Cookie Policy.",
+              "ReadyRoad stores the signed authentication token in a Secure HttpOnly cookie in production, so client-side scripts cannot read it. A separate CSRF token protects state-changing requests. Language is retained for a consistent multilingual experience; the optional theme preference is stored only after Preferences consent. Google sign-in is optional and uses short-lived security cookies. The complete inventory and consent controls are available in the Cookie Policy.",
             ],
           },
           {
@@ -292,7 +292,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Cookie Policy",
         lastUpdated: "Last reviewed: 21 July 2026",
         intro:
-          "ReadyRoad currently uses only cookies and browser storage needed for security, sign-in, and interface preferences. It does not currently set analytics or marketing cookies.",
+          "ReadyRoad uses necessary cookies and browser storage for security, sign-in, language, and consent choices. Optional preference storage requires consent. Analytics and marketing services are not currently active.",
         sections: [
           {
             title: "1. What this policy covers",
@@ -313,21 +313,22 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             ],
           },
           {
-            title: "3. Browser local storage",
+            title: "3. Browser storage",
             paragraphs: [
-              "readyroad_locale also keeps the selected language available on the client. readyroad_theme remembers the light or dark theme until you change it or clear browser storage. These values do not contain the JWT or your password.",
+              "readyroad_locale keeps the selected language available on the client. readyroad_cookie_consent stores version 1, a timestamp, and the four category choices without personal data. session_expired is a one-time tab-session flag. current_exam is transient exam compatibility state and is removed when invalid or complete.",
+              "readyroad_theme stores the light or dark appearance only after Preferences consent and is removed when that consent is withdrawn. These browser values do not contain the JWT or your password.",
             ],
           },
           {
             title: "4. Analytics and marketing",
             paragraphs: [
-              "ReadyRoad does not currently activate analytics, advertising, marketing, social-media tracking pixels, or profiling cookies. External social links in the footer do not load those platforms until you choose to open a link.",
+              "ReadyRoad does not currently load Google Analytics, Vercel Analytics, advertising, marketing, social-media pixels, or profiling resources. The consent system is ready for Google Consent Mode v2, but it has no Measurement ID and sends no Google request. Choosing Analytics records the permission for a future integration; it does not activate a service today. External social links load only after you open them.",
             ],
           },
           {
             title: "5. Consent and future changes",
             paragraphs: [
-              "Strictly necessary cookies do not require prior consent, but they must be explained. If ReadyRoad later introduces analytics or another non-essential category, it will first add a consent control that allows refusal and withdrawal without blocking access to the core service, and this inventory will be updated before activation.",
+              "Strictly necessary storage remains active so the requested service can work. The banner offers equally accessible Accept all, Reject optional, and Customize choices. Consent version 1 stores the decision locally. If the version changes, ReadyRoad asks again. Optional services may load only after the matching category is accepted.",
             ],
             references: [
               {
@@ -340,7 +341,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "6. Managing storage",
             paragraphs: [
-              "Logging out removes the authentication and CSRF cookies. OAuth cookies are removed after the sign-in callback. You can clear other ReadyRoad cookies and local storage in your browser settings, but doing so may reset your language, theme, or session. Use the contact page for cookie questions.",
+              "Use Cookie settings in the footer at any time to review, change, or withdraw optional consent. Withdrawal removes disallowed preference storage and keeps necessary functions available. Logging out removes authentication and CSRF cookies; OAuth cookies are removed after callback. You may also clear browser data, which resets the saved decision.",
             ],
           },
         ],
@@ -687,7 +688,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. Authenticatie en cookies",
             paragraphs: [
-              "In productie bewaart ReadyRoad het ondertekende authenticatietoken in een Secure HttpOnly-cookie, zodat scripts aan de clientzijde het niet kunnen lezen. Een afzonderlijk CSRF-token beschermt wijzigende verzoeken. Taal en thema worden in de browser bewaard. Google-login is optioneel en gebruikt kortlevende beveiligingscookies. Het volledige overzicht staat in het Cookiebeleid.",
+              "In productie bewaart ReadyRoad het ondertekende authenticatietoken in een Secure HttpOnly-cookie, zodat clientscripts het niet kunnen lezen. Een afzonderlijk CSRF-token beschermt wijzigende verzoeken. De taal blijft bewaard voor een consistente meertalige ervaring; het optionele thema wordt alleen na toestemming voor Voorkeuren opgeslagen. Google-login is optioneel en gebruikt kortlevende beveiligingscookies. Het volledige overzicht en de toestemmingskeuzes staan in het Cookiebeleid.",
             ],
           },
           {
@@ -733,7 +734,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Cookiebeleid",
         lastUpdated: "Laatst nagekeken: 21 juli 2026",
         intro:
-          "ReadyRoad gebruikt momenteel alleen cookies en browseropslag die nodig zijn voor beveiliging, inloggen en interfacevoorkeuren. Er worden nu geen analytische of marketingcookies geplaatst.",
+          "ReadyRoad gebruikt noodzakelijke cookies en browseropslag voor beveiliging, inloggen, taal en toestemmingskeuzes. Optionele voorkeursopslag vereist toestemming. Analyse- en marketingdiensten zijn momenteel niet actief.",
         sections: [
           {
             title: "1. Reikwijdte",
@@ -754,21 +755,22 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             ],
           },
           {
-            title: "3. Lokale browseropslag",
+            title: "3. Browseropslag",
             paragraphs: [
-              "readyroad_locale houdt de taal ook op de client beschikbaar. readyroad_theme onthoudt het lichte of donkere thema tot u het wijzigt of browseropslag wist. Deze waarden bevatten geen JWT of wachtwoord.",
+              "readyroad_locale houdt de gekozen taal op de client beschikbaar. readyroad_cookie_consent bewaart versie 1, een tijdstip en de vier categorie-keuzes zonder persoonsgegevens. session_expired is een eenmalige vlag voor de tabsessie. current_exam is tijdelijke compatibiliteitsstatus en wordt verwijderd wanneer die ongeldig of voltooid is.",
+              "readyroad_theme bewaart de lichte of donkere weergave alleen na toestemming voor Voorkeuren en wordt verwijderd wanneer die toestemming wordt ingetrokken. Deze waarden bevatten geen JWT of wachtwoord.",
             ],
           },
           {
             title: "4. Analyse en marketing",
             paragraphs: [
-              "ReadyRoad activeert momenteel geen analyse-, advertentie-, marketing-, socialmediapixel- of profileringscookies. Externe sociale links laden het andere platform pas wanneer u de link opent.",
+              "ReadyRoad laadt momenteel geen Google Analytics, Vercel Analytics, advertenties, marketing, socialmediapixels of profilering. Het systeem is voorbereid op Google Consent Mode v2, maar heeft geen Measurement ID en verstuurt geen Google-verzoek. Analyse kiezen bewaart alleen toestemming voor een toekomstige integratie. Externe sociale links laden pas na uw klik.",
             ],
           },
           {
             title: "5. Toestemming en toekomstige wijzigingen",
             paragraphs: [
-              "Strikt noodzakelijke cookies vereisen geen voorafgaande toestemming, maar wel duidelijke informatie. Als ReadyRoad later analyse of een andere niet-noodzakelijke categorie invoert, komt eerst een toestemmingskeuze waarmee weigeren en intrekken mogelijk blijft zonder de kerndienst te blokkeren. Dit overzicht wordt vóór activering bijgewerkt.",
+              "Strikt noodzakelijke opslag blijft actief om de gevraagde dienst te leveren. De banner biedt even toegankelijke keuzes voor alles accepteren, optionele weigeren en aanpassen. Toestemmingsversie 1 bewaart de keuze lokaal. Bij een nieuwe versie vraagt ReadyRoad opnieuw. Een optionele dienst mag pas na toestemming voor de juiste categorie laden.",
             ],
             references: [
               {
@@ -781,7 +783,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "6. Opslag beheren",
             paragraphs: [
-              "Uitloggen verwijdert authenticatie- en CSRF-cookies. OAuth-cookies verdwijnen na de login-callback. Andere ReadyRoad-cookies en local storage kunt u via de browser wissen; daardoor kunnen taal, thema of sessie worden gereset. Gebruik Contact voor vragen.",
+              "Gebruik Cookie-instellingen in de footer om toestemming op elk moment te bekijken, wijzigen of intrekken. Intrekken verwijdert niet-toegestane voorkeursopslag en laat noodzakelijke functies werken. Uitloggen verwijdert authenticatie- en CSRF-cookies; OAuth-cookies verdwijnen na de callback. Browsergegevens wissen reset ook de opgeslagen keuze.",
             ],
           },
         ],
@@ -1128,7 +1130,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. Authentification et cookies",
             paragraphs: [
-              "En production, le jeton signé est placé dans un cookie Secure HttpOnly inaccessible aux scripts du navigateur. Un jeton CSRF distinct protège les requêtes de modification. Langue et thème sont conservés dans le navigateur. Google est facultatif et utilise de courts cookies de sécurité. L'inventaire complet figure dans la Politique relative aux cookies.",
+              "En production, le jeton signé est placé dans un cookie Secure HttpOnly inaccessible aux scripts du navigateur. Un jeton CSRF distinct protège les requêtes de modification. La langue est conservée pour une expérience multilingue cohérente ; le thème facultatif n'est enregistré qu'après consentement aux Préférences. Google est facultatif et utilise de courts cookies de sécurité. L'inventaire et les contrôles figurent dans la Politique relative aux cookies.",
             ],
           },
           {
@@ -1174,7 +1176,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Politique relative aux cookies",
         lastUpdated: "Dernière vérification : 21 juillet 2026",
         intro:
-          "ReadyRoad utilise actuellement uniquement les cookies et le stockage nécessaires à la sécurité, à la connexion et aux préférences d'interface. Aucun cookie analytique ou marketing n'est actuellement placé.",
+          "ReadyRoad utilise les cookies et le stockage nécessaires à la sécurité, à la connexion, à la langue et aux choix de consentement. Le stockage facultatif des préférences exige un consentement. Aucun service analytique ou marketing n'est actif.",
         sections: [
           {
             title: "1. Champ d'application",
@@ -1195,21 +1197,22 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             ],
           },
           {
-            title: "3. Stockage local",
+            title: "3. Stockage du navigateur",
             paragraphs: [
-              "readyroad_locale garde aussi la langue côté client. readyroad_theme mémorise le thème clair ou sombre jusqu'à modification ou effacement du navigateur. Ces valeurs ne contiennent ni JWT ni mot de passe.",
+              "readyroad_locale conserve la langue côté client. readyroad_cookie_consent enregistre la version 1, un horodatage et les quatre choix de catégorie sans donnée personnelle. session_expired est un indicateur ponctuel limité à l'onglet. current_exam est un état transitoire de compatibilité supprimé lorsqu'il est invalide ou terminé.",
+              "readyroad_theme conserve l'affichage clair ou sombre uniquement après consentement aux Préférences et est supprimé au retrait. Ces valeurs ne contiennent ni JWT ni mot de passe.",
             ],
           },
           {
             title: "4. Analyse et marketing",
             paragraphs: [
-              "ReadyRoad n'active actuellement aucun cookie analytique, publicitaire, marketing, pixel social ou profilage. Les liens sociaux externes ne chargent la plateforme concernée que si vous ouvrez le lien.",
+              "ReadyRoad ne charge actuellement ni Google Analytics, ni Vercel Analytics, ni publicité, marketing, pixel social ou profilage. Le système est prêt pour Google Consent Mode v2, sans Measurement ID ni requête Google. Choisir Analyse enregistre seulement l'autorisation pour une intégration future. Les liens sociaux ne chargent leur plateforme qu'après votre clic.",
             ],
           },
           {
             title: "5. Consentement et évolutions",
             paragraphs: [
-              "Les cookies strictement nécessaires n'exigent pas de consentement préalable mais doivent être expliqués. Avant tout futur cookie non essentiel, ReadyRoad ajoutera un choix permettant refus et retrait sans bloquer le service principal, et mettra cet inventaire à jour avant activation.",
+              "Le stockage strictement nécessaire reste actif pour fournir le service demandé. La bannière propose de manière équivalente Tout accepter, Refuser les options et Personnaliser. La version 1 conserve le choix localement ; une nouvelle version déclenche une nouvelle demande. Aucun service facultatif ne peut charger sans la catégorie correspondante.",
             ],
             references: [
               {
@@ -1222,7 +1225,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "6. Gérer le stockage",
             paragraphs: [
-              "La déconnexion supprime les cookies d'authentification et CSRF. Les cookies OAuth sont effacés après le retour. Vous pouvez supprimer les autres données dans le navigateur, au risque de réinitialiser langue, thème ou session. Utilisez Contact pour toute question.",
+              "Utilisez Paramètres des cookies dans le pied de page pour revoir, modifier ou retirer votre consentement. Le retrait supprime le stockage facultatif refusé sans interrompre les fonctions nécessaires. La déconnexion supprime les cookies d'authentification et CSRF ; les cookies OAuth sont effacés après le retour. Effacer les données du navigateur réinitialise aussi le choix.",
             ],
           },
         ],
@@ -1569,7 +1572,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. المصادقة وملفات الارتباط",
             paragraphs: [
-              "تخزن ReadyRoad في بيئة الإنتاج رمز المصادقة الموقّع داخل ملف ارتباط Secure وHttpOnly، فلا تستطيع برمجيات المتصفح قراءته. ويحمي رمز CSRF منفصل الطلبات التي تغيّر البيانات. تُحفظ اللغة والمظهر في المتصفح. تسجيل Google اختياري ويستخدم ملفات أمنية قصيرة المدة. يرد الجرد الكامل في سياسة ملفات الارتباط.",
+              "تخزن ReadyRoad في بيئة الإنتاج رمز المصادقة الموقّع داخل ملف ارتباط Secure وHttpOnly، فلا تستطيع برمجيات المتصفح قراءته. ويحمي رمز CSRF منفصل الطلبات التي تغيّر البيانات. تُحفظ اللغة لضمان تجربة متعددة اللغات، ولا يُحفظ المظهر الاختياري إلا بعد الموافقة على التفضيلات. تسجيل Google اختياري ويستخدم ملفات أمنية قصيرة المدة. يرد الجرد الكامل وأدوات التحكم في سياسة ملفات الارتباط.",
             ],
           },
           {
@@ -1615,7 +1618,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "سياسة ملفات الارتباط",
         lastUpdated: "آخر مراجعة: 21 يوليو 2026",
         intro:
-          "تستخدم ReadyRoad حاليًا ملفات الارتباط وتخزين المتصفح الضروريين فقط للأمن وتسجيل الدخول وتفضيلات الواجهة. ولا تضع حاليًا ملفات تحليلية أو تسويقية.",
+          "تستخدم ReadyRoad ملفات الارتباط وتخزين المتصفح الضروريين للأمان وتسجيل الدخول واللغة وخيارات الموافقة. ويتطلب تخزين التفضيلات الاختيارية موافقة. لا توجد حاليًا خدمات تحليلات أو تسويق مفعّلة.",
         sections: [
           {
             title: "1. نطاق السياسة",
@@ -1638,19 +1641,20 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. التخزين المحلي",
             paragraphs: [
-              "يحفظ readyroad_locale اللغة أيضًا في جهة العميل، ويحفظ readyroad_theme المظهر الفاتح أو الداكن حتى تغييره أو مسح بيانات المتصفح. لا تحتوي هذه القيم على JWT أو كلمة المرور.",
+              "يحفظ readyroad_locale اللغة في جهة العميل. ويحفظ readyroad_cookie_consent الإصدار 1 ووقت القرار وخيارات الفئات الأربع من دون بيانات شخصية. أما session_expired فهو مؤشر لمرة واحدة داخل جلسة علامة التبويب، وcurrent_exam حالة توافق مؤقتة تُحذف عند بطلانها أو اكتمالها.",
+              "لا يحفظ readyroad_theme المظهر الفاتح أو الداكن إلا بعد الموافقة على التفضيلات، ويُحذف عند سحبها. لا تحتوي هذه القيم على JWT أو كلمة المرور.",
             ],
           },
           {
             title: "4. التحليلات والتسويق",
             paragraphs: [
-              "لا تفعّل ReadyRoad حاليًا ملفات للتحليلات أو الإعلان أو التسويق أو بكسلات الشبكات الاجتماعية أو التنميط. ولا تُحمّل الروابط الاجتماعية المنصة الخارجية إلا عند فتح الرابط.",
+              "لا تحمّل ReadyRoad حاليًا Google Analytics أو Vercel Analytics أو إعلانات أو أدوات تسويق أو بكسلات شبكات اجتماعية أو تنميط. النظام مهيأ لـGoogle Consent Mode v2 من دون Measurement ID ومن دون أي طلب إلى Google. اختيار التحليلات يسجل الإذن لتكامل مستقبلي فقط. لا تُحمّل الروابط الاجتماعية منصاتها إلا بعد النقر عليها.",
             ],
           },
           {
             title: "5. الموافقة والتغييرات المستقبلية",
             paragraphs: [
-              "لا تحتاج الملفات الضرورية بشدة إلى موافقة مسبقة، لكنها تحتاج إلى شرح واضح. إذا أضيفت مستقبلًا تحليلات أو فئة غير ضرورية، فستُضاف أولًا أداة موافقة تسمح بالرفض والسحب من دون حجب الخدمة الأساسية، وسيُحدّث هذا الجرد قبل التفعيل.",
+              "يبقى التخزين الضروري مفعّلًا لتقديم الخدمة المطلوبة. يعرض الشريط خيارات قبول الكل ورفض الاختياري والتخصيص بوضوح متساوٍ. يحفظ الإصدار 1 القرار محليًا، ويُطلب القرار مجددًا عند تغيير الإصدار. لا يجوز تحميل أي خدمة اختيارية قبل الموافقة على فئتها.",
             ],
             references: [
               {
@@ -1663,7 +1667,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "6. إدارة التخزين",
             paragraphs: [
-              "يزيل تسجيل الخروج ملفي المصادقة وCSRF. وتُزال ملفات OAuth بعد عودة تسجيل الدخول. يمكنك مسح بقية ملفات ReadyRoad والتخزين المحلي من إعدادات المتصفح، وقد يعيد ذلك ضبط اللغة أو المظهر أو الجلسة. استخدم صفحة التواصل للأسئلة.",
+              "استخدم إعدادات ملفات الارتباط في التذييل لمراجعة الموافقة أو تعديلها أو سحبها في أي وقت. يحذف السحب تخزين التفضيلات غير المسموح به مع استمرار الوظائف الضرورية. يزيل تسجيل الخروج ملفي المصادقة وCSRF، وتُزال ملفات OAuth بعد العودة. كما يؤدي مسح بيانات المتصفح إلى إعادة ضبط القرار.",
             ],
           },
         ],

@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { seedCookieConsent } from "./helpers/consent";
 
 const publicPages = [
   { path: "/about", heading: "About ReadyRoad" },
@@ -19,6 +20,7 @@ async function fulfillJson(route: Route, status: number, body: unknown) {
 }
 
 async function useAnonymousEnglish(page: Page) {
+  await seedCookieConsent(page);
   await page.addInitScript(() => {
     window.localStorage.setItem("readyroad_locale", "en");
   });

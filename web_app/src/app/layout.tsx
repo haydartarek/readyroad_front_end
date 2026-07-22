@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
+import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { LanguageProvider } from "@/contexts/language-context";
+import { CookieConsentProvider } from "@/contexts/cookie-consent-context";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/navbar";
@@ -23,6 +25,9 @@ import {
   createWebsiteSchema,
 } from "@/lib/site-copy";
 import { serializeJsonLd } from "@/lib/seo";
+import { COOKIE_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/cookie-consent-bootstrap";
+import { CookieConsentManager } from "@/components/privacy/cookie-consent-manager";
+import { ConsentThemeController } from "@/components/privacy/consent-theme-controller";
 
 // ─── Font ────────────────────────────────────────────────
 
@@ -127,6 +132,11 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
+        <Script
+          id="readyroad-consent-defaults"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: COOKIE_CONSENT_BOOTSTRAP_SCRIPT }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -149,24 +159,28 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <ErrorBoundary>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-            disableTransitionOnChange
-            storageKey={STORAGE_KEYS.THEME}
-          >
-            <LanguageProvider initialLanguage={locale as Language}>
-              <AuthProvider>
-                <NotificationProvider>
-                  <Navbar />
-                  {children}
-                  <ConditionalFooter />
-                  <Toaster position="bottom-right" richColors />
-                </NotificationProvider>
-              </AuthProvider>
-            </LanguageProvider>
-          </ThemeProvider>
+          <LanguageProvider initialLanguage={locale as Language}>
+            <CookieConsentProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                enableSystem={false}
+                disableTransitionOnChange
+                storageKey={STORAGE_KEYS.THEME}
+              >
+                <ConsentThemeController />
+                <AuthProvider>
+                  <NotificationProvider>
+                    <Navbar />
+                    {children}
+                    <ConditionalFooter />
+                    <CookieConsentManager />
+                    <Toaster position="bottom-right" richColors />
+                  </NotificationProvider>
+                </AuthProvider>
+              </ThemeProvider>
+            </CookieConsentProvider>
+          </LanguageProvider>
         </ErrorBoundary>
       </body>
     </html>

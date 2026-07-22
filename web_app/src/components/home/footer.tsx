@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
+import { useCookieConsent } from "@/contexts/cookie-consent-context";
 import { LANGUAGES } from "@/lib/constants";
 import {
   Globe,
@@ -28,6 +29,7 @@ import {
   KeyRound,
   Info,
   Cookie,
+  Settings2,
   Scale,
   CircleHelp,
 } from "lucide-react";
@@ -52,6 +54,7 @@ const iconBadgeClasses =
 export function Footer() {
   const { t, language, setLanguage, isRTL } = useLanguage();
   const { user, logout } = useAuth();
+  const { openSettings } = useCookieConsent();
 
   const learnLinks = [
     { label: t("home.footer.exam_sim"), href: "/exam", icon: GraduationCap },
@@ -342,6 +345,14 @@ export function Footer() {
                   <Cookie className="h-3 w-3" />
                   {t("home.footer.cookies")}
                 </Link>
+                <button
+                  type="button"
+                  onClick={openSettings}
+                  className={legalLinkClasses}
+                >
+                  <Settings2 className="h-3 w-3" />
+                  {t("consent.footer_settings")}
+                </button>
                 <Link
                   href="/terms"
                   prefetch={false}

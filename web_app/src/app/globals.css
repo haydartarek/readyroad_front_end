@@ -26,6 +26,10 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+html[data-readyroad-consent="stored"] .readyroad-cookie-consent-banner {
+  display: none;
+}
+
 :root {
   --radius: 1.5rem;
   --background: 0 0% 100%;

@@ -241,6 +241,22 @@ test.describe("Milestone 4 UX and accessibility", () => {
     expect(toggleBox!.x).toBeLessThan(inputBox!.x + inputBox!.width / 2);
   });
 
+  test("Arabic desktop public navigation does not overflow near its wide breakpoint", async ({
+    page,
+  }) => {
+    await seedCookieConsent(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/privacy-policy");
+    await page.evaluate(() => {
+      window.localStorage.setItem("readyroad_locale", "ar");
+      document.cookie = "readyroad_locale=ar; path=/; samesite=lax";
+    });
+    await page.goto("/privacy-policy");
+
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("successful login uses a focus-managed timed redirect dialog", async ({
     page,
   }) => {

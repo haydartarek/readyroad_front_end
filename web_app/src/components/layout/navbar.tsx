@@ -59,8 +59,8 @@ const NAV_ITEMS = [
   { name: "nav.dashboard", href: ROUTES.DASHBOARD },
   { name: "nav.exam", href: ROUTES.EXAM },
   { name: "nav.practice", href: ROUTES.PRACTICE },
-  { name: "nav.about", href: "/about", wideOnly: true },
-  { name: "nav.faq", href: "/faq", wideOnly: true },
+  { name: "nav.about", href: "/about" },
+  { name: "nav.faq", href: "/faq" },
 ] as const;
 
 const AUTH_PATHS = [
@@ -84,12 +84,10 @@ function NavLink({
   href,
   label,
   pathname,
-  className,
 }: {
   href: string;
   label: string;
   pathname: string;
-  className?: string;
 }) {
   const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
@@ -102,7 +100,6 @@ function NavLink({
         isActive
           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
           : "text-muted-foreground hover:bg-background hover:text-foreground",
-        className,
       )}
     >
       {label}
@@ -226,7 +223,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        <div className="hidden flex-1 items-center justify-center lg:flex">
+        <div className="hidden flex-1 items-center justify-center 2xl:flex">
           <div className="flex items-center gap-1 rounded-full border border-border/60 bg-muted/45 p-1 shadow-sm">
             {NAV_ITEMS.map((item) => (
               <NavLink
@@ -234,11 +231,6 @@ export function Navbar() {
                 href={item.href}
                 label={t(item.name)}
                 pathname={pathname}
-                className={
-                  "wideOnly" in item && item.wideOnly
-                    ? "hidden 2xl:block"
-                    : undefined
-                }
               />
             ))}
           </div>
@@ -467,7 +459,7 @@ export function Navbar() {
             </div>
           ) : null}
 
-          <div className="flex items-center lg:hidden">
+          <div className="flex items-center 2xl:hidden">
             <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <DialogTrigger asChild>
                 <Button

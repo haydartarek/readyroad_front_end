@@ -108,6 +108,27 @@ test.describe("Public information and legal pages", () => {
     }
   });
 
+  test("public responses include the production security policy", async ({
+    request,
+  }) => {
+    const response = await request.get("/");
+    const headers = response.headers();
+
+    expect(headers["content-security-policy"]).toContain("default-src 'self'");
+    expect(headers["content-security-policy"]).toContain("object-src 'none'");
+    expect(headers["content-security-policy"]).toContain(
+      "frame-ancestors 'self'",
+    );
+    expect(headers["x-content-type-options"]).toBe("nosniff");
+    expect(headers["x-frame-options"]).toBe("SAMEORIGIN");
+    expect(headers["referrer-policy"]).toBe(
+      "strict-origin-when-cross-origin",
+    );
+    expect(headers["permissions-policy"]).toBe(
+      "camera=(), microphone=(), geolocation=()",
+    );
+  });
+
   test("legacy privacy URL permanently redirects to the canonical policy", async ({
     request,
   }) => {

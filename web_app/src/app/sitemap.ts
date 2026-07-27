@@ -12,6 +12,9 @@ import {
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
+// The production Backend is available at runtime, not during the Docker build.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const publicPages = [
     {

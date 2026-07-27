@@ -2,7 +2,7 @@ import {
   getPublicLessons,
   getPublicTrafficSigns,
 } from "@/lib/server/public-catalog";
-import sitemap from "@/app/sitemap";
+import sitemap, { dynamic } from "@/app/sitemap";
 import { DEFAULT_APP_URL } from "@/lib/site-copy";
 
 jest.mock("@/lib/server/public-catalog", () => ({
@@ -17,6 +17,10 @@ const STATIC_PUBLIC_PAGE_COUNT = 10;
 const LOCALE_COUNT = 4;
 
 describe("public sitemap", () => {
+  it("is generated at runtime so production catalog routes are never omitted", () => {
+    expect(dynamic).toBe("force-dynamic");
+  });
+
   it("includes canonical catalog pages and excludes noindex auth pages", async () => {
     mockedGetPublicTrafficSigns.mockResolvedValue([
       { signCode: "A1a", routeCode: "A1a" },

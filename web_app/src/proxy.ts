@@ -85,9 +85,14 @@ function redirectTo(
   request: NextRequest,
   locale: "en" | "nl" | "fr" | "ar",
   status: 307 | 308 = 307,
+  preserveSearch = false,
 ): NextResponse {
+  const redirectUrl = new URL(localizePathname(url, locale), request.url);
+  if (preserveSearch) {
+    redirectUrl.search = request.nextUrl.search;
+  }
   const response = NextResponse.redirect(
-    new URL(localizePathname(url, locale), request.url),
+    redirectUrl,
     status,
   );
   response.cookies.set(STORAGE_KEYS.LANGUAGE, locale, {
@@ -175,6 +180,17 @@ export default function proxy(request: NextRequest) {
 
   if (pathname === "/privacy") {
     return redirectTo("/privacy-policy", request, locale, 308);
+  }
+
+  const legacyLessonPageOne = pathname.match(/^\/lessons\/([^/]+)\/1\/?$/);
+  if (legacyLessonPageOne) {
+    return redirectTo(
+      `/lessons/${legacyLessonPageOne[1]}`,
+      request,
+      locale,
+      308,
+      true,
+    );
   }
 
   if (pathname === "/assessment" || pathname.startsWith("/assessment/")) {

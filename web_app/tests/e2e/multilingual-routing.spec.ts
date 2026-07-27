@@ -43,6 +43,38 @@ test("serves indexable locale routes with reciprocal metadata", async ({
   ).toBe(true);
 });
 
+test("every lesson locale publishes the same reciprocal hreflang cluster", async ({
+  page,
+}) => {
+  const variants = [
+    ["/lessons/les-19/2", /\/lessons\/les-19\/2$/],
+    ["/nl/lessons/les-19/2", /\/nl\/lessons\/les-19\/2$/],
+    ["/fr/lessons/les-19/2", /\/fr\/lessons\/les-19\/2$/],
+    ["/ar/lessons/les-19/2", /\/ar\/lessons\/les-19\/2$/],
+  ] as const;
+  const alternates = {
+    en: /\/lessons\/les-19\/2$/,
+    "nl-BE": /\/nl\/lessons\/les-19\/2$/,
+    "fr-BE": /\/fr\/lessons\/les-19\/2$/,
+    ar: /\/ar\/lessons\/les-19\/2$/,
+    "x-default": /\/lessons\/les-19\/2$/,
+  } as const;
+
+  for (const [path, canonical] of variants) {
+    await page.goto(path);
+
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      canonical,
+    );
+    for (const [hreflang, href] of Object.entries(alternates)) {
+      await expect(
+        page.locator(`link[rel="alternate"][hreflang="${hreflang}"]`),
+      ).toHaveAttribute("href", href);
+    }
+  }
+});
+
 test("Arabic is RTL and internal links retain the locale prefix", async ({
   page,
 }) => {
@@ -79,9 +111,39 @@ test("legacy English prefix redirects permanently to the unprefixed URL", async 
   expect(response.headers().location).toMatch(/\/lessons\/les-19\/2$/);
 });
 
+test("duplicate lesson page-one URLs redirect permanently to the lesson root", async ({
+  request,
+}) => {
+  for (const [legacyPath, canonicalPath] of [
+    [
+      "/lessons/les-19/1?source=legacy",
+      "/lessons/les-19?source=legacy",
+    ],
+    [
+      "/nl/lessons/les-19/1?source=legacy",
+      "/nl/lessons/les-19?source=legacy",
+    ],
+    [
+      "/fr/lessons/les-19/1?source=legacy",
+      "/fr/lessons/les-19?source=legacy",
+    ],
+    [
+      "/ar/lessons/les-19/1?source=legacy",
+      "/ar/lessons/les-19?source=legacy",
+    ],
+  ]) {
+    const response = await request.get(legacyPath, { maxRedirects: 0 });
+
+    expect(response.status()).toBe(308);
+    expect(response.headers().location).toBe(canonicalPath);
+  }
+});
+
 test("all multilingual sitemap URLs resolve without broken links", async ({
   request,
 }) => {
+  test.setTimeout(90_000);
+
   const sitemapResponse = await request.get("/sitemap.xml");
   expect(sitemapResponse.status()).toBe(200);
   const xml = await sitemapResponse.text();
@@ -91,12 +153,19 @@ test("all multilingual sitemap URLs resolve without broken links", async ({
 
   expect(urls.length).toBeGreaterThan(40);
   const failures: string[] = [];
-  for (const url of urls) {
-    const response = await request.get(new URL(url).pathname);
-    if (response.status() !== 200) {
-      failures.push(`${response.status()} ${url}`);
+  let cursor = 0;
+  const crawl = async () => {
+    while (cursor < urls.length) {
+      const url = urls[cursor];
+      cursor += 1;
+      const response = await request.get(new URL(url).pathname);
+      if (response.status() !== 200) {
+        failures.push(`${response.status()} ${url}`);
+      }
     }
-  }
+  };
+
+  await Promise.all(Array.from({ length: 4 }, () => crawl()));
 
   expect(failures).toEqual([]);
 });

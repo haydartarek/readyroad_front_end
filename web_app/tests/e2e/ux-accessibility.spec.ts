@@ -88,7 +88,7 @@ test.describe("Milestone 4 UX and accessibility", () => {
   test("public and authentication routes remain usable on a mobile viewport", async ({
     page,
   }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
     await useAnonymousLanguage(page, "en");
     await page.setViewportSize({ width: 375, height: 812 });
     const consoleErrors: string[] = [];

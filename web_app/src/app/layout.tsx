@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
@@ -19,7 +19,6 @@ import {
   getLayoutMetadataCopy,
   getOpenGraphLocale,
   getSharedOgImage,
-  resolveSiteLocale,
   createEducationalAppSchema,
   createOrganizationSchema,
   createWebsiteSchema,
@@ -28,6 +27,9 @@ import { serializeJsonLd } from "@/lib/seo";
 import { COOKIE_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/cookie-consent-bootstrap";
 import { CookieConsentManager } from "@/components/privacy/cookie-consent-manager";
 import { ConsentThemeController } from "@/components/privacy/consent-theme-controller";
+import { buildLocalizedUrl } from "@/lib/i18n-routing";
+import { getLocalizedAlternates } from "@/lib/localized-seo";
+import { getRequestLocale } from "@/lib/server/request-locale";
 
 // ─── Font ────────────────────────────────────────────────
 
@@ -52,12 +54,14 @@ export const viewport: Viewport = {
 
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  );
+  const [locale, headerStore] = await Promise.all([
+    getRequestLocale(),
+    headers(),
+  ]);
   const copy = getLayoutMetadataCopy(locale);
   const ogImage = getSharedOgImage(locale);
+  const pathname = headerStore.get("x-readyroad-pathname") || "/";
+  const canonical = buildLocalizedUrl(pathname, locale, APP_URL);
 
   return {
     metadataBase: new URL(APP_URL),
@@ -72,9 +76,7 @@ export async function generateMetadata(): Promise<Metadata> {
     publisher: "ReadyRoad",
     category: "education",
     formatDetection: { email: false, address: false, telephone: false },
-    alternates: {
-      canonical: APP_URL,
-    },
+    alternates: getLocalizedAlternates(pathname, locale, APP_URL),
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "any" },
@@ -93,7 +95,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: copy.defaultTitle,
       description: copy.openGraphDescription,
       type: "website",
-      url: APP_URL,
+      url: canonical,
       siteName: "ReadyRoad",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
@@ -121,10 +123,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  );
+  const locale = await getRequestLocale();
   const isRTL = locale === "ar";
   const organizationSchema = createOrganizationSchema(APP_URL, locale);
   const websiteSchema = createWebsiteSchema(APP_URL, locale);

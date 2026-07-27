@@ -1,7 +1,8 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Card,
@@ -77,7 +78,7 @@ function LoadingSpinner({ message }: { message?: string }) {
 }
 
 export default function PracticePage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { language, t } = useLanguage();
   const { isAuthenticated } = useAuth();
   const lang = (["en", "ar", "nl", "fr"] as Lang[]).includes(language as Lang)

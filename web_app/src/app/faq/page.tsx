@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { ChevronDown, CircleHelp, MessageCircle } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { useLanguage } from "@/contexts/language-context";
@@ -36,6 +36,7 @@ export default function FaqPage() {
     path: "/faq",
     homeLabel,
     currentLabel: content.title,
+    language,
   });
   const faqSchema = createFaqSchema(content.items, language);
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { Footer } from "@/components/home/footer";
+import { useRoutePathname } from "@/hooks/use-route-pathname";
 
 const EXCLUDED_PREFIXES = [
   "/admin",
@@ -13,7 +13,7 @@ const EXCLUDED_PREFIXES = [
 ];
 
 export function ConditionalFooter() {
-  const pathname = usePathname();
+  const pathname = useRoutePathname();
   const allowAdminDashboard = pathname === "/admin/dashboard";
   const hidden = EXCLUDED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),

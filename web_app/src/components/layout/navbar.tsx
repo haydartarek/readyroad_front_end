@@ -1,15 +1,10 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "@/components/localized-link";
 import {
   ChevronDown,
   LayoutDashboard,
@@ -49,6 +44,7 @@ import {
 import { NotificationPanel } from "@/components/layout/notification-panel";
 import { LANGUAGES, ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { useRoutePathname } from "@/hooks/use-route-pathname";
 
 type LangCode = "en" | "ar" | "nl" | "fr";
 
@@ -112,8 +108,8 @@ export function Navbar() {
   const { t, language, setLanguage, isRTL } = useLanguage();
   const { resolvedTheme, setTheme } = useTheme();
   const { consent, openSettings } = useCookieConsent();
-  const pathname = usePathname();
-  const router = useRouter();
+  const pathname = useRoutePathname();
+  const router = useLocalizedRouter();
   const searchContainer = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const themeMounted = useSyncExternalStore(

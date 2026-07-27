@@ -71,6 +71,7 @@ export default function ContactPage() {
     path: "/contact",
     homeLabel,
     currentLabel: pageTitle,
+    language,
   });
 
   const [form, setForm] = useState<FormData>({

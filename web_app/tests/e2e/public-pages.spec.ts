@@ -171,12 +171,7 @@ test.describe("Public information and legal pages", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
-    await page.evaluate(() => {
-      window.localStorage.setItem("readyroad_locale", "ar");
-      document.cookie = "readyroad_locale=ar; path=/; samesite=lax";
-    });
-    await page.goto("/privacy-policy");
+    await page.goto("/ar/privacy-policy");
 
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(

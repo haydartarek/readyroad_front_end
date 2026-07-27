@@ -76,7 +76,9 @@ describe("traffic sign detail metadata", () => {
       "B1: Cédez le passage aux autres usagers.",
     );
     expect(metadata.openGraph?.locale).toBe("fr_BE");
-    expect(metadata.alternates?.canonical).toBe(`${appUrl}/traffic-signs/B1`);
+    expect(metadata.alternates?.canonical).toBe(
+      `${appUrl}/fr/traffic-signs/B1`,
+    );
   });
 
   it("marks missing signs as noindex", async () => {

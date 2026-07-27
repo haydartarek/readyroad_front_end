@@ -1,7 +1,9 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -20,7 +22,7 @@ import {
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { toast } from "sonner";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import {
   BookOpen,
   BarChart2,
@@ -382,7 +384,7 @@ export function ErrorPatternsContent() {
 }
 
 function ErrorPatternsRedirect() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {

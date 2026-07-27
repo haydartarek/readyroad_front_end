@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "next/navigation";
+import Link from "@/components/localized-link";
 import { SignImage } from "@/components/traffic-signs/sign-image";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +62,7 @@ function LoadingSpinner({ message }: { message: string }) {
 
 export default function PracticeSignsPage() {
   const params = useParams();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const categoryCode = ((params.category as string) || "").toUpperCase();
   const { language, t } = useLanguage();
   const { isAuthenticated } = useAuth();

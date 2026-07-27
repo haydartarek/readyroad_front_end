@@ -406,7 +406,8 @@ export default function AdminAnalyticsPage() {
                         {cat.categoryName || cat.categoryCode}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {cat.totalCorrect}/{cat.totalAttempted} correct •{" "}
+                        {cat.totalCorrect}/{cat.totalAttempted}{" "}
+                        {t("admin.analytics.correct")} •{" "}
                         {cat.userCount} {t("admin.analytics.users_label")}
                       </span>
                     </div>

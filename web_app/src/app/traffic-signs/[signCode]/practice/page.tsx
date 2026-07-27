@@ -1,9 +1,11 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import Link from "@/components/localized-link";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -171,7 +173,7 @@ function LoadingState() {
 export default function TrafficSignPracticePage() {
   const params = useParams<{ signCode: string }>();
   const routeParam = params.signCode;
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { t, language, isRTL } = useLanguage();
   const currentLanguage = (["nl", "en", "ar", "fr"] as Lang[]).includes(
     language as Lang,

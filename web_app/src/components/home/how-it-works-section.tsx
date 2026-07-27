@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { Target, SignpostBig, FileText, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { EXAM_RULES } from "@/lib/constants";

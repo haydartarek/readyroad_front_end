@@ -1,16 +1,16 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { UserSidebar } from "@/components/layout/UserSidebar";
 import { cn } from "@/lib/utils";
+import { useRoutePathname } from "@/hooks/use-route-pathname";
 
 export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  const pathname = useRoutePathname();
   const isFocusedExamRoute =
     pathname === "/practice/random" ||
     pathname.startsWith("/practice/random") ||

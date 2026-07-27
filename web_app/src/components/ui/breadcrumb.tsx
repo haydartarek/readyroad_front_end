@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/components/localized-link";
 import { ChevronRight, ChevronLeft, Home, MoreHorizontal } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { GROUP_INFO, type LangKey } from "@/lib/sign-category-data";
 import { cn } from "@/lib/utils";
+import { useRoutePathname } from "@/hooks/use-route-pathname";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -162,7 +162,7 @@ function BreadcrumbLink({
 // ─── Main Component ──────────────────────────────────────
 
 export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
-  const pathname = usePathname();
+  const pathname = useRoutePathname();
   const { t, isRTL, language } = useLanguage();
   const containerRef = useRef<HTMLOListElement>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);

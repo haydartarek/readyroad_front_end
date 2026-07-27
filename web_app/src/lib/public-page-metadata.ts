@@ -1,16 +1,17 @@
+import { getRequestLocale } from "@/lib/server/request-locale";
 import "server-only";
 
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { STORAGE_KEYS, type Language } from "@/lib/constants";
+import { type Language } from "@/lib/constants";
 import { getPublicMetadata, type PublicPageKey } from "@/lib/public-content";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
   getOpenGraphLocale,
   getSharedOgImage,
-  resolveSiteLocale,
 } from "@/lib/site-copy";
+import { buildLocalizedUrl } from "@/lib/i18n-routing";
+import { getLocalizedAlternates } from "@/lib/localized-seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -18,12 +19,9 @@ export async function createPublicPageMetadata(
   page: PublicPageKey,
   path: string,
 ): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  ) as Language;
+  const locale = (await getRequestLocale()) as Language;
   const copy = getPublicMetadata(locale, page);
-  const canonical = new URL(path, `${APP_URL.replace(/\/+$/, "")}/`).toString();
+  const canonical = buildLocalizedUrl(path, locale, APP_URL);
   const ogImage = {
     ...getSharedOgImage(locale),
     alt: copy.imageAlt,
@@ -32,7 +30,7 @@ export async function createPublicPageMetadata(
   return {
     title: copy.title,
     description: copy.description,
-    alternates: { canonical },
+    alternates: getLocalizedAlternates(path, locale, APP_URL),
     openGraph: {
       title: copy.openGraphTitle,
       description: copy.openGraphDescription,

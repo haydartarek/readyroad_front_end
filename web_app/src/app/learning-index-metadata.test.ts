@@ -16,7 +16,9 @@ describe("learning index metadata", () => {
 
     const metadata = await generateTrafficSignsMetadata();
 
-    expect(metadata.title).toBe("إشارات المرور في بلجيكا: المعاني والشرح");
+    expect(metadata.title).toBe(
+      "العلامات المرورية في بلجيكا: المعاني والشرح",
+    );
     expect(metadata.openGraph?.locale).toBe("ar_BE");
     expect(metadata.alternates?.canonical).toContain("/traffic-signs");
   });

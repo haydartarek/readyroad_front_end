@@ -29,6 +29,7 @@ jest.mock("next/link", () => {
 });
 
 jest.mock("@/contexts/language-context", () => ({
+  useOptionalLanguage: () => "fr",
   useLanguage: () => ({
     t: (key: string) => key,
     language: "fr",

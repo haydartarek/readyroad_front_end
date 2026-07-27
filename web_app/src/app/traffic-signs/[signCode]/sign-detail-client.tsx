@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import Link from "@/components/localized-link";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -90,7 +92,7 @@ export default function TrafficSignDetailClient({
 }: Readonly<{ initialSign: TrafficSign | null }>) {
   const params = useParams<{ signCode: string }>();
   const routeParam = params.signCode;
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { t, language, isRTL } = useLanguage();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const currentLanguage = (["nl", "en", "ar", "fr"] as Lang[]).includes(
@@ -292,7 +294,7 @@ export default function TrafficSignDetailClient({
     examQuestionsCount && examPassingPercentage != null
       ? `${
           currentLanguage === "ar"
-            ? `${examQuestionsCount} اسئلة والنجاح من ${examPassingPercentage}%`
+            ? `${examQuestionsCount} أسئلة، ودرجة النجاح ${examPassingPercentage}٪`
             : `${t("sign_quiz.questions_count").replace("{n}", examQuestionsCount.toString())} • ${t("sign_quiz.pass_score").replace("{score}", examPassingPercentage.toString())}`
         }${signProgress?.exam1BestScorePct != null ? ` • ${t("sign_quiz.best_score").replace("{score}", Math.round(signProgress.exam1BestScorePct).toString())}` : ""}`
       : progressLoading

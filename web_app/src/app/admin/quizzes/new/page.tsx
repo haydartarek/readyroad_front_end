@@ -1,9 +1,10 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { getCsrfToken } from "@/lib/auth-token";
 import { API_ENDPOINTS } from "@/lib/constants";
@@ -187,7 +188,7 @@ function FormTextarea({
 // ─── Page ──────────────────────────────────────────────
 
 export default function AdminAddQuizQuestionPage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { t, language } = useLanguage();
 
   // ─── Quiz question state ────────────────────────────────────────
@@ -654,7 +655,7 @@ export default function AdminAddQuizQuestionPage() {
             <div className="relative inline-block">
               <Image
                 src={resolveImageUrl(form.contentImageUrl)}
-                alt="Question content"
+                    alt={t("practice.question_image_alt")}
                 width={320}
                 height={192}
                 unoptimized

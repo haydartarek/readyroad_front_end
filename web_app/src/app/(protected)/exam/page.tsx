@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -650,7 +650,7 @@ export default function TheoryExamPage() {
                   <div className="flex justify-center mb-4">
                     <Image
                       src={question.contentImageUrl}
-                      alt="Question illustration"
+                      alt={t("practice.question_image_alt")}
                       width={400}
                       height={176}
                       className="max-h-44 object-contain rounded-2xl border border-border/50"

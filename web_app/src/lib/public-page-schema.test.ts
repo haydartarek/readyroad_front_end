@@ -21,6 +21,7 @@ describe("public page structured data", () => {
       path: "/about",
       homeLabel: "Home",
       currentLabel: "About ReadyRoad",
+      language: "en",
     });
 
     expect(page).toEqual(

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import type { LucideIcon } from "lucide-react";
 import { ExternalLink } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -46,6 +46,7 @@ export function PublicDocumentPage({
     path,
     homeLabel,
     currentLabel: document.title,
+    language,
   });
 
   return (

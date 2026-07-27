@@ -1,6 +1,8 @@
+import { buildLocalizedUrl } from "@/lib/i18n-routing";
+
 export type SiteLocale = "en" | "ar" | "fr" | "nl";
 
-export const DEFAULT_APP_URL = "https://readyroad-frontend-haydar.vercel.app";
+export const DEFAULT_APP_URL = "https://readyroad.be";
 export const DEFAULT_SITE_LOCALE: SiteLocale = "en";
 
 const SHARED_KEYWORDS = [
@@ -14,9 +16,9 @@ const SHARED_KEYWORDS = [
   "permis de conduire belgique",
   "examen théorique permis conduire",
   "panneaux signalisation belgique",
-  "رخصة القيادة في بلجيكا",
-  "امتحان القيادة في بلجيكا",
-  "إشارات المرور البلجيكية",
+  "رخصة السياقة في بلجيكا",
+  "امتحان السياقة في بلجيكا",
+  "العلامات المرورية البلجيكية",
 ];
 
 const OPEN_GRAPH_LOCALES: Record<SiteLocale, string> = {
@@ -77,30 +79,30 @@ const SITE_COPY: Record<
     },
   },
   ar: {
-    sharedOgAlt: "ReadyRoad | التحضير لامتحان القيادة النظري في بلجيكا",
+    sharedOgAlt: "ReadyRoad | الاستعداد لامتحان السياقة النظري في بلجيكا",
     homeMetadata: {
-      title: "امتحان القيادة النظري في بلجيكا | ReadyRoad",
+      title: "امتحان السياقة النظري في بلجيكا | ReadyRoad",
       description:
-        "استعد لامتحان القيادة النظري في بلجيكا عبر إشارات المرور، والدروس المنظمة، والتدريب الموجّه، ولوحة تقدم واضحة في مكان واحد.",
+        "استعد لامتحان السياقة النظري في بلجيكا من خلال الدروس والعلامات المرورية والاختبارات التدريبية، وتابع تقدمك في مكان واحد.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "امتحان القيادة النظري في بلجيكا | ReadyRoad",
+      openGraphTitle: "امتحان السياقة النظري في بلجيكا | ReadyRoad",
       openGraphDescription:
-        "ادرس إشارات المرور، وراجع الدروس النظرية، وتدرّب حسب الفئة، وتابع تقدمك من مكان واحد.",
+        "تعلّم العلامات المرورية، واقرأ الدروس النظرية، وتدرّب حسب الفئة، وتابع تقدمك في مكان واحد.",
     },
     layoutMetadata: {
-      defaultTitle: "ReadyRoad | التحضير لامتحان القيادة النظري في بلجيكا",
+      defaultTitle: "ReadyRoad | الاستعداد لامتحان السياقة النظري في بلجيكا",
       description:
-        "يساعد ReadyRoad المتعلمين على الاستعداد لامتحان القيادة النظري في بلجيكا عبر إشارات المرور، والدروس، والتدريب الموقّت، وتحليلات التقدم.",
+        "يساعدك ReadyRoad على الاستعداد لامتحان السياقة النظري في بلجيكا من خلال العلامات المرورية والدروس والتدريب ومتابعة التقدم.",
       keywords: SHARED_KEYWORDS,
       openGraphDescription:
-        "تدرّب على محاور النظرية البلجيكية، وادرس العلامات المرورية، وتابع تقدمك من لوحة تحكم واحدة.",
+        "تدرّب على مواضيع الامتحان النظري البلجيكي، وتعلّم العلامات المرورية، وتابع تقدمك من لوحة تحكم واحدة.",
       twitterDescription:
-        "تدرّب على محاور النظرية، وادرس العلامات المرورية، وتابع تقدمك مع ReadyRoad.",
+        "تدرّب على مواضيع الامتحان النظري، وتعلّم العلامات المرورية، وتابع تقدمك مع ReadyRoad.",
       organizationDescription:
-        "ReadyRoad منصة تعليمية مستقلة للتحضير لامتحان القيادة النظري في بلجيكا.",
-      websiteDescription: "منصة للتحضير لامتحان القيادة النظري في بلجيكا.",
+        "ReadyRoad منصة تعليمية مستقلة للاستعداد لامتحان السياقة النظري في بلجيكا.",
+      websiteDescription: "منصة للاستعداد لامتحان السياقة النظري في بلجيكا.",
       softwareDescription:
-        "استعد لامتحان القيادة النظري في بلجيكا عبر مسارات التدريب، والعلامات المرورية، والدروس، وتحليلات التقدم.",
+        "استعد لامتحان السياقة النظري في بلجيكا من خلال التدريب والعلامات المرورية والدروس ومتابعة التقدم.",
     },
   },
   fr: {
@@ -226,7 +228,7 @@ export function createOrganizationSchema(appUrl: string, locale: SiteLocale) {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
-      url: `${appUrl}/contact`,
+      url: buildLocalizedUrl("/contact", locale, appUrl),
       availableLanguage: ["English", "Dutch", "French", "Arabic"],
     },
   };
@@ -234,11 +236,12 @@ export function createOrganizationSchema(appUrl: string, locale: SiteLocale) {
 
 export function createWebsiteSchema(appUrl: string, locale: SiteLocale) {
   const copy = getLayoutMetadataCopy(locale);
+  const localizedRoot = buildLocalizedUrl("/", locale, appUrl);
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": `${appUrl}/#website`,
-    url: appUrl,
+    url: localizedRoot,
     name: "ReadyRoad",
     description: copy.websiteDescription,
     publisher: {
@@ -248,7 +251,7 @@ export function createWebsiteSchema(appUrl: string, locale: SiteLocale) {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${appUrl}/traffic-signs?search={search_term_string}`,
+        urlTemplate: `${buildLocalizedUrl("/traffic-signs", locale, appUrl)}?search={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },
@@ -264,7 +267,7 @@ export function createEducationalAppSchema(appUrl: string, locale: SiteLocale) {
     name: "ReadyRoad",
     applicationCategory: "EducationalApplication",
     operatingSystem: "Web",
-    url: appUrl,
+    url: buildLocalizedUrl("/", locale, appUrl),
     description: copy.softwareDescription,
     offers: {
       "@type": "Offer",

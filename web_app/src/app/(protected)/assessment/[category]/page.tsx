@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import Link from "@/components/localized-link";
+import { useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
 import {
   getAssessmentCategory,
@@ -59,7 +61,7 @@ function CategoryContent({
   t: (key: string, params?: Record<string, string | number>) => string;
   isRTL: boolean;
 }) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
 
   const [category, setCategory] = useState<AssessmentCategory | null>(null);
   const [loading, setLoading] = useState(true);

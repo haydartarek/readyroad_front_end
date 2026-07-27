@@ -6,7 +6,7 @@ import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { useLanguage } from "@/contexts/language-context";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import {
   Users,
   TrafficCone,

@@ -221,12 +221,7 @@ test.describe("Milestone 4 UX and accessibility", () => {
   }) => {
     await useAnonymousLanguage(page, "ar");
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
-    await page.evaluate(() => {
-      window.localStorage.setItem("readyroad_locale", "ar");
-      document.cookie = "readyroad_locale=ar; path=/; samesite=lax";
-    });
-    await page.goto("/register");
+    await page.goto("/ar/register");
 
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expectNoHorizontalOverflow(page);
@@ -246,12 +241,7 @@ test.describe("Milestone 4 UX and accessibility", () => {
   }) => {
     await seedCookieConsent(page);
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto("/privacy-policy");
-    await page.evaluate(() => {
-      window.localStorage.setItem("readyroad_locale", "ar");
-      document.cookie = "readyroad_locale=ar; path=/; samesite=lax";
-    });
-    await page.goto("/privacy-policy");
+    await page.goto("/ar/privacy-policy");
 
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expectNoHorizontalOverflow(page);

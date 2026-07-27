@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { useParams } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
 import {

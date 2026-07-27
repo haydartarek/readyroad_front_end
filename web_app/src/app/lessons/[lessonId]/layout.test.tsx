@@ -59,11 +59,16 @@ describe("lesson detail metadata", () => {
 
     expect(metadata.title).toEqual({
       absolute:
-        "الأولوية من اليمين | نظرية القيادة البلجيكية | ReadyRoad",
+        "الأولوية من اليمين | قواعد السياقة البلجيكية | ReadyRoad",
     });
     expect(metadata.description).toBe("شرح قاعدة الأولوية من اليمين.");
     expect(metadata.openGraph?.locale).toBe("ar_BE");
-    expect(metadata.alternates?.canonical).toBe(`${appUrl}/lessons/les-19`);
+    expect(metadata.alternates?.canonical).toBe(
+      `${appUrl}/ar/lessons/les-19`,
+    );
+    expect(metadata.alternates?.languages?.["x-default"]).toBe(
+      `${appUrl}/lessons/les-19`,
+    );
   });
 
   it("marks a missing lesson as noindex", async () => {

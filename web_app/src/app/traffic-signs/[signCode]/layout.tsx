@@ -1,15 +1,15 @@
+import { getRequestLocale } from "@/lib/server/request-locale";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { STORAGE_KEYS } from "@/lib/constants";
 import { getLocalizedTrafficSignSeo } from "@/lib/learning-seo-copy";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
   getOpenGraphLocale,
-  resolveSiteLocale,
 } from "@/lib/site-copy";
 import { buildAbsoluteUrl, serializeJsonLd, toMetadataDescription } from "@/lib/seo";
 import { getPublicTrafficSign } from "@/lib/server/public-catalog";
+import { buildLocalizedUrl } from "@/lib/i18n-routing";
+import { getLocalizedAlternates } from "@/lib/localized-seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -31,17 +31,12 @@ export async function generateMetadata({
     };
   }
 
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  );
+  const locale = await getRequestLocale();
   const copy = getLocalizedTrafficSignSeo(sign, locale);
 
   const routeCode = sign.routeCode || sign.signCode;
-  const canonical = buildAbsoluteUrl(
-    `/traffic-signs/${encodeURIComponent(routeCode)}`,
-    APP_URL,
-  );
+  const routePath = `/traffic-signs/${encodeURIComponent(routeCode)}`;
+  const canonical = buildLocalizedUrl(routePath, locale, APP_URL);
   const description = toMetadataDescription(
     copy.description ? `${sign.signCode}: ${copy.description}` : "",
     copy.fallbackDescription,
@@ -52,7 +47,7 @@ export async function generateMetadata({
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical },
+    alternates: getLocalizedAlternates(routePath, locale, APP_URL),
     openGraph: {
       title,
       description,
@@ -84,17 +79,12 @@ export default async function SignLayout({
     return children;
   }
 
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  );
+  const locale = await getRequestLocale();
   const copy = getLocalizedTrafficSignSeo(sign, locale);
 
   const routeCode = sign.routeCode || sign.signCode;
-  const canonical = buildAbsoluteUrl(
-    `/traffic-signs/${encodeURIComponent(routeCode)}`,
-    APP_URL,
-  );
+  const routePath = `/traffic-signs/${encodeURIComponent(routeCode)}`;
+  const canonical = buildLocalizedUrl(routePath, locale, APP_URL);
   const image = buildAbsoluteUrl(sign.imageUrl, APP_URL);
   const description = toMetadataDescription(
     copy.description,
@@ -109,13 +99,13 @@ export default async function SignLayout({
           "@type": "ListItem",
           position: 1,
           name: copy.homeLabel,
-          item: APP_URL,
+          item: buildLocalizedUrl("/", locale, APP_URL),
         },
         {
           "@type": "ListItem",
           position: 2,
           name: copy.indexLabel,
-          item: buildAbsoluteUrl("/traffic-signs", APP_URL),
+          item: buildLocalizedUrl("/traffic-signs", locale, APP_URL),
         },
         {
           "@type": "ListItem",
@@ -132,7 +122,7 @@ export default async function SignLayout({
       description,
       url: canonical,
       image,
-      inLanguage: ["en", "nl", "fr", "ar"],
+      inLanguage: locale,
       learningResourceType: copy.learningResourceType,
       educationalUse: copy.educationalUse,
       about: {

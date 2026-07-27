@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -108,9 +108,11 @@ function getPageContent(page: LessonPage, lang: string) {
 export default function LessonDetailClient({
   initialLesson,
   initialLessons,
+  initialPageNumber,
 }: Readonly<{
   initialLesson: LessonDetail | null;
   initialLessons: Lesson[];
+  initialPageNumber: number;
 }>) {
   const params = useParams();
   const lessonIdOrCode = params.lessonId as string;
@@ -121,7 +123,7 @@ export default function LessonDetailClient({
   const [allLessons, setAllLessons] = useState<Lesson[]>(initialLessons);
   const [loading, setLoading] = useState(initialLesson === null);
   const [error, setError] = useState<string | null>(null);
-  const [activePage, setActivePage] = useState(0);
+  const activePage = Math.max(initialPageNumber - 1, 0);
   const [lessonProgress, setLessonProgress] = useState<LessonProgress | null>(
     null,
   );
@@ -176,14 +178,8 @@ export default function LessonDetailClient({
               lessonPages,
             );
             trackedPagesRef.current = buildTrackedPages(safePagesRead);
-            setActivePage(
-              safePagesRead > 0
-                ? Math.min(safePagesRead - 1, Math.max(lessonPages - 1, 0))
-                : 0,
-            );
           } else {
             trackedPagesRef.current = new Set();
-            setActivePage(0);
           }
           setServiceUnavailable(false);
         }
@@ -321,6 +317,10 @@ export default function LessonDetailClient({
       ? allLessons[currentIndex + 1]
       : null;
   const currentPage = lesson.pages[activePage];
+  const pageHref = (pageNumber: number) =>
+    pageNumber <= 1
+      ? `/lessons/${lesson.lessonCode}`
+      : `/lessons/${lesson.lessonCode}/${pageNumber}`;
   const pagesRead = user
     ? Math.min(lessonProgress?.pagesRead ?? 0, lesson.pages.length)
     : Math.min(activePage + 1, lesson.pages.length);
@@ -414,13 +414,15 @@ export default function LessonDetailClient({
                     key={page.pageNumber}
                     variant={activePage === index ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setActivePage(index)}
                     className={cn(
                       "rounded-full px-4 transition-all",
                       activePage === index && "shadow-md shadow-primary/20",
                     )}
+                    asChild
                   >
-                    {page.pageNumber}
+                    <Link href={pageHref(page.pageNumber)}>
+                      {page.pageNumber}
+                    </Link>
                   </Button>
                 ))}
               </div>
@@ -526,15 +528,27 @@ export default function LessonDetailClient({
 
             {lesson.pages.length > 1 && (
               <PageSectionSurface className="rounded-[26px] border-border/50 bg-card/80 p-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setActivePage((page) => Math.max(0, page - 1))}
-                  disabled={activePage === 0}
-                  className="rounded-full px-5"
-                >
-                  <ChevronStart className="h-4 w-4" />
-                  {t("lessons.previous_page")}
-                </Button>
+                {activePage === 0 ? (
+                  <Button
+                    variant="outline"
+                    disabled
+                    className="rounded-full px-5"
+                  >
+                    <ChevronStart className="h-4 w-4" />
+                    {t("lessons.previous_page")}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="rounded-full px-5"
+                    asChild
+                  >
+                    <Link href={pageHref(activePage)}>
+                      <ChevronStart className="h-4 w-4" />
+                      {t("lessons.previous_page")}
+                    </Link>
+                  </Button>
+                )}
 
                 <div className="text-sm font-medium text-muted-foreground">
                   {t("lessons.question_progress", {
@@ -543,18 +557,25 @@ export default function LessonDetailClient({
                   })}
                 </div>
 
-                <Button
-                  onClick={() =>
-                    setActivePage((page) =>
-                      Math.min(lesson.pages.length - 1, page + 1),
-                    )
-                  }
-                  disabled={activePage >= lesson.pages.length - 1}
-                  className="rounded-full px-5 shadow-sm shadow-primary/15"
-                >
-                  {t("lessons.next_page")}
-                  <ChevronEnd className="h-4 w-4" />
-                </Button>
+                {activePage >= lesson.pages.length - 1 ? (
+                  <Button
+                    disabled
+                    className="rounded-full px-5 shadow-sm shadow-primary/15"
+                  >
+                    {t("lessons.next_page")}
+                    <ChevronEnd className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    className="rounded-full px-5 shadow-sm shadow-primary/15"
+                    asChild
+                  >
+                    <Link href={pageHref(activePage + 2)}>
+                      {t("lessons.next_page")}
+                      <ChevronEnd className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
               </PageSectionSurface>
             )}
 
@@ -641,9 +662,9 @@ export default function LessonDetailClient({
               title={t("lessons.pages_overview")}
             >
               {lesson.pages.map((page, index) => (
-                <button
+                <Link
                   key={page.pageNumber}
-                  onClick={() => setActivePage(index)}
+                  href={pageHref(page.pageNumber)}
                   className={cn(
                     "w-full rounded-2xl px-4 py-3 text-sm transition-all",
                     isRtl ? "text-right" : "text-left",
@@ -660,7 +681,7 @@ export default function LessonDetailClient({
                       {getLangTitle(page, language)}
                     </span>
                   </div>
-                </button>
+                </Link>
               ))}
             </PageSectionSurface>
 

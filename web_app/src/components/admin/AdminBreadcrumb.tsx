@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/components/localized-link";
 import { ChevronRight, ChevronLeft, Home } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { getBreadcrumbTrail } from "@/lib/admin-routes";
+import { useRoutePathname } from "@/hooks/use-route-pathname";
 
 export default function AdminBreadcrumb() {
-  const pathname = usePathname();
+  const pathname = useRoutePathname();
   const { t, isRTL } = useLanguage();
 
   const trail = getBreadcrumbTrail(pathname, t);

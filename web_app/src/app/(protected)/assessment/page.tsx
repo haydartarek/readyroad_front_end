@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { useLanguage } from "@/contexts/language-context";
 import {
   getAssessmentCategories,

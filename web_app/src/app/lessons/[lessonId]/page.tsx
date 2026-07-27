@@ -3,6 +3,7 @@ import {
   getPublicLesson,
   getPublicLessons,
 } from "@/lib/server/public-catalog";
+import LessonStructuredData from "@/app/lessons/[lessonId]/lesson-structured-data";
 
 type LessonDetailPageProps = Readonly<{
   params: Promise<{ lessonId: string }>;
@@ -17,5 +18,14 @@ export default async function LessonDetailPage({
     getPublicLessons(),
   ]);
 
-  return <LessonDetailClient initialLesson={lesson} initialLessons={lessons} />;
+  return (
+    <>
+      {lesson && <LessonStructuredData lesson={lesson} />}
+      <LessonDetailClient
+        initialLesson={lesson}
+        initialLessons={lessons}
+        initialPageNumber={1}
+      />
+    </>
+  );
 }

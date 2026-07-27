@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { Cookie, ShieldCheck } from "lucide-react";
 import { useCookieConsent } from "@/contexts/cookie-consent-context";
 import { useLanguage } from "@/contexts/language-context";

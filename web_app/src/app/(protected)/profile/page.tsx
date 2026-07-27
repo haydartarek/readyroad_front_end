@@ -1,7 +1,9 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
@@ -138,7 +140,7 @@ export function ProfilePageContent({
 }) {
   const { user, fetchUser } = useAuth();
   const { t, language, setLanguage } = useLanguage();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const searchParams = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -813,7 +815,7 @@ export function ProfilePageContent({
 }
 
 export default function ProfilePage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
 
   useEffect(() => {
     router.replace("/dashboard?section=profile");

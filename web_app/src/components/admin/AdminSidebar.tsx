@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/components/localized-link";
 import { Home, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/language-context";
@@ -13,6 +12,7 @@ import {
   type AdminChildRoute,
   type AdminRoute,
 } from "@/lib/admin-routes";
+import { useRoutePathname } from "@/hooks/use-route-pathname";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -104,7 +104,7 @@ function AdminSidebarItem({
 
 export default function AdminSidebar() {
   const { logout: authLogout, user } = useAuth();
-  const pathname = usePathname();
+  const pathname = useRoutePathname();
   const { t, isRTL } = useLanguage();
   const hasTopNavbar = pathname === "/admin/dashboard";
 

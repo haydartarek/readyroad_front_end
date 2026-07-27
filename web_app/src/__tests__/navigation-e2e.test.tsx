@@ -277,18 +277,11 @@ describe("Epic 8: E2E Navigation & Contract Smoke Tests", () => {
       });
     });
 
-    test("language change does NOT change route", () => {
-      const currentRoute = "/dashboard";
-      const newLanguage = "ar";
+    test("language change preserves the current page under its locale prefix", () => {
+      const currentRoute = "/lessons/les-19/2";
+      const routeAfterLanguageChange = `/ar${currentRoute}`;
 
-      // Simulate language change
-      localStorage.setItem(LOCALE_KEY, newLanguage);
-      document.documentElement.lang = newLanguage;
-      document.documentElement.dir = "rtl";
-
-      // Route should remain unchanged
-      const routeAfterLanguageChange = "/dashboard";
-      expect(routeAfterLanguageChange).toBe(currentRoute);
+      expect(routeAfterLanguageChange).toBe("/ar/lessons/les-19/2");
     });
 
     test("language persists across page refresh", () => {

@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "@/components/localized-link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown, Languages, ListFilter, Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
 import { TrafficSignsFilters } from "@/components/traffic-signs/traffic-signs-filters";
@@ -75,7 +77,7 @@ function TrafficSignsContent({
   initialSigns: TrafficSignCatalogItem[];
 }) {
   const { t, language } = useLanguage();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lang = (["nl", "en", "ar", "fr"] as Lang[]).includes(language as Lang)

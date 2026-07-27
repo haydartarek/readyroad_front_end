@@ -1,8 +1,8 @@
 "use client";
 
 import { Suspense } from "react";
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import Link from "@/components/localized-link";
+import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
   ClipboardList,
@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { useNotifications } from "@/contexts/notification-context";
 import { cn } from "@/lib/utils";
+import { useRoutePathname } from "@/hooks/use-route-pathname";
 
 interface NavItem {
   key: string;
@@ -128,7 +129,7 @@ function UserSidebarInner() {
   const { user, logout } = useAuth();
   const { t, isRTL } = useLanguage();
   const { unreadCount } = useNotifications();
-  const pathname = usePathname();
+  const pathname = useRoutePathname();
   const searchParams = useSearchParams();
   const currentSection = searchParams.get("section");
 

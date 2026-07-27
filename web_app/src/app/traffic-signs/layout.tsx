@@ -1,32 +1,30 @@
+import { getRequestLocale } from "@/lib/server/request-locale";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { STORAGE_KEYS } from "@/lib/constants";
 import { getTrafficSignsSeoCopy } from "@/lib/learning-seo-copy";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
   getOpenGraphLocale,
-  resolveSiteLocale,
 } from "@/lib/site-copy";
+import { buildLocalizedUrl } from "@/lib/i18n-routing";
+import { getLocalizedAlternates } from "@/lib/localized-seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  );
+  const locale = await getRequestLocale();
   const copy = getTrafficSignsSeoCopy(locale);
+  const canonical = buildLocalizedUrl("/traffic-signs", locale, APP_URL);
 
   return {
     title: copy.title,
     description: copy.description,
     keywords: copy.keywords,
-    alternates: { canonical: `${APP_URL}/traffic-signs` },
+    alternates: getLocalizedAlternates("/traffic-signs", locale, APP_URL),
     openGraph: {
       title: copy.openGraphTitle,
       description: copy.openGraphDescription,
-      url: `${APP_URL}/traffic-signs`,
+      url: canonical,
       siteName: "ReadyRoad",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),

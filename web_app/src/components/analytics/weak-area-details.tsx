@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { AlertTriangle, BookOpen, ClipboardList } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -160,7 +160,10 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
                     {t("analytics.your_progress")}
                   </span>
                   <span className="text-muted-foreground">
-                    {area.correctCount}/{area.totalCount} questions
+                    {area.correctCount}/
+                    {t("progress.stat_questions", {
+                      count: area.totalCount,
+                    })}
                   </span>
                 </div>
                 <Progress

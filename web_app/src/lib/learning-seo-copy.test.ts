@@ -56,6 +56,6 @@ describe("learning SEO copy", () => {
 
     expect(copy.name).toBe("الأولوية من اليمين");
     expect(copy.description).toBe("درس عربي");
-    expect(copy.title).toContain("نظرية القيادة البلجيكية");
+    expect(copy.title).toContain("قواعد السياقة البلجيكية");
   });
 });

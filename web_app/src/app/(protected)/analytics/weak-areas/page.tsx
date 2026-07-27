@@ -1,7 +1,8 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import {
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { toast } from "sonner";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import {
   PenLine,
   BookOpen,
@@ -272,7 +273,7 @@ export function WeakAreasPageContent() {
 }
 
 export default function WeakAreasPage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
 
   useEffect(() => {
     router.replace("/dashboard?section=weak-areas");

@@ -1,7 +1,8 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
@@ -29,7 +30,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { t, isRTL } = useLanguage();
 
   // Scenario: Redirect non-admin users away from admin routes

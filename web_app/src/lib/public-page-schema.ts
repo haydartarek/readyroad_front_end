@@ -1,4 +1,6 @@
 import type { FaqItem } from "@/lib/public-content";
+import { buildLocalizedUrl } from "@/lib/i18n-routing";
+import type { SiteLocale } from "@/lib/site-copy";
 
 export function createPublicPageSchema({
   appUrl,
@@ -12,10 +14,10 @@ export function createPublicPageSchema({
   path: string;
   title: string;
   description: string;
-  language: string;
+  language: SiteLocale;
   pageType?: "AboutPage" | "ContactPage" | "WebPage";
 }) {
-  const url = new URL(path, `${appUrl.replace(/\/+$/, "")}/`).toString();
+  const url = buildLocalizedUrl(path, language, appUrl);
 
   return {
     "@context": "https://schema.org",
@@ -35,14 +37,16 @@ export function createBreadcrumbSchema({
   path,
   homeLabel,
   currentLabel,
+  language,
 }: {
   appUrl: string;
   path: string;
   homeLabel: string;
   currentLabel: string;
+  language: SiteLocale;
 }) {
-  const rootUrl = `${appUrl.replace(/\/+$/, "")}/`;
-  const currentUrl = new URL(path, rootUrl).toString();
+  const rootUrl = buildLocalizedUrl("/", language, appUrl);
+  const currentUrl = buildLocalizedUrl(path, language, appUrl);
 
   return {
     "@context": "https://schema.org",

@@ -1,7 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
+import Link from "@/components/localized-link";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,7 +23,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function UnauthorizedPage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { t, isRTL } = useLanguage();
   const { logout } = useAuth();
 

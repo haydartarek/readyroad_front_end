@@ -60,7 +60,7 @@ const CONTACT_TEXT: Record<
     errors: {
       required: "جميع الحقول مطلوبة.",
       invalidEmail: "عنوان البريد الإلكتروني غير صالح.",
-      generic: "تعذر إرسال الرسالة. يرجى المحاولة مرة أخرى.",
+      generic: "تعذر إرسال الرسالة. حاول مرة أخرى.",
     },
     mail: {
       fromName: "تواصل ReadyRoad",

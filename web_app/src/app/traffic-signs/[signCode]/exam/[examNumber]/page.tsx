@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "next/navigation";
+import Link from "@/components/localized-link";
 import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
 import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
 import { SignImage } from "@/components/traffic-signs/sign-image";
@@ -86,7 +88,7 @@ export default function ExamPage() {
     signCode: string;
     examNumber: string;
   }>();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const examNum = Number(examNumber) as 1 | 2;
   const { t, language, isRTL } = useLanguage();
   const lang = language as Lang;

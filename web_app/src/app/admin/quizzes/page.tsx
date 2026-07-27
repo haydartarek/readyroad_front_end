@@ -1,9 +1,11 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import Image from "next/image";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useLanguage } from "@/contexts/language-context";
@@ -136,7 +138,7 @@ function DetailLang({
 
 export default function AdminQuizzesPage() {
   const { t, language } = useLanguage();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 

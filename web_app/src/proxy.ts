@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  getLocaleFromPathname,
+  localizePathname,
+} from "@/lib/i18n-routing";
+import { STORAGE_KEYS } from "@/lib/constants";
 
 const PROTECTED_ROUTES = [
   "/dashboard",
@@ -75,66 +80,143 @@ function matchesAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
 }
 
-function redirectTo(url: string, request: NextRequest): NextResponse {
-  return NextResponse.redirect(new URL(url, request.url));
+function redirectTo(
+  url: string,
+  request: NextRequest,
+  locale: "en" | "nl" | "fr" | "ar",
+  status: 307 | 308 = 307,
+): NextResponse {
+  const response = NextResponse.redirect(
+    new URL(localizePathname(url, locale), request.url),
+    status,
+  );
+  response.cookies.set(STORAGE_KEYS.LANGUAGE, locale, {
+    path: "/",
+    maxAge: 31_536_000,
+    sameSite: "lax",
+  });
+  return response;
 }
 
-function redirectToLogin(pathname: string, request: NextRequest): NextResponse {
-  const url = new URL("/login", request.url);
+function redirectToLogin(
+  pathname: string,
+  request: NextRequest,
+  locale: "en" | "nl" | "fr" | "ar",
+): NextResponse {
+  const url = new URL(localizePathname("/login", locale), request.url);
   url.searchParams.set("returnUrl", pathname);
-  return NextResponse.redirect(url);
+  const response = NextResponse.redirect(url);
+  response.cookies.set(STORAGE_KEYS.LANGUAGE, locale, {
+    path: "/",
+    maxAge: 31_536_000,
+    sameSite: "lax",
+  });
+  return response;
+}
+
+function withRouteLocale(
+  request: NextRequest,
+  locale: "en" | "nl" | "fr" | "ar",
+  pathname: string,
+  rewrite: boolean,
+): NextResponse {
+  const requestHeaders = new Headers(request.headers);
+  const cookieHeader = requestHeaders.get("cookie") ?? "";
+  const localeCookie = `${STORAGE_KEYS.LANGUAGE}=${locale}`;
+  const updatedCookieHeader = cookieHeader
+    .split(";")
+    .map((item) => item.trim())
+    .filter(
+      (item) =>
+        item.length > 0 &&
+        !item.startsWith(`${STORAGE_KEYS.LANGUAGE}=`),
+    );
+  updatedCookieHeader.push(localeCookie);
+  requestHeaders.set("cookie", updatedCookieHeader.join("; "));
+  requestHeaders.set("x-readyroad-locale", locale);
+  requestHeaders.set("x-readyroad-pathname", pathname);
+  requestHeaders.set("x-readyroad-routed", "1");
+
+  const response = rewrite
+    ? NextResponse.rewrite(new URL(pathname, request.url), {
+        request: { headers: requestHeaders },
+      })
+    : NextResponse.next({ request: { headers: requestHeaders } });
+  response.cookies.set(STORAGE_KEYS.LANGUAGE, locale, {
+    path: "/",
+    maxAge: 31_536_000,
+    sameSite: "lax",
+  });
+  return response;
 }
 
 export default function proxy(request: NextRequest) {
+  if (request.headers.get("x-readyroad-routed") === "1") {
+    return NextResponse.next();
+  }
+
   const rawToken = request.cookies.get("token")?.value;
   const hasValidToken = isValidTokenFormat(rawToken);
-  const { pathname } = request.nextUrl;
+  const browserPathname = request.nextUrl.pathname;
+  const route = getLocaleFromPathname(browserPathname);
+  const { locale, pathname } = route;
+
+  if (route.hasEnglishPrefix) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname;
+    const response = NextResponse.redirect(url, 308);
+    response.cookies.set(STORAGE_KEYS.LANGUAGE, "en", {
+      path: "/",
+      maxAge: 31_536_000,
+      sameSite: "lax",
+    });
+    return response;
+  }
 
   if (pathname === "/privacy") {
-    return NextResponse.redirect(new URL("/privacy-policy", request.url), 308);
+    return redirectTo("/privacy-policy", request, locale, 308);
   }
 
   if (pathname === "/assessment" || pathname.startsWith("/assessment/")) {
-    return redirectTo("/practice/random", request);
+    return redirectTo("/practice/random", request, locale);
   }
 
   if (rawToken && !hasValidToken) {
-    const response = NextResponse.next();
+    const response = withRouteLocale(
+      request,
+      locale,
+      pathname,
+      route.hasLocalePrefix,
+    );
     response.cookies.delete("token");
     return response;
   }
 
   if (matchesAny(pathname, ADMIN_ROUTES)) {
-    if (!hasValidToken) return redirectToLogin(pathname, request);
+    if (!hasValidToken) return redirectToLogin(browserPathname, request, locale);
     if (extractRole(rawToken) !== "ADMIN")
-      return redirectTo("/unauthorized", request);
-    return NextResponse.next();
+      return redirectTo("/unauthorized", request, locale);
+    return withRouteLocale(
+      request,
+      locale,
+      pathname,
+      route.hasLocalePrefix,
+    );
   }
 
   if (matchesAny(pathname, PROTECTED_ROUTES) && !hasValidToken) {
-    return redirectToLogin(pathname, request);
+    return redirectToLogin(browserPathname, request, locale);
   }
 
   if (matchesAny(pathname, AUTH_ROUTES) && hasValidToken) {
-    return redirectTo("/dashboard", request);
+    return redirectTo("/dashboard", request, locale);
   }
 
-  return NextResponse.next();
+  return withRouteLocale(request, locale, pathname, route.hasLocalePrefix);
 }
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/exam/:path*",
-    "/practice/:path*",
-    "/analytics/:path*",
-    "/profile/:path*",
-    "/assessment/:path*",
-    "/admin/:path*",
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/reset-password",
-    "/privacy",
+    "/((?!api|_next/static|_next/image|images|icons|favicon.ico|favicon-16x16.png|favicon-32x32.png|apple-touch-icon.png|manifest.json|opengraph-image|twitter-image).*)",
   ],
 };

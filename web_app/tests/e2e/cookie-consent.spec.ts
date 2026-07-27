@@ -214,7 +214,7 @@ test.describe("Milestone 5 cookie consent management", () => {
   }) => {
     await useAnonymousSession(page, "ar");
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/register");
+    await page.goto("/ar/register");
 
     const banner = page.getByRole("region", {
       name: "الموافقة على ملفات الارتباط",

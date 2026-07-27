@@ -1,7 +1,9 @@
 "use client";
+
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
 import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
 import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
@@ -138,7 +140,7 @@ function LoadingSpinner({ message }: { message: string }) {
 }
 
 export default function ExamQuestionsPage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const params = useParams();
   const { t, language } = useLanguage();
   const isRTL = language === "ar";
@@ -504,7 +506,7 @@ export default function ExamQuestionsPage() {
               <div className="relative h-40 w-full min-w-[250px] max-w-[430px] md:h-44">
                 <Image
                   src={questionImageUrl}
-                  alt="Question illustration"
+                  alt={t("practice.question_image_alt")}
                   fill
                   className="object-contain"
                   priority

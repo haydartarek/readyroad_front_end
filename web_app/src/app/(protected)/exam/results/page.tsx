@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
+
 import { useEffect, useState, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import Link from "@/components/localized-link";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
@@ -618,7 +620,7 @@ export function ExamResultsPageContent() {
                       {isLoadingThis || !detail ? (
                         <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground text-sm">
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Loading questions…
+                          {t("practice.loading")}
                         </div>
                       ) : (
                         <div className="p-5 space-y-4">
@@ -715,7 +717,7 @@ export function ExamResultsPageContent() {
                             </div>
                           ) : (
                             <p className="text-sm text-muted-foreground text-center py-4">
-                              No question details available for this exam.
+                              {t("exam.results_no_answers")}
                             </p>
                           )}
 
@@ -1399,7 +1401,7 @@ export function ExamResultsPageContent() {
 }
 
 export default function ExamResultsPage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
 
   useEffect(() => {
     router.replace("/dashboard?section=exam-results");

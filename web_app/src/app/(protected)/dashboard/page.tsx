@@ -17,7 +17,7 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import {
   Trophy,
   Target,

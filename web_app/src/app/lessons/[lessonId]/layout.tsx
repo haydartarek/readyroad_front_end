@@ -1,15 +1,15 @@
+import { getRequestLocale } from "@/lib/server/request-locale";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { STORAGE_KEYS } from "@/lib/constants";
 import { getLocalizedLessonSeo } from "@/lib/learning-seo-copy";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
   getOpenGraphLocale,
-  resolveSiteLocale,
 } from "@/lib/site-copy";
-import { buildAbsoluteUrl, serializeJsonLd, toMetadataDescription } from "@/lib/seo";
+import { buildAbsoluteUrl, toMetadataDescription } from "@/lib/seo";
 import { getPublicLesson } from "@/lib/server/public-catalog";
+import { buildLocalizedUrl } from "@/lib/i18n-routing";
+import { getLocalizedAlternates } from "@/lib/localized-seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -31,16 +31,11 @@ export async function generateMetadata({
     };
   }
 
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  );
+  const locale = await getRequestLocale();
   const copy = getLocalizedLessonSeo(lesson, locale);
 
-  const canonical = buildAbsoluteUrl(
-    `/lessons/${encodeURIComponent(lesson.lessonCode)}`,
-    APP_URL,
-  );
+  const routePath = `/lessons/${encodeURIComponent(lesson.lessonCode)}`;
+  const canonical = buildLocalizedUrl(routePath, locale, APP_URL);
   const description = toMetadataDescription(
     copy.description,
     copy.fallbackDescription,
@@ -51,7 +46,7 @@ export async function generateMetadata({
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical },
+    alternates: getLocalizedAlternates(routePath, locale, APP_URL),
     openGraph: {
       title,
       description,
@@ -76,77 +71,6 @@ export async function generateMetadata({
 
 export default async function LessonLayout({
   children,
-  params,
 }: LessonLayoutProps) {
-  const { lessonId } = await params;
-  const lesson = await getPublicLesson(lessonId);
-
-  if (!lesson) {
-    return children;
-  }
-
-  const cookieStore = await cookies();
-  const locale = resolveSiteLocale(
-    cookieStore.get(STORAGE_KEYS.LANGUAGE)?.value,
-  );
-  const copy = getLocalizedLessonSeo(lesson, locale);
-
-  const canonical = buildAbsoluteUrl(
-    `/lessons/${encodeURIComponent(lesson.lessonCode)}`,
-    APP_URL,
-  );
-  const schemas = [
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        {
-          "@type": "ListItem",
-          position: 1,
-          name: copy.homeLabel,
-          item: APP_URL,
-        },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: copy.indexLabel,
-          item: buildAbsoluteUrl("/lessons", APP_URL),
-        },
-        {
-          "@type": "ListItem",
-          position: 3,
-          name: copy.name,
-          item: canonical,
-        },
-      ],
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "LearningResource",
-      name: copy.name,
-      description: toMetadataDescription(
-        copy.description,
-        copy.fallbackDescription,
-      ),
-      url: canonical,
-      inLanguage: ["en", "nl", "fr", "ar"],
-      learningResourceType: copy.learningResourceType,
-      educationalUse: copy.educationalUse,
-      timeRequired: `PT${lesson.estimatedMinutes}M`,
-      isPartOf: { "@id": `${APP_URL}/#website` },
-    },
-  ];
-
-  return (
-    <>
-      {schemas.map((schema) => (
-        <script
-          key={schema["@type"]}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
-        />
-      ))}
-      {children}
-    </>
-  );
+  return children;
 }

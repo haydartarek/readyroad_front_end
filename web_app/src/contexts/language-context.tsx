@@ -15,6 +15,10 @@ import {
   isValidLanguage,
   readLanguageFromCookieString,
 } from "@/lib/messages";
+import {
+  getLocaleFromPathname,
+  localizePathname,
+} from "@/lib/i18n-routing";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -48,6 +52,12 @@ function readStoredLanguage(): Language | null {
   if (typeof window === "undefined") {
     return null;
   }
+
+  const routeLocale = getLocaleFromPathname(window.location.pathname).locale;
+  if (isValidLanguage(routeLocale)) {
+    return routeLocale;
+  }
+
   try {
     const stored =
       localStorage.getItem(STORAGE_KEY) ??
@@ -121,17 +131,31 @@ export function LanguageProvider({
 
   const setLanguage = useCallback(
     (lang: Language) => {
-      if (lang === language) return;
       try {
         localStorage.setItem(STORAGE_KEY, lang);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+        document.cookie = `${STORAGE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
       } catch {
         // Private browsing / storage quota — silently ignore
       }
+
       if (typeof window !== "undefined") {
+        const targetPathname = localizePathname(
+          window.location.pathname,
+          lang,
+        );
+        const target = `${targetPathname}${window.location.search}${window.location.hash}`;
+        const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+        if (target !== current) {
+          window.location.assign(target);
+          return;
+        }
+
         window.dispatchEvent(new Event(STORAGE_EVENT));
       }
     },
-    [language],
+    [],
   );
 
   const t = useCallback(
@@ -161,4 +185,10 @@ export function useLanguage(): LanguageContextType {
   if (!context)
     throw new Error("useLanguage must be used within a LanguageProvider");
   return context;
+}
+
+export function useOptionalLanguage(): Language {
+  return (
+    useContext(LanguageContext)?.language ?? (DEFAULT_LANGUAGE as Language)
+  );
 }

@@ -15,6 +15,7 @@ import { useLanguage } from "@/contexts/language-context";
 
 interface ErrorPattern {
   pattern: string;
+  patternKey: string;
   count: number;
   percentage: number;
   severity: "HIGH" | "MEDIUM" | "LOW";
@@ -74,7 +75,9 @@ export function ErrorSummary({
       high: patterns.filter((p) => p.severity === "HIGH").length,
       medium: patterns.filter((p) => p.severity === "MEDIUM").length,
       topCount: patterns[0]?.count ?? 0,
-      topLabel: patterns[0]?.pattern ?? t("error_patterns.metric_no_patterns"),
+      topLabel: patterns[0]?.patternKey
+        ? t(patterns[0].patternKey)
+        : t("error_patterns.metric_no_patterns"),
     }),
     [totalErrors, patterns, t],
   );

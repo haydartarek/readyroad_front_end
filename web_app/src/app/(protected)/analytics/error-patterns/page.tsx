@@ -37,10 +37,10 @@ import { useLanguage } from "@/contexts/language-context";
 interface ErrorPattern {
   pattern: string;
   patternKey: string;
+  descriptionKey: string;
   count: number;
   percentage: number;
   severity: "HIGH" | "MEDIUM" | "LOW";
-  description: string;
   affectedCategories: string[];
   recommendation: string;
   recommendationKey: string;
@@ -80,22 +80,18 @@ function formatPatternKey(patternType: string): string {
   return keys[patternType] ?? "error_patterns.pattern_sign_confusion";
 }
 
-function formatPatternFallback(patternType: string): string {
-  const names: Record<string, string> = {
-    SIGN_CONFUSION: "Sign Confusion",
-    SUPPLEMENTARY_IGNORED: "Supplementary Signs Ignored",
-    PRIORITY_MISUNDERSTANDING: "Priority & Right-of-Way",
-    SPEED_LIMIT_ERROR: "Speed Limit Errors",
-    ZONE_CONFUSION: "Zone Confusion",
-    RULE_OVERGENERALIZATION: "Rule Overgeneralization",
+function getDescriptionKey(patternType: string): string {
+  const keys: Record<string, string> = {
+    SIGN_CONFUSION: "error_patterns.desc_sign_confusion",
+    SUPPLEMENTARY_IGNORED: "error_patterns.desc_supplementary_ignored",
+    PRIORITY_MISUNDERSTANDING:
+      "error_patterns.desc_priority_misunderstanding",
+    SPEED_LIMIT_ERROR: "error_patterns.desc_speed_limit_error",
+    ZONE_CONFUSION: "error_patterns.desc_zone_confusion",
+    RULE_OVERGENERALIZATION:
+      "error_patterns.desc_rule_overgeneralization",
   };
-  return (
-    names[patternType] ??
-    patternType
-      .replace(/_/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (c) => c.toUpperCase())
-  );
+  return keys[patternType] ?? "error_patterns.desc_default";
 }
 
 function getRecommendationKey(patternType: string): string {
@@ -123,12 +119,12 @@ function transformBackendPatterns(raw: BackendPattern[]): AnalyticsData {
   const totalErrors = active.reduce((sum, p) => sum + (p.count ?? 0), 0);
 
   const patterns: ErrorPattern[] = active.map((p) => ({
-    pattern: formatPatternFallback(p.patternType),
+    pattern: p.patternType,
     patternKey: formatPatternKey(p.patternType),
+    descriptionKey: getDescriptionKey(p.patternType),
     count: p.count,
     percentage: p.percentage ?? 0,
     severity: computeSeverity(p.percentage ?? 0),
-    description: p.description ?? "",
     affectedCategories: [
       ...new Set(
         (p.exampleQuestions ?? [])

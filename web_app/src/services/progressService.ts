@@ -1,4 +1,4 @@
-import { apiClient, isServiceUnavailable } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import {
   getPracticeHistory,
@@ -172,10 +172,39 @@ const OVERALL_FALLBACK: OverallProgress = {
   weakSigns: [],
 };
 
-const BY_CATEGORY_FALLBACK: ProgressByCategory = {
-  categories: [],
-  overallAccuracy: 0,
-};
+const REQUIRED_OVERALL_NUMERIC_FIELDS = [
+  "totalAttempted",
+  "totalCorrect",
+  "overallAccuracy",
+  "studyStreak",
+  "questionsRemaining",
+  "totalExamsTaken",
+  "passedExams",
+  "failedExams",
+  "passRate",
+  "signPracticeCount",
+  "signExamCount",
+  "signPassedCount",
+  "signRandomExamCount",
+  "signRandomExamPassedCount",
+  "lessonsStartedCount",
+  "lessonsCompletedCount",
+  "incompleteActivitiesCount",
+  "activeTheoryExamCount",
+  "incompleteSignPracticeCount",
+  "activeRandomSignExamCount",
+] as const;
+
+function assertOverallProgressContract(data: OverallProgress): void {
+  const values = data as unknown as Record<string, unknown>;
+  const missingField = REQUIRED_OVERALL_NUMERIC_FIELDS.find(
+    (field) => typeof values[field] !== "number",
+  );
+
+  if (missingField) {
+    throw new Error(`Overall progress response is missing ${missingField}`);
+  }
+}
 
 function normalizeCategoryProgress(
   item: Partial<CategoryProgress>,
@@ -223,90 +252,70 @@ function computeOverallCategoryAccuracy(
 
 /** GET /api/users/me/progress/overall */
 export async function getOverallProgress(): Promise<OverallProgress> {
-  try {
-    const response = await apiClient.get<OverallProgress>(ENDPOINTS.OVERALL);
-    const data = response.data ?? {};
-
-    // Normalise: add backward-compat aliases so older UI code still works
-    return {
-      ...OVERALL_FALLBACK, // fill any missing optional fields with safe defaults
-      ...data,
-      totalAttempted: data.totalAttempted ?? 0,
-      totalAttempts: data.totalAttempted ?? 0, // alias
-      totalCorrect: data.totalCorrect ?? 0,
-      correctAnswers: data.totalCorrect ?? 0, // alias
-      overallAccuracy: data.overallAccuracy ?? 0,
-      studyStreak: data.studyStreak ?? 0,
-      lastActivityDate: data.lastActivityDate ?? null,
-      totalExamsTaken: data.totalExamsTaken ?? 0,
-      passedExams: data.passedExams ?? 0,
-      failedExams: data.failedExams ?? 0,
-      passRate: data.passRate ?? 0,
-      signPracticeCount: data.signPracticeCount ?? 0,
-      signExamCount: data.signExamCount ?? 0,
-      signPassedCount: data.signPassedCount ?? 0,
-      signRandomExamCount: data.signRandomExamCount ?? 0,
-      signRandomExamPassedCount: data.signRandomExamPassedCount ?? 0,
-      lessonsStartedCount: data.lessonsStartedCount ?? 0,
-      lessonsCompletedCount: data.lessonsCompletedCount ?? 0,
-      incompleteActivitiesCount: data.incompleteActivitiesCount ?? 0,
-      activeTheoryExamCount: data.activeTheoryExamCount ?? 0,
-      incompleteSignPracticeCount: data.incompleteSignPracticeCount ?? 0,
-      activeRandomSignExamCount: data.activeRandomSignExamCount ?? 0,
-      weakSigns: Array.isArray(data.weakSigns) ? data.weakSigns : [],
-      weakCategories: Array.isArray(data.weakCategories)
-        ? data.weakCategories
-        : [],
-      strongCategories: Array.isArray(data.strongCategories)
-        ? data.strongCategories
-        : [],
-      mostStudiedCategories: Array.isArray(data.mostStudiedCategories)
-        ? data.mostStudiedCategories
-        : [],
-    };
-  } catch (error) {
-    if (isServiceUnavailable(error)) throw error;
-    return OVERALL_FALLBACK;
+  const response = await apiClient.get<OverallProgress>(ENDPOINTS.OVERALL);
+  const data = response.data;
+  if (!data || typeof data !== "object") {
+    throw new Error("Overall progress response is missing");
   }
+  assertOverallProgressContract(data);
+
+  // Preserve aliases used by older components, but never replace a failed
+  // request with a synthetic all-zero dashboard.
+  return {
+    ...OVERALL_FALLBACK,
+    ...data,
+    totalAttempted: data.totalAttempted,
+    totalAttempts: data.totalAttempted,
+    totalCorrect: data.totalCorrect,
+    correctAnswers: data.totalCorrect,
+    overallAccuracy: data.overallAccuracy,
+    studyStreak: data.studyStreak,
+    lastActivityDate: data.lastActivityDate,
+    weakSigns: Array.isArray(data.weakSigns) ? data.weakSigns : [],
+    weakCategories: Array.isArray(data.weakCategories)
+      ? data.weakCategories
+      : [],
+    strongCategories: Array.isArray(data.strongCategories)
+      ? data.strongCategories
+      : [],
+    mostStudiedCategories: Array.isArray(data.mostStudiedCategories)
+      ? data.mostStudiedCategories
+      : [],
+  };
 }
 
 /** GET /api/users/me/progress/categories */
 export async function getProgressByCategory(): Promise<ProgressByCategory> {
-  try {
-    const response = await apiClient.get<
-      CategoryProgress[] | ProgressByCategory
-    >(ENDPOINTS.BY_CATEGORY);
-    const payload = response.data;
+  const response = await apiClient.get<
+    CategoryProgress[] | ProgressByCategory
+  >(ENDPOINTS.BY_CATEGORY);
+  const payload = response.data;
 
-    const categories = Array.isArray(payload)
-      ? payload.map(normalizeCategoryProgress)
-      : Array.isArray(payload?.categories)
-        ? payload.categories.map(normalizeCategoryProgress)
-        : [];
-
-    return {
-      categories,
-      overallAccuracy: Array.isArray(payload)
-        ? computeOverallCategoryAccuracy(categories)
-        : (payload?.overallAccuracy ??
-          computeOverallCategoryAccuracy(categories)),
-    };
-  } catch (error) {
-    if (isServiceUnavailable(error)) throw error;
-    return BY_CATEGORY_FALLBACK;
+  if (!Array.isArray(payload) && !Array.isArray(payload?.categories)) {
+    throw new Error("Category progress response is invalid");
   }
+
+  const categories = Array.isArray(payload)
+    ? payload.map(normalizeCategoryProgress)
+    : payload.categories.map(normalizeCategoryProgress);
+
+  return {
+    categories,
+    overallAccuracy: Array.isArray(payload)
+      ? computeOverallCategoryAccuracy(categories)
+      : (payload.overallAccuracy ?? computeOverallCategoryAccuracy(categories)),
+  };
 }
 
 /** Returns recent exam activity from persisted exam history */
 export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
-  try {
-    const [
-      officialResult,
-      activeExamResult,
-      randomResult,
-      signExamResult,
-      signPracticeResult,
-    ] = await Promise.allSettled([
+  const [
+    officialResult,
+    activeExamResult,
+    randomResult,
+    signExamResult,
+    signPracticeResult,
+  ] = await Promise.all([
       apiClient.get<{
         totalExams?: number;
         exams?: Array<{
@@ -334,31 +343,13 @@ export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
       getPracticeHistory(),
     ]);
 
-    const officialExams =
-      officialResult.status === "fulfilled"
-        ? (officialResult.value.data.exams ?? [])
-        : [];
-
-    const randomSessions =
-      randomResult.status === "fulfilled"
-        ? (randomResult.value.sessions ?? [])
-        : [];
-
-    const signExamSessions =
-      signExamResult.status === "fulfilled"
-        ? (signExamResult.value.results ?? [])
-        : [];
-
-    const signPracticeSessions =
-      signPracticeResult.status === "fulfilled"
-        ? (signPracticeResult.value.sessions ?? [])
-        : [];
-
-    const activeExam =
-      activeExamResult.status === "fulfilled" &&
-      activeExamResult.value.data.hasActiveExam
-        ? activeExamResult.value.data.activeExam
-        : null;
+  const officialExams = officialResult.data.exams ?? [];
+  const randomSessions = randomResult.sessions ?? [];
+  const signExamSessions = signExamResult.results ?? [];
+  const signPracticeSessions = signPracticeResult.sessions ?? [];
+  const activeExam = activeExamResult.data.hasActiveExam
+    ? activeExamResult.data.activeExam
+    : null;
 
     const officialExamActivity: RecentActivity[] = officialExams.map(
       (exam) => ({
@@ -458,17 +449,13 @@ export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
       }),
     );
 
-    return [
-      ...activeTheoryExamActivity,
-      ...officialExamActivity,
-      ...randomSignExamActivity,
-      ...signSpecificExamActivity,
-      ...signPracticeActivity,
-    ]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, limit);
-  } catch (error) {
-    if (isServiceUnavailable(error)) throw error;
-    return [];
-  }
+  return [
+    ...activeTheoryExamActivity,
+    ...officialExamActivity,
+    ...randomSignExamActivity,
+    ...signSpecificExamActivity,
+    ...signPracticeActivity,
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, limit);
 }

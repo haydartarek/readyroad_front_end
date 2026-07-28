@@ -69,7 +69,7 @@ interface BackendExamData {
   questions: BackendQuestion[];
 }
 
-function normalizeExamData(backendData: BackendExamData): ExamData {
+export function normalizeExamData(backendData: BackendExamData): ExamData {
   return {
     id: backendData.examId,
     createdAt:

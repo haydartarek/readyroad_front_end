@@ -1,4 +1,4 @@
-import { apiClient, isServiceUnavailable } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -66,13 +66,6 @@ interface WeakAreasOverviewResponse {
 
 const WEAK_AREAS_ENDPOINT = "/users/me/analytics/weak-areas";
 
-const WEAK_AREAS_FALLBACK: WeakAreasData = {
-  weakAreas: [],
-  overallAccuracy: 0,
-  totalCategories: 0,
-  recommendations: [],
-};
-
 // ─── Helpers ─────────────────────────────────────────────
 
 /**
@@ -87,7 +80,7 @@ const WEAK_AREAS_FALLBACK: WeakAreasData = {
  */
 function transformWeakAreas(backend: WeakAreasOverviewResponse): WeakAreasData {
   if (!backend || !Array.isArray(backend.weakAreas)) {
-    return WEAK_AREAS_FALLBACK;
+    throw new Error("Weak areas response is invalid");
   }
 
   const weakAreas: WeakArea[] = backend.weakAreas.map((item) => ({
@@ -128,13 +121,8 @@ function transformWeakAreas(backend: WeakAreasOverviewResponse): WeakAreasData {
  * Frontend expects: WeakAreasData { weakAreas[], overallAccuracy, totalCategories }
  */
 export async function getWeakAreas(): Promise<WeakAreasData> {
-  try {
-    const response = await apiClient.get<WeakAreasOverviewResponse>(
-      WEAK_AREAS_ENDPOINT,
-    );
-    return transformWeakAreas(response.data);
-  } catch (error) {
-    if (isServiceUnavailable(error)) throw error;
-    return WEAK_AREAS_FALLBACK;
-  }
+  const response = await apiClient.get<WeakAreasOverviewResponse>(
+    WEAK_AREAS_ENDPOINT,
+  );
+  return transformWeakAreas(response.data);
 }

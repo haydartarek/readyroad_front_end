@@ -14,6 +14,7 @@ import {
 } from "@/services";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import { StatusScreen } from "@/components/ui/status-screen";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ import {
   Zap,
   CheckCircle,
   Clock3,
+  AlertTriangle,
 } from "lucide-react";
 import type {
   CategoryProgressSummary,
@@ -580,6 +582,7 @@ function DashboardHome() {
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
 
   // Reset all dashboard state when the user changes (login / logout).
@@ -592,6 +595,8 @@ function DashboardHome() {
     setWeakAreas([]);
     setRecentActivities([]);
     setCategoryProgress([]);
+    setServiceUnavailable(false);
+    setLoadError(false);
   }, [currentUserId]);
 
   useEffect(() => {
@@ -601,6 +606,8 @@ function DashboardHome() {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
+        setServiceUnavailable(false);
+        setLoadError(false);
 
         // Fetch all data in parallel
         const [
@@ -697,6 +704,8 @@ function DashboardHome() {
         logApiError("Failed to fetch dashboard data", error);
         if (isServiceUnavailable(error)) {
           setServiceUnavailable(true);
+        } else {
+          setLoadError(true);
         }
       } finally {
         setIsLoading(false);
@@ -733,18 +742,40 @@ function DashboardHome() {
     );
   }
 
+  if (serviceUnavailable) {
+    return (
+      <div className="flex min-h-[calc(100vh-160px)] items-center justify-center p-6">
+        <ServiceUnavailableBanner
+          onRetry={() => setFetchKey((key) => key + 1)}
+          className="max-w-lg"
+        />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <StatusScreen
+        badge={t("common.error_badge")}
+        title={t("common.error_title")}
+        description={t("common.error_desc")}
+        icon={<AlertTriangle className="h-9 w-9" />}
+        dir={language === "ar" ? "rtl" : "ltr"}
+        fullscreen={false}
+        primaryAction={{
+          label: t("common.retry"),
+          onClick: () => setFetchKey((key) => key + 1),
+        }}
+        secondaryAction={{
+          label: t("common.go_home"),
+          href: "/",
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-8 p-6">
-      {serviceUnavailable && (
-        <ServiceUnavailableBanner
-          onRetry={() => {
-            setServiceUnavailable(false);
-            setFetchKey((k) => k + 1);
-          }}
-          className="mb-2"
-        />
-      )}
-
       {/* Welcome Header */}
       <GreetingHeader
         name={`${t("dashboard.welcome_back")} ${firstName}`}

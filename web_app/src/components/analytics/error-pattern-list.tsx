@@ -24,10 +24,10 @@ import { useLanguage } from "@/contexts/language-context";
 interface ErrorPattern {
   pattern: string;
   patternKey: string;
+  descriptionKey: string;
   count: number;
   percentage: number;
   severity: "HIGH" | "MEDIUM" | "LOW";
-  description: string;
   affectedCategories: string[];
   recommendation: string;
   recommendationKey: string;
@@ -141,7 +141,7 @@ export function ErrorPatternList({ patterns }: { patterns: ErrorPattern[] }) {
                     {t(pattern.patternKey)}
                   </CardTitle>
                   <p className="text-sm font-medium text-muted-foreground">
-                    {pattern.description}
+                    {t(pattern.descriptionKey)}
                   </p>
                 </div>
 

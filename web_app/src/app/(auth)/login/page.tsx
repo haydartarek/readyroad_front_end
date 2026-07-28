@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { PageLoading } from "@/components/ui/page-loading";
 import { ROUTES } from "@/lib/constants";
+import { localizeHref } from "@/lib/i18n-routing";
 import { AuthPageFrame } from "@/components/auth/auth-page-frame";
 import { AuthShowcasePanel } from "@/components/auth/auth-showcase-panel";
 import { cn } from "@/lib/utils";
@@ -41,8 +42,11 @@ function validateReturnUrl(returnUrl: string | null): string | undefined {
 
 function LoginForm() {
   const { login } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const searchParams = useSearchParams();
+  const validatedReturnUrl = validateReturnUrl(searchParams.get("returnUrl"));
+  const postAuthTarget =
+    validatedReturnUrl ?? localizeHref(ROUTES.DASHBOARD, language);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
@@ -93,9 +97,7 @@ function LoginForm() {
     setInvalidFields(new Set());
 
     setIsLoading(true);
-    const returnUrl = searchParams.get("returnUrl");
-    const validatedReturnUrl = validateReturnUrl(returnUrl);
-    const result = await login(formData, validatedReturnUrl);
+    const result = await login(formData, postAuthTarget);
     setIsLoading(false);
 
     if (!result.success) {
@@ -310,7 +312,11 @@ function LoginForm() {
           </Link>
         </div>
 
-        <GoogleAuthButton mode="login" label={t("auth.continue_with_google")} />
+        <GoogleAuthButton
+          mode="login"
+          returnTo={postAuthTarget}
+          label={t("auth.continue_with_google")}
+        />
 
         <div className="relative py-1">
           <div className="absolute inset-0 flex items-center">

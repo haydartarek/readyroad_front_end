@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { LANGUAGES, STORAGE_KEYS, type Language } from "@/lib/constants";
+import { localizeHref } from "@/lib/i18n-routing";
 import {
   AUTH_COOKIE_NAME,
   CSRF_COOKIE_NAME,
@@ -37,6 +39,13 @@ function isValidReturnTo(value: string | null | undefined): value is string {
   return !!value && value.startsWith("/") && !value.startsWith("//");
 }
 
+function getRequestLanguage(request: NextRequest): Language {
+  const value = request.cookies.get(STORAGE_KEYS.LANGUAGE)?.value;
+  return LANGUAGES.some((language) => language.code === value)
+    ? (value as Language)
+    : "en";
+}
+
 function normalizeBackendError(errorCode: string | undefined) {
   return errorCode?.toLowerCase() ?? "unknown_error";
 }
@@ -49,21 +58,24 @@ function buildRedirectUrl(
   returnTo?: string | null,
 ) {
   const frontendUrl = getFrontendUrl(request);
-  const fallback =
+  const language = getRequestLanguage(request);
+  const fallback = localizeHref(
     mode === "register"
       ? "/register"
       : mode === "link"
         ? "/dashboard?section=profile"
-        : "/login";
+        : "/login",
+    language,
+  );
 
   const successTarget =
     mode === "link"
       ? isValidReturnTo(returnTo)
         ? returnTo
-        : "/dashboard?section=profile"
+        : localizeHref("/dashboard?section=profile", language)
       : isValidReturnTo(returnTo)
         ? returnTo
-        : "/dashboard";
+        : localizeHref("/dashboard", language);
 
   const target = type === "success" ? successTarget : fallback;
   const redirectUrl = new URL(target, frontendUrl);

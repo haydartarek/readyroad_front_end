@@ -4,6 +4,7 @@ import {
   getLocaleFromPathname,
   localizeHref,
   localizePathname,
+  resolveRouteLocale,
 } from "@/lib/i18n-routing";
 
 describe("multilingual routing", () => {
@@ -30,6 +31,17 @@ describe("multilingual routing", () => {
     expect(localizeHref("/lessons/les-19/2?from=lesson#rule", "nl")).toBe(
       "/nl/lessons/les-19/2?from=lesson#rule",
     );
+  });
+
+  it("uses an explicit URL locale before a persisted preference", () => {
+    expect(resolveRouteLocale("/fr/lessons/les-19/2", "ar")).toBe("fr");
+    expect(resolveRouteLocale("/en/dashboard", "nl")).toBe("en");
+  });
+
+  it("restores a persisted locale for an unprefixed route", () => {
+    expect(resolveRouteLocale("/dashboard", "ar")).toBe("ar");
+    expect(resolveRouteLocale("/lessons/les-19/2", "nl")).toBe("nl");
+    expect(resolveRouteLocale("/login", "unsupported")).toBe("en");
   });
 
   it("builds reciprocal hreflang URLs with English as x-default", () => {

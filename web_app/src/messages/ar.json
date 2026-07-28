@@ -2,6 +2,7 @@
   "app.name": "ReadyRoad",
   "app.tagline": "استعد للحصول على رخصة السياقة البلجيكية",
   "common.service_unavailable": "الخدمة غير متاحة مؤقتًا. يُرجى المحاولة لاحقًا.",
+  "common.not_available": "غير متوفر",
   "common.retry": "إعادة المحاولة",
   "common.load_error": "تعذر تحميل البيانات.",
   "common.loading": "جارٍ التحميل…",

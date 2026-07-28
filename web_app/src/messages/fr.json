@@ -2,6 +2,7 @@
   "app.name": "ReadyRoad",
   "app.tagline": "Maîtrisez Votre Permis de Conduire Belge",
   "common.service_unavailable": "Service temporairement indisponible. Veuillez réessayer plus tard.",
+  "common.not_available": "Non disponible",
   "common.retry": "Réessayer",
   "common.load_error": "Impossible de charger les données.",
   "common.loading": "Chargement...",

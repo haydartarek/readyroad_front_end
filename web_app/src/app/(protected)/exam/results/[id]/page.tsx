@@ -11,6 +11,10 @@ import { PageHeroTitle } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import {
+  formatExamDuration,
+  localizeExamText,
+} from "@/lib/exam-results-presentation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -54,9 +58,21 @@ interface BackendIncorrectQuestion {
   questionTextFr: string;
   selectedOptionId: number;
   selectedOptionText: string | null;
+  selectedOptionTextEn?: string | null;
+  selectedOptionTextAr?: string | null;
+  selectedOptionTextNl?: string | null;
+  selectedOptionTextFr?: string | null;
   correctOptionId: number;
   correctOptionText: string | null;
+  correctOptionTextEn?: string | null;
+  correctOptionTextAr?: string | null;
+  correctOptionTextNl?: string | null;
+  correctOptionTextFr?: string | null;
   categoryName: string;
+  categoryNameEn?: string | null;
+  categoryNameAr?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
   categoryCode: string;
   contentImageUrl?: string;
 }
@@ -68,8 +84,20 @@ interface AllAnsweredQuestion {
   questionTextNl: string;
   questionTextFr: string;
   selectedOptionText: string | null;
+  selectedOptionTextEn?: string | null;
+  selectedOptionTextAr?: string | null;
+  selectedOptionTextNl?: string | null;
+  selectedOptionTextFr?: string | null;
   correctOptionText: string | null;
+  correctOptionTextEn?: string | null;
+  correctOptionTextAr?: string | null;
+  correctOptionTextNl?: string | null;
+  correctOptionTextFr?: string | null;
   categoryName: string;
+  categoryNameEn?: string | null;
+  categoryNameAr?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
   categoryCode: string;
   contentImageUrl?: string;
   isCorrect: boolean;
@@ -87,8 +115,8 @@ interface ExamResults {
   passingScore: number;
   passingThreshold: number;
   pointsToPass: number;
-  timeTakenSeconds: number;
-  averageTimePerQuestion: number;
+  timeTakenSeconds: number | null;
+  averageTimePerQuestion: number | null;
   answeredCount: number;
   unansweredCount: number;
   weakCategories: string[];
@@ -104,8 +132,20 @@ interface ReviewAnswer {
   questionTextNl: string;
   questionTextFr: string;
   selectedOptionText: string | null;
+  selectedOptionTextEn?: string | null;
+  selectedOptionTextAr?: string | null;
+  selectedOptionTextNl?: string | null;
+  selectedOptionTextFr?: string | null;
   correctOptionText: string | null;
+  correctOptionTextEn?: string | null;
+  correctOptionTextAr?: string | null;
+  correctOptionTextNl?: string | null;
+  correctOptionTextFr?: string | null;
   categoryName: string;
+  categoryNameEn?: string | null;
+  categoryNameAr?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
   categoryCode: string;
   contentImageUrl?: string;
   isCorrect: boolean;
@@ -137,21 +177,6 @@ function LoadingSpinner({
   );
 }
 
-function formatDuration(totalSeconds: number): string {
-  const safeSeconds = Number.isFinite(totalSeconds)
-    ? Math.max(0, totalSeconds)
-    : 0;
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
-  const seconds = safeSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  }
-
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
 export default function ExamResultsPage() {
   const params = useParams();
   const { t, language } = useLanguage();
@@ -163,16 +188,7 @@ export default function ExamResultsPage() {
     nl?: string | null,
     fr?: string | null,
   ): string => {
-    switch (language) {
-      case "ar":
-        return ar || en || "";
-      case "nl":
-        return nl || en || "";
-      case "fr":
-        return fr || en || "";
-      default:
-        return en || "";
-    }
+    return localizeExamText(language, { en, ar, nl, fr });
   };
 
   const paramIdRaw = (params as Record<string, string | string[] | undefined>)
@@ -300,12 +316,9 @@ export default function ExamResultsPage() {
   const unansweredCount = Number.isFinite(results.unansweredCount)
     ? results.unansweredCount
     : 0;
-  const averagePerQuestion = formatDuration(
-    Math.round(
-      Number.isFinite(results.averageTimePerQuestion)
-        ? results.averageTimePerQuestion
-        : 0,
-    ),
+  const totalTime = formatExamDuration(results.timeTakenSeconds);
+  const averagePerQuestion = formatExamDuration(
+    results.averageTimePerQuestion,
   );
 
   const allAnswers: ReviewAnswer[] =
@@ -318,8 +331,20 @@ export default function ExamResultsPage() {
           questionTextNl: question.questionTextNl,
           questionTextFr: question.questionTextFr,
           selectedOptionText: question.selectedOptionText,
+          selectedOptionTextEn: question.selectedOptionTextEn,
+          selectedOptionTextAr: question.selectedOptionTextAr,
+          selectedOptionTextNl: question.selectedOptionTextNl,
+          selectedOptionTextFr: question.selectedOptionTextFr,
           correctOptionText: question.correctOptionText,
+          correctOptionTextEn: question.correctOptionTextEn,
+          correctOptionTextAr: question.correctOptionTextAr,
+          correctOptionTextNl: question.correctOptionTextNl,
+          correctOptionTextFr: question.correctOptionTextFr,
           categoryName: question.categoryName,
+          categoryNameEn: question.categoryNameEn,
+          categoryNameAr: question.categoryNameAr,
+          categoryNameNl: question.categoryNameNl,
+          categoryNameFr: question.categoryNameFr,
           categoryCode: question.categoryCode,
           contentImageUrl: question.contentImageUrl,
           isCorrect: false,
@@ -579,11 +604,15 @@ export default function ExamResultsPage() {
                             {category.displayName}
                           </p>
                         </div>
-                        <div className="text-end text-xs font-semibold text-muted-foreground">
+                        <div
+                          dir="ltr"
+                          className="inline-flex items-center gap-1.5 text-end text-xs font-semibold tabular-nums text-muted-foreground"
+                        >
                           <span>
                             {category.correctAnswers}/{category.totalQuestions}
                           </span>
-                          <span className="ms-2">
+                          <span aria-hidden="true">·</span>
+                          <span>
                             {Math.round(category.accuracyPercentage)}%
                           </span>
                         </div>
@@ -635,12 +664,12 @@ export default function ExamResultsPage() {
                   {
                     icon: <Clock className="h-4 w-4 text-orange-500" />,
                     label: t("exam.results_total_time"),
-                    value: formatDuration(results.timeTakenSeconds),
+                    value: totalTime ?? t("common.not_available"),
                   },
                   {
                     icon: <Timer className="h-4 w-4 text-primary" />,
                     label: t("exam.results_average_time"),
-                    value: averagePerQuestion,
+                    value: averagePerQuestion ?? t("common.not_available"),
                   },
                   {
                     icon: <ClipboardList className="h-4 w-4 text-green-500" />,
@@ -763,6 +792,24 @@ function ExamReviewCard({
     answer.questionTextNl,
     answer.questionTextFr,
   );
+  const selectedOptionText = localize(
+    answer.selectedOptionTextEn ?? answer.selectedOptionText,
+    answer.selectedOptionTextAr,
+    answer.selectedOptionTextNl,
+    answer.selectedOptionTextFr,
+  );
+  const correctOptionText = localize(
+    answer.correctOptionTextEn ?? answer.correctOptionText,
+    answer.correctOptionTextAr,
+    answer.correctOptionTextNl,
+    answer.correctOptionTextFr,
+  );
+  const categoryName = localize(
+    answer.categoryNameEn ?? answer.categoryName,
+    answer.categoryNameAr,
+    answer.categoryNameNl,
+    answer.categoryNameFr,
+  );
 
   const statusConfig = answer.isCorrect
     ? {
@@ -801,7 +848,7 @@ function ExamReviewCard({
               statusConfig.badge,
             )}
           >
-            {answer.categoryName}
+            {categoryName}
           </span>
         </div>
 
@@ -838,7 +885,7 @@ function ExamReviewCard({
                 answer.isCorrect ? "text-green-600" : "text-red-500",
               )}
             >
-              {answer.selectedOptionText || "—"}
+              {selectedOptionText || "—"}
             </span>
           </div>
 
@@ -848,13 +895,13 @@ function ExamReviewCard({
                 {t("exam.correct_answer")}
               </span>
               <span className="text-sm font-bold text-green-600">
-                {answer.correctOptionText || "—"}
+                {correctOptionText || "—"}
               </span>
             </div>
           )}
         </div>
 
-        {!answer.isCorrect && answer.correctOptionText && (
+        {!answer.isCorrect && correctOptionText && (
           <>
             <button
               onClick={() => setExpanded((current) => !current)}
@@ -872,7 +919,7 @@ function ExamReviewCard({
 
             {expanded && (
               <div className="space-y-2">
-                {answer.correctOptionText && (
+                {correctOptionText && (
                   <div className="flex items-start gap-2.5 rounded-xl border border-green-500/20 bg-green-500/10 px-3 py-2.5">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
                     <div className="min-w-0">
@@ -880,7 +927,7 @@ function ExamReviewCard({
                         {t("practice_exam.review_correct_answer")}
                       </p>
                       <p className="text-sm font-medium text-green-800">
-                        {answer.correctOptionText}
+                        {correctOptionText}
                       </p>
                     </div>
                   </div>

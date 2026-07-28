@@ -18,6 +18,7 @@ import {
 import {
   getLocaleFromPathname,
   localizePathname,
+  resolveRouteLocale,
 } from "@/lib/i18n-routing";
 
 // ─── Types ───────────────────────────────────────────────
@@ -53,20 +54,31 @@ function readStoredLanguage(): Language | null {
     return null;
   }
 
-  const routeLocale = getLocaleFromPathname(window.location.pathname).locale;
-  if (isValidLanguage(routeLocale)) {
-    return routeLocale;
+  const route = getLocaleFromPathname(window.location.pathname);
+  if (
+    (route.hasLocalePrefix || route.hasEnglishPrefix) &&
+    isValidLanguage(route.locale)
+  ) {
+    return route.locale;
   }
 
   try {
+    const cookieLanguage = readLanguageFromCookie();
+    if (cookieLanguage) {
+      return resolveRouteLocale(
+        window.location.pathname,
+        cookieLanguage,
+      ) as Language;
+    }
+
     const stored =
       localStorage.getItem(STORAGE_KEY) ??
       localStorage.getItem(LEGACY_STORAGE_KEY);
     if (stored && isValidLanguage(stored)) {
-      return stored;
+      return resolveRouteLocale(window.location.pathname, stored) as Language;
     }
 
-    return readLanguageFromCookie();
+    return null;
   } catch {
     return readLanguageFromCookie(); // SSR / private browsing guard
   }

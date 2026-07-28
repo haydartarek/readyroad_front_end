@@ -2,6 +2,7 @@
   "app.name": "ReadyRoad",
   "app.tagline": "Beheers je Belgisch Rijbewijs",
   "common.service_unavailable": "Service tijdelijk niet beschikbaar. Probeer het later opnieuw.",
+  "common.not_available": "Niet beschikbaar",
   "common.retry": "Opnieuw proberen",
   "common.load_error": "Gegevens konden niet worden geladen.",
   "common.loading": "Laden...",

@@ -2,6 +2,7 @@
   "app.name": "ReadyRoad",
   "app.tagline": "Master Your Belgian Driving License",
   "common.service_unavailable": "Service temporarily unavailable. Please try again later.",
+  "common.not_available": "Not available",
   "common.retry": "Retry",
   "common.load_error": "Failed to load data.",
   "common.loading": "Loading...",

@@ -1,5 +1,7 @@
 import { createHash, randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { LANGUAGES, STORAGE_KEYS, type Language } from "@/lib/constants";
+import { localizeHref } from "@/lib/i18n-routing";
 import { getFrontendUrl, shouldUseSecureCookies } from "@/lib/server/auth";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -31,15 +33,26 @@ function isValidReturnTo(value: string | null): value is string {
   return !!value && value.startsWith("/") && !value.startsWith("//");
 }
 
+function getRequestLanguage(request: NextRequest): Language {
+  const value = request.cookies.get(STORAGE_KEYS.LANGUAGE)?.value;
+  return LANGUAGES.some((language) => language.code === value)
+    ? (value as Language)
+    : "en";
+}
+
 export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID ?? "";
   const url = new URL(request.url);
   const frontendUrl = getFrontendUrl(request);
   const mode = url.searchParams.get("mode") ?? "login";
   const returnTo = url.searchParams.get("returnTo");
+  const language = getRequestLanguage(request);
 
   if (!clientId) {
-    const fallback = mode === "register" ? "/register" : "/login";
+    const fallback = localizeHref(
+      mode === "register" ? "/register" : "/login",
+      language,
+    );
     return NextResponse.redirect(
       new URL(
         `${fallback}?authProvider=google&authError=unavailable`,

@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { AuthSuccessModal } from "@/components/ui/auth-success-modal";
 import { LogoutModal } from "@/components/ui/logout-modal";
 import { ROUTES } from "@/lib/constants";
+import { localizeHref } from "@/lib/i18n-routing";
 import { type User, type LoginRequest } from "@/lib/types";
 import { isUnavailableStatus, logApiError } from "@/lib/api";
 import { getSocialAuthSuccessMessage } from "@/lib/social-auth-feedback";
@@ -123,7 +124,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
 // ─── Provider ────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
@@ -387,7 +388,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         )}
         redirectingText={t("auth.modal.redirecting")}
         onRedirect={() => {
-          window.location.href = successModal.redirectPath;
+          window.location.href = localizeHref(
+            successModal.redirectPath,
+            language,
+          );
         }}
       />
       <LogoutModal
@@ -397,7 +401,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         subtitle={t("auth.modal.logout_subtitle")}
         redirectingText={t("auth.modal.logout_redirecting")}
         onRedirect={() => {
-          window.location.href = ROUTES.LOGIN;
+          window.location.href = localizeHref(ROUTES.LOGIN, language);
         }}
       />
     </AuthContext.Provider>

@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { ROUTES } from "@/lib/constants";
+import { localizeHref } from "@/lib/i18n-routing";
 import { AuthPageFrame } from "@/components/auth/auth-page-frame";
 import { AuthShowcasePanel } from "@/components/auth/auth-showcase-panel";
 import { cn } from "@/lib/utils";
@@ -113,8 +114,9 @@ function validateField(
 
 export default function RegisterPage() {
   const { register } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const searchParams = useSearchParams();
+  const postAuthTarget = localizeHref(ROUTES.DASHBOARD, language);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
@@ -216,7 +218,7 @@ export default function RegisterPage() {
           password: formData.password,
           fullName,
         },
-        ROUTES.DASHBOARD,
+        postAuthTarget,
       );
       if (!result.success) {
         if (result.status === 503) {
@@ -697,6 +699,7 @@ export default function RegisterPage() {
 
         <GoogleAuthButton
           mode="register"
+          returnTo={postAuthTarget}
           label={t("auth.continue_with_google")}
         />
 

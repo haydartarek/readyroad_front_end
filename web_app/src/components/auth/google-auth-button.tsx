@@ -1,6 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
+import type { Language } from "@/lib/constants";
+import { localizeHref } from "@/lib/i18n-routing";
 import { cn } from "@/lib/utils";
 
 type GoogleAuthMode = "login" | "register" | "link";
@@ -12,11 +15,15 @@ interface GoogleAuthButtonProps {
   className?: string;
 }
 
-function buildHref(mode: GoogleAuthMode, returnTo?: string) {
+export function buildGoogleAuthHref(
+  mode: GoogleAuthMode,
+  language: Language,
+  returnTo?: string,
+) {
   const params = new URLSearchParams({ mode });
-  if (returnTo) {
-    params.set("returnTo", returnTo);
-  }
+  const fallback =
+    mode === "link" ? "/dashboard?section=profile" : "/dashboard";
+  params.set("returnTo", localizeHref(returnTo ?? fallback, language));
 
   return `/api/auth/google/start?${params.toString()}`;
 }
@@ -27,6 +34,8 @@ export function GoogleAuthButton({
   returnTo,
   className,
 }: GoogleAuthButtonProps) {
+  const { language } = useLanguage();
+
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     const activeElement = document.activeElement;
     if (activeElement instanceof HTMLElement) {
@@ -44,7 +53,10 @@ export function GoogleAuthButton({
         className,
       )}
     >
-      <a href={buildHref(mode, returnTo)} onClick={handleClick}>
+      <a
+        href={buildGoogleAuthHref(mode, language, returnTo)}
+        onClick={handleClick}
+      >
         <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
           <path
             d="M21.805 10.023h-9.76v3.955h5.594c-.241 1.271-.965 2.348-2.058 3.069v2.545h3.327c1.948-1.793 3.067-4.438 2.897-7.57Z"

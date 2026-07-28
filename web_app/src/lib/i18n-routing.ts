@@ -47,6 +47,20 @@ export function getLocaleFromPathname(pathname: string): {
   };
 }
 
+export function resolveRouteLocale(
+  pathname: string,
+  persistedLocale?: string | null,
+): SiteLocale {
+  const route = getLocaleFromPathname(pathname);
+  if (route.hasLocalePrefix || route.hasEnglishPrefix) {
+    return route.locale;
+  }
+
+  return SITE_LOCALES.includes(persistedLocale as SiteLocale)
+    ? (persistedLocale as SiteLocale)
+    : route.locale;
+}
+
 export function localizePathname(
   pathname: string,
   locale: SiteLocale,

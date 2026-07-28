@@ -100,6 +100,66 @@ test("language switch keeps the current lesson page", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
 });
 
+test("a persisted locale survives browser navigation into authentication", async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([
+    {
+      name: "readyroad_locale",
+      value: "ar",
+      domain: "127.0.0.1",
+      path: "/",
+      sameSite: "Lax",
+    },
+  ]);
+
+  await page.goto("/login");
+
+  await expect(page).toHaveURL(/\/ar\/login$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "ar");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+
+  const googleHref = await page
+    .locator('a[href^="/api/auth/google/start"]')
+    .getAttribute("href");
+  const googleUrl = new URL(googleHref!, "http://127.0.0.1");
+  expect(googleUrl.searchParams.get("returnTo")).toBe("/ar/dashboard");
+});
+
+test("a protected localized deep link preserves its query through login", async ({
+  page,
+}) => {
+  const hydrationErrors: string[] = [];
+  page.on("console", (message) => {
+    if (
+      message.type() === "error" &&
+      /hydration|hydrated|server rendered html/i.test(message.text())
+    ) {
+      hydrationErrors.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => {
+    if (/hydration|hydrated|server rendered html/i.test(error.message)) {
+      hydrationErrors.push(error.message);
+    }
+  });
+
+  await page.goto("/nl/practice/random?mode=retry");
+
+  await expect(page).toHaveURL(
+    /\/nl\/login\?returnUrl=%2Fnl%2Fpractice%2Frandom%3Fmode%3Dretry$/,
+  );
+  await expect(page.locator("html")).toHaveAttribute("lang", "nl");
+  await expect(
+    page.locator('a[href^="/api/auth/google/start"]'),
+  ).toHaveAttribute(
+    "href",
+    /returnTo=%2Fnl%2Fpractice%2Frandom%3Fmode%3Dretry$/,
+  );
+  expect(hydrationErrors).toEqual([]);
+});
+
 test("legacy English prefix redirects permanently to the unprefixed URL", async ({
   request,
 }) => {

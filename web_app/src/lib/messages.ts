@@ -49,6 +49,13 @@ export function getInitialClientLanguage(): Language {
     return DEFAULT_LANGUAGE as Language;
   }
 
+  if (typeof document !== "undefined") {
+    const cookieLanguage = readLanguageFromCookieString(document.cookie);
+    if (cookieLanguage) {
+      return cookieLanguage;
+    }
+  }
+
   try {
     const stored =
       window.localStorage.getItem(STORAGE_KEYS.LANGUAGE) ??
@@ -61,20 +68,11 @@ export function getInitialClientLanguage(): Language {
     // Ignore storage failures and continue to document fallbacks.
   }
 
-  const documentLanguage =
-    typeof document !== "undefined"
-      ? resolveMessageLanguage(document.documentElement.lang || null)
-      : null;
-
-  if (documentLanguage && isValidLanguage(documentLanguage)) {
-    return documentLanguage;
-  }
-
-  if (typeof document !== "undefined") {
-    const cookieLanguage = readLanguageFromCookieString(document.cookie);
-    if (cookieLanguage) {
-      return cookieLanguage;
-    }
+  const browserLanguage = window.navigator.language
+    ?.toLowerCase()
+    .split("-")[0];
+  if (isValidLanguage(browserLanguage)) {
+    return browserLanguage;
   }
 
   return DEFAULT_LANGUAGE as Language;

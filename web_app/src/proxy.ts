@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import {
   getLocaleFromPathname,
   localizePathname,
+  resolveRouteLocale,
 } from "@/lib/i18n-routing";
 import { STORAGE_KEYS } from "@/lib/constants";
 
@@ -109,7 +110,7 @@ function redirectToLogin(
   locale: "en" | "nl" | "fr" | "ar",
 ): NextResponse {
   const url = new URL(localizePathname("/login", locale), request.url);
-  url.searchParams.set("returnUrl", pathname);
+  url.searchParams.set("returnUrl", `${pathname}${request.nextUrl.search}`);
   const response = NextResponse.redirect(url);
   response.cookies.set(STORAGE_KEYS.LANGUAGE, locale, {
     path: "/",
@@ -142,8 +143,10 @@ function withRouteLocale(
   requestHeaders.set("x-readyroad-pathname", pathname);
   requestHeaders.set("x-readyroad-routed", "1");
 
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = pathname;
   const response = rewrite
-    ? NextResponse.rewrite(new URL(pathname, request.url), {
+    ? NextResponse.rewrite(rewriteUrl, {
         request: { headers: requestHeaders },
       })
     : NextResponse.next({ request: { headers: requestHeaders } });
@@ -164,7 +167,10 @@ export default function proxy(request: NextRequest) {
   const hasValidToken = isValidTokenFormat(rawToken);
   const browserPathname = request.nextUrl.pathname;
   const route = getLocaleFromPathname(browserPathname);
-  const { locale, pathname } = route;
+  const { pathname } = route;
+  const cookieLocale = request.cookies.get(STORAGE_KEYS.LANGUAGE)?.value;
+  const hasExplicitLocale = route.hasLocalePrefix || route.hasEnglishPrefix;
+  const locale = resolveRouteLocale(browserPathname, cookieLocale);
 
   if (route.hasEnglishPrefix) {
     const url = request.nextUrl.clone();
@@ -176,6 +182,10 @@ export default function proxy(request: NextRequest) {
       sameSite: "lax",
     });
     return response;
+  }
+
+  if (!hasExplicitLocale && locale !== "en") {
+    return redirectTo(pathname, request, locale, 307, true);
   }
 
   if (pathname === "/privacy") {

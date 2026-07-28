@@ -30,7 +30,7 @@ import {
 import { useLanguage } from "@/contexts/language-context";
 
 export function WeakAreasPageContent() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [data, setData] = useState<WeakAreasData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export function WeakAreasPageContent() {
     const fetchWeakAreas = async () => {
       try {
         setIsLoading(true);
-        const weakAreasData = await getWeakAreas();
+        const weakAreasData = await getWeakAreas(language);
         setData(weakAreasData);
         setError(null);
       } catch (err) {
@@ -57,7 +57,7 @@ export function WeakAreasPageContent() {
       }
     };
     fetchWeakAreas();
-  }, [fetchKey, t]);
+  }, [fetchKey, t, language]);
 
   // ── Loading ──────────────────────────────────────
   if (isLoading) {

@@ -41,10 +41,24 @@ interface ErrorPattern {
   count: number;
   percentage: number;
   severity: "HIGH" | "MEDIUM" | "LOW";
+  uniqueQuestions: number;
   affectedCategories: string[];
+  analysisGroups: AnalysisGroup[];
   recommendation: string;
   recommendationKey: string;
   exampleQuestions: number[];
+}
+
+interface AnalysisGroup {
+  groupType:
+    | "CATEGORY"
+    | "TRAFFIC_SIGN_FAMILY"
+    | "LEGAL_CONCEPT"
+    | "REPEATED_MISCONCEPTION";
+  code: string;
+  label: string;
+  labelKey?: string;
+  count: number;
 }
 
 interface AnalyticsData {
@@ -58,9 +72,30 @@ interface BackendPattern {
   count: number;
   percentage: number;
   description: string;
+  severity: "CRITICAL" | "HIGH" | "MODERATE" | "LOW" | "NONE";
+  uniqueQuestions: number;
+  recommendationKey: string;
+  sourceScope: "COMPLETE_HISTORY";
+  groups: Array<{
+    groupType:
+      | "CATEGORY"
+      | "TRAFFIC_SIGN_FAMILY"
+      | "LEGAL_CONCEPT"
+      | "REPEATED_MISCONCEPTION";
+    code: string;
+    nameEn?: string;
+    nameAr?: string;
+    nameNl?: string;
+    nameFr?: string;
+    count: number;
+  }>;
   exampleQuestions?: Array<{
     questionId: number;
     categoryName?: string;
+    categoryNameEn?: string;
+    categoryNameAr?: string;
+    categoryNameNl?: string;
+    categoryNameFr?: string;
     timesWrong?: number;
   }>;
 }
@@ -84,56 +119,104 @@ function getDescriptionKey(patternType: string): string {
   const keys: Record<string, string> = {
     SIGN_CONFUSION: "error_patterns.desc_sign_confusion",
     SUPPLEMENTARY_IGNORED: "error_patterns.desc_supplementary_ignored",
-    PRIORITY_MISUNDERSTANDING:
-      "error_patterns.desc_priority_misunderstanding",
+    PRIORITY_MISUNDERSTANDING: "error_patterns.desc_priority_misunderstanding",
     SPEED_LIMIT_ERROR: "error_patterns.desc_speed_limit_error",
     ZONE_CONFUSION: "error_patterns.desc_zone_confusion",
-    RULE_OVERGENERALIZATION:
-      "error_patterns.desc_rule_overgeneralization",
+    RULE_OVERGENERALIZATION: "error_patterns.desc_rule_overgeneralization",
   };
   return keys[patternType] ?? "error_patterns.desc_default";
 }
 
-function getRecommendationKey(patternType: string): string {
-  const keys: Record<string, string> = {
-    SIGN_CONFUSION: "error_patterns.rec_sign_confusion",
-    SUPPLEMENTARY_IGNORED: "error_patterns.rec_supplementary_ignored",
-    PRIORITY_MISUNDERSTANDING: "error_patterns.rec_priority_misunderstanding",
-    SPEED_LIMIT_ERROR: "error_patterns.rec_speed_limit_error",
-    ZONE_CONFUSION: "error_patterns.rec_zone_confusion",
-    RULE_OVERGENERALIZATION: "error_patterns.rec_rule_overgeneralization",
-  };
-  return keys[patternType] ?? "error_patterns.rec_default";
+function localizedGroupName(
+  group: BackendPattern["groups"][number],
+  language: "en" | "ar" | "nl" | "fr",
+): string {
+  if (language === "ar") return group.nameAr || group.nameEn || group.code;
+  if (language === "nl") return group.nameNl || group.nameEn || group.code;
+  if (language === "fr") return group.nameFr || group.nameEn || group.code;
+  return group.nameEn || group.code;
 }
 
-function computeSeverity(percentage: number): "HIGH" | "MEDIUM" | "LOW" {
-  if (percentage >= 30) return "HIGH";
-  if (percentage >= 10) return "MEDIUM";
+function groupLabelKey(
+  group: BackendPattern["groups"][number],
+): string | undefined {
+  if (group.groupType === "TRAFFIC_SIGN_FAMILY") {
+    return `error_patterns.family_${group.code.toLowerCase()}`;
+  }
+  if (group.groupType === "LEGAL_CONCEPT") {
+    return formatPatternKey(group.code);
+  }
+  if (group.groupType === "REPEATED_MISCONCEPTION") {
+    return "error_patterns.group_repeated_misconception";
+  }
+  return undefined;
+}
+
+function normalizeBackendSeverity(
+  severity: BackendPattern["severity"],
+): "HIGH" | "MEDIUM" | "LOW" {
+  if (severity === "CRITICAL" || severity === "HIGH") return "HIGH";
+  if (severity === "MODERATE") return "MEDIUM";
   return "LOW";
 }
 
-function transformBackendPatterns(raw: BackendPattern[]): AnalyticsData {
-  // Keep only patterns where at least one wrong answer occurred
-  const active = raw.filter((p) => (p.count ?? 0) > 0);
+function transformBackendPatterns(
+  raw: BackendPattern[],
+  language: "en" | "ar" | "nl" | "fr",
+): AnalyticsData {
+  raw.forEach((pattern) => {
+    if (
+      !pattern.patternType ||
+      typeof pattern.count !== "number" ||
+      !Number.isFinite(pattern.count) ||
+      typeof pattern.percentage !== "number" ||
+      !Number.isFinite(pattern.percentage) ||
+      !pattern.severity ||
+      typeof pattern.uniqueQuestions !== "number" ||
+      !Array.isArray(pattern.groups) ||
+      pattern.groups.some(
+        (group) =>
+          !group.groupType ||
+          !group.code ||
+          typeof group.count !== "number" ||
+          !Number.isFinite(group.count),
+      ) ||
+      pattern.sourceScope !== "COMPLETE_HISTORY"
+    ) {
+      throw new Error(
+        "Error pattern response is missing complete-history analytics",
+      );
+    }
+  });
 
-  const totalErrors = active.reduce((sum, p) => sum + (p.count ?? 0), 0);
+  // Keep only patterns where at least one wrong answer occurred
+  const active = raw.filter((p) => p.count > 0);
+
+  const totalErrors = active.reduce((sum, p) => sum + p.count, 0);
 
   const patterns: ErrorPattern[] = active.map((p) => ({
     pattern: p.patternType,
     patternKey: formatPatternKey(p.patternType),
     descriptionKey: getDescriptionKey(p.patternType),
     count: p.count,
-    percentage: p.percentage ?? 0,
-    severity: computeSeverity(p.percentage ?? 0),
-    affectedCategories: [
-      ...new Set(
-        (p.exampleQuestions ?? [])
-          .map((q) => q.categoryName)
-          .filter((c): c is string => Boolean(c)),
+    percentage: p.percentage,
+    severity: normalizeBackendSeverity(p.severity),
+    uniqueQuestions: p.uniqueQuestions,
+    affectedCategories: p.groups
+      .filter((group) => group.groupType === "CATEGORY")
+      .map((group) => localizedGroupName(group, language))
+      .filter(
+        (category, index, categories) => categories.indexOf(category) === index,
       ),
-    ],
+    analysisGroups: p.groups.map((group) => ({
+      groupType: group.groupType,
+      code: group.code,
+      label: localizedGroupName(group, language),
+      labelKey: groupLabelKey(group),
+      count: group.count,
+    })),
     recommendation: "",
-    recommendationKey: getRecommendationKey(p.patternType),
+    recommendationKey: p.recommendationKey,
     exampleQuestions: (p.exampleQuestions ?? []).map((q) => q.questionId),
   }));
 
@@ -157,7 +240,7 @@ function LoadingSpinner({ message }: { message?: string }) {
 export function ErrorPatternsContent() {
   const searchParams = useSearchParams();
   const examId = searchParams.get("examId");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -174,8 +257,11 @@ export function ErrorPatternsContent() {
           : "/users/me/analytics/error-patterns";
         // Backend returns BackendPattern[] (array), not the AnalyticsData wrapper
         const response = await apiClient.get<BackendPattern[]>(url);
-        const raw = Array.isArray(response.data) ? response.data : [];
-        setData(transformBackendPatterns(raw));
+        if (!Array.isArray(response.data)) {
+          throw new Error("Error pattern response is invalid");
+        }
+        const raw = response.data;
+        setData(transformBackendPatterns(raw, language));
         setError(null);
       } catch (err) {
         logApiError("Failed to fetch analytics", err);
@@ -190,7 +276,7 @@ export function ErrorPatternsContent() {
       }
     };
     fetchAnalytics();
-  }, [examId, fetchKey, t]);
+  }, [examId, fetchKey, t, language]);
 
   if (isLoading)
     return <LoadingSpinner message={t("error_patterns.loading_analyzing")} />;

@@ -55,7 +55,7 @@ export function WeakAreaSummary({
 }: {
   weakAreas: WeakArea[];
   totalCategories: number;
-  overallAccuracy: number;
+  overallAccuracy: number | null;
 }) {
   const { t } = useLanguage();
 
@@ -80,7 +80,9 @@ export function WeakAreaSummary({
           </CardHeader>
           <CardContent className="space-y-0.5">
             <p className={cn("text-3xl font-black", color)}>
-              {format(stats[key])}
+              {stats[key] === null
+                ? t("common.not_available")
+                : format(stats[key] as number)}
             </p>
             <p className="text-xs text-muted-foreground">{t(subKey)}</p>
           </CardContent>

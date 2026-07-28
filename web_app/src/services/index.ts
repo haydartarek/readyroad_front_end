@@ -13,6 +13,7 @@ export {
 
 export {
   getOverallProgress,
+  getStudentIntelligence,
   getProgressByCategory,
   getRecentActivity,
 } from "./progressService";

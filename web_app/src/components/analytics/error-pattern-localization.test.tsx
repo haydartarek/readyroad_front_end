@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import { ErrorPatternList } from "./error-pattern-list";
 import { ErrorSummary } from "./error-summary";
@@ -6,6 +6,8 @@ import { ErrorSummary } from "./error-summary";
 const translations: Record<string, string> = {
   "error_patterns.pattern_sign_confusion": "التشابه بين العلامات",
   "error_patterns.desc_sign_confusion": "الخلط بين علامات مرور متشابهة.",
+  "error_patterns.grouped_analysis": "التفصيل التاريخي",
+  "error_patterns.family_priority": "علامات الأولوية",
 };
 
 jest.mock("@/contexts/language-context", () => ({
@@ -34,7 +36,9 @@ const pattern = {
   count: 5,
   percentage: 100,
   severity: "HIGH" as const,
+  uniqueQuestions: 3,
   affectedCategories: [],
+  analysisGroups: [],
   recommendation: "",
   recommendationKey: "error_patterns.rec_sign_confusion",
   exampleQuestions: [],
@@ -59,5 +63,32 @@ describe("error pattern localization", () => {
 
     expect(screen.getByText("التشابه بين العلامات")).toBeInTheDocument();
     expect(screen.queryByText("SIGN_CONFUSION")).not.toBeInTheDocument();
+  });
+
+  it("localizes complete-history sign-family groups", () => {
+    render(
+      <ErrorPatternList
+        patterns={[
+          {
+            ...pattern,
+            analysisGroups: [
+              {
+                groupType: "TRAFFIC_SIGN_FAMILY",
+                code: "PRIORITY",
+                label: "PRIORITY",
+                labelKey: "error_patterns.family_priority",
+                count: 4,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("التشابه بين العلامات"));
+
+    expect(screen.getByText("التفصيل التاريخي")).toBeInTheDocument();
+    expect(screen.getByText("علامات الأولوية")).toBeInTheDocument();
+    expect(screen.queryByText("PRIORITY")).not.toBeInTheDocument();
   });
 });

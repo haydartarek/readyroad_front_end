@@ -28,7 +28,19 @@ interface ErrorPattern {
   count: number;
   percentage: number;
   severity: "HIGH" | "MEDIUM" | "LOW";
+  uniqueQuestions: number;
   affectedCategories: string[];
+  analysisGroups: Array<{
+    groupType:
+      | "CATEGORY"
+      | "TRAFFIC_SIGN_FAMILY"
+      | "LEGAL_CONCEPT"
+      | "REPEATED_MISCONCEPTION";
+    code: string;
+    label: string;
+    labelKey?: string;
+    count: number;
+  }>;
   recommendation: string;
   recommendationKey: string;
   exampleQuestions: number[];
@@ -93,10 +105,7 @@ export function ErrorPatternList({ patterns }: { patterns: ErrorPattern[] }) {
       {patterns.map((pattern, index) => {
         const cfg = SEVERITY_CONFIG[pattern.severity];
         const isExpanded = expandedPattern === pattern.pattern;
-        const practiceHref = `/practice/${
-          pattern.affectedCategories[0]?.toLowerCase().replace(/\s+/g, "-") ??
-          "traffic-signs"
-        }`;
+        const practiceHref = "/practice";
 
         return (
           <Card
@@ -179,22 +188,50 @@ export function ErrorPatternList({ patterns }: { patterns: ErrorPattern[] }) {
                 />
               </div>
 
+              <p className="text-xs text-muted-foreground">
+                {t("error_patterns.unique_questions", {
+                  count: pattern.uniqueQuestions,
+                })}
+              </p>
+
               {/* Expanded content */}
               {isExpanded && (
                 <div className="space-y-4 border-t border-border/50 pt-4">
                   {/* Affected categories */}
+                  {pattern.affectedCategories.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
+                        {t("error_patterns.affected_categories")}
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {pattern.affectedCategories.map((cat) => (
+                          <Badge
+                            key={cat}
+                            variant="secondary"
+                            className="rounded-full text-xs"
+                          >
+                            {cat}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
-                      {t("error_patterns.affected_categories")}
+                      {t("error_patterns.grouped_analysis")}
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {pattern.affectedCategories.map((cat) => (
+                      {pattern.analysisGroups.map((group) => (
                         <Badge
-                          key={cat}
-                          variant="secondary"
+                          key={`${group.groupType}:${group.code}`}
+                          variant="outline"
                           className="rounded-full text-xs"
                         >
-                          {cat}
+                          {group.labelKey ? t(group.labelKey) : group.label}
+                          <span className="ms-1 text-muted-foreground">
+                            · {group.count}
+                          </span>
                         </Badge>
                       ))}
                     </div>

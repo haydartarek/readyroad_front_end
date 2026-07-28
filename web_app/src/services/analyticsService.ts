@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api";
+import type { Language } from "@/lib/constants";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -9,6 +10,10 @@ import { apiClient } from "@/lib/api";
 export interface WeakArea {
   categoryCode: string;
   categoryName: string;
+  categoryNameEn?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
+  categoryNameAr?: string | null;
   correctCount: number;
   /** Total questions attempted in this category (from backend questionsAttempted) */
   totalCount: number;
@@ -25,11 +30,15 @@ export interface WeakArea {
   recommendedDifficulty?: string;
   priority?: number;
   categoryId?: number;
+  priorityScore?: number;
+  confidenceScore?: number;
+  trend?: string;
+  daysSincePractice?: number | null;
 }
 
 export interface WeakAreasData {
   weakAreas: WeakArea[];
-  overallAccuracy: number;
+  overallAccuracy: number | null;
   totalCategories: number;
   recommendations?: string[];
 }
@@ -42,6 +51,10 @@ interface WeakAreaRecommendationResponse {
   categoryId: number;
   categoryCode: string;
   categoryName: string;
+  categoryNameEn?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
+  categoryNameAr?: string | null;
   currentAccuracy: number;
   targetAccuracy: number;
   accuracyGap: number;
@@ -50,6 +63,10 @@ interface WeakAreaRecommendationResponse {
   estimatedTimeMinutes: number;
   priority: number;
   questionsAttempted: number;
+  priorityScore?: number;
+  confidenceScore?: number;
+  trend?: string;
+  daysSincePractice?: number | null;
 }
 
 /**
@@ -59,7 +76,7 @@ interface WeakAreaRecommendationResponse {
 interface WeakAreasOverviewResponse {
   weakAreas: WeakAreaRecommendationResponse[];
   totalPracticedCategories: number;
-  overallAccuracy: number;
+  overallAccuracy: number | null;
 }
 
 // ─── Constants ───────────────────────────────────────────
@@ -78,36 +95,88 @@ const WEAK_AREAS_ENDPOINT = "/users/me/analytics/weak-areas";
  *   backend.overallAccuracy                 → WeakAreasData.overallAccuracy (real value)
  *   backend.totalPracticedCategories        → WeakAreasData.totalCategories  (real value)
  */
-function transformWeakAreas(backend: WeakAreasOverviewResponse): WeakAreasData {
+function localizedCategoryName(
+  item: WeakAreaRecommendationResponse,
+  language: Language,
+): string {
+  if (language === "ar")
+    return item.categoryNameAr || item.categoryNameEn || item.categoryName;
+  if (language === "nl")
+    return item.categoryNameNl || item.categoryNameEn || item.categoryName;
+  if (language === "fr")
+    return item.categoryNameFr || item.categoryNameEn || item.categoryName;
+  return item.categoryNameEn || item.categoryName;
+}
+
+function transformWeakAreas(
+  backend: WeakAreasOverviewResponse,
+  language: Language,
+): WeakAreasData {
   if (!backend || !Array.isArray(backend.weakAreas)) {
     throw new Error("Weak areas response is invalid");
   }
 
-  const weakAreas: WeakArea[] = backend.weakAreas.map((item) => ({
-    categoryCode: item.categoryCode ?? "",
-    categoryName: item.categoryName ?? "",
-    accuracy: item.currentAccuracy ?? 0,
-    totalCount: item.questionsAttempted ?? 0,
-    correctCount: Math.round(
-      ((item.currentAccuracy ?? 0) / 100) * (item.questionsAttempted ?? 0),
-    ),
-    estimatedTime: `${item.estimatedTimeMinutes ?? 0} min`,
-    commonMistakes: [],
-    recommendedLessons: [],
-    accuracyGap: item.accuracyGap,
-    recommendedQuestions: item.recommendedQuestions,
-    estimatedTimeMinutes: item.estimatedTimeMinutes,
-    recommendedDifficulty: item.recommendedDifficulty,
-    priority: item.priority,
-    categoryId: item.categoryId,
-  }));
+  const weakAreas: WeakArea[] = backend.weakAreas.map((item) => {
+    const requiredNumbers = [
+      item.categoryId,
+      item.currentAccuracy,
+      item.questionsAttempted,
+      item.estimatedTimeMinutes,
+    ];
+    if (
+      !item.categoryCode ||
+      requiredNumbers.some((value) => !Number.isFinite(value))
+    ) {
+      throw new Error("Weak area item is missing required analytics data");
+    }
+
+    return {
+      categoryCode: item.categoryCode,
+      categoryName: localizedCategoryName(item, language),
+      categoryNameEn: item.categoryNameEn,
+      categoryNameNl: item.categoryNameNl,
+      categoryNameFr: item.categoryNameFr,
+      categoryNameAr: item.categoryNameAr,
+      accuracy: item.currentAccuracy,
+      totalCount: item.questionsAttempted,
+      correctCount: Math.round(
+        (item.currentAccuracy / 100) * item.questionsAttempted,
+      ),
+      estimatedTime: `${item.estimatedTimeMinutes} min`,
+      commonMistakes: [],
+      recommendedLessons: [],
+      accuracyGap: item.accuracyGap,
+      recommendedQuestions: item.recommendedQuestions,
+      estimatedTimeMinutes: item.estimatedTimeMinutes,
+      recommendedDifficulty: item.recommendedDifficulty,
+      priority: item.priority,
+      categoryId: item.categoryId,
+      priorityScore: item.priorityScore,
+      confidenceScore: item.confidenceScore,
+      trend: item.trend,
+      daysSincePractice: item.daysSincePractice,
+    };
+  });
+
+  if (!Number.isFinite(backend.totalPracticedCategories)) {
+    throw new Error(
+      "Weak areas response is missing the practiced category count",
+    );
+  }
+  if (
+    backend.overallAccuracy !== null &&
+    !Number.isFinite(backend.overallAccuracy)
+  ) {
+    throw new Error("Weak areas response contains an invalid overall accuracy");
+  }
 
   return {
     weakAreas,
-    // Use the real overall accuracy supplied by the backend (all practiced categories)
-    overallAccuracy: Math.round((backend.overallAccuracy ?? 0) * 10) / 10,
-    // Use the real total from backend so "Strong Areas" = total - weak.length is correct
-    totalCategories: backend.totalPracticedCategories ?? weakAreas.length,
+    overallAccuracy:
+      backend.overallAccuracy === null
+        ? null
+        : Math.round(backend.overallAccuracy * 10) / 10,
+    totalCategories: backend.totalPracticedCategories,
     recommendations: [],
   };
 }
@@ -120,9 +189,10 @@ function transformWeakAreas(backend: WeakAreasOverviewResponse): WeakAreasData {
  * Backend returns: WeakAreasOverviewResponse { weakAreas[], totalPracticedCategories, overallAccuracy }
  * Frontend expects: WeakAreasData { weakAreas[], overallAccuracy, totalCategories }
  */
-export async function getWeakAreas(): Promise<WeakAreasData> {
-  const response = await apiClient.get<WeakAreasOverviewResponse>(
-    WEAK_AREAS_ENDPOINT,
-  );
-  return transformWeakAreas(response.data);
+export async function getWeakAreas(
+  language: Language = "en",
+): Promise<WeakAreasData> {
+  const response =
+    await apiClient.get<WeakAreasOverviewResponse>(WEAK_AREAS_ENDPOINT);
+  return transformWeakAreas(response.data, language);
 }

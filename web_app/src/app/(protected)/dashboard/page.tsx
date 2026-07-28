@@ -8,6 +8,7 @@ import { ProgressOverviewCard } from "@/components/dashboard/progress-overview-c
 import { WeakAreasPreview } from "@/components/dashboard/weak-areas-preview";
 import {
   getOverallProgress,
+  getStudentIntelligence,
   getProgressByCategory,
   getRecentActivity,
   getWeakAreas,
@@ -37,6 +38,7 @@ import {
 import type {
   CategoryProgressSummary,
   SignWeaknessSummary,
+  StudentIntelligence,
 } from "@/services/progressService";
 import { QuickActionsSection } from "@/components/dashboard/quick-actions-section";
 import { RecentActivityList } from "@/components/dashboard/recent-activity-list";
@@ -44,6 +46,7 @@ import { WeakAreasPageContent } from "@/app/(protected)/analytics/weak-areas/pag
 import { ErrorPatternsContent } from "@/app/(protected)/analytics/error-patterns/page";
 import { ExamResultsPageContent } from "@/app/(protected)/exam/results/page";
 import { ProfilePageContent } from "@/app/(protected)/profile/page";
+import { StudentIntelligencePanel } from "@/components/dashboard/student-intelligence-panel";
 
 // ─── Progress Tracker types (inline, no extra file) ──────────────────────────
 
@@ -53,15 +56,11 @@ interface CategoryProgressItem {
   questionsAttempted: number;
   correctAnswers: number;
   accuracy: number;
-  trend: "improving" | "stable" | "declining";
+  trend: "improving" | "stable" | "declining" | "insufficient";
 }
 
 type DashboardSection =
-  | "overview"
-  | "weak-areas"
-  | "error-patterns"
-  | "exam-results"
-  | "profile";
+  "overview" | "weak-areas" | "error-patterns" | "exam-results" | "profile";
 
 interface DashboardActivityItem {
   id: string;
@@ -80,7 +79,11 @@ interface DashboardActivityItem {
   link?: string;
 }
 
-function TrendIcon({ trend }: { trend: "improving" | "stable" | "declining" }) {
+function TrendIcon({
+  trend,
+}: {
+  trend: "improving" | "stable" | "declining" | "insufficient";
+}) {
   if (trend === "improving")
     return <TrendingUp className="w-4 h-4 text-green-500" />;
   if (trend === "declining")
@@ -88,29 +91,31 @@ function TrendIcon({ trend }: { trend: "improving" | "stable" | "declining" }) {
   return <Minus className="w-4 h-4 text-muted-foreground" />;
 }
 
-const defaultProgressData = {
-  totalExamsTaken: 0,
-  totalAttempted: 0,
-  averageScore: 0,
-  passRate: 0,
-  currentStreak: 0,
-  passedExams: 0,
-  failedExams: 0,
-  questionsRemaining: 500,
-  recommendedDifficulty: "EASY" as string,
-  signPracticeCount: 0,
-  signExamCount: 0,
-  signPassedCount: 0,
-  signRandomExamCount: 0,
-  signRandomExamPassedCount: 0,
-  lessonsStartedCount: 0,
-  lessonsCompletedCount: 0,
-  incompleteActivitiesCount: 0,
-  activeTheoryExamCount: 0,
-  incompleteSignPracticeCount: 0,
-  activeRandomSignExamCount: 0,
-  weakSigns: [] as SignWeaknessSummary[],
+type DashboardProgressData = {
+  totalExamsTaken: number;
+  totalAttempted: number;
+  averageScore: number;
+  passRate: number;
+  currentStreak: number;
+  passedExams: number;
+  failedExams: number;
+  questionsRemaining: number;
+  recommendedDifficulty: string;
+  signPracticeCount: number;
+  signExamCount: number;
+  signPassedCount: number;
+  signRandomExamCount: number;
+  signRandomExamPassedCount: number;
+  lessonsStartedCount: number;
+  lessonsCompletedCount: number;
+  incompleteActivitiesCount: number;
+  activeTheoryExamCount: number;
+  incompleteSignPracticeCount: number;
+  activeRandomSignExamCount: number;
+  weakSigns: SignWeaknessSummary[];
 };
+
+const emptyProgressData: DashboardProgressData | null = null;
 
 function SkeletonCard() {
   return (
@@ -531,7 +536,7 @@ function WeakSignsWidget({
                   </p>
                 </div>
                 <p className="text-sm font-black text-destructive">
-                  {Number(sign.accuracy ?? 0).toFixed(1)}%
+                  {sign.accuracy.toFixed(1)}%
                 </p>
               </div>
 
@@ -564,7 +569,8 @@ function DashboardHome() {
   const { user } = useAuth();
   const { t, language } = useLanguage();
 
-  const [progressData, setProgressData] = useState(defaultProgressData);
+  const [progressData, setProgressData] =
+    useState<DashboardProgressData | null>(emptyProgressData);
   const [strongAreas, setStrongAreas] = useState<CategoryProgressSummary[]>([]);
   const [weakAreas, setWeakAreas] = useState<
     {
@@ -583,6 +589,8 @@ function DashboardHome() {
   const [isLoading, setIsLoading] = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [studentIntelligence, setStudentIntelligence] =
+    useState<StudentIntelligence | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
 
   // Reset all dashboard state when the user changes (login / logout).
@@ -590,13 +598,15 @@ function DashboardHome() {
   // user's data is loading — or worse, after logout.
   const currentUserId = user?.userId ?? null;
   useEffect(() => {
-    setProgressData(defaultProgressData);
+    setProgressData(null);
     setStrongAreas([]);
     setWeakAreas([]);
     setRecentActivities([]);
     setCategoryProgress([]);
+    setIsLoading(true);
     setServiceUnavailable(false);
     setLoadError(false);
+    setStudentIntelligence(null);
   }, [currentUserId]);
 
   useEffect(() => {
@@ -612,44 +622,47 @@ function DashboardHome() {
         // Fetch all data in parallel
         const [
           progress,
+          intelligence,
           weakAreasData,
           recentActivityData,
           categoryProgressResponse,
         ] = await Promise.all([
           getOverallProgress(),
-          getWeakAreas(),
+          getStudentIntelligence(),
+          getWeakAreas(language),
           getRecentActivity(5),
           getProgressByCategory(),
         ]);
 
+        setStudentIntelligence(intelligence);
+
         setProgressData({
-          totalExamsTaken: progress.totalExamsTaken ?? 0,
-          totalAttempted: progress.totalAttempted ?? 0,
-          averageScore: progress.overallAccuracy ?? 0,
-          passRate: progress.passRate ?? 0,
-          currentStreak: progress.studyStreak ?? 0,
-          passedExams: progress.passedExams ?? 0,
-          failedExams: progress.failedExams ?? 0,
-          questionsRemaining: progress.questionsRemaining ?? 500,
-          recommendedDifficulty: progress.recommendedDifficulty ?? "EASY",
-          signPracticeCount: progress.signPracticeCount ?? 0,
-          signExamCount: progress.signExamCount ?? 0,
-          signPassedCount: progress.signPassedCount ?? 0,
-          signRandomExamCount: progress.signRandomExamCount ?? 0,
-          signRandomExamPassedCount: progress.signRandomExamPassedCount ?? 0,
-          lessonsStartedCount: progress.lessonsStartedCount ?? 0,
-          lessonsCompletedCount: progress.lessonsCompletedCount ?? 0,
-          incompleteActivitiesCount: progress.incompleteActivitiesCount ?? 0,
-          activeTheoryExamCount: progress.activeTheoryExamCount ?? 0,
-          incompleteSignPracticeCount:
-            progress.incompleteSignPracticeCount ?? 0,
-          activeRandomSignExamCount: progress.activeRandomSignExamCount ?? 0,
-          weakSigns: progress.weakSigns ?? [],
+          totalExamsTaken: progress.totalExamsTaken,
+          totalAttempted: progress.totalAttempted,
+          averageScore: progress.overallAccuracy,
+          passRate: progress.passRate,
+          currentStreak: progress.studyStreak,
+          passedExams: progress.passedExams,
+          failedExams: progress.failedExams,
+          questionsRemaining: progress.questionsRemaining,
+          recommendedDifficulty: progress.recommendedDifficulty,
+          signPracticeCount: progress.signPracticeCount,
+          signExamCount: progress.signExamCount,
+          signPassedCount: progress.signPassedCount,
+          signRandomExamCount: progress.signRandomExamCount,
+          signRandomExamPassedCount: progress.signRandomExamPassedCount,
+          lessonsStartedCount: progress.lessonsStartedCount,
+          lessonsCompletedCount: progress.lessonsCompletedCount,
+          incompleteActivitiesCount: progress.incompleteActivitiesCount,
+          activeTheoryExamCount: progress.activeTheoryExamCount,
+          incompleteSignPracticeCount: progress.incompleteSignPracticeCount,
+          activeRandomSignExamCount: progress.activeRandomSignExamCount,
+          weakSigns: progress.weakSigns,
         });
 
-        setStrongAreas(progress.strongCategories ?? []);
+        setStrongAreas(progress.strongCategories);
 
-        const areas = weakAreasData.weakAreas ?? [];
+        const areas = weakAreasData.weakAreas;
         setWeakAreas(
           areas.map((area) => ({
             categoryCode: area.categoryCode,
@@ -685,19 +698,27 @@ function DashboardHome() {
 
         // Progress Tracker data
         const categories = categoryProgressResponse.categories ?? [];
+        const categoryTrends = new Map(
+          intelligence.learningPriorities.map((category) => [
+            category.categoryCode,
+            category.trend,
+          ]),
+        );
         setCategoryProgress(
           categories.map((cat) => ({
-            categoryCode: cat.categoryCode ?? cat.category ?? "",
+            categoryCode: cat.categoryCode,
             categoryName: cat.categoryName,
-            questionsAttempted: cat.questionsAttempted ?? 0,
-            correctAnswers: cat.correctAnswers ?? 0,
-            accuracy: Number(cat.accuracyRate ?? cat.accuracy ?? 0),
+            questionsAttempted: cat.questionsAttempted,
+            correctAnswers: cat.correctAnswers,
+            accuracy: cat.accuracyRate,
             trend:
-              Number(cat.accuracyRate ?? cat.accuracy ?? 0) >= 70
+              categoryTrends.get(cat.categoryCode) === "IMPROVING"
                 ? "improving"
-                : Number(cat.accuracyRate ?? cat.accuracy ?? 0) >= 50
+                : categoryTrends.get(cat.categoryCode) === "STABLE"
                   ? "stable"
-                  : "declining",
+                  : categoryTrends.get(cat.categoryCode) === "DECLINING"
+                    ? "declining"
+                    : "insufficient",
           })),
         );
       } catch (error) {
@@ -716,7 +737,7 @@ function DashboardHome() {
     // currentUserId is included so the effect re-runs when auth loads after mount
     // (user starts as null → effect bails out → user loads → re-runs with actual data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchKey, currentUserId]);
+  }, [fetchKey, currentUserId, language]);
 
   const firstName = user?.firstName || user?.username || t("dashboard.learner");
 
@@ -774,6 +795,27 @@ function DashboardHome() {
     );
   }
 
+  if (!progressData || !studentIntelligence) {
+    return (
+      <StatusScreen
+        badge={t("common.error_badge")}
+        title={t("common.error_title")}
+        description={t("common.error_desc")}
+        icon={<AlertTriangle className="h-9 w-9" />}
+        dir={language === "ar" ? "rtl" : "ltr"}
+        fullscreen={false}
+        primaryAction={{
+          label: t("common.retry"),
+          onClick: () => setFetchKey((key) => key + 1),
+        }}
+        secondaryAction={{
+          label: t("common.go_home"),
+          href: "/",
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-8 p-6">
       {/* Welcome Header */}
@@ -781,6 +823,8 @@ function DashboardHome() {
         name={`${t("dashboard.welcome_back")} ${firstName}`}
         subtitle={t("dashboard.subtitle")}
       />
+
+      <StudentIntelligencePanel data={studentIntelligence} />
 
       {/* Recent Activity */}
       {/* Quick Stats Strip */}

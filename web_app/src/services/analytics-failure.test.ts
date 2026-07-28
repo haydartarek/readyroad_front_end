@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api";
 import { getWeakAreas } from "./analyticsService";
 import {
   getOverallProgress,
+  getStudentIntelligence,
   getProgressByCategory,
   getRecentActivity,
 } from "./progressService";
@@ -41,6 +42,7 @@ describe("analytics services preserve API failure state", () => {
 
   it.each([
     ["overall progress", () => getOverallProgress()],
+    ["student intelligence", () => getStudentIntelligence()],
     ["category progress", () => getProgressByCategory()],
     ["recent activity", () => getRecentActivity()],
     ["weak areas", () => getWeakAreas()],

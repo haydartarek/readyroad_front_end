@@ -163,6 +163,7 @@ export default function ExamQuestionsPage() {
   // ── Per-question countdown ──────────────────────────────
   const [questionTimeLeft, setQuestionTimeLeft] = useState(QUESTION_TIME);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const questionStartedAtRef = useRef(Date.now());
 
   const isExamActive = useRef(true);
   const pendingNavigation = useRef<string | null>(null);
@@ -284,12 +285,17 @@ export default function ExamQuestionsPage() {
 
       // Optimistic local update — user can still change during the 15s window
       setAnswers((prev) => ({ ...prev, [questionId]: optionNumber }));
+      const timeTakenSeconds = Math.min(
+        QUESTION_TIME,
+        Math.max(0, Math.round((Date.now() - questionStartedAtRef.current) / 1000)),
+      );
 
       try {
         await apiClient.post(
           `/exams/simulations/${safeExamId}/questions/${questionId}/answer`,
           {
             selectedOptionId,
+            timeTakenSeconds,
           },
         );
       } catch (err) {
@@ -352,6 +358,7 @@ export default function ExamQuestionsPage() {
   useEffect(() => {
     // Reset timer whenever the question changes
     setQuestionTimeLeft(QUESTION_TIME);
+    questionStartedAtRef.current = Date.now();
     if (timerRef.current) clearInterval(timerRef.current);
 
     timerRef.current = setInterval(() => {

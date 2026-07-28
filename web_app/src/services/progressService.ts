@@ -27,16 +27,103 @@ export interface SignWeaknessSummary {
   wrongAnswers: number;
 }
 
+export interface StudentLearningPriority {
+  categoryId: number;
+  categoryCode: string;
+  categoryNameEn?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
+  categoryNameAr?: string | null;
+  accuracy: number;
+  questionsAttempted: number;
+  priorityScore: number;
+  confidenceScore: number;
+  trend: "IMPROVING" | "STABLE" | "DECLINING" | "INSUFFICIENT_DATA";
+  trendChange: number | null;
+  daysSincePractice: number | null;
+}
+
+export interface StudentIntelligence {
+  dataStatus: "NO_DATA" | "LIMITED" | "SUFFICIENT";
+  studentLevel:
+    | "BEGINNER"
+    | "BASIC"
+    | "INTERMEDIATE"
+    | "ADVANCED"
+    | "EXAM_READY"
+    | "EXPERT";
+  examReadinessScore: number | null;
+  confidenceScore: number | null;
+  learningConsistencyScore: number | null;
+  knowledgeRetentionScore: number | null;
+  estimatedPassProbability: number | null;
+  weeklyProgress: number | null;
+  monthlyProgress: number | null;
+  overallLearningTrend:
+    "IMPROVING" | "STABLE" | "DECLINING" | "INSUFFICIENT_DATA";
+  totalLearningActivities: number;
+  activeDaysLast28: number;
+  evidenceQuestions: number;
+  examAnalytics: {
+    totalExams: number;
+    completedExams: number;
+    passedExams: number;
+    failedExams: number;
+    passRate: number | null;
+    averageScore: number | null;
+    highestScore: number | null;
+    lowestScore: number | null;
+    averageCompletionTimeSeconds: number | null;
+    fastestCompletionTimeSeconds: number | null;
+    slowestCompletionTimeSeconds: number | null;
+    scoreTrend: number | null;
+    passTrend: number | null;
+    recentScores: number[];
+  };
+  timingAnalytics: {
+    averageAnswerTimeSeconds: number | null;
+    answerTimeTrendSeconds: number | null;
+    examTimeTrendSeconds: number | null;
+    answerTimingSamples: number;
+    answerTimingScope: "UNAVAILABLE" | "LATEST_RECORDED_PER_QUESTION";
+    categoryTimings: Array<{
+      categoryId: number;
+      categoryCode: string;
+      categoryNameEn?: string | null;
+      categoryNameNl?: string | null;
+      categoryNameFr?: string | null;
+      categoryNameAr?: string | null;
+      averageAnswerTimeSeconds: number;
+      samples: number;
+    }>;
+  };
+  progressJourney: {
+    lessonsStarted: number;
+    lessonsCompleted: number;
+    lessonRevisitCount: number | null;
+    currentStudyStreak: number;
+    activeToday: boolean;
+    activeDaysLast7: number;
+    activeDaysLast30: number;
+    completedPracticeSessions: number;
+    completedOfficialExams: number;
+    masteredCategories: number;
+    masteredSigns: number;
+  };
+  learningPriorities: StudentLearningPriority[];
+  strongestCategories: StudentLearningPriority[];
+  recommendations: Array<{
+    key: string;
+    categoryCode: string | null;
+    actionPath: string;
+    priority: number;
+  }>;
+}
+
 export interface OverallProgress {
   /** Total questions answered (matches backend field name) */
   totalAttempted: number;
-  /** @deprecated alias – same value as totalAttempted, kept for backwards compat */
-  totalAttempts?: number;
-
   totalCorrect: number;
-  /** @deprecated alias – same value as totalCorrect */
-  correctAnswers?: number;
-
   overallAccuracy: number;
 
   /** Categories where user is struggling (<70% accuracy, ≥5 attempts) */
@@ -51,39 +138,30 @@ export interface OverallProgress {
   /** ISO date of last practice (yyyy-MM-dd) or null */
   lastActivityDate: string | null;
 
-  questionsRemaining?: number;
-  recommendedDifficulty?: string;
+  questionsRemaining: number;
+  recommendedDifficulty: string;
 
-  // Optional legacy / placeholder fields
-  masteryLevel?: string;
-  totalExamsTaken?: number;
-  passedExams?: number;
-  failedExams?: number;
-  passRate?: number;
-  averageScore?: number;
-  totalPracticeQuestions?: number;
-  correctPracticeAnswers?: number;
-  practiceAccuracy?: number;
-  totalStudyHours?: number;
-  currentStreak?: number;
-  longestStreak?: number;
-  signPracticeCount?: number;
-  signExamCount?: number;
-  signPassedCount?: number;
-  signRandomExamCount?: number;
-  signRandomExamPassedCount?: number;
-  lessonsStartedCount?: number;
-  lessonsCompletedCount?: number;
-  incompleteActivitiesCount?: number;
-  activeTheoryExamCount?: number;
-  incompleteSignPracticeCount?: number;
-  activeRandomSignExamCount?: number;
-  weakSigns?: SignWeaknessSummary[];
+  totalExamsTaken: number;
+  passedExams: number;
+  failedExams: number;
+  passRate: number;
+  signPracticeCount: number;
+  signExamCount: number;
+  signPassedCount: number;
+  signRandomExamCount: number;
+  signRandomExamPassedCount: number;
+  lessonsStartedCount: number;
+  lessonsCompletedCount: number;
+  incompleteActivitiesCount: number;
+  activeTheoryExamCount: number;
+  incompleteSignPracticeCount: number;
+  activeRandomSignExamCount: number;
+  weakSigns: SignWeaknessSummary[];
 }
 
 export interface CategoryProgress {
   categoryId?: number;
-  categoryCode?: string;
+  categoryCode: string;
   /** @deprecated alias for categoryCode, kept for backwards compatibility */
   category?: string;
   categoryName: string;
@@ -130,47 +208,19 @@ export interface RecentActivity {
 
 const ENDPOINTS = {
   OVERALL: "/users/me/progress/overall",
+  INTELLIGENCE: "/users/me/progress/intelligence",
   BY_CATEGORY: "/users/me/progress/categories",
   EXAM_HISTORY: "/exams/simulations/history",
 } as const;
 
-const OVERALL_FALLBACK: OverallProgress = {
-  totalAttempted: 0,
-  totalAttempts: 0,
-  totalCorrect: 0,
-  correctAnswers: 0,
-  overallAccuracy: 0,
-  masteryLevel: "beginner",
-  weakCategories: [],
-  strongCategories: [],
-  mostStudiedCategories: [],
-  studyStreak: 0,
-  lastActivityDate: null,
-  questionsRemaining: 500,
-  totalExamsTaken: 0,
-  passedExams: 0,
-  failedExams: 0,
-  passRate: 0,
-  averageScore: 0,
-  totalPracticeQuestions: 0,
-  correctPracticeAnswers: 0,
-  practiceAccuracy: 0,
-  totalStudyHours: 0,
-  currentStreak: 0,
-  longestStreak: 0,
-  signPracticeCount: 0,
-  signExamCount: 0,
-  signPassedCount: 0,
-  signRandomExamCount: 0,
-  signRandomExamPassedCount: 0,
-  lessonsStartedCount: 0,
-  lessonsCompletedCount: 0,
-  incompleteActivitiesCount: 0,
-  activeTheoryExamCount: 0,
-  incompleteSignPracticeCount: 0,
-  activeRandomSignExamCount: 0,
-  weakSigns: [],
-};
+const REQUIRED_INTELLIGENCE_FIELDS = [
+  "dataStatus",
+  "studentLevel",
+  "overallLearningTrend",
+  "totalLearningActivities",
+  "activeDaysLast28",
+  "evidenceQuestions",
+] as const;
 
 const REQUIRED_OVERALL_NUMERIC_FIELDS = [
   "totalAttempted",
@@ -204,28 +254,82 @@ function assertOverallProgressContract(data: OverallProgress): void {
   if (missingField) {
     throw new Error(`Overall progress response is missing ${missingField}`);
   }
+  for (const field of [
+    "weakSigns",
+    "weakCategories",
+    "strongCategories",
+    "mostStudiedCategories",
+  ] as const) {
+    if (!Array.isArray(values[field])) {
+      throw new Error(`Overall progress response is missing ${field}`);
+    }
+  }
+
+  for (const category of [
+    ...data.weakCategories,
+    ...data.strongCategories,
+    ...data.mostStudiedCategories,
+  ]) {
+    if (
+      typeof category.categoryName !== "string" ||
+      typeof category.accuracy !== "number" ||
+      !Number.isFinite(category.accuracy) ||
+      typeof category.attempted !== "number" ||
+      !Number.isFinite(category.attempted)
+    ) {
+      throw new Error("Overall progress contains an invalid category summary");
+    }
+  }
+
+  for (const sign of data.weakSigns) {
+    if (
+      typeof sign.signCode !== "string" ||
+      typeof sign.accuracy !== "number" ||
+      !Number.isFinite(sign.accuracy) ||
+      typeof sign.attempted !== "number" ||
+      !Number.isFinite(sign.attempted) ||
+      typeof sign.wrongAnswers !== "number" ||
+      !Number.isFinite(sign.wrongAnswers)
+    ) {
+      throw new Error("Overall progress contains an invalid weak sign");
+    }
+  }
 }
 
 function normalizeCategoryProgress(
   item: Partial<CategoryProgress>,
 ): CategoryProgress {
-  const accuracyRate = Number(item.accuracyRate ?? item.accuracy ?? 0);
+  const categoryCode = item.categoryCode ?? item.category;
+  const accuracyValue = item.accuracyRate ?? item.accuracy;
+  if (
+    !categoryCode ||
+    !item.categoryName ||
+    typeof item.questionsAttempted !== "number" ||
+    !Number.isFinite(item.questionsAttempted) ||
+    typeof item.correctAnswers !== "number" ||
+    !Number.isFinite(item.correctAnswers) ||
+    typeof accuracyValue !== "number" ||
+    !Number.isFinite(accuracyValue)
+  ) {
+    throw new Error("Category progress item is missing required data");
+  }
+  const accuracyRate = Number(accuracyValue);
 
   return {
     categoryId: item.categoryId,
-    categoryCode: item.categoryCode ?? item.category ?? "",
-    category: item.category ?? item.categoryCode ?? "",
-    categoryName: item.categoryName ?? "",
-    questionsAttempted: item.questionsAttempted ?? 0,
-    correctAnswers: item.correctAnswers ?? 0,
+    categoryCode,
+    category: categoryCode,
+    categoryName: item.categoryName,
+    questionsAttempted: item.questionsAttempted,
+    correctAnswers: item.correctAnswers,
     accuracyRate,
     accuracy: accuracyRate,
     masteryLevel: item.masteryLevel,
     lastPracticed: item.lastPracticed ?? null,
-    isWeakCategory: item.isWeakCategory ?? item.weakCategory ?? false,
-    isStrongCategory: item.isStrongCategory ?? item.strongCategory ?? false,
-    weakCategory: item.weakCategory ?? item.isWeakCategory ?? false,
-    strongCategory: item.strongCategory ?? item.isStrongCategory ?? false,
+    isWeakCategory: item.isWeakCategory ?? item.weakCategory,
+    isStrongCategory: item.isStrongCategory ?? item.strongCategory,
+    weakCategory: item.weakCategory ?? item.isWeakCategory,
+    strongCategory: item.strongCategory ?? item.isStrongCategory,
     questionsRemaining: item.questionsRemaining ?? null,
     recommendedDifficulty: item.recommendedDifficulty ?? null,
   };
@@ -235,13 +339,13 @@ function computeOverallCategoryAccuracy(
   categories: CategoryProgress[],
 ): number {
   const totalAttempted = categories.reduce(
-    (sum, category) => sum + (category.questionsAttempted ?? 0),
+    (sum, category) => sum + category.questionsAttempted,
     0,
   );
   if (totalAttempted === 0) return 0;
 
   const totalCorrect = categories.reduce(
-    (sum, category) => sum + (category.correctAnswers ?? 0),
+    (sum, category) => sum + category.correctAnswers,
     0,
   );
 
@@ -259,36 +363,43 @@ export async function getOverallProgress(): Promise<OverallProgress> {
   }
   assertOverallProgressContract(data);
 
-  // Preserve aliases used by older components, but never replace a failed
-  // request with a synthetic all-zero dashboard.
-  return {
-    ...OVERALL_FALLBACK,
-    ...data,
-    totalAttempted: data.totalAttempted,
-    totalAttempts: data.totalAttempted,
-    totalCorrect: data.totalCorrect,
-    correctAnswers: data.totalCorrect,
-    overallAccuracy: data.overallAccuracy,
-    studyStreak: data.studyStreak,
-    lastActivityDate: data.lastActivityDate,
-    weakSigns: Array.isArray(data.weakSigns) ? data.weakSigns : [],
-    weakCategories: Array.isArray(data.weakCategories)
-      ? data.weakCategories
-      : [],
-    strongCategories: Array.isArray(data.strongCategories)
-      ? data.strongCategories
-      : [],
-    mostStudiedCategories: Array.isArray(data.mostStudiedCategories)
-      ? data.mostStudiedCategories
-      : [],
-  };
+  return data;
+}
+
+/** Complete, read-only learning intelligence calculated from persisted history. */
+export async function getStudentIntelligence(): Promise<StudentIntelligence> {
+  const response = await apiClient.get<StudentIntelligence>(
+    ENDPOINTS.INTELLIGENCE,
+  );
+  const data = response.data;
+  if (!data || typeof data !== "object") {
+    throw new Error("Student intelligence response is missing");
+  }
+  const values = data as unknown as Record<string, unknown>;
+  const missingField = REQUIRED_INTELLIGENCE_FIELDS.find(
+    (field) => values[field] === null || values[field] === undefined,
+  );
+  if (
+    missingField ||
+    !data.examAnalytics ||
+    !data.timingAnalytics ||
+    !data.progressJourney ||
+    !Array.isArray(data.learningPriorities) ||
+    !Array.isArray(data.strongestCategories) ||
+    !Array.isArray(data.recommendations)
+  ) {
+    throw new Error(
+      `Student intelligence response is invalid${missingField ? `: ${missingField}` : ""}`,
+    );
+  }
+  return data;
 }
 
 /** GET /api/users/me/progress/categories */
 export async function getProgressByCategory(): Promise<ProgressByCategory> {
-  const response = await apiClient.get<
-    CategoryProgress[] | ProgressByCategory
-  >(ENDPOINTS.BY_CATEGORY);
+  const response = await apiClient.get<CategoryProgress[] | ProgressByCategory>(
+    ENDPOINTS.BY_CATEGORY,
+  );
   const payload = response.data;
 
   if (!Array.isArray(payload) && !Array.isArray(payload?.categories)) {
@@ -303,8 +414,18 @@ export async function getProgressByCategory(): Promise<ProgressByCategory> {
     categories,
     overallAccuracy: Array.isArray(payload)
       ? computeOverallCategoryAccuracy(categories)
-      : (payload.overallAccuracy ?? computeOverallCategoryAccuracy(categories)),
+      : requireFiniteMetric(
+          payload.overallAccuracy,
+          "category progress overallAccuracy",
+        ),
   };
+}
+
+function requireFiniteMetric(value: unknown, field: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`Progress response is missing ${field}`);
+  }
+  return value;
 }
 
 /** Returns recent exam activity from persisted exam history */
@@ -316,32 +437,32 @@ export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
     signExamResult,
     signPracticeResult,
   ] = await Promise.all([
-      apiClient.get<{
-        totalExams?: number;
-        exams?: Array<{
-          examId: number;
-          startedAt: string;
-          completedAt: string | null;
-          status?: "COMPLETED" | "IN_PROGRESS" | "EXPIRED" | "ABANDONED";
-          totalQuestions?: number;
-          correctAnswers?: number;
-          scorePercentage: number;
-          passed: boolean;
-        }>;
-      }>(ENDPOINTS.EXAM_HISTORY),
-      apiClient.get<{
-        hasActiveExam: boolean;
-        activeExam: {
-          examId: number;
-          startedAt: string;
-          expiresAt?: string;
-          totalQuestions?: number;
-        } | null;
-      }>(API_ENDPOINTS.EXAMS.ACTIVE),
-      getRandomPracticeHistory(),
-      getSignExamHistory(),
-      getPracticeHistory(),
-    ]);
+    apiClient.get<{
+      totalExams?: number;
+      exams?: Array<{
+        examId: number;
+        startedAt: string;
+        completedAt: string | null;
+        status?: "COMPLETED" | "IN_PROGRESS" | "EXPIRED" | "ABANDONED";
+        totalQuestions?: number;
+        correctAnswers?: number;
+        scorePercentage: number;
+        passed: boolean;
+      }>;
+    }>(ENDPOINTS.EXAM_HISTORY),
+    apiClient.get<{
+      hasActiveExam: boolean;
+      activeExam: {
+        examId: number;
+        startedAt: string;
+        expiresAt?: string;
+        totalQuestions?: number;
+      } | null;
+    }>(API_ENDPOINTS.EXAMS.ACTIVE),
+    getRandomPracticeHistory(),
+    getSignExamHistory(),
+    getPracticeHistory(),
+  ]);
 
   const officialExams = officialResult.data.exams ?? [];
   const randomSessions = randomResult.sessions ?? [];
@@ -351,103 +472,121 @@ export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
     ? activeExamResult.data.activeExam
     : null;
 
-    const officialExamActivity: RecentActivity[] = officialExams.map(
-      (exam) => ({
-        id: exam.examId,
-        type: "exam",
-        date: exam.completedAt ?? exam.startedAt,
-        status: exam.status ?? "COMPLETED",
-        score:
-          exam.status === "COMPLETED"
-            ? Math.round(exam.scorePercentage ?? 0)
-            : undefined,
-        passed: exam.status === "COMPLETED" ? exam.passed : undefined,
-        questionsAnswered:
-          exam.status === "COMPLETED" ? exam.totalQuestions : undefined,
-        totalQuestions: exam.totalQuestions,
-        link: `/exam/results/${exam.examId}`,
-      }),
-    );
+  const officialExamActivity: RecentActivity[] = officialExams.map((exam) => ({
+    id: exam.examId,
+    type: "exam",
+    date: exam.completedAt ?? exam.startedAt,
+    status: exam.status ?? "COMPLETED",
+    score:
+      exam.status === "COMPLETED"
+        ? Math.round(
+            requireFiniteMetric(
+              exam.scorePercentage,
+              "official exam scorePercentage",
+            ),
+          )
+        : undefined,
+    passed: exam.status === "COMPLETED" ? exam.passed : undefined,
+    questionsAnswered:
+      exam.status === "COMPLETED" ? exam.totalQuestions : undefined,
+    totalQuestions: exam.totalQuestions,
+    link: `/exam/results/${exam.examId}`,
+  }));
 
-    const activeTheoryExamActivity: RecentActivity[] = activeExam
-      ? [
-          {
-            id: activeExam.examId,
-            type: "exam",
-            date: activeExam.startedAt,
-            status: "IN_PROGRESS",
-            totalQuestions: activeExam.totalQuestions,
-            link: `/exam/${activeExam.examId}`,
-          },
-        ]
-      : [];
+  const activeTheoryExamActivity: RecentActivity[] = activeExam
+    ? [
+        {
+          id: activeExam.examId,
+          type: "exam",
+          date: activeExam.startedAt,
+          status: "IN_PROGRESS",
+          totalQuestions: activeExam.totalQuestions,
+          link: `/exam/${activeExam.examId}`,
+        },
+      ]
+    : [];
 
-    const randomSignExamActivity: RecentActivity[] = randomSessions.map(
-      (session) => ({
-        id: session.sessionId,
-        type: "sign-exam",
-        date: session.completedAt ?? session.startedAt,
-        status: session.status,
-        score:
-          session.status === "COMPLETED"
-            ? Math.round(session.scorePercentage ?? 0)
-            : undefined,
-        passed: session.status === "COMPLETED" ? session.passed : undefined,
-        questionsAnswered: session.answeredCount,
-        totalQuestions: session.totalQuestions,
-        link:
-          session.status === "IN_PROGRESS"
-            ? "/practice/random"
-            : `/dashboard?section=exam-results&randomSignExamId=${session.sessionId}`,
-      }),
-    );
+  const randomSignExamActivity: RecentActivity[] = randomSessions.map(
+    (session) => ({
+      id: session.sessionId,
+      type: "sign-exam",
+      date: session.completedAt ?? session.startedAt,
+      status: session.status,
+      score:
+        session.status === "COMPLETED"
+          ? Math.round(
+              requireFiniteMetric(
+                session.scorePercentage,
+                "random sign exam scorePercentage",
+              ),
+            )
+          : undefined,
+      passed: session.status === "COMPLETED" ? session.passed : undefined,
+      questionsAnswered: session.answeredCount,
+      totalQuestions: session.totalQuestions,
+      link:
+        session.status === "IN_PROGRESS"
+          ? "/practice/random"
+          : `/dashboard?section=exam-results&randomSignExamId=${session.sessionId}`,
+    }),
+  );
 
-    const signSpecificExamActivity: RecentActivity[] = signExamSessions
-      .filter((result): result is typeof result & { completedAt: string } =>
-        Boolean(result.completedAt),
-      )
-      .map((result) => ({
-        id: result.resultId,
-        type: "sign-exam",
-        date: result.completedAt,
-        status: "COMPLETED",
-        score: Math.round(result.scorePercentage ?? 0),
-        passed: result.passed,
-        category:
-          result.nameEn ?? result.nameNl ?? result.routeCode ?? result.signCode,
-        signNameEn: result.nameEn,
-        signNameNl: result.nameNl,
-        signNameFr: result.nameFr,
-        signNameAr: result.nameAr,
-        questionsAnswered: result.answeredCount,
-        totalQuestions: result.totalQuestions,
-        link: `/dashboard?section=exam-results&signExamResultId=${result.resultId}`,
-      }));
+  const signSpecificExamActivity: RecentActivity[] = signExamSessions
+    .filter((result): result is typeof result & { completedAt: string } =>
+      Boolean(result.completedAt),
+    )
+    .map((result) => ({
+      id: result.resultId,
+      type: "sign-exam",
+      date: result.completedAt,
+      status: "COMPLETED",
+      score: Math.round(
+        requireFiniteMetric(
+          result.scorePercentage,
+          "sign exam scorePercentage",
+        ),
+      ),
+      passed: result.passed,
+      category:
+        result.nameEn ?? result.nameNl ?? result.routeCode ?? result.signCode,
+      signNameEn: result.nameEn,
+      signNameNl: result.nameNl,
+      signNameFr: result.nameFr,
+      signNameAr: result.nameAr,
+      questionsAnswered: result.answeredCount,
+      totalQuestions: result.totalQuestions,
+      link: `/dashboard?section=exam-results&signExamResultId=${result.resultId}`,
+    }));
 
-    const signPracticeActivity: RecentActivity[] = signPracticeSessions.map(
-      (session) => ({
-        id: session.sessionId,
-        type: "practice",
-        date: session.completedAt ?? session.startedAt,
-        status: session.status,
-        score:
-          session.status === "COMPLETED"
-            ? Math.round(session.scorePercentage ?? 0)
-            : undefined,
-        passed: session.status === "COMPLETED" ? session.passed : undefined,
-        category: session.signCode,
-        signNameEn: session.nameEn,
-        signNameNl: session.nameNl,
-        signNameFr: session.nameFr,
-        signNameAr: session.nameAr,
-        questionsAnswered: session.answeredCount,
-        totalQuestions: session.totalQuestions,
-        link:
-          session.status === "IN_PROGRESS"
-            ? `/traffic-signs/${session.signCode}/practice`
-            : `/traffic-signs/${session.signCode}`,
-      }),
-    );
+  const signPracticeActivity: RecentActivity[] = signPracticeSessions.map(
+    (session) => ({
+      id: session.sessionId,
+      type: "practice",
+      date: session.completedAt ?? session.startedAt,
+      status: session.status,
+      score:
+        session.status === "COMPLETED"
+          ? Math.round(
+              requireFiniteMetric(
+                session.scorePercentage,
+                "sign practice scorePercentage",
+              ),
+            )
+          : undefined,
+      passed: session.status === "COMPLETED" ? session.passed : undefined,
+      category: session.signCode,
+      signNameEn: session.nameEn,
+      signNameNl: session.nameNl,
+      signNameFr: session.nameFr,
+      signNameAr: session.nameAr,
+      questionsAnswered: session.answeredCount,
+      totalQuestions: session.totalQuestions,
+      link:
+        session.status === "IN_PROGRESS"
+          ? `/traffic-signs/${session.signCode}/practice`
+          : `/traffic-signs/${session.signCode}`,
+    }),
+  );
 
   return [
     ...activeTheoryExamActivity,

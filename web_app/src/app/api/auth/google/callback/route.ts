@@ -159,6 +159,7 @@ export async function GET(request: NextRequest) {
         code,
         redirectUri,
         codeVerifier,
+        preferredLanguage: getRequestLanguage(request),
       }),
       cache: "no-store",
     });

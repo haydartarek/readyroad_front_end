@@ -41,6 +41,7 @@ interface RegisterPayload {
   email: string;
   password: string;
   fullName: string;
+  preferredLanguage?: "en" | "ar" | "nl" | "fr";
 }
 
 interface LoginOptions {
@@ -110,6 +111,13 @@ function normalizeUser(raw: Record<string, unknown>): User {
       (nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined),
     role: (raw.role as string) ?? "USER",
     isActive: true,
+    preferredLanguage:
+      raw.preferredLanguage === "en" ||
+      raw.preferredLanguage === "ar" ||
+      raw.preferredLanguage === "nl" ||
+      raw.preferredLanguage === "fr"
+        ? raw.preferredLanguage
+        : undefined,
     createdAt: (raw.createdAt as string) || undefined,
     linkedProviders: Array.isArray(raw.linkedProviders)
       ? (raw.linkedProviders as string[])
@@ -124,7 +132,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
 // ─── Provider ────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { t, language } = useLanguage();
+  const { t, language, applyAccountLanguage } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
@@ -177,7 +185,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Use normalizeUser so firstName is extracted from fullName on page refresh
         // (same normalization applied during login)
-        setUser(normalizeUser(raw));
+        const normalizedUser = normalizeUser(raw);
+        setUser(normalizedUser);
+        applyAccountLanguage(normalizedUser.preferredLanguage);
         setServiceUnavailable(false);
         return;
       }
@@ -213,7 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [applyAccountLanguage]);
 
   // On mount: resolve session from HttpOnly cookie via BFF
   useEffect(() => {
@@ -270,6 +280,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const raw = await response.json();
         const normalizedUser = normalizeUser(raw);
         setUser(normalizedUser);
+        applyAccountLanguage(normalizedUser.preferredLanguage, false);
         const displayName =
           normalizedUser.firstName ??
           normalizedUser.fullName?.split(" ")[0] ??
@@ -295,7 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [t],
+    [applyAccountLanguage, t],
   );
 
   const register = useCallback(
@@ -308,7 +319,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            ...payload,
+            preferredLanguage: payload.preferredLanguage ?? language,
+          }),
         });
 
         if (!response.ok) {
@@ -346,7 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [t],
+    [language, t],
   );
 
   const logout = useCallback(async () => {

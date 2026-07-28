@@ -28,6 +28,10 @@ type Language = "en" | "ar" | "nl" | "fr";
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  applyAccountLanguage: (
+    lang: Language | null | undefined,
+    navigate?: boolean,
+  ) => boolean;
   t: (key: string, params?: Record<string, string | number>) => string;
   isRTL: boolean;
 }
@@ -37,6 +41,7 @@ interface LanguageContextType {
 const STORAGE_KEY = STORAGE_KEYS.LANGUAGE;
 const LEGACY_STORAGE_KEY = "readyroad_language";
 const STORAGE_EVENT = "readyroad-language-change";
+const SESSION_EXPLICIT_LANGUAGE_KEY = "readyroad_explicit_session_language";
 const RTL_LANGS = new Set<Language>(["ar"]);
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -103,6 +108,43 @@ function getLanguageSnapshot(): Language {
   return readStoredLanguage() ?? getInitialClientLanguage();
 }
 
+function persistLanguageLocally(lang: Language, explicit: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, lang);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    document.cookie = `${STORAGE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
+    if (explicit) {
+      sessionStorage.setItem(SESSION_EXPLICIT_LANGUAGE_KEY, lang);
+    }
+  } catch {
+    // Storage can be unavailable in restricted browser contexts.
+  }
+}
+
+function persistLanguageForSignedInUser(lang: Language): void {
+  if (typeof document === "undefined") return;
+
+  const csrfToken = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith("csrf_token="))
+    ?.slice("csrf_token=".length);
+
+  if (!csrfToken) return;
+
+  void fetch("/api/proxy/users/me/preferred-language", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "x-csrf-token": csrfToken,
+    },
+    body: JSON.stringify({ preferredLanguage: lang }),
+    keepalive: true,
+  }).catch(() => {
+    // The local choice remains valid if the account request is temporarily unavailable.
+  });
+}
+
 // ─── Context ─────────────────────────────────────────────
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -132,24 +174,13 @@ export function LanguageProvider({
     document.documentElement.lang = language;
     document.documentElement.dir = isRTL ? "rtl" : "ltr";
 
-    try {
-      localStorage.setItem(STORAGE_KEY, language);
-      localStorage.removeItem(LEGACY_STORAGE_KEY);
-      document.cookie = `${STORAGE_KEY}=${language}; path=/; max-age=31536000; samesite=lax`;
-    } catch {
-      // Ignore storage failures in restricted browser contexts.
-    }
+    persistLanguageLocally(language, false);
   }, [language, isRTL]);
 
   const setLanguage = useCallback(
     (lang: Language) => {
-      try {
-        localStorage.setItem(STORAGE_KEY, lang);
-        localStorage.removeItem(LEGACY_STORAGE_KEY);
-        document.cookie = `${STORAGE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
-      } catch {
-        // Private browsing / storage quota — silently ignore
-      }
+      persistLanguageLocally(lang, true);
+      persistLanguageForSignedInUser(lang);
 
       if (typeof window !== "undefined") {
         const targetPathname = localizePathname(
@@ -170,6 +201,58 @@ export function LanguageProvider({
     [],
   );
 
+  const applyAccountLanguage = useCallback(
+    (
+      preferredLanguage: Language | null | undefined,
+      navigate = true,
+    ): boolean => {
+      if (
+        typeof window === "undefined" ||
+        !preferredLanguage ||
+        !isValidLanguage(preferredLanguage)
+      ) {
+        return false;
+      }
+
+      const routeLocale = getLocaleFromPathname(window.location.pathname);
+      if (routeLocale.hasLocalePrefix || routeLocale.hasEnglishPrefix) {
+        return false;
+      }
+
+      try {
+        const explicitSessionLanguage = sessionStorage.getItem(
+          SESSION_EXPLICIT_LANGUAGE_KEY,
+        );
+        if (
+          explicitSessionLanguage &&
+          isValidLanguage(explicitSessionLanguage)
+        ) {
+          return false;
+        }
+      } catch {
+        // Continue with the account preference when session storage is unavailable.
+      }
+
+      persistLanguageLocally(preferredLanguage, false);
+      window.dispatchEvent(new Event(STORAGE_EVENT));
+
+      if (navigate) {
+        const targetPathname = localizePathname(
+          window.location.pathname,
+          preferredLanguage,
+        );
+        const target = `${targetPathname}${window.location.search}${window.location.hash}`;
+        const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        if (target !== current) {
+          window.location.replace(target);
+        }
+      }
+
+      return true;
+    },
+    [],
+  );
+
   const t = useCallback(
     (key: string, params?: Record<string, string | number>): string => {
       let str = translations[key] ?? key;
@@ -184,7 +267,9 @@ export function LanguageProvider({
   );
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
+    <LanguageContext.Provider
+      value={{ language, setLanguage, applyAccountLanguage, t, isRTL }}
+    >
       {children}
     </LanguageContext.Provider>
   );

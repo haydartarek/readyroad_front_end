@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
+import type { Language } from "@/lib/types";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -13,6 +14,7 @@ export interface UserProfile {
   isActive: boolean;
   createdAt?: string;
   lastLogin?: string;
+  preferredLanguage?: Language;
 }
 
 export interface NotificationCount {
@@ -35,6 +37,10 @@ export interface AppNotification {
 export interface UpdateProfileRequest {
   fullName?: string;
   email?: string;
+}
+
+export interface UpdatePreferredLanguageRequest {
+  preferredLanguage: Language;
 }
 
 // ─── Service ─────────────────────────────────────────────
@@ -90,6 +96,16 @@ export async function updateProfile(
 ): Promise<UserProfile> {
   const response = await apiClient.put<UserProfile>(
     API_ENDPOINTS.USERS.ME,
+    data,
+  );
+  return response.data;
+}
+
+export async function updatePreferredLanguage(
+  data: UpdatePreferredLanguageRequest,
+): Promise<UserProfile> {
+  const response = await apiClient.patch<UserProfile>(
+    API_ENDPOINTS.USERS.PREFERRED_LANGUAGE,
     data,
   );
   return response.data;

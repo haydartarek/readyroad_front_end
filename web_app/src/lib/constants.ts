@@ -94,6 +94,7 @@ export const API_ENDPOINTS = {
 
   USERS: {
     ME: "/users/me",
+    PREFERRED_LANGUAGE: "/users/me/preferred-language",
     NOTIFICATIONS: "/users/me/notifications",
     NOTIFICATIONS_COUNT: "/users/me/notifications/unread-count",
     NOTIFICATIONS_READ_ALL: "/users/me/notifications/read-all",

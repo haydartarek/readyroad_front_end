@@ -200,7 +200,7 @@ export function Navbar() {
       data-testid="site-navbar"
       className="sticky top-0 z-50 border-b border-border/60 bg-background/92 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70"
     >
-      <div className="mx-auto flex h-[74px] w-full max-w-[1536px] items-center justify-between gap-3 px-4 sm:px-6">
+      <div className="mx-auto flex h-[74px] w-full max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           href="/"
           prefetch={false}
@@ -224,7 +224,7 @@ export function Navbar() {
 
         <div
           data-testid="desktop-primary-navigation"
-          className="hidden min-w-0 flex-1 items-center justify-center 2xl:flex"
+          className="hidden min-w-0 flex-1 items-center justify-center min-[1600px]:flex"
         >
           <div className="flex min-w-0 items-center gap-0.5 rounded-full border border-border/60 bg-muted/45 p-1 shadow-sm">
             {NAV_ITEMS.map((item) => (
@@ -486,7 +486,7 @@ export function Navbar() {
             </div>
           ) : null}
 
-          <div className="flex items-center 2xl:hidden">
+          <div className="flex items-center min-[1600px]:hidden">
             <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <DialogTrigger asChild>
                 <Button

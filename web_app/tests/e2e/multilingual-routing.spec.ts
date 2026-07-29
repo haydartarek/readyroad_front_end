@@ -148,6 +148,7 @@ test("navbar uses a stable compact menu without overflow below desktop", async (
 }) => {
   for (const viewport of [
     { width: 1366, height: 768 },
+    { width: 1536, height: 864 },
     { width: 768, height: 1024 },
     { width: 375, height: 812 },
   ]) {

@@ -117,6 +117,8 @@ test("desktop navbar remains single-line and balanced in every language", async 
         const primary = navbar.querySelector(
           '[data-testid="desktop-primary-navigation"]',
         );
+        const navigationPill = primary?.firstElementChild;
+        const actions = navbar.querySelector('[data-testid="navbar-actions"]');
         const links = primary ? [...primary.querySelectorAll("a")] : [];
         const search = navbar.querySelector<HTMLInputElement>("#navbar-search");
         const menuButton = [...navbar.querySelectorAll("button")].find((button) =>
@@ -130,8 +132,15 @@ test("desktop navbar remains single-line and balanced in every language", async 
             primary instanceof HTMLElement &&
             getComputedStyle(primary).display !== "none",
           primaryOverflow:
-            primary instanceof HTMLElement &&
-            primary.scrollWidth > primary.clientWidth,
+            navigationPill instanceof HTMLElement &&
+            navigationPill.scrollWidth > navigationPill.clientWidth,
+          primaryOverlap:
+            navigationPill instanceof HTMLElement &&
+            actions instanceof HTMLElement &&
+            navigationPill.getBoundingClientRect().right >
+              actions.getBoundingClientRect().left &&
+            navigationPill.getBoundingClientRect().left <
+              actions.getBoundingClientRect().right,
           wrappedLinks: links.filter(
             (link) => getComputedStyle(link).whiteSpace !== "nowrap",
           ).length,
@@ -143,11 +152,12 @@ test("desktop navbar remains single-line and balanced in every language", async 
         };
       });
 
-      expect(metrics).toEqual({
+      expect(metrics, `${width}px ${path}`).toEqual({
         navbarHeight: 75,
         pageOverflow: false,
         primaryVisible: true,
         primaryOverflow: false,
+        primaryOverlap: false,
         wrappedLinks: 0,
         menuVisible: false,
         searchWidth: 128,

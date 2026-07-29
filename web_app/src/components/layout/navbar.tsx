@@ -92,7 +92,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-full px-1.5 py-2 text-sm font-semibold transition-all duration-200 min-[1536px]:px-2",
+        "shrink-0 whitespace-nowrap rounded-full px-1.5 py-2 text-[13px] font-semibold transition-all duration-200 min-[1536px]:px-2 min-[1536px]:text-sm",
         isActive
           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
           : "text-muted-foreground hover:bg-background hover:text-foreground",
@@ -212,9 +212,9 @@ export function Navbar() {
             aria-hidden="true"
             width={48}
             height={48}
-            className="rounded-2xl ring-1 ring-border/50"
+            className="rounded-2xl ring-1 ring-border/50 xl:h-10 xl:w-10 min-[1536px]:h-12 min-[1536px]:w-12"
           />
-          <span className="text-[1.12rem] font-black leading-none tracking-tight sm:text-[1.24rem] md:text-[1.34rem] lg:text-[1.48rem]">
+          <span className="text-[1.12rem] font-black leading-none tracking-tight sm:text-[1.24rem] md:text-[1.34rem] lg:text-[1.48rem] xl:text-base min-[1536px]:text-[1.34rem] min-[1600px]:text-[1.48rem]">
             <span className="text-primary">R</span>
             <span className="text-secondary">eady</span>
             <span className="text-primary">R</span>
@@ -238,7 +238,10 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5 min-[1536px]:gap-2">
+        <div
+          data-testid="navbar-actions"
+          className="flex shrink-0 items-center gap-1.5 min-[1536px]:gap-2"
+        >
           <div
             ref={searchContainer}
             className="relative hidden items-center xl:flex"

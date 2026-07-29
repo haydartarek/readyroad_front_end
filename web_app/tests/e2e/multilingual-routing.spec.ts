@@ -100,6 +100,166 @@ test("language switch keeps the current lesson page", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
 });
 
+test("desktop navbar remains single-line and balanced in every language", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+
+  for (const path of ["/", "/nl", "/fr", "/ar"]) {
+    await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
+
+    const metrics = await page.getByTestId("site-navbar").evaluate((navbar) => {
+      const primary = navbar.querySelector(
+        '[data-testid="desktop-primary-navigation"]',
+      );
+      const links = primary ? [...primary.querySelectorAll("a")] : [];
+      const search = navbar.querySelector<HTMLInputElement>("#navbar-search");
+
+      return {
+        navbarHeight: navbar.getBoundingClientRect().height,
+        pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+        primaryVisible:
+          primary instanceof HTMLElement &&
+          getComputedStyle(primary).display !== "none",
+        primaryOverflow:
+          primary instanceof HTMLElement &&
+          primary.scrollWidth > primary.clientWidth,
+        wrappedLinks: links.filter(
+          (link) => getComputedStyle(link).whiteSpace !== "nowrap",
+        ).length,
+        searchWidth: search?.getBoundingClientRect().width ?? 0,
+      };
+    });
+
+    expect(metrics).toEqual({
+      navbarHeight: 75,
+      pageOverflow: false,
+      primaryVisible: true,
+      primaryOverflow: false,
+      wrappedLinks: 0,
+      searchWidth: 144,
+    });
+  }
+});
+
+test("navbar uses a stable compact menu without overflow below desktop", async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 1366, height: 768 },
+    { width: 768, height: 1024 },
+    { width: 375, height: 812 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/ar/lessons/les-19/2");
+
+    await expect(page.getByTestId("site-navbar")).toHaveCSS("height", "75px");
+    await expect(
+      page.getByTestId("desktop-primary-navigation"),
+    ).toBeHidden();
+    await expect(
+      page.getByRole("button", { name: "فتح قائمة التنقل" }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth,
+      ),
+    ).toBe(false);
+  }
+});
+
+test("authenticated account menu exposes localized dashboard access on desktop and mobile", async ({
+  page,
+}) => {
+  await page.context().addCookies([
+    {
+      name: "csrf_token",
+      value: "playwright-session",
+      domain: "127.0.0.1",
+      path: "/",
+      sameSite: "Lax",
+    },
+  ]);
+  await page.unroute("**/api/auth/me");
+  await page.route("**/api/auth/me", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        userId: 42,
+        username: "haydar",
+        fullName: "Haydar Tarek",
+        email: "haydar.with.a.very.long.address@example.com",
+        role: "USER",
+        preferredLanguage: null,
+        isActive: true,
+      }),
+    }),
+  );
+  await page.route("**/api/proxy/users/me/notifications**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ unreadCount: 0, content: [] }),
+    }),
+  );
+  await page.route("**/api/proxy/lessons/*/progress", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        lessonId: 20,
+        pagesRead: 2,
+        totalPages: 8,
+        currentPage: 2,
+        status: "IN_PROGRESS",
+        completed: false,
+      }),
+    }),
+  );
+
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto("/ar/lessons/les-19/2");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: "قائمة الحساب" }).click();
+
+  const accountMenu = page.getByTestId("account-menu-content");
+  const accountItems = accountMenu.getByRole("menuitem");
+  await expect(accountItems.first()).toHaveText("لوحة التحكم");
+  await expect(accountItems.first()).toHaveAttribute("href", "/ar/dashboard");
+  await expect(accountItems.first()).toHaveCSS("white-space", "nowrap");
+  await expect(
+    accountMenu.getByText("haydar.with.a.very.long.address@example.com"),
+  ).toHaveAttribute("title", "haydar.with.a.very.long.address@example.com");
+
+  await page.keyboard.press("Escape");
+  await expect(accountMenu).toBeHidden();
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/ar/lessons/les-19/2");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: "فتح قائمة التنقل" }).click();
+
+  const mobileMenu = page.getByTestId("mobile-navigation-dialog");
+  const dashboardLink = mobileMenu.getByRole("link", {
+    name: "لوحة التحكم",
+    exact: true,
+  });
+  await expect(dashboardLink).toHaveAttribute("href", "/ar/dashboard");
+  await expect(dashboardLink).toHaveCSS("white-space", "nowrap");
+  expect(
+    await dashboardLink.evaluate(
+      (element) => element.getBoundingClientRect().height,
+    ),
+  ).toBeGreaterThanOrEqual(48);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    ),
+  ).toBe(false);
+});
+
 test("a persisted locale survives browser navigation into authentication", async ({
   context,
   page,

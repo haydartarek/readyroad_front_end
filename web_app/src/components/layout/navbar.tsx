@@ -92,7 +92,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200",
+        "shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold transition-all duration-200",
         isActive
           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
           : "text-muted-foreground hover:bg-background hover:text-foreground",
@@ -196,8 +196,11 @@ export function Navbar() {
   if (isAuthPage || (isAdminPage && !isAdminDashboardPage)) return null;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/92 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex h-[74px] w-full max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6">
+    <nav
+      data-testid="site-navbar"
+      className="sticky top-0 z-50 border-b border-border/60 bg-background/92 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70"
+    >
+      <div className="mx-auto flex h-[74px] w-full max-w-[1536px] items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           href="/"
           prefetch={false}
@@ -219,8 +222,11 @@ export function Navbar() {
           </span>
         </Link>
 
-        <div className="hidden flex-1 items-center justify-center 2xl:flex">
-          <div className="flex items-center gap-1 rounded-full border border-border/60 bg-muted/45 p-1 shadow-sm">
+        <div
+          data-testid="desktop-primary-navigation"
+          className="hidden min-w-0 flex-1 items-center justify-center 2xl:flex"
+        >
+          <div className="flex min-w-0 items-center gap-0.5 rounded-full border border-border/60 bg-muted/45 p-1 shadow-sm">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.href}
@@ -254,7 +260,7 @@ export function Navbar() {
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               className={cn(
-                "h-11 w-40 rounded-full border border-border/70 bg-muted/40 py-2 text-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12 2xl:w-48",
+                "h-11 w-32 rounded-full border border-border/70 bg-muted/40 py-2 text-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12 2xl:w-36",
                 isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
               )}
             />
@@ -307,8 +313,10 @@ export function Navbar() {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent
+                data-testid="account-menu-content"
                 align={isRTL ? "start" : "end"}
-                className="w-64"
+                collisionPadding={8}
+                className="w-72 max-w-[calc(100vw-1rem)]"
               >
                 <div className="mb-2 rounded-[1.25rem] border border-border/60 bg-muted/35 px-3.5 py-3.5">
                   <div className="flex items-center gap-3">
@@ -322,12 +330,16 @@ export function Navbar() {
                     >
                       {userInitial}
                     </span>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-black text-foreground">
                         {displayName}
                       </p>
                       {user.email ? (
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        <p
+                          dir="ltr"
+                          title={user.email}
+                          className="mt-0.5 truncate text-start text-xs text-muted-foreground"
+                        >
                           {user.email}
                         </p>
                       ) : null}
@@ -340,31 +352,50 @@ export function Navbar() {
                   </div>
                 </div>
 
+                <DropdownMenuItem
+                  asChild
+                  className="min-h-12 cursor-pointer whitespace-nowrap border-primary/10 bg-primary/[0.06] text-foreground"
+                >
+                  <Link href={ROUTES.DASHBOARD} prefetch={false}>
+                    <LayoutDashboard className="h-4 w-4 text-primary" />
+                    <span className="min-w-0 truncate">
+                      {t("nav.dashboard")}
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+
                 {isAdmin ? (
                   <>
-                    <DropdownMenuItem asChild className="cursor-pointer">
+                    <DropdownMenuItem
+                      asChild
+                      className="min-h-12 cursor-pointer whitespace-nowrap"
+                    >
                       <Link href="/admin/dashboard" prefetch={false}>
                         <LayoutDashboard className="h-4 w-4 text-primary" />
-                        {t("nav.admin_panel")}
+                        <span className="min-w-0 truncate">
+                          {t("nav.admin_panel")}
+                        </span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
                   </>
                 ) : null}
 
-                <DropdownMenuItem asChild className="cursor-pointer">
+                <DropdownMenuItem
+                  asChild
+                  className="min-h-12 cursor-pointer whitespace-nowrap"
+                >
                   <Link href={ROUTES.PROFILE} prefetch={false}>
                     <Settings className="h-4 w-4 text-muted-foreground" />
-                    {t("nav.profile")}
+                    <span className="min-w-0 truncate">{t("nav.profile")}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}
-                  className="cursor-pointer text-red-600 focus:text-red-600"
+                  className="min-h-12 cursor-pointer whitespace-nowrap text-red-600 focus:text-red-600"
                 >
                   <LogOut className="h-4 w-4" />
-                  {t("auth.logout")}
+                  <span className="min-w-0 truncate">{t("auth.logout")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -469,9 +500,10 @@ export function Navbar() {
               </DialogTrigger>
 
               <DialogContent
+                data-testid="mobile-navigation-dialog"
                 showCloseButton={false}
                 overlayClassName="bg-secondary/35 backdrop-blur-sm supports-[backdrop-filter]:bg-secondary/20"
-                className="left-0 top-[74px] h-[calc(100dvh-74px)] max-h-[calc(100dvh-74px)] w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-x-0 border-b border-border/60 bg-background/90 p-0 shadow-2xl backdrop-blur-2xl supports-[backdrop-filter]:bg-background/78"
+                className="left-0 top-[75px] h-[calc(100dvh-75px)] max-h-[calc(100dvh-75px)] w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-x-0 border-b border-border/60 bg-background/90 p-0 shadow-2xl backdrop-blur-2xl supports-[backdrop-filter]:bg-background/78"
               >
                 <DialogTitle className="sr-only">
                   {t("nav.open_menu")}
@@ -574,11 +606,15 @@ export function Navbar() {
                         >
                           {userInitial}
                         </span>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-bold text-foreground">
                             {displayName}
                           </p>
-                          <p className="truncate text-xs text-muted-foreground">
+                          <p
+                            dir={isStaff ? undefined : "ltr"}
+                            title={isStaff ? roleLabel : user.email}
+                            className="truncate text-start text-xs text-muted-foreground"
+                          >
                             {isStaff
                               ? roleLabel
                               : (user.email ?? t("nav.profile"))}
@@ -588,7 +624,7 @@ export function Navbar() {
                     ) : null}
                   </div>
 
-                  <div className="flex-1 overflow-y-auto px-4 py-4">
+                  <div className="flex-1 overflow-y-auto px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
                     <div className="grid gap-2.5">
                       {NAV_ITEMS.map((item) => {
                         const isActive =
@@ -602,16 +638,18 @@ export function Navbar() {
                               href={item.href}
                               prefetch={false}
                               className={cn(
-                                "flex items-center justify-between rounded-[1.6rem] border px-4 py-4 text-sm font-semibold transition-all duration-200",
+                                "flex min-h-12 items-center justify-between whitespace-nowrap rounded-[1.6rem] border px-4 py-4 text-sm font-semibold transition-all duration-200",
                                 isActive
                                   ? "border-primary/20 bg-primary/[0.07] text-foreground shadow-sm"
                                   : "border-border/60 bg-card/80 text-foreground hover:border-primary/20 hover:bg-muted/40",
                               )}
                             >
-                              <span>{t(item.name)}</span>
+                              <span className="min-w-0 truncate">
+                                {t(item.name)}
+                              </span>
                               <span
                                 className={cn(
-                                  "h-2.5 w-2.5 rounded-full",
+                                  "h-2.5 w-2.5 shrink-0 rounded-full",
                                   isActive ? "bg-primary" : "bg-border",
                                 )}
                               />
@@ -653,10 +691,12 @@ export function Navbar() {
                                 <Link
                                   href="/admin/dashboard"
                                   prefetch={false}
-                                  className="flex items-center gap-3 rounded-[1.3rem] border border-border/60 bg-background/80 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/20 hover:bg-muted/40"
+                                  className="flex min-h-12 items-center gap-3 whitespace-nowrap rounded-[1.3rem] border border-border/60 bg-background/80 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/20 hover:bg-muted/40"
                                 >
-                                  <LayoutDashboard className="h-4 w-4 text-primary" />
-                                  <span>{t("nav.admin_panel")}</span>
+                                  <LayoutDashboard className="h-4 w-4 shrink-0 text-primary" />
+                                  <span className="min-w-0 truncate">
+                                    {t("nav.admin_panel")}
+                                  </span>
                                 </Link>
                               </DialogClose>
                             ) : null}
@@ -664,19 +704,23 @@ export function Navbar() {
                               <Link
                                 href={ROUTES.PROFILE}
                                 prefetch={false}
-                                className="flex items-center gap-3 rounded-[1.3rem] border border-border/60 bg-background/80 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/20 hover:bg-muted/40"
+                                className="flex min-h-12 items-center gap-3 whitespace-nowrap rounded-[1.3rem] border border-border/60 bg-background/80 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/20 hover:bg-muted/40"
                               >
-                                <Settings className="h-4 w-4 text-muted-foreground" />
-                                <span>{t("nav.profile")}</span>
+                                <Settings className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <span className="min-w-0 truncate">
+                                  {t("nav.profile")}
+                                </span>
                               </Link>
                             </DialogClose>
                             <button
                               type="button"
                               onClick={handleLogout}
-                              className="flex items-center gap-3 rounded-[1.3rem] border border-destructive/15 bg-destructive/[0.05] px-4 py-3 text-sm font-semibold text-destructive transition-colors hover:border-destructive/25 hover:bg-destructive/[0.08]"
+                              className="flex min-h-12 items-center gap-3 whitespace-nowrap rounded-[1.3rem] border border-destructive/15 bg-destructive/[0.05] px-4 py-3 text-sm font-semibold text-destructive transition-colors hover:border-destructive/25 hover:bg-destructive/[0.08]"
                             >
-                              <LogOut className="h-4 w-4" />
-                              <span>{t("auth.logout")}</span>
+                              <LogOut className="h-4 w-4 shrink-0" />
+                              <span className="min-w-0 truncate">
+                                {t("auth.logout")}
+                              </span>
                             </button>
                           </>
                         )}

@@ -272,8 +272,9 @@ export function NotificationPanel() {
       {/* ── Panel ── */}
       {isOpen && (
         <div
+          data-testid="notification-popover"
           className={cn(
-            "absolute end-0 top-[calc(100%+10px)] z-50 w-80 sm:w-96 max-w-[calc(100vw-1rem)]",
+            "fixed inset-x-2 top-[70px] z-50 w-auto max-w-none sm:absolute sm:inset-x-auto sm:end-0 sm:top-[calc(100%+10px)] sm:w-96 sm:max-w-[calc(100vw-1rem)]",
             "rounded-[1.65rem] border border-border/60 bg-gradient-to-br from-background/98 via-background/94 to-primary/[0.03]",
             "p-2.5 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.34)] ring-1 ring-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80",
             "animate-in fade-in-0 zoom-in-95 duration-150",

@@ -10,6 +10,13 @@ import { useAuth } from "@/contexts/auth-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
+import {
+  PageHeroDescription,
+  PageHeroEyebrow,
+  PageHeroSurface,
+  PageHeroTitle,
+  PageSectionSurface,
+} from "@/components/ui/page-surface";
 import { cn } from "@/lib/utils";
 import {
   getRandomPracticeHistory,
@@ -335,26 +342,24 @@ export function ExamResultsPageContent() {
       {serviceDown && <ServiceUnavailableBanner />}
 
       {/* ── Header ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-background border border-amber-500/15 px-6 py-7 shadow-sm">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-        <div className="relative flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-            <ClipboardList className="w-6 h-6 text-amber-600" />
+      <PageHeroSurface>
+        <div className="flex min-w-0 items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+            <ClipboardList className="h-6 w-6" />
           </div>
-          <div className="space-y-0.5">
-            <p className="text-sm font-semibold text-amber-600">
+          <div className="min-w-0 space-y-1">
+            <PageHeroEyebrow>
               {t("user_sidebar.exam_results")}
-            </p>
-            <h1 className="text-3xl font-black tracking-tight">
+            </PageHeroEyebrow>
+            <PageHeroTitle>
               {t("user_sidebar.exam_history_title")}
-            </h1>
-            <p className="text-sm font-medium text-muted-foreground">
+            </PageHeroTitle>
+            <PageHeroDescription>
               {t("user_sidebar.exam_history_subtitle")}
-            </p>
+            </PageHeroDescription>
           </div>
         </div>
-      </div>
+      </PageHeroSurface>
 
       {/* ── Loading ── */}
       {isLoading && (
@@ -765,23 +770,21 @@ export function ExamResultsPageContent() {
 
               return (
                 <>
-                  <div className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background px-6 py-7 shadow-sm">
-                    <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
-                    <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
-                    <div className="relative flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <PageSectionSurface className="border-primary/15">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <Shuffle className="h-5 w-5" />
                       </div>
-                      <div className="space-y-0.5">
+                      <div className="min-w-0 space-y-0.5">
                         <p className="text-sm font-semibold text-primary">
                           {t("sign_practice.badge")}
                         </p>
-                        <h2 className="text-xl font-black tracking-tight text-secondary">
+                        <h2 className="break-words text-xl font-black tracking-normal text-foreground">
                           {t("sign_practice.history_title")}
                         </h2>
                       </div>
                     </div>
-                  </div>
+                  </PageSectionSurface>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
@@ -1089,23 +1092,21 @@ export function ExamResultsPageContent() {
 
               return (
                 <>
-                  <div className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background px-6 py-7 shadow-sm">
-                    <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
-                    <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
-                    <div className="relative flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <PageSectionSurface className="border-primary/15">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <Shield className="h-5 w-5" />
                       </div>
-                      <div className="space-y-0.5">
+                      <div className="min-w-0 space-y-0.5">
                         <p className="text-sm font-semibold text-primary">
                           {t("sign_quiz.history_badge")}
                         </p>
-                        <h2 className="text-xl font-black tracking-tight text-secondary">
+                        <h2 className="break-words text-xl font-black tracking-normal text-foreground">
                           {t("sign_quiz.history_title")}
                         </h2>
                       </div>
                     </div>
-                  </div>
+                  </PageSectionSurface>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">

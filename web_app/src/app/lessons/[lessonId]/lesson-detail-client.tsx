@@ -361,12 +361,12 @@ export default function LessonDetailClient({
           </Link>
         </Button>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_360px]">
-          <div className="space-y-6">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1.6fr)_360px]">
+          <div className="min-w-0 space-y-6">
             <PageHeroSurface>
-              <div className="px-0 py-0">
+              <div className="min-w-0 px-0 py-0">
                 <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-4">
+                  <div className="min-w-0 space-y-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary hover:bg-primary/10">
                         {t("lessons.lesson")} {lesson.displayOrder}
@@ -394,13 +394,15 @@ export default function LessonDetailClient({
                       </PageHeroDescription>
                     </div>
 
-                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-xs font-medium text-muted-foreground">
-                      <Sparkles className="h-3.5 w-3.5 text-primary" />
-                      {t("lessons.detail_note")}
+                    <div className="flex w-fit max-w-full items-start gap-2 rounded-xl border border-primary/20 bg-background/80 px-3 py-2 text-xs font-medium text-muted-foreground sm:px-4">
+                      <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                      <span className="min-w-0 break-words">
+                        {t("lessons.detail_note")}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-[28px] bg-primary/10 text-5xl ring-1 ring-primary/20 shadow-sm">
+                  <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-4xl shadow-sm ring-1 ring-primary/20 sm:h-24 sm:w-24 sm:text-5xl">
                     <span aria-hidden>{lesson.icon}</span>
                   </div>
                 </div>
@@ -440,24 +442,24 @@ export default function LessonDetailClient({
                   .filter(Boolean);
 
                 return (
-                  <PageSectionSurface className="overflow-hidden rounded-[30px] border-border/50 bg-card/90 p-0">
-                    <div className="border-b border-border/40 bg-gradient-to-br from-primary/8 via-background to-transparent px-6 py-5">
+                  <PageSectionSurface className="overflow-hidden p-0">
+                    <div className="border-b border-border/40 bg-primary/[0.035] px-4 py-5 sm:px-6">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
                           <FileText className="h-4 w-4" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                             {t("lessons.page_label")} {currentPage.pageNumber}
                           </div>
-                          <h2 className="mt-1 text-xl font-black text-foreground">
+                          <h2 className="mt-1 break-words text-xl font-black text-foreground">
                             {title}
                           </h2>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-6 px-6 py-6">
+                    <div className="min-w-0 space-y-6 px-4 py-5 sm:px-6 sm:py-6">
                       <div className="space-y-4">
                         {paragraphs.map((paragraph, index) => {
                           const isBulletBlock = /^[•\-*]\s/.test(paragraph);
@@ -480,7 +482,7 @@ export default function LessonDetailClient({
                                         className="flex items-start gap-3"
                                       >
                                         <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary/70" />
-                                        <span className="text-sm leading-6 text-foreground/90">
+                                        <span className="min-w-0 break-words text-sm leading-6 text-foreground/90">
                                           {item}
                                         </span>
                                       </li>
@@ -493,7 +495,7 @@ export default function LessonDetailClient({
                           return (
                             <p
                               key={index}
-                              className="text-[0.98rem] leading-8 text-foreground/85"
+                              className="break-words text-[0.98rem] leading-8 text-foreground/85"
                             >
                               {paragraph}
                             </p>
@@ -513,7 +515,7 @@ export default function LessonDetailClient({
                                 className="flex items-start gap-3"
                               >
                                 <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                                <span className="text-sm leading-6 text-foreground/90">
+                                <span className="min-w-0 break-words text-sm leading-6 text-foreground/90">
                                   {bullet}
                                 </span>
                               </li>
@@ -527,12 +529,12 @@ export default function LessonDetailClient({
               })()}
 
             {lesson.pages.length > 1 && (
-              <PageSectionSurface className="rounded-[26px] border-border/50 bg-card/80 p-4">
+              <PageSectionSurface className="p-4">
                 {activePage === 0 ? (
                   <Button
                     variant="outline"
                     disabled
-                    className="rounded-full px-5"
+                    className="w-full rounded-xl px-3 sm:w-auto sm:px-5"
                   >
                     <ChevronStart className="h-4 w-4" />
                     {t("lessons.previous_page")}
@@ -540,7 +542,7 @@ export default function LessonDetailClient({
                 ) : (
                   <Button
                     variant="outline"
-                    className="rounded-full px-5"
+                    className="w-full rounded-xl px-3 sm:w-auto sm:px-5"
                     asChild
                   >
                     <Link href={pageHref(activePage)}>
@@ -550,7 +552,7 @@ export default function LessonDetailClient({
                   </Button>
                 )}
 
-                <div className="text-sm font-medium text-muted-foreground">
+                <div className="break-words text-center text-sm font-medium text-muted-foreground">
                   {t("lessons.question_progress", {
                     current: activePage + 1,
                     total: lesson.pages.length,
@@ -560,14 +562,14 @@ export default function LessonDetailClient({
                 {activePage >= lesson.pages.length - 1 ? (
                   <Button
                     disabled
-                    className="rounded-full px-5 shadow-sm shadow-primary/15"
+                    className="w-full rounded-xl px-3 shadow-sm shadow-primary/15 sm:w-auto sm:px-5"
                   >
                     {t("lessons.next_page")}
                     <ChevronEnd className="h-4 w-4" />
                   </Button>
                 ) : (
                   <Button
-                    className="rounded-full px-5 shadow-sm shadow-primary/15"
+                    className="w-full rounded-xl px-3 shadow-sm shadow-primary/15 sm:w-auto sm:px-5"
                     asChild
                   >
                     <Link href={pageHref(activePage + 2)}>
@@ -583,11 +585,11 @@ export default function LessonDetailClient({
               {prevLesson ? (
                 <Button
                   variant="outline"
-                  className="justify-between rounded-[24px] px-5 py-6"
+                  className="w-full min-w-0 justify-between rounded-2xl px-4 py-6 sm:px-5"
                   asChild
                 >
                   <Link href={`/lessons/${prevLesson.lessonCode}`}>
-                    <span className="inline-flex items-center gap-2">
+                    <span className="inline-flex shrink-0 items-center gap-2">
                       <ArrowStart className="h-4 w-4" />
                       {t("lessons.previous")}
                     </span>
@@ -602,14 +604,14 @@ export default function LessonDetailClient({
 
               {nextLesson && (
                 <Button
-                  className="justify-between rounded-[24px] px-5 py-6 shadow-sm shadow-primary/15"
+                  className="w-full min-w-0 justify-between rounded-2xl px-4 py-6 shadow-sm shadow-primary/15 sm:px-5"
                   asChild
                 >
                   <Link href={`/lessons/${nextLesson.lessonCode}`}>
                     <span className="truncate text-xs text-primary-foreground">
                       {getLangTitle(nextLesson, language)}
                     </span>
-                    <span className="inline-flex items-center gap-2">
+                    <span className="inline-flex shrink-0 items-center gap-2">
                       {t("lessons.next")}
                       <ArrowEnd className="h-4 w-4" />
                     </span>
@@ -620,10 +622,7 @@ export default function LessonDetailClient({
           </div>
 
           <div className="space-y-5">
-            <PageSectionSurface
-              className="rounded-[28px] border-border/50 bg-card/90"
-              title={t("lessons.your_progress")}
-            >
+            <PageSectionSurface title={t("lessons.your_progress")}>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-sm text-muted-foreground">
@@ -657,10 +656,7 @@ export default function LessonDetailClient({
               </div>
             </PageSectionSurface>
 
-            <PageSectionSurface
-              className="rounded-[28px] border-border/50 bg-card/90"
-              title={t("lessons.pages_overview")}
-            >
+            <PageSectionSurface title={t("lessons.pages_overview")}>
               {lesson.pages.map((page, index) => (
                 <Link
                   key={page.pageNumber}
@@ -687,7 +683,7 @@ export default function LessonDetailClient({
 
             <div className="grid gap-3">
               <Button
-                className="justify-between rounded-[24px] px-5 py-6 shadow-sm shadow-primary/15"
+                className="justify-between px-5 py-6 shadow-sm shadow-primary/15"
                 asChild
               >
                 <Link href="/exam">
@@ -697,7 +693,7 @@ export default function LessonDetailClient({
               </Button>
               <Button
                 variant="outline"
-                className="justify-between rounded-[24px] px-5 py-6"
+                className="justify-between px-5 py-6"
                 asChild
               >
                 <Link href="/traffic-signs">

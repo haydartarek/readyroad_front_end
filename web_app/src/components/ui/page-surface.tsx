@@ -38,14 +38,16 @@ export function PageHeroSurface({
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-sm",
+        "relative min-w-0 max-w-full overflow-hidden rounded-2xl border border-primary/15 bg-card/95 shadow-sm",
         className,
       )}
     >
-      <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
-      <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
-
-      <div className={cn("relative space-y-3 px-6 py-7", contentClassName)}>
+      <div
+        className={cn(
+          "relative min-w-0 space-y-3 border-s-4 border-primary px-4 py-6 sm:px-6 sm:py-7",
+          contentClassName,
+        )}
+      >
         {children}
       </div>
     </section>
@@ -62,7 +64,12 @@ export function PageHeroEyebrow({
   as?: ElementType;
 }) {
   return (
-    <Component className={cn("text-sm font-medium text-primary", className)}>
+    <Component
+      className={cn(
+        "min-w-0 break-words text-sm font-semibold text-primary",
+        className,
+      )}
+    >
       {children}
     </Component>
   );
@@ -80,7 +87,7 @@ export function PageHeroTitle({
   return (
     <Component
       className={cn(
-        "text-3xl font-black tracking-tight text-foreground",
+        "min-w-0 break-words text-2xl font-black tracking-normal text-foreground sm:text-3xl",
         className,
       )}
     >
@@ -100,7 +107,10 @@ export function PageHeroDescription({
 }) {
   return (
     <Component
-      className={cn("text-sm font-medium text-muted-foreground", className)}
+      className={cn(
+        "min-w-0 break-words text-sm font-medium leading-6 text-muted-foreground",
+        className,
+      )}
     >
       {children}
     </Component>
@@ -125,29 +135,31 @@ export function PageSectionSurface({
   return (
     <section
       className={cn(
-        "rounded-[1.5rem] border border-border/60 bg-card/85 p-3.5 md:p-4 shadow-sm",
+        "min-w-0 rounded-2xl border border-border/60 bg-card/90 p-4 shadow-sm sm:p-5",
         className,
       )}
     >
       {title || description || actions ? (
-        <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-0.5">
+        <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0 space-y-1">
             {title ? (
-              <h2 className="text-lg font-black tracking-tight text-foreground md:text-xl">
+              <h2 className="break-words text-lg font-black tracking-normal text-foreground sm:text-xl">
                 {title}
               </h2>
             ) : null}
             {description ? (
-              <p className="text-xs leading-5 text-muted-foreground md:text-sm">
+              <p className="break-words text-xs leading-5 text-muted-foreground sm:text-sm">
                 {description}
               </p>
             ) : null}
           </div>
-          {actions}
+          {actions ? <div className="min-w-0 shrink-0">{actions}</div> : null}
         </div>
       ) : null}
 
-      <div className={cn("space-y-3", contentClassName)}>{children}</div>
+      <div className={cn("min-w-0 space-y-3", contentClassName)}>
+        {children}
+      </div>
     </section>
   );
 }
@@ -175,8 +187,8 @@ export function PageMetricCard({
     <div
       className={cn(
         isSmall
-          ? "rounded-[0.75rem] border border-border/60 bg-background/80 p-1.5 shadow-sm"
-          : "rounded-[1.2rem] border border-border/60 bg-background/80 p-3 shadow-sm",
+          ? "min-w-0 rounded-xl border border-border/60 bg-background/80 p-2 shadow-sm"
+          : "min-w-0 rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm",
         className,
       )}
     >
@@ -199,8 +211,8 @@ export function PageMetricCard({
         <p
           className={cn(
             isSmall
-              ? "text-[13px] font-semibold leading-4 tracking-tight md:text-[13px]"
-              : "text-xl font-black tracking-tight md:text-2xl",
+              ? "break-words text-[13px] font-semibold leading-4 tracking-normal"
+              : "break-words text-xl font-black tracking-normal sm:text-2xl",
             METRIC_TONE_CLASSES[tone],
           )}
         >
@@ -211,7 +223,7 @@ export function PageMetricCard({
       <div className={cn(isSmall ? "mt-0.5 space-y-0" : "mt-2 space-y-0.5")}>
         <p
           className={cn(
-            "font-semibold uppercase text-muted-foreground",
+            "break-words font-semibold uppercase text-muted-foreground",
             isSmall
               ? "text-[8px] tracking-[0.08em]"
               : "text-[10px] tracking-[0.16em]",
@@ -222,7 +234,7 @@ export function PageMetricCard({
         {hint ? (
           <p
             className={cn(
-              "font-medium text-foreground/80",
+              "break-words font-medium text-foreground/80",
               isSmall
                 ? "text-[9px] leading-3.5 md:text-[9px]"
                 : "text-[11px] leading-4.5 md:text-xs",

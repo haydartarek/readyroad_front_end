@@ -6,7 +6,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   PageHeroDescription,
+  PageHeroEyebrow,
+  PageHeroSurface,
   PageHeroTitle,
+  PageMetricCard,
+  PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { useLanguage } from "@/contexts/language-context";
@@ -151,12 +155,14 @@ export default function TheoryExamPage() {
     >
       <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
-          <section className="border-y border-primary/15 bg-primary/[0.04] px-1 py-8 sm:px-6">
+          <PageHeroSurface>
             <div className="max-w-3xl space-y-6">
-              <div className="inline-flex items-center gap-2 text-sm font-bold text-primary">
-                <ClipboardList className="h-4 w-4" aria-hidden />
-                {t("practice_exam.badge")}
-              </div>
+              <PageHeroEyebrow className="flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 shrink-0" aria-hidden />
+                <span className="min-w-0 break-words">
+                  {t("practice_exam.badge")}
+                </span>
+              </PageHeroEyebrow>
 
               <div className="space-y-3">
                 <PageHeroTitle>
@@ -168,20 +174,23 @@ export default function TheoryExamPage() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
-                <ExamFact
+                <PageMetricCard
                   icon={<ClipboardList className="h-5 w-5" />}
                   value={String(EXAM_RULES.TOTAL_QUESTIONS)}
                   label={t("exam.total_questions")}
+                  tone="primary"
                 />
-                <ExamFact
+                <PageMetricCard
                   icon={<Clock3 className="h-5 w-5" />}
                   value={`${EXAM_RULES.DURATION_MINUTES} min`}
                   label={t("exam.duration")}
+                  tone="primary"
                 />
-                <ExamFact
+                <PageMetricCard
                   icon={<Trophy className="h-5 w-5" />}
                   value={`${EXAM_RULES.PASSING_SCORE}/${EXAM_RULES.TOTAL_QUESTIONS}`}
                   label={t("exam.pass_score")}
+                  tone="primary"
                 />
               </div>
 
@@ -195,7 +204,7 @@ export default function TheoryExamPage() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"
-                  className="h-12 flex-1 gap-2"
+                  className="flex-1 gap-2"
                   disabled={isChecking || isStarting}
                   onClick={() => void startOrResumeExam()}
                 >
@@ -212,26 +221,20 @@ export default function TheoryExamPage() {
                       ? t("exam.back_to_exam_start")
                       : t("practice_exam.start_btn")}
                 </Button>
-                <Button variant="outline" size="lg" className="h-12" asChild>
+                <Button variant="outline" size="lg" asChild>
                   <Link href="/practice">
                     {t("practice_exam.back_practice")}
                   </Link>
                 </Button>
               </div>
             </div>
-          </section>
+          </PageHeroSurface>
 
-          <aside className="border-l border-border/70 px-0 py-2 lg:px-6">
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-lg font-black text-foreground">
-                  {t("exam.rules.title")}
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {t("exam.rules.subtitle")}
-                </p>
-              </div>
-
+          <PageSectionSurface
+            title={t("exam.rules.title")}
+            description={t("exam.rules.subtitle")}
+          >
+            <aside>
               <div className="space-y-4">
                 <ExamRule
                   icon={<CheckCircle2 className="h-5 w-5" />}
@@ -250,30 +253,10 @@ export default function TheoryExamPage() {
                   text={t("exam.rules.content.submission")}
                 />
               </div>
-            </div>
-          </aside>
+            </aside>
+          </PageSectionSurface>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ExamFact({
-  icon,
-  value,
-  label,
-}: {
-  icon: React.ReactNode;
-  value: string;
-  label: string;
-}) {
-  return (
-    <div className="border-l-2 border-primary px-4 py-2">
-      <div className="flex items-center gap-2 text-primary">{icon}</div>
-      <p className="mt-2 text-2xl font-black tabular-nums text-foreground">
-        {value}
-      </p>
-      <p className="mt-1 text-sm font-medium text-muted-foreground">{label}</p>
     </div>
   );
 }

@@ -294,6 +294,12 @@ export function Navbar() {
             {user ? <NotificationPanel /> : null}
           </div>
 
+          {user ? (
+            <div data-testid="mobile-notifications" className="lg:hidden">
+              <NotificationPanel />
+            </div>
+          ) : null}
+
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -544,12 +550,6 @@ export function Navbar() {
                     </div>
 
                     <div className="mt-4 flex items-center gap-2 rounded-[1.6rem] border border-border/60 bg-muted/35 p-2">
-                      {user ? (
-                        <div className="shrink-0">
-                          <NotificationPanel />
-                        </div>
-                      ) : null}
-
                       <button
                         type="button"
                         aria-label={

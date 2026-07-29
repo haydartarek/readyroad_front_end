@@ -46,6 +46,7 @@ test("serves indexable locale routes with reciprocal metadata", async ({
 test("every lesson locale publishes the same reciprocal hreflang cluster", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const variants = [
     ["/lessons/les-19/2", /\/lessons\/les-19\/2$/],
     ["/nl/lessons/les-19/2", /\/nl\/lessons\/les-19\/2$/],

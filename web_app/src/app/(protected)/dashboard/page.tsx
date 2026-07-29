@@ -18,6 +18,13 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { StatusScreen } from "@/components/ui/status-screen";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  PageHeroDescription,
+  PageHeroEyebrow,
+  PageHeroSurface,
+  PageHeroTitle,
+  PageMetricCard,
+} from "@/components/ui/page-surface";
 import { cn } from "@/lib/utils";
 import Link from "@/components/localized-link";
 import {
@@ -141,15 +148,11 @@ function GreetingHeader({
         : t("dashboard.greeting_evening");
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
-      <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-      <div className="relative space-y-1">
-        <p className="text-sm font-medium text-primary">{greeting}</p>
-        <h1 className="text-3xl font-black tracking-tight">{name}!</h1>
-        <p className="text-muted-foreground text-sm font-medium">{subtitle}</p>
-      </div>
-    </div>
+    <PageHeroSurface>
+      <PageHeroEyebrow>{greeting}</PageHeroEyebrow>
+      <PageHeroTitle>{name}!</PageHeroTitle>
+      <PageHeroDescription>{subtitle}</PageHeroDescription>
+    </PageHeroSurface>
   );
 }
 
@@ -743,8 +746,8 @@ function DashboardHome() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8 p-6">
-        <div className="rounded-2xl bg-muted/40 border border-border/30 px-6 py-7 space-y-2 animate-pulse">
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+        <div className="space-y-2 rounded-2xl border border-border/30 bg-muted/40 px-4 py-6 animate-pulse sm:px-6 sm:py-7">
           <div className="h-3 w-24 bg-muted rounded-full" />
           <div className="h-8 w-48 bg-muted rounded-full" />
           <div className="h-3 w-64 bg-muted rounded-full" />
@@ -817,7 +820,7 @@ function DashboardHome() {
   }
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       {/* Welcome Header */}
       <GreetingHeader
         name={`${t("dashboard.welcome_back")} ${firstName}`}
@@ -859,20 +862,13 @@ function DashboardHome() {
             bg: "bg-primary/10",
           },
         ].map((stat, i) => (
-          <div
+          <PageMetricCard
             key={i}
-            className="flex items-center gap-3 rounded-2xl border border-border/40 bg-card/80 px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-200"
-          >
-            <div
-              className={`w-9 h-9 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center flex-shrink-0`}
-            >
-              {stat.icon}
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-              <p className="text-lg font-black leading-tight">{stat.value}</p>
-            </div>
-          </div>
+            icon={<span className={stat.color}>{stat.icon}</span>}
+            label={stat.label}
+            value={stat.value}
+            tone={stat.color === "text-secondary" ? "default" : "primary"}
+          />
         ))}
       </div>
 

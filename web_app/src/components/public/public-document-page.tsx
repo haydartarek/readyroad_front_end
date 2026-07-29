@@ -76,11 +76,11 @@ export function PublicDocumentPage({
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Icon className="h-6 w-6" aria-hidden="true" />
             </span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-primary">
                 {document.eyebrow}
               </p>
-              <h1 className="mt-1 text-3xl font-black tracking-normal sm:text-4xl">
+              <h1 className="mt-1 max-w-full break-words text-3xl font-black tracking-normal sm:text-4xl">
                 {document.title}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -104,7 +104,7 @@ export function PublicDocumentPage({
               >
                 <h2
                   id={headingId}
-                  className="text-xl font-black tracking-normal"
+                  className="break-words text-xl font-black tracking-normal"
                 >
                   {section.title}
                 </h2>
@@ -139,7 +139,9 @@ export function PublicDocumentPage({
                         rel="noopener noreferrer"
                         className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        <span>{reference.label}</span>
+                        <span className="min-w-0 break-words">
+                          {reference.label}
+                        </span>
                         <ExternalLink
                           className="h-4 w-4 shrink-0"
                           aria-hidden="true"

@@ -7,7 +7,10 @@ import Link from "@/components/localized-link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageHeroTitle } from "@/components/ui/page-surface";
+import {
+  PageHeroSurface,
+  PageHeroTitle,
+} from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -371,22 +374,15 @@ export default function ExamResultsPage() {
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className="relative min-h-screen overflow-hidden bg-gradient-to-b from-background via-background to-muted/35 pb-8"
+      className="relative min-h-screen overflow-hidden bg-background pb-8"
     >
-      <div className="pointer-events-none absolute -top-32 right-[-8rem] h-[24rem] w-[24rem] rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 left-[-8rem] h-[20rem] w-[20rem] rounded-full bg-secondary/10 blur-3xl" />
-
       <div className="container relative mx-auto max-w-5xl space-y-4 px-4 py-6">
-        <div
+        <PageHeroSurface
           className={cn(
-            "relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-sm",
             results.passed ? "border-green-200" : "border-red-200/70",
           )}
         >
-          <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
-          <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
-
-          <div className="relative grid gap-5 px-6 py-7 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+          <div className="grid min-w-0 gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
             <div className="space-y-4">
               <div
                 className={cn(
@@ -568,7 +564,7 @@ export default function ExamResultsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </PageHeroSurface>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
           <section className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/85 shadow-sm">

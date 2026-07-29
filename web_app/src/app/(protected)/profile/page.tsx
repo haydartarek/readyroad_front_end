@@ -13,6 +13,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+  PageMetricCard,
+} from "@/components/ui/page-surface";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -68,34 +74,6 @@ function SectionHeader({
         {icon}
       </div>
       <CardTitle className="text-lg font-black">{title}</CardTitle>
-    </div>
-  );
-}
-
-// ─── Stat Pill ───────────────────────────────────────────
-
-function StatPill({
-  icon,
-  value,
-  label,
-  color,
-  bg,
-}: {
-  icon: React.ReactNode;
-  value: string;
-  label: string;
-  color: string;
-  bg: string;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border border-border/40 bg-card px-4 py-5 text-center shadow-sm hover:shadow-md transition-all">
-      <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center ${bg} ${color}`}
-      >
-        {icon}
-      </div>
-      <p className={`text-2xl font-black leading-none ${color}`}>{value}</p>
-      <p className="text-xs text-muted-foreground font-medium">{label}</p>
     </div>
   );
 }
@@ -321,8 +299,7 @@ export function ProfilePageContent({
     <>
       <div
         className={cn(
-          !embedded &&
-            "min-h-screen bg-gradient-to-b from-muted/40 to-background",
+          !embedded && "min-h-screen bg-background",
         )}
       >
         <div
@@ -338,29 +315,24 @@ export function ProfilePageContent({
           )}
 
           {/* ── Hero Banner ── */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
-            <div className="pointer-events-none absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="pointer-events-none absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-
-            <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-6">
+          <PageHeroSurface>
+            <div className="flex min-w-0 flex-col items-center gap-5 sm:flex-row sm:items-end">
               {/* Avatar */}
-              <div className="w-24 h-24 rounded-3xl bg-primary/15 border-2 border-primary/30 flex items-center justify-center text-primary text-4xl font-black shadow-md flex-shrink-0">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-3xl font-black text-primary shadow-sm sm:h-24 sm:w-24 sm:text-4xl">
                 {initials ? (
                   initials
                 ) : (
-                  <User className="w-12 h-12" strokeWidth={1.5} />
+                  <User className="h-11 w-11" strokeWidth={1.5} />
                 )}
               </div>
 
               {/* Info */}
-              <div className="text-center sm:text-start space-y-1 flex-1">
-                <h1 className="text-3xl font-black tracking-tight text-foreground">
-                  {fullName}
-                </h1>
-                <p className="text-muted-foreground text-sm font-medium">
+              <div className="min-w-0 flex-1 space-y-1 text-center sm:text-start">
+                <PageHeroTitle>{fullName}</PageHeroTitle>
+                <PageHeroDescription className="break-all">
                   @{user.username}
-                </p>
-                <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
+                </PageHeroDescription>
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-1 sm:justify-start">
                   <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary ring-1 ring-primary/20">
                     {t("profile.badge_free")}
                   </span>
@@ -372,7 +344,7 @@ export function ProfilePageContent({
 
               {/* Member since */}
               <div className="hidden sm:block text-end">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
                   {t("profile.member_since_label")}
                 </p>
                 <p className="text-foreground font-bold mt-0.5">
@@ -380,7 +352,7 @@ export function ProfilePageContent({
                 </p>
               </div>
             </div>
-          </div>
+          </PageHeroSurface>
 
           {/* ── Two-column layout ── */}
           <div className="grid gap-6 lg:grid-cols-3">
@@ -395,26 +367,23 @@ export function ProfilePageContent({
                   />
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 gap-3">
-                  <StatPill
-                    icon={<Trophy className="w-4 h-4" />}
+                  <PageMetricCard
+                    icon={<Trophy className="h-4 w-4" />}
                     value={String(stats.examsCount)}
                     label={t("profile.stat_exams_taken")}
-                    color="text-amber-500"
-                    bg="bg-amber-500/10"
+                    tone="warning"
                   />
-                  <StatPill
-                    icon={<Target className="w-4 h-4" />}
+                  <PageMetricCard
+                    icon={<Target className="h-4 w-4" />}
                     value={`${Math.round(stats.avgScore)}%`}
                     label={t("profile.stat_avg_score")}
-                    color="text-green-500"
-                    bg="bg-green-500/10"
+                    tone="success"
                   />
-                  <StatPill
-                    icon={<Flame className="w-4 h-4" />}
+                  <PageMetricCard
+                    icon={<Flame className="h-4 w-4" />}
                     value={String(stats.practiceCount)}
                     label={t("profile.stat_practice_qs")}
-                    color="text-blue-500"
-                    bg="bg-blue-500/10"
+                    tone="primary"
                   />
                 </CardContent>
               </Card>

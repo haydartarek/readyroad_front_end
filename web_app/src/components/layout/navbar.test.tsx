@@ -203,6 +203,26 @@ describe("Navbar responsive account navigation", () => {
     ).toHaveClass("min-[1280px]:hidden");
   });
 
+  test("keeps one notification trigger available outside the mobile menu", () => {
+    render(<Navbar />);
+
+    const mobileNotifications = screen.getByTestId("mobile-notifications");
+    expect(mobileNotifications).toHaveClass("lg:hidden");
+    expect(
+      within(mobileNotifications).getByRole("button", {
+        name: "Notifications",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("navbar-actions")).getAllByRole("button", {
+        name: "Notifications",
+      }),
+    ).toHaveLength(2);
+    expect(
+      screen.queryByTestId("mobile-navigation-dialog"),
+    ).not.toBeInTheDocument();
+  });
+
   test.each([
     ["en", "Dashboard", "/dashboard"],
     ["nl", "Dashboard", "/nl/dashboard"],

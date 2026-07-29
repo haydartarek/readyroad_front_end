@@ -153,7 +153,7 @@ test.describe("Milestone 4 UX and accessibility", () => {
       "/forgot-password",
       "/reset-password",
     ]) {
-      await page.goto(route);
+      await navigateToPublicRoute(page, route);
       await expect(page.locator("main"), route).toHaveCount(1);
       await expect(page.locator("h1"), route).toHaveCount(1);
     }

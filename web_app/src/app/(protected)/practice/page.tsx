@@ -17,6 +17,7 @@ import {
   PageHeroDescription,
   PageHeroSurface,
   PageHeroTitle,
+  PageMetricCard,
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
@@ -60,7 +61,7 @@ function LoadingSpinner({ message }: { message?: string }) {
   const { t } = useLanguage();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center space-y-4">
         <div className="relative mx-auto w-16 h-16">
           <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
@@ -186,9 +187,9 @@ export default function PracticePage() {
   return (
     <div
       dir={isRtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background"
+      className="min-h-screen bg-background"
     >
-      <div className="container mx-auto max-w-6xl px-4 py-10 space-y-8">
+      <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
         <PageHeroSurface contentClassName="space-y-4">
           <div className="space-y-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -238,22 +239,12 @@ export default function PracticePage() {
                     label: t("practice.hub.metric_languages"),
                   },
                 ].map((metric) => (
-                  <div
+                  <PageMetricCard
                     key={metric.label}
-                    className="rounded-[1.35rem] border border-border/60 bg-background/80 px-3 py-3 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-muted/70 text-foreground/70 ring-1 ring-border/50 dark:bg-muted/40 dark:text-foreground/80">
-                        {metric.icon}
-                      </div>
-                      <p className="text-2xl font-black tracking-tight text-foreground">
-                        {metric.value}
-                      </p>
-                    </div>
-                    <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      {metric.label}
-                    </p>
-                  </div>
+                    icon={metric.icon}
+                    value={metric.value}
+                    label={metric.label}
+                  />
                 ))}
               </div>
             </div>
@@ -281,7 +272,7 @@ export default function PracticePage() {
                 size="sm"
                 variant="outline"
                 onClick={fetchData}
-                className={`gap-1 ${isRtl ? "mr-4" : "ml-4"}`}
+                className="ms-4 gap-1"
               >
                 <RefreshCw className="w-3 h-3" /> {t("practice.retry")}
               </Button>
@@ -325,7 +316,7 @@ export default function PracticePage() {
             <div className="flex flex-col gap-3 lg:w-[240px]">
               <Button
                 onClick={() => router.push("/traffic-signs")}
-                className="font-bold flex-shrink-0 gap-2 hover:scale-[1.02] transition-all duration-200"
+                className="flex-shrink-0 gap-2 font-bold"
                 size="lg"
               >
                 <BookOpen className="w-4 h-4" />

@@ -129,18 +129,18 @@ export function WeakAreasPageContent() {
   // ── Empty state ──────────────────────────────────
   if (!data || !data.weakAreas || data.weakAreas.length === 0) {
     return (
-      <div className="max-w-6xl mx-auto space-y-8 py-4">
+      <div className="mx-auto max-w-6xl space-y-6 py-4">
         {pageHeader}
 
         {/* Success card */}
-        <Card className="rounded-3xl border-2 border-green-200 dark:border-green-900/40 bg-gradient-to-br from-green-50/80 to-emerald-50/40 dark:from-green-950/20 dark:to-emerald-950/10 shadow-sm overflow-hidden">
-          <CardContent className="pt-12 pb-10 flex flex-col items-center text-center space-y-6">
+        <Card className="overflow-hidden border-green-200/80 bg-card/90 dark:border-green-900/50">
+          <CardContent className="flex flex-col items-center space-y-6 pb-10 pt-12 text-center">
             {/* Icon */}
             <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/25">
-                <Trophy className="w-10 h-10 text-white" />
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-green-100 text-green-700 ring-1 ring-green-200 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-900/60">
+                <Trophy className="h-10 w-10" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-sm border-2 border-background">
+              <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-primary shadow-sm">
                 <span className="text-white text-xs font-black leading-none">
                   ✓
                 </span>
@@ -149,7 +149,7 @@ export function WeakAreasPageContent() {
 
             {/* Text */}
             <div className="space-y-2 max-w-sm">
-              <h2 className="text-3xl font-black tracking-tight">
+              <h2 className="break-words text-2xl font-black tracking-normal sm:text-3xl">
                 {t("weak_areas.no_weak_areas_title")}
               </h2>
               <p className="text-muted-foreground">
@@ -158,11 +158,11 @@ export function WeakAreasPageContent() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-wrap gap-3 justify-center pt-1">
+            <div className="flex w-full flex-col justify-center gap-3 pt-1 sm:w-auto sm:flex-row sm:flex-wrap">
               <Button
                 size="lg"
                 asChild
-                className="gap-2 rounded-xl shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform"
+                className="w-full gap-2 shadow-sm shadow-primary/20 sm:w-auto"
               >
                 <Link href="/exam">
                   <Target className="w-4 h-4" />
@@ -173,7 +173,7 @@ export function WeakAreasPageContent() {
                 size="lg"
                 variant="outline"
                 asChild
-                className="gap-2 rounded-xl"
+                className="w-full gap-2 sm:w-auto"
               >
                 <Link href="/practice">
                   <PenLine className="w-4 h-4" />
@@ -184,7 +184,7 @@ export function WeakAreasPageContent() {
                 size="lg"
                 variant="outline"
                 asChild
-                className="gap-2 rounded-xl"
+                className="w-full gap-2 sm:w-auto"
               >
                 <Link href="/lessons">
                   <BookOpen className="w-4 h-4" />
@@ -200,7 +200,7 @@ export function WeakAreasPageContent() {
 
   // ── Data state ───────────────────────────────────
   return (
-    <div className="max-w-6xl mx-auto space-y-8 py-4">
+    <div className="mx-auto max-w-6xl space-y-6 py-4">
       {pageHeader}
 
       {/* Summary Cards */}
@@ -226,7 +226,7 @@ export function WeakAreasPageContent() {
       <WeakAreaDetails weakAreas={data.weakAreas} />
 
       {/* Actions Card */}
-      <Card className="rounded-2xl border-border/50 shadow-sm">
+      <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -246,20 +246,20 @@ export function WeakAreasPageContent() {
           <div className="grid gap-3 md:grid-cols-3">
             <Button
               asChild
-              className="gap-2 rounded-xl shadow-sm shadow-primary/20"
+              className="gap-2 shadow-sm shadow-primary/20"
             >
               <Link href="/practice">
                 <PenLine className="w-4 h-4" />
                 {t("weak_areas.practice_mode")}
               </Link>
             </Button>
-            <Button variant="outline" asChild className="gap-2 rounded-xl">
+            <Button variant="outline" asChild className="gap-2">
               <Link href="/lessons">
                 <BookOpen className="w-4 h-4" />
                 {t("weak_areas.study_lessons")}
               </Link>
             </Button>
-            <Button variant="outline" asChild className="gap-2 rounded-xl">
+            <Button variant="outline" asChild className="gap-2">
               <Link href="/exam">
                 <Target className="w-4 h-4" />
                 {t("weak_areas.take_full_exam")}

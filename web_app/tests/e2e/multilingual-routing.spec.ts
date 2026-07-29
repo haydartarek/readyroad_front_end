@@ -134,6 +134,11 @@ test("desktop navbar remains single-line and balanced in every language", async 
           primaryOverflow:
             navigationPill instanceof HTMLElement &&
             navigationPill.scrollWidth > navigationPill.clientWidth,
+          primaryHeadroom:
+            primary instanceof HTMLElement &&
+            navigationPill instanceof HTMLElement
+              ? primary.clientWidth - navigationPill.scrollWidth
+              : -1,
           primaryOverlap:
             navigationPill instanceof HTMLElement &&
             actions instanceof HTMLElement &&
@@ -152,7 +157,11 @@ test("desktop navbar remains single-line and balanced in every language", async 
         };
       });
 
-      expect(metrics, `${width}px ${path}`).toEqual({
+      const { primaryHeadroom, ...stableMetrics } = metrics;
+      expect(primaryHeadroom, `${width}px ${path} navigation headroom`).toBeGreaterThanOrEqual(
+        8,
+      );
+      expect(stableMetrics, `${width}px ${path}`).toEqual({
         navbarHeight: 75,
         pageOverflow: false,
         primaryVisible: true,

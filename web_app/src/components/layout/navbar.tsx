@@ -92,7 +92,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-full px-1 py-2 text-[13px] font-semibold transition-all duration-200 min-[1536px]:px-2 min-[1536px]:text-sm",
+        "shrink-0 whitespace-nowrap rounded-full px-1 py-2 text-xs font-semibold transition-all duration-200 min-[1536px]:px-2 min-[1536px]:text-sm",
         isActive
           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
           : "text-muted-foreground hover:bg-background hover:text-foreground",

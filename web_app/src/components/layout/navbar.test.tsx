@@ -190,12 +190,17 @@ describe("Navbar responsive account navigation", () => {
 
     const search = screen.getByRole("textbox", { name: "nav.search" });
     expect(search).toHaveClass("w-32");
-    expect(search).toHaveClass("2xl:w-36");
+    expect(search).toHaveClass("shrink-0");
     expect(search).not.toHaveClass("w-40");
+    expect(search).not.toHaveClass("2xl:w-36");
     expect(search).not.toHaveClass("2xl:w-48");
     expect(screen.getByTestId("site-navbar").firstElementChild).toHaveClass(
       "h-[74px]",
     );
+    expect(primaryNavigation).toHaveClass("min-[1280px]:flex");
+    expect(
+      screen.getByRole("button", { name: "nav.open_menu" }).parentElement,
+    ).toHaveClass("min-[1280px]:hidden");
   });
 
   test.each([

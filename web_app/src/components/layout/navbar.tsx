@@ -92,7 +92,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-full px-2 py-2 text-sm font-semibold transition-all duration-200",
+        "shrink-0 whitespace-nowrap rounded-full px-1.5 py-2 text-sm font-semibold transition-all duration-200 min-[1536px]:px-2",
         isActive
           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
           : "text-muted-foreground hover:bg-background hover:text-foreground",
@@ -200,11 +200,11 @@ export function Navbar() {
       data-testid="site-navbar"
       className="sticky top-0 z-50 border-b border-border/60 bg-background/92 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70"
     >
-      <div className="mx-auto flex h-[74px] w-full max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6">
+      <div className="mx-auto flex h-[74px] w-full max-w-[1600px] items-center justify-between gap-2 px-3 sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-6">
         <Link
           href="/"
           prefetch={false}
-          className="flex shrink-0 items-center gap-3"
+          className="flex shrink-0 items-center gap-2 min-[1600px]:gap-3"
         >
           <Image
             src="/images/logo.png"
@@ -224,9 +224,9 @@ export function Navbar() {
 
         <div
           data-testid="desktop-primary-navigation"
-          className="hidden min-w-0 flex-1 items-center justify-center min-[1600px]:flex"
+          className="hidden min-w-0 flex-1 items-center justify-center min-[1280px]:flex"
         >
-          <div className="flex min-w-0 items-center gap-0.5 rounded-full border border-border/60 bg-muted/45 p-1 shadow-sm">
+          <div className="flex min-w-0 items-center rounded-full border border-border/60 bg-muted/45 p-1 shadow-sm">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.href}
@@ -238,7 +238,7 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 min-[1536px]:gap-2">
           <div
             ref={searchContainer}
             className="relative hidden items-center xl:flex"
@@ -260,7 +260,7 @@ export function Navbar() {
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               className={cn(
-                "h-11 w-32 rounded-full border border-border/70 bg-muted/40 py-2 text-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12 2xl:w-36",
+                "h-11 w-32 shrink-0 rounded-full border border-border/70 bg-muted/40 py-2 text-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12",
                 isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
               )}
             />
@@ -433,7 +433,7 @@ export function Navbar() {
                 <button
                   type="button"
                   aria-label={t("nav.language_menu")}
-                  className="inline-flex h-11 items-center gap-2 rounded-full border border-border/70 bg-card px-3 text-sm font-semibold shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50"
+                  className="inline-flex h-11 items-center gap-1.5 rounded-full border border-border/70 bg-card px-2 text-sm font-semibold shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 min-[1536px]:gap-2 min-[1536px]:px-3"
                 >
                   <span className="text-xs font-bold text-muted-foreground">
                     {currentLanguage?.flag}
@@ -468,7 +468,7 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 asChild
-                className="rounded-full px-4 font-semibold"
+                className="rounded-full px-2.5 font-semibold min-[1536px]:px-4"
               >
                 <Link href={ROUTES.LOGIN} prefetch={false}>
                   {t("auth.login")}
@@ -477,7 +477,7 @@ export function Navbar() {
               <Button
                 size="sm"
                 asChild
-                className="rounded-full px-5 font-semibold shadow-lg shadow-primary/20"
+                className="rounded-full px-3 font-semibold shadow-lg shadow-primary/20 min-[1536px]:px-5"
               >
                 <Link href={ROUTES.REGISTER} prefetch={false}>
                   {t("auth.register")}
@@ -486,7 +486,7 @@ export function Navbar() {
             </div>
           ) : null}
 
-          <div className="flex items-center min-[1600px]:hidden">
+          <div className="flex items-center min-[1280px]:hidden">
             <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <DialogTrigger asChild>
                 <Button

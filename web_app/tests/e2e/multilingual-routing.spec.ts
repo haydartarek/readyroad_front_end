@@ -103,43 +103,56 @@ test("language switch keeps the current lesson page", async ({ page }) => {
 test("desktop navbar remains single-line and balanced in every language", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1600, height: 900 });
+  test.setTimeout(60_000);
 
   for (const path of ["/", "/nl", "/fr", "/ar"]) {
+    await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(path);
     await page.evaluate(() => document.fonts.ready);
 
-    const metrics = await page.getByTestId("site-navbar").evaluate((navbar) => {
-      const primary = navbar.querySelector(
-        '[data-testid="desktop-primary-navigation"]',
-      );
-      const links = primary ? [...primary.querySelectorAll("a")] : [];
-      const search = navbar.querySelector<HTMLInputElement>("#navbar-search");
+    for (const width of [1280, 1366, 1440, 1536, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
 
-      return {
-        navbarHeight: navbar.getBoundingClientRect().height,
-        pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
-        primaryVisible:
-          primary instanceof HTMLElement &&
-          getComputedStyle(primary).display !== "none",
-        primaryOverflow:
-          primary instanceof HTMLElement &&
-          primary.scrollWidth > primary.clientWidth,
-        wrappedLinks: links.filter(
-          (link) => getComputedStyle(link).whiteSpace !== "nowrap",
-        ).length,
-        searchWidth: search?.getBoundingClientRect().width ?? 0,
-      };
-    });
+      const metrics = await page.getByTestId("site-navbar").evaluate((navbar) => {
+        const primary = navbar.querySelector(
+          '[data-testid="desktop-primary-navigation"]',
+        );
+        const links = primary ? [...primary.querySelectorAll("a")] : [];
+        const search = navbar.querySelector<HTMLInputElement>("#navbar-search");
+        const menuButton = [...navbar.querySelectorAll("button")].find((button) =>
+          button.querySelector(".lucide-menu"),
+        );
 
-    expect(metrics).toEqual({
-      navbarHeight: 75,
-      pageOverflow: false,
-      primaryVisible: true,
-      primaryOverflow: false,
-      wrappedLinks: 0,
-      searchWidth: 144,
-    });
+        return {
+          navbarHeight: navbar.getBoundingClientRect().height,
+          pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+          primaryVisible:
+            primary instanceof HTMLElement &&
+            getComputedStyle(primary).display !== "none",
+          primaryOverflow:
+            primary instanceof HTMLElement &&
+            primary.scrollWidth > primary.clientWidth,
+          wrappedLinks: links.filter(
+            (link) => getComputedStyle(link).whiteSpace !== "nowrap",
+          ).length,
+          menuVisible:
+            menuButton instanceof HTMLElement &&
+            getComputedStyle(menuButton).display !== "none" &&
+            menuButton.getBoundingClientRect().width > 0,
+          searchWidth: search?.getBoundingClientRect().width ?? 0,
+        };
+      });
+
+      expect(metrics).toEqual({
+        navbarHeight: 75,
+        pageOverflow: false,
+        primaryVisible: true,
+        primaryOverflow: false,
+        wrappedLinks: 0,
+        menuVisible: false,
+        searchWidth: 128,
+      });
+    }
   }
 });
 
@@ -147,8 +160,7 @@ test("navbar uses a stable compact menu without overflow below desktop", async (
   page,
 }) => {
   for (const viewport of [
-    { width: 1366, height: 768 },
-    { width: 1536, height: 864 },
+    { width: 1024, height: 768 },
     { width: 768, height: 1024 },
     { width: 375, height: 812 },
   ]) {

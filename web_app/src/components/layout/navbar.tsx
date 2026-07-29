@@ -204,7 +204,8 @@ export function Navbar() {
         <Link
           href="/"
           prefetch={false}
-          className="flex shrink-0 items-center gap-2 min-[1600px]:gap-3"
+          aria-label="ReadyRoad"
+          className="flex shrink-0 items-center gap-2 max-[359px]:gap-0 min-[1600px]:gap-3"
         >
           <Image
             src="/images/logo.png"
@@ -212,9 +213,9 @@ export function Navbar() {
             aria-hidden="true"
             width={48}
             height={48}
-            className="rounded-2xl ring-1 ring-border/50 xl:h-10 xl:w-10 min-[1536px]:h-12 min-[1536px]:w-12"
+            className="shrink-0 rounded-2xl ring-1 ring-border/50 max-[359px]:h-10 max-[359px]:w-10 max-[359px]:rounded-xl xl:h-10 xl:w-10 min-[1536px]:h-12 min-[1536px]:w-12"
           />
-          <span className="text-[1.12rem] font-black leading-none tracking-tight sm:text-[1.24rem] md:text-[1.34rem] lg:text-[1.48rem] xl:text-base min-[1536px]:text-[1.34rem] min-[1600px]:text-[1.48rem]">
+          <span className="text-[1.12rem] font-black leading-none tracking-tight max-[359px]:hidden sm:text-[1.24rem] md:text-[1.34rem] lg:text-[1.48rem] xl:text-base min-[1536px]:text-[1.34rem] min-[1600px]:text-[1.48rem]">
             <span className="text-primary">R</span>
             <span className="text-secondary">eady</span>
             <span className="text-primary">R</span>

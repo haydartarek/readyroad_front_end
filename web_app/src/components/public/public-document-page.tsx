@@ -63,7 +63,7 @@ export function PublicDocumentPage({
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
 
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto min-w-0 w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
         <Breadcrumb
           items={[
             { label: homeLabel, href: "/" },
@@ -71,24 +71,24 @@ export function PublicDocumentPage({
           ]}
         />
 
-        <header className="border-b border-border pb-8 pt-2">
-          <div className="flex items-start gap-4">
+        <header className="min-w-0 border-b border-border pb-8 pt-2">
+          <div className="flex min-w-0 items-start gap-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Icon className="h-6 w-6" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-primary">
+              <p className="break-words text-sm font-bold text-primary [overflow-wrap:anywhere]">
                 {document.eyebrow}
               </p>
-              <h1 className="mt-1 max-w-full break-words text-3xl font-black tracking-normal sm:text-4xl">
+              <h1 className="mt-1 max-w-full break-words text-2xl font-black tracking-normal [overflow-wrap:anywhere] sm:text-4xl">
                 {document.title}
               </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-2 break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">
                 {document.lastUpdated}
               </p>
             </div>
           </div>
-          <p className="mt-6 max-w-3xl text-base leading-8 text-muted-foreground sm:text-lg">
+          <p className="mt-6 max-w-3xl break-words text-base leading-8 text-muted-foreground [overflow-wrap:anywhere] sm:text-lg">
             {document.intro}
           </p>
         </header>
@@ -100,46 +100,48 @@ export function PublicDocumentPage({
               <section
                 key={section.title}
                 aria-labelledby={headingId}
-                className="py-8"
+                className="min-w-0 py-8"
               >
                 <h2
                   id={headingId}
-                  className="break-words text-xl font-black tracking-normal"
+                  className="break-words text-xl font-black tracking-normal [overflow-wrap:anywhere]"
                 >
                   {section.title}
                 </h2>
 
-                <div className="mt-4 max-w-4xl space-y-4 text-[15px] leading-7 text-muted-foreground">
+                <div className="mt-4 min-w-0 max-w-4xl space-y-4 break-words text-[15px] leading-7 text-muted-foreground [overflow-wrap:anywhere]">
                   {section.paragraphs.map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
                   ))}
                 </div>
 
                 {section.items?.length ? (
-                  <ul className="mt-5 max-w-4xl space-y-3">
+                  <ul className="mt-5 min-w-0 max-w-4xl space-y-3">
                     {section.items.map((item) => (
                       <li key={item} className="flex gap-3 text-sm leading-7">
                         <span
                           className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
                           aria-hidden="true"
                         />
-                        <span className="text-muted-foreground">{item}</span>
+                        <span className="min-w-0 break-words text-muted-foreground [overflow-wrap:anywhere]">
+                          {item}
+                        </span>
                       </li>
                     ))}
                   </ul>
                 ) : null}
 
                 {section.references?.length ? (
-                  <div className="mt-5 flex flex-wrap gap-3">
+                  <div className="mt-5 flex min-w-0 flex-wrap gap-3">
                     {section.references.map((reference) => (
                       <Link
                         key={reference.id}
                         href={reference.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="inline-flex min-h-10 min-w-0 max-w-full items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        <span className="min-w-0 break-words">
+                        <span className="min-w-0 break-words [overflow-wrap:anywhere]">
                           {reference.label}
                         </span>
                         <ExternalLink

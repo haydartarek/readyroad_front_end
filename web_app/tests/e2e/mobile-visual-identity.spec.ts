@@ -3,6 +3,22 @@ import { seedCookieConsent } from "./helpers/consent";
 
 const locales = ["en", "nl", "fr", "ar"] as const;
 const mobileWidths = [320, 375, 390, 414, 428] as const;
+const trafficSignsViewports = [
+  320,
+  360,
+  375,
+  390,
+  393,
+  412,
+  414,
+  428,
+  768,
+  1024,
+  1280,
+  1366,
+  1440,
+  1920,
+] as const;
 
 const publicRoutes = [
   "/",
@@ -342,6 +358,77 @@ async function expectMobileLayout(
 }
 
 test.describe("ReadyRoad mobile visual identity", () => {
+  test("traffic sign cards remain width-constrained after viewport changes", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await seedCookieConsent(page);
+    await installAnonymousMocks(page);
+
+    for (const locale of locales) {
+      await page.setViewportSize({ width: 428, height: 900 });
+      await navigate(page, localizedPath("/traffic-signs", locale));
+
+      for (const width of trafficSignsViewports) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => resolve()),
+            ),
+        );
+
+        const metrics = await page.evaluate(() => {
+          const viewport = window.innerWidth;
+          const cards = [...document.querySelectorAll(".traffic-sign-card")];
+          const grid = cards[0]?.parentElement;
+          const measuredElements = [
+            document.querySelector("main"),
+            document.querySelector("main .container"),
+            grid,
+            ...cards,
+            ...cards.flatMap((card) => [
+              card.firstElementChild,
+              card.querySelector("img"),
+              ...card.querySelectorAll("button"),
+            ]),
+          ].filter((element): element is Element => element instanceof Element);
+
+          return {
+            viewport,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            gridWidth: grid?.getBoundingClientRect().width ?? 0,
+            gridScrollWidth: grid?.scrollWidth ?? 0,
+            oversizedElements: measuredElements
+              .map((element) => {
+                const rect = element.getBoundingClientRect();
+                return {
+                  tag: element.tagName,
+                  className: element.className,
+                  width: rect.width,
+                };
+              })
+              .filter(({ width: elementWidth }) => elementWidth > viewport + 1),
+          };
+        });
+
+        expect(metrics, `${locale} at ${width}px`).toEqual({
+          viewport: width,
+          documentWidth: width,
+          bodyWidth: width,
+          gridWidth: expect.any(Number),
+          gridScrollWidth: expect.any(Number),
+          oversizedElements: [],
+        });
+        expect(
+          metrics.gridScrollWidth,
+          `${locale} grid overflow at ${width}px`,
+        ).toBeLessThanOrEqual(metrics.gridWidth + 1);
+      }
+    }
+  });
+
   test("all public pages remain inside every supported mobile viewport", async ({
     page,
   }) => {

@@ -252,35 +252,52 @@ function CategoryProgressWidget({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4">
-      <div className="flex items-center gap-3">
+    <div
+      data-testid="category-progress-widget"
+      className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4"
+    >
+      <div className="flex min-w-0 items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
           <TrendingUp className="w-4 h-4" />
         </div>
-        <div>
-          <h3 className="font-black text-secondary">{t("progress.badge")}</h3>
-          <p className="text-xs text-muted-foreground">
+        <div className="min-w-0">
+          <h3 className="break-words font-black text-secondary">
+            {t("progress.badge")}
+          </h3>
+          <p className="break-words text-xs text-muted-foreground">
             {t("progress.subtitle")}
           </p>
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div
+        data-testid="category-progress-grid"
+        className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
+      >
         {orderedCategories.map((cat) => (
           <div
             key={cat.categoryCode}
-            className="rounded-xl border border-border/40 bg-background/60 p-4 space-y-3"
+            data-testid="category-progress-card"
+            className="min-w-0 max-w-full rounded-xl border border-border/40 bg-background/60 p-4 space-y-3"
           >
-            <div className="flex items-start justify-between gap-3">
+            <div
+              data-testid="category-progress-header"
+              className="grid min-w-0 grid-cols-1 gap-2 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-start 2xl:gap-3"
+            >
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-muted px-2 text-xs font-black text-muted-foreground">
+                <div className="flex min-w-0 flex-wrap items-start gap-2 2xl:flex-nowrap 2xl:items-center">
+                  <span className="inline-flex h-7 min-w-7 max-w-full shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-xs font-black text-muted-foreground break-words">
                     {cat.categoryCode}
                   </span>
-                  <p className="truncate text-sm font-bold text-foreground">
+                  <p
+                    data-testid="category-progress-name"
+                    className="order-3 line-clamp-2 min-w-0 basis-full break-words text-sm font-bold leading-5 text-foreground 2xl:order-none 2xl:basis-auto 2xl:flex-1"
+                  >
                     {cat.categoryName}
                   </p>
-                  <TrendIcon trend={cat.trend} />
+                  <span className="shrink-0">
+                    <TrendIcon trend={cat.trend} />
+                  </span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {cat.questionsAttempted} {t("progress.questions_attempted")}
@@ -288,8 +305,9 @@ function CategoryProgressWidget({
               </div>
 
               <span
+                data-testid="category-progress-percentage"
                 className={cn(
-                  "text-lg font-black",
+                  "max-w-full shrink-0 justify-self-start whitespace-nowrap text-lg font-black 2xl:justify-self-auto",
                   cat.accuracy >= 80
                     ? "text-green-600"
                     : cat.accuracy >= 60
@@ -313,7 +331,7 @@ function CategoryProgressWidget({
                       : "[&>div]:bg-destructive",
                 )}
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <span>
                   {cat.correctAnswers} {t("progress.correct")}
                 </span>
@@ -324,15 +342,15 @@ function CategoryProgressWidget({
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <Button
                 variant="outline"
                 size="sm"
                 asChild
-                className="flex-1 gap-1 rounded-full hover:bg-primary/5 hover:border-primary/30 transition-all"
+                className="min-w-0 w-full gap-1 rounded-full hover:bg-primary/5 hover:border-primary/30 transition-all"
               >
                 <Link href={`/practice/${cat.categoryCode}`}>
-                  <PenLine className="w-3.5 h-3.5" />
+                  <PenLine className="w-3.5 h-3.5 shrink-0" />
                   {t("progress.practice")}
                 </Link>
               </Button>
@@ -341,10 +359,10 @@ function CategoryProgressWidget({
                   variant="outline"
                   size="sm"
                   asChild
-                  className="flex-1 gap-1 rounded-full hover:bg-primary/5 hover:border-primary/30 transition-all"
+                  className="min-w-0 w-full gap-1 rounded-full hover:bg-primary/5 hover:border-primary/30 transition-all"
                 >
                   <Link href={`/lessons?category=${cat.categoryCode}`}>
-                    <BookOpen className="w-3.5 h-3.5" />
+                    <BookOpen className="w-3.5 h-3.5 shrink-0" />
                     {t("progress.study")}
                   </Link>
                 </Button>
@@ -430,7 +448,7 @@ function SignActivityWidget({
         ].map((item, i) => (
           <div
             key={i}
-            className="rounded-xl border border-border/40 bg-background/60 p-3 text-center space-y-1"
+            className="min-w-0 rounded-xl border border-border/40 bg-background/60 p-3 text-center space-y-1"
           >
             <div
               className={`w-8 h-8 rounded-lg ${item.bg} ${item.color} flex items-center justify-center mx-auto`}
@@ -438,7 +456,7 @@ function SignActivityWidget({
               {item.icon}
             </div>
             <p className={`text-xl font-black ${item.color}`}>{item.value}</p>
-            <p className="text-xs text-muted-foreground leading-tight">
+            <p className="break-words text-xs text-muted-foreground leading-tight">
               {item.label}
             </p>
           </div>
@@ -750,7 +768,7 @@ function DashboardHome() {
         <div className="space-y-2 rounded-2xl border border-border/30 bg-muted/40 px-4 py-6 animate-pulse sm:px-6 sm:py-7">
           <div className="h-3 w-24 bg-muted rounded-full" />
           <div className="h-8 w-48 bg-muted rounded-full" />
-          <div className="h-3 w-64 bg-muted rounded-full" />
+          <div className="h-3 w-64 max-w-full bg-muted rounded-full" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (

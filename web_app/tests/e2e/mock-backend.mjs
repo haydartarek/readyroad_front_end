@@ -56,6 +56,36 @@ const summary = Object.fromEntries(
   Object.entries(lesson).filter(([key]) => key !== "pages"),
 );
 
+const trafficSign = {
+  id: 1,
+  signCode: "A1b",
+  routeCode: "A1b",
+  categoryCode: "A",
+  exam1TotalQuestions: 10,
+  exam1PassingScore: 7,
+  imageUrl: "/images/logo.png",
+  nameEn: "Dangerous bend to the right",
+  nameNl: "Gevaarlijke bocht naar rechts",
+  nameFr: "Virage dangereux a droite",
+  nameAr: "منعطف خطير إلى اليمين",
+  summaryEn: "A dangerous right-hand bend lies ahead.",
+  summaryNl: "Er volgt een gevaarlijke bocht naar rechts.",
+  summaryFr: "Un virage dangereux a droite se trouve devant vous.",
+  summaryAr: "يوجد منعطف خطير إلى اليمين أمامك.",
+  descriptionEn: "Warns about a dangerous bend to the right.",
+  descriptionNl: "Waarschuwt voor een gevaarlijke bocht naar rechts.",
+  descriptionFr: "Avertit d'un virage dangereux a droite.",
+  descriptionAr: "تحذر من منعطف خطير إلى اليمين.",
+  driverGuidanceEn: "Reduce speed before the bend and keep control.",
+  driverGuidanceNl: "Verminder snelheid voor de bocht en behoud de controle.",
+  driverGuidanceFr: "Reduisez votre vitesse avant le virage et gardez le controle.",
+  driverGuidanceAr: "خفف السرعة قبل المنعطف وحافظ على التحكم بالمركبة.",
+  exceptionsEn: ["A supplementary plate may specify the distance."],
+  exceptionsNl: ["Een onderbord kan de afstand aangeven."],
+  exceptionsFr: ["Un panneau additionnel peut indiquer la distance."],
+  exceptionsAr: ["قد تحدد لوحة إضافية المسافة."],
+};
+
 const server = http.createServer((request, response) => {
   response.setHeader("Content-Type", "application/json; charset=utf-8");
 
@@ -71,6 +101,11 @@ const server = http.createServer((request, response) => {
 
   if (request.url === "/api/traffic-signs") {
     response.end("[]");
+    return;
+  }
+
+  if (request.url === "/api/traffic-signs/A1b") {
+    response.end(JSON.stringify(trafficSign));
     return;
   }
 

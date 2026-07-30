@@ -55,8 +55,8 @@ export function StatusScreen({
           fullscreen ? "min-h-screen" : "min-h-[calc(100vh-74px)]",
         )}
       >
-        <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-          <section className="hidden rounded-[2.5rem] border border-border/60 bg-card/60 p-8 shadow-[0_30px_100px_rgba(15,23,42,0.12)] backdrop-blur xl:flex xl:flex-col xl:justify-between">
+        <div className="grid w-full max-w-5xl grid-cols-1 gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+          <section className="hidden min-w-0 rounded-[2.5rem] border border-border/60 bg-card/60 p-8 shadow-[0_30px_100px_rgba(15,23,42,0.12)] backdrop-blur xl:flex xl:flex-col xl:justify-between">
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <Image
@@ -103,8 +103,8 @@ export function StatusScreen({
             ) : null}
           </section>
 
-          <section className="flex items-center">
-            <div className="w-full rounded-[2.25rem] border border-border/60 bg-card/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:p-8">
+          <section className="flex min-w-0 items-center">
+            <div className="min-w-0 w-full rounded-[2.25rem] border border-border/60 bg-card/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:p-8">
               <div className="mb-8 flex items-center justify-center gap-3 xl:hidden">
                 <Image
                   src="/images/logo.png"
@@ -134,10 +134,10 @@ export function StatusScreen({
                   {icon}
                 </div>
 
-                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                <h1 className="break-words text-3xl font-black tracking-tight text-foreground sm:text-4xl">
                   {title}
                 </h1>
-                <p className="mt-3 text-base leading-7 text-muted-foreground sm:text-lg">
+                <p className="mt-3 break-words text-base leading-7 text-muted-foreground sm:text-lg">
                   {description}
                 </p>
               </div>
@@ -151,13 +151,13 @@ export function StatusScreen({
                 <StatusActionButton
                   action={primaryAction}
                   variant="default"
-                  className="h-12 flex-1 rounded-[1.1rem] px-6 text-sm font-bold"
+                  className="min-h-12 h-auto flex-1 whitespace-normal rounded-[1.1rem] px-5 py-3 text-center text-sm font-bold"
                 />
                 {secondaryAction ? (
                   <StatusActionButton
                     action={secondaryAction}
                     variant="outline"
-                    className="h-12 flex-1 rounded-[1.1rem] px-6 text-sm font-semibold"
+                    className="min-h-12 h-auto flex-1 whitespace-normal rounded-[1.1rem] px-5 py-3 text-center text-sm font-semibold"
                   />
                 ) : null}
               </div>

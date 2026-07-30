@@ -173,24 +173,30 @@ export default function TheoryExamPage() {
                 </PageHeroDescription>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div
+                data-testid="exam-summary-grid"
+                className="grid gap-3 sm:grid-cols-3"
+              >
                 <PageMetricCard
                   icon={<ClipboardList className="h-5 w-5" />}
                   value={String(EXAM_RULES.TOTAL_QUESTIONS)}
                   label={t("exam.total_questions")}
                   tone="primary"
+                  mobileStacked
                 />
                 <PageMetricCard
                   icon={<Clock3 className="h-5 w-5" />}
                   value={`${EXAM_RULES.DURATION_MINUTES} min`}
                   label={t("exam.duration")}
                   tone="primary"
+                  mobileStacked
                 />
                 <PageMetricCard
                   icon={<Trophy className="h-5 w-5" />}
                   value={`${EXAM_RULES.PASSING_SCORE}/${EXAM_RULES.TOTAL_QUESTIONS}`}
                   label={t("exam.pass_score")}
                   tone="primary"
+                  mobileStacked
                 />
               </div>
 
@@ -203,8 +209,9 @@ export default function TheoryExamPage() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
+                  data-testid="exam-start-button"
                   size="lg"
-                  className="flex-1 gap-2"
+                  className="h-11 min-h-11 w-full flex-none gap-2 py-2.5 sm:w-auto sm:flex-1"
                   disabled={isChecking || isStarting}
                   onClick={() => void startOrResumeExam()}
                 >
@@ -215,13 +222,20 @@ export default function TheoryExamPage() {
                   ) : (
                     <Play className="h-4 w-4" />
                   )}
-                  {isChecking || isStarting
-                    ? t("exam.starting")
-                    : activeExam
-                      ? t("exam.back_to_exam_start")
-                      : t("practice_exam.start_btn")}
+                  <span data-testid="exam-start-button-label">
+                    {isChecking || isStarting
+                      ? t("exam.starting")
+                      : activeExam
+                        ? t("exam.back_to_exam_start")
+                        : t("practice_exam.start_btn")}
+                  </span>
                 </Button>
-                <Button variant="outline" size="lg" asChild>
+                <Button
+                  data-testid="exam-back-button"
+                  variant="outline"
+                  size="lg"
+                  asChild
+                >
                   <Link href="/practice">
                     {t("practice_exam.back_practice")}
                   </Link>

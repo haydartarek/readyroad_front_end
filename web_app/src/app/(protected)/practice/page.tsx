@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -51,7 +50,6 @@ type Lang = "en" | "ar" | "nl" | "fr";
 interface CategoryCardData {
   code: string;
   title: string;
-  description: string;
   signCount: number;
   practiceCompleted: number;
   passedSigns: number;
@@ -143,7 +141,6 @@ export default function PracticePage() {
           return {
             code: group,
             title: info.title[lang],
-            description: info.description[lang],
             signCount: signs.length,
             practiceCompleted,
             passedSigns,
@@ -362,6 +359,7 @@ export default function PracticePage() {
                 return (
                   <Card
                     key={cat.code}
+                    data-testid="practice-category-card"
                     className={cn(
                       "group relative overflow-hidden cursor-pointer border border-border/50 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg",
                       groupMeta.style.cardBorder,
@@ -370,42 +368,43 @@ export default function PracticePage() {
                     onClick={() => router.push(`/practice/${cat.code}`)}
                   >
                     <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div
+                      <div
+                        data-testid="practice-category-header"
+                        className="flex min-w-0 flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:text-start"
+                      >
+                        <div
+                          data-testid="practice-category-icon"
+                          className={cn(
+                            "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-[1.03]",
+                            visual.iconWrap,
+                          )}
+                        >
+                          <CategoryIcon
+                            className={cn("h-5 w-5", visual.iconTone)}
+                          />
+                        </div>
+                        <div className="flex min-w-0 flex-col items-center gap-1.5 sm:flex-1 sm:items-start">
+                          <span
+                            data-testid="practice-category-code"
                             className={cn(
-                              "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-[1.03]",
-                              visual.iconWrap,
+                              "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[10px] font-black uppercase tracking-[0.14em]",
+                              visual.countBadge,
                             )}
                           >
-                            <CategoryIcon
-                              className={cn("h-5 w-5", visual.iconTone)}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="mb-1 flex items-center gap-2">
-                              <span
-                                className={cn(
-                                  "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[10px] font-black uppercase tracking-[0.14em]",
-                                  visual.countBadge,
-                                )}
-                              >
-                                {cat.code}
-                              </span>
-                            </div>
-                            <CardTitle className="text-base font-black leading-tight">
-                              {cat.title}
-                            </CardTitle>
-                            <CardDescription className="mt-1 text-xs line-clamp-2 font-medium">
-                              {cat.description ||
-                                t("practice.hub.all_signs_desc")}
-                            </CardDescription>
-                          </div>
+                            {cat.code}
+                          </span>
+                          <CardTitle
+                            data-testid="practice-category-title"
+                            className="max-w-full break-words text-base font-black leading-tight"
+                          >
+                            {cat.title}
+                          </CardTitle>
                         </div>
                         <Badge
+                          data-testid="practice-category-count"
                           variant="secondary"
                           className={cn(
-                            "border-0 text-xs font-semibold",
+                            "max-w-full whitespace-normal border-0 text-center text-xs font-semibold sm:ms-auto sm:shrink-0",
                             visual.countBadge,
                           )}
                         >
@@ -417,33 +416,78 @@ export default function PracticePage() {
                     <CardContent className="pt-0 space-y-4">
                       {isAuthenticated && (
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2">
-                            <div className="flex items-center gap-2 text-emerald-700">
-                              <CheckCircle2 className="w-4 h-4" />
-                              <span className="text-xs font-semibold">
+                          <div
+                            data-testid="practice-category-stat"
+                            className="flex min-h-[104px] min-w-0 flex-col items-center justify-center rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 text-center sm:min-h-0 sm:items-stretch sm:justify-start sm:text-start"
+                          >
+                            <div className="flex min-w-0 flex-col items-center gap-1 text-emerald-700 sm:flex-row sm:gap-2">
+                              <CheckCircle2
+                                data-testid="practice-category-stat-icon"
+                                className="h-4 w-4 shrink-0"
+                              />
+                              <span
+                                data-testid="practice-category-stat-label"
+                                className="min-w-0 break-words text-xs font-semibold leading-4"
+                              >
                                 {t("practice.hub.completed")}
                               </span>
                             </div>
-                            <p className="mt-1 text-lg font-black text-emerald-800">
+                            <p
+                              data-testid="practice-category-stat-value"
+                              className="mt-1 text-lg font-black text-emerald-800"
+                            >
                               {cat.practiceCompleted}
                             </p>
                           </div>
-                          <div className="rounded-xl border border-amber-200/70 bg-amber-50/70 px-3 py-2">
-                            <div className="flex items-center gap-2 text-amber-700">
-                              <Trophy className="w-4 h-4" />
-                              <span className="text-xs font-semibold">
+                          <div
+                            data-testid="practice-category-stat"
+                            className="flex min-h-[104px] min-w-0 flex-col items-center justify-center rounded-xl border border-amber-200/70 bg-amber-50/70 px-3 py-2 text-center sm:min-h-0 sm:items-stretch sm:justify-start sm:text-start"
+                          >
+                            <div className="flex min-w-0 flex-col items-center gap-1 text-amber-700 sm:flex-row sm:gap-2">
+                              <Trophy
+                                data-testid="practice-category-stat-icon"
+                                className="h-4 w-4 shrink-0"
+                              />
+                              <span
+                                data-testid="practice-category-stat-label"
+                                className="min-w-0 break-words text-xs font-semibold leading-4"
+                              >
                                 {t("practice.hub.passed_signs")}
                               </span>
                             </div>
-                            <p className="mt-1 text-lg font-black text-amber-800">
+                            <p
+                              data-testid="practice-category-stat-value"
+                              className="mt-1 text-lg font-black text-amber-800"
+                            >
                               {cat.passedSigns}
                             </p>
                           </div>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        data-testid="practice-category-progress"
+                        className="space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+                          <span className="text-muted-foreground">
+                            {t("practice.progress")}
+                          </span>
+                          <span
+                            data-testid="practice-category-progress-value"
+                            className={cn("shrink-0", visual.actionTone)}
+                          >
+                            {practicePct}%
+                          </span>
+                        </div>
+                        <div
+                          data-testid="practice-category-progress-bar"
+                          role="progressbar"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={practicePct}
+                          className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                        >
                           <div
                             className={cn(
                               "h-full rounded-full transition-all duration-500",
@@ -452,24 +496,22 @@ export default function PracticePage() {
                             style={{ width: `${practicePct}%` }}
                           />
                         </div>
-                        <span
-                          className={cn(
-                            "flex items-center gap-1 whitespace-nowrap text-xs font-semibold transition-all group-hover:gap-2",
-                            visual.actionTone,
-                          )}
+                        <Button
+                          data-testid="practice-category-action"
+                          type="button"
+                          size="lg"
+                          className="h-11 min-h-11 w-full gap-2"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            router.push(`/practice/${cat.code}`);
+                          }}
                         >
                           {t("practice.start_practice")}
-                          <ChevDir className="w-3 h-3" />
-                        </span>
+                          <ChevDir className="h-4 w-4" />
+                        </Button>
                       </div>
                     </CardContent>
 
-                    <div
-                      className={cn(
-                        "pointer-events-none absolute -bottom-14 -end-12 h-36 w-36 rounded-full blur-3xl opacity-0 transition-opacity duration-200 group-hover:opacity-100",
-                        visual.cardGlow,
-                      )}
-                    />
                   </Card>
                 );
               })}

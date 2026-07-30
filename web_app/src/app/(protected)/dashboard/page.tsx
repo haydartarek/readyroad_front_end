@@ -254,7 +254,7 @@ function CategoryProgressWidget({
   return (
     <div
       data-testid="category-progress-widget"
-      className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4"
+      className="min-w-0 max-w-full rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4"
     >
       <div className="flex min-w-0 items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
@@ -272,104 +272,127 @@ function CategoryProgressWidget({
 
       <div
         data-testid="category-progress-grid"
-        className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
+        className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
       >
-        {orderedCategories.map((cat) => (
-          <div
-            key={cat.categoryCode}
-            data-testid="category-progress-card"
-            className="min-w-0 max-w-full rounded-xl border border-border/40 bg-background/60 p-4 space-y-3"
-          >
+        {orderedCategories.map((cat) => {
+          const needsStudy = cat.accuracy < 70;
+
+          return (
             <div
-              data-testid="category-progress-header"
-              className="grid min-w-0 grid-cols-1 gap-2 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-start 2xl:gap-3"
+              key={cat.categoryCode}
+              data-testid="category-progress-card"
+              className="min-w-0 w-full max-w-full rounded-xl border border-border/40 bg-background/60 p-4 space-y-3"
             >
-              <div className="min-w-0">
-                <div className="flex min-w-0 flex-wrap items-start gap-2 2xl:flex-nowrap 2xl:items-center">
-                  <span className="inline-flex h-7 min-w-7 max-w-full shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-xs font-black text-muted-foreground break-words">
-                    {cat.categoryCode}
-                  </span>
-                  <p
-                    data-testid="category-progress-name"
-                    className="order-3 line-clamp-2 min-w-0 basis-full break-words text-sm font-bold leading-5 text-foreground 2xl:order-none 2xl:basis-auto 2xl:flex-1"
-                  >
-                    {cat.categoryName}
+              <div
+                data-testid="category-progress-header"
+                className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-3"
+              >
+                <div className="min-w-0">
+                  <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2">
+                    <span
+                      data-testid="category-progress-code"
+                      className="inline-flex h-7 min-w-7 max-w-full shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-xs font-black text-muted-foreground"
+                    >
+                      {cat.categoryCode}
+                    </span>
+                    <p
+                      data-testid="category-progress-name"
+                      className="line-clamp-2 min-w-0 break-words text-sm font-bold leading-5 text-foreground"
+                    >
+                      {cat.categoryName}
+                    </p>
+                    <span
+                      data-testid="category-progress-trend"
+                      className="shrink-0"
+                    >
+                      <TrendIcon trend={cat.trend} />
+                    </span>
+                  </div>
+                  <p className="mt-1 break-words text-xs text-muted-foreground">
+                    {cat.questionsAttempted} {t("progress.questions_attempted")}
                   </p>
-                  <span className="shrink-0">
-                    <TrendIcon trend={cat.trend} />
+                </div>
+
+                <span
+                  data-testid="category-progress-percentage"
+                  className={cn(
+                    "max-w-full shrink-0 justify-self-start whitespace-nowrap text-lg font-black sm:justify-self-auto",
+                    cat.accuracy >= 80
+                      ? "text-green-600"
+                      : cat.accuracy >= 60
+                        ? "text-orange-500"
+                        : "text-destructive",
+                  )}
+                >
+                  {cat.accuracy.toFixed(1)}%
+                </span>
+              </div>
+
+              <div
+                data-testid="category-progress-progress"
+                className="min-w-0 max-w-full space-y-1.5"
+              >
+                <Progress
+                  value={cat.accuracy}
+                  className={cn(
+                    "h-2 max-w-full",
+                    cat.accuracy >= 80
+                      ? "[&>div]:bg-green-500"
+                      : cat.accuracy >= 60
+                        ? "[&>div]:bg-orange-500"
+                        : "[&>div]:bg-destructive",
+                  )}
+                />
+                <div
+                  data-testid="category-progress-counts"
+                  className="flex min-w-0 flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground"
+                >
+                  <span>
+                    {cat.correctAnswers} {t("progress.correct")}
+                  </span>
+                  <span>
+                    {cat.questionsAttempted - cat.correctAnswers}{" "}
+                    {t("progress.wrong")}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {cat.questionsAttempted} {t("progress.questions_attempted")}
-                </p>
               </div>
 
-              <span
-                data-testid="category-progress-percentage"
+              <div
+                data-testid="category-progress-actions"
                 className={cn(
-                  "max-w-full shrink-0 justify-self-start whitespace-nowrap text-lg font-black 2xl:justify-self-auto",
-                  cat.accuracy >= 80
-                    ? "text-green-600"
-                    : cat.accuracy >= 60
-                      ? "text-orange-500"
-                      : "text-destructive",
+                  "grid min-w-0 max-w-full grid-cols-1 gap-2",
+                  needsStudy &&
+                    "min-[360px]:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2",
                 )}
               >
-                {cat.accuracy.toFixed(1)}%
-              </span>
-            </div>
-
-            <div className="space-y-1.5">
-              <Progress
-                value={cat.accuracy}
-                className={cn(
-                  "h-2",
-                  cat.accuracy >= 80
-                    ? "[&>div]:bg-green-500"
-                    : cat.accuracy >= 60
-                      ? "[&>div]:bg-orange-500"
-                      : "[&>div]:bg-destructive",
-                )}
-              />
-              <div className="flex flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                <span>
-                  {cat.correctAnswers} {t("progress.correct")}
-                </span>
-                <span>
-                  {cat.questionsAttempted - cat.correctAnswers}{" "}
-                  {t("progress.wrong")}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="min-w-0 w-full gap-1 rounded-full hover:bg-primary/5 hover:border-primary/30 transition-all"
-              >
-                <Link href={`/practice/${cat.categoryCode}`}>
-                  <PenLine className="w-3.5 h-3.5 shrink-0" />
-                  {t("progress.practice")}
-                </Link>
-              </Button>
-              {cat.accuracy < 70 && (
                 <Button
                   variant="outline"
                   size="sm"
                   asChild
-                  className="min-w-0 w-full gap-1 rounded-full hover:bg-primary/5 hover:border-primary/30 transition-all"
+                  className="min-h-9 h-auto min-w-0 w-full gap-1 whitespace-normal rounded-full py-2 text-center transition-all hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:whitespace-nowrap sm:py-0"
                 >
-                  <Link href={`/lessons?category=${cat.categoryCode}`}>
-                    <BookOpen className="w-3.5 h-3.5 shrink-0" />
-                    {t("progress.study")}
+                  <Link href={`/practice/${cat.categoryCode}`}>
+                    <PenLine className="w-3.5 h-3.5 shrink-0" />
+                    {t("progress.practice")}
                   </Link>
                 </Button>
-              )}
+                {needsStudy && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="min-h-9 h-auto min-w-0 w-full gap-1 whitespace-normal rounded-full py-2 text-center transition-all hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:whitespace-nowrap sm:py-0"
+                  >
+                    <Link href={`/lessons?category=${cat.categoryCode}`}>
+                      <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                      {t("progress.study")}
+                    </Link>
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -448,16 +471,27 @@ function SignActivityWidget({
         ].map((item, i) => (
           <div
             key={i}
-            className="min-w-0 rounded-xl border border-border/40 bg-background/60 p-3 text-center space-y-1"
+            data-testid="dashboard-stat-card"
+            data-stat-kind="activity"
+            className="flex min-w-0 flex-col items-center gap-1 rounded-xl border border-border/40 bg-background/60 p-3 text-center"
           >
             <div
-              className={`w-8 h-8 rounded-lg ${item.bg} ${item.color} flex items-center justify-center mx-auto`}
+              data-testid="dashboard-stat-icon"
+              className={`order-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.bg} ${item.color}`}
             >
               {item.icon}
             </div>
-            <p className={`text-xl font-black ${item.color}`}>{item.value}</p>
-            <p className="break-words text-xs text-muted-foreground leading-tight">
+            <p
+              data-testid="dashboard-stat-label"
+              className="order-2 min-w-0 max-w-full break-words text-xs leading-tight text-muted-foreground sm:order-3"
+            >
               {item.label}
+            </p>
+            <p
+              data-testid="dashboard-stat-value"
+              className={`order-3 min-w-0 max-w-full break-words text-xl font-black sm:order-2 ${item.color}`}
+            >
+              {item.value}
             </p>
           </div>
         ))}
@@ -886,6 +920,7 @@ function DashboardHome() {
             label={stat.label}
             value={stat.value}
             tone={stat.color === "text-secondary" ? "default" : "primary"}
+            mobileStacked
           />
         ))}
       </div>

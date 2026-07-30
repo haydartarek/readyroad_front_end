@@ -214,7 +214,7 @@ interface CategoryProgressFixture {
 
 const longCategoryProgressFixtures: CategoryProgressFixture[] = [
   {
-    categoryCode: "INFORMATION",
+    categoryCode: "F",
     categoryName: "Information and Temporary Traffic Signs",
     questionsAttempted: 3,
     correctAnswers: 1,
@@ -223,8 +223,8 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "SUPPLEMENTARY",
-    categoryName: "Cyclist & Moped Advisory Signs",
+    categoryCode: "G",
+    categoryName: "Supplementary Signs",
     questionsAttempted: 8,
     correctAnswers: 3,
     accuracyRate: 37.5,
@@ -232,7 +232,16 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "PARKING",
+    categoryCode: "A",
+    categoryName: "Danger Signs",
+    questionsAttempted: 42,
+    correctAnswers: 21,
+    accuracyRate: 50,
+    accuracy: 50,
+    lastPracticed: null,
+  },
+  {
+    categoryCode: "E",
     categoryName: "Parking and Standing Signs",
     questionsAttempted: 7,
     correctAnswers: 4,
@@ -241,8 +250,8 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "INFO-AR",
-    categoryName: "العلامات المعلوماتية والإجراءات المرورية المؤقتة",
+    categoryCode: "C",
+    categoryName: "Prohibition Signs",
     questionsAttempted: 5,
     correctAnswers: 3,
     accuracyRate: 60,
@@ -250,7 +259,7 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "INFO-FR",
+    categoryCode: "H",
     categoryName:
       "Signaux d'information et mesures temporaires de circulation",
     questionsAttempted: 6,
@@ -260,12 +269,39 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "INFO-NL",
-    categoryName: "Informatieborden en tijdelijke verkeersmaatregelen",
+    categoryCode: "M",
+    categoryName: "Cyclist & Moped Advisory Signs",
     questionsAttempted: 9,
     correctAnswers: 7,
     accuracyRate: 77.8,
     accuracy: 77.8,
+    lastPracticed: null,
+  },
+  {
+    categoryCode: "B",
+    categoryName: "Priority Signs",
+    questionsAttempted: 32,
+    correctAnswers: 18,
+    accuracyRate: 56.3,
+    accuracy: 56.3,
+    lastPracticed: null,
+  },
+  {
+    categoryCode: "D",
+    categoryName: "Mandatory Signs",
+    questionsAttempted: 14,
+    correctAnswers: 8,
+    accuracyRate: 57.1,
+    accuracy: 57.1,
+    lastPracticed: null,
+  },
+  {
+    categoryCode: "Z",
+    categoryName: "العلامات المعلوماتية والإجراءات المرورية المؤقتة",
+    questionsAttempted: 27,
+    correctAnswers: 20,
+    accuracyRate: 74.1,
+    accuracy: 74.1,
     lastPracticed: null,
   },
 ];
@@ -823,7 +859,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
   test("dashboard category progress cards stay readable in every language and viewport", async ({
     context,
     page,
-  }) => {
+  }, testInfo) => {
     test.setTimeout(180_000);
     await seedCookieConsent(page);
     await installAuthenticatedSession(
@@ -882,10 +918,44 @@ test.describe("ReadyRoad mobile visual identity", () => {
               '[data-testid="category-progress-percentage"]',
             );
             const progress = card.querySelector('[role="progressbar"]');
+            const code = card.querySelector(
+              '[data-testid="category-progress-code"]',
+            );
+            const trend = card.querySelector(
+              '[data-testid="category-progress-trend"]',
+            );
+            const counts = card.querySelector(
+              '[data-testid="category-progress-counts"]',
+            );
+            const actions = card.querySelector(
+              '[data-testid="category-progress-actions"]',
+            );
             const buttons = [...card.querySelectorAll("a")];
 
-            if (!header || !name || !percentage || !progress) {
-              return [{ index, reason: "missing required card content" }];
+            if (
+              !header ||
+              !name ||
+              !percentage ||
+              !progress ||
+              !code ||
+              !trend ||
+              !counts ||
+              !actions
+            ) {
+              return [
+                {
+                  index,
+                  category: name?.textContent?.trim() ?? "unknown",
+                  reason: "missing required card content",
+                  cardWidth: cardRect.width,
+                  cardLeft: cardRect.left,
+                  cardRight: cardRect.right,
+                  headerWidth: 0,
+                  percentageLeft: 0,
+                  percentageRight: 0,
+                  buttonWidths: buttons.map((button) => rect(button).width),
+                },
+              ];
             }
 
             const headerRect = rect(header);
@@ -893,6 +963,12 @@ test.describe("ReadyRoad mobile visual identity", () => {
             const percentageRect = rect(percentage);
             const progressRect = rect(progress);
             const nameStyle = getComputedStyle(name);
+            const boundedElements = [
+              ["code", code],
+              ["trend", trend],
+              ["counts", counts],
+              ["actions", actions],
+            ] as const;
             const buttonOverflow = buttons.some((button) => {
               const buttonRect = rect(button);
               return (
@@ -901,6 +977,16 @@ test.describe("ReadyRoad mobile visual identity", () => {
                 button.scrollWidth > button.clientWidth + 1
               );
             });
+            const boundedOverflow = boundedElements.flatMap(
+              ([elementName, target]) => {
+                const targetRect = rect(target);
+                return targetRect.left < cardRect.left - 1 ||
+                  targetRect.right > cardRect.right + 1 ||
+                  target.scrollWidth > target.clientWidth + 1
+                  ? [`${elementName} overflows card`]
+                  : [];
+              },
+            );
 
             const reasons = [
               cardRect.left < -1 && "card starts outside viewport",
@@ -924,9 +1010,21 @@ test.describe("ReadyRoad mobile visual identity", () => {
               Math.abs(progressRect.width - headerRect.width) > 1 &&
                 "progress does not fill card content width",
               buttonOverflow && "button overflows card",
-            ].filter(Boolean);
+              ...boundedOverflow,
+            ].filter((reason): reason is string => Boolean(reason));
 
-            return reasons.map((reason) => ({ index, reason }));
+            return reasons.map((reason) => ({
+              index,
+              category: name.textContent?.trim() ?? "unknown",
+              reason,
+              cardWidth: cardRect.width,
+              cardLeft: cardRect.left,
+              cardRight: cardRect.right,
+              headerWidth: headerRect.width,
+              percentageLeft: percentageRect.left,
+              percentageRight: percentageRect.right,
+              buttonWidths: buttons.map((button) => rect(button).width),
+            }));
           });
 
           const widgetStyle = getComputedStyle(element);
@@ -941,12 +1039,32 @@ test.describe("ReadyRoad mobile visual identity", () => {
             widgetScrollWidth: element.scrollWidth,
             gridWidth: grid?.getBoundingClientRect().width ?? 0,
             gridScrollWidth: grid?.scrollWidth ?? 0,
+            gridColumnCount: grid
+              ? getComputedStyle(grid).gridTemplateColumns.split(" ").length
+              : 0,
+            headerColumnCounts: cardElements.map((card) => {
+              const header = card.querySelector(
+                '[data-testid="category-progress-header"]',
+              );
+              return header
+                ? getComputedStyle(header).gridTemplateColumns.split(" ").length
+                : 0;
+            }),
             widgetOverflowX: widgetStyle.overflowX,
             htmlOverflowX: htmlStyle.overflowX,
             bodyOverflowX: bodyStyle.overflowX,
             invalidCards,
           };
         });
+
+        if (metrics.invalidCards.length > 0) {
+          await page.screenshot({
+            path: testInfo.outputPath(
+              `dashboard-progress-${locale}-${width}px-overflow.png`,
+            ),
+            fullPage: true,
+          });
+        }
 
         expect(metrics, `${locale} dashboard progress at ${width}px`).toEqual({
           viewport: width,
@@ -956,11 +1074,21 @@ test.describe("ReadyRoad mobile visual identity", () => {
           widgetScrollWidth: expect.any(Number),
           gridWidth: expect.any(Number),
           gridScrollWidth: expect.any(Number),
+          gridColumnCount: expect.any(Number),
+          headerColumnCounts: expect.any(Array),
           widgetOverflowX: "visible",
           htmlOverflowX: "visible",
           bodyOverflowX: "visible",
           invalidCards: [],
         });
+        const expectedGridColumns =
+          width >= 1280 || (width >= 768 && width < 1024) ? 2 : 1;
+        expect(metrics.gridColumnCount).toBe(expectedGridColumns);
+        expect(metrics.headerColumnCounts).toEqual(
+          Array(longCategoryProgressFixtures.length).fill(
+            width >= 768 ? 2 : 1,
+          ),
+        );
         expect(metrics.widgetScrollWidth).toBeLessThanOrEqual(
           metrics.widgetWidth + 1,
         );
@@ -972,6 +1100,1641 @@ test.describe("ReadyRoad mobile visual identity", () => {
 
     expect(consoleErrors).toEqual([]);
     expect(pageErrors).toEqual([]);
+  });
+
+  test("dashboard statistic cards use a consistent mobile content order", async ({
+    context,
+    page,
+  }, testInfo) => {
+    test.setTimeout(120_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(
+      context,
+      page,
+      longCategoryProgressFixtures,
+    );
+
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+
+    for (const locale of locales) {
+      await page.setViewportSize({ width: 320, height: 900 });
+      await navigate(page, localizedPath("/dashboard", locale));
+      await page.evaluate(() => document.fonts.ready);
+
+      const statCards = page.getByTestId("dashboard-stat-card");
+      await expect(statCards).toHaveCount(9);
+
+      for (const width of mobileWidths) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
+        );
+
+        const metrics = await statCards.evaluateAll((cards) => {
+          const viewport = window.innerWidth;
+          const rect = (target: Element) => target.getBoundingClientRect();
+          const centerX = (target: DOMRect) => target.left + target.width / 2;
+          const invalidCards = cards.flatMap((card, index) => {
+            const cardRect = rect(card);
+            const icon = card.querySelector(
+              '[data-testid="dashboard-stat-icon"]',
+            );
+            const label = card.querySelector(
+              '[data-testid="dashboard-stat-label"]',
+            );
+            const value = card.querySelector(
+              '[data-testid="dashboard-stat-value"]',
+            );
+
+            if (!icon || !label || !value) {
+              return [
+                {
+                  index,
+                  kind: card.getAttribute("data-stat-kind"),
+                  reason: "missing icon, label, or value",
+                },
+              ];
+            }
+
+            const iconRect = rect(icon);
+            const labelRect = rect(label);
+            const valueRect = rect(value);
+            const parts = [
+              ["icon", iconRect],
+              ["label", labelRect],
+              ["value", valueRect],
+            ] as const;
+            const reasons = [
+              cardRect.left < -1 && "card starts outside viewport",
+              cardRect.right > viewport + 1 && "card ends outside viewport",
+              card.scrollWidth > card.clientWidth + 1 && "card scrolls",
+              Math.abs(centerX(iconRect) - centerX(cardRect)) > 1 &&
+                "icon is not centered",
+              Math.abs(centerX(labelRect) - centerX(cardRect)) > 1 &&
+                "label is not centered",
+              Math.abs(centerX(valueRect) - centerX(cardRect)) > 1 &&
+                "value is not centered",
+              iconRect.bottom > labelRect.top + 1 &&
+                "icon is not before label",
+              labelRect.bottom > valueRect.top + 1 &&
+                "label is not before value",
+              ...parts.flatMap(([part, partRect]) =>
+                partRect.left < cardRect.left - 1 ||
+                partRect.right > cardRect.right + 1
+                  ? [`${part} leaves card bounds`]
+                  : [],
+              ),
+            ].filter((reason): reason is string => Boolean(reason));
+
+            return reasons.map((reason) => ({
+              index,
+              kind: card.getAttribute("data-stat-kind"),
+              reason,
+              cardLeft: cardRect.left,
+              cardRight: cardRect.right,
+              iconCenter: centerX(iconRect),
+              labelCenter: centerX(labelRect),
+              valueCenter: centerX(valueRect),
+            }));
+          });
+
+          return {
+            viewport,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            invalidCards,
+          };
+        });
+
+        if (
+          metrics.documentWidth > width ||
+          metrics.bodyWidth > width ||
+          metrics.invalidCards.length > 0
+        ) {
+          await page.screenshot({
+            path: testInfo.outputPath(
+              `dashboard-stat-cards-${locale}-${width}px.png`,
+            ),
+            fullPage: true,
+          });
+        }
+
+        expect(metrics, `${locale} dashboard statistics at ${width}px`).toEqual({
+          viewport: width,
+          documentWidth: width,
+          bodyWidth: width,
+          invalidCards: [],
+        });
+      }
+
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
+
+      const desktopOrder = await statCards.evaluateAll((cards) =>
+        cards.flatMap((card, index) => {
+          const icon = card.querySelector(
+            '[data-testid="dashboard-stat-icon"]',
+          );
+          const label = card.querySelector(
+            '[data-testid="dashboard-stat-label"]',
+          );
+          const value = card.querySelector(
+            '[data-testid="dashboard-stat-value"]',
+          );
+          if (!icon || !label || !value) return [`card ${index} is incomplete`];
+
+          const iconRect = icon.getBoundingClientRect();
+          const labelRect = label.getBoundingClientRect();
+          const valueRect = value.getBoundingClientRect();
+          const isSummary = card.getAttribute("data-stat-kind") === "summary";
+
+          if (isSummary) {
+            return Math.abs(iconRect.top - valueRect.top) <= 1 &&
+              labelRect.top >= Math.max(iconRect.bottom, valueRect.bottom) - 1
+              ? []
+              : [`summary card ${index} changed desktop order`];
+          }
+
+          return iconRect.bottom <= valueRect.top + 1 &&
+            valueRect.bottom <= labelRect.top + 1
+            ? []
+            : [`activity card ${index} changed desktop order`];
+        }),
+      );
+
+      expect(desktopOrder, `${locale} dashboard statistics at 1280px`).toEqual(
+        [],
+      );
+    }
+
+    expect(consoleErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("recent activity cards use a clear vertical mobile hierarchy", async ({
+    context,
+    page,
+  }, testInfo) => {
+    test.setTimeout(120_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+
+    await page.route("**/api/proxy/exams/simulations/history", (route) =>
+      fulfillJson(route, {
+        totalExams: 2,
+        exams: [
+          {
+            examId: 101,
+            startedAt: "2026-07-30T08:00:00Z",
+            completedAt: "2026-07-30T08:30:00Z",
+            status: "COMPLETED",
+            totalQuestions: 50,
+            correctAnswers: 43,
+            scorePercentage: 86,
+            passed: true,
+          },
+          {
+            examId: 102,
+            startedAt: "2026-07-29T08:00:00Z",
+            completedAt: "2026-07-29T08:30:00Z",
+            status: "COMPLETED",
+            totalQuestions: 50,
+            correctAnswers: 19,
+            scorePercentage: 38,
+            passed: false,
+          },
+        ],
+      }),
+    );
+    await page.route("**/api/proxy/exams/simulations/active", (route) =>
+      fulfillJson(route, {
+        hasActiveExam: true,
+        activeExam: {
+          examId: 103,
+          startedAt: "2026-07-31T08:00:00Z",
+          totalQuestions: 50,
+        },
+      }),
+    );
+    await page.route(
+      "**/api/proxy/sign-quiz/random-practice/history",
+      (route) =>
+        fulfillJson(route, {
+          totalSessions: 1,
+          sessions: [
+            {
+              sessionId: 201,
+              status: "COMPLETED",
+              totalQuestions: 50,
+              answeredCount: 50,
+              correctAnswers: 0,
+              wrongAnswers: 50,
+              unanswered: 0,
+              scorePercentage: 0,
+              passed: false,
+              passingScore: 41,
+              startedAt: "2026-07-28T08:00:00Z",
+              completedAt: "2026-07-28T08:30:00Z",
+            },
+          ],
+        }),
+    );
+    await page.route("**/api/proxy/sign-quiz/exam-history", (route) =>
+      fulfillJson(route, { totalResults: 0, results: [] }),
+    );
+    await page.route("**/api/proxy/sign-quiz/practice/history", (route) =>
+      fulfillJson(route, {
+        totalSessions: 1,
+        sessions: [
+          {
+            sessionId: 301,
+            signCode: "A1a",
+            nameNl: "Gevaarlijke bocht naar links",
+            nameEn: "Dangerous bend to the left",
+            nameFr: "Virage dangereux vers la gauche",
+            nameAr: "منعطف خطر نحو اليسار",
+            status: "IN_PROGRESS",
+            totalQuestions: 8,
+            answeredCount: 0,
+            correctAnswers: 0,
+            wrongAnswers: 0,
+            scorePercentage: 0,
+            passed: false,
+            startedAt: "2026-07-30T10:00:00Z",
+          },
+        ],
+      }),
+    );
+
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+
+    for (const locale of locales) {
+      await page.setViewportSize({ width: 320, height: 900 });
+      await navigate(page, localizedPath("/dashboard", locale));
+      await page.evaluate(() => document.fonts.ready);
+
+      const cards = page.getByTestId("recent-activity-card");
+      await expect(cards).toHaveCount(5);
+
+      for (const width of [320, 360, 375, 390, 428] as const) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
+        );
+
+        const metrics = await cards.evaluateAll((activityCards) => {
+          const viewport = window.innerWidth;
+          const centerX = (target: DOMRect) => target.left + target.width / 2;
+          const invalidCards = activityCards.flatMap((card, index) => {
+            const cardRect = card.getBoundingClientRect();
+            const parts = [
+              card.querySelector('[data-testid="recent-activity-icon"]'),
+              card.querySelector('[data-testid="recent-activity-name"]'),
+              card.querySelector('[data-testid="recent-activity-meta"]'),
+              card.querySelector('[data-testid="recent-activity-score"]'),
+              card.querySelector('[data-testid="recent-activity-status"]'),
+              card.querySelector('[data-testid="recent-activity-action"]'),
+            ].filter((part): part is Element => Boolean(part));
+            const name = card.querySelector(
+              '[data-testid="recent-activity-name"]',
+            );
+            const action = card.querySelector(
+              '[data-testid="recent-activity-action"]',
+            );
+
+            if (!name || !action || parts.length < 5) {
+              return [{ index, reason: "activity content is incomplete" }];
+            }
+
+            const partRects = parts.map((part) => part.getBoundingClientRect());
+            const nameStyle = getComputedStyle(name);
+            const actionRect = action.getBoundingClientRect();
+            const reasons = [
+              cardRect.left < -1 && "card starts outside viewport",
+              cardRect.right > viewport + 1 && "card ends outside viewport",
+              card.scrollWidth > card.clientWidth + 1 && "card scrolls",
+              nameStyle.whiteSpace === "nowrap" && "name cannot wrap",
+              nameStyle.webkitLineClamp !== "2" &&
+                "name is not limited to two readable lines",
+              actionRect.width < cardRect.width - 34 &&
+                "action is not near full width",
+              ...partRects.flatMap((partRect, partIndex) => {
+                const findings: string[] = [];
+                if (
+                  partRect.left < cardRect.left - 1 ||
+                  partRect.right > cardRect.right + 1
+                ) {
+                  findings.push(`part ${partIndex} leaves card bounds`);
+                }
+                if (Math.abs(centerX(partRect) - centerX(cardRect)) > 1) {
+                  findings.push(`part ${partIndex} is not centered`);
+                }
+                if (
+                  partIndex > 0 &&
+                  partRects[partIndex - 1].bottom > partRect.top + 1
+                ) {
+                  findings.push(`part ${partIndex} is out of vertical order`);
+                }
+                return findings;
+              }),
+            ].filter((reason): reason is string => Boolean(reason));
+
+            return reasons.map((reason) => ({
+              index,
+              reason,
+              cardLeft: cardRect.left,
+              cardRight: cardRect.right,
+              cardWidth: cardRect.width,
+              actionWidth: actionRect.width,
+            }));
+          });
+
+          return {
+            viewport,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            invalidCards,
+          };
+        });
+
+        if (
+          metrics.documentWidth > width ||
+          metrics.bodyWidth > width ||
+          metrics.invalidCards.length > 0
+        ) {
+          await page.screenshot({
+            path: testInfo.outputPath(
+              `recent-activity-${locale}-${width}px.png`,
+            ),
+            fullPage: true,
+          });
+        }
+
+        expect(metrics, `${locale} recent activity at ${width}px`).toEqual({
+          viewport: width,
+          documentWidth: width,
+          bodyWidth: width,
+          invalidCards: [],
+        });
+      }
+
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
+      await expect(cards.first()).toHaveCSS("flex-direction", "row");
+    }
+
+    expect(consoleErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("dashboard error summary cards use a centered mobile hierarchy", async ({
+    context,
+    page,
+  }, testInfo) => {
+    test.setTimeout(120_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+    await page.route(
+      "**/api/proxy/users/me/analytics/error-patterns*",
+      (route) =>
+        fulfillJson(route, [
+          {
+            patternType: "SIGN_CONFUSION",
+            count: 12,
+            percentage: 60,
+            description: "Confusion between similar traffic signs.",
+            severity: "CRITICAL",
+            uniqueQuestions: 8,
+            recommendationKey: "error_patterns.rec_sign_confusion",
+            sourceScope: "COMPLETE_HISTORY",
+            groups: [
+              {
+                groupType: "CATEGORY",
+                code: "DANGER",
+                nameEn: "Danger signs",
+                nameNl: "Gevaarsborden",
+                nameFr: "Panneaux de danger",
+                nameAr: "علامات الخطر",
+                count: 7,
+              },
+            ],
+            exampleQuestions: [],
+          },
+          {
+            patternType: "PRIORITY_MISUNDERSTANDING",
+            count: 8,
+            percentage: 40,
+            description: "Priority rules are misunderstood.",
+            severity: "MODERATE",
+            uniqueQuestions: 5,
+            recommendationKey:
+              "error_patterns.rec_priority_misunderstanding",
+            sourceScope: "COMPLETE_HISTORY",
+            groups: [
+              {
+                groupType: "CATEGORY",
+                code: "PRIORITY",
+                nameEn: "Priority signs",
+                nameNl: "Voorrangsborden",
+                nameFr: "Panneaux de priorité",
+                nameAr: "علامات الأولوية",
+                count: 5,
+              },
+            ],
+            exampleQuestions: [],
+          },
+        ]),
+    );
+
+    for (const locale of locales) {
+      await page.setViewportSize({ width: 320, height: 900 });
+      await navigate(
+        page,
+        localizedPath("/dashboard?section=error-patterns", locale),
+      );
+      await page.evaluate(() => document.fonts.ready);
+
+      const cards = page.getByTestId("error-summary-card");
+      await expect(cards).toHaveCount(4);
+
+      for (const width of [320, 360, 375, 390, 428] as const) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
+        );
+
+        const metrics = await cards.evaluateAll((summaryCards) => {
+          const viewport = window.innerWidth;
+          const centerX = (target: DOMRect) => target.left + target.width / 2;
+          const invalidCards = summaryCards.flatMap((card, index) => {
+            const cardRect = card.getBoundingClientRect();
+            const icon = card.querySelector(
+              '[data-testid="error-summary-icon"]',
+            );
+            const label = card.querySelector(
+              '[data-testid="error-summary-label"]',
+            );
+            const value = card.querySelector(
+              '[data-testid="error-summary-value"]',
+            );
+            const description = card.querySelector(
+              '[data-testid="error-summary-description"]',
+            );
+
+            if (!icon || !label || !value || !description) {
+              return [{ index, reason: "summary card content is incomplete" }];
+            }
+
+            const parts = [icon, label, value, description];
+            const partRects = parts.map((part) => part.getBoundingClientRect());
+            const descriptionStyle = getComputedStyle(description);
+            const reasons = [
+              cardRect.left < -1 && "card starts outside viewport",
+              cardRect.right > viewport + 1 && "card ends outside viewport",
+              card.scrollWidth > card.clientWidth + 1 && "card scrolls",
+              descriptionStyle.webkitLineClamp !== "2" &&
+                "description is not allowed two lines",
+              ...partRects.flatMap((partRect, partIndex) => {
+                const findings: string[] = [];
+                if (
+                  partRect.left < cardRect.left - 1 ||
+                  partRect.right > cardRect.right + 1
+                ) {
+                  findings.push(`part ${partIndex} leaves card bounds`);
+                }
+                if (Math.abs(centerX(partRect) - centerX(cardRect)) > 1) {
+                  findings.push(`part ${partIndex} is not centered`);
+                }
+                if (
+                  partIndex > 0 &&
+                  partRects[partIndex - 1].bottom > partRect.top + 1
+                ) {
+                  findings.push(`part ${partIndex} is out of vertical order`);
+                }
+                return findings;
+              }),
+            ].filter((reason): reason is string => Boolean(reason));
+
+            return reasons.map((reason) => ({
+              index,
+              reason,
+              cardLeft: cardRect.left,
+              cardRight: cardRect.right,
+              cardWidth: cardRect.width,
+            }));
+          });
+
+          return {
+            viewport,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            invalidCards,
+          };
+        });
+
+        if (
+          metrics.documentWidth > width ||
+          metrics.bodyWidth > width ||
+          metrics.invalidCards.length > 0
+        ) {
+          await page.screenshot({
+            path: testInfo.outputPath(
+              `error-summary-${locale}-${width}px.png`,
+            ),
+            fullPage: true,
+          });
+        }
+
+        expect(metrics, `${locale} error summary at ${width}px`).toEqual({
+          viewport: width,
+          documentWidth: width,
+          bodyWidth: width,
+          invalidCards: [],
+        });
+      }
+
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
+      await expect(
+        cards.first().getByTestId("error-summary-content"),
+      ).toHaveCSS("flex-direction", "row");
+    }
+  });
+
+  test("official exam result cards use a balanced mobile hierarchy", async ({
+    context,
+    page,
+  }, testInfo) => {
+    test.setTimeout(120_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+    await page.route("**/api/proxy/exams/simulations/history", (route) =>
+      fulfillJson(route, {
+        totalExams: 3,
+        exams: [
+          {
+            examId: 401,
+            startedAt: "2026-07-30T14:20:00Z",
+            completedAt: "2026-07-30T14:52:00Z",
+            status: "COMPLETED",
+            scorePercentage: 84,
+            totalQuestions: 50,
+            correctAnswers: 42,
+            passed: true,
+          },
+          {
+            examId: 402,
+            startedAt: "2026-07-29T14:20:00Z",
+            completedAt: "2026-07-29T14:52:00Z",
+            status: "COMPLETED",
+            scorePercentage: 24,
+            totalQuestions: 50,
+            correctAnswers: 12,
+            passed: false,
+          },
+          {
+            examId: 403,
+            startedAt: "2026-07-28T14:20:00Z",
+            completedAt: null,
+            status: "IN_PROGRESS",
+            scorePercentage: 0,
+            totalQuestions: 50,
+            correctAnswers: 0,
+            passed: false,
+          },
+        ],
+      }),
+    );
+
+    for (const locale of locales) {
+      await page.setViewportSize({ width: 320, height: 900 });
+      await navigate(
+        page,
+        localizedPath("/dashboard?section=exam-results", locale),
+      );
+      await page.evaluate(() => document.fonts.ready);
+
+      const cards = page.getByTestId("official-exam-result-card");
+      await expect(cards).toHaveCount(3);
+
+      for (const width of [320, 360, 375, 390, 428] as const) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
+        );
+
+        const metrics = await cards.evaluateAll((resultCards) => {
+          const viewport = window.innerWidth;
+          const centerX = (target: DOMRect) => target.left + target.width / 2;
+          const invalidCards = resultCards.flatMap((card, index) => {
+            const cardRect = card.getBoundingClientRect();
+            const icon = card.querySelector(
+              '[data-testid="official-exam-result-icon"]',
+            );
+            const name = card.querySelector(
+              '[data-testid="official-exam-result-name"]',
+            );
+            const status = card.querySelector(
+              '[data-testid="official-exam-result-status"]',
+            );
+            const date = card.querySelector(
+              '[data-testid="official-exam-result-date"]',
+            );
+            const score = card.querySelector(
+              '[data-testid="official-exam-result-score"]',
+            );
+            const progress = card.querySelector(
+              '[data-testid="official-exam-result-progress"]',
+            );
+            const chevron = card.querySelector(
+              '[data-testid="official-exam-result-chevron"]',
+            );
+
+            if (!icon || !name || !status || !date) {
+              return [{ index, reason: "exam result content is incomplete" }];
+            }
+
+            const parts = [icon, name, status, date, score, progress, chevron].filter(
+              (part): part is Element => Boolean(part),
+            );
+            const partRects = parts.map((part) => part.getBoundingClientRect());
+            const iconRect = icon.getBoundingClientRect();
+            const scoreRect = score?.getBoundingClientRect();
+            const iconSvgRect =
+              icon.querySelector("svg")?.getBoundingClientRect() ?? null;
+            const dateText = date.textContent?.trim() ?? "";
+            const reasons = [
+              cardRect.left < -1 && "card starts outside viewport",
+              cardRect.right > viewport + 1 && "card ends outside viewport",
+              card.scrollWidth > card.clientWidth + 1 && "card scrolls",
+              Math.abs(iconRect.width - 40) > 1 && "icon container is not 40px",
+              Math.abs(iconRect.height - 40) > 1 && "icon container is not 40px",
+              iconSvgRect &&
+                Math.abs(iconSvgRect.width - 20) > 1 &&
+                "status icon is not 20px",
+              scoreRect &&
+                Math.abs(scoreRect.width - 52) > 1 &&
+                "score container is not 52px",
+              scoreRect &&
+                Math.abs(scoreRect.height - 52) > 1 &&
+                "score container is not 52px",
+              date.getAttribute("data-calendar") !== "gregory" &&
+                "date is not Gregorian",
+              !dateText.includes("2026") && "Gregorian year is missing",
+              /[\u0660-\u0669\u06f0-\u06f9]/u.test(dateText) &&
+                "date uses Arabic-Indic digits",
+              ...partRects.flatMap((partRect, partIndex) => {
+                const findings: string[] = [];
+                if (
+                  partRect.left < cardRect.left - 1 ||
+                  partRect.right > cardRect.right + 1
+                ) {
+                  findings.push(`part ${partIndex} leaves card bounds`);
+                }
+                if (Math.abs(centerX(partRect) - centerX(cardRect)) > 1) {
+                  findings.push(`part ${partIndex} is not centered`);
+                }
+                if (
+                  partIndex > 0 &&
+                  partRects[partIndex - 1].bottom > partRect.top + 1
+                ) {
+                  findings.push(`part ${partIndex} is out of vertical order`);
+                }
+                return findings;
+              }),
+            ].filter((reason): reason is string => Boolean(reason));
+
+            return reasons.map((reason) => ({
+              index,
+              reason,
+              cardWidth: cardRect.width,
+              iconWidth: iconRect.width,
+              scoreWidth: scoreRect?.width ?? null,
+              dateText,
+            }));
+          });
+
+          return {
+            viewport,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            invalidCards,
+          };
+        });
+
+        if (
+          metrics.documentWidth > width ||
+          metrics.bodyWidth > width ||
+          metrics.invalidCards.length > 0
+        ) {
+          await page.screenshot({
+            path: testInfo.outputPath(
+              `official-exam-result-${locale}-${width}px.png`,
+            ),
+            fullPage: true,
+          });
+        }
+
+        expect(metrics, `${locale} official exam result at ${width}px`).toEqual({
+          viewport: width,
+          documentWidth: width,
+          bodyWidth: width,
+          invalidCards: [],
+        });
+      }
+
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
+      await expect(
+        cards.first().getByTestId("official-exam-result-header"),
+      ).toHaveCSS("flex-direction", "row");
+      await expect(
+        cards.first().getByTestId("official-exam-result-icon"),
+      ).toHaveCSS("width", "48px");
+      await expect(
+        cards.first().getByTestId("official-exam-result-score"),
+      ).toHaveCSS("width", "64px");
+    }
+  });
+
+  test("exam results page uses one mobile card hierarchy for every exam type", async ({
+    context,
+    page,
+  }, testInfo) => {
+    test.setTimeout(120_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+
+    await page.route("**/api/proxy/exams/simulations/history", (route) =>
+      fulfillJson(route, {
+        totalExams: 2,
+        exams: [
+          {
+            examId: 501,
+            startedAt: "2026-07-30T14:20:00Z",
+            completedAt: "2026-07-30T14:52:00Z",
+            status: "COMPLETED",
+            scorePercentage: 84,
+            totalQuestions: 50,
+            correctAnswers: 42,
+            passed: true,
+          },
+          {
+            examId: 502,
+            startedAt: "2026-07-29T14:20:00Z",
+            completedAt: "2026-07-29T14:52:00Z",
+            status: "COMPLETED",
+            scorePercentage: 24,
+            totalQuestions: 50,
+            correctAnswers: 12,
+            passed: false,
+          },
+        ],
+      }),
+    );
+    await page.route(
+      "**/api/proxy/sign-quiz/random-practice/history",
+      (route) =>
+        fulfillJson(route, {
+          totalSessions: 2,
+          sessions: [
+            {
+              sessionId: 601,
+              status: "COMPLETED",
+              totalQuestions: 50,
+              answeredCount: 50,
+              correctAnswers: 44,
+              wrongAnswers: 6,
+              unanswered: 0,
+              scorePercentage: 88,
+              passed: true,
+              passingScore: 41,
+              startedAt: "2026-07-28T14:20:00Z",
+              completedAt: "2026-07-28T14:52:00Z",
+            },
+            {
+              sessionId: 602,
+              status: "COMPLETED",
+              totalQuestions: 50,
+              answeredCount: 50,
+              correctAnswers: 15,
+              wrongAnswers: 35,
+              unanswered: 0,
+              scorePercentage: 30,
+              passed: false,
+              passingScore: 41,
+              startedAt: "2026-07-27T14:20:00Z",
+              completedAt: "2026-07-27T14:52:00Z",
+            },
+          ],
+        }),
+    );
+    await page.route("**/api/proxy/sign-quiz/exam-history", (route) =>
+      fulfillJson(route, {
+        totalResults: 2,
+        results: [
+          {
+            resultId: 701,
+            signCode: "A1a",
+            routeCode: "A1a",
+            nameEn: "Dangerous bend to the left",
+            nameNl: "Gevaarlijke bocht naar links",
+            nameFr: "Virage dangereux vers la gauche",
+            nameAr: "منعطف خطر نحو اليسار",
+            examNumber: 1,
+            totalQuestions: 8,
+            answeredCount: 8,
+            correctAnswers: 7,
+            wrongAnswers: 1,
+            unansweredCount: 0,
+            scorePercentage: 87.5,
+            passingThreshold: 75,
+            passed: true,
+            completedAt: "2026-07-26T14:52:00Z",
+          },
+          {
+            resultId: 702,
+            signCode: "F",
+            routeCode: "F",
+            nameEn: "Information and temporary traffic signs",
+            nameNl: "Informatieborden en tijdelijke verkeersmaatregelen",
+            nameFr:
+              "Panneaux d'information et mesures temporaires de circulation",
+            nameAr: "علامات المعلومات والإجراءات المرورية المؤقتة",
+            examNumber: 1,
+            totalQuestions: 8,
+            answeredCount: 8,
+            correctAnswers: 2,
+            wrongAnswers: 6,
+            unansweredCount: 0,
+            scorePercentage: 25,
+            passingThreshold: 75,
+            passed: false,
+            completedAt: "2026-07-25T14:52:00Z",
+          },
+        ],
+      }),
+    );
+
+    for (const locale of locales) {
+      await page.setViewportSize({ width: 320, height: 900 });
+      await navigate(
+        page,
+        localizedPath("/dashboard?section=exam-results", locale),
+      );
+      await page.evaluate(() => document.fonts.ready);
+
+      const cards = page.locator(
+        '[data-testid="official-exam-result-card"], [data-testid="mixed-sign-exam-result-card"], [data-testid="sign-exam-result-card"]',
+      );
+      await expect(cards).toHaveCount(6);
+
+      for (const width of [320, 360, 375, 390, 428] as const) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
+        );
+
+        const metrics = await cards.evaluateAll((resultCards) => {
+          const viewport = window.innerWidth;
+          const centerX = (target: DOMRect) => target.left + target.width / 2;
+          const invalidCards = resultCards.flatMap((card, index) => {
+            const cardRect = card.getBoundingClientRect();
+            const parts = [
+              "icon",
+              "name",
+              "status",
+              "date",
+              "score",
+              "progress",
+              "chevron",
+            ].map((part) =>
+              card.querySelector(`[data-result-part="${part}"]`),
+            );
+
+            if (parts.some((part) => !part)) {
+              return [
+                {
+                  index,
+                  kind: card.getAttribute("data-exam-result-kind"),
+                  reason: "unified card content is incomplete",
+                },
+              ];
+            }
+
+            const elements = parts as Element[];
+            const partRects = elements.map((part) =>
+              part.getBoundingClientRect(),
+            );
+            const [icon, name, , date, score] = elements;
+            const iconRect = icon.getBoundingClientRect();
+            const scoreRect = score.getBoundingClientRect();
+            const iconSvgRect =
+              icon.querySelector("svg")?.getBoundingClientRect() ?? null;
+            const nameStyle = getComputedStyle(name);
+            const dateText = date.textContent?.trim() ?? "";
+            const reasons = [
+              cardRect.left < -1 && "card starts outside viewport",
+              cardRect.right > viewport + 1 && "card ends outside viewport",
+              card.scrollWidth > card.clientWidth + 1 && "card scrolls",
+              Math.abs(iconRect.width - 40) > 1 && "icon is not 40px",
+              iconSvgRect &&
+                Math.abs(iconSvgRect.width - 20) > 1 &&
+                "icon glyph is not 20px",
+              Math.abs(scoreRect.width - 52) > 1 && "score is not 52px",
+              nameStyle.whiteSpace === "nowrap" && "name cannot wrap",
+              nameStyle.webkitLineClamp !== "2" &&
+                "name is not limited to two readable lines",
+              date.getAttribute("data-calendar") !== "gregory" &&
+                "date is not Gregorian",
+              !dateText.includes("2026") && "Gregorian year is missing",
+              /[\u0660-\u0669\u06f0-\u06f9]/u.test(dateText) &&
+                "date uses Arabic-Indic digits",
+              ...partRects.flatMap((partRect, partIndex) => {
+                const findings: string[] = [];
+                if (
+                  partRect.left < cardRect.left - 1 ||
+                  partRect.right > cardRect.right + 1
+                ) {
+                  findings.push(`part ${partIndex} leaves card bounds`);
+                }
+                if (Math.abs(centerX(partRect) - centerX(cardRect)) > 1) {
+                  findings.push(`part ${partIndex} is not centered`);
+                }
+                if (
+                  partIndex > 0 &&
+                  partRects[partIndex - 1].bottom > partRect.top + 1
+                ) {
+                  findings.push(`part ${partIndex} is out of vertical order`);
+                }
+                return findings;
+              }),
+            ].filter((reason): reason is string => Boolean(reason));
+
+            return reasons.map((reason) => ({
+              index,
+              kind: card.getAttribute("data-exam-result-kind"),
+              reason,
+              cardWidth: cardRect.width,
+              iconWidth: iconRect.width,
+              scoreWidth: scoreRect.width,
+              dateText,
+            }));
+          });
+
+          return {
+            viewport,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            invalidCards,
+          };
+        });
+
+        if (
+          metrics.documentWidth > width ||
+          metrics.bodyWidth > width ||
+          metrics.invalidCards.length > 0
+        ) {
+          await page.screenshot({
+            path: testInfo.outputPath(
+              `unified-exam-results-${locale}-${width}px.png`,
+            ),
+            fullPage: true,
+          });
+        }
+
+        expect(metrics, `${locale} unified exam results at ${width}px`).toEqual({
+          viewport: width,
+          documentWidth: width,
+          bodyWidth: width,
+          invalidCards: [],
+        });
+      }
+
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          ),
+      );
+      const desktopMetrics = await cards.evaluateAll((resultCards) =>
+        resultCards.map((card) => {
+          const header = card.children.item(1);
+          const icon = card.querySelector('[data-result-part="icon"]');
+          const score = card.querySelector('[data-result-part="score"]');
+          return {
+            direction: header ? getComputedStyle(header).flexDirection : null,
+            iconWidth: icon?.getBoundingClientRect().width ?? 0,
+            scoreWidth: score?.getBoundingClientRect().width ?? 0,
+          };
+        }),
+      );
+      expect(desktopMetrics).toEqual(
+        Array(6).fill({
+          direction: "row",
+          iconWidth: 48,
+          scoreWidth: 64,
+        }),
+      );
+    }
+  });
+
+  test("exam start button matches the large secondary action height at every target viewport", async ({
+    context,
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+    await page.setViewportSize({ width: 320, height: 900 });
+    await navigate(page, localizedPath("/exam", "ar"));
+
+    const startButton = page.getByTestId("exam-start-button");
+    const backButton = page.getByTestId("exam-back-button");
+    await expect(startButton).toBeVisible();
+    await expect(startButton).toBeEnabled();
+    await expect(backButton).toBeVisible();
+
+    const targetWidths = [320, 375, 768, 1024, 1440] as const;
+    let primaryBackground = "";
+
+    for (const width of targetWidths) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => resolve()),
+            ),
+          ),
+      );
+
+      const metrics = await startButton.evaluate((element) => {
+        const back = document.querySelector<HTMLElement>(
+          '[data-testid="exam-back-button"]',
+        );
+        const icon = element.querySelector<SVGElement>("svg");
+        const label = element.querySelector<HTMLElement>(
+          '[data-testid="exam-start-button-label"]',
+        );
+        const parent = element.parentElement;
+        if (!back || !icon || !label || !parent) {
+          throw new Error("Exam action button structure is incomplete");
+        }
+
+        const buttonRect = element.getBoundingClientRect();
+        const backRect = back.getBoundingClientRect();
+        const iconRect = icon.getBoundingClientRect();
+        const labelRect = label.getBoundingClientRect();
+        const parentRect = parent.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        const parentStyle = getComputedStyle(parent);
+        const buttonCenter = buttonRect.top + buttonRect.height / 2;
+
+        return {
+          viewport: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          bodyWidth: document.body.scrollWidth,
+          height: buttonRect.height,
+          backHeight: backRect.height,
+          width: buttonRect.width,
+          left: buttonRect.left,
+          right: buttonRect.right,
+          parentLeft: parentRect.left,
+          parentRight: parentRect.right,
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+          alignItems: style.alignItems,
+          justifyContent: style.justifyContent,
+          columnGap: style.columnGap,
+          parentDirection: parentStyle.flexDirection,
+          iconCenterDelta: Math.abs(
+            iconRect.top + iconRect.height / 2 - buttonCenter,
+          ),
+          labelCenterDelta: Math.abs(
+            labelRect.top + labelRect.height / 2 - buttonCenter,
+          ),
+          backgroundColor: style.backgroundColor,
+          color: style.color,
+          variant: element.getAttribute("data-variant"),
+          size: element.getAttribute("data-size"),
+        };
+      });
+
+      if (!primaryBackground) primaryBackground = metrics.backgroundColor;
+
+      expect(metrics, `exam actions at ${width}px`).toMatchObject({
+        viewport: width,
+        documentWidth: width,
+        bodyWidth: width,
+        height: 44,
+        backHeight: 44,
+        alignItems: "center",
+        justifyContent: "center",
+        columnGap: "8px",
+        backgroundColor: primaryBackground,
+        variant: "default",
+        size: "lg",
+      });
+      expect(metrics.width).toBeGreaterThan(0);
+      expect(metrics.left).toBeGreaterThanOrEqual(metrics.parentLeft - 1);
+      expect(metrics.right).toBeLessThanOrEqual(metrics.parentRight + 1);
+      expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1);
+      expect(metrics.iconCenterDelta).toBeLessThanOrEqual(1);
+      expect(metrics.labelCenterDelta).toBeLessThanOrEqual(1);
+      expect(metrics.color).not.toBe("rgba(0, 0, 0, 0)");
+
+      if (width < 640) {
+        expect(metrics.parentDirection).toBe("column");
+      } else {
+        expect(metrics.parentDirection).toBe("row");
+      }
+    }
+  });
+
+  test("exam summary cards share the icon label value mobile hierarchy", async ({
+    context,
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+
+    const mobileViewports = [320, 360, 375, 390, 428] as const;
+    const testedLocales = ["en", "ar"] as const;
+
+    for (const locale of testedLocales) {
+      await page.setViewportSize({ width: 320, height: 900 });
+      await navigate(page, localizedPath("/exam", locale));
+
+      const summaryGrid = page.getByTestId("exam-summary-grid");
+      const cards = summaryGrid.getByTestId("dashboard-stat-card");
+      await expect(summaryGrid).toBeVisible();
+      await expect(cards).toHaveCount(3);
+
+      for (const width of mobileViewports) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
+            ),
+        );
+
+        const metrics = await summaryGrid.evaluate((grid) => {
+          const gridRect = grid.getBoundingClientRect();
+          const cardElements = [
+            ...grid.querySelectorAll<HTMLElement>(
+              ':scope > [data-testid="dashboard-stat-card"]',
+            ),
+          ];
+
+          return {
+            viewport: window.innerWidth,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            gridClientWidth: grid.clientWidth,
+            gridScrollWidth: grid.scrollWidth,
+            cardMetrics: cardElements.map((card) => {
+              const icon = card.querySelector<HTMLElement>(
+                '[data-testid="dashboard-stat-icon"]',
+              );
+              const label = card.querySelector<HTMLElement>(
+                '[data-testid="dashboard-stat-label"]',
+              );
+              const value = card.querySelector<HTMLElement>(
+                '[data-testid="dashboard-stat-value"]',
+              );
+              if (!icon || !label || !value) {
+                throw new Error("Exam summary card structure is incomplete");
+              }
+
+              const cardRect = card.getBoundingClientRect();
+              const iconRect = icon.getBoundingClientRect();
+              const labelRect = label.getBoundingClientRect();
+              const valueRect = value.getBoundingClientRect();
+              const cardCenter = cardRect.left + cardRect.width / 2;
+
+              return {
+                cardLeft: cardRect.left,
+                cardRight: cardRect.right,
+                cardWidth: cardRect.width,
+                cardClientWidth: card.clientWidth,
+                cardScrollWidth: card.scrollWidth,
+                iconTop: iconRect.top,
+                iconBottom: iconRect.bottom,
+                iconCenterDelta: Math.abs(
+                  iconRect.left + iconRect.width / 2 - cardCenter,
+                ),
+                labelTop: labelRect.top,
+                labelBottom: labelRect.bottom,
+                labelCenterDelta: Math.abs(
+                  labelRect.left + labelRect.width / 2 - cardCenter,
+                ),
+                labelTextAlign: getComputedStyle(label).textAlign,
+                valueTop: valueRect.top,
+                valueCenterDelta: Math.abs(
+                  valueRect.left + valueRect.width / 2 - cardCenter,
+                ),
+                valueTextAlign: getComputedStyle(value).textAlign,
+                valueScrollWidth: value.scrollWidth,
+                valueClientWidth: value.clientWidth,
+              };
+            }),
+            gridLeft: gridRect.left,
+            gridRight: gridRect.right,
+          };
+        });
+
+        expect(metrics.viewport).toBe(width);
+        expect(metrics.documentWidth).toBe(width);
+        expect(metrics.bodyWidth).toBe(width);
+        expect(metrics.gridScrollWidth).toBeLessThanOrEqual(
+          metrics.gridClientWidth + 1,
+        );
+        expect(metrics.cardMetrics).toHaveLength(3);
+
+        for (const card of metrics.cardMetrics) {
+          expect(card.cardLeft).toBeGreaterThanOrEqual(metrics.gridLeft - 1);
+          expect(card.cardRight).toBeLessThanOrEqual(metrics.gridRight + 1);
+          expect(card.cardScrollWidth).toBeLessThanOrEqual(
+            card.cardClientWidth + 1,
+          );
+          expect(card.iconBottom).toBeLessThanOrEqual(card.labelTop + 1);
+          expect(card.labelBottom).toBeLessThanOrEqual(card.valueTop + 1);
+          expect(card.iconCenterDelta).toBeLessThanOrEqual(1);
+          expect(card.labelCenterDelta).toBeLessThanOrEqual(1);
+          expect(card.valueCenterDelta).toBeLessThanOrEqual(1);
+          expect(card.labelTextAlign).toBe("center");
+          expect(card.valueTextAlign).toBe("center");
+          expect(card.valueScrollWidth).toBeLessThanOrEqual(
+            card.valueClientWidth + 1,
+          );
+        }
+
+        expect(new Set(metrics.cardMetrics.map((card) => card.cardWidth)).size).toBe(
+          1,
+        );
+      }
+
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => resolve()),
+            ),
+          ),
+      );
+      const desktopMetrics = await cards.evaluateAll((cardElements) =>
+        cardElements.map((card) => {
+          const icon = card.querySelector<HTMLElement>(
+            '[data-testid="dashboard-stat-icon"]',
+          );
+          const label = card.querySelector<HTMLElement>(
+            '[data-testid="dashboard-stat-label"]',
+          );
+          const value = card.querySelector<HTMLElement>(
+            '[data-testid="dashboard-stat-value"]',
+          );
+          if (!icon || !label || !value) {
+            throw new Error("Exam summary card structure is incomplete");
+          }
+          const iconRect = icon.getBoundingClientRect();
+          const labelRect = label.getBoundingClientRect();
+          const valueRect = value.getBoundingClientRect();
+          return {
+            iconTop: Math.round(iconRect.top),
+            valueTop: Math.round(valueRect.top),
+            labelTop: Math.round(labelRect.top),
+            firstRowBottom: Math.round(
+              Math.max(iconRect.bottom, valueRect.bottom),
+            ),
+          };
+        }),
+      );
+
+      for (const card of desktopMetrics) {
+        expect(Math.abs(card.iconTop - card.valueTop)).toBeLessThanOrEqual(1);
+        expect(card.labelTop).toBeGreaterThanOrEqual(card.firstRowBottom);
+      }
+    }
+  });
+
+  test("practice category cards use a clear mobile learning hierarchy in every locale", async ({
+    context,
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+
+    const practiceSigns = [
+      trafficSignCatalogFixture,
+      {
+        ...trafficSignCatalogFixture,
+        id: 2,
+        signCode: "F1",
+        routeCode: "F1",
+        categoryCode: "F",
+      },
+      {
+        ...trafficSignCatalogFixture,
+        id: 3,
+        signCode: "G1",
+        routeCode: "G1",
+        categoryCode: "G",
+      },
+    ];
+    const practiceProgress = practiceSigns.map((sign, index) => ({
+      signCode: sign.signCode,
+      routeCode: sign.routeCode,
+      practiceCompleted: index < 2,
+      exam1Passed: index === 0,
+    }));
+
+    await page.route("**/api/proxy/traffic-signs", (route) =>
+      fulfillJson(route, practiceSigns),
+    );
+    await page.route("**/api/proxy/sign-quiz/user-progress*", (route) =>
+      fulfillJson(route, practiceProgress),
+    );
+
+    const targetWidths = [320, 360, 375, 390, 428] as const;
+
+    for (const locale of locales) {
+      await page.setViewportSize({ width: 320, height: 1000 });
+      await navigate(page, localizedPath("/practice", locale));
+
+      const cards = page.getByTestId("practice-category-card");
+      await expect(cards).toHaveCount(3);
+
+      for (const width of targetWidths) {
+        await page.setViewportSize({ width, height: 1000 });
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
+            ),
+        );
+
+        const metrics = await cards.evaluateAll((cardElements) => ({
+          viewport: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          bodyWidth: document.body.scrollWidth,
+          cards: cardElements.map((card) => {
+            const icon = card.querySelector<HTMLElement>(
+              '[data-testid="practice-category-icon"]',
+            );
+            const code = card.querySelector<HTMLElement>(
+              '[data-testid="practice-category-code"]',
+            );
+            const title = card.querySelector<HTMLElement>(
+              '[data-testid="practice-category-title"]',
+            );
+            const count = card.querySelector<HTMLElement>(
+              '[data-testid="practice-category-count"]',
+            );
+            const progress = card.querySelector<HTMLElement>(
+              '[data-testid="practice-category-progress"]',
+            );
+            const progressBar = card.querySelector<HTMLElement>(
+              '[data-testid="practice-category-progress-bar"]',
+            );
+            const action = card.querySelector<HTMLElement>(
+              '[data-testid="practice-category-action"]',
+            );
+            const stats = [
+              ...card.querySelectorAll<HTMLElement>(
+                '[data-testid="practice-category-stat"]',
+              ),
+            ];
+            if (
+              !icon ||
+              !code ||
+              !title ||
+              !count ||
+              !progress ||
+              !progressBar ||
+              !action ||
+              stats.length !== 2
+            ) {
+              throw new Error("Practice category card structure is incomplete");
+            }
+
+            const cardRect = card.getBoundingClientRect();
+            const iconRect = icon.getBoundingClientRect();
+            const codeRect = code.getBoundingClientRect();
+            const titleRect = title.getBoundingClientRect();
+            const countRect = count.getBoundingClientRect();
+            const progressHeaderRect =
+              progress.children.item(0)?.getBoundingClientRect();
+            const progressBarRect = progressBar.getBoundingClientRect();
+            const actionRect = action.getBoundingClientRect();
+            const cardCenter = cardRect.left + cardRect.width / 2;
+            const statMetrics = stats.map((stat) => {
+              const statIcon = stat.querySelector<HTMLElement>(
+                '[data-testid="practice-category-stat-icon"]',
+              );
+              const statLabel = stat.querySelector<HTMLElement>(
+                '[data-testid="practice-category-stat-label"]',
+              );
+              const statValue = stat.querySelector<HTMLElement>(
+                '[data-testid="practice-category-stat-value"]',
+              );
+              if (!statIcon || !statLabel || !statValue) {
+                throw new Error("Practice statistic structure is incomplete");
+              }
+              const statRect = stat.getBoundingClientRect();
+              const statIconRect = statIcon.getBoundingClientRect();
+              const statLabelRect = statLabel.getBoundingClientRect();
+              const statValueRect = statValue.getBoundingClientRect();
+              const statCenter = statRect.left + statRect.width / 2;
+              return {
+                height: statRect.height,
+                direction: getComputedStyle(statIcon.parentElement!).flexDirection,
+                iconBottom: statIconRect.bottom,
+                labelTop: statLabelRect.top,
+                labelBottom: statLabelRect.bottom,
+                valueTop: statValueRect.top,
+                iconCenterDelta: Math.abs(
+                  statIconRect.left + statIconRect.width / 2 - statCenter,
+                ),
+                labelCenterDelta: Math.abs(
+                  statLabelRect.left + statLabelRect.width / 2 - statCenter,
+                ),
+                valueCenterDelta: Math.abs(
+                  statValueRect.left + statValueRect.width / 2 - statCenter,
+                ),
+              };
+            });
+
+            return {
+              cardLeft: cardRect.left,
+              cardRight: cardRect.right,
+              cardClientWidth: card.clientWidth,
+              cardScrollWidth: card.scrollWidth,
+              headerDirection: getComputedStyle(
+                card.querySelector<HTMLElement>(
+                  '[data-testid="practice-category-header"]',
+                )!,
+              ).flexDirection,
+              descriptionCount: card.querySelectorAll(
+                '[data-slot="card-description"]',
+              ).length,
+              iconBottom: iconRect.bottom,
+              codeTop: codeRect.top,
+              codeBottom: codeRect.bottom,
+              titleTop: titleRect.top,
+              titleBottom: titleRect.bottom,
+              countTop: countRect.top,
+              headerCenterDeltas: [iconRect, codeRect, titleRect, countRect].map(
+                (rect) =>
+                  Math.abs(rect.left + rect.width / 2 - cardCenter),
+              ),
+              statMetrics,
+              progressHeaderBottom: progressHeaderRect?.bottom ?? 0,
+              progressBarTop: progressBarRect.top,
+              progressBarBottom: progressBarRect.bottom,
+              progressBarWidth: progressBarRect.width,
+              actionTop: actionRect.top,
+              actionHeight: actionRect.height,
+              actionWidth: actionRect.width,
+              progressWidth: progress.getBoundingClientRect().width,
+            };
+          }),
+        }));
+
+        expect(metrics.viewport).toBe(width);
+        expect(metrics.documentWidth).toBe(width);
+        expect(metrics.bodyWidth).toBe(width);
+
+        for (const card of metrics.cards) {
+          expect(card.cardLeft).toBeGreaterThanOrEqual(-1);
+          expect(card.cardRight).toBeLessThanOrEqual(width + 1);
+          expect(card.cardScrollWidth).toBeLessThanOrEqual(
+            card.cardClientWidth + 1,
+          );
+          expect(card.headerDirection).toBe("column");
+          expect(card.descriptionCount).toBe(0);
+          expect(card.iconBottom).toBeLessThanOrEqual(card.codeTop + 1);
+          expect(card.codeBottom).toBeLessThanOrEqual(card.titleTop + 1);
+          expect(card.titleBottom).toBeLessThanOrEqual(card.countTop + 1);
+          expect(Math.max(...card.headerCenterDeltas)).toBeLessThanOrEqual(1);
+          expect(new Set(card.statMetrics.map((stat) => stat.height)).size).toBe(
+            1,
+          );
+          for (const stat of card.statMetrics) {
+            expect(stat.direction).toBe("column");
+            expect(stat.iconBottom).toBeLessThanOrEqual(stat.labelTop + 1);
+            expect(stat.labelBottom).toBeLessThanOrEqual(stat.valueTop + 1);
+            expect(stat.iconCenterDelta).toBeLessThanOrEqual(1);
+            expect(stat.labelCenterDelta).toBeLessThanOrEqual(1);
+            expect(stat.valueCenterDelta).toBeLessThanOrEqual(1);
+          }
+          expect(card.progressHeaderBottom).toBeLessThanOrEqual(
+            card.progressBarTop,
+          );
+          expect(card.progressBarBottom).toBeLessThanOrEqual(card.actionTop);
+          expect(card.actionHeight).toBe(44);
+          expect(Math.abs(card.actionWidth - card.progressWidth)).toBeLessThanOrEqual(
+            1,
+          );
+          expect(card.progressBarWidth).toBeGreaterThan(0);
+        }
+      }
+
+      await page.setViewportSize({ width: 1280, height: 1000 });
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => resolve()),
+            ),
+          ),
+      );
+      const desktopMetrics = await cards.evaluateAll((cardElements) =>
+        cardElements.map((card) => ({
+          headerDirection: getComputedStyle(
+            card.querySelector<HTMLElement>(
+              '[data-testid="practice-category-header"]',
+            )!,
+          ).flexDirection,
+          statDirections: [
+            ...card.querySelectorAll<HTMLElement>(
+              '[data-testid="practice-category-stat"] > div',
+            ),
+          ].map((statHeader) => getComputedStyle(statHeader).flexDirection),
+          right: card.getBoundingClientRect().right,
+          viewport: window.innerWidth,
+        })),
+      );
+      for (const card of desktopMetrics) {
+        expect(card.headerDirection).toBe("row");
+        expect(card.statDirections).toEqual(["row", "row"]);
+        expect(card.right).toBeLessThanOrEqual(card.viewport + 1);
+      }
+
+      const firstCard = cards.first();
+      const code = await firstCard
+        .getByTestId("practice-category-code")
+        .textContent();
+      await firstCard.getByTestId("practice-category-action").click();
+      await expect(page).toHaveURL(
+        new RegExp(`${localizedPath(`/practice/${code}`, locale)}$`),
+        { timeout: 20_000 },
+      );
+    }
   });
 
   test("traffic sign cards remain width-constrained after viewport changes", async ({

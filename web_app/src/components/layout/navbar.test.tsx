@@ -177,6 +177,100 @@ async function openAccountMenu() {
 }
 
 describe("Navbar responsive account navigation", () => {
+  test.each([
+    ["en", "Dashboard", "/dashboard"],
+    ["nl", "Dashboard", "/nl/dashboard"],
+    ["fr", "Tableau de Bord", "/fr/dashboard"],
+    ["ar", "لوحة التحكم", "/ar/dashboard"],
+  ] as const)(
+    "keeps dashboard only in the %s account menu for authenticated users",
+    async (language, label, href) => {
+      mockLanguage = language;
+      render(<Navbar />);
+
+      const primaryNavigation = screen.getByTestId(
+        "desktop-primary-navigation",
+      );
+      expect(
+        within(primaryNavigation).queryByRole("link", {
+          name: label,
+        }),
+      ).not.toBeInTheDocument();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "nav.open_menu" }),
+      );
+      const mobileNavigation = await screen.findByTestId(
+        "mobile-navigation-dialog",
+      );
+      expect(
+        within(mobileNavigation).queryByRole("link", {
+          name: label,
+        }),
+      ).not.toBeInTheDocument();
+
+      fireEvent.keyDown(document, { key: "Escape" });
+      await waitFor(() =>
+        expect(
+          screen.queryByTestId("mobile-navigation-dialog"),
+        ).not.toBeInTheDocument(),
+      );
+
+      const accountMenu = await openAccountMenu();
+      expect(
+        within(accountMenu).getByRole("menuitem", {
+          name: label,
+        }),
+      ).toHaveAttribute("href", href);
+    },
+  );
+
+  test.each([
+    ["en", "Dashboard", "/dashboard"],
+    ["nl", "Dashboard", "/nl/dashboard"],
+    ["fr", "Tableau de Bord", "/fr/dashboard"],
+    ["ar", "لوحة التحكم", "/ar/dashboard"],
+  ] as const)(
+    "preserves the current %s guest navigation",
+    async (language, label, href) => {
+      mockLanguage = language;
+      mockIsAuthenticated = false;
+      render(<Navbar />);
+
+      const primaryNavigation = screen.getByTestId(
+        "desktop-primary-navigation",
+      );
+      expect(
+        within(primaryNavigation).getByRole("link", {
+          name: label,
+        }),
+      ).toHaveAttribute("href", href);
+      expect(
+        screen.queryByRole("button", {
+          name: mockLabels[language]["nav.account_menu"],
+        }),
+      ).not.toBeInTheDocument();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "nav.open_menu" }),
+      );
+      const mobileNavigation = await screen.findByTestId(
+        "mobile-navigation-dialog",
+      );
+      expect(
+        within(mobileNavigation).getByRole("link", {
+          name: label,
+        }),
+      ).toHaveAttribute("href", href);
+      expect(
+        within(mobileNavigation).getByRole("link", { name: "auth.login" }),
+      ).toBeInTheDocument();
+      expect(
+        within(mobileNavigation).getByRole("link", { name: "auth.register" }),
+      ).toBeInTheDocument();
+    },
+  );
+
   test("keeps primary navigation labels on one line and reduces search width", () => {
     render(<Navbar />);
 
@@ -195,7 +289,7 @@ describe("Navbar responsive account navigation", () => {
     expect(search).not.toHaveClass("2xl:w-36");
     expect(search).not.toHaveClass("2xl:w-48");
     expect(screen.getByTestId("site-navbar").firstElementChild).toHaveClass(
-      "h-[74px]",
+      "h-[58px]",
     );
     expect(primaryNavigation).toHaveClass("min-[1280px]:flex");
     expect(

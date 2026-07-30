@@ -271,7 +271,7 @@ export function ExamResultsPageContent() {
     if (!iso) return "—";
     return new Date(iso).toLocaleDateString(
       language === "ar"
-        ? "ar-SA"
+        ? "ar-SA-u-ca-gregory-nu-latn"
         : language === "nl"
           ? "nl-BE"
           : language === "fr"
@@ -283,6 +283,8 @@ export function ExamResultsPageContent() {
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
+        calendar: "gregory",
+        numberingSystem: "latn",
       },
     );
   }
@@ -466,6 +468,8 @@ export function ExamResultsPageContent() {
               return (
                 <div
                   key={exam.examId}
+                  data-testid="official-exam-result-card"
+                  data-exam-result-kind="official"
                   className={cn(
                     "rounded-2xl border bg-card shadow-sm overflow-hidden transition-all duration-200",
                     isPassed ? "border-green-200" : "",
@@ -490,16 +494,19 @@ export function ExamResultsPageContent() {
 
                   {/* Card header — clickable to expand */}
                   <div
+                    data-testid="official-exam-result-header"
                     className={cn(
-                      "p-5 flex items-center gap-4",
+                      "flex min-w-0 flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start",
                       isCompleted ? "cursor-pointer select-none" : "",
                     )}
                     onClick={() => isCompleted && toggleExpand(exam.examId)}
                   >
                     {/* Icon bubble */}
                     <div
+                      data-testid="official-exam-result-icon"
+                      data-result-part="icon"
                       className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
+                        "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
                         isPassed ? "bg-green-100 text-green-600" : "",
                         isFailed ? "bg-red-100 text-red-600" : "",
                         !isCompleted ? "bg-muted text-muted-foreground" : "",
@@ -507,25 +514,31 @@ export function ExamResultsPageContent() {
                     >
                       {isCompleted ? (
                         exam.passed ? (
-                          <Trophy className="w-6 h-6" />
+                          <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
                         ) : (
-                          <XCircle className="w-6 h-6" />
+                          <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
                         )
                       ) : (
-                        <Clock className="w-6 h-6" />
+                        <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
                       )}
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0 space-y-2">
+                    <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
                       {/* Title row */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-bold text-foreground">
+                      <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
+                        <span
+                          data-testid="official-exam-result-name"
+                          data-result-part="name"
+                          className="line-clamp-2 break-words text-sm font-bold text-foreground sm:line-clamp-1"
+                        >
                           {t("user_sidebar.exam_number")} #
                           {data.totalExams - index}
                         </span>
                         {isCompleted ? (
                           <span
+                            data-testid="official-exam-result-status"
+                            data-result-part="status"
                             className={cn(
                               "inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full",
                               isPassed
@@ -536,7 +549,11 @@ export function ExamResultsPageContent() {
                             {isPassed ? t("exam.passed") : t("exam.failed")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                          <span
+                            data-testid="official-exam-result-status"
+                            data-result-part="status"
+                            className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                          >
                             {exam.status === "ABANDONED"
                               ? t("dashboard.activity_status_abandoned")
                               : exam.status === "EXPIRED"
@@ -549,15 +566,24 @@ export function ExamResultsPageContent() {
                       </div>
 
                       {/* Date */}
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <p
+                        data-testid="official-exam-result-date"
+                        data-result-part="date"
+                        data-calendar="gregory"
+                        className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
+                      >
                         <Clock className="w-3 h-3 opacity-60" />
                         {formatDate(exam.completedAt ?? exam.startedAt)}
                       </p>
 
                       {/* Score bar */}
                       {isCompleted && (
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
+                        <div
+                          data-testid="official-exam-result-progress"
+                          data-result-part="progress"
+                          className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
+                        >
+                          <div className="flex items-center justify-center text-xs sm:justify-between">
                             <span className="text-muted-foreground">
                               {exam.correctAnswers}/{exam.totalQuestions}{" "}
                               {t("exam.correct_answers")}
@@ -581,8 +607,10 @@ export function ExamResultsPageContent() {
                     {/* Score badge */}
                     {isCompleted && (
                       <div
+                        data-testid="official-exam-result-score"
+                        data-result-part="score"
                         className={cn(
-                          "shrink-0 flex flex-col items-center justify-center w-16 h-16 rounded-2xl border-2 font-black text-xl leading-none",
+                          "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
                           isPassed
                             ? "bg-green-50 border-green-200 text-green-700"
                             : "bg-red-50 border-red-200 text-red-600",
@@ -599,15 +627,19 @@ export function ExamResultsPageContent() {
                         <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
                       ) : isExpanded ? (
                         <ChevronUp
+                          data-testid="official-exam-result-chevron"
+                          data-result-part="chevron"
                           className={cn(
-                            "w-5 h-5 shrink-0",
+                            "order-6 h-5 w-5 shrink-0 sm:order-none",
                             isPassed ? "text-green-500" : "text-red-400",
                           )}
                         />
                       ) : (
                         <ChevronDown
+                          data-testid="official-exam-result-chevron"
+                          data-result-part="chevron"
                           className={cn(
-                            "w-5 h-5 shrink-0",
+                            "order-6 h-5 w-5 shrink-0 sm:order-none",
                             isPassed ? "text-green-500" : "text-red-400",
                           )}
                         />
@@ -827,6 +859,8 @@ export function ExamResultsPageContent() {
                       return (
                         <div
                           key={session.sessionId}
+                          data-testid="mixed-sign-exam-result-card"
+                          data-exam-result-kind="mixed-sign"
                           className={cn(
                             "overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200",
                             isPassed ? "border-green-200" : "border-red-200",
@@ -844,33 +878,38 @@ export function ExamResultsPageContent() {
                           />
 
                           <div
-                            className="cursor-pointer select-none p-5 flex items-center gap-4"
+                            className="flex min-w-0 cursor-pointer select-none flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start"
                             onClick={() =>
                               void toggleExpandRandom(session.sessionId)
                             }
                           >
                             <div
+                              data-result-part="icon"
                               className={cn(
-                                "flex h-12 w-12 items-center justify-center rounded-2xl shrink-0",
+                                "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
                                 isPassed
                                   ? "bg-green-100 text-green-600"
                                   : "bg-red-100 text-red-600",
                               )}
                             >
                               {isPassed ? (
-                                <Trophy className="w-6 h-6" />
+                                <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
                               ) : (
-                                <XCircle className="w-6 h-6" />
+                                <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
                               )}
                             </div>
 
-                            <div className="flex-1 min-w-0 space-y-2">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-bold text-foreground">
+                            <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
+                              <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
+                                <span
+                                  data-result-part="name"
+                                  className="line-clamp-2 break-words text-sm font-bold text-foreground sm:line-clamp-1"
+                                >
                                   {t("sign_practice.history_session")} #
                                   {randomHistory.totalSessions - index}
                                 </span>
                                 <span
+                                  data-result-part="status"
                                   className={cn(
                                     "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
                                     isPassed
@@ -889,15 +928,22 @@ export function ExamResultsPageContent() {
                                 )}
                               </div>
 
-                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <p
+                                data-result-part="date"
+                                data-calendar="gregory"
+                                className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
+                              >
                                 <Clock className="w-3 h-3 opacity-60" />
                                 {formatDate(
                                   session.completedAt ?? session.startedAt,
                                 )}
                               </p>
 
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between text-xs">
+                              <div
+                                data-result-part="progress"
+                                className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
+                              >
+                                <div className="flex items-center justify-center text-xs sm:justify-between">
                                   <span className="text-muted-foreground">
                                     {session.correctAnswers}/
                                     {session.totalQuestions}{" "}
@@ -919,8 +965,9 @@ export function ExamResultsPageContent() {
                             </div>
 
                             <div
+                              data-result-part="score"
                               className={cn(
-                                "shrink-0 flex h-16 w-16 flex-col items-center justify-center rounded-2xl border-2 text-xl font-black leading-none",
+                                "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
                                 isPassed
                                   ? "bg-green-50 border-green-200 text-green-700"
                                   : "bg-red-50 border-red-200 text-red-600",
@@ -936,15 +983,17 @@ export function ExamResultsPageContent() {
                               <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
                             ) : isExpanded ? (
                               <ChevronUp
+                                data-result-part="chevron"
                                 className={cn(
-                                  "w-5 h-5 shrink-0",
+                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
                                   isPassed ? "text-green-500" : "text-red-400",
                                 )}
                               />
                             ) : (
                               <ChevronDown
+                                data-result-part="chevron"
                                 className={cn(
-                                  "w-5 h-5 shrink-0",
+                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
                                   isPassed ? "text-green-500" : "text-red-400",
                                 )}
                               />
@@ -1151,6 +1200,8 @@ export function ExamResultsPageContent() {
                       return (
                         <div
                           key={result.resultId}
+                          data-testid="sign-exam-result-card"
+                          data-exam-result-kind="sign-specific"
                           className={cn(
                             "overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200",
                             isPassed ? "border-green-200" : "border-red-200",
@@ -1168,37 +1219,37 @@ export function ExamResultsPageContent() {
                           />
 
                           <div
-                            className="cursor-pointer select-none p-5 flex items-center gap-4"
+                            className="flex min-w-0 cursor-pointer select-none flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start"
                             onClick={() =>
                               void toggleExpandSign(result.resultId)
                             }
                           >
                             <div
+                              data-result-part="icon"
                               className={cn(
-                                "flex h-12 w-12 items-center justify-center rounded-2xl shrink-0",
+                                "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
                                 isPassed
                                   ? "bg-green-100 text-green-600"
                                   : "bg-red-100 text-red-600",
                               )}
                             >
                               {isPassed ? (
-                                <Trophy className="w-6 h-6" />
+                                <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
                               ) : (
-                                <XCircle className="w-6 h-6" />
+                                <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
                               )}
                             </div>
 
-                            <div className="flex-1 min-w-0 space-y-2">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="truncate text-sm font-bold text-foreground">
+                            <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
+                              <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
+                                <span
+                                  data-result-part="name"
+                                  className="line-clamp-2 min-w-0 max-w-full break-words text-sm font-bold text-foreground sm:truncate"
+                                >
                                   {signName}
                                 </span>
-                                {result.routeCode ? (
-                                  <span className="inline-flex items-center rounded-full border border-border/60 bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                                    {result.routeCode}
-                                  </span>
-                                ) : null}
                                 <span
+                                  data-result-part="status"
                                   className={cn(
                                     "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
                                     isPassed
@@ -1210,6 +1261,11 @@ export function ExamResultsPageContent() {
                                     ? t("exam.passed")
                                     : t("exam.failed")}
                                 </span>
+                                {result.routeCode ? (
+                                  <span className="inline-flex items-center rounded-full border border-border/60 bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                                    {result.routeCode}
+                                  </span>
+                                ) : null}
                                 {isHighlighted && (
                                   <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                                     {t("sign_quiz.history_latest")}
@@ -1217,13 +1273,20 @@ export function ExamResultsPageContent() {
                                 )}
                               </div>
 
-                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <p
+                                data-result-part="date"
+                                data-calendar="gregory"
+                                className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
+                              >
                                 <Clock className="w-3 h-3 opacity-60" />
                                 {formatDate(result.completedAt ?? null)}
                               </p>
 
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between text-xs">
+                              <div
+                                data-result-part="progress"
+                                className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
+                              >
+                                <div className="flex items-center justify-center text-xs sm:justify-between">
                                   <span className="text-muted-foreground">
                                     {result.correctAnswers}/
                                     {result.totalQuestions}{" "}
@@ -1245,8 +1308,9 @@ export function ExamResultsPageContent() {
                             </div>
 
                             <div
+                              data-result-part="score"
                               className={cn(
-                                "shrink-0 flex h-16 w-16 flex-col items-center justify-center rounded-2xl border-2 text-xl font-black leading-none",
+                                "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
                                 isPassed
                                   ? "bg-green-50 border-green-200 text-green-700"
                                   : "bg-red-50 border-red-200 text-red-600",
@@ -1262,15 +1326,17 @@ export function ExamResultsPageContent() {
                               <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
                             ) : isExpanded ? (
                               <ChevronUp
+                                data-result-part="chevron"
                                 className={cn(
-                                  "w-5 h-5 shrink-0",
+                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
                                   isPassed ? "text-green-500" : "text-red-400",
                                 )}
                               />
                             ) : (
                               <ChevronDown
+                                data-result-part="chevron"
                                 className={cn(
-                                  "w-5 h-5 shrink-0",
+                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
                                   isPassed ? "text-green-500" : "text-red-400",
                                 )}
                               />

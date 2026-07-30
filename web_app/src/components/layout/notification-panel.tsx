@@ -109,6 +109,21 @@ const DEFAULT_CFG: TypeConfig = {
   dotClass: "bg-slate-400",
 };
 
+const PREVIEW_NOTIFICATION_COUNT = 5;
+const MAX_VISIBLE_NOTIFICATIONS = 15;
+
+function mergeUniqueNotifications(
+  primary: AppNotification[],
+  fallback: AppNotification[] = [],
+): AppNotification[] {
+  const seen = new Set<number>();
+  return [...primary, ...fallback].filter((notification) => {
+    if (seen.has(notification.id)) return false;
+    seen.add(notification.id);
+    return true;
+  });
+}
+
 function getTypeCfg(type: NotifType): TypeConfig {
   return TYPE_CONFIG[type] ?? DEFAULT_CFG;
 }
@@ -139,6 +154,8 @@ export function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [items, setItems] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // ── Helpers ──────────────────────────────────────────────
@@ -166,15 +183,6 @@ export function NotificationPanel() {
     [t],
   );
 
-  /** Footer text with pluralisation */
-  const footerText = useCallback(
-    (count: number): string => {
-      const key = count === 1 ? "notif.footer" : "notif.footer_plural";
-      return t(key).replace("{count}", String(count));
-    },
-    [t],
-  );
-
   // ── Sync badge with parent ─────────────────────────────
   // (removed — unreadCount now comes directly from context)
 
@@ -193,8 +201,13 @@ export function NotificationPanel() {
     setIsOpen(true);
     setIsLoading(true);
     try {
-      const notifs = await getNotifications();
+      const notifs = mergeUniqueNotifications(await getNotifications());
       setItems(notifs);
+      setVisibleCount(
+        notifs.length >= MAX_VISIBLE_NOTIFICATIONS
+          ? PREVIEW_NOTIFICATION_COUNT
+          : Math.min(notifs.length, MAX_VISIBLE_NOTIFICATIONS),
+      );
       if (unreadCount > 0) {
         await markAllRead();
       }
@@ -204,6 +217,19 @@ export function NotificationPanel() {
       setIsLoading(false);
     }
   }, [unreadCount, markAllRead]);
+
+  const showLatestNotifications = useCallback(async () => {
+    setIsLoadingMore(true);
+    try {
+      const latest = await getNotifications();
+      setItems((current) => mergeUniqueNotifications(latest, current));
+      setVisibleCount(MAX_VISIBLE_NOTIFICATIONS);
+    } catch {
+      // Keep the existing list and allow another attempt.
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, []);
 
   // ── Mark one as read locally + on server ─────────────
   const handleItemClick = useCallback(
@@ -223,6 +249,13 @@ export function NotificationPanel() {
   );
 
   const badgeCount = unreadCount > 99 ? "99+" : unreadCount;
+  const visibleItems = items.slice(
+    0,
+    Math.min(visibleCount, MAX_VISIBLE_NOTIFICATIONS),
+  );
+  const canShowLatest =
+    items.length >= MAX_VISIBLE_NOTIFICATIONS &&
+    visibleCount < MAX_VISIBLE_NOTIFICATIONS;
 
   return (
     <div ref={panelRef} className="relative">
@@ -327,7 +360,7 @@ export function NotificationPanel() {
             ) : (
               // Notification list
               <ul className="space-y-1.5" role="list">
-                {items.map((notif) => {
+                {visibleItems.map((notif) => {
                   const cfg = getTypeCfg(notif.type);
                   const Icon = cfg.icon;
                   const typeKey = TYPE_I18N[notif.type];
@@ -429,11 +462,29 @@ export function NotificationPanel() {
           </div>
 
           {/* Footer */}
-          {items.length > 0 && (
+          {canShowLatest && (
             <div className="mt-2 rounded-[1.15rem] border border-border/60 bg-muted/30 px-3 py-2.5">
-              <p className="text-center text-xs text-muted-foreground">
-                {footerText(items.length)}
-              </p>
+              <Button
+                data-testid="show-latest-notifications"
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-9 w-full cursor-pointer rounded-xl text-xs font-semibold text-muted-foreground hover:bg-background/80 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/20"
+                disabled={isLoadingMore}
+                aria-label={t("notif.show_latest_15")}
+                onClick={() => {
+                  void showLatestNotifications();
+                }}
+              >
+                {isLoadingMore ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    {t("common.loading")}
+                  </>
+                ) : (
+                  t("notif.show_latest_15")
+                )}
+              </Button>
             </div>
           )}
         </div>

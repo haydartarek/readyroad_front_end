@@ -92,10 +92,10 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-full px-1 py-2 text-xs font-semibold transition-all duration-200 min-[1366px]:px-1.5 min-[1536px]:px-2.5 min-[1536px]:text-sm",
+        "shrink-0 whitespace-nowrap rounded-lg px-1.5 py-2 text-xs font-semibold transition-all duration-200 min-[1366px]:px-2 min-[1536px]:px-3 min-[1536px]:text-sm",
         isActive
-          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-          : "text-muted-foreground hover:bg-background hover:text-foreground",
+          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+          : "text-muted-foreground hover:bg-background/85 hover:text-foreground",
       )}
     >
       {label}
@@ -128,6 +128,10 @@ export function Navbar() {
   const isAdmin = user?.role === "ADMIN";
   const isStaff = user?.role === "ADMIN" || user?.role === "MODERATOR";
   const roleLabel = t(getRoleLabelKey(user?.role));
+  const primaryNavigationItems =
+    isAuthenticated && user
+      ? NAV_ITEMS.filter((item) => item.href !== ROUTES.DASHBOARD)
+      : NAV_ITEMS;
   const displayName = user?.fullName ?? user?.username ?? t("nav.profile");
   const userInitial = displayName.trim().charAt(0).toUpperCase();
   const isDarkTheme = resolvedTheme === "dark";
@@ -198,14 +202,14 @@ export function Navbar() {
   return (
     <nav
       data-testid="site-navbar"
-      className="sticky top-0 z-50 border-b border-border/60 bg-background/92 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70"
+      className="sticky top-0 z-50 bg-background/85 px-2 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65"
     >
-      <div className="mx-auto flex h-[74px] w-full max-w-[1600px] items-center justify-between gap-2 px-3 sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-6">
+      <div className="mx-auto my-2 flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-5">
         <Link
           href="/"
           prefetch={false}
           aria-label="ReadyRoad"
-          className="flex shrink-0 items-center gap-2 max-[359px]:gap-0 min-[1600px]:gap-3"
+          className="flex shrink-0 items-center gap-2 max-[359px]:gap-0"
         >
           <Image
             src="/images/logo.png"
@@ -213,9 +217,9 @@ export function Navbar() {
             aria-hidden="true"
             width={48}
             height={48}
-            className="shrink-0 rounded-2xl ring-1 ring-border/50 max-[359px]:h-10 max-[359px]:w-10 max-[359px]:rounded-xl xl:h-10 xl:w-10 min-[1536px]:h-12 min-[1536px]:w-12"
+            className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-border/50 min-[1536px]:h-11 min-[1536px]:w-11"
           />
-          <span className="text-[1.12rem] font-black leading-none tracking-tight max-[359px]:hidden sm:text-[1.24rem] md:text-[1.34rem] lg:text-[1.48rem] xl:text-base min-[1536px]:text-[1.34rem] min-[1600px]:text-[1.48rem]">
+          <span className="text-[1.05rem] font-black leading-none tracking-normal max-[359px]:hidden">
             <span className="text-primary">R</span>
             <span className="text-secondary">eady</span>
             <span className="text-primary">R</span>
@@ -227,8 +231,8 @@ export function Navbar() {
           data-testid="desktop-primary-navigation"
           className="hidden min-w-0 flex-1 items-center justify-center min-[1280px]:flex"
         >
-          <div className="flex min-w-0 items-center rounded-full border border-border/60 bg-muted/45 p-1 shadow-sm">
-            {NAV_ITEMS.map((item) => (
+          <div className="flex min-w-0 items-center gap-0.5 rounded-xl bg-muted/40 p-1">
+            {primaryNavigationItems.map((item) => (
               <NavLink
                 key={item.href}
                 href={item.href}
@@ -241,7 +245,7 @@ export function Navbar() {
 
         <div
           data-testid="navbar-actions"
-          className="flex shrink-0 items-center gap-1.5 min-[1536px]:gap-2"
+          className="flex shrink-0 items-center gap-1.5"
         >
           <div
             ref={searchContainer}
@@ -264,7 +268,7 @@ export function Navbar() {
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               className={cn(
-                "h-11 w-32 shrink-0 rounded-full border border-border/70 bg-muted/40 py-2 text-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12",
+                "h-11 w-32 shrink-0 rounded-xl border border-border/60 bg-muted/35 py-2 text-sm shadow-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12",
                 isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
               )}
             />
@@ -428,7 +432,7 @@ export function Navbar() {
                 : t("nav.toggle_theme")
             }
             onClick={toggleTheme}
-            className="hidden h-11 w-11 items-center justify-center rounded-full border border-border/70 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary lg:inline-flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary lg:inline-flex"
           >
             {themeMounted && isDarkTheme ? (
               <Sun className="h-[18px] w-[18px]" />
@@ -443,7 +447,7 @@ export function Navbar() {
                 <button
                   type="button"
                   aria-label={t("nav.language_menu")}
-                  className="inline-flex h-11 items-center gap-1.5 rounded-full border border-border/70 bg-card px-2 text-sm font-semibold shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 min-[1536px]:gap-2 min-[1536px]:px-3"
+                  className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-2.5 text-sm font-semibold shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 min-[1536px]:gap-2 min-[1536px]:px-3"
                 >
                   <span className="text-xs font-bold text-muted-foreground">
                     {currentLanguage?.flag}
@@ -478,7 +482,7 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 asChild
-                className="rounded-full px-2.5 font-semibold min-[1536px]:px-4"
+                className="h-11 rounded-xl px-2.5 font-semibold min-[1536px]:px-4"
               >
                 <Link href={ROUTES.LOGIN} prefetch={false}>
                   {t("auth.login")}
@@ -487,7 +491,7 @@ export function Navbar() {
               <Button
                 size="sm"
                 asChild
-                className="rounded-full px-3 font-semibold shadow-lg shadow-primary/20 min-[1536px]:px-5"
+                className="h-11 rounded-xl px-3 font-semibold shadow-sm shadow-primary/20 min-[1536px]:px-5"
               >
                 <Link href={ROUTES.REGISTER} prefetch={false}>
                   {t("auth.register")}
@@ -502,7 +506,7 @@ export function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-10 w-10 rounded-full border-border/70 bg-card p-0 shadow-sm transition-all duration-200 hover:border-primary/20 hover:bg-muted/50"
+                  className="h-10 w-10 rounded-xl border-border/60 bg-card p-0 shadow-sm transition-all duration-200 hover:border-primary/20 hover:bg-muted/50"
                 >
                   <span className="sr-only">{t("nav.open_menu")}</span>
                   <Menu className="h-5 w-5" />
@@ -630,7 +634,7 @@ export function Navbar() {
 
                   <div className="flex-1 overflow-y-auto px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
                     <div className="grid gap-2.5">
-                      {NAV_ITEMS.map((item) => {
+                      {primaryNavigationItems.map((item) => {
                         const isActive =
                           item.href === "/"
                             ? pathname === "/"

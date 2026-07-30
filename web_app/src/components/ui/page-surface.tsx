@@ -171,6 +171,7 @@ export function PageMetricCard({
   hint,
   tone = "default",
   size = "default",
+  mobileStacked = false,
   className,
 }: {
   icon: ReactNode;
@@ -179,12 +180,15 @@ export function PageMetricCard({
   hint?: ReactNode;
   tone?: MetricTone;
   size?: "default" | "sm";
+  mobileStacked?: boolean;
   className?: string;
 }) {
   const isSmall = size === "sm";
 
   return (
     <div
+      data-testid={mobileStacked ? "dashboard-stat-card" : undefined}
+      data-stat-kind={mobileStacked ? "summary" : undefined}
       className={cn(
         isSmall
           ? "min-w-0 rounded-xl border border-border/60 bg-background/80 p-2 shadow-sm"
@@ -192,58 +196,119 @@ export function PageMetricCard({
         className,
       )}
     >
-      <div
-        className={cn(
-          "flex items-start justify-between",
-          isSmall ? "gap-1" : "gap-3",
-        )}
-      >
+      {mobileStacked ? (
         <div
           className={cn(
-            isSmall
-              ? "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-[0.55rem]"
-              : "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem]",
-            METRIC_ICON_TONE_CLASSES[tone],
+            "grid min-w-0 grid-cols-1 justify-items-center text-center sm:grid-cols-[auto_minmax(0,1fr)] sm:justify-items-stretch sm:text-start",
+            isSmall ? "gap-y-1 sm:gap-x-1" : "gap-y-2 sm:gap-x-3",
           )}
         >
-          {icon}
-        </div>
-        <p
-          className={cn(
-            isSmall
-              ? "break-words text-[13px] font-semibold leading-4 tracking-normal"
-              : "break-words text-xl font-black tracking-normal sm:text-2xl",
-            METRIC_TONE_CLASSES[tone],
-          )}
-        >
-          {value}
-        </p>
-      </div>
-
-      <div className={cn(isSmall ? "mt-0.5 space-y-0" : "mt-2 space-y-0.5")}>
-        <p
-          className={cn(
-            "break-words font-semibold uppercase text-muted-foreground",
-            isSmall
-              ? "text-[8px] tracking-[0.08em]"
-              : "text-[10px] tracking-[0.16em]",
-          )}
-        >
-          {label}
-        </p>
-        {hint ? (
-          <p
+          <div
+            data-testid="dashboard-stat-icon"
             className={cn(
-              "break-words font-medium text-foreground/80",
+              "row-start-1 shrink-0 sm:col-start-1",
               isSmall
-                ? "text-[9px] leading-3.5 md:text-[9px]"
-                : "text-[11px] leading-4.5 md:text-xs",
+                ? "flex h-5 w-5 items-center justify-center rounded-[0.55rem]"
+                : "flex h-8 w-8 items-center justify-center rounded-[0.9rem]",
+              METRIC_ICON_TONE_CLASSES[tone],
             )}
           >
-            {hint}
+            {icon}
+          </div>
+          <p
+            data-testid="dashboard-stat-label"
+            className={cn(
+              "row-start-2 min-w-0 max-w-full break-words font-semibold uppercase text-muted-foreground sm:col-span-2 sm:justify-self-start",
+              isSmall
+                ? "text-[8px] tracking-[0.08em] sm:mt-0.5"
+                : "text-[10px] tracking-[0.16em] sm:mt-2",
+            )}
+          >
+            {label}
           </p>
-        ) : null}
-      </div>
+          <p
+            data-testid="dashboard-stat-value"
+            className={cn(
+              "row-start-3 min-w-0 max-w-full break-words sm:col-start-2 sm:row-start-1 sm:justify-self-end",
+              isSmall
+                ? "text-[13px] font-semibold leading-4 tracking-normal"
+                : "text-xl font-black tracking-normal sm:text-2xl",
+              METRIC_TONE_CLASSES[tone],
+            )}
+          >
+            {value}
+          </p>
+          {hint ? (
+            <p
+              className={cn(
+                "row-start-4 min-w-0 max-w-full break-words font-medium text-foreground/80 sm:col-span-2 sm:justify-self-start",
+                isSmall
+                  ? "text-[9px] leading-3.5 md:text-[9px]"
+                  : "text-[11px] leading-4.5 md:text-xs",
+              )}
+            >
+              {hint}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <>
+          <div
+            className={cn(
+              "flex items-start justify-between",
+              isSmall ? "gap-1" : "gap-3",
+            )}
+          >
+            <div
+              className={cn(
+                isSmall
+                  ? "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-[0.55rem]"
+                  : "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem]",
+                METRIC_ICON_TONE_CLASSES[tone],
+              )}
+            >
+              {icon}
+            </div>
+            <p
+              className={cn(
+                isSmall
+                  ? "break-words text-[13px] font-semibold leading-4 tracking-normal"
+                  : "break-words text-xl font-black tracking-normal sm:text-2xl",
+                METRIC_TONE_CLASSES[tone],
+              )}
+            >
+              {value}
+            </p>
+          </div>
+
+          <div
+            className={cn(isSmall ? "mt-0.5 space-y-0" : "mt-2 space-y-0.5")}
+          >
+            <p
+              className={cn(
+                "break-words font-semibold uppercase text-muted-foreground",
+                isSmall
+                  ? "text-[8px] tracking-[0.08em]"
+                  : "text-[10px] tracking-[0.16em]",
+              )}
+            >
+              {label}
+            </p>
+            {hint ? (
+              <p
+                className={cn(
+                  "break-words font-medium text-foreground/80",
+                  isSmall
+                    ? "text-[9px] leading-3.5 md:text-[9px]"
+                    : "text-[11px] leading-4.5 md:text-xs",
+                )}
+              >
+                {hint}
+              </p>
+            ) : null}
+          </div>
+        </>
+      )}
     </div>
   );
 }

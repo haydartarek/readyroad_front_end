@@ -133,18 +133,28 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
             return (
               <div
                 key={activity.id}
-                className="group flex items-center justify-between rounded-xl border border-border bg-background/60 p-4 transition-colors hover:bg-muted/50"
+                data-testid="recent-activity-card"
+                className="group flex min-w-0 flex-col items-center gap-3 rounded-xl border border-border bg-background/60 p-4 text-center transition-colors hover:bg-muted/50 sm:flex-row sm:justify-between sm:text-start"
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10">
+                <div className="flex min-w-0 max-w-full flex-col items-center gap-2 sm:flex-row sm:gap-3">
+                  <div
+                    data-testid="recent-activity-icon"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10"
+                  >
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
 
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">
+                  <div className="min-w-0 max-w-full text-center sm:text-start">
+                    <p
+                      data-testid="recent-activity-name"
+                      className="line-clamp-2 min-w-0 max-w-full break-words text-sm font-semibold text-foreground sm:truncate"
+                    >
                       {label}
                     </p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <div
+                      data-testid="recent-activity-meta"
+                      className="mt-1 flex min-w-0 max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:mt-0.5 sm:justify-start"
+                    >
                       <span>
                         {new Date(activity.date).toLocaleDateString(
                           language === "ar"
@@ -163,18 +173,22 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
                 </div>
 
                 {(showScore || status || shouldShowAction) && (
-                  <div className="flex flex-shrink-0 items-center gap-4">
-                    <div className="text-right space-y-1">
+                  <div className="flex min-w-0 w-full max-w-full flex-col items-center gap-3 sm:w-auto sm:flex-shrink-0 sm:flex-row sm:gap-4">
+                    <div className="space-y-1 text-center sm:text-end">
                       {showScore && (
-                        <p className="text-lg font-black leading-tight text-foreground">
+                        <p
+                          data-testid="recent-activity-score"
+                          className="text-lg font-black leading-tight text-foreground"
+                        >
                           {activity.score}%
                         </p>
                       )}
 
                       {showResult && (
                         <div
+                          data-testid="recent-activity-status"
                           className={cn(
-                            "flex items-center justify-end gap-1 text-xs font-semibold",
+                            "flex items-center justify-center gap-1 text-xs font-semibold sm:justify-end",
                             activity.passed
                               ? "text-primary"
                               : "text-destructive",
@@ -196,8 +210,9 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
 
                       {!showResult && status && (
                         <div
+                          data-testid="recent-activity-status"
                           className={cn(
-                            "inline-flex items-center justify-end rounded-full border px-2 py-0.5 text-xs font-semibold",
+                            "inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold sm:justify-end",
                             status.className,
                           )}
                         >
@@ -208,13 +223,14 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
 
                     {shouldShowAction && (
                       <Link
+                        data-testid="recent-activity-action"
                         href={
                           activity.link ??
                           (activity.type === "exam"
                             ? `/exam/results/${activity.id}`
                             : `/practice`)
                         }
-                        className="flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
+                        className="flex min-h-9 w-full max-w-full items-center justify-center gap-1 rounded-full border border-primary/20 px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 hover:text-primary/80 sm:min-h-0 sm:w-auto sm:rounded-none sm:border-0 sm:p-0 sm:hover:bg-transparent"
                       >
                         {activity.status === "IN_PROGRESS"
                           ? t("dashboard.activity_resume")

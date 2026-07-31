@@ -408,7 +408,10 @@ export function ExamResultsPageContent() {
             <p className="text-sm text-muted-foreground">
               {t("user_sidebar.exam_no_results_hint")}
             </p>
-            <Button asChild className="mt-2 rounded-xl">
+            <Button
+              asChild
+              className="mt-2 h-auto min-h-9 max-w-full whitespace-normal rounded-xl py-2 text-center"
+            >
               <Link href="/exam">{t("user_sidebar.take_first_exam")}</Link>
             </Button>
           </div>

@@ -82,7 +82,9 @@ test.describe("ReadyRoad brand assets", () => {
 
     expect(response?.status()).toBe(404);
     await expect(page.locator('img[src*="logo.png"]').first()).toBeVisible();
-    await expect(page.getByText("ReadyRoad", { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByTestId("site-navbar").getByRole("link", { name: "ReadyRoad" }),
+    ).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       "content",
       /noindex/i,

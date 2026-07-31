@@ -310,7 +310,7 @@ export default function PracticePage() {
                 </Badge>
               </div>
             </div>
-            <div className="flex flex-col gap-3 lg:w-[240px]">
+            <div className="flex min-w-0 flex-col gap-3 lg:w-[248px]">
               <Button
                 onClick={() => router.push("/traffic-signs")}
                 className="flex-shrink-0 gap-2 font-bold"

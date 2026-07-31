@@ -425,28 +425,28 @@ export function ExamResultsPageContent() {
                 ? Math.round((passedCount / data.totalExams) * 100)
                 : 0;
             return (
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
+              <div className="grid min-w-0 grid-cols-3 gap-3">
+                <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
                   <p className="text-2xl font-black text-foreground">
                     {data.totalExams}
                   </p>
-                  <p className="text-xs text-muted-foreground font-medium">
+                  <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
                     {t("user_sidebar.exam_total_taken")}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
+                <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
                   <p className="text-2xl font-black text-green-600">
                     {passedCount}
                   </p>
-                  <p className="text-xs text-green-600/80 font-medium">
+                  <p className="text-xs text-green-600/80 font-medium [overflow-wrap:anywhere]">
                     {t("dashboard.result_passed")}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
+                <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
                   <p className="text-2xl font-black text-foreground">
                     {passRate}%
                   </p>
-                  <p className="text-xs text-muted-foreground font-medium">
+                  <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
                     {t("progress.pass_rate")}
                   </p>
                 </div>
@@ -820,28 +820,28 @@ export function ExamResultsPageContent() {
                     </div>
                   </PageSectionSurface>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
+                  <div className="grid min-w-0 grid-cols-3 gap-3">
+                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
                       <p className="text-2xl font-black text-foreground">
                         {randomHistory.totalSessions}
                       </p>
-                      <p className="text-xs text-muted-foreground font-medium">
+                      <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
                         {t("sign_practice.history_total")}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
+                    <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
                       <p className="text-2xl font-black text-green-600">
                         {passedCount}
                       </p>
-                      <p className="text-xs text-green-600/80 font-medium">
+                      <p className="text-xs text-green-600/80 font-medium [overflow-wrap:anywhere]">
                         {t("dashboard.result_passed")}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
+                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
                       <p className="text-2xl font-black text-foreground">
                         {passRate}%
                       </p>
-                      <p className="text-xs text-muted-foreground font-medium">
+                      <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
                         {t("progress.pass_rate")}
                       </p>
                     </div>
@@ -1161,28 +1161,28 @@ export function ExamResultsPageContent() {
                     </div>
                   </PageSectionSurface>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
+                  <div className="grid min-w-0 grid-cols-3 gap-3">
+                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
                       <p className="text-2xl font-black text-foreground">
                         {signExamHistory.totalResults}
                       </p>
-                      <p className="text-xs font-medium text-muted-foreground">
+                      <p className="text-xs font-medium text-muted-foreground [overflow-wrap:anywhere]">
                         {t("sign_quiz.history_total")}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
+                    <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
                       <p className="text-2xl font-black text-green-600">
                         {passedCount}
                       </p>
-                      <p className="text-xs font-medium text-green-600/80">
+                      <p className="text-xs font-medium text-green-600/80 [overflow-wrap:anywhere]">
                         {t("dashboard.result_passed")}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
+                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
                       <p className="text-2xl font-black text-foreground">
                         {passRate}%
                       </p>
-                      <p className="text-xs font-medium text-muted-foreground">
+                      <p className="text-xs font-medium text-muted-foreground [overflow-wrap:anywhere]">
                         {t("progress.pass_rate")}
                       </p>
                     </div>

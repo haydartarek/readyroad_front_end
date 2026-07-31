@@ -92,7 +92,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-lg px-1.5 py-2 text-xs font-semibold transition-all duration-200 min-[1366px]:px-2 min-[1536px]:px-3 min-[1536px]:text-sm",
+        "shrink-0 whitespace-nowrap rounded-lg px-1 py-2 text-xs font-semibold transition-all duration-200 min-[1366px]:px-2 min-[1920px]:px-3 min-[1920px]:text-sm",
         isActive
           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
           : "text-muted-foreground hover:bg-background/85 hover:text-foreground",
@@ -231,7 +231,7 @@ export function Navbar() {
           data-testid="desktop-primary-navigation"
           className="hidden min-w-0 flex-1 items-center justify-center min-[1280px]:flex"
         >
-          <div className="flex min-w-0 items-center gap-0.5 rounded-xl bg-muted/40 p-1">
+          <div className="flex min-w-0 items-center gap-0 rounded-xl bg-muted/40 p-1 min-[1366px]:gap-0.5">
             {primaryNavigationItems.map((item) => (
               <NavLink
                 key={item.href}

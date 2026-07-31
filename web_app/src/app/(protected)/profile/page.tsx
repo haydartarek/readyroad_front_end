@@ -67,13 +67,15 @@ function SectionHeader({
   color?: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex min-w-0 items-center gap-3">
       <div
         className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}
       >
         {icon}
       </div>
-      <CardTitle className="text-lg font-black">{title}</CardTitle>
+      <CardTitle className="min-w-0 text-lg font-black [overflow-wrap:anywhere]">
+        {title}
+      </CardTitle>
     </div>
   );
 }
@@ -488,7 +490,7 @@ export function ProfilePageContent({
               {/* Personal Information */}
               <Card className="border-border/50 shadow-sm">
                 <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <SectionHeader
                       icon={<User className="w-4 h-4" />}
                       title={t("profile.section_personal_info")}
@@ -498,7 +500,7 @@ export function ProfilePageContent({
                         variant="outline"
                         size="sm"
                         onClick={() => setIsEditing(true)}
-                        className="gap-1.5 text-xs h-8 hover:bg-primary/5 hover:border-primary/30 transition-all"
+                        className="h-8 w-full gap-1.5 text-xs transition-all hover:border-primary/30 hover:bg-primary/5 sm:w-auto"
                       >
                         <Pencil className="w-3 h-3" /> {t("profile.edit")}
                       </Button>

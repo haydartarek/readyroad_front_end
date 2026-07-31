@@ -202,9 +202,9 @@ export function Navbar() {
   return (
     <nav
       data-testid="site-navbar"
-      className="sticky top-0 z-50 bg-background/85 px-2 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65"
+      className="sticky top-0 z-50 h-[75px] bg-background/85 px-2 py-2 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65"
     >
-      <div className="mx-auto my-2 flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-5">
+      <div className="mx-auto flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-5">
         <Link
           href="/"
           prefetch={false}
@@ -219,7 +219,7 @@ export function Navbar() {
             height={48}
             className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-border/50 min-[1536px]:h-11 min-[1536px]:w-11"
           />
-          <span className="text-[1.05rem] font-black leading-none tracking-normal max-[359px]:hidden">
+          <span className="text-[1.05rem] font-black leading-none tracking-normal max-[359px]:hidden min-[1280px]:hidden min-[1536px]:inline">
             <span className="text-primary">R</span>
             <span className="text-secondary">eady</span>
             <span className="text-primary">R</span>

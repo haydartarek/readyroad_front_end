@@ -279,18 +279,26 @@ test("authenticated account menu exposes localized dashboard access on desktop a
     name: "لوحة التحكم",
     exact: true,
   });
-  await expect(dashboardLink).toHaveAttribute("href", "/ar/dashboard");
-  await expect(dashboardLink).toHaveCSS("white-space", "nowrap");
-  expect(
-    await dashboardLink.evaluate(
-      (element) => element.getBoundingClientRect().height,
-    ),
-  ).toBeGreaterThanOrEqual(48);
+  await expect(dashboardLink).toHaveCount(0);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth,
     ),
   ).toBe(false);
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "قائمة الحساب" }).click();
+  const mobileAccountDashboardLink = page
+    .getByTestId("account-menu-content")
+    .getByRole("menuitem", { name: "لوحة التحكم", exact: true });
+  await expect(mobileAccountDashboardLink).toHaveAttribute(
+    "href",
+    "/ar/dashboard",
+  );
+  await expect(mobileAccountDashboardLink).toHaveCSS(
+    "white-space",
+    "nowrap",
+  );
 });
 
 test("a persisted locale survives browser navigation into authentication", async ({

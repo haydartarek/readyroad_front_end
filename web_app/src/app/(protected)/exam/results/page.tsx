@@ -572,8 +572,10 @@ export function ExamResultsPageContent() {
                         data-calendar="gregory"
                         className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
                       >
-                        <Clock className="w-3 h-3 opacity-60" />
-                        {formatDate(exam.completedAt ?? exam.startedAt)}
+                        <Clock className="h-3 w-3 shrink-0 opacity-60" />
+                        <span className="min-w-0 break-words">
+                          {formatDate(exam.completedAt ?? exam.startedAt)}
+                        </span>
                       </p>
 
                       {/* Score bar */}
@@ -933,10 +935,12 @@ export function ExamResultsPageContent() {
                                 data-calendar="gregory"
                                 className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
                               >
-                                <Clock className="w-3 h-3 opacity-60" />
-                                {formatDate(
-                                  session.completedAt ?? session.startedAt,
-                                )}
+                                <Clock className="h-3 w-3 shrink-0 opacity-60" />
+                                <span className="min-w-0 break-words">
+                                  {formatDate(
+                                    session.completedAt ?? session.startedAt,
+                                  )}
+                                </span>
                               </p>
 
                               <div
@@ -1278,8 +1282,10 @@ export function ExamResultsPageContent() {
                                 data-calendar="gregory"
                                 className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
                               >
-                                <Clock className="w-3 h-3 opacity-60" />
-                                {formatDate(result.completedAt ?? null)}
+                                <Clock className="h-3 w-3 shrink-0 opacity-60" />
+                                <span className="min-w-0 break-words">
+                                  {formatDate(result.completedAt ?? null)}
+                                </span>
                               </p>
 
                               <div

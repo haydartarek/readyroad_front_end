@@ -345,8 +345,8 @@ export default function TrafficSignDetailClient({
           </div>
         </PageHeroSurface>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_360px]">
-          <div className="space-y-6">
+        <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.25fr)_360px]">
+          <div className="min-w-0 space-y-6">
             <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="text-xl font-black">

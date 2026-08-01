@@ -7,7 +7,10 @@ import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
 import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
 import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
+import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
+import { getExamOptionLabel } from "@/components/exam/exam-option-card";
 import { SignImage } from "@/components/traffic-signs/sign-image";
+import { ResultAnswerBlock } from "@/components/results/result-review";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -440,12 +443,14 @@ export default function ExamPage() {
                       .replace("{n}", String(result.correctAnswers))
                       .replace("{total}", String(result.totalLinked))}
                     tone={result.passed ? "success" : "danger"}
+                    mobileStacked
                   />
                   <PageMetricCard
                     icon={<BookOpen className="h-5 w-5" />}
                     label={t("sign_quiz.exam.correct_answers_label")}
                     value={`${result.correctAnswers}/${result.totalLinked}`}
                     hint={t("sign_quiz.exam.required_to_pass")}
+                    mobileStacked
                   />
                   <PageMetricCard
                     icon={<Shapes className="h-5 w-5" />}
@@ -453,6 +458,7 @@ export default function ExamPage() {
                     value={`${reqPct}%`}
                     hint={`${result.passingThreshold}/${result.totalLinked}`}
                     tone={result.passed ? "primary" : "warning"}
+                    mobileStacked
                   />
                 </div>
 
@@ -522,6 +528,18 @@ export default function ExamPage() {
                       ] as string) ||
                       qRes.explanationEn ||
                       "";
+                    const selectedChoice = q?.choices.find(
+                      (choice) => choice.id === qRes.selectedChoiceId,
+                    );
+                    const selectedText = selectedChoice
+                      ? cText(selectedChoice, lang)
+                      : "";
+                    const selectedIndex = q?.choices.findIndex(
+                      (choice) => choice.id === qRes.selectedChoiceId,
+                    );
+                    const correctIndex = q?.choices.findIndex(
+                      (choice) => choice.id === qRes.correctChoiceId,
+                    );
 
                     return (
                       <Card
@@ -536,15 +554,8 @@ export default function ExamPage() {
                         )}
                       >
                         <CardContent className="space-y-3 px-5 py-5">
-                          <div className="flex items-start gap-3">
-                            <div className="relative h-11 w-11 rounded-xl bg-white border border-border/40 p-1.5 flex items-center justify-center flex-shrink-0">
-                              <SignImage
-                                src={resolveTrafficSignImage(sign)}
-                                alt={sign.nameEn}
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <div className="space-y-4">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
                                 <span className="text-xs text-muted-foreground font-semibold">
                                   {t("sign_quiz.exam.question_x").replace(
                                     "{n}",
@@ -577,24 +588,65 @@ export default function ExamPage() {
                                     {t("sign_quiz.exam.wrong_label")}
                                   </Badge>
                                 )}
-                              </div>
-                              <p className="text-sm font-semibold leading-6">
-                                {q ? qText(q, lang) : `Question ${idx + 1}`}
-                              </p>
                             </div>
+
+                            <ExamQuestionImageFrame variant="review">
+                              <SignImage
+                                src={resolveTrafficSignImage(sign)}
+                                alt={sign.nameEn}
+                                className="object-contain"
+                              />
+                            </ExamQuestionImageFrame>
+
+                            <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
+                              {q ? qText(q, lang) : `Question ${idx + 1}`}
+                            </p>
                           </div>
 
-                          {correctText && (
-                            <p className="text-sm text-green-700 font-medium">
-                              ✓ {t("sign_quiz.exam.correct_answer")}:{" "}
-                              {correctText}
-                            </p>
-                          )}
-                          {expl && (
-                            <p className="text-xs text-muted-foreground">
-                              {expl}
-                            </p>
-                          )}
+                          <div className="grid min-w-0 grid-cols-1 gap-2.5">
+                            <ResultAnswerBlock
+                              label={t("sign_quiz.practice.your_answer")}
+                              tone={
+                                !qRes.answered
+                                  ? "neutral"
+                                  : qRes.isCorrect
+                                    ? "correct"
+                                    : "incorrect"
+                              }
+                              marker={
+                                selectedIndex !== undefined &&
+                                selectedIndex >= 0
+                                  ? getExamOptionLabel(selectedIndex)
+                                  : undefined
+                              }
+                            >
+                              {selectedText || "—"}
+                            </ResultAnswerBlock>
+
+                            {!qRes.isCorrect && correctText && (
+                              <ResultAnswerBlock
+                                label={t("sign_quiz.exam.correct_answer")}
+                                tone="correct"
+                                marker={
+                                  correctIndex !== undefined &&
+                                  correctIndex >= 0
+                                    ? getExamOptionLabel(correctIndex)
+                                    : undefined
+                                }
+                              >
+                                {correctText}
+                              </ResultAnswerBlock>
+                            )}
+
+                            {expl && (
+                              <ResultAnswerBlock
+                                label={t("practice_exam.review_explanation")}
+                                tone="neutral"
+                              >
+                                {expl}
+                              </ResultAnswerBlock>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
                     );
@@ -669,21 +721,18 @@ export default function ExamPage() {
         }
         media={
           questionImageUrl ? (
-            <div className="rounded-2xl border border-border/50 bg-background/70 p-2 shadow-sm">
-              <div className="relative h-[8.25rem] w-[8.25rem] md:h-36 md:w-36">
-                <SignImage
-                  src={questionImageUrl}
-                  alt={sign.nameEn}
-                  className="object-contain"
-                />
-              </div>
-            </div>
+            <ExamQuestionImageFrame>
+              <SignImage
+                src={questionImageUrl}
+                alt={sign.nameEn}
+                className="object-contain"
+              />
+            </ExamQuestionImageFrame>
           ) : null
         }
         title={questionText}
-        options={current.choices.map((choice, index) => ({
+        options={current.choices.map((choice) => ({
           key: choice.id,
-          marker: index + 1,
           text: cText(choice, lang),
           selected: answers.get(current.id) === choice.id,
           onSelect: () => handleSelect(current.id, choice.id),
@@ -711,7 +760,7 @@ export default function ExamPage() {
                     : handleForceSubmit
                 }
                 disabled={submitting || !answers.has(current.id)}
-                className="h-10 min-w-[112px] gap-2 rounded-full px-5 font-semibold shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25"
+                className="h-11 w-full gap-2 rounded-full px-5 font-semibold shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 sm:w-auto sm:min-w-[112px]"
               >
                 {currentIdx + 1 === total
                   ? submitting

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminMetricCard from "@/components/admin/AdminMetricCard";
+import { useAuth } from "@/hooks/useAuth";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +47,14 @@ type UsersResponse = {
   totalPages?: number;
   query?: string;
 };
+type UserSummary = {
+  total: number;
+  active: number;
+  locked: number;
+  inactive: number;
+  newThisWeek: number;
+  newSince: string;
+};
 
 const ROLES = ["USER", "STUDENT", "MODERATOR", "ADMIN"] as const;
 
@@ -64,50 +74,10 @@ const ROLE_SELECT: Record<string, string> = {
   USER: "border-border bg-muted text-foreground",
 };
 
-function StatCard({
-  label,
-  value,
-  icon,
-  labelClass,
-  valueClass,
-  iconClass,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  labelClass: string;
-  valueClass: string;
-  iconClass?: string;
-}) {
-  return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 flex items-center gap-4">
-      <div
-        className={cn(
-          "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-          iconClass ?? "bg-muted",
-        )}
-      >
-        {icon}
-      </div>
-      <div>
-        <p
-          className={cn(
-            "text-xs font-semibold uppercase tracking-wide",
-            labelClass,
-          )}
-        >
-          {label}
-        </p>
-        <p className={cn("text-2xl font-black", valueClass)}>{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, language: string): string {
   if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    return new Date(dateStr).toLocaleDateString(`${language}-u-ca-gregory`, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -120,7 +90,8 @@ function formatDate(dateStr: string): string {
 // ─── Page ───────────────────────────────────────────────
 
 export default function AdminUsersPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { user: currentUser } = useAuth();
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,6 +101,7 @@ export default function AdminUsersPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [page, setPage] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [summary, setSummary] = useState<UserSummary | null>(null);
   const [actionLoading, setActionLoading] = useState<Record<number, string>>(
     {},
   );
@@ -157,17 +129,21 @@ export default function AdminUsersPage() {
       setError(null);
       setServiceUnavailable(false);
       try {
-        const res = await apiClient.get<UsersResponse>("/admin/users", {
-          page: pageNum,
-          size: pageSize,
-          q: searchQuery,
-          sortField: "createdAt",
-          sortDir: "desc",
-        });
+        const [res, summaryRes] = await Promise.all([
+          apiClient.get<UsersResponse>("/admin/users", {
+            page: pageNum,
+            size: pageSize,
+            q: searchQuery,
+            sortField: "createdAt",
+            sortDir: "desc",
+          }),
+          apiClient.get<UserSummary>("/admin/users/summary"),
+        ]);
         const data = res.data;
         const list = Array.isArray(data) ? data : (data.users ?? []);
         setUsers(list);
         setTotalUsers(data.total ?? list.length);
+        setSummary(summaryRes.data);
         setPage(pageNum);
       } catch (e: unknown) {
         logApiError("Failed to fetch users", e);
@@ -186,19 +162,15 @@ export default function AdminUsersPage() {
 
   const toggleLock = async (user: UserRow) => {
     const next = !user.isLocked;
+    if (!window.confirm(t(next ? "admin.users.confirm_lock" : "admin.users.confirm_unlock"))) {
+      return;
+    }
     setActionLoading((prev) => ({ ...prev, [user.id]: "lock" }));
-    setUsers((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, isLocked: next } : u)),
-    );
     try {
       await apiClient.put(`/admin/users/${user.id}/lock`, { isLocked: next });
+      await fetchUsers(page);
     } catch (e: unknown) {
       logApiError("Failed to toggle lock", e);
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === user.id ? { ...u, isLocked: user.isLocked } : u,
-        ),
-      );
       if (isServiceUnavailable(e)) setServiceUnavailable(true);
       else setError(t("admin.users.lock_error"));
     } finally {
@@ -207,18 +179,14 @@ export default function AdminUsersPage() {
   };
 
   const changeRole = async (user: UserRow, newRole: string) => {
-    const prev = user.role;
+    if (newRole === user.role) return;
+    if (!window.confirm(t("admin.users.confirm_role"))) return;
     setActionLoading((p) => ({ ...p, [user.id]: "role" }));
-    setUsers((p) =>
-      p.map((u) => (u.id === user.id ? { ...u, role: newRole } : u)),
-    );
     try {
       await apiClient.put(`/admin/users/${user.id}/role`, { role: newRole });
+      await fetchUsers(page);
     } catch (e: unknown) {
       logApiError("Failed to change role", e);
-      setUsers((p) =>
-        p.map((u) => (u.id === user.id ? { ...u, role: prev } : u)),
-      );
       if (isServiceUnavailable(e)) setServiceUnavailable(true);
       else setError(t("admin.users.role_error"));
     } finally {
@@ -227,15 +195,6 @@ export default function AdminUsersPage() {
   };
 
   const filteredUsers = useMemo(() => users, [users]);
-
-  const activeCount = useMemo(
-    () => users.filter((u) => u.isActive && !u.isLocked).length,
-    [users],
-  );
-  const lockedCount = useMemo(
-    () => users.filter((u) => u.isLocked).length,
-    [users],
-  );
 
   return (
     <div className="space-y-5">
@@ -262,29 +221,30 @@ export default function AdminUsersPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
+        <AdminMetricCard
           label={t("admin.users.total_users")}
-          value={totalUsers}
+          value={summary?.total ?? totalUsers}
           icon={<Users className="w-5 h-5 text-primary" />}
-          labelClass="text-muted-foreground"
-          valueClass="text-foreground"
-          iconClass="bg-primary/10"
+          iconClassName="bg-primary/10 text-primary"
+          loading={loading && !summary}
         />
-        <StatCard
+        <AdminMetricCard
           label={t("admin.users.active_users")}
-          value={activeCount}
+          value={summary?.active}
           icon={<UserCheck className="w-5 h-5 text-emerald-600" />}
-          labelClass="text-emerald-600"
-          valueClass="text-emerald-700"
-          iconClass="bg-emerald-500/10"
+          labelClassName="text-emerald-600"
+          valueClassName="text-emerald-700"
+          iconClassName="bg-emerald-500/10 text-emerald-600"
+          loading={loading && !summary}
         />
-        <StatCard
+        <AdminMetricCard
           label={t("admin.users.locked_users")}
-          value={lockedCount}
+          value={summary?.locked}
           icon={<UserX className="w-5 h-5 text-destructive" />}
-          labelClass="text-destructive"
-          valueClass="text-destructive"
-          iconClass="bg-destructive/10"
+          labelClassName="text-destructive"
+          valueClassName="text-destructive"
+          iconClassName="bg-destructive/10 text-destructive"
+          loading={loading && !summary}
         />
       </div>
 
@@ -379,6 +339,7 @@ export default function AdminUsersPage() {
                   const isLoading = !!actionLoading[user.id];
                   const displayName = user.fullName || user.username;
                   const avatarColor = AVATAR_COLOR[user.role] || "bg-slate-400";
+                  const isCurrentUser = currentUser?.username === user.username;
 
                   return (
                     <tr
@@ -422,7 +383,7 @@ export default function AdminUsersPage() {
                           name={`role-${user.id}`}
                           value={user.role}
                           onChange={(e) => changeRole(user, e.target.value)}
-                          disabled={isLoading}
+                          disabled={isLoading || isCurrentUser}
                           className={cn(
                             NATIVE_SELECT_COMPACT_CLASS,
                             NATIVE_SELECT_DISABLED_CLASS,
@@ -464,14 +425,14 @@ export default function AdminUsersPage() {
 
                       {/* Joined */}
                       <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {formatDate(user.createdAt)}
+                        {formatDate(user.createdAt, language)}
                       </td>
 
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => toggleLock(user)}
-                          disabled={isLoading}
+                          disabled={isLoading || isCurrentUser}
                           className={cn(
                             "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border transition-all disabled:opacity-50",
                             user.isLocked

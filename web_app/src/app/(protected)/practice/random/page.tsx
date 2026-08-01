@@ -14,10 +14,16 @@ import {
 } from "@/components/ui/page-surface";
 import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
 import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
+import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
+import { getExamOptionLabel } from "@/components/exam/exam-option-card";
 import { useLanguage } from "@/contexts/language-context";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { SignImage } from "@/components/traffic-signs/sign-image";
+import {
+  ResultAnswerBlock,
+  ResultDetailsToggle,
+} from "@/components/results/result-review";
 import { cn } from "@/lib/utils";
 import {
   startRandomPracticeSession,
@@ -622,15 +628,13 @@ export default function RandomPracticePage() {
           }
           media={
             question.showSign && question.signImagePath ? (
-              <div className="rounded-2xl border border-border/50 bg-background/70 p-2 shadow-sm">
-                <div className="relative h-[6.5rem] w-[6.5rem] md:h-28 md:w-28">
-                  <SignImage
-                    src={question.signImagePath}
-                    alt={question.signCode ?? "traffic sign"}
-                    className="object-contain"
-                  />
-                </div>
-              </div>
+              <ExamQuestionImageFrame>
+                <SignImage
+                  src={question.signImagePath}
+                  alt={question.signCode ?? "traffic sign"}
+                  className="object-contain"
+                />
+              </ExamQuestionImageFrame>
             ) : null
           }
           title={localize(
@@ -639,9 +643,8 @@ export default function RandomPracticePage() {
             question.questionNl,
             question.questionFr,
           )}
-          options={question.choices.map((choice, idx) => ({
+          options={question.choices.map((choice) => ({
             key: choice.id,
-            marker: idx + 1,
             text: localize(
               choice.textEn,
               choice.textAr,
@@ -670,7 +673,7 @@ export default function RandomPracticePage() {
                   onClick={() => advanceToNext(selectedOption)}
                   disabled={isLockedUi}
                   className={cn(
-                    "h-10 gap-2 rounded-full px-5 font-semibold shadow-md transition-all",
+                    "h-11 w-full gap-2 rounded-full px-5 font-semibold shadow-md transition-all sm:w-auto",
                     selectedOption !== null
                       ? "shadow-primary/20 hover:-translate-y-0.5"
                       : "opacity-80",
@@ -778,12 +781,14 @@ export default function RandomPracticePage() {
                   value={`${result.scorePercentage.toFixed(1)}%`}
                   tone={result.passed ? "success" : "danger"}
                   hint={`${result.correctAnswers}/${result.totalQuestions}`}
+                  mobileStacked
                 />
                 <PageMetricCard
                   icon={<CheckCircle2 className="h-4 w-4" />}
                   label={t("practice_exam.score_correct")}
                   value={String(result.correctAnswers)}
                   tone="success"
+                  mobileStacked
                 />
                 <PageMetricCard
                   icon={<XCircle className="h-4 w-4" />}
@@ -794,6 +799,7 @@ export default function RandomPracticePage() {
                       ? "danger"
                       : "default"
                   }
+                  mobileStacked
                 />
               </div>
             </div>
@@ -851,6 +857,7 @@ export default function RandomPracticePage() {
                   label={stat.label}
                   value={String(stat.value)}
                   tone={stat.tone}
+                  mobileStacked
                 />
               ))}
             </div>
@@ -903,16 +910,46 @@ export default function RandomPracticePage() {
                     result.questions.findIndex(
                       (q) => q.questionId === qr.questionId,
                     ) + 1;
+                  const sourceQuestion = questions.find(
+                    (question) => question.id === qr.questionId,
+                  );
+                  const selectedChoice = sourceQuestion?.choices.find(
+                    (choice) => choice.id === qr.selectedChoiceId,
+                  );
+                  const selectedText = selectedChoice
+                    ? localize(
+                        selectedChoice.textEn,
+                        selectedChoice.textAr,
+                        selectedChoice.textNl,
+                        selectedChoice.textFr,
+                      )
+                    : "";
+                  const selectedIndex = sourceQuestion?.choices.findIndex(
+                    (choice) => choice.id === qr.selectedChoiceId,
+                  );
+                  const correctIndex = sourceQuestion?.choices.findIndex(
+                    (choice) => choice.id === qr.correctChoiceId,
+                  );
                   return (
                     <SignReviewCard
                       key={qr.questionId}
                       qr={qr}
                       qNum={qNum}
                       localize={localize}
-                      isRTL={isRTL}
                       t={t}
                       getDifficultyColor={getDifficultyColor}
                       getDifficultyLabel={getDifficultyLabel}
+                      selectedText={selectedText}
+                      selectedMarker={
+                        selectedIndex !== undefined && selectedIndex >= 0
+                          ? getExamOptionLabel(selectedIndex)
+                          : undefined
+                      }
+                      correctMarker={
+                        correctIndex !== undefined && correctIndex >= 0
+                          ? getExamOptionLabel(correctIndex)
+                          : undefined
+                      }
                     />
                   );
                 })}
@@ -933,10 +970,12 @@ function SignReviewCard({
   qr,
   qNum,
   localize,
-  isRTL,
   t,
   getDifficultyColor,
   getDifficultyLabel,
+  selectedText,
+  selectedMarker,
+  correctMarker,
 }: {
   qr: QuestionResult;
   qNum: number;
@@ -946,10 +985,12 @@ function SignReviewCard({
     nl?: string | null,
     fr?: string | null,
   ) => string;
-  isRTL: boolean;
   t: (key: string) => string;
   getDifficultyColor: (level: string) => string;
   getDifficultyLabel: (level: string) => string;
+  selectedText: string;
+  selectedMarker?: string;
+  correctMarker?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -987,11 +1028,10 @@ function SignReviewCard({
       : "border-red-200 bg-red-50/30 dark:border-red-900/50 dark:bg-red-900/10";
 
   return (
-    <div className={`rounded-xl border p-4 space-y-3 ${borderCls}`}>
-      <div className="flex items-start gap-2">
-        {statusIcon}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+    <div className={`space-y-4 rounded-2xl border p-4 ${borderCls}`}>
+      <div className="min-w-0 space-y-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="shrink-0">{statusIcon}</span>
             <span className="text-xs font-semibold text-muted-foreground">
               Q{qNum}
             </span>
@@ -1007,62 +1047,77 @@ function SignReviewCard({
                 {getDifficultyLabel(qr.difficulty)}
               </span>
             )}
-          </div>
-          {qr.signImagePath && (
-            <div className="flex items-center gap-3 mb-2">
-              <div className="relative w-12 h-12 flex-shrink-0">
-                <SignImage
-                  src={qr.signImagePath}
-                  alt={qr.signCode ?? "sign"}
-                  className="object-contain"
-                />
-              </div>
-            </div>
-          )}
-          <p className={`text-sm font-medium ${isRTL ? "text-right" : ""}`}>
-            {questionText}
-          </p>
+          <span
+            className={cn(
+              "ms-auto rounded-full border px-2.5 py-1 text-xs font-semibold",
+              qr.wasTimeout
+                ? "border-orange-200 bg-orange-100 text-orange-700"
+                : qr.isCorrect
+                  ? "border-green-200 bg-green-100 text-green-700"
+                  : "border-red-200 bg-red-100 text-red-700",
+            )}
+          >
+            {qr.wasTimeout
+              ? t("practice_exam.score_timeout")
+              : qr.isCorrect
+                ? t("practice_exam.filter_correct")
+                : t("practice_exam.filter_wrong")}
+          </span>
         </div>
-      </div>
-      {!qr.isCorrect && (
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="text-xs text-primary flex items-center gap-1 hover:underline"
+        {qr.signImagePath && (
+          <ExamQuestionImageFrame variant="review">
+            <SignImage
+              src={qr.signImagePath}
+              alt={qr.signCode ?? "sign"}
+              className="object-contain"
+            />
+          </ExamQuestionImageFrame>
+        )}
+        <p
+          className={cn(
+            "mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground",
+          )}
         >
-          {expanded ? (
-            <ChevronUp className="w-3 h-3" />
-          ) : (
-            <ChevronDown className="w-3 h-3" />
-          )}
-          {expanded
-            ? t("practice_exam.review_hide")
-            : t("practice_exam.review_show_answer")}
-        </button>
-      )}
-      {expanded && !qr.isCorrect && (
-        <div className="space-y-2 text-sm">
-          {correctText && (
-            <div className="flex items-start gap-2 bg-green-100/60 dark:bg-green-900/20 rounded-lg p-2.5">
-              <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-0.5">
-                  {t("practice_exam.review_correct_answer")}
-                </p>
-                <p className="text-green-800 dark:text-green-300">
-                  {correctText}
-                </p>
-              </div>
-            </div>
-          )}
-          {explanationText && (
-            <div className="bg-muted/50 rounded-lg p-2.5">
-              <p className="text-xs font-semibold text-muted-foreground mb-0.5">
-                {t("practice_exam.review_explanation")}
-              </p>
-              <p>{explanationText}</p>
-            </div>
-          )}
-        </div>
+          {questionText}
+        </p>
+      </div>
+
+      <div className="grid min-w-0 grid-cols-1 gap-2.5">
+        <ResultAnswerBlock
+          label={t("exam.your_answer")}
+          tone={qr.isCorrect ? "correct" : "incorrect"}
+          marker={selectedMarker}
+        >
+          {selectedText || "—"}
+        </ResultAnswerBlock>
+
+        {expanded && !qr.isCorrect && correctText && (
+          <ResultAnswerBlock
+            label={t("practice_exam.review_correct_answer")}
+            tone="correct"
+            marker={correctMarker}
+          >
+            {correctText}
+          </ResultAnswerBlock>
+        )}
+
+        {expanded && !qr.isCorrect && explanationText && (
+          <ResultAnswerBlock
+            label={t("practice_exam.review_explanation")}
+            tone="neutral"
+          >
+            {explanationText}
+          </ResultAnswerBlock>
+        )}
+      </div>
+
+      {!qr.isCorrect && (
+        <ResultDetailsToggle
+          expanded={expanded}
+          onToggle={() => setExpanded((value) => !value)}
+          showLabel={t("practice_exam.review_show_details")}
+          hideLabel={t("practice_exam.review_hide_details")}
+        />
       )}
     </div>
   );

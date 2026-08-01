@@ -30,11 +30,13 @@ function AdminSidebarItem({
   pathname,
   t,
   isRTL,
+  onNavigate,
 }: {
   route: AdminRoute;
   pathname: string;
   t: (key: string) => string;
   isRTL: boolean;
+  onNavigate?: () => void;
 }) {
   const Icon = route.icon;
   const isActive = route.exact
@@ -45,6 +47,7 @@ function AdminSidebarItem({
     <li>
       <Link
         href={route.path}
+        onClick={onNavigate}
         className={cn(
           "group relative flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-all duration-200",
           isActive
@@ -71,7 +74,7 @@ function AdminSidebarItem({
             <Icon className="h-4 w-4" />
           </div>
         ) : null}
-        <span className={cn("flex-1 truncate", isActive && "font-semibold")}>
+        <span className={cn("min-w-0 flex-1 break-words", isActive && "font-semibold")}>
           {t(route.labelKey)}
         </span>
       </Link>
@@ -84,6 +87,7 @@ function AdminSidebarItem({
               <li key={child.key}>
                 <Link
                   href={child.path}
+                  onClick={onNavigate}
                   className={cn(
                     "block rounded-xl px-3 py-2 text-sm transition-colors",
                     childActive
@@ -102,7 +106,13 @@ function AdminSidebarItem({
   );
 }
 
-export default function AdminSidebar() {
+export default function AdminSidebar({
+  variant = "desktop",
+  onNavigate,
+}: {
+  variant?: "desktop" | "drawer";
+  onNavigate?: () => void;
+}) {
   const { logout: authLogout, user } = useAuth();
   const pathname = useRoutePathname();
   const { t, isRTL } = useLanguage();
@@ -129,8 +139,12 @@ export default function AdminSidebar() {
   return (
     <aside
       className={cn(
-        "sticky flex w-72 shrink-0 flex-col border-border/60 bg-background/95 shadow-[8px_0_28px_rgba(15,23,42,0.04)] backdrop-blur",
-        hasTopNavbar ? "top-[74px] h-[calc(100vh-74px)]" : "top-0 min-h-screen",
+        "w-72 shrink-0 flex-col border-border/60 bg-background/95 shadow-[8px_0_28px_rgba(15,23,42,0.04)] backdrop-blur",
+        variant === "desktop"
+          ? "sticky hidden lg:flex"
+          : "flex h-full max-w-[calc(100vw-2rem)]",
+        variant === "desktop" &&
+          (hasTopNavbar ? "top-[74px] h-[calc(100vh-74px)]" : "top-0 min-h-screen"),
         isRTL ? "border-l" : "border-r",
       )}
     >
@@ -162,13 +176,13 @@ export default function AdminSidebar() {
               {avatar}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-foreground">
+              <p className="break-words text-sm font-bold leading-5 text-foreground">
                 {user?.fullName || t("admin.system_admin")}
               </p>
               <div className="mt-1 inline-flex rounded-full border border-primary/15 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-primary">
                 {roleLabel}
               </div>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="break-all text-xs leading-5 text-muted-foreground">
                 {user?.email || t("admin.sidebar.panel_title")}
               </p>
             </div>
@@ -192,6 +206,7 @@ export default function AdminSidebar() {
                     pathname={pathname}
                     t={t}
                     isRTL={isRTL}
+                    onNavigate={onNavigate}
                   />
                 ))}
               </ul>
@@ -204,6 +219,7 @@ export default function AdminSidebar() {
         <div className="space-y-1.5">
           <Link
             href="/"
+            onClick={onNavigate}
             className="group flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:border-border/70 hover:bg-muted/70 hover:text-foreground"
           >
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-muted/35 text-muted-foreground transition-all duration-200 group-hover:border-primary/15 group-hover:bg-primary/10 group-hover:text-primary">
@@ -216,6 +232,7 @@ export default function AdminSidebar() {
 
           <button
             onClick={() => {
+              onNavigate?.();
               void authLogout();
             }}
             className="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-red-600/85 transition-all duration-200 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/25"

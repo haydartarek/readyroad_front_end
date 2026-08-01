@@ -20,6 +20,12 @@ import {
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { SignImage } from "@/components/traffic-signs/sign-image";
+import {
+  ExamOptionCard,
+  getExamOptionLabel,
+} from "@/components/exam/exam-option-card";
+import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
+import { ResultAnswerBlock } from "@/components/results/result-review";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -617,6 +623,7 @@ export default function TrafficSignPracticePage() {
                       .replace("{total}", String(session.totalQuestions))}
                     tone={scoreTone}
                     className="p-2.5"
+                    mobileStacked
                   />
                   <PageMetricCard
                     icon={<CheckCircle2 className="h-4 w-4" />}
@@ -625,6 +632,7 @@ export default function TrafficSignPracticePage() {
                     hint={t("sign_quiz.practice.group_label")}
                     tone="primary"
                     className="p-2.5"
+                    mobileStacked
                   />
                 </div>
               </div>
@@ -642,6 +650,7 @@ export default function TrafficSignPracticePage() {
                   .replace("{total}", String(session.totalQuestions))}
                 tone={scoreTone}
                 className="p-2.5"
+                mobileStacked
               />
               <PageMetricCard
                 icon={<CheckCircle2 className="h-4 w-4" />}
@@ -650,6 +659,7 @@ export default function TrafficSignPracticePage() {
                 hint={t("sign_practice.metric_questions")}
                 tone="success"
                 className="p-2.5"
+                mobileStacked
               />
               <PageMetricCard
                 icon={<XCircle className="h-4 w-4" />}
@@ -658,6 +668,7 @@ export default function TrafficSignPracticePage() {
                 hint={`${wrongAnswers}/${session.totalQuestions}`}
                 tone={wrongAnswers === 0 ? "success" : "danger"}
                 className="p-2.5"
+                mobileStacked
               />
               <PageMetricCard
                 icon={<BookOpen className="h-4 w-4" />}
@@ -666,6 +677,7 @@ export default function TrafficSignPracticePage() {
                 hint={sign.signCode}
                 tone="primary"
                 className="p-2.5"
+                mobileStacked
               />
             </div>
 
@@ -721,7 +733,16 @@ export default function TrafficSignPracticePage() {
               >
                 <div className="space-y-3">
                   {answerHistory.map((entry, index) => {
+                    const selectedChoice = entry.question.choices.find(
+                      (choice) => choice.id === entry.selectedChoiceId,
+                    );
                     const correctChoice = entry.question.choices.find(
+                      (choice) => choice.id === entry.response.correctChoiceId,
+                    );
+                    const selectedChoiceIndex = entry.question.choices.findIndex(
+                      (choice) => choice.id === entry.selectedChoiceId,
+                    );
+                    const correctChoiceIndex = entry.question.choices.findIndex(
                       (choice) => choice.id === entry.response.correctChoiceId,
                     );
 
@@ -736,19 +757,17 @@ export default function TrafficSignPracticePage() {
                         )}
                       >
                         <CardContent className="px-4 py-4">
-                          <div className="flex flex-col gap-3 md:flex-row md:items-start">
-                            <div className="rounded-xl border border-border/60 bg-background/80 p-2 shadow-sm md:w-fit">
-                              <div className="relative h-12 w-12">
+                          <div className="space-y-4">
+                            <ExamQuestionImageFrame variant="review">
                                 <SignImage
                                   src={resolveTrafficSignImage(sign)}
                                   alt={signName}
                                   className="object-contain"
                                 />
-                              </div>
-                            </div>
+                            </ExamQuestionImageFrame>
 
-                            <div className="min-w-0 flex-1 space-y-2.5">
-                              <div className="flex flex-wrap items-center gap-2">
+                            <div className="min-w-0 space-y-3">
+                              <div className="flex flex-wrap items-center justify-center gap-2">
                                 <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                                   {t("sign_quiz.practice.question_of")
                                     .replace("{n}", String(index + 1))
@@ -775,47 +794,51 @@ export default function TrafficSignPracticePage() {
                                 )}
                               </div>
 
-                              <p className="text-sm font-semibold leading-6 text-foreground md:text-[15px]">
+                              <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
                                 {getQuestionText(
                                   entry.question,
                                   currentLanguage,
                                 )}
                               </p>
 
-                              <div className="grid gap-2 md:grid-cols-2">
-                                <div className="rounded-[0.95rem] border border-border/60 bg-background/80 px-3 py-2.5">
-                                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                                    {t("sign_quiz.practice.your_answer")}
-                                  </p>
-                                  <p
-                                    className={cn(
-                                      "mt-1 text-sm font-semibold leading-6",
-                                      entry.response.isCorrect
-                                        ? "text-green-700"
-                                        : "text-red-700",
+                              <div className="grid min-w-0 grid-cols-1 gap-2.5 md:grid-cols-2">
+                                <ResultAnswerBlock
+                                  label={t("sign_quiz.practice.your_answer")}
+                                  marker={
+                                    selectedChoiceIndex >= 0
+                                      ? getExamOptionLabel(selectedChoiceIndex)
+                                      : undefined
+                                  }
+                                  tone={
+                                    entry.response.isCorrect
+                                      ? "correct"
+                                      : "incorrect"
+                                  }
+                                >
+                                  {selectedChoice
+                                    ? getChoiceText(
+                                        selectedChoice,
+                                        currentLanguage,
+                                      )
+                                    : "—"}
+                                </ResultAnswerBlock>
+                                {!entry.response.isCorrect && correctChoice && (
+                                  <ResultAnswerBlock
+                                    label={t(
+                                      "sign_quiz.practice.correct_answer",
                                     )}
+                                    marker={
+                                      correctChoiceIndex >= 0
+                                        ? getExamOptionLabel(correctChoiceIndex)
+                                        : undefined
+                                    }
+                                    tone="correct"
                                   >
                                     {getChoiceText(
-                                      entry.question.choices.find(
-                                        (choice) =>
-                                          choice.id === entry.selectedChoiceId,
-                                      ) ?? entry.question.choices[0],
+                                      correctChoice,
                                       currentLanguage,
                                     )}
-                                  </p>
-                                </div>
-                                {correctChoice && (
-                                  <div className="rounded-[0.95rem] border border-green-200 bg-green-50 px-3 py-2.5">
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-green-700/80">
-                                      {t("sign_quiz.practice.correct_answer")}
-                                    </p>
-                                    <p className="mt-1 text-sm font-semibold leading-6 text-green-700">
-                                      {getChoiceText(
-                                        correctChoice,
-                                        currentLanguage,
-                                      )}
-                                    </p>
-                                  </div>
+                                  </ResultAnswerBlock>
                                 )}
                               </div>
 
@@ -823,17 +846,15 @@ export default function TrafficSignPracticePage() {
                                 entry.response,
                                 currentLanguage,
                               ) && (
-                                <div className="rounded-[0.95rem] border border-border/60 bg-muted/30 px-3 py-2.5">
-                                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                                    {t("sign_quiz.practice.explanation")}
-                                  </p>
-                                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                                    {getExplanation(
-                                      entry.response,
-                                      currentLanguage,
-                                    )}
-                                  </p>
-                                </div>
+                                <ResultAnswerBlock
+                                  label={t("sign_quiz.practice.explanation")}
+                                  tone="neutral"
+                                >
+                                  {getExplanation(
+                                    entry.response,
+                                    currentLanguage,
+                                  )}
+                                </ResultAnswerBlock>
                               )}
                             </div>
                           </div>
@@ -859,10 +880,10 @@ export default function TrafficSignPracticePage() {
         <Breadcrumb items={breadcrumbItems} />
 
         <PageHeroSurface contentClassName="p-3 md:p-3.5">
-          <div className="grid gap-2.5 md:grid-cols-[132px_minmax(0,1fr)] lg:grid-cols-[152px_minmax(0,1fr)] md:items-start">
+          <div className="grid gap-3 md:grid-cols-[180px_minmax(0,1fr)] lg:grid-cols-[200px_minmax(0,1fr)] md:items-start">
             <div className="space-y-1.5">
               <div className="rounded-xl border border-border/60 bg-background/85 p-2 shadow-sm">
-                <div className="relative mx-auto aspect-square w-full max-w-[92px] md:max-w-[102px]">
+                <div className="relative mx-auto aspect-square w-full max-w-[144px] md:max-w-[168px]">
                   <SignImage
                     src={resolveTrafficSignImage(sign)}
                     alt={signName}
@@ -944,22 +965,32 @@ export default function TrafficSignPracticePage() {
 
         {currentQuestion && (
           <PageSectionSurface
-            title={getQuestionText(currentQuestion, currentLanguage)}
-            description={t("sign_quiz.practice.question_of")
-              .replace("{n}", String(displayQuestionNumber))
-              .replace("{m}", String(session.totalQuestions))}
-            actions={
-              <Badge
-                className={`border ${DIFFICULTY_STYLES[currentQuestion.difficulty] || "border-border bg-muted text-foreground"}`}
-              >
-                {t(`sign_quiz.${currentQuestion.difficulty.toLowerCase()}`)}
-              </Badge>
-            }
             className="xl:min-h-[calc(100vh-20rem)]"
-            contentClassName="flex flex-col gap-2"
+            contentClassName="flex flex-col gap-4"
           >
-            <div className="space-y-2">
-              {currentQuestion.choices.map((choice) => {
+            <div className="space-y-2 text-center">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Badge
+                  className={`border ${DIFFICULTY_STYLES[currentQuestion.difficulty] || "border-border bg-muted text-foreground"}`}
+                >
+                  {t(`sign_quiz.${currentQuestion.difficulty.toLowerCase()}`)}
+                </Badge>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {t("sign_quiz.practice.question_of")
+                    .replace("{n}", String(displayQuestionNumber))
+                    .replace("{m}", String(session.totalQuestions))}
+                </span>
+              </div>
+              <h2
+                data-testid="exam-question-title"
+                className="mx-auto max-w-3xl break-words text-center text-lg font-black leading-8 text-foreground sm:text-xl md:text-[1.35rem]"
+              >
+                {getQuestionText(currentQuestion, currentLanguage)}
+              </h2>
+            </div>
+
+            <div className="space-y-2.5">
+              {currentQuestion.choices.map((choice, index) => {
                 const isSelected = selectedChoice === choice.id;
                 const isCorrect =
                   answerState?.response.correctChoiceId === choice.id;
@@ -969,59 +1000,27 @@ export default function TrafficSignPracticePage() {
                   !answerState.response.isCorrect;
 
                 return (
-                  <button
+                  <ExamOptionCard
                     key={choice.id}
-                    type="button"
+                    index={index}
+                    text={getChoiceText(choice, currentLanguage)}
                     disabled={!!answerState}
-                    onClick={() => {
+                    state={
+                      !answerState
+                        ? isSelected
+                          ? "selected"
+                          : "idle"
+                        : isCorrect
+                          ? "correct"
+                          : isWrong
+                            ? "incorrect"
+                            : "neutral"
+                    }
+                    onSelect={() => {
                       setSelectedChoice(choice.id);
                       setSubmissionError(null);
                     }}
-                    className={cn(
-                      "flex w-full items-start gap-3 rounded-[1rem] border-2 px-3.5 py-2.5 text-start transition-all duration-150",
-                      !answerState &&
-                        !isSelected &&
-                        "border-border/60 bg-background hover:border-primary/35 hover:bg-primary/5",
-                      !answerState &&
-                        isSelected &&
-                        "border-primary bg-primary/10 shadow-sm",
-                      answerState &&
-                        isCorrect &&
-                        "border-green-300 bg-green-50",
-                      answerState && isWrong && "border-red-300 bg-red-50",
-                      answerState &&
-                        !isCorrect &&
-                        !isWrong &&
-                        "border-border/60 bg-background/70 opacity-70",
-                    )}
-                  >
-                    {!answerState ? (
-                      <span
-                        className={cn(
-                          "mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2",
-                          isSelected
-                            ? "border-primary bg-primary"
-                            : "border-muted-foreground/40",
-                        )}
-                      />
-                    ) : isCorrect ? (
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
-                    ) : isWrong ? (
-                      <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
-                    ) : (
-                      <span className="mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2 border-border/50" />
-                    )}
-
-                    <span
-                      className={cn(
-                        "flex-1 text-sm font-semibold leading-6 text-foreground md:text-[15px]",
-                        answerState && isCorrect && "text-green-800",
-                        answerState && isWrong && "text-red-800",
-                      )}
-                    >
-                      {getChoiceText(choice, currentLanguage)}
-                    </span>
-                  </button>
+                  />
                 );
               })}
             </div>

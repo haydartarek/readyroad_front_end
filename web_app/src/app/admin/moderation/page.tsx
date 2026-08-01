@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminMetricCard from "@/components/admin/AdminMetricCard";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,19 @@ type UserRow = {
   isLocked: boolean;
   createdAt: string;
 };
-type UsersResponse = { users: UserRow[]; total: number };
+type UsersResponse = {
+  users: UserRow[];
+  total: number;
+  totalPages?: number;
+};
+type UserSummary = {
+  total: number;
+  active: number;
+  locked: number;
+  inactive: number;
+  newThisWeek: number;
+  newSince: string;
+};
 
 // ─── Helpers ────────────────────────────────────────────
 
@@ -42,10 +55,10 @@ const ROLE_COLOR: Record<string, string> = {
   USER: "bg-slate-400",
 };
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, language: string): string {
   if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    return new Date(dateStr).toLocaleDateString(`${language}-u-ca-gregory`, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -60,41 +73,6 @@ function isNewThisWeek(dateStr: string): boolean {
   const d = new Date(dateStr);
   const now = new Date();
   return now.getTime() - d.getTime() < 7 * 24 * 60 * 60 * 1000;
-}
-
-// ─── Stat Card ──────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  bgClass,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  colorClass: string;
-  bgClass: string;
-}) {
-  return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 flex items-center gap-4">
-      <div
-        className={cn(
-          "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-          bgClass,
-        )}
-      >
-        <span className={colorClass}>{icon}</span>
-      </div>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <p className={cn("text-2xl font-black", colorClass)}>{value}</p>
-      </div>
-    </div>
-  );
 }
 
 // ─── User Table ─────────────────────────────────────────
@@ -112,7 +90,7 @@ function UserTable({
   onUnlock?: (user: UserRow) => void;
   showUnlock?: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   if (rows.length === 0) {
     return (
@@ -208,7 +186,7 @@ function UserTable({
                   </div>
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">
-                  {formatDate(user.createdAt)}
+                  {formatDate(user.createdAt, language)}
                 </td>
                 {showUnlock && (
                   <td className="px-4 py-3 text-right">
@@ -287,18 +265,32 @@ export default function AdminModerationPage() {
   const [serviceUnavailable, setSvcUnavail] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("locked");
   const [unlocking, setUnlocking] = useState<Record<number, boolean>>({});
+  const [summary, setSummary] = useState<UserSummary | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get<UsersResponse>("/admin/users", {
-        page: 0,
-        size: 200,
-      });
-      const data = res.data;
-      const list = Array.isArray(data) ? data : (data.users ?? []);
-      setUsers(list);
+      const [firstPage, summaryResponse] = await Promise.all([
+        apiClient.get<UsersResponse>("/admin/users", { page: 0, size: 100 }),
+        apiClient.get<UserSummary>("/admin/users/summary"),
+      ]);
+      const data = firstPage.data;
+      const firstUsers = Array.isArray(data) ? data : (data.users ?? []);
+      const totalPages = Array.isArray(data) ? 1 : (data.totalPages ?? 1);
+      const remainingPages = await Promise.all(
+        Array.from({ length: Math.max(0, totalPages - 1) }, (_, index) =>
+          apiClient.get<UsersResponse>("/admin/users", {
+            page: index + 1,
+            size: 100,
+          }),
+        ),
+      );
+      const remainingUsers = remainingPages.flatMap((response) =>
+        Array.isArray(response.data) ? response.data : (response.data.users ?? []),
+      );
+      setUsers([...firstUsers, ...remainingUsers]);
+      setSummary(summaryResponse.data);
     } catch (e: unknown) {
       logApiError("Moderation: failed to fetch users", e);
       if (isServiceUnavailable(e)) setSvcUnavail(true);
@@ -327,17 +319,13 @@ export default function AdminModerationPage() {
   }, [users]);
 
   const handleUnlock = async (user: UserRow) => {
+    if (!window.confirm(t("admin.users.confirm_unlock"))) return;
     setUnlocking((p) => ({ ...p, [user.id]: true }));
-    setUsers((p) =>
-      p.map((u) => (u.id === user.id ? { ...u, isLocked: false } : u)),
-    );
     try {
       await apiClient.put(`/admin/users/${user.id}/lock`, { isLocked: false });
+      await fetchUsers();
     } catch (e: unknown) {
       logApiError("Failed to unlock user", e);
-      setUsers((p) =>
-        p.map((u) => (u.id === user.id ? { ...u, isLocked: true } : u)),
-      );
       setError(t("admin.moderation.unlock_error"));
     } finally {
       setUnlocking((p) => {
@@ -383,26 +371,29 @@ export default function AdminModerationPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
+        <AdminMetricCard
           label={t("admin.moderation.stats_locked")}
-          value={loading ? 0 : lockedUsers.length}
+          value={summary?.locked}
           icon={<Lock className="w-5 h-5" />}
-          colorClass="text-destructive"
-          bgClass="bg-destructive/10"
+          valueClassName="text-destructive"
+          iconClassName="bg-destructive/10 text-destructive"
+          loading={loading && !summary}
         />
-        <StatCard
+        <AdminMetricCard
           label={t("admin.moderation.stats_inactive")}
-          value={loading ? 0 : inactiveUsers.length}
+          value={summary?.inactive}
           icon={<UserX className="w-5 h-5" />}
-          colorClass="text-amber-600"
-          bgClass="bg-amber-500/10"
+          valueClassName="text-amber-600"
+          iconClassName="bg-amber-500/10 text-amber-600"
+          loading={loading && !summary}
         />
-        <StatCard
+        <AdminMetricCard
           label={t("admin.moderation.stats_new")}
-          value={loading ? 0 : newUsers.length}
+          value={summary?.newThisWeek}
           icon={<UserPlus className="w-5 h-5" />}
-          colorClass="text-emerald-600"
-          bgClass="bg-emerald-500/10"
+          valueClassName="text-emerald-600"
+          iconClassName="bg-emerald-500/10 text-emerald-600"
+          loading={loading && !summary}
         />
       </div>
 

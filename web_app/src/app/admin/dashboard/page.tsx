@@ -6,6 +6,7 @@ import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { useLanguage } from "@/contexts/language-context";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminMetricCard from "@/components/admin/AdminMetricCard";
 import Link from "@/components/localized-link";
 import {
   Users,
@@ -31,45 +32,6 @@ function getRoleLabelKey(role?: string) {
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
-
-function StatCard({
-  title,
-  value,
-  icon,
-  colorClass,
-  bgClass,
-  description,
-  loading,
-}: {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  colorClass: string;
-  bgClass: string;
-  description: string;
-  loading?: boolean;
-}) {
-  return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5">
-      <div className="flex items-start justify-between mb-4">
-        <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${bgClass} ${colorClass}`}
-        >
-          {icon}
-        </div>
-        {loading ? (
-          <div className="h-9 w-20 animate-pulse rounded-xl bg-muted" />
-        ) : (
-          <p className={`text-3xl font-black ${colorClass}`}>
-            {value.toLocaleString()}
-          </p>
-        )}
-      </div>
-      <h3 className="font-bold text-foreground">{title}</h3>
-      <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
-    </div>
-  );
-}
 
 function QuickActionButton({
   icon,
@@ -184,28 +146,26 @@ export default function AdminDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <StatCard
-          title={t("admin.total_users")}
-          value={data?.totalUsers ?? 0}
+        <AdminMetricCard
+          label={t("admin.total_users")}
+          value={data?.totalUsers?.toLocaleString()}
           icon={<Users className="w-6 h-6" />}
-          colorClass="text-primary"
-          bgClass="bg-primary/10"
+          iconClassName="bg-primary/10 text-primary"
+          valueClassName="text-primary"
           description={t("admin.total_users_desc")}
         />
-        <StatCard
-          title={t("admin.total_signs")}
-          value={data?.totalSigns ?? 0}
+        <AdminMetricCard
+          label={t("admin.total_signs")}
+          value={data?.totalSigns?.toLocaleString()}
           icon={<TrafficCone className="w-6 h-6" />}
-          colorClass="text-foreground"
-          bgClass="bg-primary/10"
+          iconClassName="bg-primary/10 text-primary"
           description={t("admin.total_signs_desc")}
         />
-        <StatCard
-          title={t("admin.total_quizzes")}
-          value={data?.totalQuizQuestions ?? 0}
+        <AdminMetricCard
+          label={t("admin.total_quizzes")}
+          value={data?.totalQuizQuestions?.toLocaleString()}
           icon={<ClipboardList className="w-6 h-6" />}
-          colorClass="text-foreground"
-          bgClass="bg-primary/10"
+          iconClassName="bg-primary/10 text-primary"
           description={t("admin.total_quizzes_desc")}
         />
       </div>

@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import AdminMetricCard from "@/components/admin/AdminMetricCard";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,49 +72,6 @@ function formatDuration(seconds: number | null): string {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-  sub,
-  loading,
-  colorClass,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  sub?: string;
-  loading: boolean;
-  colorClass: string;
-}) {
-  return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-shadow p-5">
-      <div className="flex items-start gap-4">
-        <div
-          className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${colorClass}`}
-        >
-          {icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            {label}
-          </p>
-          {loading ? (
-            <div className="mt-2 h-7 w-20 animate-pulse rounded-lg bg-muted" />
-          ) : (
-            <p className="text-2xl font-black text-foreground mt-0.5">
-              {value}
-            </p>
-          )}
-          {sub && !loading && (
-            <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function RoleBar({
   label,
   count,
@@ -177,7 +135,7 @@ function LoadingPlaceholder() {
 // ─── Page ────────────────────────────────────────────────────────────────
 
 export default function AdminAnalyticsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -258,34 +216,36 @@ export default function AdminAnalyticsPage() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
+        <AdminMetricCard
           icon={<Users className="w-5 h-5" />}
           label={t("admin.analytics.total_users")}
-          value={stats?.totalUsers ?? "-"}
-          sub={`${stats?.activeUsers ?? 0} ${t("admin.analytics.active")}`}
+          value={stats?.totalUsers}
+          description={
+            stats ? `${stats.activeUsers} ${t("admin.analytics.active")}` : undefined
+          }
           loading={loading}
-          colorClass="bg-primary/10 text-primary"
+          iconClassName="bg-primary/10 text-primary"
         />
-        <StatCard
+        <AdminMetricCard
           icon={<TrafficCone className="w-5 h-5" />}
           label={t("admin.analytics.total_signs")}
-          value={stats?.totalSigns ?? "-"}
+          value={stats?.totalSigns}
           loading={loading}
-          colorClass="bg-primary/10 text-foreground"
+          iconClassName="bg-primary/10 text-primary"
         />
-        <StatCard
+        <AdminMetricCard
           icon={<GraduationCap className="w-5 h-5" />}
           label={t("admin.analytics.total_exams")}
-          value={recentExams?.total ?? "-"}
+          value={recentExams?.total}
           loading={loading}
-          colorClass="bg-primary/10 text-primary"
+          iconClassName="bg-primary/10 text-primary"
         />
-        <StatCard
+        <AdminMetricCard
           icon={<TrendingUp className="w-5 h-5" />}
           label={t("admin.analytics.pass_rate")}
-          value={quizStats ? `${quizStats.passRate}%` : "-"}
+          value={quizStats ? `${quizStats.passRate}%` : undefined}
           loading={loading}
-          colorClass={
+          iconClassName={
             quizStats && quizStats.passRate >= 50
               ? "bg-green-500/10 text-green-500"
               : "bg-amber-500/10 text-amber-600"
@@ -504,7 +464,7 @@ export default function AdminAnalyticsPage() {
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {exam.completedAt
                         ? new Date(exam.completedAt).toLocaleDateString(
-                            undefined,
+                            `${language}-u-ca-gregory`,
                             {
                               year: "numeric",
                               month: "short",

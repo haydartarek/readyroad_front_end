@@ -43,6 +43,8 @@ type SettingsModel = {
   examQuestions: number;
   examDurationMinutes: number;
   passingScorePercent: number;
+  siteNameEditable: boolean;
+  examSettingsEditable: boolean;
 };
 
 const DEFAULTS: SettingsModel = {
@@ -53,6 +55,8 @@ const DEFAULTS: SettingsModel = {
   examQuestions: EXAM_RULES.TOTAL_QUESTIONS,
   examDurationMinutes: EXAM_RULES.DURATION_MINUTES,
   passingScorePercent: EXAM_RULES.PASS_PERCENTAGE,
+  siteNameEditable: false,
+  examSettingsEditable: false,
 };
 
 // ─── Section Header ────────────────────────────────────
@@ -184,6 +188,7 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [settings, setSettings] = useState<SettingsModel>(DEFAULTS);
+  const [savedSettings, setSavedSettings] = useState<SettingsModel | null>(null);
 
   const loadSettings = useCallback(async () => {
     setLoading(true);
@@ -193,7 +198,9 @@ export default function AdminSettingsPage() {
       const response = await apiClient.get<SettingsModel>(
         API_ENDPOINTS.ADMIN.SETTINGS,
       );
-      setSettings({ ...DEFAULTS, ...response.data });
+      const loaded = { ...DEFAULTS, ...response.data };
+      setSettings(loaded);
+      setSavedSettings(loaded);
     } catch (err) {
       logApiError("[AdminSettings] load", err);
       if (isServiceUnavailable(err)) {
@@ -215,7 +222,13 @@ export default function AdminSettingsPage() {
     setSuccess(null);
     setError(null);
     try {
-      await apiClient.put(API_ENDPOINTS.ADMIN.SETTINGS, settings);
+      const response = await apiClient.put<SettingsModel>(
+        API_ENDPOINTS.ADMIN.SETTINGS,
+        settings,
+      );
+      const saved = { ...DEFAULTS, ...response.data };
+      setSettings(saved);
+      setSavedSettings(saved);
       setSuccess(t("admin.settings_page.save_success"));
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -231,7 +244,8 @@ export default function AdminSettingsPage() {
   };
 
   const resetSettings = () => {
-    setSettings(DEFAULTS);
+    if (!savedSettings) return;
+    setSettings(savedSettings);
     setSuccess(t("admin.settings_page.reset_success"));
     setTimeout(() => setSuccess(null), 3000);
   };
@@ -311,12 +325,12 @@ export default function AdminSettingsPage() {
             </Badge>
           )}
         </div>
-        <div className="flex gap-2 ml-auto">
+        <div className="flex w-full flex-col gap-2 sm:ms-auto sm:w-auto sm:flex-row">
           <Button
             variant="outline"
             onClick={resetSettings}
-            disabled={saving}
-            className="gap-2 rounded-xl"
+            disabled={saving || !savedSettings}
+            className="w-full gap-2 rounded-xl sm:w-auto"
           >
             <RotateCcw className="w-4 h-4" />
             {t("admin.settings_page.reset")}
@@ -324,7 +338,7 @@ export default function AdminSettingsPage() {
           <Button
             onClick={saveSettings}
             disabled={saving}
-            className="gap-2 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg hover:scale-[1.01] transition-all disabled:shadow-none disabled:scale-100"
+            className="w-full gap-2 rounded-xl shadow-md shadow-primary/20 transition-all hover:scale-[1.01] hover:shadow-lg disabled:scale-100 disabled:shadow-none sm:w-auto"
           >
             {saving ? (
               <>
@@ -386,6 +400,7 @@ export default function AdminSettingsPage() {
             <Field
               label={t("admin.settings_page.site_name")}
               htmlFor="admin-settings-site-name"
+              hint={t("admin.settings_page.fixed_site_name_hint")}
             >
               <input
                 id="admin-settings-site-name"
@@ -393,6 +408,8 @@ export default function AdminSettingsPage() {
                 type="text"
                 autoComplete="off"
                 value={settings.siteName}
+                disabled={!settings.siteNameEditable}
+                readOnly={!settings.siteNameEditable}
                 onChange={(e) => update("siteName", e.target.value)}
                 className={inputClass}
                 placeholder={t("app.name")}
@@ -482,6 +499,12 @@ export default function AdminSettingsPage() {
           />
         </CardHeader>
         <CardContent className="space-y-5">
+          {!settings.examSettingsEditable ? (
+            <div className="flex items-start gap-2 rounded-xl border border-blue-500/20 bg-blue-500/5 px-3 py-2 text-sm text-muted-foreground">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+              <span>{t("admin.settings_page.fixed_exam_note")}</span>
+            </div>
+          ) : null}
           <div className="grid gap-5 sm:grid-cols-3">
             <Field
               htmlFor="admin-settings-exam-questions"
@@ -498,6 +521,7 @@ export default function AdminSettingsPage() {
                   min={10}
                   max={100}
                   value={settings.examQuestions}
+                  disabled={!settings.examSettingsEditable}
                   onChange={(e) =>
                     update("examQuestions", Number(e.target.value))
                   }
@@ -520,6 +544,7 @@ export default function AdminSettingsPage() {
                   min={10}
                   max={120}
                   value={settings.examDurationMinutes}
+                  disabled={!settings.examSettingsEditable}
                   onChange={(e) =>
                     update("examDurationMinutes", Number(e.target.value))
                   }
@@ -540,6 +565,7 @@ export default function AdminSettingsPage() {
                   min={50}
                   max={100}
                   value={settings.passingScorePercent}
+                  disabled={!settings.examSettingsEditable}
                   onChange={(e) =>
                     update("passingScorePercent", Number(e.target.value))
                   }

@@ -5,6 +5,9 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/localized-link";
+import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
+import { SignImage } from "@/components/traffic-signs/sign-image";
+import { ResultAnswerBlock } from "@/components/results/result-review";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
@@ -719,39 +722,36 @@ export function ExamResultsPageContent() {
                                     )}
                                   </div>
 
-                                  {/* Question text */}
-                                  <p className="text-sm font-medium text-foreground leading-relaxed">
+                                  {q.contentImageUrl ? (
+                                    <ExamQuestionImageFrame variant="wide">
+                                      <SignImage
+                                        src={q.contentImageUrl}
+                                        alt={getQuestionText(q)}
+                                        className="object-contain"
+                                      />
+                                    </ExamQuestionImageFrame>
+                                  ) : null}
+
+                                  <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
                                     {getQuestionText(q)}
                                   </p>
 
-                                  {/* Answer summary */}
-                                  <div className="space-y-1 text-sm">
-                                    <div className="flex items-start gap-2">
-                                      <span className="text-muted-foreground shrink-0 text-xs">
-                                        {t("exam.your_answer") ??
-                                          "Your answer:"}
-                                      </span>
-                                      <span
-                                        className={cn(
-                                          "font-bold text-xs",
-                                          q.isCorrect
-                                            ? "text-green-600"
-                                            : "text-red-600",
-                                        )}
-                                      >
-                                        {q.selectedOptionText}
-                                      </span>
-                                    </div>
+                                  <div className="grid min-w-0 grid-cols-1 gap-2.5">
+                                    <ResultAnswerBlock
+                                      label={t("exam.your_answer")}
+                                      tone={
+                                        q.isCorrect ? "correct" : "incorrect"
+                                      }
+                                    >
+                                      {q.selectedOptionText || "—"}
+                                    </ResultAnswerBlock>
                                     {!q.isCorrect && (
-                                      <div className="flex items-start gap-2">
-                                        <span className="text-muted-foreground shrink-0 text-xs">
-                                          {t("exam.correct_answer") ??
-                                            "Correct answer:"}
-                                        </span>
-                                        <span className="font-bold text-xs text-green-600">
-                                          {q.correctOptionText}
-                                        </span>
-                                      </div>
+                                      <ResultAnswerBlock
+                                        label={t("exam.correct_answer")}
+                                        tone="correct"
+                                      >
+                                        {q.correctOptionText || "—"}
+                                      </ResultAnswerBlock>
                                     )}
                                   </div>
                                 </div>
@@ -1069,6 +1069,14 @@ export function ExamResultsPageContent() {
                                               : language === "fr"
                                                 ? question.correctChoiceFr
                                                 : question.correctChoiceEn;
+                                        const explanationText =
+                                          language === "ar"
+                                            ? question.explanationAr
+                                            : language === "nl"
+                                              ? question.explanationNl
+                                              : language === "fr"
+                                                ? question.explanationFr
+                                                : question.explanationEn;
 
                                         return (
                                           <div
@@ -1098,19 +1106,62 @@ export function ExamResultsPageContent() {
                                               )}
                                             </div>
 
-                                            <p className="text-sm font-medium text-foreground leading-relaxed">
+                                            {question.signImagePath ? (
+                                              <ExamQuestionImageFrame variant="review">
+                                                <SignImage
+                                                  src={question.signImagePath}
+                                                  alt={
+                                                    question.signCode ??
+                                                    questionText
+                                                  }
+                                                  className="object-contain"
+                                                />
+                                              </ExamQuestionImageFrame>
+                                            ) : null}
+
+                                            <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
                                               {questionText}
                                             </p>
 
-                                            {!question.isCorrect &&
-                                            correctText ? (
-                                              <div className="text-xs font-semibold text-green-700">
-                                                {t(
-                                                  "practice_exam.review_correct_answer",
-                                                )}
-                                                : {correctText}
-                                              </div>
-                                            ) : null}
+                                            <div className="grid min-w-0 grid-cols-1 gap-2.5">
+                                              <ResultAnswerBlock
+                                                label={t("exam.your_answer")}
+                                                tone={
+                                                  question.wasTimeout
+                                                    ? "neutral"
+                                                    : question.isCorrect
+                                                      ? "correct"
+                                                      : "incorrect"
+                                                }
+                                              >
+                                                {question.isCorrect
+                                                  ? correctText || "—"
+                                                  : "—"}
+                                              </ResultAnswerBlock>
+
+                                              {!question.isCorrect &&
+                                              correctText ? (
+                                                <ResultAnswerBlock
+                                                  label={t(
+                                                    "practice_exam.review_correct_answer",
+                                                  )}
+                                                  tone="correct"
+                                                >
+                                                  {correctText}
+                                                </ResultAnswerBlock>
+                                              ) : null}
+
+                                              {explanationText ? (
+                                                <ResultAnswerBlock
+                                                  label={t(
+                                                    "practice_exam.review_explanation",
+                                                  )}
+                                                  tone="neutral"
+                                                >
+                                                  {explanationText}
+                                                </ResultAnswerBlock>
+                                              ) : null}
+                                            </div>
                                           </div>
                                         );
                                       },
@@ -1407,6 +1458,14 @@ export function ExamResultsPageContent() {
                                                 : language === "fr"
                                                   ? question.correctTextFr
                                                   : question.correctTextEn;
+                                          const explanationText =
+                                            language === "ar"
+                                              ? question.explanationAr
+                                              : language === "nl"
+                                                ? question.explanationNl
+                                                : language === "fr"
+                                                  ? question.explanationFr
+                                                  : question.explanationEn;
 
                                           return (
                                             <div
@@ -1434,21 +1493,63 @@ export function ExamResultsPageContent() {
                                                 )}
                                               </div>
 
-                                              <p className="text-sm font-medium text-foreground leading-relaxed">
+                                              {detail.signImagePath ? (
+                                                <ExamQuestionImageFrame variant="review">
+                                                  <SignImage
+                                                    src={detail.signImagePath}
+                                                    alt={getStoredSignName(
+                                                      detail,
+                                                    )}
+                                                    className="object-contain"
+                                                  />
+                                                </ExamQuestionImageFrame>
+                                              ) : null}
+
+                                              <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
                                                 {getStoredSignQuestionText(
                                                   question,
                                                 )}
                                               </p>
 
-                                              {!question.isCorrect &&
-                                              correctText ? (
-                                                <div className="text-xs font-semibold text-green-700">
-                                                  {t(
-                                                    "practice_exam.review_correct_answer",
-                                                  )}
-                                                  : {correctText}
-                                                </div>
-                                              ) : null}
+                                              <div className="grid min-w-0 grid-cols-1 gap-2.5">
+                                                <ResultAnswerBlock
+                                                  label={t("exam.your_answer")}
+                                                  tone={
+                                                    !question.answered
+                                                      ? "neutral"
+                                                      : question.isCorrect
+                                                        ? "correct"
+                                                        : "incorrect"
+                                                  }
+                                                >
+                                                  {question.isCorrect
+                                                    ? correctText || "—"
+                                                    : "—"}
+                                                </ResultAnswerBlock>
+
+                                                {!question.isCorrect &&
+                                                correctText ? (
+                                                  <ResultAnswerBlock
+                                                    label={t(
+                                                      "practice_exam.review_correct_answer",
+                                                    )}
+                                                    tone="correct"
+                                                  >
+                                                    {correctText}
+                                                  </ResultAnswerBlock>
+                                                ) : null}
+
+                                                {explanationText ? (
+                                                  <ResultAnswerBlock
+                                                    label={t(
+                                                      "practice_exam.review_explanation",
+                                                    )}
+                                                    tone="neutral"
+                                                  >
+                                                    {explanationText}
+                                                  </ResultAnswerBlock>
+                                                ) : null}
+                                              </div>
                                             </div>
                                           );
                                         },

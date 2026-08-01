@@ -22,11 +22,11 @@ export default function AdminBreadcrumb() {
       dir={isRTL ? "rtl" : "ltr"}
       className="mb-6"
     >
-      <ol className="inline-flex items-center gap-1 rounded-2xl border border-border/50 bg-card px-4 py-2 shadow-sm">
+      <ol className="flex max-w-full flex-wrap items-center gap-1 rounded-2xl border border-border/50 bg-card px-3 py-2 shadow-sm sm:inline-flex sm:flex-nowrap sm:px-4">
         {trail.map((segment, idx) => (
           <li
             key={`${segment.href ?? segment.label}-${idx}`}
-            className="flex items-center gap-1"
+            className="flex min-w-0 items-center gap-1"
           >
             {idx > 0 && (
               <Separator className="h-3 w-3 text-muted-foreground/40 flex-shrink-0 mx-0.5" />

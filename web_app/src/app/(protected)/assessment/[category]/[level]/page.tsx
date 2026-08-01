@@ -8,7 +8,6 @@ import {
   getAssessmentQuestions,
   checkAssessmentAnswer,
   type AssessmentQuestion,
-  type AssessmentChoice,
   type DifficultyLevel,
 } from "@/services/assessmentService";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
@@ -16,6 +15,12 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import {
+  ExamOptionCard,
+  getExamOptionLabel,
+  type ExamOptionState,
+} from "@/components/exam/exam-option-card";
+import { ResultAnswerBlock } from "@/components/results/result-review";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -35,40 +40,6 @@ interface QuestionAttempt {
   selectedId: number | null;
   correctChoiceId: number | null;
   answerState: AnswerState;
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function ChoiceButton({
-  choice,
-  state,
-  disabled = false,
-  onSelect,
-}: {
-  choice: AssessmentChoice;
-  state: "idle" | "selected-correct" | "selected-incorrect" | "reveal-correct";
-  disabled?: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      onClick={onSelect}
-      disabled={disabled || state !== "idle"}
-      className={cn(
-        "w-full text-left rounded-xl border px-4 py-3 text-sm transition-all duration-150",
-        "hover:border-primary/50 hover:bg-primary/5",
-        state === "idle" && "bg-card border-border",
-        state === "selected-correct" &&
-          "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300",
-        state === "selected-incorrect" &&
-          "bg-rose-500/15 border-rose-500 text-rose-700 dark:text-rose-300",
-        state === "reveal-correct" && "bg-emerald-500/10 border-emerald-400/60",
-        state !== "idle" && "cursor-default",
-      )}
-    >
-      {choice.text}
-    </button>
-  );
 }
 
 // ─── Results screen ───────────────────────────────────────────────────────────
@@ -127,47 +98,90 @@ function ResultsScreen({
 
       {/* Per-question review */}
       <div className="space-y-4">
-        {attempts.map((a, i) => (
-          <div
-            key={a.question.id}
-            className={cn(
-              "rounded-xl border p-4",
-              a.answerState === "correct"
-                ? "border-emerald-500/30 bg-emerald-500/5"
-                : "border-rose-500/30 bg-rose-500/5",
-            )}
-          >
-            <div className="flex items-start gap-2">
-              {a.answerState === "correct" ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-              ) : (
-                <XCircle className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
+        {attempts.map((a, i) => {
+          const selectedIndex = a.question.choices.findIndex(
+            (choice) => choice.id === a.selectedId,
+          );
+          const correctIndex = a.question.choices.findIndex(
+            (choice) => choice.id === a.correctChoiceId,
+          );
+          const selectedText = a.question.choices[selectedIndex]?.text ?? "—";
+          const correctText = a.question.choices[correctIndex]?.text ?? "—";
+
+          return (
+            <div
+              key={a.question.id}
+              className={cn(
+                "space-y-4 rounded-2xl border p-4 shadow-sm",
+                a.answerState === "correct"
+                  ? "border-emerald-200 bg-emerald-50/35"
+                  : "border-red-200 bg-red-50/35",
               )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">
-                  {t("assessment.result.question_number", { number: i + 1 })}.{" "}
-                  {a.question.question}
-                </p>
-                {a.answerState !== "correct" && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                      {
-                        a.question.choices.find(
-                          (c) => c.id === a.correctChoiceId,
-                        )?.text
-                      }
-                    </span>
-                  </p>
-                )}
-                {a.question.explanation && (
-                  <p className="text-xs text-muted-foreground mt-1 italic">
-                    {a.question.explanation}
-                  </p>
-                )}
+            >
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background text-xs font-black">
+                  {i + 1}
+                </span>
+                <span
+                  className={cn(
+                    "ms-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold",
+                    a.answerState === "correct"
+                      ? "border-emerald-200 bg-emerald-100 text-emerald-800"
+                      : "border-red-200 bg-red-100 text-red-800",
+                  )}
+                >
+                  {a.answerState === "correct" ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <XCircle className="h-4 w-4" />
+                  )}
+                  {a.answerState === "correct"
+                    ? t("assessment.result.passed")
+                    : t("assessment.result.failed")}
+                </span>
               </div>
+
+              <p className="break-words text-center text-base font-bold leading-7 text-foreground">
+                {a.question.question}
+              </p>
+
+              <ResultAnswerBlock
+                label={t("exam.your_answer")}
+                tone={a.answerState === "correct" ? "correct" : "incorrect"}
+                marker={
+                  selectedIndex >= 0
+                    ? getExamOptionLabel(selectedIndex)
+                    : undefined
+                }
+              >
+                {selectedText}
+              </ResultAnswerBlock>
+
+              {a.answerState !== "correct" ? (
+                <ResultAnswerBlock
+                  label={t("exam.correct_answer")}
+                  tone="correct"
+                  marker={
+                    correctIndex >= 0
+                      ? getExamOptionLabel(correctIndex)
+                      : undefined
+                  }
+                >
+                  {correctText}
+                </ResultAnswerBlock>
+              ) : null}
+
+              {a.question.explanation ? (
+                <ResultAnswerBlock
+                  label={t("assessment.explanation")}
+                  tone="neutral"
+                >
+                  {a.question.explanation}
+                </ResultAnswerBlock>
+              ) : null}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap gap-3 justify-center pt-2">
@@ -373,31 +387,32 @@ function AssessmentQuizSession({
       {/* Question */}
       {q && (
         <div className="space-y-4">
-          <p className="font-medium leading-snug">{q.question}</p>
+          <p className="mx-auto max-w-3xl break-words text-center text-lg font-black leading-8 text-foreground sm:text-xl">
+            {q.question}
+          </p>
 
-          <div className="space-y-2">
-            {q.choices.map((c) => {
-              let state:
-                | "idle"
-                | "selected-correct"
-                | "selected-incorrect"
-                | "reveal-correct" = "idle";
+          <div className="space-y-2.5">
+            {q.choices.map((c, index) => {
+              let state: ExamOptionState = "idle";
               if (answered) {
                 if (c.id === attempt.selectedId) {
                   state =
                     attempt.answerState === "correct"
-                      ? "selected-correct"
-                      : "selected-incorrect";
+                      ? "correct"
+                      : "incorrect";
                 } else if (c.id === attempt.correctChoiceId) {
-                  state = "reveal-correct";
+                  state = "correct";
+                } else {
+                  state = "neutral";
                 }
               }
               return (
-                <ChoiceButton
+                <ExamOptionCard
                   key={c.id}
-                  choice={c}
+                  index={index}
+                  text={c.text}
                   state={state}
-                  disabled={checkingAnswer}
+                  disabled={checkingAnswer || answered}
                   onSelect={() => handleAnswer(c.id)}
                 />
               );
@@ -406,12 +421,12 @@ function AssessmentQuizSession({
 
           {/* Explanation */}
           {answered && q.explanation && (
-            <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
-                {t("assessment.explanation")}:{" "}
-              </span>
+            <ResultAnswerBlock
+              label={t("assessment.explanation")}
+              tone="neutral"
+            >
               {q.explanation}
-            </div>
+            </ResultAnswerBlock>
           )}
 
           {/* Next */}

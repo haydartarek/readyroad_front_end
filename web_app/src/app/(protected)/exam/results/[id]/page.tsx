@@ -4,13 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
+import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   PageHeroSurface,
   PageHeroTitle,
+  PageMetricCard,
 } from "@/components/ui/page-surface";
+import {
+  ResultAnswerBlock,
+  ResultDetailsToggle,
+} from "@/components/results/result-review";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -374,7 +380,7 @@ export default function ExamResultsPage() {
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className="relative min-h-screen overflow-hidden bg-background pb-8"
+      className="relative min-h-screen bg-background pb-8"
     >
       <div className="container relative mx-auto max-w-5xl space-y-4 px-4 py-6">
         <PageHeroSurface
@@ -383,23 +389,23 @@ export default function ExamResultsPage() {
           )}
         >
           <div className="grid min-w-0 gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
-            <div className="space-y-4">
+            <div className="space-y-4 text-center lg:text-start">
               <div
                 className={cn(
-                  "flex aspect-square w-full max-w-[160px] items-center justify-center rounded-[1.7rem] border shadow-sm",
+                  "mx-auto flex h-24 w-24 items-center justify-center rounded-[1.5rem] border shadow-sm sm:h-28 sm:w-28 lg:aspect-square lg:h-auto lg:w-full lg:max-w-[160px] lg:rounded-[1.7rem]",
                   results.passed
                     ? "border-green-200 bg-green-50"
                     : "border-red-200 bg-red-50",
                 )}
               >
                 {results.passed ? (
-                  <CheckCircle2 className="h-14 w-14 text-green-600" />
+                  <CheckCircle2 className="h-10 w-10 text-green-600 sm:h-12 sm:w-12 lg:h-14 lg:w-14" />
                 ) : (
-                  <XCircle className="h-14 w-14 text-red-500" />
+                  <XCircle className="h-10 w-10 text-red-500 sm:h-12 sm:w-12 lg:h-14 lg:w-14" />
                 )}
               </div>
 
-              <div className="space-y-2 text-center lg:text-start">
+              <div className="space-y-2">
                 <Badge
                   className={cn(
                     "border",
@@ -413,15 +419,12 @@ export default function ExamResultsPage() {
                 <p className="text-sm text-muted-foreground">
                   {t("practice_exam.badge")}
                 </p>
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  {t("exam.results_score_label")}
-                </p>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="space-y-1">
+            <div className="min-w-0 space-y-4">
+              <div className="flex min-w-0 flex-col items-center gap-4 text-center lg:flex-row lg:items-center lg:justify-between lg:text-start">
+                <div className="min-w-0 space-y-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     {t("exam.results_score_label")}
                   </p>
@@ -430,20 +433,20 @@ export default function ExamResultsPage() {
                       ? t("exam.results_passed_title")
                       : t("exam.results_failed_title")}
                   </PageHeroTitle>
-                  <p className="max-w-xl text-sm text-muted-foreground">
+                  <p className="mx-auto max-w-xl text-sm leading-6 text-muted-foreground lg:mx-0">
                     {results.passed
                       ? t("exam.results_passed_subtitle")
                       : t("exam.results_failed_subtitle")}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 rounded-[1.25rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm">
+                <div className="flex w-full max-w-[220px] shrink-0 items-center justify-center gap-3 rounded-[1.25rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm lg:w-auto">
                   {results.passed ? (
                     <Trophy className="h-8 w-8 text-green-500" />
                   ) : (
                     <ClipboardList className="h-8 w-8 text-primary" />
                   )}
-                  <div className="text-end">
+                  <div className="text-center lg:text-end">
                     <div
                       className={cn(
                         "text-4xl font-black tabular-nums leading-none md:text-5xl",
@@ -467,8 +470,13 @@ export default function ExamResultsPage() {
                       String(passingScore),
                     )}
                   </span>
-                  <span className="font-semibold text-primary">
-                    {scorePercent}%
+                  <span
+                    className={cn(
+                      "font-semibold",
+                      results.passed ? "text-green-600" : "text-red-600",
+                    )}
+                  >
+                    {results.passed ? t("exam.passed") : t("exam.failed")}
                   </span>
                 </div>
                 <div className="h-2.5 rounded-full bg-muted/70">
@@ -490,7 +498,7 @@ export default function ExamResultsPage() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[
                   {
                     icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
@@ -511,30 +519,25 @@ export default function ExamResultsPage() {
                     tone: "text-orange-500",
                   },
                 ].map((stat) => (
-                  <div
+                  <PageMetricCard
                     key={stat.label}
-                    className="rounded-[1.35rem] border border-border/60 bg-background/80 px-4 py-4 shadow-sm"
-                  >
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
-                      {stat.icon}
-                    </div>
-                    <p
-                      className={cn(
-                        "text-3xl font-black tabular-nums",
-                        stat.tone,
-                      )}
-                    >
-                      {stat.value}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-foreground/80">
-                      {stat.label}
-                    </p>
-                  </div>
+                    icon={stat.icon}
+                    label={stat.label}
+                    value={String(stat.value)}
+                    tone={
+                      stat.tone === "text-green-600"
+                        ? "success"
+                        : stat.tone === "text-red-500"
+                          ? "danger"
+                          : "warning"
+                    }
+                    mobileStacked
+                  />
                 ))}
               </div>
 
-              <div className="grid gap-2.5 sm:grid-cols-3">
-                <Button className="h-10 rounded-xl font-semibold" asChild>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                <Button className="h-11 w-full rounded-xl font-semibold" asChild>
                   <Link href="/exam">
                     <RotateCcw className="me-2 h-4 w-4" />
                     {t("exam.results_take_another")}
@@ -542,14 +545,14 @@ export default function ExamResultsPage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  className="h-10 rounded-xl font-medium"
+                  className="h-11 w-full rounded-xl font-medium"
                   onClick={() => setShowReview((current) => !current)}
                 >
                   {t("exam.results_toggle_review")}
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-10 rounded-xl font-medium"
+                  className="h-11 w-full rounded-xl font-medium"
                   asChild
                 >
                   <Link href="/dashboard">
@@ -596,7 +599,7 @@ export default function ExamResultsPage() {
                     <div key={category.categoryCode} className="space-y-2">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-foreground">
+                          <p className="break-words text-sm font-semibold text-foreground">
                             {category.displayName}
                           </p>
                         </div>
@@ -741,7 +744,6 @@ export default function ExamResultsPage() {
                       key={answer.questionId}
                       answer={answer}
                       index={index + 1}
-                      isRTL={isRTL}
                       localize={localize}
                       t={t}
                     />
@@ -765,13 +767,11 @@ export default function ExamResultsPage() {
 function ExamReviewCard({
   answer,
   index,
-  isRTL,
   localize,
   t,
 }: {
   answer: ReviewAnswer;
   index: number;
-  isRTL: boolean;
   localize: (
     en?: string | null,
     ar?: string | null,
@@ -828,109 +828,79 @@ function ExamReviewCard({
         statusConfig.card,
       )}
     >
-      <div
-        className={cn("absolute inset-y-0 left-0 w-1", statusConfig.accent)}
-      />
+      <div className={cn("absolute inset-y-0 start-0 w-1", statusConfig.accent)} />
 
-      <div className="space-y-3 px-4 py-4 ps-5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex-shrink-0">{statusConfig.icon}</div>
+      <div className="space-y-4 p-4 ps-5 sm:p-5 sm:ps-6">
+        <div
+          data-testid="result-review-header"
+          className="flex min-w-0 flex-wrap items-center gap-2"
+        >
           <span className="text-xs font-black text-foreground/70">
             Q{index}
           </span>
           <span
             className={cn(
-              "rounded-full border px-2 py-0.5 text-xs font-semibold",
+              "min-w-0 max-w-full break-words rounded-full border px-2.5 py-1 text-xs font-semibold",
               statusConfig.badge,
             )}
           >
             {categoryName}
           </span>
+          <span
+            className={cn(
+              "ms-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold",
+              statusConfig.badge,
+            )}
+          >
+            {statusConfig.icon}
+            {answer.isCorrect
+              ? t("practice_exam.filter_correct")
+              : t("practice_exam.filter_wrong")}
+          </span>
         </div>
 
         {answer.contentImageUrl && (
-          <div className="flex justify-center">
+          <ExamQuestionImageFrame variant="wide">
             <Image
               src={answer.contentImageUrl}
               alt={questionText || t("practice.question_image_alt")}
-              width={320}
-              height={160}
-              className="max-h-40 w-auto rounded-2xl border border-border/50 bg-background/80 object-contain"
+              fill
+              sizes="(max-width: 640px) 100vw, 520px"
+              className="object-contain"
               unoptimized
             />
-          </div>
+          </ExamQuestionImageFrame>
         )}
 
-        <p
-          className={cn(
-            "text-sm font-semibold leading-6 text-foreground",
-            isRTL && "text-right",
-          )}
-        >
+        <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
           {questionText}
         </p>
 
-        <div className="space-y-2 rounded-2xl border border-border/40 bg-background/80 p-3">
-          <div className="flex items-start gap-2">
-            <span className="shrink-0 text-xs font-semibold text-muted-foreground">
-              {t("exam.your_answer")}
-            </span>
-            <span
-              className={cn(
-                "text-sm font-bold",
-                answer.isCorrect ? "text-green-600" : "text-red-500",
-              )}
-            >
-              {selectedOptionText || "—"}
-            </span>
-          </div>
+        <div className="grid min-w-0 grid-cols-1 gap-2.5">
+          <ResultAnswerBlock
+            label={t("exam.your_answer")}
+            tone={answer.isCorrect ? "correct" : "incorrect"}
+          >
+            {selectedOptionText || "—"}
+          </ResultAnswerBlock>
 
-          {!answer.isCorrect && (
-            <div className="flex items-start gap-2">
-              <span className="shrink-0 text-xs font-semibold text-muted-foreground">
-                {t("exam.correct_answer")}
-              </span>
-              <span className="text-sm font-bold text-green-600">
-                {correctOptionText || "—"}
-              </span>
-            </div>
+          {!answer.isCorrect && expanded && (
+            <ResultAnswerBlock
+              label={t("exam.correct_answer")}
+              tone="correct"
+            >
+              {correctOptionText || "—"}
+            </ResultAnswerBlock>
           )}
         </div>
 
         {!answer.isCorrect && correctOptionText && (
-          <>
-            <button
-              onClick={() => setExpanded((current) => !current)}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
-            >
-              {expanded ? (
-                <ChevronUp className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5" />
-              )}
-              {expanded
-                ? t("practice_exam.review_hide")
-                : t("practice_exam.review_show_answer")}
-            </button>
-
-            {expanded && (
-              <div className="space-y-2">
-                {correctOptionText && (
-                  <div className="flex items-start gap-2.5 rounded-xl border border-green-500/20 bg-green-500/10 px-3 py-2.5">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-                    <div className="min-w-0">
-                      <p className="mb-0.5 text-xs font-bold uppercase tracking-wide text-green-700">
-                        {t("practice_exam.review_correct_answer")}
-                      </p>
-                      <p className="text-sm font-medium text-green-800">
-                        {correctOptionText}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
+          <ResultDetailsToggle
+            expanded={expanded}
+            onToggle={() => setExpanded((current) => !current)}
+            showLabel={t("practice_exam.review_show_details")}
+            hideLabel={t("practice_exam.review_hide_details")}
+          />
         )}
       </div>
     </div>

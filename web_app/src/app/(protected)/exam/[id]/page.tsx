@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
 import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
 import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
+import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
@@ -509,23 +510,20 @@ export default function ExamQuestionsPage() {
         }
         media={
           questionImageUrl ? (
-            <div className="overflow-hidden rounded-2xl border border-border/50 bg-background/70 p-3 shadow-sm">
-              <div className="relative h-40 w-full min-w-[250px] max-w-[430px] md:h-44">
-                <Image
-                  src={questionImageUrl}
-                  alt={t("practice.question_image_alt")}
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </div>
+            <ExamQuestionImageFrame variant="wide">
+              <Image
+                src={questionImageUrl}
+                alt={t("practice.question_image_alt")}
+                fill
+                className="object-contain"
+                priority
+              />
+            </ExamQuestionImageFrame>
           ) : null
         }
         title={questionText}
         options={currentQuestion.options.map((option) => ({
           key: option.id,
-          marker: option.number,
           text: localizeText(
             language,
             option.textEn,
@@ -550,7 +548,7 @@ export default function ExamQuestionsPage() {
                 size="sm"
                 onClick={handleNextOrSubmit}
                 disabled={isSubmitting}
-                className="h-11 min-w-[112px] gap-2 rounded-full px-6 font-semibold shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25"
+                className="h-11 w-full gap-2 rounded-full px-6 font-semibold shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 sm:w-auto sm:min-w-[112px]"
               >
                 {isLastQuestion
                   ? t("practice_exam.submit_btn")

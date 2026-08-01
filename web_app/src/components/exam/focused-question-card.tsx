@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { ExamOptionCard } from "@/components/exam/exam-option-card";
 
 interface FocusedQuestionOption {
   key: string | number;
-  marker: string | number;
   text: string;
   selected: boolean;
   onSelect: () => void;
@@ -38,48 +38,25 @@ export function FocusedQuestionCard({
       {media ? <div className="flex justify-center">{media}</div> : null}
 
       <h1
+        data-testid="exam-question-title"
         className={cn(
-          "text-[0.9rem] font-black leading-[1.45] text-foreground md:text-[1.05rem]",
+          "mx-auto max-w-3xl break-words text-center text-lg font-black leading-8 text-foreground sm:text-xl md:text-[1.35rem]",
           titleClassName,
         )}
       >
         {title}
       </h1>
 
-      <div className="space-y-1.5">
-        {options.map((option) => (
-          <button
+      <div className="space-y-2.5">
+        {options.map((option, index) => (
+          <ExamOptionCard
             key={option.key}
+            index={index}
+            text={option.text}
             disabled={option.disabled}
-            onClick={option.onSelect}
-            className={cn(
-              "w-full rounded-[1rem] border-2 p-3 text-start transition-all",
-              !option.disabled &&
-                !option.selected &&
-                "border-border bg-background/60 hover:-translate-y-0.5 hover:border-primary/60 hover:bg-primary/5 hover:shadow-sm",
-              option.selected &&
-                "border-primary bg-primary/10 shadow-md shadow-primary/10",
-              option.disabled &&
-                !option.selected &&
-                "border-border/40 bg-muted/30 opacity-50",
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className={cn(
-                  "flex h-6.5 w-6.5 flex-shrink-0 items-center justify-center rounded-lg text-[11px] font-black transition-colors",
-                  option.selected
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
-                {option.marker}
-              </span>
-              <span className="flex-1 text-[0.92rem] font-medium leading-6 text-foreground md:text-[0.94rem]">
-                {option.text}
-              </span>
-            </div>
-          </button>
+            state={option.selected ? "selected" : "idle"}
+            onSelect={option.onSelect}
+          />
         ))}
       </div>
 

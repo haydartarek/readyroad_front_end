@@ -103,6 +103,7 @@ test.describe("Public information and legal pages", () => {
       "/terms",
       "/disclaimer",
       "/contact",
+      "/videos",
     ]) {
       await expect(page.locator(`footer a[href="${path}"]`).first()).toBeVisible();
     }
@@ -118,6 +119,9 @@ test.describe("Public information and legal pages", () => {
     expect(headers["content-security-policy"]).toContain("object-src 'none'");
     expect(headers["content-security-policy"]).toContain(
       "frame-ancestors 'self'",
+    );
+    expect(headers["content-security-policy"]).toContain(
+      "frame-src 'self' https://www.youtube-nocookie.com",
     );
     expect(headers["x-content-type-options"]).toBe("nosniff");
     expect(headers["x-frame-options"]).toBe("SAMEORIGIN");

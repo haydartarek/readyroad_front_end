@@ -274,11 +274,11 @@ export default function RandomPracticePage() {
   const backToPracticeContent = isRTL ? (
     <>
       <span>{t("practice_exam.back_practice")}</span>
-      <ArrowRight className="ms-2 h-4 w-4" />
+      <ArrowRight className="h-4 w-4" />
     </>
   ) : (
     <>
-      <ArrowLeft className="me-2 h-4 w-4" />
+      <ArrowLeft className="h-4 w-4" />
       <span>{t("practice_exam.back_practice")}</span>
     </>
   );
@@ -410,16 +410,15 @@ export default function RandomPracticePage() {
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
                     size="lg"
-                    className="h-11 flex-1 rounded-full text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25"
+                    className="shadow-lg shadow-primary/20 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25 sm:flex-1"
                     onClick={() => void startExam()}
                   >
-                    <Timer className="me-2 h-4 w-4" />
+                    <Timer className="h-4 w-4" />
                     {t("practice_exam.start_btn")}
                   </Button>
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-11 rounded-full px-5 text-sm font-semibold"
                     asChild
                   >
                     <Link href="/practice">{backToPracticeContent}</Link>

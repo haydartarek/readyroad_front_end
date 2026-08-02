@@ -9,6 +9,7 @@ const mockSetLanguage = jest.fn();
 const mockRouterPush = jest.fn();
 let mockLanguage: Language = "en";
 let mockIsAuthenticated = true;
+let mockPathname = "/lessons";
 
 const mockUser = {
   userId: 42,
@@ -24,24 +25,28 @@ const mockLabels: Record<Language, Record<string, string>> = {
     "nav.account_menu": "Account menu",
     "nav.dashboard": "Dashboard",
     "nav.profile": "Profile",
+    "nav.videos": "Driving Videos",
     "auth.logout": "Log out",
   },
   nl: {
     "nav.account_menu": "Accountmenu",
     "nav.dashboard": "Dashboard",
     "nav.profile": "Profiel",
+    "nav.videos": "Rijlesvideo’s",
     "auth.logout": "Uitloggen",
   },
   fr: {
     "nav.account_menu": "Menu du compte",
     "nav.dashboard": "Tableau de Bord",
     "nav.profile": "Profil",
+    "nav.videos": "Vidéos de conduite",
     "auth.logout": "Se déconnecter",
   },
   ar: {
     "nav.account_menu": "قائمة الحساب",
     "nav.dashboard": "لوحة التحكم",
     "nav.profile": "الملف الشخصي",
+    "nav.videos": "فيديوهات تعليم السياقة",
     "auth.logout": "تسجيل الخروج",
   },
 };
@@ -76,7 +81,7 @@ jest.mock("@/hooks/use-localized-router", () => ({
 }));
 
 jest.mock("@/hooks/use-route-pathname", () => ({
-  useRoutePathname: () => "/lessons",
+  useRoutePathname: () => mockPathname,
 }));
 
 jest.mock("@/hooks/use-search", () => ({
@@ -163,6 +168,7 @@ beforeAll(() => {
 beforeEach(() => {
   mockLanguage = "en";
   mockIsAuthenticated = true;
+  mockPathname = "/lessons";
   mockLogout.mockClear();
 });
 
@@ -296,6 +302,38 @@ describe("Navbar responsive account navigation", () => {
       screen.getByRole("button", { name: "nav.open_menu" }).parentElement,
     ).toHaveClass("min-[1280px]:hidden");
   });
+
+  test.each([
+    ["en", "Driving Videos", "/videos"],
+    ["nl", "Rijlesvideo’s", "/nl/videos"],
+    ["fr", "Vidéos de conduite", "/fr/videos"],
+    ["ar", "فيديوهات تعليم السياقة", "/ar/videos"],
+  ] as const)(
+    "replaces about with one videos link in the %s desktop and mobile navigation",
+    async (language, label, href) => {
+      mockLanguage = language;
+      mockPathname = "/videos";
+      render(<Navbar />);
+
+      const desktopLink = within(
+        screen.getByTestId("desktop-primary-navigation"),
+      ).getByRole("link", { name: label });
+      expect(desktopLink).toHaveAttribute("href", href);
+      expect(desktopLink).toHaveClass("bg-primary");
+
+      fireEvent.click(screen.getByRole("button", { name: "nav.open_menu" }));
+      const mobileNavigation = within(
+        await screen.findByTestId("mobile-navigation-dialog"),
+      );
+      expect(mobileNavigation.getAllByRole("link", { name: label })).toHaveLength(
+        1,
+      );
+      expect(mobileNavigation.getByRole("link", { name: label })).toHaveAttribute(
+        "href",
+        href,
+      );
+    },
+  );
 
   test("keeps one notification trigger available outside the mobile menu", () => {
     render(<Navbar />);

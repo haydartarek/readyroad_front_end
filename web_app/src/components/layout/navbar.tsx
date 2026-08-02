@@ -55,7 +55,7 @@ const NAV_ITEMS = [
   { name: "nav.dashboard", href: ROUTES.DASHBOARD },
   { name: "nav.exam", href: ROUTES.EXAM },
   { name: "nav.practice", href: ROUTES.PRACTICE },
-  { name: "nav.about", href: "/about" },
+  { name: "nav.videos", href: ROUTES.VIDEOS },
   { name: "nav.faq", href: "/faq" },
 ] as const;
 

@@ -13,7 +13,7 @@ jest.mock("@/lib/server/public-catalog", () => ({
 const mockedGetPublicLessons = jest.mocked(getPublicLessons);
 const mockedGetPublicTrafficSigns = jest.mocked(getPublicTrafficSigns);
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
-const STATIC_PUBLIC_PAGE_COUNT = 10;
+const STATIC_PUBLIC_PAGE_COUNT = 11;
 const LOCALE_COUNT = 4;
 
 describe("public sitemap", () => {
@@ -43,6 +43,10 @@ describe("public sitemap", () => {
     expect(urls).toContain(`${appUrl}/faq`);
     expect(urls).toContain(`${appUrl}/cookie-policy`);
     expect(urls).toContain(`${appUrl}/disclaimer`);
+    expect(urls).toContain(`${appUrl}/videos`);
+    expect(urls).toContain(`${appUrl}/nl/videos`);
+    expect(urls).toContain(`${appUrl}/fr/videos`);
+    expect(urls).toContain(`${appUrl}/ar/videos`);
     expect(urls).toContain(`${appUrl}/traffic-signs/A1a`);
     expect(urls).toContain(`${appUrl}/traffic-signs/B1`);
     expect(urls).toContain(`${appUrl}/lessons/les-0`);

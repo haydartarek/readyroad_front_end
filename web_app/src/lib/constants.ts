@@ -66,6 +66,7 @@ export const ROUTES = {
 
   LESSONS: "/lessons",
   LESSON_DETAIL: (code: string) => `/lessons/${code}`,
+  VIDEOS: "/videos",
 } as const;
 
 // ─── Storage Keys ────────────────────────────────────────

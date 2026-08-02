@@ -18,6 +18,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "connect-src 'self' https://api.readyroad.be",
   "worker-src 'self' blob:",
+  "frame-src 'self' https://www.youtube-nocookie.com",
   "manifest-src 'self'",
   "media-src 'self'",
   "upgrade-insecure-requests",

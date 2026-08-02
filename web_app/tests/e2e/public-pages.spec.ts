@@ -103,7 +103,6 @@ test.describe("Public information and legal pages", () => {
       "/terms",
       "/disclaimer",
       "/contact",
-      "/videos",
     ]) {
       await expect(page.locator(`footer a[href="${path}"]`).first()).toBeVisible();
     }

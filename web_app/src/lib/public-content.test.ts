@@ -29,6 +29,18 @@ const PLACEHOLDER_PATTERN =
 describe("public content governance", () => {
   const content = getAllPublicContent();
 
+  it("identifies ReadyRoad and explains Google sign-in on every homepage", () => {
+    for (const language of LANGUAGES) {
+      expect(ALL_MESSAGES[language]["home.hero.headline"]).toContain(
+        "ReadyRoad",
+      );
+      expect(ALL_MESSAGES[language]["home.hero.subtitle"]).toContain(
+        "ReadyRoad",
+      );
+      expect(ALL_MESSAGES[language]["home.hero.subtitle"]).toContain("Google");
+    }
+  });
+
   it("contains complete, unique metadata in every supported language", () => {
     for (const language of LANGUAGES) {
       const titles = new Set<string>();

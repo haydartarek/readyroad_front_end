@@ -220,7 +220,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       privacy: {
         eyebrow: "Your data and your rights",
         title: "Privacy Policy",
-        lastUpdated: "Last reviewed: 21 July 2026",
+        lastUpdated: "Last reviewed: 3 August 2026",
         intro:
           "This policy explains how ReadyRoad processes personal data when you browse the public website, create an account, sign in, study, or contact us.",
         sections: [
@@ -233,7 +233,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "2. Data we process",
             paragraphs: [
-              "Account data includes username, full name, email address, password hash, role, account status, timestamps, and, when you choose Google sign-in, the limited identity information needed to create or link your account. Learning data includes lesson progress, practice and exam attempts, answers, scores, weak areas, achievements, and notifications.",
+              "Account data includes username, full name, email address, password hash, role, account status, and timestamps. If you choose Google sign-in, ReadyRoad receives only your verified name and email address from Google to create, link, or securely sign in to your account. ReadyRoad does not sell this information or share it with third parties for advertising. Learning data includes lesson progress, practice and exam attempts, answers, scores, weak areas, achievements, and notifications.",
               "Contact data includes the name, email address, subject, and message you submit. Limited technical and security data may be processed in server logs to operate, diagnose, and protect the service. ReadyRoad does not ask for payment-card data.",
             ],
           },
@@ -252,7 +252,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Service providers and transfers",
             paragraphs: [
-              "The production service currently uses Vercel for the web frontend, Render for the backend, Supabase for the PostgreSQL database, and Google only when you choose Google sign-in. These providers process only the data needed for their role and may operate infrastructure in different countries under their own privacy and transfer safeguards. ReadyRoad does not sell personal data and does not use it for third-party advertising.",
+              "The production service uses Hostinger for frontend and backend hosting, Supabase for the PostgreSQL database, and Google only when you choose Google sign-in. Google provides only the verified name and email address needed to create, link, or securely sign in to your ReadyRoad account. These providers process only the data needed for their role and may operate infrastructure in different countries under their own privacy and transfer safeguards. ReadyRoad does not sell personal data or use it for third-party advertising.",
             ],
           },
           {
@@ -662,7 +662,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       privacy: {
         eyebrow: "Uw gegevens en rechten",
         title: "Privacybeleid",
-        lastUpdated: "Laatst nagekeken: 21 juli 2026",
+        lastUpdated: "Laatst nagekeken: 3 augustus 2026",
         intro:
           "Dit beleid legt uit hoe ReadyRoad persoonsgegevens verwerkt wanneer u de openbare website bezoekt, een account maakt, inlogt, studeert of contact opneemt.",
         sections: [
@@ -682,7 +682,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. Doeleinden en rechtsgronden",
             paragraphs: [
-              "Account- en leergegevens zijn nodig om de gevraagde dienst te leveren, gebruikers te authenticeren, voortgang te bewaren en resultaten te tonen. Beveiliging, fraudepreventie, diagnose en inhoudskwaliteit steunen op ons gerechtvaardigd belang in een veilig en betrouwbaar platform. Wettelijke verplichtingen gelden waar nodig. Optionele verwerking waarvoor toestemming vereist is, wordt niet geactiveerd zonder geldige toestemming.",
+              "Account- en leergegevens zijn nodig om de gevraagde dienst te leveren, gebruikers te authenticeren, voortgang te bewaren en resultaten te tonen. Als je Google-login kiest, ontvangt ReadyRoad van Google alleen je geverifieerde naam en e-mailadres om je account aan te maken, te koppelen of je veilig aan te melden. ReadyRoad verkoopt deze gegevens niet en deelt ze niet met derden voor advertenties. Beveiliging, fraudepreventie, diagnose en inhoudskwaliteit steunen op ons gerechtvaardigd belang in een veilig en betrouwbaar platform. Wettelijke verplichtingen gelden waar nodig. Optionele verwerking waarvoor toestemming vereist is, wordt niet geactiveerd zonder geldige toestemming.",
             ],
           },
           {
@@ -694,7 +694,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Dienstverleners en doorgiften",
             paragraphs: [
-              "De productiedienst gebruikt Vercel voor de webfrontend, Render voor de backend, Supabase voor PostgreSQL en Google alleen wanneer u Google-login kiest. Zij verwerken uitsluitend gegevens die voor hun rol nodig zijn en kunnen infrastructuur in verschillende landen gebruiken onder hun eigen privacy- en doorgiftemaatregelen. ReadyRoad verkoopt geen persoonsgegevens en gebruikt ze niet voor advertenties van derden.",
+              "De productiedienst gebruikt Hostinger voor de frontend- en backendhosting, Supabase voor PostgreSQL en Google alleen wanneer je Google-login kiest. Google verstrekt uitsluitend de geverifieerde naam en het e-mailadres die nodig zijn om je ReadyRoad-account aan te maken, te koppelen of je veilig aan te melden. Deze dienstverleners verwerken alleen de gegevens die voor hun rol nodig zijn en kunnen infrastructuur in verschillende landen gebruiken onder hun eigen privacy- en doorgiftemaatregelen. ReadyRoad verkoopt geen persoonsgegevens en gebruikt ze niet voor advertenties van derden.",
             ],
           },
           {
@@ -1104,7 +1104,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       privacy: {
         eyebrow: "Vos données et vos droits",
         title: "Politique de confidentialité",
-        lastUpdated: "Dernière vérification : 21 juillet 2026",
+        lastUpdated: "Dernière vérification : 3 août 2026",
         intro:
           "Cette politique explique comment ReadyRoad traite les données personnelles lorsque vous consultez le site public, créez un compte, vous connectez, étudiez ou nous contactez.",
         sections: [
@@ -1117,7 +1117,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "2. Données traitées",
             paragraphs: [
-              "Les données de compte comprennent nom d'utilisateur, nom complet, e-mail, hash du mot de passe, rôle, état du compte et horodatages. Si vous choisissez Google, seules les données d'identité nécessaires à la création ou à la liaison du compte sont traitées. Les données d'apprentissage comprennent progression, tentatives, réponses, scores, points faibles, réussites et notifications.",
+              "Les données de compte comprennent le nom d'utilisateur, le nom complet, l'adresse e-mail, le hash du mot de passe, le rôle, l'état du compte et les horodatages. Si vous choisissez la connexion Google, ReadyRoad reçoit uniquement votre nom vérifié et votre adresse e-mail afin de créer, lier ou ouvrir votre compte en toute sécurité. ReadyRoad ne vend pas ces informations et ne les partage pas avec des tiers à des fins publicitaires. Les données d'apprentissage comprennent la progression, les tentatives, les réponses, les scores, les points faibles, les réussites et les notifications.",
               "Les données de contact comprennent nom, e-mail, objet et message. Des données techniques et de sécurité limitées peuvent figurer dans les journaux pour exploiter, diagnostiquer et protéger le service. ReadyRoad ne demande aucune donnée de carte bancaire.",
             ],
           },
@@ -1136,7 +1136,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Prestataires et transferts",
             paragraphs: [
-              "Le service utilise Vercel pour le frontend, Render pour le backend, Supabase pour PostgreSQL et Google uniquement si vous choisissez cette connexion. Ils ne traitent que les données nécessaires à leur rôle et peuvent exploiter une infrastructure dans différents pays selon leurs garanties. ReadyRoad ne vend pas de données et ne les utilise pas pour la publicité de tiers.",
+              "Le service utilise Hostinger pour l'hébergement du frontend et du backend, Supabase pour PostgreSQL et Google uniquement si vous choisissez cette connexion. Google fournit seulement le nom vérifié et l'adresse e-mail nécessaires pour créer, lier ou ouvrir votre compte ReadyRoad en toute sécurité. Ces prestataires ne traitent que les données nécessaires à leur rôle et peuvent exploiter une infrastructure dans différents pays selon leurs garanties. ReadyRoad ne vend pas de données et ne les utilise pas pour la publicité de tiers.",
             ],
           },
           {
@@ -1546,7 +1546,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       privacy: {
         eyebrow: "بياناتك وحقوقك",
         title: "سياسة الخصوصية",
-        lastUpdated: "آخر مراجعة: 21 يوليو 2026",
+        lastUpdated: "آخر مراجعة: 3 أغسطس 2026",
         intro:
           "توضح هذه السياسة كيفية معالجة ReadyRoad للبيانات الشخصية عند تصفح الموقع العام أو إنشاء حساب أو تسجيل الدخول أو الدراسة أو التواصل معنا.",
         sections: [
@@ -1559,7 +1559,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "2. البيانات التي نعالجها",
             paragraphs: [
-              "تشمل بيانات الحساب اسم المستخدم والاسم الكامل والبريد الإلكتروني وتجزئة كلمة المرور والدور وحالة الحساب والتواريخ. وعند اختيار Google نعالج بيانات الهوية المحدودة اللازمة لإنشاء الحساب أو ربطه. وتشمل بيانات التعلم تقدم الدروس ومحاولات التدريب والامتحان والإجابات والدرجات ونقاط الضعف والإنجازات والإشعارات.",
+              "تشمل بيانات الحساب اسم المستخدم والاسم الكامل والبريد الإلكتروني وتجزئة كلمة المرور والدور وحالة الحساب والتواريخ. وعند اختيار تسجيل الدخول عبر Google، تستلم ReadyRoad من Google اسمك الموثق وعنوان بريدك الإلكتروني فقط لإنشاء حسابك أو ربطه أو تسجيل دخولك بأمان. لا تبيع ReadyRoad هذه المعلومات ولا تشاركها مع أطراف أخرى لأغراض إعلانية. وتشمل بيانات التعلم تقدم الدروس ومحاولات التدريب والامتحان والإجابات والدرجات ونقاط الضعف والإنجازات والإشعارات.",
               "تشمل بيانات التواصل الاسم والبريد والموضوع والرسالة. وقد تُعالج بيانات تقنية وأمنية محدودة في سجلات الخادم لتشغيل الخدمة وتشخيصها وحمايتها. لا تطلب ReadyRoad بيانات بطاقات الدفع.",
             ],
           },
@@ -1578,7 +1578,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. مقدمو الخدمة ونقل البيانات",
             paragraphs: [
-              "تستخدم الخدمة Vercel للواجهة، وRender للخادم الخلفي، وSupabase لقاعدة PostgreSQL، وGoogle فقط عند اختيار تسجيل الدخول به. يعالج كل مزود البيانات اللازمة لدوره وقد يشغّل بنية في بلدان مختلفة وفق ضماناته. لا تبيع ReadyRoad البيانات الشخصية ولا تستخدمها لإعلانات الغير.",
+              "تستخدم الخدمة Hostinger لاستضافة الواجهة والخادم الخلفي، وSupabase لقاعدة PostgreSQL، وGoogle فقط عند اختيار تسجيل الدخول به. يزوّد Google منصة ReadyRoad بالاسم الموثق وعنوان البريد الإلكتروني اللازمين فقط لإنشاء الحساب أو ربطه أو تسجيل الدخول إليه بأمان. يعالج كل مزود البيانات اللازمة لدوره وقد يشغّل بنية في بلدان مختلفة وفق ضماناته. لا تبيع ReadyRoad البيانات الشخصية ولا تستخدمها لإعلانات الغير.",
             ],
           },
           {

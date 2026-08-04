@@ -43,9 +43,13 @@ describe("Google Analytics consent synchronization", () => {
       "src",
       `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`,
     );
+    const commands = analyticsWindow.dataLayer?.map((entry) =>
+      Array.from(entry as ArrayLike<unknown>),
+    );
     expect(
-      analyticsWindow.dataLayer,
-    ).toContainEqual([
+      analyticsWindow.dataLayer?.every((entry) => !Array.isArray(entry)),
+    ).toBe(true);
+    expect(commands).toContainEqual([
       "config",
       GOOGLE_ANALYTICS_ID,
       {

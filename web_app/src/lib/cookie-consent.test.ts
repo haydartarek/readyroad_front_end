@@ -81,7 +81,11 @@ describe("cookie consent model", () => {
 
     applyGoogleConsentMode(createConsentRecord({ analytics: true }));
     const dataLayer = (window as Window & { dataLayer?: unknown[] }).dataLayer;
-    expect(dataLayer).toContainEqual([
+    const commands = dataLayer?.map((entry) =>
+      Array.from(entry as ArrayLike<unknown>),
+    );
+    expect(dataLayer?.every((entry) => !Array.isArray(entry))).toBe(true);
+    expect(commands).toContainEqual([
       "consent",
       "update",
       expect.objectContaining({ analytics_storage: "granted" }),

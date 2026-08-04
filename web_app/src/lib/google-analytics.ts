@@ -22,8 +22,10 @@ export function synchronizeGoogleAnalytics(
   if (!analyticsEnabled) return;
 
   analyticsWindow.dataLayer ??= [];
-  analyticsWindow.gtag ??= (...args: unknown[]) => {
-    analyticsWindow.dataLayer?.push(args);
+  analyticsWindow.gtag ??= function () {
+    // gtag.js expects pre-load commands to be queued as Arguments objects.
+    // eslint-disable-next-line prefer-rest-params
+    analyticsWindow.dataLayer?.push(arguments);
   };
 
   if (document.getElementById(GOOGLE_ANALYTICS_SCRIPT_ID)) return;

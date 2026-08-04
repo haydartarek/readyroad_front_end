@@ -101,8 +101,10 @@ export function applyGoogleConsentMode(
 
   const consentWindow = window as ConsentWindow;
   consentWindow.dataLayer ??= [];
-  consentWindow.gtag ??= (...args: unknown[]) => {
-    consentWindow.dataLayer?.push(args);
+  consentWindow.gtag ??= function () {
+    // gtag.js expects pre-load commands to be queued as Arguments objects.
+    // eslint-disable-next-line prefer-rest-params
+    consentWindow.dataLayer?.push(arguments);
   };
   consentWindow.gtag("consent", mode, getGoogleConsentState(consent));
 }

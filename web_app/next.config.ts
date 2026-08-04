@@ -3,8 +3,8 @@ import path from "path";
 
 const scriptSource =
   process.env.NODE_ENV === "production"
-    ? "script-src 'self' 'unsafe-inline'"
-    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+    ? "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -16,7 +16,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://api.readyroad.be",
+  "connect-src 'self' https://api.readyroad.be https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com",
   "worker-src 'self' blob:",
   "frame-src 'self' https://www.youtube-nocookie.com",
   "manifest-src 'self'",

@@ -1069,6 +1069,14 @@ export function ExamResultsPageContent() {
                                               : language === "fr"
                                                 ? question.correctChoiceFr
                                                 : question.correctChoiceEn;
+                                        const selectedText =
+                                          language === "ar"
+                                            ? question.selectedChoiceAr
+                                            : language === "nl"
+                                              ? question.selectedChoiceNl
+                                              : language === "fr"
+                                                ? question.selectedChoiceFr
+                                                : question.selectedChoiceEn;
                                         const explanationText =
                                           language === "ar"
                                             ? question.explanationAr
@@ -1134,9 +1142,7 @@ export function ExamResultsPageContent() {
                                                       : "incorrect"
                                                 }
                                               >
-                                                {question.isCorrect
-                                                  ? correctText || "—"
-                                                  : "—"}
+                                                {selectedText || "—"}
                                               </ResultAnswerBlock>
 
                                               {!question.isCorrect &&

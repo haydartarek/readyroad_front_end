@@ -99,7 +99,7 @@ test.describe("Milestone 5 cookie consent management", () => {
       page.getByRole("region", { name: "Cookie consent" }),
     ).toBeHidden();
     await expect.poll(() => readConsent(page)).toMatchObject({
-      version: 1,
+      version: 2,
       necessary: true,
       preferences: false,
       analytics: false,
@@ -117,6 +117,11 @@ test.describe("Milestone 5 cookie consent management", () => {
   }) => {
     await useAnonymousSession(page);
     await page.goto("/");
+    const analyticsRequest = page.waitForRequest((request) =>
+      request.url().startsWith(
+        "https://www.googletagmanager.com/gtag/js?id=G-1P4EJH6D2T",
+      ),
+    );
     await page.getByRole("button", { name: "Accept all" }).click();
 
     await expect.poll(() => readConsent(page)).toMatchObject({
@@ -138,6 +143,37 @@ test.describe("Milestone 5 cookie consent management", () => {
         ad_personalization: "denied",
       },
     ]);
+    await expect(
+      page.locator("#readyroad-google-analytics"),
+    ).toHaveCount(1);
+    expect((await analyticsRequest).url()).toContain("G-1P4EJH6D2T");
+  });
+
+  test("a saved analytics decision loads one GA4 tag on every locale route", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        "readyroad_cookie_consent",
+        JSON.stringify({
+          version: 2,
+          timestamp: "2026-08-03T12:00:00.000Z",
+          necessary: true,
+          preferences: false,
+          analytics: true,
+          marketing: false,
+        }),
+      );
+    });
+    await useAnonymousSession(page);
+
+    for (const pathname of ["/", "/ar", "/nl", "/fr"]) {
+      await page.goto(pathname);
+      await expect(page.locator("#readyroad-google-analytics")).toHaveCount(1);
+      await expect(
+        page.getByRole("region", { name: /cookie|الموافقة/i }),
+      ).toHaveCount(0);
+    }
   });
 
   test("customization enables preferences while analytics remains blocked", async ({
@@ -191,7 +227,7 @@ test.describe("Milestone 5 cookie consent management", () => {
       window.localStorage.setItem(
         "readyroad_cookie_consent",
         JSON.stringify({
-          version: 0,
+          version: 1,
           timestamp: "2026-07-21T12:00:00.000Z",
           necessary: true,
           preferences: true,

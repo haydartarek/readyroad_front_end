@@ -1,5 +1,5 @@
 export const COOKIE_CONSENT_STORAGE_KEY = "readyroad_cookie_consent";
-export const COOKIE_CONSENT_VERSION = 1;
+export const COOKIE_CONSENT_VERSION = 2;
 export const COOKIE_CONSENT_CHANGED_EVENT = "readyroad:consent-changed";
 export const MARKETING_SERVICES_AVAILABLE = false;
 
@@ -28,6 +28,7 @@ type ConsentWindow = Window & {
 };
 
 const OPTIONAL_STORAGE_KEYS = ["readyroad_theme"] as const;
+const GOOGLE_ANALYTICS_COOKIE_PATTERN = /^_(?:ga(?:_.+)?|gid|gat(?:_.+)?)$/;
 
 export function createConsentRecord(
   selection: Partial<ConsentSelection> = {},
@@ -114,5 +115,43 @@ export function clearDisallowedOptionalStorage(
 
   for (const key of OPTIONAL_STORAGE_KEYS) {
     storage.removeItem(key);
+  }
+}
+
+export function clearDisallowedAnalyticsCookies(
+  consent: CookieConsentRecord | null,
+): void {
+  if (
+    consent?.analytics ||
+    typeof document === "undefined" ||
+    typeof window === "undefined"
+  ) {
+    return;
+  }
+
+  const cookieNames = document.cookie
+    .split(";")
+    .map((cookie) => cookie.split("=", 1)[0]?.trim())
+    .filter(
+      (name): name is string =>
+        Boolean(name) && GOOGLE_ANALYTICS_COOKIE_PATTERN.test(name),
+    );
+
+  const hostname = window.location.hostname;
+  const domainCandidates = new Set<string>();
+  if (hostname && hostname !== "localhost" && !/^\d+(?:\.\d+){3}$/.test(hostname)) {
+    domainCandidates.add(hostname);
+    const labels = hostname.split(".");
+    if (labels.length >= 2) {
+      domainCandidates.add(`.${labels.slice(-2).join(".")}`);
+    }
+  }
+
+  for (const name of cookieNames) {
+    const expired = `${name}=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax`;
+    document.cookie = expired;
+    for (const domain of domainCandidates) {
+      document.cookie = `${expired}; Domain=${domain}; Secure`;
+    }
   }
 }

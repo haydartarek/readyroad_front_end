@@ -1,5 +1,6 @@
 import {
   applyGoogleConsentMode,
+  clearDisallowedAnalyticsCookies,
   clearDisallowedOptionalStorage,
   COOKIE_CONSENT_STORAGE_KEY,
   COOKIE_CONSENT_VERSION,
@@ -101,5 +102,18 @@ describe("cookie consent model", () => {
       window.localStorage,
     );
     expect(window.localStorage.getItem("readyroad_theme")).toBe("dark");
+  });
+
+  test("removes Google Analytics cookies after rejection or withdrawal", () => {
+    document.cookie = "_ga=client-id; path=/";
+    document.cookie = "_ga_1P4EJH6D2T=session-state; path=/";
+    document.cookie = "readyroad_locale=en; path=/";
+
+    clearDisallowedAnalyticsCookies(
+      createConsentRecord({ analytics: false }),
+    );
+
+    expect(document.cookie).not.toMatch(/(?:^|;\s*)_ga(?:_|=)/);
+    expect(document.cookie).toContain("readyroad_locale=en");
   });
 });

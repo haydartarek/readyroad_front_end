@@ -10,8 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import { useLanguage } from "@/contexts/language-context";
+import { synchronizeGoogleAnalytics } from "@/lib/google-analytics";
 import {
   applyGoogleConsentMode,
+  clearDisallowedAnalyticsCookies,
   clearDisallowedOptionalStorage,
   COOKIE_CONSENT_CHANGED_EVENT,
   COOKIE_CONSENT_STORAGE_KEY,
@@ -56,6 +58,8 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
   const synchronizeConsent = useCallback((next: CookieConsentRecord | null) => {
     setConsent(next);
     applyGoogleConsentMode(next);
+    synchronizeGoogleAnalytics(next);
+    clearDisallowedAnalyticsCookies(next);
     try {
       clearDisallowedOptionalStorage(next, window.localStorage);
     } catch {

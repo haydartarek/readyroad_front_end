@@ -13,7 +13,7 @@ export async function seedCookieConsent(
     window.localStorage.setItem(
       "readyroad_cookie_consent",
       JSON.stringify({
-        version: 1,
+        version: 2,
         timestamp: "2026-07-21T12:00:00.000Z",
         necessary: true,
         preferences: selection.preferences ?? false,

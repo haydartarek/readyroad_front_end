@@ -171,6 +171,10 @@ export interface SignRandomPracticeQuestionResult {
   questionFr: string;
   questionAr: string;
   selectedChoiceId: number | null;
+  selectedChoiceNl: string | null;
+  selectedChoiceEn: string | null;
+  selectedChoiceFr: string | null;
+  selectedChoiceAr: string | null;
   correctChoiceId: number | null;
   correctChoiceNl: string | null;
   correctChoiceEn: string | null;

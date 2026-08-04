@@ -113,7 +113,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       cookies: {
         title: "Cookie Policy",
         description:
-          "See which essential cookies and browser storage ReadyRoad uses for login security, language, theme, and Google sign-in.",
+          "See which essential and optional cookies ReadyRoad uses for login security, language, preferences, Google sign-in, and consent-based analytics.",
         openGraphTitle: "ReadyRoad Cookie Policy",
         openGraphDescription:
           "A transparent inventory of ReadyRoad cookies, browser storage, purposes, and retention periods.",
@@ -234,7 +234,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             title: "2. Data we process",
             paragraphs: [
               "Account data includes username, full name, email address, password hash, role, account status, and timestamps. If you choose Google sign-in, ReadyRoad receives only your verified name and email address from Google to create, link, or securely sign in to your account. ReadyRoad does not sell this information or share it with third parties for advertising. Learning data includes lesson progress, practice and exam attempts, answers, scores, weak areas, achievements, and notifications.",
-              "Contact data includes the name, email address, subject, and message you submit. Limited technical and security data may be processed in server logs to operate, diagnose, and protect the service. ReadyRoad does not ask for payment-card data.",
+              "Contact data includes the name, email address, subject, and message you submit. Limited technical and security data may be processed in server logs to operate, diagnose, and protect the service. If you consent to Analytics, Google Analytics processes pseudonymous browser, device, page, session, interaction, traffic-source, and approximate-location data; ReadyRoad does not send it your account name, email address, or internal user ID. ReadyRoad does not ask for payment-card data.",
             ],
           },
           {
@@ -252,7 +252,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Service providers and transfers",
             paragraphs: [
-              "The production service uses Hostinger for frontend and backend hosting, Supabase for the PostgreSQL database, and Google only when you choose Google sign-in. Google provides only the verified name and email address needed to create, link, or securely sign in to your ReadyRoad account. These providers process only the data needed for their role and may operate infrastructure in different countries under their own privacy and transfer safeguards. ReadyRoad does not sell personal data or use it for third-party advertising.",
+              "The production service uses Hostinger for frontend and backend hosting and Supabase for the PostgreSQL database. Google provides optional sign-in and, only after Analytics consent, Google Analytics usage measurement. Sign-in provides the verified name and email address needed to create, link, or securely access your account; Analytics receives no ReadyRoad account identity. These providers may operate infrastructure in different countries under their own privacy and transfer safeguards. ReadyRoad does not sell personal data or use it for third-party advertising.",
             ],
           },
           {
@@ -290,9 +290,9 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       cookies: {
         eyebrow: "Browser storage transparency",
         title: "Cookie Policy",
-        lastUpdated: "Last reviewed: 21 July 2026",
+        lastUpdated: "Last reviewed: 3 August 2026",
         intro:
-          "ReadyRoad uses necessary cookies and browser storage for security, sign-in, language, and consent choices. Optional preference storage requires consent. Analytics and marketing services are not currently active.",
+          "ReadyRoad uses necessary cookies and browser storage for security, sign-in, language, and consent choices. Optional preferences and Google Analytics remain disabled until you consent. Marketing services are not used.",
         sections: [
           {
             title: "1. What this policy covers",
@@ -315,20 +315,24 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. Browser storage",
             paragraphs: [
-              "readyroad_locale keeps the selected language available on the client. readyroad_cookie_consent stores version 1, a timestamp, and the four category choices without personal data. session_expired is a one-time tab-session flag. current_exam is transient exam compatibility state and is removed when invalid or complete.",
+              "readyroad_locale keeps the selected language available on the client. readyroad_cookie_consent stores version 2, a timestamp, and the four category choices without personal data. session_expired is a one-time tab-session flag. current_exam is transient exam compatibility state and is removed when invalid or complete.",
               "readyroad_theme stores the light or dark appearance only after Preferences consent and is removed when that consent is withdrawn. These browser values do not contain the JWT or your password.",
             ],
           },
           {
             title: "4. Analytics and marketing",
             paragraphs: [
-              "ReadyRoad does not currently load Google Analytics, Vercel Analytics, advertising, marketing, social-media pixels, or profiling resources. The consent system is ready for Google Consent Mode v2, but it has no Measurement ID and sends no Google request. Choosing Analytics records the permission for a future integration; it does not activate a service today. External social links load only after you open them.",
+              "ReadyRoad uses Google Analytics 4 with Measurement ID G-1P4EJH6D2T only after you enable Analytics. It measures page views, sessions, approximate location, browser and device details, traffic sources, and interactions. Before consent, Google Analytics scripts and requests are not loaded. Google Consent Mode v2 keeps analytics and advertising storage denied by default; advertising, remarketing, social-media pixels, and profiling are not used. Analytics consent can create the following first-party cookies, which are removed when you withdraw that consent.",
+            ],
+            items: [
+              "_ga — ReadyRoad domain, path /, distinguishes browsers for aggregate usage measurement, up to 2 years or until Analytics consent is withdrawn.",
+              "_ga_1P4EJH6D2T — ReadyRoad domain, path /, maintains GA4 session state, up to 2 years or until Analytics consent is withdrawn.",
             ],
           },
           {
             title: "5. Consent and future changes",
             paragraphs: [
-              "Strictly necessary storage remains active so the requested service can work. The banner offers equally accessible Accept all, Reject optional, and Customize choices. Consent version 1 stores the decision locally. If the version changes, ReadyRoad asks again. Optional services may load only after the matching category is accepted.",
+              "Strictly necessary storage remains active so the requested service can work. The banner offers equally accessible Accept all, Reject optional, and Customize choices. Consent version 2 stores the decision locally. If the version changes, ReadyRoad asks again. Optional services may load only after the matching category is accepted.",
             ],
             references: [
               {
@@ -341,7 +345,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "6. Managing storage",
             paragraphs: [
-              "Use Cookie settings in the footer at any time to review, change, or withdraw optional consent. Withdrawal removes disallowed preference storage and keeps necessary functions available. Logging out removes authentication and CSRF cookies; OAuth cookies are removed after callback. You may also clear browser data, which resets the saved decision.",
+              "Use Cookie settings in the footer at any time to review, change, or withdraw optional consent. Withdrawal removes disallowed preference storage and Google Analytics cookies while necessary functions remain available. Logging out removes authentication and CSRF cookies; OAuth cookies are removed after callback. You may also clear browser data, which resets the saved decision.",
             ],
           },
         ],
@@ -555,7 +559,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       cookies: {
         title: "Cookiebeleid",
         description:
-          "Bekijk welke noodzakelijke cookies en browseropslag ReadyRoad gebruikt voor inlogbeveiliging, taal, thema en Google-login.",
+          "Bekijk welke noodzakelijke en optionele cookies ReadyRoad gebruikt voor inlogbeveiliging, taal, voorkeuren, Google-login en analyse na toestemming.",
         openGraphTitle: "Cookiebeleid van ReadyRoad",
         openGraphDescription:
           "Een transparant overzicht van ReadyRoad-cookies, browseropslag, doeleinden en bewaartermijnen.",
@@ -676,7 +680,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             title: "2. Gegevens die we verwerken",
             paragraphs: [
               "Accountgegevens omvatten gebruikersnaam, volledige naam, e-mailadres, wachtwoordhash, rol, accountstatus en tijdstippen. Bij Google-login verwerken we alleen de identiteitsgegevens die nodig zijn om het account te maken of te koppelen. Leergegevens omvatten lesvoortgang, oefen- en examenpogingen, antwoorden, scores, zwakke punten, prestaties en meldingen.",
-              "Contactgegevens omvatten naam, e-mailadres, onderwerp en bericht. Beperkte technische en beveiligingsgegevens kunnen in serverlogs worden verwerkt om de dienst te beheren, onderzoeken en beschermen. ReadyRoad vraagt niet om betaalkaartgegevens.",
+              "Contactgegevens omvatten naam, e-mailadres, onderwerp en bericht. Beperkte technische en beveiligingsgegevens kunnen in serverlogs worden verwerkt om de dienst te beheren, onderzoeken en beschermen. Als u toestemming geeft voor Analyse, verwerkt Google Analytics pseudonieme browser-, apparaat-, pagina-, sessie-, interactie-, verkeersbron- en locatiegegevens bij benadering; ReadyRoad stuurt geen accountnaam, e-mailadres of interne gebruikers-ID mee. ReadyRoad vraagt niet om betaalkaartgegevens.",
             ],
           },
           {
@@ -694,7 +698,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Dienstverleners en doorgiften",
             paragraphs: [
-              "De productiedienst gebruikt Hostinger voor de frontend- en backendhosting, Supabase voor PostgreSQL en Google alleen wanneer je Google-login kiest. Google verstrekt uitsluitend de geverifieerde naam en het e-mailadres die nodig zijn om je ReadyRoad-account aan te maken, te koppelen of je veilig aan te melden. Deze dienstverleners verwerken alleen de gegevens die voor hun rol nodig zijn en kunnen infrastructuur in verschillende landen gebruiken onder hun eigen privacy- en doorgiftemaatregelen. ReadyRoad verkoopt geen persoonsgegevens en gebruikt ze niet voor advertenties van derden.",
+              "De productiedienst gebruikt Hostinger voor frontend- en backendhosting en Supabase voor PostgreSQL. Google verzorgt de optionele login en, uitsluitend na toestemming voor Analyse, gebruiksmeting met Google Analytics. De login levert de geverifieerde naam en het e-mailadres voor het account; Analytics ontvangt geen ReadyRoad-accountidentiteit. Deze dienstverleners kunnen infrastructuur in verschillende landen gebruiken onder hun eigen privacy- en doorgiftemaatregelen. ReadyRoad verkoopt geen persoonsgegevens en gebruikt ze niet voor advertenties van derden.",
             ],
           },
           {
@@ -732,9 +736,9 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       cookies: {
         eyebrow: "Transparantie over browseropslag",
         title: "Cookiebeleid",
-        lastUpdated: "Laatst nagekeken: 21 juli 2026",
+        lastUpdated: "Laatst nagekeken: 3 augustus 2026",
         intro:
-          "ReadyRoad gebruikt noodzakelijke cookies en browseropslag voor beveiliging, inloggen, taal en toestemmingskeuzes. Optionele voorkeursopslag vereist toestemming. Analyse- en marketingdiensten zijn momenteel niet actief.",
+          "ReadyRoad gebruikt noodzakelijke cookies en browseropslag voor beveiliging, inloggen, taal en toestemmingskeuzes. Optionele voorkeuren en Google Analytics blijven uitgeschakeld totdat u toestemming geeft. Marketingdiensten worden niet gebruikt.",
         sections: [
           {
             title: "1. Reikwijdte",
@@ -757,20 +761,24 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. Browseropslag",
             paragraphs: [
-              "readyroad_locale houdt de gekozen taal op de client beschikbaar. readyroad_cookie_consent bewaart versie 1, een tijdstip en de vier categorie-keuzes zonder persoonsgegevens. session_expired is een eenmalige vlag voor de tabsessie. current_exam is tijdelijke compatibiliteitsstatus en wordt verwijderd wanneer die ongeldig of voltooid is.",
+              "readyroad_locale houdt de gekozen taal op de client beschikbaar. readyroad_cookie_consent bewaart versie 2, een tijdstip en de vier categorie-keuzes zonder persoonsgegevens. session_expired is een eenmalige vlag voor de tabsessie. current_exam is tijdelijke compatibiliteitsstatus en wordt verwijderd wanneer die ongeldig of voltooid is.",
               "readyroad_theme bewaart de lichte of donkere weergave alleen na toestemming voor Voorkeuren en wordt verwijderd wanneer die toestemming wordt ingetrokken. Deze waarden bevatten geen JWT of wachtwoord.",
             ],
           },
           {
             title: "4. Analyse en marketing",
             paragraphs: [
-              "ReadyRoad laadt momenteel geen Google Analytics, Vercel Analytics, advertenties, marketing, socialmediapixels of profilering. Het systeem is voorbereid op Google Consent Mode v2, maar heeft geen Measurement ID en verstuurt geen Google-verzoek. Analyse kiezen bewaart alleen toestemming voor een toekomstige integratie. Externe sociale links laden pas na uw klik.",
+              "ReadyRoad gebruikt Google Analytics 4 met Measurement ID G-1P4EJH6D2T alleen nadat u Analyse inschakelt. Het meet paginaweergaven, sessies, locatie bij benadering, browser- en apparaatgegevens, verkeersbronnen en interacties. Vóór toestemming worden geen Google Analytics-scripts of -verzoeken geladen. Google Consent Mode v2 weigert analytische en advertentieopslag standaard; advertenties, remarketing, socialmediapixels en profilering worden niet gebruikt. Toestemming voor Analyse kan de volgende first-partycookies aanmaken; bij intrekking worden ze verwijderd.",
+            ],
+            items: [
+              "_ga — ReadyRoad-domein, pad /, onderscheidt browsers voor geaggregeerde gebruiksmeting, maximaal 2 jaar of tot intrekking van toestemming voor Analyse.",
+              "_ga_1P4EJH6D2T — ReadyRoad-domein, pad /, bewaart de GA4-sessiestatus, maximaal 2 jaar of tot intrekking van toestemming voor Analyse.",
             ],
           },
           {
             title: "5. Toestemming en toekomstige wijzigingen",
             paragraphs: [
-              "Strikt noodzakelijke opslag blijft actief om de gevraagde dienst te leveren. De banner biedt even toegankelijke keuzes voor alles accepteren, optionele weigeren en aanpassen. Toestemmingsversie 1 bewaart de keuze lokaal. Bij een nieuwe versie vraagt ReadyRoad opnieuw. Een optionele dienst mag pas na toestemming voor de juiste categorie laden.",
+              "Strikt noodzakelijke opslag blijft actief om de gevraagde dienst te leveren. De banner biedt even toegankelijke keuzes voor alles accepteren, optionele weigeren en aanpassen. Toestemmingsversie 2 bewaart de keuze lokaal. Bij een nieuwe versie vraagt ReadyRoad opnieuw. Een optionele dienst mag pas na toestemming voor de juiste categorie laden.",
             ],
             references: [
               {
@@ -783,7 +791,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "6. Opslag beheren",
             paragraphs: [
-              "Gebruik Cookie-instellingen in de footer om toestemming op elk moment te bekijken, wijzigen of intrekken. Intrekken verwijdert niet-toegestane voorkeursopslag en laat noodzakelijke functies werken. Uitloggen verwijdert authenticatie- en CSRF-cookies; OAuth-cookies verdwijnen na de callback. Browsergegevens wissen reset ook de opgeslagen keuze.",
+              "Gebruik Cookie-instellingen in de footer om toestemming op elk moment te bekijken, wijzigen of intrekken. Intrekken verwijdert niet-toegestane voorkeursopslag en Google Analytics-cookies, terwijl noodzakelijke functies blijven werken. Uitloggen verwijdert authenticatie- en CSRF-cookies; OAuth-cookies verdwijnen na de callback. Browsergegevens wissen reset ook de opgeslagen keuze.",
             ],
           },
         ],
@@ -997,7 +1005,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       cookies: {
         title: "Politique relative aux cookies",
         description:
-          "Consultez les cookies essentiels et le stockage navigateur utilisés par ReadyRoad pour la connexion, la langue, le thème et Google.",
+          "Consultez les cookies nécessaires et facultatifs utilisés par ReadyRoad pour la connexion, la langue, les préférences, Google et l'analyse soumise au consentement.",
         openGraphTitle: "Politique relative aux cookies ReadyRoad",
         openGraphDescription:
           "Inventaire transparent des cookies ReadyRoad, du stockage navigateur, de leurs finalités et durées.",
@@ -1118,7 +1126,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             title: "2. Données traitées",
             paragraphs: [
               "Les données de compte comprennent le nom d'utilisateur, le nom complet, l'adresse e-mail, le hash du mot de passe, le rôle, l'état du compte et les horodatages. Si vous choisissez la connexion Google, ReadyRoad reçoit uniquement votre nom vérifié et votre adresse e-mail afin de créer, lier ou ouvrir votre compte en toute sécurité. ReadyRoad ne vend pas ces informations et ne les partage pas avec des tiers à des fins publicitaires. Les données d'apprentissage comprennent la progression, les tentatives, les réponses, les scores, les points faibles, les réussites et les notifications.",
-              "Les données de contact comprennent nom, e-mail, objet et message. Des données techniques et de sécurité limitées peuvent figurer dans les journaux pour exploiter, diagnostiquer et protéger le service. ReadyRoad ne demande aucune donnée de carte bancaire.",
+              "Les données de contact comprennent nom, e-mail, objet et message. Des données techniques et de sécurité limitées peuvent figurer dans les journaux pour exploiter, diagnostiquer et protéger le service. Si vous consentez à l'Analyse, Google Analytics traite des données pseudonymes relatives au navigateur, à l'appareil, aux pages, aux sessions, aux interactions, aux sources de trafic et à la localisation approximative ; ReadyRoad ne lui envoie ni nom de compte, ni adresse e-mail, ni identifiant utilisateur interne. ReadyRoad ne demande aucune donnée de carte bancaire.",
             ],
           },
           {
@@ -1136,7 +1144,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Prestataires et transferts",
             paragraphs: [
-              "Le service utilise Hostinger pour l'hébergement du frontend et du backend, Supabase pour PostgreSQL et Google uniquement si vous choisissez cette connexion. Google fournit seulement le nom vérifié et l'adresse e-mail nécessaires pour créer, lier ou ouvrir votre compte ReadyRoad en toute sécurité. Ces prestataires ne traitent que les données nécessaires à leur rôle et peuvent exploiter une infrastructure dans différents pays selon leurs garanties. ReadyRoad ne vend pas de données et ne les utilise pas pour la publicité de tiers.",
+              "Le service utilise Hostinger pour l'hébergement du frontend et du backend et Supabase pour PostgreSQL. Google fournit la connexion facultative et, uniquement après consentement à l'Analyse, la mesure d'usage avec Google Analytics. La connexion transmet le nom vérifié et l'adresse e-mail nécessaires au compte ; Analytics ne reçoit aucune identité de compte ReadyRoad. Ces prestataires peuvent exploiter une infrastructure dans différents pays selon leurs garanties. ReadyRoad ne vend pas de données et ne les utilise pas pour la publicité de tiers.",
             ],
           },
           {
@@ -1174,9 +1182,9 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       cookies: {
         eyebrow: "Transparence du stockage navigateur",
         title: "Politique relative aux cookies",
-        lastUpdated: "Dernière vérification : 21 juillet 2026",
+        lastUpdated: "Dernière vérification : 3 août 2026",
         intro:
-          "ReadyRoad utilise les cookies et le stockage nécessaires à la sécurité, à la connexion, à la langue et aux choix de consentement. Le stockage facultatif des préférences exige un consentement. Aucun service analytique ou marketing n'est actif.",
+          "ReadyRoad utilise les cookies et le stockage nécessaires à la sécurité, à la connexion, à la langue et aux choix de consentement. Les préférences facultatives et Google Analytics restent désactivés jusqu'à votre consentement. Aucun service marketing n'est utilisé.",
         sections: [
           {
             title: "1. Champ d'application",
@@ -1199,20 +1207,24 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. Stockage du navigateur",
             paragraphs: [
-              "readyroad_locale conserve la langue côté client. readyroad_cookie_consent enregistre la version 1, un horodatage et les quatre choix de catégorie sans donnée personnelle. session_expired est un indicateur ponctuel limité à l'onglet. current_exam est un état transitoire de compatibilité supprimé lorsqu'il est invalide ou terminé.",
+              "readyroad_locale conserve la langue côté client. readyroad_cookie_consent enregistre la version 2, un horodatage et les quatre choix de catégorie sans donnée personnelle. session_expired est un indicateur ponctuel limité à l'onglet. current_exam est un état transitoire de compatibilité supprimé lorsqu'il est invalide ou terminé.",
               "readyroad_theme conserve l'affichage clair ou sombre uniquement après consentement aux Préférences et est supprimé au retrait. Ces valeurs ne contiennent ni JWT ni mot de passe.",
             ],
           },
           {
             title: "4. Analyse et marketing",
             paragraphs: [
-              "ReadyRoad ne charge actuellement ni Google Analytics, ni Vercel Analytics, ni publicité, marketing, pixel social ou profilage. Le système est prêt pour Google Consent Mode v2, sans Measurement ID ni requête Google. Choisir Analyse enregistre seulement l'autorisation pour une intégration future. Les liens sociaux ne chargent leur plateforme qu'après votre clic.",
+              "ReadyRoad utilise Google Analytics 4 avec l'identifiant de mesure G-1P4EJH6D2T uniquement après activation de l'Analyse. Il mesure les pages vues, les sessions, la localisation approximative, les informations sur le navigateur et l'appareil, les sources de trafic et les interactions. Avant votre consentement, aucun script ni aucune requête Google Analytics n'est chargé. Google Consent Mode v2 refuse par défaut le stockage analytique et publicitaire ; ReadyRoad n'utilise ni publicité, ni remarketing, ni pixel social, ni profilage. Le consentement à l'Analyse peut créer les cookies internes suivants, supprimés lors du retrait.",
+            ],
+            items: [
+              "_ga — domaine ReadyRoad, chemin /, distingue les navigateurs pour la mesure agrégée de l'usage, jusqu'à 2 ans ou jusqu'au retrait du consentement à l'Analyse.",
+              "_ga_1P4EJH6D2T — domaine ReadyRoad, chemin /, conserve l'état de session GA4, jusqu'à 2 ans ou jusqu'au retrait du consentement à l'Analyse.",
             ],
           },
           {
             title: "5. Consentement et évolutions",
             paragraphs: [
-              "Le stockage strictement nécessaire reste actif pour fournir le service demandé. La bannière propose de manière équivalente Tout accepter, Refuser les options et Personnaliser. La version 1 conserve le choix localement ; une nouvelle version déclenche une nouvelle demande. Aucun service facultatif ne peut charger sans la catégorie correspondante.",
+              "Le stockage strictement nécessaire reste actif pour fournir le service demandé. La bannière propose de manière équivalente Tout accepter, Refuser les options et Personnaliser. La version 2 conserve le choix localement ; une nouvelle version déclenche une nouvelle demande. Aucun service facultatif ne peut charger sans la catégorie correspondante.",
             ],
             references: [
               {
@@ -1225,7 +1237,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "6. Gérer le stockage",
             paragraphs: [
-              "Utilisez Paramètres des cookies dans le pied de page pour revoir, modifier ou retirer votre consentement. Le retrait supprime le stockage facultatif refusé sans interrompre les fonctions nécessaires. La déconnexion supprime les cookies d'authentification et CSRF ; les cookies OAuth sont effacés après le retour. Effacer les données du navigateur réinitialise aussi le choix.",
+              "Utilisez Paramètres des cookies dans le pied de page pour revoir, modifier ou retirer votre consentement. Le retrait supprime le stockage facultatif refusé et les cookies Google Analytics sans interrompre les fonctions nécessaires. La déconnexion supprime les cookies d'authentification et CSRF ; les cookies OAuth sont effacés après le retour. Effacer les données du navigateur réinitialise aussi le choix.",
             ],
           },
         ],
@@ -1439,7 +1451,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       cookies: {
         title: "سياسة ملفات الارتباط",
         description:
-          "اطّلع على ملفات الارتباط والتخزين الضروريين لتأمين الدخول واللغة والمظهر وتسجيل الدخول عبر Google.",
+          "اطّلع على ملفات الارتباط الضرورية والاختيارية التي تستخدمها ReadyRoad لتأمين الدخول واللغة والتفضيلات وتسجيل Google والتحليلات المشروطة بالموافقة.",
         openGraphTitle: "سياسة ملفات الارتباط في ReadyRoad",
         openGraphDescription:
           "جرد شفاف لملفات ارتباط ReadyRoad وتخزين المتصفح وأغراضها ومددها.",
@@ -1560,7 +1572,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             title: "2. البيانات التي نعالجها",
             paragraphs: [
               "تشمل بيانات الحساب اسم المستخدم والاسم الكامل والبريد الإلكتروني وتجزئة كلمة المرور والدور وحالة الحساب والتواريخ. وعند اختيار تسجيل الدخول عبر Google، تستلم ReadyRoad من Google اسمك الموثق وعنوان بريدك الإلكتروني فقط لإنشاء حسابك أو ربطه أو تسجيل دخولك بأمان. لا تبيع ReadyRoad هذه المعلومات ولا تشاركها مع أطراف أخرى لأغراض إعلانية. وتشمل بيانات التعلم تقدم الدروس ومحاولات التدريب والامتحان والإجابات والدرجات ونقاط الضعف والإنجازات والإشعارات.",
-              "تشمل بيانات التواصل الاسم والبريد والموضوع والرسالة. وقد تُعالج بيانات تقنية وأمنية محدودة في سجلات الخادم لتشغيل الخدمة وتشخيصها وحمايتها. لا تطلب ReadyRoad بيانات بطاقات الدفع.",
+              "تشمل بيانات التواصل الاسم والبريد والموضوع والرسالة. وقد تُعالج بيانات تقنية وأمنية محدودة في سجلات الخادم لتشغيل الخدمة وتشخيصها وحمايتها. وعند موافقتك على التحليلات، يعالج Google Analytics بيانات مستعارة عن المتصفح والجهاز والصفحات والجلسات والتفاعلات ومصادر الزيارة والموقع التقريبي؛ ولا ترسل إليه ReadyRoad اسم الحساب أو البريد الإلكتروني أو معرّف المستخدم الداخلي. لا تطلب ReadyRoad بيانات بطاقات الدفع.",
             ],
           },
           {
@@ -1578,7 +1590,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. مقدمو الخدمة ونقل البيانات",
             paragraphs: [
-              "تستخدم الخدمة Hostinger لاستضافة الواجهة والخادم الخلفي، وSupabase لقاعدة PostgreSQL، وGoogle فقط عند اختيار تسجيل الدخول به. يزوّد Google منصة ReadyRoad بالاسم الموثق وعنوان البريد الإلكتروني اللازمين فقط لإنشاء الحساب أو ربطه أو تسجيل الدخول إليه بأمان. يعالج كل مزود البيانات اللازمة لدوره وقد يشغّل بنية في بلدان مختلفة وفق ضماناته. لا تبيع ReadyRoad البيانات الشخصية ولا تستخدمها لإعلانات الغير.",
+              "تستخدم الخدمة Hostinger لاستضافة الواجهة والخادم الخلفي وSupabase لقاعدة PostgreSQL. ويوفّر Google تسجيل الدخول الاختياري، ويوفّر قياس الاستخدام عبر Google Analytics فقط بعد الموافقة على التحليلات. يرسل تسجيل الدخول الاسم الموثق والبريد اللازمين للحساب، بينما لا يتلقى Analytics هوية حساب ReadyRoad. قد يشغّل هؤلاء المزودون بنية في بلدان مختلفة وفق ضماناتهم. لا تبيع ReadyRoad البيانات الشخصية ولا تستخدمها لإعلانات الغير.",
             ],
           },
           {
@@ -1616,9 +1628,9 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       cookies: {
         eyebrow: "شفافية تخزين المتصفح",
         title: "سياسة ملفات الارتباط",
-        lastUpdated: "آخر مراجعة: 21 يوليو 2026",
+        lastUpdated: "آخر مراجعة: 3 أغسطس 2026",
         intro:
-          "تستخدم ReadyRoad ملفات الارتباط وتخزين المتصفح الضروريين للأمان وتسجيل الدخول واللغة وخيارات الموافقة. ويتطلب تخزين التفضيلات الاختيارية موافقة. لا توجد حاليًا خدمات تحليلات أو تسويق مفعّلة.",
+          "تستخدم ReadyRoad ملفات الارتباط وتخزين المتصفح الضروريين للأمان وتسجيل الدخول واللغة وخيارات الموافقة. وتبقى التفضيلات الاختيارية وGoogle Analytics معطّلة حتى توافق عليها. ولا تُستخدم خدمات تسويقية.",
         sections: [
           {
             title: "1. نطاق السياسة",
@@ -1641,20 +1653,24 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. التخزين المحلي",
             paragraphs: [
-              "يحفظ readyroad_locale اللغة في جهة العميل. ويحفظ readyroad_cookie_consent الإصدار 1 ووقت القرار وخيارات الفئات الأربع من دون بيانات شخصية. أما session_expired فهو مؤشر لمرة واحدة داخل جلسة علامة التبويب، وcurrent_exam حالة توافق مؤقتة تُحذف عند بطلانها أو اكتمالها.",
+              "يحفظ readyroad_locale اللغة في جهة العميل. ويحفظ readyroad_cookie_consent الإصدار 2 ووقت القرار وخيارات الفئات الأربع من دون بيانات شخصية. أما session_expired فهو مؤشر لمرة واحدة داخل جلسة علامة التبويب، وcurrent_exam حالة توافق مؤقتة تُحذف عند بطلانها أو اكتمالها.",
               "لا يحفظ readyroad_theme المظهر الفاتح أو الداكن إلا بعد الموافقة على التفضيلات، ويُحذف عند سحبها. لا تحتوي هذه القيم على JWT أو كلمة المرور.",
             ],
           },
           {
             title: "4. التحليلات والتسويق",
             paragraphs: [
-              "لا تحمّل ReadyRoad حاليًا Google Analytics أو Vercel Analytics أو إعلانات أو أدوات تسويق أو بكسلات شبكات اجتماعية أو تنميط. النظام مهيأ لـGoogle Consent Mode v2 من دون Measurement ID ومن دون أي طلب إلى Google. اختيار التحليلات يسجل الإذن لتكامل مستقبلي فقط. لا تُحمّل الروابط الاجتماعية منصاتها إلا بعد النقر عليها.",
+              "تستخدم ReadyRoad خدمة Google Analytics 4 بمعرّف القياس G-1P4EJH6D2T بعد تفعيلك للتحليلات فقط. وتقيس مشاهدات الصفحات والجلسات والموقع التقريبي ومعلومات المتصفح والجهاز ومصادر الزيارة والتفاعلات. ولا تُحمّل قبل الموافقة أي برمجية أو طلب تابع لـGoogle Analytics. يرفض Google Consent Mode v2 تخزين التحليلات والإعلانات افتراضيًا، ولا تستخدم ReadyRoad الإعلانات أو إعادة الاستهداف أو بكسلات الشبكات الاجتماعية أو التنميط. قد تنشئ موافقة التحليلات ملفي الارتباط التاليين من الطرف الأول، ويُحذفان عند سحبها.",
+            ],
+            items: [
+              "_ga — نطاق ReadyRoad، المسار /، يميّز المتصفحات لقياس الاستخدام المجمّع، حتى سنتين أو إلى حين سحب موافقة التحليلات.",
+              "_ga_1P4EJH6D2T — نطاق ReadyRoad، المسار /، يحفظ حالة جلسة GA4، حتى سنتين أو إلى حين سحب موافقة التحليلات.",
             ],
           },
           {
             title: "5. الموافقة والتغييرات المستقبلية",
             paragraphs: [
-              "يبقى التخزين الضروري مفعّلًا لتقديم الخدمة المطلوبة. يعرض الشريط خيارات قبول الكل ورفض الاختياري والتخصيص بوضوح متساوٍ. يحفظ الإصدار 1 القرار محليًا، ويُطلب القرار مجددًا عند تغيير الإصدار. لا يجوز تحميل أي خدمة اختيارية قبل الموافقة على فئتها.",
+              "يبقى التخزين الضروري مفعّلًا لتقديم الخدمة المطلوبة. يعرض الشريط خيارات قبول الكل ورفض الاختياري والتخصيص بوضوح متساوٍ. يحفظ الإصدار 2 القرار محليًا، ويُطلب القرار مجددًا عند تغيير الإصدار. لا يجوز تحميل أي خدمة اختيارية قبل الموافقة على فئتها.",
             ],
             references: [
               {
@@ -1667,7 +1683,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "6. إدارة التخزين",
             paragraphs: [
-              "استخدم إعدادات ملفات الارتباط في التذييل لمراجعة الموافقة أو تعديلها أو سحبها في أي وقت. يحذف السحب تخزين التفضيلات غير المسموح به مع استمرار الوظائف الضرورية. يزيل تسجيل الخروج ملفي المصادقة وCSRF، وتُزال ملفات OAuth بعد العودة. كما يؤدي مسح بيانات المتصفح إلى إعادة ضبط القرار.",
+              "استخدم إعدادات ملفات الارتباط في التذييل لمراجعة الموافقة أو تعديلها أو سحبها في أي وقت. يحذف السحب تخزين التفضيلات غير المسموح به وملفات Google Analytics مع استمرار الوظائف الضرورية. يزيل تسجيل الخروج ملفي المصادقة وCSRF، وتُزال ملفات OAuth بعد العودة. كما يؤدي مسح بيانات المتصفح إلى إعادة ضبط القرار.",
             ],
           },
         ],

@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonical = buildLocalizedUrl("/", locale, APP_URL);
 
   return {
-    title: copy.title,
+    title: { absolute: copy.title },
     description: copy.description,
     keywords: copy.keywords,
     alternates: getLocalizedAlternates("/", locale, APP_URL),

@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogImage = getSharedOgImage(locale);
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: getLocalizedAlternates("/videos", locale, APP_URL),
     openGraph: {

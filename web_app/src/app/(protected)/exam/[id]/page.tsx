@@ -16,7 +16,7 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { RefreshCw, ArrowLeft, ArrowRight, Clock } from "lucide-react";
+import { RefreshCw, ArrowLeft, ArrowRight, Clock, ImageOff } from "lucide-react";
 
 /** Seconds per question — Belgian theoretical driving exam rule */
 const QUESTION_TIME = 15;
@@ -160,6 +160,7 @@ export default function ExamQuestionsPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
 
   // ── Per-question countdown ──────────────────────────────
   const [questionTimeLeft, setQuestionTimeLeft] = useState(QUESTION_TIME);
@@ -510,14 +511,29 @@ export default function ExamQuestionsPage() {
         }
         media={
           questionImageUrl ? (
-            <ExamQuestionImageFrame variant="wide">
-              <Image
-                src={questionImageUrl}
-                alt={t("practice.question_image_alt")}
-                fill
-                className="object-contain"
-                priority
-              />
+            <ExamQuestionImageFrame variant="theory">
+              {failedImageUrl === questionImageUrl ? (
+                <div
+                  role="status"
+                  className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl bg-muted/40 p-4 text-center text-sm text-muted-foreground"
+                >
+                  <ImageOff className="h-6 w-6" />
+                  <span>{t("practice.question_image_error")}</span>
+                </div>
+              ) : (
+                <Image
+                  src={questionImageUrl}
+                  alt={t("practice.question_image_alt")}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 1200px"
+                  className="object-contain"
+                  priority
+                  onError={() => {
+                    console.error("Failed to load theoretical question image", questionImageUrl);
+                    setFailedImageUrl(questionImageUrl);
+                  }}
+                />
+              )}
             </ExamQuestionImageFrame>
           ) : null
         }

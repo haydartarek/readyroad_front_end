@@ -31,6 +31,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   ClipboardList,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────
@@ -52,6 +54,10 @@ interface QuestionForm {
   questionAr: string;
   questionNl: string;
   questionFr: string;
+  explanationEn: string;
+  explanationAr: string;
+  explanationNl: string;
+  explanationFr: string;
   contentImageUrl: string;
   isActive: boolean;
   options: OptionForm[];
@@ -73,6 +79,10 @@ interface AdminQuizQuestionResponse {
   questionAr: string;
   questionNl: string;
   questionFr: string;
+  explanationEn: string | null;
+  explanationAr: string | null;
+  explanationNl: string | null;
+  explanationFr: string | null;
   contentImageUrl: string | null;
   isActive: boolean;
   optionsCount: number;
@@ -216,6 +226,10 @@ export default function AdminEditQuizQuestionPage() {
     questionAr: "",
     questionNl: "",
     questionFr: "",
+    explanationEn: "",
+    explanationAr: "",
+    explanationNl: "",
+    explanationFr: "",
     contentImageUrl: "",
     isActive: true,
     options: [],
@@ -230,6 +244,7 @@ export default function AdminEditQuizQuestionPage() {
     type: "success" | "error";
   } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
   const [isReferenced, setIsReferenced] = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -256,6 +271,10 @@ export default function AdminEditQuizQuestionPage() {
           questionAr: q.questionAr || "",
           questionNl: q.questionNl || "",
           questionFr: q.questionFr || "",
+          explanationEn: q.explanationEn || "",
+          explanationAr: q.explanationAr || "",
+          explanationNl: q.explanationNl || "",
+          explanationFr: q.explanationFr || "",
           contentImageUrl: q.contentImageUrl || "",
           isActive: q.isActive ?? true,
           options: options.map((o) => ({
@@ -292,16 +311,29 @@ export default function AdminEditQuizQuestionPage() {
     }
   }, [toast]);
 
+  useEffect(() => {
+    setImagePreviewFailed(false);
+  }, [form.contentImageUrl]);
+
   const isValid = useMemo(
     () =>
       form.categoryCode.trim() !== "" &&
       form.questionEn.trim() !== "" &&
+      form.questionAr.trim() !== "" &&
+      form.questionNl.trim() !== "" &&
+      form.questionFr.trim() !== "" &&
       (form.questionType !== "IMAGE_BASED" ||
         form.contentImageUrl.trim() !== "") &&
       form.options.length >= 2 &&
       form.options.length <= 3 &&
       form.options.filter((o) => o.isCorrect).length === 1 &&
-      form.options.every((o) => o.textEn.trim() !== ""),
+      form.options.every(
+        (o) =>
+          o.textEn.trim() !== "" &&
+          o.textAr.trim() !== "" &&
+          o.textNl.trim() !== "" &&
+          o.textFr.trim() !== "",
+      ),
     [form],
   );
 
@@ -366,15 +398,35 @@ export default function AdminEditQuizQuestionPage() {
     }));
   };
 
+  const moveOption = (idx: number, direction: -1 | 1) => {
+    const target = idx + direction;
+    if (target < 0 || target >= form.options.length) return;
+    setForm((prev) => {
+      const options = [...prev.options];
+      [options[idx], options[target]] = [options[target], options[idx]];
+      return {
+        ...prev,
+        options: options.map((option, optionIdx) => ({
+          ...option,
+          displayOrder: optionIdx + 1,
+        })),
+      };
+    });
+  };
+
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
     if (!form.categoryCode.trim())
       errors.categoryCode =
         t("admin.quizzes.form.error_category") || "Category is required";
-    if (!form.questionEn.trim())
-      errors.questionEn =
-        t("admin.quizzes.form.error_question") ||
-        "English question text is required";
+    (["En", "Ar", "Nl", "Fr"] as const).forEach((suffix) => {
+      const key = `question${suffix}` as keyof QuestionForm;
+      if (!String(form[key]).trim()) {
+        errors[key] =
+          t("admin.quizzes.form.error_question_all_languages") ||
+          "Question text is required in all four languages";
+      }
+    });
     if (form.questionType === "IMAGE_BASED" && !form.contentImageUrl.trim()) {
       errors.contentImageUrl =
         t("admin.quizzes.form.error_image_required") ||
@@ -397,11 +449,25 @@ export default function AdminEditQuizQuestionPage() {
       errors.correct =
         t("admin.quizzes.form.error_only_one_correct") ||
         "Only one option can be marked as correct";
+    const languageFields = ["textEn", "textAr", "textNl", "textFr"] as const;
     form.options.forEach((o, i) => {
-      if (!o.textEn.trim())
-        errors[`option_${i}`] =
-          t("admin.quizzes.form.error_option_en") ||
-          "English option text is required";
+      languageFields.forEach((field) => {
+        if (!o[field].trim()) {
+          errors[`option_${i}_${field}`] =
+            t("admin.quizzes.form.error_option_all_languages") ||
+            "Every option is required in all four languages";
+        }
+      });
+    });
+    languageFields.forEach((field) => {
+      const values = form.options.map((option) =>
+        option[field].trim().replace(/\s+/g, " ").toLocaleLowerCase(),
+      );
+      if (values.some((value, index) => value && values.indexOf(value) !== index)) {
+        errors.options =
+          t("admin.quizzes.form.error_duplicate_options") ||
+          "Answer options must be unique in every language";
+      }
     });
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -498,6 +564,10 @@ export default function AdminEditQuizQuestionPage() {
           questionAr: form.questionAr.trim() || "",
           questionNl: form.questionNl.trim() || "",
           questionFr: form.questionFr.trim() || "",
+          explanationEn: form.explanationEn.trim() || "",
+          explanationAr: form.explanationAr.trim() || "",
+          explanationNl: form.explanationNl.trim() || "",
+          explanationFr: form.explanationFr.trim() || "",
           contentImageUrl: form.contentImageUrl.trim() || null,
           isActive: form.isActive,
           options: form.options.map((o) => ({
@@ -615,7 +685,7 @@ export default function AdminEditQuizQuestionPage() {
             <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span>
               {t("admin.quizzes.edit_referenced_detail") ||
-                "This question is referenced by learner history. Only the question text, image, and active status can be updated."}
+                "This question is referenced by learner history. Its answers can be edited safely; category, difficulty, and type remain locked."}
             </span>
           </div>
         )}
@@ -759,19 +829,32 @@ export default function AdminEditQuizQuestionPage() {
         >
           {form.contentImageUrl && (
             <div className="relative inline-block">
-              <Image
-                src={resolveImageUrl(form.contentImageUrl)}
-                    alt={t("practice.question_image_alt")}
-                width={320}
-                height={192}
-                unoptimized
-                className="max-h-48 rounded-xl border border-border/50 object-contain bg-muted"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
+              {imagePreviewFailed ? (
+                <div
+                  role="status"
+                  className="flex aspect-video w-80 max-w-full flex-col items-center justify-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50/60 p-4 text-center text-sm text-amber-900"
+                >
+                  <AlertTriangle className="h-5 w-5" />
+                  <span>{t("admin.quizzes.form.image_preview_error")}</span>
+                </div>
+              ) : (
+                <Image
+                  src={resolveImageUrl(form.contentImageUrl)}
+                  alt={t("practice.question_image_alt")}
+                  width={320}
+                  height={180}
+                  unoptimized
+                  className="aspect-video max-w-full rounded-xl border border-border/50 bg-muted object-contain"
+                  onError={() => {
+                    const failedUrl = resolveImageUrl(form.contentImageUrl);
+                    console.error("Failed to load quiz question image", failedUrl);
+                    setImagePreviewFailed(true);
+                  }}
+                />
+              )}
               <button
                 type="button"
+                aria-label={t("admin.quizzes.upload.remove")}
                 onClick={() => {
                   setField("contentImageUrl", "");
                   if (fileInputRef.current) fileInputRef.current.value = "";
@@ -859,33 +942,62 @@ export default function AdminEditQuizQuestionPage() {
               disabled={false}
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_ar")}
+              label={`${t("admin.quizzes.form.question_ar")} *`}
               placeholder={t("admin.quizzes.form.question_ar_placeholder")}
               value={form.questionAr}
+              error={fieldErrors.questionAr}
               onChange={(v) => setField("questionAr", v)}
               dir="rtl"
               disabled={false}
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_nl")}
+              label={`${t("admin.quizzes.form.question_nl")} *`}
               placeholder={t("admin.quizzes.form.question_nl_placeholder")}
               value={form.questionNl}
+              error={fieldErrors.questionNl}
               onChange={(v) => setField("questionNl", v)}
               disabled={false}
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_fr")}
+              label={`${t("admin.quizzes.form.question_fr")} *`}
               placeholder={t("admin.quizzes.form.question_fr_placeholder")}
               value={form.questionFr}
+              error={fieldErrors.questionFr}
               onChange={(v) => setField("questionFr", v)}
               disabled={false}
             />
           </div>
         </AdminSectionCard>
 
+        <AdminSectionCard title={t("admin.quizzes.form.explanations")}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormTextarea
+              label={t("admin.quizzes.form.explanation_en")}
+              value={form.explanationEn}
+              onChange={(value) => setField("explanationEn", value)}
+            />
+            <FormTextarea
+              label={t("admin.quizzes.form.explanation_ar")}
+              value={form.explanationAr}
+              onChange={(value) => setField("explanationAr", value)}
+              dir="rtl"
+            />
+            <FormTextarea
+              label={t("admin.quizzes.form.explanation_nl")}
+              value={form.explanationNl}
+              onChange={(value) => setField("explanationNl", value)}
+            />
+            <FormTextarea
+              label={t("admin.quizzes.form.explanation_fr")}
+              value={form.explanationFr}
+              onChange={(value) => setField("explanationFr", value)}
+            />
+          </div>
+        </AdminSectionCard>
+
         {/* Answer Options */}
         <AdminSectionCard title={`${t("admin.quizzes.form.options_title")} *`}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">
               {t("admin.quizzes.form.rule_note")}
             </p>
@@ -894,7 +1006,7 @@ export default function AdminEditQuizQuestionPage() {
               variant="outline"
               size="sm"
               onClick={addOption}
-              disabled={isReferenced || form.options.length >= 3}
+              disabled={form.options.length >= 3}
               className="gap-1.5 text-xs h-8"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -916,7 +1028,7 @@ export default function AdminEditQuizQuestionPage() {
           <div className="space-y-4">
             {form.options.map((opt, idx) => (
               <div
-                key={idx}
+                key={opt.id ?? `new-${idx}`}
                 className={cn(
                   "rounded-2xl border p-4 space-y-3 transition-colors",
                   opt.isCorrect
@@ -925,8 +1037,8 @@ export default function AdminEditQuizQuestionPage() {
                 )}
               >
                 {/* Option Header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <div
                       className={cn(
                         "w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black",
@@ -935,12 +1047,12 @@ export default function AdminEditQuizQuestionPage() {
                           : "bg-muted text-muted-foreground",
                       )}
                     >
-                      {idx + 1}
+                      {String.fromCharCode(65 + idx)}
                     </div>
                     <span className="text-sm font-bold text-foreground">
                       {t("admin.quizzes.form.option_number").replace(
                         "{number}",
-                        String(idx + 1),
+                        String.fromCharCode(65 + idx),
                       )}
                     </span>
                     {opt.isCorrect && (
@@ -949,23 +1061,43 @@ export default function AdminEditQuizQuestionPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
                         name="correctOption"
                         checked={opt.isCorrect}
                         onChange={() => setCorrectOption(idx)}
-                        disabled={isReferenced}
                         className="rounded border-border"
                       />
                       <span className="text-xs text-muted-foreground font-medium">
                         {t("admin.quizzes.form.mark_correct")}
                       </span>
                     </label>
-                    {!isReferenced && form.options.length > 2 && (
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
+                        onClick={() => moveOption(idx, -1)}
+                        disabled={idx === 0}
+                        aria-label={t("admin.quizzes.form.move_up")}
+                        className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveOption(idx, 1)}
+                        disabled={idx === form.options.length - 1}
+                        aria-label={t("admin.quizzes.form.move_down")}
+                        className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </button>
+                    </div>
+                    {form.options.length > 2 && (
+                      <button
+                        type="button"
+                        aria-label={`${t("admin.quizzes.form.remove_option")} ${String.fromCharCode(65 + idx)}`}
                         onClick={() => removeOption(idx)}
                         className="text-destructive hover:opacity-70 transition-opacity"
                       >
@@ -982,37 +1114,36 @@ export default function AdminEditQuizQuestionPage() {
                       "admin.quizzes.form.option_text_en_placeholder",
                     )}
                     value={opt.textEn}
-                    error={fieldErrors[`option_${idx}`]}
+                    error={fieldErrors[`option_${idx}_textEn`]}
                     onChange={(v) => setOptionField(idx, "textEn", v)}
-                    disabled={isReferenced}
                   />
                   <FormField
-                    label={t("admin.quizzes.form.option_text_ar")}
+                    label={`${t("admin.quizzes.form.option_text_ar")} *`}
                     placeholder={t(
                       "admin.quizzes.form.option_text_ar_placeholder",
                     )}
                     value={opt.textAr}
+                    error={fieldErrors[`option_${idx}_textAr`]}
                     onChange={(v) => setOptionField(idx, "textAr", v)}
                     dir="rtl"
-                    disabled={isReferenced}
                   />
                   <FormField
-                    label={t("admin.quizzes.form.option_text_nl")}
+                    label={`${t("admin.quizzes.form.option_text_nl")} *`}
                     placeholder={t(
                       "admin.quizzes.form.option_text_nl_placeholder",
                     )}
                     value={opt.textNl}
+                    error={fieldErrors[`option_${idx}_textNl`]}
                     onChange={(v) => setOptionField(idx, "textNl", v)}
-                    disabled={isReferenced}
                   />
                   <FormField
-                    label={t("admin.quizzes.form.option_text_fr")}
+                    label={`${t("admin.quizzes.form.option_text_fr")} *`}
                     placeholder={t(
                       "admin.quizzes.form.option_text_fr_placeholder",
                     )}
                     value={opt.textFr}
+                    error={fieldErrors[`option_${idx}_textFr`]}
                     onChange={(v) => setOptionField(idx, "textFr", v)}
-                    disabled={isReferenced}
                   />
                 </div>
               </div>

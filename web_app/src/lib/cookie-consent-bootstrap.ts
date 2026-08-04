@@ -14,7 +14,7 @@ export const COOKIE_CONSENT_BOOTSTRAP_SCRIPT = `
 
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () {
-    window.dataLayer.push(Array.prototype.slice.call(arguments));
+    window.dataLayer.push(arguments);
   };
 
   try {

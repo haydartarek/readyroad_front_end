@@ -12,6 +12,10 @@ import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import {
+  localizeExamExplanation,
+  localizeExamText,
+} from "@/lib/exam-results-presentation";
 import { Button } from "@/components/ui/button";
 import {
   PageHeroDescription,
@@ -70,9 +74,25 @@ interface AllAnsweredQuestion {
   questionTextAr: string;
   questionTextNl: string;
   questionTextFr: string;
-  selectedOptionText: string;
-  correctOptionText: string;
+  selectedOptionText: string | null;
+  selectedOptionTextEn?: string | null;
+  selectedOptionTextAr?: string | null;
+  selectedOptionTextNl?: string | null;
+  selectedOptionTextFr?: string | null;
+  correctOptionText: string | null;
+  correctOptionTextEn?: string | null;
+  correctOptionTextAr?: string | null;
+  correctOptionTextNl?: string | null;
+  correctOptionTextFr?: string | null;
+  explanationEn?: string | null;
+  explanationAr?: string | null;
+  explanationNl?: string | null;
+  explanationFr?: string | null;
   categoryName: string;
+  categoryNameEn?: string | null;
+  categoryNameAr?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
   categoryCode: string;
   contentImageUrl?: string;
   isCorrect: boolean;
@@ -242,10 +262,12 @@ export function ExamResultsPageContent() {
 
   // ── Resolve question text for active language ──
   function getQuestionText(q: AllAnsweredQuestion): string {
-    if (language === "ar" && q.questionTextAr) return q.questionTextAr;
-    if (language === "nl" && q.questionTextNl) return q.questionTextNl;
-    if (language === "fr" && q.questionTextFr) return q.questionTextFr;
-    return q.questionTextEn ?? "";
+    return localizeExamText(language, {
+      en: q.questionTextEn,
+      ar: q.questionTextAr,
+      nl: q.questionTextNl,
+      fr: q.questionTextFr,
+    });
   }
 
   function getStoredSignQuestionText(
@@ -695,7 +717,52 @@ export function ExamResultsPageContent() {
                           {/* Question list */}
                           {detail.allAnswers && detail.allAnswers.length > 0 ? (
                             <div className="space-y-3">
-                              {detail.allAnswers.map((q, qi) => (
+                              {detail.allAnswers.map((q, qi) => {
+                                const selectedOptionText = localizeExamText(
+                                  language,
+                                  {
+                                    en:
+                                      q.selectedOptionTextEn ??
+                                      q.selectedOptionText,
+                                    ar: q.selectedOptionTextAr,
+                                    nl: q.selectedOptionTextNl,
+                                    fr: q.selectedOptionTextFr,
+                                  },
+                                );
+                                const correctOptionText = localizeExamText(
+                                  language,
+                                  {
+                                    en:
+                                      q.correctOptionTextEn ??
+                                      q.correctOptionText,
+                                    ar: q.correctOptionTextAr,
+                                    nl: q.correctOptionTextNl,
+                                    fr: q.correctOptionTextFr,
+                                  },
+                                );
+                                const explanation = localizeExamExplanation(
+                                  language,
+                                  {
+                                    en: q.explanationEn,
+                                    ar: q.explanationAr,
+                                    nl: q.explanationNl,
+                                    fr: q.explanationFr,
+                                  },
+                                  t(
+                                    "practice_exam.review_explanation_unavailable",
+                                  ),
+                                );
+                                const categoryName = localizeExamText(
+                                  language,
+                                  {
+                                    en: q.categoryNameEn ?? q.categoryName,
+                                    ar: q.categoryNameAr,
+                                    nl: q.categoryNameNl,
+                                    fr: q.categoryNameFr,
+                                  },
+                                );
+
+                                return (
                                 <div
                                   key={q.questionId}
                                   className={cn(
@@ -712,7 +779,7 @@ export function ExamResultsPageContent() {
                                         {qi + 1}
                                       </span>
                                       <span className="text-xs font-medium text-muted-foreground">
-                                        {q.categoryName}
+                                        {categoryName}
                                       </span>
                                     </div>
                                     {q.isCorrect ? (
@@ -743,19 +810,28 @@ export function ExamResultsPageContent() {
                                         q.isCorrect ? "correct" : "incorrect"
                                       }
                                     >
-                                      {q.selectedOptionText || "—"}
+                                      {selectedOptionText || "—"}
                                     </ResultAnswerBlock>
                                     {!q.isCorrect && (
                                       <ResultAnswerBlock
                                         label={t("exam.correct_answer")}
                                         tone="correct"
                                       >
-                                        {q.correctOptionText || "—"}
+                                        {correctOptionText || "—"}
                                       </ResultAnswerBlock>
                                     )}
+                                    <ResultAnswerBlock
+                                      label={t(
+                                        "practice_exam.review_explanation",
+                                      )}
+                                      tone="neutral"
+                                    >
+                                      {explanation}
+                                    </ResultAnswerBlock>
                                   </div>
                                 </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           ) : (
                             <p className="text-sm text-muted-foreground text-center py-4">
@@ -1078,13 +1154,18 @@ export function ExamResultsPageContent() {
                                                 ? question.selectedChoiceFr
                                                 : question.selectedChoiceEn;
                                         const explanationText =
-                                          language === "ar"
-                                            ? question.explanationAr
-                                            : language === "nl"
-                                              ? question.explanationNl
-                                              : language === "fr"
-                                                ? question.explanationFr
-                                                : question.explanationEn;
+                                          localizeExamExplanation(
+                                            language,
+                                            {
+                                              en: question.explanationEn,
+                                              ar: question.explanationAr,
+                                              nl: question.explanationNl,
+                                              fr: question.explanationFr,
+                                            },
+                                            t(
+                                              "practice_exam.review_explanation_unavailable",
+                                            ),
+                                          );
 
                                         return (
                                           <div
@@ -1157,16 +1238,14 @@ export function ExamResultsPageContent() {
                                                 </ResultAnswerBlock>
                                               ) : null}
 
-                                              {explanationText ? (
-                                                <ResultAnswerBlock
-                                                  label={t(
-                                                    "practice_exam.review_explanation",
-                                                  )}
-                                                  tone="neutral"
-                                                >
-                                                  {explanationText}
-                                                </ResultAnswerBlock>
-                                              ) : null}
+                                              <ResultAnswerBlock
+                                                label={t(
+                                                  "practice_exam.review_explanation",
+                                                )}
+                                                tone="neutral"
+                                              >
+                                                {explanationText}
+                                              </ResultAnswerBlock>
                                             </div>
                                           </div>
                                         );
@@ -1465,13 +1544,18 @@ export function ExamResultsPageContent() {
                                                   ? question.correctTextFr
                                                   : question.correctTextEn;
                                           const explanationText =
-                                            language === "ar"
-                                              ? question.explanationAr
-                                              : language === "nl"
-                                                ? question.explanationNl
-                                                : language === "fr"
-                                                  ? question.explanationFr
-                                                  : question.explanationEn;
+                                            localizeExamExplanation(
+                                              language,
+                                              {
+                                                en: question.explanationEn,
+                                                ar: question.explanationAr,
+                                                nl: question.explanationNl,
+                                                fr: question.explanationFr,
+                                              },
+                                              t(
+                                                "practice_exam.review_explanation_unavailable",
+                                              ),
+                                            );
 
                                           return (
                                             <div
@@ -1545,16 +1629,14 @@ export function ExamResultsPageContent() {
                                                   </ResultAnswerBlock>
                                                 ) : null}
 
-                                                {explanationText ? (
-                                                  <ResultAnswerBlock
-                                                    label={t(
-                                                      "practice_exam.review_explanation",
-                                                    )}
-                                                    tone="neutral"
-                                                  >
-                                                    {explanationText}
-                                                  </ResultAnswerBlock>
-                                                ) : null}
+                                                <ResultAnswerBlock
+                                                  label={t(
+                                                    "practice_exam.review_explanation",
+                                                  )}
+                                                  tone="neutral"
+                                                >
+                                                  {explanationText}
+                                                </ResultAnswerBlock>
                                               </div>
                                             </div>
                                           );

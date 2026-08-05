@@ -21,7 +21,7 @@ import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ───────────────────────────────────────────────
 
-interface ErrorPattern {
+export interface ErrorPatternViewModel {
   pattern: string;
   patternKey: string;
   descriptionKey: string;
@@ -44,6 +44,12 @@ interface ErrorPattern {
   recommendation: string;
   recommendationKey: string;
   exampleQuestions: number[];
+  previousCount: number | null;
+  currentCount: number;
+  delta: number | null;
+  trend: "IMPROVED" | "UNCHANGED" | "WORSENED" | "INSUFFICIENT_DATA";
+  recentAttemptsCount: number;
+  lastCalculatedAt: string | null;
 }
 
 // ─── Constants (labels use translation keys) ─────────────
@@ -93,8 +99,12 @@ const MAX_VISIBLE_QUESTIONS = 5;
 
 // ─── Component ───────────────────────────────────────────
 
-export function ErrorPatternList({ patterns }: { patterns: ErrorPattern[] }) {
-  const { t } = useLanguage();
+export function ErrorPatternList({
+  patterns,
+}: {
+  patterns: ErrorPatternViewModel[];
+}) {
+  const { t, language } = useLanguage();
   const [expandedPattern, setExpandedPattern] = useState<string | null>(null);
 
   const toggle = (key: string) =>
@@ -106,10 +116,28 @@ export function ErrorPatternList({ patterns }: { patterns: ErrorPattern[] }) {
         const cfg = SEVERITY_CONFIG[pattern.severity];
         const isExpanded = expandedPattern === pattern.pattern;
         const practiceHref = "/practice";
+        const trendKey = {
+          IMPROVED: "error_patterns.trend_improved",
+          UNCHANGED: "error_patterns.trend_unchanged",
+          WORSENED: "error_patterns.trend_worsened",
+          INSUFFICIENT_DATA: "error_patterns.trend_insufficient",
+        }[pattern.trend];
+        const locale = {
+          ar: "ar-BE-u-ca-gregory",
+          en: "en-BE-u-ca-gregory",
+          nl: "nl-BE-u-ca-gregory",
+          fr: "fr-BE-u-ca-gregory",
+        }[language];
+        const lastUpdated = pattern.lastCalculatedAt
+          ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
+              new Date(pattern.lastCalculatedAt),
+            )
+          : null;
 
         return (
           <Card
             key={pattern.pattern}
+            data-testid="error-pattern-card"
             className={cn(
               "rounded-2xl border-2 transition-all shadow-sm",
               cfg.border,
@@ -172,6 +200,71 @@ export function ErrorPatternList({ patterns }: { patterns: ErrorPattern[] }) {
 
             {/* ── Content ── */}
             <CardContent className="px-6 py-5 space-y-4">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="rounded-xl border border-border/50 bg-background/70 p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    {t("error_patterns.previous_value")}
+                  </p>
+                  <p className="mt-1 text-lg font-black">
+                    {pattern.previousCount ?? "—"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/50 bg-background/70 p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    {t("error_patterns.current_value")}
+                  </p>
+                  <p className={cn("mt-1 text-lg font-black", cfg.text)}>
+                    {pattern.currentCount}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/50 bg-background/70 p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    {t("error_patterns.change")}
+                  </p>
+                  <p className="mt-1 text-lg font-black">
+                    {pattern.delta === null
+                      ? "—"
+                      : `${pattern.delta > 0 ? "+" : ""}${pattern.delta}`}
+                  </p>
+                </div>
+                <div className="flex min-w-0 items-center justify-center rounded-xl border border-border/50 bg-background/70 p-3 text-center">
+                  <Badge className={cn("max-w-full whitespace-normal", cfg.badgeBg)}>
+                    {t(trendKey)}
+                  </Badge>
+                </div>
+              </div>
+
+              {pattern.trend === "INSUFFICIENT_DATA" ? (
+                <p className="text-center text-xs text-muted-foreground">
+                  {t("error_patterns.insufficient_comparison")}
+                </p>
+              ) : (
+                <p className="text-center text-xs text-muted-foreground">
+                  {pattern.delta !== null && pattern.delta < 0
+                    ? t("error_patterns.fewer_errors", {
+                        count: Math.abs(pattern.delta),
+                      })
+                    : pattern.delta !== null && pattern.delta > 0
+                      ? t("error_patterns.more_errors", {
+                          count: pattern.delta,
+                        })
+                      : t("error_patterns.trend_unchanged")}
+                </p>
+              )}
+
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span>
+                  {t("error_patterns.recent_attempts", {
+                    count: pattern.recentAttemptsCount,
+                  })}
+                </span>
+                {lastUpdated ? (
+                  <span>
+                    {t("error_patterns.last_updated", { date: lastUpdated })}
+                  </span>
+                ) : null}
+              </div>
+
               {/* Progress */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">

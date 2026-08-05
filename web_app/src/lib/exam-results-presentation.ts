@@ -8,6 +8,11 @@ interface LocalizedExamText {
   fallback?: string | null;
 }
 
+function normalized(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
 export function formatExamDuration(
   totalSeconds: number | null | undefined,
 ): string | null {
@@ -36,14 +41,23 @@ export function localizeExamText(
   language: Language,
   text: LocalizedExamText,
 ): string {
-  switch (language) {
-    case "ar":
-      return text.ar || text.en || text.fallback || "";
-    case "nl":
-      return text.nl || text.en || text.fallback || "";
-    case "fr":
-      return text.fr || text.en || text.fallback || "";
-    default:
-      return text.en || text.fallback || "";
-  }
+  const requested = normalized(text[language]);
+  if (requested) return requested;
+
+  const english = normalized(text.en);
+  if (english) return english;
+
+  const firstAvailable = [text.ar, text.nl, text.fr]
+    .map(normalized)
+    .find((value): value is string => value !== null);
+
+  return firstAvailable ?? normalized(text.fallback) ?? "";
+}
+
+export function localizeExamExplanation(
+  language: Language,
+  text: LocalizedExamText,
+  unavailableLabel: string,
+): string {
+  return normalized(text[language]) ?? unavailableLabel;
 }

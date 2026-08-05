@@ -13,7 +13,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ErrorSummary } from "@/components/analytics/error-summary";
-import { ErrorPatternList } from "@/components/analytics/error-pattern-list";
+import {
+  ErrorPatternList,
+  type ErrorPatternViewModel,
+} from "@/components/analytics/error-pattern-list";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
@@ -34,32 +37,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 
-interface ErrorPattern {
-  pattern: string;
-  patternKey: string;
-  descriptionKey: string;
-  count: number;
-  percentage: number;
-  severity: "HIGH" | "MEDIUM" | "LOW";
-  uniqueQuestions: number;
-  affectedCategories: string[];
-  analysisGroups: AnalysisGroup[];
-  recommendation: string;
-  recommendationKey: string;
-  exampleQuestions: number[];
-}
-
-interface AnalysisGroup {
-  groupType:
-    | "CATEGORY"
-    | "TRAFFIC_SIGN_FAMILY"
-    | "LEGAL_CONCEPT"
-    | "REPEATED_MISCONCEPTION";
-  code: string;
-  label: string;
-  labelKey?: string;
-  count: number;
-}
+type ErrorPattern = ErrorPatternViewModel;
 
 interface AnalyticsData {
   totalErrors: number;
@@ -75,7 +53,13 @@ interface BackendPattern {
   severity: "CRITICAL" | "HIGH" | "MODERATE" | "LOW" | "NONE";
   uniqueQuestions: number;
   recommendationKey: string;
-  sourceScope: "COMPLETE_HISTORY";
+  previousCount: number | null;
+  currentCount: number;
+  delta: number | null;
+  trend: "IMPROVED" | "UNCHANGED" | "WORSENED" | "INSUFFICIENT_DATA";
+  recentAttemptsCount: number;
+  lastCalculatedAt: string | null;
+  sourceScope: "COMPLETE_HISTORY" | "LAST_TWO_COMPLETED_EXAMS";
   groups: Array<{
     groupType:
       | "CATEGORY"
@@ -173,6 +157,10 @@ function transformBackendPatterns(
       !Number.isFinite(pattern.percentage) ||
       !pattern.severity ||
       typeof pattern.uniqueQuestions !== "number" ||
+      typeof pattern.currentCount !== "number" ||
+      !Number.isFinite(pattern.currentCount) ||
+      typeof pattern.recentAttemptsCount !== "number" ||
+      !pattern.trend ||
       !Array.isArray(pattern.groups) ||
       pattern.groups.some(
         (group) =>
@@ -181,24 +169,28 @@ function transformBackendPatterns(
           typeof group.count !== "number" ||
           !Number.isFinite(group.count),
       ) ||
-      pattern.sourceScope !== "COMPLETE_HISTORY"
+      !["COMPLETE_HISTORY", "LAST_TWO_COMPLETED_EXAMS"].includes(
+        pattern.sourceScope,
+      )
     ) {
       throw new Error(
-        "Error pattern response is missing complete-history analytics",
+        "Error pattern response is missing required analytics fields",
       );
     }
   });
 
-  // Keep only patterns where at least one wrong answer occurred
-  const active = raw.filter((p) => p.count > 0);
+  // Keep improvements to zero visible when the preceding attempt had errors.
+  const active = raw.filter(
+    (p) => p.currentCount > 0 || (p.previousCount ?? 0) > 0,
+  );
 
-  const totalErrors = active.reduce((sum, p) => sum + p.count, 0);
+  const totalErrors = active.reduce((sum, p) => sum + p.currentCount, 0);
 
   const patterns: ErrorPattern[] = active.map((p) => ({
     pattern: p.patternType,
     patternKey: formatPatternKey(p.patternType),
     descriptionKey: getDescriptionKey(p.patternType),
-    count: p.count,
+    count: p.currentCount,
     percentage: p.percentage,
     severity: normalizeBackendSeverity(p.severity),
     uniqueQuestions: p.uniqueQuestions,
@@ -218,6 +210,12 @@ function transformBackendPatterns(
     recommendation: "",
     recommendationKey: p.recommendationKey,
     exampleQuestions: (p.exampleQuestions ?? []).map((q) => q.questionId),
+    previousCount: p.previousCount,
+    currentCount: p.currentCount,
+    delta: p.delta,
+    trend: p.trend,
+    recentAttemptsCount: p.recentAttemptsCount,
+    lastCalculatedAt: p.lastCalculatedAt,
   }));
 
   return { totalErrors, patterns };

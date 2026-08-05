@@ -8,6 +8,13 @@ const translations: Record<string, string> = {
   "error_patterns.desc_sign_confusion": "الخلط بين علامات مرور متشابهة.",
   "error_patterns.grouped_analysis": "التفصيل التاريخي",
   "error_patterns.family_priority": "علامات الأولوية",
+  "error_patterns.previous_value": "السابق",
+  "error_patterns.current_value": "الحالي",
+  "error_patterns.change": "الفرق",
+  "error_patterns.trend_improved": "تحسّن",
+  "error_patterns.fewer_errors": "3 أخطاء أقل",
+  "error_patterns.recent_attempts": "المحاولات المحتسبة: 2",
+  "error_patterns.last_updated": "آخر تحديث: 5 أغسطس 2026",
 };
 
 jest.mock("@/contexts/language-context", () => ({
@@ -42,6 +49,12 @@ const pattern = {
   recommendation: "",
   recommendationKey: "error_patterns.rec_sign_confusion",
   exampleQuestions: [],
+  previousCount: 8,
+  currentCount: 5,
+  delta: -3,
+  trend: "IMPROVED" as const,
+  recentAttemptsCount: 2,
+  lastCalculatedAt: "2026-08-05T12:00:00Z",
 };
 
 describe("error pattern localization", () => {
@@ -90,5 +103,15 @@ describe("error pattern localization", () => {
     expect(screen.getByText("التفصيل التاريخي")).toBeInTheDocument();
     expect(screen.getByText("علامات الأولوية")).toBeInTheDocument();
     expect(screen.queryByText("PRIORITY")).not.toBeInTheDocument();
+  });
+
+  it("renders the previous, current, delta, and trend comparison", () => {
+    render(<ErrorPatternList patterns={[pattern]} />);
+
+    expect(screen.getByText("السابق")).toBeInTheDocument();
+    expect(screen.getByText("الحالي")).toBeInTheDocument();
+    expect(screen.getByText("-3")).toBeInTheDocument();
+    expect(screen.getByText("تحسّن")).toBeInTheDocument();
+    expect(screen.getByText("3 أخطاء أقل")).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ExamResultsPageContent } from "@/app/(protected)/exam/results/page";
 import apiClient from "@/lib/api";
 import {
@@ -7,22 +7,39 @@ import {
   getSignExamHistory,
 } from "@/services/signQuizService";
 
+let mockRandomSignExamId: string | null = "10";
+const mockT = (key: string) => key;
+const mockUser = { id: 1 };
+
 jest.mock("next/navigation", () => ({
   useSearchParams: () => ({
-    get: (key: string) => (key === "randomSignExamId" ? "10" : null),
+    get: (key: string) =>
+      key === "randomSignExamId" ? mockRandomSignExamId : null,
   }),
 }));
 
 jest.mock("@/contexts/language-context", () => ({
   useLanguage: () => ({
     language: "ar",
-    t: (key: string) => key,
+    t: mockT,
   }),
 }));
 
 jest.mock("@/contexts/auth-context", () => ({
-  useAuth: () => ({ user: { id: 1 } }),
+  useAuth: () => ({ user: mockUser }),
 }));
+
+jest.mock("@/components/localized-link", () => {
+  return function MockLink({
+    href,
+    children,
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) {
+    return <a href={href}>{children}</a>;
+  };
+});
 
 jest.mock("@/lib/api", () => ({
   __esModule: true,
@@ -45,6 +62,7 @@ const mockedSignHistory = getSignExamHistory as jest.Mock;
 
 describe("random sign exam review", () => {
   beforeEach(() => {
+    mockRandomSignExamId = "10";
     mockedApiGet.mockResolvedValue({ data: { totalExams: 0, exams: [] } });
     mockedRandomHistory.mockResolvedValue({
       totalSessions: 1,
@@ -118,5 +136,76 @@ describe("random sign exam review", () => {
       expect(screen.getByText("الإجابة الصحيحة")).toBeVisible();
     });
     expect(mockedRandomResult).toHaveBeenCalledWith(10);
+  });
+
+  it("localizes theory answers and renders the saved explanation", async () => {
+    mockRandomSignExamId = null;
+    mockedRandomHistory.mockResolvedValue({ totalSessions: 0, sessions: [] });
+    mockedApiGet.mockImplementation((url: string) => {
+      if (url === "/exams/simulations/history") {
+        return Promise.resolve({
+          data: {
+            totalExams: 1,
+            exams: [
+              {
+                examId: 22,
+                startedAt: "2026-08-04T10:00:00Z",
+                completedAt: "2026-08-04T10:10:00Z",
+                status: "COMPLETED",
+                scorePercentage: 0,
+                totalQuestions: 1,
+                correctAnswers: 0,
+                passed: false,
+              },
+            ],
+          },
+        });
+      }
+
+      return Promise.resolve({
+        data: {
+          categoryBreakdown: [],
+          allAnswers: [
+            {
+              questionId: 5,
+              questionTextEn: "English question",
+              questionTextAr: "السؤال العربي",
+              questionTextNl: "Nederlandse vraag",
+              questionTextFr: "Question française",
+              selectedOptionText: "English selected",
+              selectedOptionTextEn: "English selected",
+              selectedOptionTextAr: "الإجابة العربية المختارة",
+              selectedOptionTextNl: "Gekozen antwoord",
+              selectedOptionTextFr: "Réponse choisie",
+              correctOptionText: "English correct",
+              correctOptionTextEn: "English correct",
+              correctOptionTextAr: "الإجابة العربية الصحيحة",
+              correctOptionTextNl: "Juist antwoord",
+              correctOptionTextFr: "Bonne réponse",
+              explanationEn: "English explanation",
+              explanationAr: "الشرح العربي المحفوظ",
+              explanationNl: "Nederlandse uitleg",
+              explanationFr: "Explication française",
+              categoryName: "Priority",
+              categoryNameEn: "Priority",
+              categoryNameAr: "الأولوية",
+              categoryNameNl: "Voorrang",
+              categoryNameFr: "Priorité",
+              categoryCode: "PRIORITY",
+              isCorrect: false,
+            },
+          ],
+        },
+      });
+    });
+
+    render(<ExamResultsPageContent />);
+    await screen.findByTestId("official-exam-result-card");
+    fireEvent.click(screen.getByTestId("official-exam-result-header"));
+
+    expect(await screen.findByText("الإجابة العربية المختارة")).toBeVisible();
+    expect(screen.getByText("الإجابة العربية الصحيحة")).toBeVisible();
+    expect(screen.getByText("الشرح العربي المحفوظ")).toBeVisible();
+    expect(screen.queryByText("English selected")).not.toBeInTheDocument();
   });
 });

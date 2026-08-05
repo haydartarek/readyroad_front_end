@@ -22,6 +22,7 @@ import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
   formatExamDuration,
+  localizeExamExplanation,
   localizeExamText,
 } from "@/lib/exam-results-presentation";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,10 @@ interface BackendIncorrectQuestion {
   correctOptionTextAr?: string | null;
   correctOptionTextNl?: string | null;
   correctOptionTextFr?: string | null;
+  explanationEn?: string | null;
+  explanationAr?: string | null;
+  explanationNl?: string | null;
+  explanationFr?: string | null;
   categoryName: string;
   categoryNameEn?: string | null;
   categoryNameAr?: string | null;
@@ -102,6 +107,10 @@ interface AllAnsweredQuestion {
   correctOptionTextAr?: string | null;
   correctOptionTextNl?: string | null;
   correctOptionTextFr?: string | null;
+  explanationEn?: string | null;
+  explanationAr?: string | null;
+  explanationNl?: string | null;
+  explanationFr?: string | null;
   categoryName: string;
   categoryNameEn?: string | null;
   categoryNameAr?: string | null;
@@ -150,6 +159,10 @@ interface ReviewAnswer {
   correctOptionTextAr?: string | null;
   correctOptionTextNl?: string | null;
   correctOptionTextFr?: string | null;
+  explanationEn?: string | null;
+  explanationAr?: string | null;
+  explanationNl?: string | null;
+  explanationFr?: string | null;
   categoryName: string;
   categoryNameEn?: string | null;
   categoryNameAr?: string | null;
@@ -349,6 +362,10 @@ export default function ExamResultsPage() {
           correctOptionTextAr: question.correctOptionTextAr,
           correctOptionTextNl: question.correctOptionTextNl,
           correctOptionTextFr: question.correctOptionTextFr,
+          explanationEn: question.explanationEn,
+          explanationAr: question.explanationAr,
+          explanationNl: question.explanationNl,
+          explanationFr: question.explanationFr,
           categoryName: question.categoryName,
           categoryNameEn: question.categoryNameEn,
           categoryNameAr: question.categoryNameAr,
@@ -744,6 +761,7 @@ export default function ExamResultsPage() {
                       key={answer.questionId}
                       answer={answer}
                       index={index + 1}
+                      language={language}
                       localize={localize}
                       t={t}
                     />
@@ -767,11 +785,13 @@ export default function ExamResultsPage() {
 function ExamReviewCard({
   answer,
   index,
+  language,
   localize,
   t,
 }: {
   answer: ReviewAnswer;
   index: number;
+  language: "en" | "ar" | "nl" | "fr";
   localize: (
     en?: string | null,
     ar?: string | null,
@@ -805,6 +825,16 @@ function ExamReviewCard({
     answer.categoryNameAr,
     answer.categoryNameNl,
     answer.categoryNameFr,
+  );
+  const explanation = localizeExamExplanation(
+    language,
+    {
+      en: answer.explanationEn,
+      ar: answer.explanationAr,
+      nl: answer.explanationNl,
+      fr: answer.explanationFr,
+    },
+    t("practice_exam.review_explanation_unavailable"),
   );
 
   const statusConfig = answer.isCorrect
@@ -892,9 +922,18 @@ function ExamReviewCard({
               {correctOptionText || "—"}
             </ResultAnswerBlock>
           )}
+
+          {expanded && (
+            <ResultAnswerBlock
+              label={t("practice_exam.review_explanation")}
+              tone="neutral"
+            >
+              {explanation}
+            </ResultAnswerBlock>
+          )}
         </div>
 
-        {!answer.isCorrect && correctOptionText && (
+        {(correctOptionText || explanation) && (
           <ResultDetailsToggle
             expanded={expanded}
             onToggle={() => setExpanded((current) => !current)}

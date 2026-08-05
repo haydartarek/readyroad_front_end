@@ -1,5 +1,6 @@
 import {
   formatExamDuration,
+  localizeExamExplanation,
   localizeExamText,
 } from "@/lib/exam-results-presentation";
 
@@ -37,5 +38,31 @@ describe("exam results presentation", () => {
 
   it("uses English when a requested translation is missing", () => {
     expect(localizeExamText("ar", { en: "Priority" })).toBe("Priority");
+  });
+
+  it("uses the first available translation when the requested and English texts are missing", () => {
+    expect(localizeExamText("nl", { ar: "الأولوية", fr: "Priorité" })).toBe(
+      "الأولوية",
+    );
+  });
+
+  it("does not substitute another language for a missing explanation", () => {
+    expect(
+      localizeExamExplanation(
+        "ar",
+        { en: "English explanation" },
+        "السبب غير متوفر حاليًا.",
+      ),
+    ).toBe("السبب غير متوفر حاليًا.");
+  });
+
+  it("uses the exact saved explanation in the requested language", () => {
+    expect(
+      localizeExamExplanation(
+        "nl",
+        { nl: "Opgeslagen uitleg" },
+        "De uitleg is momenteel niet beschikbaar.",
+      ),
+    ).toBe("Opgeslagen uitleg");
   });
 });

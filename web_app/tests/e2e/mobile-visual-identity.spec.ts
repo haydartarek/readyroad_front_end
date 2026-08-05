@@ -1527,12 +1527,18 @@ test.describe("ReadyRoad mobile visual identity", () => {
           {
             patternType: "SIGN_CONFUSION",
             count: 12,
+            previousCount: 16,
+            currentCount: 12,
+            delta: -4,
+            trend: "IMPROVED",
+            recentAttemptsCount: 2,
+            lastCalculatedAt: "2026-08-05T12:00:00Z",
             percentage: 60,
             description: "Confusion between similar traffic signs.",
             severity: "CRITICAL",
             uniqueQuestions: 8,
             recommendationKey: "error_patterns.rec_sign_confusion",
-            sourceScope: "COMPLETE_HISTORY",
+            sourceScope: "LAST_TWO_COMPLETED_EXAMS",
             groups: [
               {
                 groupType: "CATEGORY",
@@ -1549,13 +1555,19 @@ test.describe("ReadyRoad mobile visual identity", () => {
           {
             patternType: "PRIORITY_MISUNDERSTANDING",
             count: 8,
+            previousCount: 5,
+            currentCount: 8,
+            delta: 3,
+            trend: "WORSENED",
+            recentAttemptsCount: 2,
+            lastCalculatedAt: "2026-08-05T12:00:00Z",
             percentage: 40,
             description: "Priority rules are misunderstood.",
             severity: "MODERATE",
             uniqueQuestions: 5,
             recommendationKey:
               "error_patterns.rec_priority_misunderstanding",
-            sourceScope: "COMPLETE_HISTORY",
+            sourceScope: "LAST_TWO_COMPLETED_EXAMS",
             groups: [
               {
                 groupType: "CATEGORY",
@@ -1582,6 +1594,8 @@ test.describe("ReadyRoad mobile visual identity", () => {
 
       const cards = page.getByTestId("error-summary-card");
       await expect(cards).toHaveCount(4);
+      const patternCards = page.getByTestId("error-pattern-card");
+      await expect(patternCards).toHaveCount(2);
 
       for (const width of [320, 360, 375, 390, 428] as const) {
         await page.setViewportSize({ width, height: 900 });
@@ -1680,6 +1694,25 @@ test.describe("ReadyRoad mobile visual identity", () => {
           bodyWidth: width,
           invalidCards: [],
         });
+
+        const patternMetrics = await patternCards.evaluateAll((items) => ({
+          viewport: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          invalidCards: items.flatMap((item, index) => {
+            const rect = item.getBoundingClientRect();
+            return rect.left < -1 || rect.right > window.innerWidth + 1
+              ? [{ index, left: rect.left, right: rect.right }]
+              : [];
+          }),
+        }));
+        expect(
+          patternMetrics,
+          `${locale} error pattern comparison at ${width}px`,
+        ).toEqual({
+          viewport: width,
+          documentWidth: width,
+          invalidCards: [],
+        });
       }
 
       await page.setViewportSize({ width: 1280, height: 900 });
@@ -1692,6 +1725,13 @@ test.describe("ReadyRoad mobile visual identity", () => {
       await expect(
         cards.first().getByTestId("error-summary-content"),
       ).toHaveCSS("flex-direction", "row");
+      expect(
+        await page.evaluate(() => ({
+          viewport: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          bodyWidth: document.body.scrollWidth,
+        })),
+      ).toEqual({ viewport: 1280, documentWidth: 1280, bodyWidth: 1280 });
     }
   });
 

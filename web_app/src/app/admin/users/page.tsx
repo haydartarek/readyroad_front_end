@@ -8,6 +8,16 @@ import AdminMetricCard from "@/components/admin/AdminMetricCard";
 import { useAuth } from "@/hooks/useAuth";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   NATIVE_SELECT_COMPACT_CLASS,
   NATIVE_SELECT_DISABLED_CLASS,
@@ -25,6 +35,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  UserPlus,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────
@@ -56,7 +67,18 @@ type UserSummary = {
   newSince: string;
 };
 
-const ROLES = ["USER", "STUDENT", "MODERATOR", "ADMIN"] as const;
+const ROLES = ["USER", "MODERATOR", "ADMIN"] as const;
+const EMPTY_CREATE_FORM = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  username: "",
+  password: "",
+  preferredLanguage: "en",
+  role: "USER",
+  isActive: true,
+  emailVerified: false,
+};
 
 // ─── Helpers ────────────────────────────────────────────
 
@@ -105,6 +127,10 @@ export default function AdminUsersPage() {
   const [actionLoading, setActionLoading] = useState<Record<number, string>>(
     {},
   );
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createForm, setCreateForm] = useState(EMPTY_CREATE_FORM);
 
   const pageSize = 20;
   const totalPages = Math.ceil(totalUsers / pageSize);
@@ -194,6 +220,25 @@ export default function AdminUsersPage() {
     }
   };
 
+  const createUser = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCreating(true);
+    setCreateError(null);
+    try {
+      await apiClient.post("/admin/users", createForm);
+      setCreateOpen(false);
+      setCreateForm(EMPTY_CREATE_FORM);
+      await fetchUsers(0);
+    } catch (e: unknown) {
+      logApiError("Failed to create admin user", e);
+      const message = (e as { response?: { data?: { message?: string; error?: string } } })
+        .response?.data;
+      setCreateError(message?.message || message?.error || t("admin.users.create_error"));
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const filteredUsers = useMemo(() => users, [users]);
 
   return (
@@ -207,17 +252,142 @@ export default function AdminUsersPage() {
         title={t("admin.users.title")}
         description={t("admin.users.description")}
         actions={
-          <Button
-            variant="outline"
-            onClick={() => fetchUsers(page)}
-            disabled={loading}
-            className="gap-2"
-          >
-            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
-            {loading ? t("common.loading") : t("admin.users.refresh")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => setCreateOpen(true)} className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              {t("admin.users.create")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => fetchUsers(page)}
+              disabled={loading}
+              className="gap-2"
+            >
+              <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+              {loading ? t("common.loading") : t("admin.users.refresh")}
+            </Button>
+          </div>
         }
       />
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <form onSubmit={createUser} className="space-y-5">
+            <DialogHeader>
+              <DialogTitle>{t("admin.users.create_title")}</DialogTitle>
+              <DialogDescription>{t("admin.users.create_description")}</DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {([
+                ["firstName", "admin.users.first_name", "given-name"],
+                ["lastName", "admin.users.last_name", "family-name"],
+                ["email", "admin.users.email", "email"],
+                ["username", "admin.users.username", "username"],
+              ] as const).map(([field, label, autoComplete]) => (
+                <div key={field} className="space-y-1.5">
+                  <Label htmlFor={`create-${field}`}>{t(label)}</Label>
+                  <Input
+                    id={`create-${field}`}
+                    type={field === "email" ? "email" : "text"}
+                    autoComplete={autoComplete}
+                    required
+                    value={createForm[field]}
+                    onChange={(event) =>
+                      setCreateForm((current) => ({ ...current, [field]: event.target.value }))
+                    }
+                  />
+                </div>
+              ))}
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="create-password">{t("admin.users.password")}</Label>
+                <Input
+                  id="create-password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
+                  value={createForm.password}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({ ...current, password: event.target.value }))
+                  }
+                />
+                <p className="text-xs text-muted-foreground">{t("admin.users.password_hint")}</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="create-language">{t("admin.users.preferred_language")}</Label>
+                <select
+                  id="create-language"
+                  value={createForm.preferredLanguage}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({ ...current, preferredLanguage: event.target.value }))
+                  }
+                  className={NATIVE_SELECT_COMPACT_CLASS}
+                >
+                  <option value="en">English</option>
+                  <option value="nl">Nederlands</option>
+                  <option value="fr">Français</option>
+                  <option value="ar">العربية</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="create-role">{t("admin.users.col_role")}</Label>
+                <select
+                  id="create-role"
+                  value={createForm.role}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({ ...current, role: event.target.value }))
+                  }
+                  className={NATIVE_SELECT_COMPACT_CLASS}
+                >
+                  {ROLES.map((role) => <option key={role} value={role}>{role}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid gap-3 rounded-2xl border border-border/50 bg-muted/25 p-4 sm:grid-cols-2">
+              <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={createForm.isActive}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({ ...current, isActive: event.target.checked }))
+                  }
+                  className="h-4 w-4 accent-primary"
+                />
+                {t("admin.users.status_active")}
+              </label>
+              <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={createForm.emailVerified}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({ ...current, emailVerified: event.target.checked }))
+                  }
+                  className="h-4 w-4 accent-primary"
+                />
+                {t("admin.users.email_verified")}
+              </label>
+            </div>
+
+            {createError && (
+              <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {createError}
+              </p>
+            )}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button type="submit" disabled={creating} className="gap-2">
+                {creating && <RefreshCw className="h-4 w-4 animate-spin" />}
+                {creating ? t("common.loading") : t("admin.users.create")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

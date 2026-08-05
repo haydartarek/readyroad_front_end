@@ -111,6 +111,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
       (nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined),
     role: (raw.role as string) ?? "USER",
     isActive: true,
+    emailVerified: Boolean(raw.emailVerified),
     preferredLanguage:
       raw.preferredLanguage === "en" ||
       raw.preferredLanguage === "ar" ||

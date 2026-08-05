@@ -25,6 +25,7 @@ export interface User {
   lastName?: string;
   role: string;
   isActive: boolean;
+  emailVerified?: boolean;
   preferredLanguage?: Language;
   createdAt?: string;
   linkedProviders?: string[];

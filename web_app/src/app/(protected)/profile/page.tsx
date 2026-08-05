@@ -48,6 +48,8 @@ import {
   Trash2,
   AlertTriangle,
   Loader2,
+  KeyRound,
+  LockKeyhole,
 } from "lucide-react";
 import { DeleteAccountModal } from "@/components/ui/delete-account-modal";
 import {
@@ -296,6 +298,14 @@ export function ProfilePageContent({
         month: "long",
       })
     : "—";
+  const isAdmin = user.role === "ADMIN";
+  const isModerator = user.role === "MODERATOR";
+  const isPrivileged = isAdmin || isModerator;
+  const roleLabel = isAdmin
+    ? t("profile.role_admin")
+    : isModerator
+      ? t("profile.role_moderator")
+      : t("profile.role_user");
 
   return (
     <>
@@ -330,16 +340,30 @@ export function ProfilePageContent({
 
               {/* Info */}
               <div className="min-w-0 flex-1 space-y-1 text-center sm:text-start">
+                {isAdmin && (
+                  <p className="text-xs font-black uppercase text-primary">
+                    {t("profile.admin_profile_title")}
+                  </p>
+                )}
                 <PageHeroTitle>{fullName}</PageHeroTitle>
                 <PageHeroDescription className="break-all">
                   @{user.username}
                 </PageHeroDescription>
                 <div className="flex flex-wrap items-center justify-center gap-2 pt-1 sm:justify-start">
                   <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary ring-1 ring-primary/20">
-                    {t("profile.badge_free")}
+                    {roleLabel}
                   </span>
-                  <span className="inline-flex items-center rounded-full bg-green-500/10 px-3 py-0.5 text-xs font-semibold text-green-600 dark:text-green-400 ring-1 ring-green-500/20">
-                    {t("profile.badge_verified")}
+                  <span
+                    className={cn(
+                      "inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold ring-1",
+                      user.emailVerified
+                        ? "bg-green-500/10 text-green-600 ring-green-500/20 dark:text-green-400"
+                        : "bg-amber-500/10 text-amber-700 ring-amber-500/20",
+                    )}
+                  >
+                    {user.emailVerified
+                      ? t("profile.badge_verified")
+                      : t("profile.badge_unverified")}
                   </span>
                 </div>
               </div>
@@ -404,7 +428,7 @@ export function ProfilePageContent({
                       label: t("profile.account_type"),
                       value: (
                         <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
-                          {t("profile.badge_free")}
+                          {roleLabel}
                         </Badge>
                       ),
                     },
@@ -419,8 +443,17 @@ export function ProfilePageContent({
                     {
                       label: t("profile.email_verified"),
                       value: (
-                        <Badge className="bg-green-500/10 text-green-600 border-green-200 text-xs">
-                          {t("profile.badge_verified")}
+                        <Badge
+                          className={cn(
+                            "text-xs",
+                            user.emailVerified
+                              ? "border-green-200 bg-green-500/10 text-green-600"
+                              : "border-amber-200 bg-amber-500/10 text-amber-700",
+                          )}
+                        >
+                          {user.emailVerified
+                            ? t("profile.badge_verified")
+                            : t("profile.badge_unverified")}
                         </Badge>
                       ),
                     },
@@ -438,7 +471,55 @@ export function ProfilePageContent({
                 </CardContent>
               </Card>
 
-              <Card className="border-border/50 shadow-sm">
+              {isPrivileged && (
+                <Card className="border-primary/15 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <SectionHeader
+                      icon={<KeyRound className="h-4 w-4" />}
+                      title={t("profile.permissions_summary")}
+                    />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {(isAdmin
+                      ? [
+                          "profile.permission_users",
+                          "profile.permission_content",
+                          "profile.permission_settings",
+                        ]
+                      : [
+                          "profile.permission_review",
+                          "profile.permission_moderation",
+                        ]
+                    ).map((permission) => (
+                      <div
+                        key={permission}
+                        className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/25 px-3 py-2.5 text-xs font-semibold text-foreground"
+                      >
+                        <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                        {t(permission)}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {isPrivileged && (
+                <Card className="border-border/50 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <SectionHeader
+                      icon={<LockKeyhole className="h-4 w-4" />}
+                      title={t("profile.security_information")}
+                    />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="rounded-xl bg-muted/35 px-3 py-3 text-xs leading-5 text-muted-foreground">
+                      {t(isAdmin ? "profile.admin_security_help" : "profile.moderator_security_help")}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!isPrivileged && <Card className="border-border/50 shadow-sm">
                 <CardHeader className="pb-3">
                   <SectionHeader
                     icon={<ShieldCheck className="w-4 h-4" />}
@@ -482,7 +563,7 @@ export function ProfilePageContent({
                     />
                   )}
                 </CardContent>
-              </Card>
+              </Card>}
             </div>
 
             {/* ── Right main content ── */}
@@ -692,7 +773,7 @@ export function ProfilePageContent({
               </Card>
 
               {/* Danger Zone */}
-              <Card className="border-destructive/25 shadow-sm">
+              {!isPrivileged && <Card className="border-destructive/25 shadow-sm">
                 <CardHeader className="pb-4">
                   <SectionHeader
                     icon={<Trash2 className="w-4 h-4" />}
@@ -765,7 +846,7 @@ export function ProfilePageContent({
                     </div>
                   )}
                 </CardContent>
-              </Card>
+              </Card>}
             </div>
           </div>
         </div>

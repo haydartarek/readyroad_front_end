@@ -185,4 +185,21 @@ describe("Admin theoretical question editing", () => {
     );
     consoleError.mockRestore();
   });
+
+  it("keeps every explanation editor visible and warns about missing translations", async () => {
+    mockedGet.mockImplementation((url: string) =>
+      Promise.resolve({
+        data:
+          url === "/categories"
+            ? [{ code: "A", nameEn: "Danger signs" }]
+            : { ...question, explanationAr: null, explanationFr: "" },
+      }),
+    );
+
+    render(<AdminEditQuizQuestionPage />);
+
+    expect(await screen.findAllByText("admin.quizzes.missing_translation")).toHaveLength(2);
+    expect(screen.getByLabelText("admin.quizzes.form.explanation_ar")).toBeInTheDocument();
+    expect(screen.getByLabelText("admin.quizzes.form.explanation_fr")).toBeInTheDocument();
+  });
 });

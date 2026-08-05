@@ -167,6 +167,7 @@ function FormTextarea({
   placeholder,
   value,
   error,
+  warning,
   onChange,
   dir,
   disabled = false,
@@ -175,6 +176,7 @@ function FormTextarea({
   placeholder?: string;
   value: string;
   error?: string;
+  warning?: string;
   onChange: (v: string) => void;
   dir?: string;
   disabled?: boolean;
@@ -206,6 +208,9 @@ function FormTextarea({
         )}
       />
       {error && <p className="text-xs text-destructive">{error}</p>}
+      {!error && warning && (
+        <p className="text-xs font-semibold text-amber-600">{warning}</p>
+      )}
     </div>
   );
 }
@@ -975,22 +980,26 @@ export default function AdminEditQuizQuestionPage() {
               label={t("admin.quizzes.form.explanation_en")}
               value={form.explanationEn}
               onChange={(value) => setField("explanationEn", value)}
+              warning={!form.explanationEn.trim() ? t("admin.quizzes.missing_translation") : undefined}
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_ar")}
               value={form.explanationAr}
               onChange={(value) => setField("explanationAr", value)}
               dir="rtl"
+              warning={!form.explanationAr.trim() ? t("admin.quizzes.missing_translation") : undefined}
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_nl")}
               value={form.explanationNl}
               onChange={(value) => setField("explanationNl", value)}
+              warning={!form.explanationNl.trim() ? t("admin.quizzes.missing_translation") : undefined}
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_fr")}
               value={form.explanationFr}
               onChange={(value) => setField("explanationFr", value)}
+              warning={!form.explanationFr.trim() ? t("admin.quizzes.missing_translation") : undefined}
             />
           </div>
         </AdminSectionCard>

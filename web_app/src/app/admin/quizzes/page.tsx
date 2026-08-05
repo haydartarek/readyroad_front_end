@@ -26,6 +26,7 @@ import {
   Trash2,
   CheckCircle2,
   AlertTriangle,
+  Shuffle,
   X,
   ChevronsLeft,
   ChevronLeft,
@@ -45,6 +46,10 @@ interface QuizQuestion {
   questionAr: string;
   questionNl: string;
   questionFr: string;
+  explanationEn: string | null;
+  explanationAr: string | null;
+  explanationNl: string | null;
+  explanationFr: string | null;
   contentImageUrl: string | null;
   isActive: boolean;
   optionsCount: number;
@@ -75,6 +80,10 @@ interface CategoryOption {
   nameAr: string;
   nameNl: string;
   nameFr: string;
+}
+interface DistributionResponse {
+  total: number;
+  positions: { label: string; count: number; percentage: number }[];
 }
 
 // ─── Constants ─────────────────────────────────────────
@@ -116,10 +125,12 @@ function DetailLang({
   label,
   text,
   dir,
+  missingLabel,
 }: {
   label: string;
   text: string;
   dir?: string;
+  missingLabel?: string;
 }) {
   return (
     <div
@@ -129,7 +140,14 @@ function DetailLang({
       <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1">
         {label}
       </p>
-      <p className="text-sm text-foreground line-clamp-3">{text || "—"}</p>
+      <p
+        className={cn(
+          "text-sm line-clamp-3",
+          text?.trim() ? "text-foreground" : "font-semibold text-amber-600",
+        )}
+      >
+        {text?.trim() || missingLabel || "—"}
+      </p>
     </div>
   );
 }
@@ -181,6 +199,9 @@ export default function AdminQuizzesPage() {
     type: "success" | "error";
   } | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [distribution, setDistribution] = useState<DistributionResponse | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [shuffling, setShuffling] = useState(false);
 
   const fetchIdRef = useRef(0);
   const tRef = useRef(t);
@@ -192,6 +213,21 @@ export default function AdminQuizzesPage() {
       .then((res) => setCategories(res.data))
       .catch(() => {});
   }, []);
+
+  const fetchDistribution = useCallback(async () => {
+    try {
+      const response = await apiClient.get<DistributionResponse>(
+        API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.DISTRIBUTION,
+      );
+      setDistribution(response.data);
+    } catch (err) {
+      logApiError("Failed to fetch correct answer distribution", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchDistribution();
+  }, [fetchDistribution]);
 
   const updateUrl = useCallback(
     (params: Record<string, string | number>) => {
@@ -255,6 +291,7 @@ export default function AdminQuizzesPage() {
       );
       if (id !== fetchIdRef.current) return;
       setQuestions(res.data.items);
+      setSelectedIds([]);
       setTotalItems(res.data.totalItems);
       setTotalPages(res.data.totalPages);
     } catch (err) {
@@ -374,6 +411,25 @@ export default function AdminQuizzesPage() {
       setDeleteId(null);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleShuffle = async () => {
+    if (selectedIds.length === 0 || !window.confirm(t("admin.quizzes.shuffle_confirm"))) {
+      return;
+    }
+    try {
+      setShuffling(true);
+      await apiClient.post(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.SHUFFLE, {
+        questionIds: selectedIds,
+      });
+      setToast({ message: t("admin.quizzes.shuffle_success"), type: "success" });
+      await Promise.all([fetchQuestions(), fetchDistribution()]);
+    } catch (err) {
+      logApiError("Failed to shuffle answer order", err);
+      setToast({ message: t("admin.quizzes.shuffle_error"), type: "error" });
+    } finally {
+      setShuffling(false);
     }
   };
 
@@ -517,6 +573,40 @@ export default function AdminQuizzesPage() {
         {t("admin.quizzes.bank_theory_desc")}
       </div>
 
+      {distribution && (
+        <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-black text-foreground">
+                {t("admin.quizzes.distribution_title")}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {t("admin.quizzes.distribution_total").replace("{count}", String(distribution.total))}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleShuffle}
+              disabled={selectedIds.length === 0 || shuffling}
+              className="gap-2"
+            >
+              <Shuffle className={cn("h-4 w-4", shuffling && "animate-spin")} />
+              {t("admin.quizzes.shuffle_selected").replace("{count}", String(selectedIds.length))}
+            </Button>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {distribution.positions.map((position) => (
+              <div key={position.label} className="rounded-xl border border-border/50 bg-muted/25 p-3 text-center">
+                <p className="text-lg font-black text-primary">{position.label}</p>
+                <p className="text-sm font-bold text-foreground">{position.percentage.toFixed(1)}%</p>
+                <p className="text-xs text-muted-foreground">{position.count}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ─── QUIZ Questions section ─── */}
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
@@ -607,6 +697,17 @@ export default function AdminQuizzesPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 border-b border-border/40">
               <tr className="text-xs uppercase tracking-wide text-muted-foreground">
+                <th className="w-12 px-4 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    aria-label={t("admin.quizzes.select_page")}
+                    checked={questions.length > 0 && selectedIds.length === questions.length}
+                    onChange={(event) =>
+                      setSelectedIds(event.target.checked ? questions.map((question) => question.id) : [])
+                    }
+                    className="h-4 w-4 accent-primary"
+                  />
+                </th>
                 <th
                   className="px-4 py-3 text-left font-semibold cursor-pointer select-none w-14"
                   onClick={() => handleSort("id")}
@@ -651,7 +752,7 @@ export default function AdminQuizzesPage() {
             <tbody className="divide-y divide-border/30">
               {questions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-16 text-center">
+                  <td colSpan={10} className="px-4 py-16 text-center">
                     <div className="space-y-2">
                       <div className="text-4xl">📋</div>
                       <p className="text-muted-foreground">
@@ -664,6 +765,21 @@ export default function AdminQuizzesPage() {
                 questions.map((q, index) => (
                   <React.Fragment key={q.id}>
                     <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          aria-label={t("admin.quizzes.select_question").replace("{id}", String(q.id))}
+                          checked={selectedIds.includes(q.id)}
+                          onChange={(event) =>
+                            setSelectedIds((current) =>
+                              event.target.checked
+                                ? [...current, q.id]
+                                : current.filter((id) => id !== q.id),
+                            )
+                          }
+                          className="h-4 w-4 accent-primary"
+                        />
+                      </td>
                       <td className="px-4 py-3">
                         <span className="text-xs font-semibold text-foreground">
                           {page * size + index + 1}
@@ -785,7 +901,7 @@ export default function AdminQuizzesPage() {
                     {/* Expanded Row */}
                     {expandedId === q.id && (
                       <tr className="bg-primary/5">
-                        <td colSpan={9} className="px-6 py-4 space-y-4">
+                        <td colSpan={10} className="px-6 py-4 space-y-4">
                           {q.contentImageUrl && (
                             <div className="rounded-2xl border border-border/40 bg-card/80 p-4">
                               <p className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3">
@@ -820,6 +936,18 @@ export default function AdminQuizzesPage() {
                               label={t("admin.settings_page.language_fr")}
                               text={q.questionFr}
                             />
+                          </div>
+
+                          <div>
+                            <p className="mb-2 text-xs font-black uppercase tracking-wide text-muted-foreground">
+                              {t("admin.quizzes.form.explanations")}
+                            </p>
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+                              <DetailLang label={t("admin.settings_page.language_en")} text={q.explanationEn || ""} missingLabel={t("admin.quizzes.missing_translation")} />
+                              <DetailLang label={t("admin.settings_page.language_ar")} text={q.explanationAr || ""} dir="rtl" missingLabel={t("admin.quizzes.missing_translation")} />
+                              <DetailLang label={t("admin.settings_page.language_nl")} text={q.explanationNl || ""} missingLabel={t("admin.quizzes.missing_translation")} />
+                              <DetailLang label={t("admin.settings_page.language_fr")} text={q.explanationFr || ""} missingLabel={t("admin.quizzes.missing_translation")} />
+                            </div>
                           </div>
 
                           {q.options?.length > 0 && (

@@ -16,11 +16,14 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { convertToPublicImageUrl } from "@/lib/image-utils";
-import {
-  NATIVE_SELECT_CLASS,
-  NATIVE_SELECT_DISABLED_CLASS,
-} from "@/lib/native-select-styles";
+import { NATIVE_SELECT_CLASS } from "@/lib/native-select-styles";
 import { cn } from "@/lib/utils";
+import {
+  difficultyAfterAddingOption,
+  optionDisplayLabel,
+  QUIZ_DIFFICULTIES,
+  QUIZ_QUESTION_TYPES,
+} from "@/lib/admin-quiz-form";
 import {
   ArrowLeft,
   Upload,
@@ -253,11 +256,12 @@ export default function AdminEditQuizQuestionPage() {
   const [isReferenced, setIsReferenced] = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const difficultyManuallyChangedRef = useRef(false);
 
   useEffect(() => {
     Promise.all([
       apiClient
-        .get<CategoryOption[]>("/categories")
+        .get<CategoryOption[]>(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CATEGORIES)
         .catch(() => ({ data: [] as CategoryOption[] })),
       apiClient.get<AdminQuizQuestionWireResponse>(
         API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.DETAIL(questionId),
@@ -292,6 +296,7 @@ export default function AdminEditQuizQuestionPage() {
             displayOrder: o.displayOrder,
           })),
         });
+        difficultyManuallyChangedRef.current = false;
       })
       .catch((err) => {
         logApiError("Failed to load quiz question", err);
@@ -386,6 +391,11 @@ export default function AdminEditQuizQuestionPage() {
     if (form.options.length >= 3) return;
     setForm((prev) => ({
       ...prev,
+      difficultyLevel: difficultyAfterAddingOption(
+        prev.options.length,
+        prev.difficultyLevel,
+        difficultyManuallyChangedRef.current,
+      ),
       options: [
         ...prev.options,
         { ...BLANK_OPTION, displayOrder: prev.options.length + 1 },
@@ -690,7 +700,7 @@ export default function AdminEditQuizQuestionPage() {
             <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span>
               {t("admin.quizzes.edit_referenced_detail") ||
-                "This question is referenced by learner history. Its answers can be edited safely; category, difficulty, and type remain locked."}
+                "This question is referenced by learner history. Existing answer records remain preserved while its current content is edited."}
             </span>
           </div>
         )}
@@ -713,11 +723,9 @@ export default function AdminEditQuizQuestionPage() {
                 name="categoryCode"
                 value={form.categoryCode}
                 onChange={(e) => setField("categoryCode", e.target.value)}
-                disabled={isReferenced}
                 className={cn(
                   "w-full",
                   NATIVE_SELECT_CLASS,
-                  NATIVE_SELECT_DISABLED_CLASS,
                   fieldErrors.categoryCode
                     ? "border-destructive/50"
                     : "border-border/50",
@@ -752,17 +760,17 @@ export default function AdminEditQuizQuestionPage() {
                 id="admin-quiz-edit-difficulty"
                 name="difficultyLevel"
                 value={form.difficultyLevel}
-                onChange={(e) => setField("difficultyLevel", e.target.value)}
-                disabled={isReferenced}
-                className={cn(
-                  "w-full",
-                  NATIVE_SELECT_CLASS,
-                  NATIVE_SELECT_DISABLED_CLASS,
-                )}
+                onChange={(e) => {
+                  difficultyManuallyChangedRef.current = true;
+                  setField("difficultyLevel", e.target.value);
+                }}
+                className={cn("w-full", NATIVE_SELECT_CLASS)}
               >
-                <option value="EASY">{t("difficulty.easy")}</option>
-                <option value="MEDIUM">{t("difficulty.medium")}</option>
-                <option value="HARD">{t("difficulty.hard")}</option>
+                {QUIZ_DIFFICULTIES.map((difficulty) => (
+                  <option key={difficulty} value={difficulty}>
+                    {t(`difficulty.${difficulty.toLowerCase()}`)}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -779,22 +787,13 @@ export default function AdminEditQuizQuestionPage() {
                 name="questionType"
                 value={form.questionType}
                 onChange={(e) => setField("questionType", e.target.value)}
-                disabled={isReferenced}
-                className={cn(
-                  "w-full",
-                  NATIVE_SELECT_CLASS,
-                  NATIVE_SELECT_DISABLED_CLASS,
-                )}
+                className={cn("w-full", NATIVE_SELECT_CLASS)}
               >
-                <option value="MULTIPLE_CHOICE">
-                  {t("admin.quizzes.type_multiple_choice")}
-                </option>
-                <option value="TRUE_FALSE">
-                  {t("admin.quizzes.type_true_false")}
-                </option>
-                <option value="IMAGE_BASED">
-                  {t("admin.quizzes.type_image_based")}
-                </option>
+                {QUIZ_QUESTION_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {t(`admin.quizzes.type_${type.toLowerCase()}`)}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -1056,12 +1055,12 @@ export default function AdminEditQuizQuestionPage() {
                           : "bg-muted text-muted-foreground",
                       )}
                     >
-                      {String.fromCharCode(65 + idx)}
+                      {optionDisplayLabel(idx)}
                     </div>
                     <span className="text-sm font-bold text-foreground">
                       {t("admin.quizzes.form.option_number").replace(
                         "{number}",
-                        String.fromCharCode(65 + idx),
+                        optionDisplayLabel(idx),
                       )}
                     </span>
                     {opt.isCorrect && (
@@ -1106,7 +1105,7 @@ export default function AdminEditQuizQuestionPage() {
                     {form.options.length > 2 && (
                       <button
                         type="button"
-                        aria-label={`${t("admin.quizzes.form.remove_option")} ${String.fromCharCode(65 + idx)}`}
+                        aria-label={`${t("admin.quizzes.form.remove_option")} ${optionDisplayLabel(idx)}`}
                         onClick={() => removeOption(idx)}
                         className="text-destructive hover:opacity-70 transition-opacity"
                       >

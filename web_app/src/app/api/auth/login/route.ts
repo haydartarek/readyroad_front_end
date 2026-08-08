@@ -18,7 +18,7 @@ import {
   CSRF_COOKIE_NAME,
   getBackendUrl,
   generateCsrfToken,
-  getAuthCookieOptions,
+  getAuthCookieOptionsForToken,
   getCsrfCookieOptions,
 } from "@/lib/server/auth";
 
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set(
       AUTH_COOKIE_NAME,
       token,
-      getAuthCookieOptions(request),
+      getAuthCookieOptionsForToken(request, token),
     );
 
     // Set CSRF double-submit cookie — client JS CAN read this

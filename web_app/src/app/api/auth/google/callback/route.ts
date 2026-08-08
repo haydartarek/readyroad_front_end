@@ -5,7 +5,7 @@ import {
   AUTH_COOKIE_NAME,
   CSRF_COOKIE_NAME,
   generateCsrfToken,
-  getAuthCookieOptions,
+  getAuthCookieOptionsForToken,
   getBackendUrl,
   getFrontendUrl,
   getCsrfCookieOptions,
@@ -216,7 +216,7 @@ export async function GET(request: NextRequest) {
     response.cookies.set(
       AUTH_COOKIE_NAME,
       token,
-      getAuthCookieOptions(request),
+      getAuthCookieOptionsForToken(request, token),
     );
     response.cookies.set(
       CSRF_COOKIE_NAME,

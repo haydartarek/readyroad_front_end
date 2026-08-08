@@ -52,11 +52,11 @@ const NAV_ITEMS = [
   { name: "nav.home", href: "/" },
   { name: "nav.lessons", href: ROUTES.LESSONS },
   { name: "nav.traffic_signs", href: ROUTES.TRAFFIC_SIGNS },
-  { name: "nav.dashboard", href: ROUTES.DASHBOARD },
-  { name: "nav.exam", href: ROUTES.EXAM },
   { name: "nav.practice", href: ROUTES.PRACTICE },
+  { name: "nav.exam", href: ROUTES.EXAM },
   { name: "nav.videos", href: ROUTES.VIDEOS },
   { name: "nav.faq", href: "/faq" },
+  { name: "nav.dashboard", href: ROUTES.DASHBOARD },
 ] as const;
 
 const AUTH_PATHS = [

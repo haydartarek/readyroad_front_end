@@ -18,6 +18,12 @@ import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { NATIVE_SELECT_CLASS } from "@/lib/native-select-styles";
 import { cn } from "@/lib/utils";
 import {
+  difficultyAfterAddingOption,
+  optionDisplayLabel,
+  QUIZ_DIFFICULTIES,
+  QUIZ_QUESTION_TYPES,
+} from "@/lib/admin-quiz-form";
+import {
   ArrowLeft,
   Upload,
   X,
@@ -48,6 +54,10 @@ interface QuestionForm {
   questionAr: string;
   questionNl: string;
   questionFr: string;
+  explanationEn: string;
+  explanationAr: string;
+  explanationNl: string;
+  explanationFr: string;
   contentImageUrl: string;
   isActive: boolean;
   options: OptionForm[];
@@ -77,6 +87,10 @@ const INITIAL_FORM: QuestionForm = {
   questionAr: "",
   questionNl: "",
   questionFr: "",
+  explanationEn: "",
+  explanationAr: "",
+  explanationNl: "",
+  explanationFr: "",
   contentImageUrl: "",
   isActive: true,
   options: [
@@ -142,6 +156,7 @@ function FormTextarea({
   placeholder,
   value,
   error,
+  warning,
   onChange,
   dir,
   disabled = false,
@@ -150,6 +165,7 @@ function FormTextarea({
   placeholder?: string;
   value: string;
   error?: string;
+  warning?: string;
   onChange: (v: string) => void;
   dir?: string;
   disabled?: boolean;
@@ -181,6 +197,9 @@ function FormTextarea({
         )}
       />
       {error && <p className="text-xs text-destructive">{error}</p>}
+      {!error && warning && (
+        <p className="text-xs font-semibold text-amber-600">{warning}</p>
+      )}
     </div>
   );
 }
@@ -206,10 +225,11 @@ export default function AdminAddQuizQuestionPage() {
   const [uploading, setUploading] = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const difficultyManuallyChangedRef = useRef(false);
 
   useEffect(() => {
     apiClient
-      .get<CategoryOption[]>("/categories")
+      .get<CategoryOption[]>(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CATEGORIES)
       .then((res) => setCategories(res.data))
       .catch(() => {});
   }, []);
@@ -225,10 +245,21 @@ export default function AdminAddQuizQuestionPage() {
     () =>
       form.categoryCode.trim() !== "" &&
       form.questionEn.trim() !== "" &&
+      form.questionAr.trim() !== "" &&
+      form.questionNl.trim() !== "" &&
+      form.questionFr.trim() !== "" &&
+      (form.questionType !== "IMAGE_BASED" ||
+        form.contentImageUrl.trim() !== "") &&
       form.options.length >= 2 &&
       form.options.length <= 3 &&
       form.options.filter((o) => o.isCorrect).length === 1 &&
-      form.options.every((o) => o.textEn.trim() !== ""),
+      form.options.every(
+        (o) =>
+          o.textEn.trim() !== "" &&
+          o.textAr.trim() !== "" &&
+          o.textNl.trim() !== "" &&
+          o.textFr.trim() !== "",
+      ),
     [form],
   );
 
@@ -276,6 +307,11 @@ export default function AdminAddQuizQuestionPage() {
     if (form.options.length >= 3) return;
     setForm((prev) => ({
       ...prev,
+      difficultyLevel: difficultyAfterAddingOption(
+        prev.options.length,
+        prev.difficultyLevel,
+        difficultyManuallyChangedRef.current,
+      ),
       options: [
         ...prev.options,
         { ...BLANK_OPTION, displayOrder: prev.options.length + 1 },
@@ -298,10 +334,14 @@ export default function AdminAddQuizQuestionPage() {
     if (!form.categoryCode.trim())
       errors.categoryCode =
         t("admin.quizzes.form.error_category") || "Category is required";
-    if (!form.questionEn.trim())
-      errors.questionEn =
-        t("admin.quizzes.form.error_question") ||
-        "English question text is required";
+    (["En", "Ar", "Nl", "Fr"] as const).forEach((suffix) => {
+      const key = `question${suffix}` as keyof QuestionForm;
+      if (!String(form[key]).trim()) {
+        errors[key] =
+          t("admin.quizzes.form.error_question_all_languages") ||
+          "Question text is required in all four languages";
+      }
+    });
     if (form.questionType === "IMAGE_BASED" && !form.contentImageUrl.trim()) {
       errors.contentImageUrl =
         t("admin.quizzes.form.error_image_required") ||
@@ -325,10 +365,15 @@ export default function AdminAddQuizQuestionPage() {
         t("admin.quizzes.form.error_only_one_correct") ||
         "Only one option can be marked as correct";
     form.options.forEach((o, i) => {
-      if (!o.textEn.trim())
+      if (
+        !o.textEn.trim() ||
+        !o.textAr.trim() ||
+        !o.textNl.trim() ||
+        !o.textFr.trim()
+      )
         errors[`option_${i}`] =
-          t("admin.quizzes.form.error_option_en") ||
-          "English option text is required";
+          t("admin.quizzes.form.error_option_all_languages") ||
+          "Option text is required in all four languages";
     });
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -424,6 +469,10 @@ export default function AdminAddQuizQuestionPage() {
         questionAr: form.questionAr.trim() || "",
         questionNl: form.questionNl.trim() || "",
         questionFr: form.questionFr.trim() || "",
+        explanationEn: form.explanationEn.trim() || "",
+        explanationAr: form.explanationAr.trim() || "",
+        explanationNl: form.explanationNl.trim() || "",
+        explanationFr: form.explanationFr.trim() || "",
         contentImageUrl: form.contentImageUrl.trim() || null,
         isActive: form.isActive,
         options: form.options.map((o) => ({
@@ -581,12 +630,17 @@ export default function AdminAddQuizQuestionPage() {
                 id="admin-quiz-new-difficulty"
                 name="difficultyLevel"
                 value={form.difficultyLevel}
-                onChange={(e) => setField("difficultyLevel", e.target.value)}
+                onChange={(e) => {
+                  difficultyManuallyChangedRef.current = true;
+                  setField("difficultyLevel", e.target.value);
+                }}
                 className={cn("w-full", NATIVE_SELECT_CLASS)}
               >
-                <option value="EASY">{t("difficulty.easy")}</option>
-                <option value="MEDIUM">{t("difficulty.medium")}</option>
-                <option value="HARD">{t("difficulty.hard")}</option>
+                {QUIZ_DIFFICULTIES.map((difficulty) => (
+                  <option key={difficulty} value={difficulty}>
+                    {t(`difficulty.${difficulty.toLowerCase()}`)}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -605,15 +659,11 @@ export default function AdminAddQuizQuestionPage() {
                 onChange={(e) => setField("questionType", e.target.value)}
                 className={cn("w-full", NATIVE_SELECT_CLASS)}
               >
-                <option value="MULTIPLE_CHOICE">
-                  {t("admin.quizzes.type_multiple_choice")}
-                </option>
-                <option value="TRUE_FALSE">
-                  {t("admin.quizzes.type_true_false")}
-                </option>
-                <option value="IMAGE_BASED">
-                  {t("admin.quizzes.type_image_based")}
-                </option>
+                {QUIZ_QUESTION_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {t(`admin.quizzes.type_${type.toLowerCase()}`)}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -666,6 +716,7 @@ export default function AdminAddQuizQuestionPage() {
               />
               <button
                 type="button"
+                aria-label={t("admin.quizzes.upload.remove")}
                 onClick={() => {
                   setField("contentImageUrl", "");
                   if (fileInputRef.current) fileInputRef.current.value = "";
@@ -752,23 +803,53 @@ export default function AdminAddQuizQuestionPage() {
               onChange={(v) => setField("questionEn", v)}
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_ar")}
+              label={`${t("admin.quizzes.form.question_ar")} *`}
               placeholder={t("admin.quizzes.form.question_ar_placeholder")}
               value={form.questionAr}
               onChange={(v) => setField("questionAr", v)}
               dir="rtl"
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_nl")}
+              label={`${t("admin.quizzes.form.question_nl")} *`}
               placeholder={t("admin.quizzes.form.question_nl_placeholder")}
               value={form.questionNl}
               onChange={(v) => setField("questionNl", v)}
             />
             <FormTextarea
-              label={t("admin.quizzes.form.question_fr")}
+              label={`${t("admin.quizzes.form.question_fr")} *`}
               placeholder={t("admin.quizzes.form.question_fr_placeholder")}
               value={form.questionFr}
               onChange={(v) => setField("questionFr", v)}
+            />
+          </div>
+        </AdminSectionCard>
+
+        <AdminSectionCard title={t("admin.quizzes.form.explanations")}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormTextarea
+              label={t("admin.quizzes.form.explanation_en")}
+              value={form.explanationEn}
+              onChange={(value) => setField("explanationEn", value)}
+              warning={!form.explanationEn.trim() ? t("admin.quizzes.missing_translation") : undefined}
+            />
+            <FormTextarea
+              label={t("admin.quizzes.form.explanation_ar")}
+              value={form.explanationAr}
+              onChange={(value) => setField("explanationAr", value)}
+              dir="rtl"
+              warning={!form.explanationAr.trim() ? t("admin.quizzes.missing_translation") : undefined}
+            />
+            <FormTextarea
+              label={t("admin.quizzes.form.explanation_nl")}
+              value={form.explanationNl}
+              onChange={(value) => setField("explanationNl", value)}
+              warning={!form.explanationNl.trim() ? t("admin.quizzes.missing_translation") : undefined}
+            />
+            <FormTextarea
+              label={t("admin.quizzes.form.explanation_fr")}
+              value={form.explanationFr}
+              onChange={(value) => setField("explanationFr", value)}
+              warning={!form.explanationFr.trim() ? t("admin.quizzes.missing_translation") : undefined}
             />
           </div>
         </AdminSectionCard>
@@ -825,12 +906,12 @@ export default function AdminAddQuizQuestionPage() {
                           : "bg-muted text-muted-foreground",
                       )}
                     >
-                      {idx + 1}
+                      {optionDisplayLabel(idx)}
                     </div>
                     <span className="text-sm font-bold text-foreground">
                       {t("admin.quizzes.form.option_number").replace(
                         "{number}",
-                        String(idx + 1),
+                        optionDisplayLabel(idx),
                       )}
                     </span>
                     {opt.isCorrect && (
@@ -855,6 +936,7 @@ export default function AdminAddQuizQuestionPage() {
                     {form.options.length > 2 && (
                       <button
                         type="button"
+                        aria-label={`${t("admin.quizzes.form.remove_option")} ${optionDisplayLabel(idx)}`}
                         onClick={() => removeOption(idx)}
                         className="text-destructive hover:opacity-70 transition-opacity"
                       >

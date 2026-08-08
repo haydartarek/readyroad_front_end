@@ -151,12 +151,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user;
 
   const clearAuth = useCallback(async () => {
-    setUser(null);
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch {
-      // Best-effort — cookie will expire eventually
+    const response = await fetch("/api/auth/logout", { method: "POST" });
+    if (!response.ok) {
+      throw new Error("Logout failed");
     }
+    setUser(null);
   }, []);
 
   const fetchUser = useCallback(async () => {
@@ -369,10 +368,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const displayName =
       user?.firstName ?? user?.fullName?.split(" ")[0] ?? user?.username ?? "";
     // Clear HttpOnly cookie server-side before showing the modal
-    await clearAuth();
+    try {
+      await clearAuth();
+    } catch (error) {
+      logApiError("[AuthContext] logout", error);
+      toast.error(t("common.error_desc"));
+      return;
+    }
     // Show farewell modal — it handles the redirect after 2.5s
     setLogoutModal({ open: true, username: displayName });
-  }, [clearAuth, user]);
+  }, [clearAuth, t, user]);
 
   return (
     <AuthContext.Provider

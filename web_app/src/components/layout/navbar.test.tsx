@@ -22,6 +22,12 @@ const mockUser = {
 
 const mockLabels: Record<Language, Record<string, string>> = {
   en: {
+    "nav.home": "Home",
+    "nav.lessons": "Driving Licence Lessons",
+    "nav.traffic_signs": "Study Traffic Signs",
+    "nav.practice": "Traffic Sign Practice",
+    "nav.exam": "Theory Exam Simulator",
+    "nav.faq": "FAQ",
     "nav.account_menu": "Account menu",
     "nav.dashboard": "Dashboard",
     "nav.profile": "Profile",
@@ -29,6 +35,12 @@ const mockLabels: Record<Language, Record<string, string>> = {
     "auth.logout": "Log out",
   },
   nl: {
+    "nav.home": "Home",
+    "nav.lessons": "Rijbewijslessen",
+    "nav.traffic_signs": "Verkeersborden leren",
+    "nav.practice": "Verkeersborden oefenen",
+    "nav.exam": "Theorie-examensimulator",
+    "nav.faq": "FAQ",
     "nav.account_menu": "Accountmenu",
     "nav.dashboard": "Dashboard",
     "nav.profile": "Profiel",
@@ -36,6 +48,12 @@ const mockLabels: Record<Language, Record<string, string>> = {
     "auth.logout": "Uitloggen",
   },
   fr: {
+    "nav.home": "Accueil",
+    "nav.lessons": "Cours du permis de conduire",
+    "nav.traffic_signs": "Étudier les panneaux routiers",
+    "nav.practice": "Entraînement aux panneaux routiers",
+    "nav.exam": "Simulateur d’examen théorique",
+    "nav.faq": "FAQ",
     "nav.account_menu": "Menu du compte",
     "nav.dashboard": "Tableau de Bord",
     "nav.profile": "Profil",
@@ -43,6 +61,12 @@ const mockLabels: Record<Language, Record<string, string>> = {
     "auth.logout": "Se déconnecter",
   },
   ar: {
+    "nav.home": "الرئيسية",
+    "nav.lessons": "دروس رخصة السياقة",
+    "nav.traffic_signs": "دراسة العلامات المرورية",
+    "nav.practice": "تدريب العلامات المرورية",
+    "nav.exam": "محاكي الامتحان النظري",
+    "nav.faq": "الأسئلة الشائعة",
     "nav.account_menu": "قائمة الحساب",
     "nav.dashboard": "لوحة التحكم",
     "nav.profile": "الملف الشخصي",
@@ -183,6 +207,65 @@ async function openAccountMenu() {
 }
 
 describe("Navbar responsive account navigation", () => {
+  test.each([
+    [
+      "en",
+      [
+        "Home",
+        "Driving Licence Lessons",
+        "Study Traffic Signs",
+        "Traffic Sign Practice",
+        "Theory Exam Simulator",
+        "Driving Videos",
+        "FAQ",
+      ],
+    ],
+    [
+      "nl",
+      [
+        "Home",
+        "Rijbewijslessen",
+        "Verkeersborden leren",
+        "Verkeersborden oefenen",
+        "Theorie-examensimulator",
+        "Rijlesvideo’s",
+        "FAQ",
+      ],
+    ],
+    [
+      "fr",
+      [
+        "Accueil",
+        "Cours du permis de conduire",
+        "Étudier les panneaux routiers",
+        "Entraînement aux panneaux routiers",
+        "Simulateur d’examen théorique",
+        "Vidéos de conduite",
+        "FAQ",
+      ],
+    ],
+    [
+      "ar",
+      [
+        "الرئيسية",
+        "دروس رخصة السياقة",
+        "دراسة العلامات المرورية",
+        "تدريب العلامات المرورية",
+        "محاكي الامتحان النظري",
+        "فيديوهات تعليم السياقة",
+        "الأسئلة الشائعة",
+      ],
+    ],
+  ] as const)("uses the learner journey order in %s", (language, labels) => {
+    mockLanguage = language;
+    render(<Navbar />);
+
+    const links = within(
+      screen.getByTestId("desktop-primary-navigation"),
+    ).getAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(labels);
+  });
+
   test.each([
     ["en", "Dashboard", "/dashboard"],
     ["nl", "Dashboard", "/nl/dashboard"],

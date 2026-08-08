@@ -190,6 +190,7 @@ export const API_ENDPOINTS = {
     },
 
     QUIZ_QUESTIONS: {
+      CATEGORIES: "/admin/quiz/categories",
       LIST: "/admin/quiz/questions",
       DETAIL: (id: number | string) => `/admin/quiz/questions/${id}`,
       CREATE: "/admin/quiz/questions",

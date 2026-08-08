@@ -66,8 +66,28 @@ function buildCookieOptions(
 }
 
 /** HttpOnly cookie options for the JWT token */
-export function getAuthCookieOptions(request: AuthCookieRequest) {
-  return buildCookieOptions(request, true, COOKIE_TTL);
+export function getAuthCookieOptions(
+  request: AuthCookieRequest,
+  maxAge = COOKIE_TTL,
+) {
+  return buildCookieOptions(request, true, maxAge);
+}
+
+export function getAuthCookieOptionsForToken(
+  request: AuthCookieRequest,
+  token: string,
+) {
+  const payload = decodeJwtPayload(token);
+  if (payload?.role !== "ADMIN") {
+    return getAuthCookieOptions(request);
+  }
+
+  const expiresAt = typeof payload.exp === "number" ? payload.exp : 0;
+  const remainingSeconds = Math.max(
+    1,
+    Math.floor(expiresAt - Date.now() / 1000),
+  );
+  return getAuthCookieOptions(request, remainingSeconds);
 }
 
 /** Non-HttpOnly cookie options for the CSRF token (must be readable by client JS) */

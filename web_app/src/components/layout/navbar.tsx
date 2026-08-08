@@ -8,12 +8,14 @@ import Link from "@/components/localized-link";
 import {
   ChevronDown,
   LayoutDashboard,
+  LogIn,
   LogOut,
   Menu,
   Moon,
   Search,
   Settings,
   Sun,
+  UserPlus,
   X,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -55,7 +57,6 @@ const NAV_ITEMS = [
   { name: "nav.practice", href: ROUTES.PRACTICE },
   { name: "nav.exam", href: ROUTES.EXAM },
   { name: "nav.videos", href: ROUTES.VIDEOS },
-  { name: "nav.dashboard", href: ROUTES.DASHBOARD },
 ] as const;
 
 const AUTH_PATHS = [
@@ -91,7 +92,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-lg px-0.5 py-2 text-[11px] font-semibold transition-all duration-200 min-[1536px]:px-2 min-[1536px]:text-xs",
+        "shrink-0 whitespace-nowrap rounded-lg px-0.5 py-2 text-[10px] font-semibold transition-all duration-200 min-[1536px]:px-2 min-[1536px]:text-xs",
         isActive
           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
           : "text-muted-foreground hover:bg-background/85 hover:text-foreground",
@@ -129,10 +130,7 @@ export function Navbar() {
   const isAdmin = user?.role === "ADMIN";
   const isStaff = user?.role === "ADMIN" || user?.role === "MODERATOR";
   const roleLabel = t(getRoleLabelKey(user?.role));
-  const primaryNavigationItems =
-    isAuthenticated && user
-      ? NAV_ITEMS.filter((item) => item.href !== ROUTES.DASHBOARD)
-      : NAV_ITEMS;
+  const primaryNavigationItems = NAV_ITEMS;
   const displayName = user?.fullName ?? user?.username ?? t("nav.profile");
   const userInitial = displayName.trim().charAt(0).toUpperCase();
   const isDarkTheme = resolvedTheme === "dark";
@@ -218,7 +216,7 @@ export function Navbar() {
       data-testid="site-navbar"
       className="sticky top-0 z-50 h-[75px] bg-background/85 px-2 py-2 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65"
     >
-      <div className="mx-auto flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-5">
+      <div className="mx-auto flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 xl:gap-1 xl:px-2 min-[1536px]:gap-3 min-[1536px]:px-5">
         <Link
           href="/"
           prefetch={false}
@@ -489,12 +487,12 @@ export function Navbar() {
                 <button
                   type="button"
                   aria-label={t("nav.language_menu")}
-                  className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-2.5 text-sm font-semibold shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 min-[1536px]:gap-2 min-[1536px]:px-3"
+                  className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-2.5 text-sm font-semibold shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 xl:w-11 xl:justify-center xl:px-0 min-[1536px]:w-auto min-[1536px]:gap-2 min-[1536px]:px-3"
                 >
                   <span className="text-xs font-bold text-muted-foreground">
                     {currentLanguage?.flag}
                   </span>
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground xl:hidden min-[1536px]:block" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -524,19 +522,35 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 asChild
-                className="h-11 rounded-xl px-2.5 font-semibold min-[1536px]:px-4"
+                className="h-11 rounded-xl px-2.5 font-semibold xl:w-11 xl:px-0 min-[1536px]:w-auto min-[1536px]:px-4"
               >
-                <Link href={ROUTES.LOGIN} prefetch={false}>
-                  {t("auth.login")}
+                <Link
+                  href={ROUTES.LOGIN}
+                  prefetch={false}
+                  aria-label={t("auth.login")}
+                  title={t("auth.login")}
+                >
+                  <LogIn className="hidden h-4 w-4 xl:block min-[1536px]:hidden" />
+                  <span className="xl:hidden min-[1536px]:inline">
+                    {t("auth.login")}
+                  </span>
                 </Link>
               </Button>
               <Button
                 size="sm"
                 asChild
-                className="h-11 rounded-xl px-3 font-semibold shadow-sm shadow-primary/20 min-[1536px]:px-5"
+                className="h-11 rounded-xl px-3 font-semibold shadow-sm shadow-primary/20 xl:w-11 xl:px-0 min-[1536px]:w-auto min-[1536px]:px-5"
               >
-                <Link href={ROUTES.REGISTER} prefetch={false}>
-                  {t("auth.register")}
+                <Link
+                  href={ROUTES.REGISTER}
+                  prefetch={false}
+                  aria-label={t("auth.register")}
+                  title={t("auth.register")}
+                >
+                  <UserPlus className="hidden h-4 w-4 xl:block min-[1536px]:hidden" />
+                  <span className="xl:hidden min-[1536px]:inline">
+                    {t("auth.register")}
+                  </span>
                 </Link>
               </Button>
             </div>

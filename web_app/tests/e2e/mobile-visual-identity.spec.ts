@@ -3140,6 +3140,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
 
     for (const locale of locales) {
       await navigate(page, localizedPath("/", locale));
+      await page.evaluate(() => document.fonts.ready);
 
       for (const width of desktopWidths) {
         await page.setViewportSize({ width, height: 1000 });

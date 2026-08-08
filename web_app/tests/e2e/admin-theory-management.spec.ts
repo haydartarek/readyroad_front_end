@@ -241,6 +241,7 @@ for (const locale of navigationByLocale) {
     for (const width of [1280, 1366, 1440, 1536, 1920]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(locale.path);
+      await page.evaluate(() => document.fonts.ready);
       await expect(desktop).toBeVisible();
       await expect(
         page.getByRole("button", { name: locale.openMenu }),

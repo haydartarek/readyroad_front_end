@@ -311,13 +311,13 @@ describe("Navbar responsive account navigation", () => {
   );
 
   test.each([
-    ["en", "Dashboard", "/dashboard"],
-    ["nl", "Dashboard", "/nl/dashboard"],
-    ["fr", "Tableau de Bord", "/fr/dashboard"],
-    ["ar", "لوحة التحكم", "/ar/dashboard"],
+    ["en", "Dashboard"],
+    ["nl", "Dashboard"],
+    ["fr", "Tableau de Bord"],
+    ["ar", "لوحة التحكم"],
   ] as const)(
-    "preserves the current %s guest navigation",
-    async (language, label, href) => {
+    "keeps dashboard out of the %s guest navigation",
+    async (language, label) => {
       mockLanguage = language;
       mockIsAuthenticated = false;
       render(<Navbar />);
@@ -326,10 +326,10 @@ describe("Navbar responsive account navigation", () => {
         "desktop-primary-navigation",
       );
       expect(
-        within(primaryNavigation).getByRole("link", {
+        within(primaryNavigation).queryByRole("link", {
           name: label,
         }),
-      ).toHaveAttribute("href", href);
+      ).not.toBeInTheDocument();
       expect(
         screen.queryByRole("button", {
           name: mockLabels[language]["nav.account_menu"],
@@ -343,10 +343,10 @@ describe("Navbar responsive account navigation", () => {
         "mobile-navigation-dialog",
       );
       expect(
-        within(mobileNavigation).getByRole("link", {
+        within(mobileNavigation).queryByRole("link", {
           name: label,
         }),
-      ).toHaveAttribute("href", href);
+      ).not.toBeInTheDocument();
       expect(
         within(mobileNavigation).getByRole("link", { name: "auth.login" }),
       ).toBeInTheDocument();

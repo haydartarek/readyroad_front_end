@@ -122,6 +122,9 @@ test("desktop navbar remains single-line and balanced in every language", async 
         const actions = navbar.querySelector('[data-testid="navbar-actions"]');
         const links = primary ? [...primary.querySelectorAll("a")] : [];
         const search = navbar.querySelector<HTMLInputElement>("#navbar-search");
+        const compactSearch = navbar.querySelector<HTMLElement>(
+          '[data-testid="compact-navbar-search"]',
+        );
         const menuButton = [...navbar.querySelectorAll("button")].find((button) =>
           button.querySelector(".lucide-menu"),
         );
@@ -154,7 +157,10 @@ test("desktop navbar remains single-line and balanced in every language", async 
             menuButton instanceof HTMLElement &&
             getComputedStyle(menuButton).display !== "none" &&
             menuButton.getBoundingClientRect().width > 0,
-          searchWidth: search?.getBoundingClientRect().width ?? 0,
+          searchWidth: Math.max(
+            search?.getBoundingClientRect().width ?? 0,
+            compactSearch?.getBoundingClientRect().width ?? 0,
+          ),
         };
       });
 
@@ -170,9 +176,29 @@ test("desktop navbar remains single-line and balanced in every language", async 
         primaryOverlap: false,
         wrappedLinks: 0,
         menuVisible: false,
-        searchWidth: 96,
+        searchWidth: width < 1920 ? 44 : 96,
       });
     }
+  }
+});
+
+test("compact desktop search remains available below the wide layout", async ({
+  page,
+}) => {
+  for (const path of ["/", "/nl", "/fr", "/ar"]) {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(path);
+
+    const compactSearch = page.getByTestId("compact-navbar-search");
+    await expect(compactSearch).toBeVisible();
+    await compactSearch.click();
+    await expect(page.locator("#compact-navbar-search-input")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#compact-navbar-search-input")).toBeHidden();
+
+    await page.setViewportSize({ width: 1920, height: 900 });
+    await expect(compactSearch).toBeHidden();
+    await expect(page.locator("#navbar-search")).toBeVisible();
   }
 });
 

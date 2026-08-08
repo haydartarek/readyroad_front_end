@@ -2,18 +2,27 @@
 
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Image from "next/image";
 import Link from "@/components/localized-link";
 import {
   ChevronDown,
   LayoutDashboard,
+  LogIn,
   LogOut,
   Menu,
   Moon,
   Search,
   Settings,
   Sun,
+  UserPlus,
+  UserRound,
   X,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -112,6 +121,7 @@ export function Navbar() {
   const router = useLocalizedRouter();
   const searchContainer = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const themeMounted = useSyncExternalStore(
     subscribeToHydration,
     getClientHydrationSnapshot,
@@ -159,6 +169,7 @@ export function Navbar() {
     (result: SearchResult) => {
       router.push(result.href);
       handleClear();
+      setDesktopSearchOpen(false);
       setMobileMenuOpen(false);
     },
     [router, handleClear],
@@ -204,7 +215,7 @@ export function Navbar() {
       data-testid="site-navbar"
       className="sticky top-0 z-50 h-[75px] bg-background/85 px-2 py-2 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65"
     >
-      <div className="mx-auto flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-5">
+      <div className="mx-auto flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 min-[1280px]:max-[1535px]:!px-3 min-[1536px]:gap-3 min-[1536px]:px-5 min-[1920px]:max-w-[1840px]">
         <Link
           href="/"
           prefetch={false}
@@ -219,7 +230,7 @@ export function Navbar() {
             height={48}
             className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-border/50 min-[1536px]:h-11 min-[1536px]:w-11"
           />
-          <span className="text-[1.05rem] font-black leading-none tracking-normal max-[359px]:hidden min-[1280px]:hidden min-[1536px]:inline">
+          <span className="text-[1.05rem] font-black leading-none tracking-normal max-[359px]:hidden min-[1280px]:hidden min-[1920px]:inline">
             <span className="text-primary">R</span>
             <span className="text-secondary">eady</span>
             <span className="text-primary">R</span>
@@ -247,9 +258,85 @@ export function Navbar() {
           data-testid="navbar-actions"
           className="flex shrink-0 items-center gap-1.5"
         >
+          <div className="hidden min-[1280px]:block min-[1920px]:hidden">
+            <Dialog
+              open={desktopSearchOpen}
+              onOpenChange={(open) => {
+                setDesktopSearchOpen(open);
+                if (!open) handleClose();
+              }}
+            >
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  data-testid="compact-navbar-search"
+                  aria-label={t("nav.search")}
+                  title={t("nav.search")}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/12"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="w-[calc(100vw-2rem)] max-w-lg rounded-2xl p-5">
+                <DialogTitle className="text-base font-black">
+                  {t("nav.search")}
+                </DialogTitle>
+                <DialogDescription className="sr-only">
+                  {t("nav.search")}
+                </DialogDescription>
+                <div className="relative">
+                  <Search
+                    className={cn(
+                      "pointer-events-none absolute top-3.5 z-10 h-4 w-4 text-muted-foreground",
+                      isRTL ? "right-4" : "left-4",
+                    )}
+                  />
+                  <input
+                    id="compact-navbar-search-input"
+                    name="compact-navbar-search"
+                    type="text"
+                    autoComplete="off"
+                    autoFocus
+                    aria-label={t("nav.search")}
+                    placeholder={t("nav.search")}
+                    value={searchQuery}
+                    onChange={(e) => handleQueryChange(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    className={cn(
+                      "h-11 w-full rounded-xl border border-border/60 bg-muted/35 py-2 text-sm shadow-sm transition-colors focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12",
+                      isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
+                    )}
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      aria-label={t("nav.clear_search")}
+                      className={cn(
+                        "absolute top-3.5 z-10 text-muted-foreground transition-colors hover:text-foreground",
+                        isRTL ? "left-4" : "right-4",
+                      )}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                  {isSearchOpen ? (
+                    <SearchDropdown
+                      results={searchResults}
+                      isLoading={isSearchLoading}
+                      query={searchQuery}
+                      highlightedIndex={highlightedIndex}
+                      onSelect={handleSelectResult}
+                    />
+                  ) : null}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
           <div
             ref={searchContainer}
-            className="relative hidden shrink-0 items-center xl:flex"
+            className="relative hidden shrink-0 items-center min-[1920px]:flex"
           >
             <Search
               className={cn(
@@ -432,7 +519,7 @@ export function Navbar() {
                 : t("nav.toggle_theme")
             }
             onClick={toggleTheme}
-            className="hidden h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary lg:inline-flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary lg:inline-flex min-[1280px]:max-[1535px]:!hidden"
           >
             {themeMounted && isDarkTheme ? (
               <Sun className="h-[18px] w-[18px]" />
@@ -477,27 +564,58 @@ export function Navbar() {
           </div>
 
           {!isAuthenticated || !user ? (
-            <div className="hidden items-center gap-2 sm:flex">
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="h-11 rounded-xl px-2.5 font-semibold min-[1536px]:px-4"
-              >
-                <Link href={ROUTES.LOGIN} prefetch={false}>
-                  {t("auth.login")}
-                </Link>
-              </Button>
-              <Button
-                size="sm"
-                asChild
-                className="h-11 rounded-xl px-3 font-semibold shadow-sm shadow-primary/20 min-[1536px]:px-5"
-              >
-                <Link href={ROUTES.REGISTER} prefetch={false}>
-                  {t("auth.register")}
-                </Link>
-              </Button>
-            </div>
+            <>
+              <div className="hidden items-center gap-2 sm:flex min-[1280px]:max-[1919px]:!hidden">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-11 rounded-xl px-2.5 font-semibold min-[1536px]:px-4"
+                >
+                  <Link href={ROUTES.LOGIN} prefetch={false}>
+                    {t("auth.login")}
+                  </Link>
+                </Button>
+                <Button
+                  size="sm"
+                  asChild
+                  className="h-11 rounded-xl px-3 font-semibold shadow-sm shadow-primary/20 min-[1536px]:px-5"
+                >
+                  <Link href={ROUTES.REGISTER} prefetch={false}>
+                    {t("auth.register")}
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="hidden min-[1280px]:block min-[1920px]:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={t("nav.account_menu")}
+                      title={t("nav.account_menu")}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/12"
+                    >
+                      <UserRound className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align={isRTL ? "start" : "end"}>
+                    <DropdownMenuItem asChild>
+                      <Link href={ROUTES.LOGIN} prefetch={false}>
+                        <LogIn className="h-4 w-4" />
+                        <span>{t("auth.login")}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={ROUTES.REGISTER} prefetch={false}>
+                        <UserPlus className="h-4 w-4" />
+                        <span>{t("auth.register")}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
           ) : null}
 
           <div className="flex items-center min-[1280px]:hidden">

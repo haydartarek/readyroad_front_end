@@ -115,7 +115,7 @@ describe("Admin theoretical question editing", () => {
     mockedGet.mockReset();
     mockedPut.mockReset();
     mockedGet.mockImplementation((url: string) =>
-      Promise.resolve({ data: url === "/categories" ? [{ code: "A", nameEn: "Danger signs" }] : question }),
+      Promise.resolve({ data: url === "/admin/quiz/categories" ? [{ code: "A", nameEn: "Danger signs" }] : question }),
     );
     mockedPut.mockResolvedValue({ data: question });
   });
@@ -190,7 +190,7 @@ describe("Admin theoretical question editing", () => {
     mockedGet.mockImplementation((url: string) =>
       Promise.resolve({
         data:
-          url === "/categories"
+          url === "/admin/quiz/categories"
             ? [{ code: "A", nameEn: "Danger signs" }]
             : { ...question, explanationAr: null, explanationFr: "" },
       }),

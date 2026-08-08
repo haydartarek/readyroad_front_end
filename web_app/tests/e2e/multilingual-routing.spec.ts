@@ -111,7 +111,7 @@ test("desktop navbar remains single-line and balanced in every language", async 
     await page.goto(path);
     await page.evaluate(() => document.fonts.ready);
 
-    for (const width of [1280, 1366, 1440, 1536, 1920]) {
+    for (const width of [1920]) {
       await page.setViewportSize({ width, height: 900 });
 
       const metrics = await page.getByTestId("site-navbar").evaluate((navbar) => {
@@ -122,9 +122,6 @@ test("desktop navbar remains single-line and balanced in every language", async 
         const actions = navbar.querySelector('[data-testid="navbar-actions"]');
         const links = primary ? [...primary.querySelectorAll("a")] : [];
         const search = navbar.querySelector<HTMLInputElement>("#navbar-search");
-        const compactSearch = navbar.querySelector<HTMLElement>(
-          '[data-testid="compact-navbar-search"]',
-        );
         const menuButton = [...navbar.querySelectorAll("button")].find((button) =>
           button.querySelector(".lucide-menu"),
         );
@@ -157,10 +154,7 @@ test("desktop navbar remains single-line and balanced in every language", async 
             menuButton instanceof HTMLElement &&
             getComputedStyle(menuButton).display !== "none" &&
             menuButton.getBoundingClientRect().width > 0,
-          searchWidth: Math.max(
-            search?.getBoundingClientRect().width ?? 0,
-            compactSearch?.getBoundingClientRect().width ?? 0,
-          ),
+          searchWidth: search?.getBoundingClientRect().width ?? 0,
         };
       });
 
@@ -176,36 +170,20 @@ test("desktop navbar remains single-line and balanced in every language", async 
         primaryOverlap: false,
         wrappedLinks: 0,
         menuVisible: false,
-        searchWidth: width < 1920 ? 44 : 96,
+        searchWidth: 96,
       });
     }
   }
 });
 
-test("compact desktop search remains available below the wide layout", async ({
-  page,
-}) => {
-  for (const path of ["/", "/nl", "/fr", "/ar"]) {
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(path);
-
-    const compactSearch = page.getByTestId("compact-navbar-search");
-    await expect(compactSearch).toBeVisible();
-    await compactSearch.click();
-    await expect(page.locator("#compact-navbar-search-input")).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(page.locator("#compact-navbar-search-input")).toBeHidden();
-
-    await page.setViewportSize({ width: 1920, height: 900 });
-    await expect(compactSearch).toBeHidden();
-    await expect(page.locator("#navbar-search")).toBeVisible();
-  }
-});
-
-test("navbar uses a stable compact menu without overflow below desktop", async ({
+test("navbar uses a stable compact menu without overflow below wide desktop", async ({
   page,
 }) => {
   for (const viewport of [
+    { width: 1536, height: 900 },
+    { width: 1440, height: 900 },
+    { width: 1366, height: 900 },
+    { width: 1280, height: 900 },
     { width: 1024, height: 768 },
     { width: 768, height: 1024 },
     { width: 375, height: 812 },

@@ -380,10 +380,10 @@ describe("Navbar responsive account navigation", () => {
     expect(screen.getByTestId("site-navbar").firstElementChild).toHaveClass(
       "h-[58px]",
     );
-    expect(primaryNavigation).toHaveClass("min-[1280px]:flex");
+    expect(primaryNavigation).toHaveClass("min-[1920px]:flex");
     expect(
       screen.getByRole("button", { name: "nav.open_menu" }).parentElement,
-    ).toHaveClass("min-[1280px]:hidden");
+    ).toHaveClass("min-[1920px]:hidden");
   });
 
   test.each([

@@ -3123,7 +3123,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
     expect(pageErrors).toEqual([]);
   });
 
-  test("desktop navigation stays complete and collision-free in every locale", async ({
+  test("navigation stays complete and collision-free in every locale", async ({
     context,
     page,
   }, testInfo) => {
@@ -3155,6 +3155,19 @@ test.describe("ReadyRoad mobile visual identity", () => {
         const actions = page.getByTestId("navbar-actions");
         const hamburger = navbar.locator("button:has(svg.lucide-menu)");
         await expect(navbar).toBeVisible();
+
+        if (width < 1920) {
+          await expect(desktopNavigation).toBeHidden();
+          await expect(hamburger).toBeVisible();
+          await expectViewportLayout(
+            page,
+            `${locale} compact desktop navbar`,
+            width,
+            testInfo,
+          );
+          continue;
+        }
+
         await expect(desktopNavigation).toBeVisible();
         await expect(hamburger).toBeHidden();
 

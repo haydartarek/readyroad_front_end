@@ -237,7 +237,7 @@ for (const locale of navigationByLocale) {
       route.fulfill({ json: [] }),
     );
 
-    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.setViewportSize({ width: 1920, height: 900 });
     await page.goto(locale.path);
     const desktop = page.getByTestId("desktop-primary-navigation");
     await expect(desktop).toBeVisible();

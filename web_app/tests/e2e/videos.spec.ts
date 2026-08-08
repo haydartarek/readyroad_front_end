@@ -85,6 +85,22 @@ async function loadMockVideos(page: Page, path: string) {
   ).toBeVisible();
 }
 
+async function loadVideosNavigationPage(page: Page, path: string) {
+  const response = await page.goto(path);
+  expect(response?.status()).toBe(200);
+
+  const retry = page.getByTestId("videos-retry");
+  const videos = page.getByTestId("video-card");
+  await expect
+    .poll(async () => (await retry.isVisible()) || (await videos.count()) > 0)
+    .toBe(true);
+
+  if (await retry.isVisible()) {
+    await retry.click();
+  }
+  await expect(videos.first()).toBeVisible();
+}
+
 test.describe("multilingual YouTube videos page", () => {
   test.beforeEach(async ({ page }) => {
     await prepareVideos(page);
@@ -134,8 +150,8 @@ test.describe("multilingual YouTube videos page", () => {
   test("uses videos as the single header destination and preserves the route when switching language", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await loadMockVideos(page, "/videos");
+    await page.setViewportSize({ width: 1920, height: 900 });
+    await loadVideosNavigationPage(page, "/videos");
 
     const desktopNavigation = page.getByTestId("desktop-primary-navigation");
     const desktopVideosLink = desktopNavigation.getByRole("link", {

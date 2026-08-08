@@ -170,7 +170,7 @@ test("desktop navbar remains single-line and balanced in every language", async 
         primaryOverlap: false,
         wrappedLinks: 0,
         menuVisible: false,
-        searchWidth: 128,
+        searchWidth: 96,
       });
     }
   }

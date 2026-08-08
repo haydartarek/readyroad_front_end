@@ -249,7 +249,7 @@ export function Navbar() {
         >
           <div
             ref={searchContainer}
-            className="relative hidden items-center xl:flex"
+            className="relative hidden shrink-0 items-center xl:flex"
           >
             <Search
               className={cn(
@@ -268,7 +268,7 @@ export function Navbar() {
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               className={cn(
-                "h-11 w-24 shrink-0 rounded-xl border border-border/60 bg-muted/35 py-2 text-sm shadow-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12 min-[1536px]:w-32",
+                "h-11 w-24 shrink-0 rounded-xl border border-border/60 bg-muted/35 py-2 text-sm shadow-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12",
                 isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
               )}
             />

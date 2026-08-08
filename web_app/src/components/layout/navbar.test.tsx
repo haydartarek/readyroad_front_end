@@ -290,7 +290,6 @@ describe("Navbar responsive account navigation", () => {
 
     const search = screen.getByRole("textbox", { name: "nav.search" });
     expect(search).toHaveClass("w-24");
-    expect(search).toHaveClass("min-[1536px]:w-32");
     expect(search).toHaveClass("shrink-0");
     expect(search).not.toHaveClass("w-40");
     expect(search).not.toHaveClass("2xl:w-36");

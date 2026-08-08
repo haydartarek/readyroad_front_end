@@ -217,7 +217,6 @@ describe("Navbar responsive account navigation", () => {
         "Traffic Sign Practice",
         "Theory Exam Simulator",
         "Driving Videos",
-        "FAQ",
       ],
     ],
     [
@@ -229,7 +228,6 @@ describe("Navbar responsive account navigation", () => {
         "Verkeersborden oefenen",
         "Theorie-examensimulator",
         "Rijlesvideo’s",
-        "FAQ",
       ],
     ],
     [
@@ -241,7 +239,6 @@ describe("Navbar responsive account navigation", () => {
         "Entraînement aux panneaux routiers",
         "Simulateur d’examen théorique",
         "Vidéos de conduite",
-        "FAQ",
       ],
     ],
     [
@@ -253,7 +250,6 @@ describe("Navbar responsive account navigation", () => {
         "تدريب العلامات المرورية",
         "محاكي الامتحان النظري",
         "فيديوهات تعليم السياقة",
-        "الأسئلة الشائعة",
       ],
     ],
   ] as const)("uses the learner journey order in %s", (language, labels) => {
@@ -360,7 +356,7 @@ describe("Navbar responsive account navigation", () => {
     },
   );
 
-  test("keeps primary navigation labels on one line and reduces search width", () => {
+  test("keeps the full desktop navigation and opens search from an icon", async () => {
     render(<Navbar />);
 
     const primaryNavigation = screen.getByTestId(
@@ -371,19 +367,31 @@ describe("Navbar responsive account navigation", () => {
       expect(link).toHaveClass("shrink-0");
     }
 
-    const search = screen.getByRole("textbox", { name: "nav.search" });
-    expect(search).toHaveClass("w-24");
-    expect(search).toHaveClass("shrink-0");
-    expect(search).not.toHaveClass("w-40");
-    expect(search).not.toHaveClass("2xl:w-36");
-    expect(search).not.toHaveClass("2xl:w-48");
+    expect(
+      within(primaryNavigation).queryByRole("link", { name: "FAQ" }),
+    ).not.toBeInTheDocument();
+    const searchTrigger = screen.getByRole("button", { name: "nav.search" });
+    expect(searchTrigger).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("textbox", { name: "nav.search" })).not.toBeInTheDocument();
+    fireEvent.click(searchTrigger);
+    expect(searchTrigger).toHaveAttribute("aria-expanded", "true");
+    expect(await screen.findByRole("textbox", { name: "nav.search" })).toHaveFocus();
     expect(screen.getByTestId("site-navbar").firstElementChild).toHaveClass(
       "h-[58px]",
     );
-    expect(primaryNavigation).toHaveClass("min-[1920px]:flex");
+    expect(primaryNavigation).toHaveClass("xl:flex");
     expect(
       screen.getByRole("button", { name: "nav.open_menu" }).parentElement,
-    ).toHaveClass("min-[1920px]:hidden");
+    ).toHaveClass("xl:hidden");
+
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "nav.search" }), {
+      key: "Escape",
+    });
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("textbox", { name: "nav.search" }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   test.each([

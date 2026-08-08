@@ -55,7 +55,6 @@ const NAV_ITEMS = [
   { name: "nav.practice", href: ROUTES.PRACTICE },
   { name: "nav.exam", href: ROUTES.EXAM },
   { name: "nav.videos", href: ROUTES.VIDEOS },
-  { name: "nav.faq", href: "/faq" },
   { name: "nav.dashboard", href: ROUTES.DASHBOARD },
 ] as const;
 
@@ -92,7 +91,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-lg px-1 py-2 text-xs font-semibold transition-all duration-200 min-[1366px]:px-2",
+        "shrink-0 whitespace-nowrap rounded-lg px-0.5 py-2 text-[11px] font-semibold transition-all duration-200 min-[1536px]:px-2 min-[1536px]:text-xs",
         isActive
           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
           : "text-muted-foreground hover:bg-background/85 hover:text-foreground",
@@ -111,7 +110,9 @@ export function Navbar() {
   const pathname = useRoutePathname();
   const router = useLocalizedRouter();
   const searchContainer = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const themeMounted = useSyncExternalStore(
     subscribeToHydration,
     getClientHydrationSnapshot,
@@ -151,7 +152,6 @@ export function Navbar() {
     highlightedIndex,
     handleQueryChange,
     handleClear,
-    handleClose,
     handleKeyDown,
   } = useSearch(language);
 
@@ -159,6 +159,7 @@ export function Navbar() {
     (result: SearchResult) => {
       router.push(result.href);
       handleClear();
+      setDesktopSearchOpen(false);
       setMobileMenuOpen(false);
     },
     [router, handleClear],
@@ -171,7 +172,11 @@ export function Navbar() {
 
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && searchResults.length > 0 && isSearchOpen) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setDesktopSearchOpen(false);
+        handleClear();
+      } else if (e.key === "Enter" && searchResults.length > 0 && isSearchOpen) {
         e.preventDefault();
         const hit = searchResults[highlightedIndex];
         if (hit) handleSelectResult(hit);
@@ -185,17 +190,26 @@ export function Navbar() {
       highlightedIndex,
       handleSelectResult,
       handleKeyDown,
+      handleClear,
     ],
   );
 
   useEffect(() => {
-    if (!isSearchOpen) return;
+    if (!desktopSearchOpen) return;
+    searchInput.current?.focus();
+  }, [desktopSearchOpen]);
+
+  useEffect(() => {
+    if (!desktopSearchOpen) return;
     const handler = (e: MouseEvent) => {
-      if (!searchContainer.current?.contains(e.target as Node)) handleClose();
+      if (!searchContainer.current?.contains(e.target as Node)) {
+        setDesktopSearchOpen(false);
+        handleClear();
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [isSearchOpen, handleClose]);
+  }, [desktopSearchOpen, handleClear]);
 
   if (isAuthPage || (isAdminPage && !isAdminDashboardPage)) return null;
 
@@ -204,7 +218,7 @@ export function Navbar() {
       data-testid="site-navbar"
       className="sticky top-0 z-50 h-[75px] bg-background/85 px-2 py-2 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65"
     >
-      <div className="mx-auto flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-5 min-[1920px]:max-w-none">
+      <div className="mx-auto flex h-[58px] w-full max-w-[1560px] items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 shadow-sm sm:px-4 min-[1536px]:gap-3 min-[1536px]:px-5">
         <Link
           href="/"
           prefetch={false}
@@ -229,9 +243,9 @@ export function Navbar() {
 
         <div
           data-testid="desktop-primary-navigation"
-          className="hidden min-w-0 flex-1 items-center justify-center min-[1920px]:flex"
+          className="hidden min-w-0 flex-1 items-center justify-center xl:flex"
         >
-          <div className="flex min-w-0 items-center gap-0 rounded-xl bg-muted/40 p-1 min-[1366px]:gap-0.5">
+          <div className="flex min-w-0 items-center gap-0 rounded-xl bg-muted/40 p-1 min-[1536px]:gap-0.5">
             {primaryNavigationItems.map((item) => (
               <NavLink
                 key={item.href}
@@ -245,53 +259,81 @@ export function Navbar() {
 
         <div
           data-testid="navbar-actions"
-          className="flex shrink-0 items-center gap-1.5"
+          className="flex shrink-0 items-center gap-1"
         >
           <div
             ref={searchContainer}
             className="relative hidden shrink-0 items-center xl:flex"
           >
-            <Search
-              className={cn(
-                "pointer-events-none absolute z-10 h-4 w-4 text-muted-foreground",
-                isRTL ? "right-4" : "left-4",
-              )}
-            />
-            <input
-              id="navbar-search"
-              name="search"
-              type="text"
-              autoComplete="off"
+            <button
+              type="button"
               aria-label={t("nav.search")}
-              placeholder={t("nav.search")}
-              value={searchQuery}
-              onChange={(e) => handleQueryChange(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              className={cn(
-                "h-11 w-24 shrink-0 rounded-xl border border-border/60 bg-muted/35 py-2 text-sm shadow-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12",
-                isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
-              )}
-            />
-            {searchQuery ? (
-              <button
-                onClick={handleClear}
-                aria-label={t("nav.clear_search")}
+              aria-expanded={desktopSearchOpen}
+              aria-controls="navbar-search-panel"
+              onClick={() => {
+                if (desktopSearchOpen) handleClear();
+                setDesktopSearchOpen((open) => !open);
+              }}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/12"
+            >
+              <Search className="h-[18px] w-[18px]" />
+            </button>
+
+            {desktopSearchOpen ? (
+              <div
+                id="navbar-search-panel"
                 className={cn(
-                  "absolute z-10 text-muted-foreground transition-colors hover:text-foreground",
-                  isRTL ? "left-4" : "right-4",
+                  "absolute top-[calc(100%+0.5rem)] z-50 w-80 max-w-[calc(100vw-1rem)]",
+                  isRTL ? "left-0" : "right-0",
                 )}
               >
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
-            {isSearchOpen ? (
-              <SearchDropdown
-                results={searchResults}
-                isLoading={isSearchLoading}
-                query={searchQuery}
-                highlightedIndex={highlightedIndex}
-                onSelect={handleSelectResult}
-              />
+                <div className="relative">
+                  <Search
+                    className={cn(
+                      "pointer-events-none absolute top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground",
+                      isRTL ? "right-4" : "left-4",
+                    )}
+                  />
+                  <input
+                    ref={searchInput}
+                    id="navbar-search"
+                    name="search"
+                    type="text"
+                    autoComplete="off"
+                    aria-label={t("nav.search")}
+                    placeholder={t("nav.search")}
+                    value={searchQuery}
+                    onChange={(e) => handleQueryChange(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    className={cn(
+                      "h-11 w-full rounded-xl border border-border/60 bg-background py-2 text-sm shadow-lg transition-all duration-200 focus:border-primary/30 focus:outline-none focus:ring-4 focus:ring-primary/12",
+                      isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
+                    )}
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      aria-label={t("nav.clear_search")}
+                      className={cn(
+                        "absolute top-1/2 z-10 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground",
+                        isRTL ? "left-4" : "right-4",
+                      )}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </div>
+                {isSearchOpen ? (
+                  <SearchDropdown
+                    results={searchResults}
+                    isLoading={isSearchLoading}
+                    query={searchQuery}
+                    highlightedIndex={highlightedIndex}
+                    onSelect={handleSelectResult}
+                  />
+                ) : null}
+              </div>
             ) : null}
           </div>
 
@@ -432,7 +474,7 @@ export function Navbar() {
                 : t("nav.toggle_theme")
             }
             onClick={toggleTheme}
-            className="hidden h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary lg:inline-flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary min-[1536px]:inline-flex"
           >
             {themeMounted && isDarkTheme ? (
               <Sun className="h-[18px] w-[18px]" />
@@ -477,7 +519,7 @@ export function Navbar() {
           </div>
 
           {!isAuthenticated || !user ? (
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="hidden items-center gap-1.5 sm:flex">
               <Button
                 variant="ghost"
                 size="sm"
@@ -500,7 +542,7 @@ export function Navbar() {
             </div>
           ) : null}
 
-          <div className="flex items-center min-[1920px]:hidden">
+          <div className="flex items-center xl:hidden">
             <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <DialogTrigger asChild>
                 <Button

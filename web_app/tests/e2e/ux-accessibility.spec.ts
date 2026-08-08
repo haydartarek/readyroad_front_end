@@ -145,7 +145,13 @@ test.describe("Milestone 4 UX and accessibility", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
 
-    await expect(page.getByRole("textbox", { name: "Search" })).toBeVisible();
+    const navbar = page.getByTestId("site-navbar");
+    const searchButton = navbar.getByRole("button", { name: "Search" });
+    await expect(searchButton).toBeVisible();
+    await searchButton.click();
+    await expect(
+      navbar.getByRole("textbox", { name: "Search" }),
+    ).toBeFocused();
 
     for (const route of [
       "/login",

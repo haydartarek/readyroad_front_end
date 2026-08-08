@@ -237,15 +237,63 @@ for (const locale of navigationByLocale) {
       route.fulfill({ json: [] }),
     );
 
-    await page.setViewportSize({ width: 1920, height: 900 });
-    await page.goto(locale.path);
     const desktop = page.getByTestId("desktop-primary-navigation");
-    await expect(desktop).toBeVisible();
-    const labels = await desktop.locator("a").allTextContents();
-    expect(labels.slice(0, 5).map((label) => label.trim())).toEqual(
-      locale.labels,
-    );
-    await expectNoPageOverflow(page);
+    for (const width of [1280, 1366, 1440, 1536, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(locale.path);
+      await expect(desktop).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: locale.openMenu }),
+      ).toBeHidden();
+      const labels = await desktop.locator("a").allTextContents();
+      expect(labels.slice(0, 5).map((label) => label.trim())).toEqual(
+        locale.labels,
+      );
+      const navigationFit = await desktop.evaluate((navigation) => {
+        const navigationRect = navigation.getBoundingClientRect();
+        const links = Array.from(navigation.querySelectorAll("a")).map((link) =>
+          link.getBoundingClientRect(),
+        );
+        return {
+          left: Math.min(...links.map((link) => link.left)),
+          right: Math.max(...links.map((link) => link.right)),
+          containerLeft: navigationRect.left,
+          containerRight: navigationRect.right,
+        };
+      });
+      expect(navigationFit.left).toBeGreaterThanOrEqual(
+        navigationFit.containerLeft - 0.5,
+      );
+      expect(navigationFit.right).toBeLessThanOrEqual(
+        navigationFit.containerRight + 0.5,
+      );
+      const actionOverlap = await page.evaluate(() => {
+        const navigation = document.querySelector(
+          '[data-testid="desktop-primary-navigation"]',
+        );
+        const actions = document.querySelector('[data-testid="navbar-actions"]');
+        if (!navigation || !actions) return Number.POSITIVE_INFINITY;
+        const navigationRect = navigation.getBoundingClientRect();
+        const actionsRect = actions.getBoundingClientRect();
+        return Math.max(
+          0,
+          Math.min(navigationRect.right, actionsRect.right) -
+            Math.max(navigationRect.left, actionsRect.left),
+        );
+      });
+      expect(actionOverlap).toBeLessThanOrEqual(0.5);
+      await expect(
+        desktop.getByRole("link", { name: /FAQ|الأسئلة الشائعة/ }),
+      ).toHaveCount(0);
+      const searchTrigger = page.getByRole("button", { name: /Search|بحث|Zoeken|Rechercher/ });
+      await expect(searchTrigger).toBeVisible();
+      await searchTrigger.click();
+      await expect(
+        page.getByRole("textbox", { name: /Search|بحث|Zoeken|Rechercher/ }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expectNoPageOverflow(page);
+    }
 
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(desktop).toBeHidden();
@@ -256,6 +304,9 @@ for (const locale of navigationByLocale) {
     for (const label of locale.labels) {
       expect(mobileLabels.map((item) => item.trim())).toContain(label);
     }
+    await expect(
+      mobile.getByRole("link", { name: /FAQ|الأسئلة الشائعة/ }),
+    ).toHaveCount(0);
     await expectNoPageOverflow(page);
     expect({ errors, failedResponses }).toEqual({
       errors: [],

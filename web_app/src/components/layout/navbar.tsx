@@ -92,7 +92,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-lg px-1 py-2 text-xs font-semibold transition-all duration-200 min-[1366px]:px-2 min-[1920px]:px-3 min-[1920px]:text-sm",
+        "shrink-0 whitespace-nowrap rounded-lg px-1 py-2 text-xs font-semibold transition-all duration-200 min-[1366px]:px-2",
         isActive
           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
           : "text-muted-foreground hover:bg-background/85 hover:text-foreground",
@@ -268,7 +268,7 @@ export function Navbar() {
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               className={cn(
-                "h-11 w-32 shrink-0 rounded-xl border border-border/60 bg-muted/35 py-2 text-sm shadow-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12",
+                "h-11 w-24 shrink-0 rounded-xl border border-border/60 bg-muted/35 py-2 text-sm shadow-sm transition-all duration-200 focus:border-primary/30 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/12 min-[1536px]:w-32",
                 isRTL ? "pl-11 pr-10" : "pl-10 pr-11",
               )}
             />

@@ -155,10 +155,12 @@ test.describe("multilingual YouTube videos page", () => {
     await page.getByRole("menuitem").filter({ hasText: "العربية" }).click();
     await expect(page).toHaveURL(/\/ar\/videos$/);
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await page.waitForLoadState("networkidle");
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.locator("button:has(svg.lucide-menu)").first().click();
+    await page.getByRole("button", { name: "فتح قائمة التنقل" }).click();
     const mobileNavigation = page.getByTestId("mobile-navigation-dialog");
+    await expect(mobileNavigation).toBeVisible();
     const mobileVideosLink = mobileNavigation.getByRole("link", {
       name: "فيديوهات تعليم السياقة",
     });

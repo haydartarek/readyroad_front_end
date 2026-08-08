@@ -592,8 +592,8 @@ export function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      aria-label={t("nav.account_menu")}
-                      title={t("nav.account_menu")}
+                      aria-label={t("auth.login")}
+                      title={t("auth.login")}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground shadow-sm transition-colors hover:border-primary/20 hover:bg-muted/50 hover:text-primary focus:outline-none focus:ring-4 focus:ring-primary/12"
                     >
                       <UserRound className="h-4 w-4" />

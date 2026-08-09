@@ -25,6 +25,7 @@ import {
   getExamOptionLabel,
 } from "@/components/exam/exam-option-card";
 import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
+import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
 import { ResultAnswerBlock } from "@/components/results/result-review";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,7 @@ import type { TrafficSign } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   getPracticeResults,
+  abandonPracticeSession,
   startPracticeSession,
   submitPracticeAnswer,
   type SignChoice,
@@ -202,6 +204,7 @@ export default function TrafficSignPracticePage() {
   const [done, setDone] = useState(false);
   const [answerHistory, setAnswerHistory] = useState<AnswerHistoryEntry[]>([]);
   const [showReview, setShowReview] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   const reviewRef = useRef<HTMLDivElement | null>(null);
   const actionRef = useRef<HTMLDivElement | null>(null);
@@ -428,6 +431,19 @@ export default function TrafficSignPracticePage() {
       setLoading(false);
     }
   }, [initializeSession, routeCode, t]);
+
+  const handleAbandon = useCallback(async () => {
+    if (!session || done) return;
+    try {
+      setSubmitting(true);
+      await abandonPracticeSession(session.sessionId);
+      router.push(`/traffic-signs/${routeCode}`);
+    } catch (apiError) {
+      logApiError("Failed to abandon sign practice", apiError);
+      setSubmissionError(t("practice.submission_error"));
+      setSubmitting(false);
+    }
+  }, [done, routeCode, router, session, t]);
 
   if (serviceUnavailable) {
     return (
@@ -739,9 +755,10 @@ export default function TrafficSignPracticePage() {
                     const correctChoice = entry.question.choices.find(
                       (choice) => choice.id === entry.response.correctChoiceId,
                     );
-                    const selectedChoiceIndex = entry.question.choices.findIndex(
-                      (choice) => choice.id === entry.selectedChoiceId,
-                    );
+                    const selectedChoiceIndex =
+                      entry.question.choices.findIndex(
+                        (choice) => choice.id === entry.selectedChoiceId,
+                      );
                     const correctChoiceIndex = entry.question.choices.findIndex(
                       (choice) => choice.id === entry.response.correctChoiceId,
                     );
@@ -759,11 +776,11 @@ export default function TrafficSignPracticePage() {
                         <CardContent className="px-4 py-4">
                           <div className="space-y-4">
                             <ExamQuestionImageFrame variant="review">
-                                <SignImage
-                                  src={resolveTrafficSignImage(sign)}
-                                  alt={signName}
-                                  className="object-contain"
-                                />
+                              <SignImage
+                                src={resolveTrafficSignImage(sign)}
+                                alt={signName}
+                                className="object-contain"
+                              />
                             </ExamQuestionImageFrame>
 
                             <div className="min-w-0 space-y-3">
@@ -895,16 +912,14 @@ export default function TrafficSignPracticePage() {
               <Button
                 variant="outline"
                 className="h-9 w-full rounded-lg px-2.5 text-[11px] font-semibold"
-                asChild
+                onClick={() => setShowExitDialog(true)}
               >
-                <Link href={`/traffic-signs/${routeCode}`}>
-                  {isRTL ? (
-                    <ArrowRight className="mr-1.5 h-3.5 w-3.5" />
-                  ) : (
-                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-                  )}
-                  {t("sign_quiz.practice.back_to_sign")}
-                </Link>
+                {isRTL ? (
+                  <ArrowRight className="mr-1.5 h-3.5 w-3.5" />
+                ) : (
+                  <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                {t("sign_quiz.practice.back_to_sign")}
               </Button>
             </div>
 
@@ -1099,6 +1114,13 @@ export default function TrafficSignPracticePage() {
           </PageSectionSurface>
         )}
       </div>
+      <ExitConfirmDialog
+        open={showExitDialog}
+        onOpenChange={setShowExitDialog}
+        onStay={() => undefined}
+        onLeave={() => void handleAbandon()}
+        context="practice"
+      />
     </div>
   );
 }

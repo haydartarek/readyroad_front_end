@@ -1,4 +1,7 @@
+import { resolveTimedAttemptStep } from "@/lib/attempt-lifecycle";
 import { normalizeExamData } from "./page";
+import fs from "node:fs";
+import path from "node:path";
 
 describe("persistent exam question images", () => {
   it("preserves the backend image URL for the exam renderer", () => {
@@ -31,5 +34,69 @@ describe("persistent exam question images", () => {
     expect(exam.questions[0].imageUrl).toBe(
       "/images/quiz/priority-question.png",
     );
+  });
+});
+
+describe("theoretical exam attempt progression", () => {
+  it("does not render the redundant active-exam label badge", () => {
+    const source = fs.readFileSync(path.join(__dirname, "page.tsx"), "utf8");
+    expect(source).not.toContain('t("nav.exam")');
+  });
+
+  it("abandons after three consecutive timed-out unanswered questions", () => {
+    const first = resolveTimedAttemptStep({
+      reason: "timeout",
+      isCurrentAnswered: false,
+      isLastQuestion: false,
+      answeredCount: 0,
+      totalQuestions: 50,
+      consecutiveUnanswered: 0,
+    });
+    const second = resolveTimedAttemptStep({
+      reason: "timeout",
+      isCurrentAnswered: false,
+      isLastQuestion: false,
+      answeredCount: 0,
+      totalQuestions: 50,
+      consecutiveUnanswered: first.consecutiveUnanswered,
+    });
+    const third = resolveTimedAttemptStep({
+      reason: "timeout",
+      isCurrentAnswered: false,
+      isLastQuestion: false,
+      answeredCount: 0,
+      totalQuestions: 50,
+      consecutiveUnanswered: second.consecutiveUnanswered,
+    });
+
+    expect(first.action).toBe("advance");
+    expect(second.action).toBe("advance");
+    expect(third.action).toBe("abandon");
+  });
+
+  it("does not submit an exam with unanswered questions", () => {
+    expect(
+      resolveTimedAttemptStep({
+        reason: "manual",
+        isCurrentAnswered: true,
+        isLastQuestion: true,
+        answeredCount: 49,
+        totalQuestions: 50,
+        consecutiveUnanswered: 0,
+      }).action,
+    ).toBe("abandon");
+  });
+
+  it("submits only after all required questions are answered", () => {
+    expect(
+      resolveTimedAttemptStep({
+        reason: "manual",
+        isCurrentAnswered: true,
+        isLastQuestion: true,
+        answeredCount: 50,
+        totalQuestions: 50,
+        consecutiveUnanswered: 0,
+      }).action,
+    ).toBe("submit");
   });
 });

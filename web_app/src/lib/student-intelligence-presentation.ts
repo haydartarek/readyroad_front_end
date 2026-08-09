@@ -1,6 +1,41 @@
 import type { Language } from "@/lib/constants";
 import type { StudentLearningPriority } from "@/services/progressService";
 
+export type LocalizedCategoryNames = {
+  categoryCode?: string | null;
+  categoryName?: string | null;
+  categoryNameEn?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
+  categoryNameAr?: string | null;
+};
+
+export function localizedCategoryName(
+  category: LocalizedCategoryNames,
+  language: Language,
+  unavailable = "",
+): string {
+  const localized =
+    language === "ar"
+      ? category.categoryNameAr
+      : language === "nl"
+        ? category.categoryNameNl
+        : language === "fr"
+          ? category.categoryNameFr
+          : category.categoryNameEn;
+
+  return (
+    localized ||
+    category.categoryNameEn ||
+    category.categoryNameNl ||
+    category.categoryNameFr ||
+    category.categoryNameAr ||
+    category.categoryName ||
+    category.categoryCode ||
+    unavailable
+  );
+}
+
 export function localizedPriorityName(
   priority: Pick<
     StudentLearningPriority,
@@ -12,28 +47,7 @@ export function localizedPriorityName(
   >,
   language: Language,
 ): string {
-  if (language === "ar") {
-    return (
-      priority.categoryNameAr ||
-      priority.categoryNameEn ||
-      priority.categoryCode
-    );
-  }
-  if (language === "nl") {
-    return (
-      priority.categoryNameNl ||
-      priority.categoryNameEn ||
-      priority.categoryCode
-    );
-  }
-  if (language === "fr") {
-    return (
-      priority.categoryNameFr ||
-      priority.categoryNameEn ||
-      priority.categoryCode
-    );
-  }
-  return priority.categoryNameEn || priority.categoryCode;
+  return localizedCategoryName(priority, language, priority.categoryCode);
 }
 
 export function intelligenceMetricValue(

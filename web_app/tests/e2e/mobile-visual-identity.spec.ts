@@ -12,32 +12,25 @@ const locales = ["en", "nl", "fr", "ar"] as const;
 const mobileWidths = [320, 360, 375, 390, 414, 428] as const;
 const desktopWidths = [1280, 1366, 1440, 1536, 1920] as const;
 const trafficSignsViewports = [
-  320,
-  360,
-  375,
-  390,
-  393,
-  412,
-  414,
-  428,
-  768,
-  1024,
-  1280,
-  1366,
-  1440,
-  1920,
+  320, 360, 375, 390, 393, 412, 414, 428, 768, 1024, 1280, 1366, 1440, 1920,
 ] as const;
 const dashboardProgressViewports = [
-  320,
-  360,
-  375,
-  390,
-  414,
-  428,
-  768,
-  1024,
-  1280,
+  320, 360, 375, 390, 414, 428, 768, 1024, 1280, 1920,
 ] as const;
+
+const localizedInformationCategoryNames = {
+  en: "Information Signs",
+  nl: "Informatieborden",
+  fr: "Signaux d’information",
+  ar: "العلامات الإعلامية",
+} as const;
+
+const approvedHomeHeadlines = {
+  en: "ReadyRoad | Prepare for the Belgian driving theory exam with confidence",
+  nl: "ReadyRoad | Bereid je voor op het Belgische theorie-examen met vertrouwen",
+  fr: "ReadyRoad | Préparez l’examen théorique belge en toute confiance",
+  ar: "ReadyRoad | استعد لامتحان السياقة النظري في بلجيكا بثقة",
+} as const;
 
 const publicRoutes = [
   "/",
@@ -109,7 +102,8 @@ const trafficSignCatalogFixture = {
   descriptionAr: "تحذر من منعطف خطير إلى اليمين.",
   driverGuidanceEn: "Reduce speed before the bend and keep control.",
   driverGuidanceNl: "Verminder snelheid voor de bocht en behoud de controle.",
-  driverGuidanceFr: "Reduisez votre vitesse avant le virage et gardez le controle.",
+  driverGuidanceFr:
+    "Reduisez votre vitesse avant le virage et gardez le controle.",
   driverGuidanceAr: "خفف السرعة قبل المنعطف وحافظ على التحكم بالمركبة.",
   exceptionsEn: ["A supplementary plate may specify the distance."],
   exceptionsNl: ["Een onderbord kan de afstand aangeven."],
@@ -205,6 +199,10 @@ const emptyStudentIntelligence = {
 interface CategoryProgressFixture {
   categoryCode: string;
   categoryName: string;
+  categoryNameEn?: string;
+  categoryNameNl?: string;
+  categoryNameFr?: string;
+  categoryNameAr?: string;
   questionsAttempted: number;
   correctAnswers: number;
   accuracyRate: number;
@@ -216,6 +214,10 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
   {
     categoryCode: "F",
     categoryName: "Information and Temporary Traffic Signs",
+    categoryNameEn: localizedInformationCategoryNames.en,
+    categoryNameNl: localizedInformationCategoryNames.nl,
+    categoryNameFr: localizedInformationCategoryNames.fr,
+    categoryNameAr: localizedInformationCategoryNames.ar,
     questionsAttempted: 3,
     correctAnswers: 1,
     accuracyRate: 33.3,
@@ -260,8 +262,7 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
   },
   {
     categoryCode: "H",
-    categoryName:
-      "Signaux d'information et mesures temporaires de circulation",
+    categoryName: "Signaux d'information et mesures temporaires de circulation",
     questionsAttempted: 6,
     correctAnswers: 4,
     accuracyRate: 66.7,
@@ -380,11 +381,15 @@ async function installAuthenticatedSession(
   const authDomain = new URL(
     process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005",
   ).hostname;
-  const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString(
-    "base64url",
-  );
+  const header = Buffer.from(
+    JSON.stringify({ alg: "none", typ: "JWT" }),
+  ).toString("base64url");
   const payload = Buffer.from(
-    JSON.stringify({ sub: qaUser.username, role: "USER", exp: futureExpiration }),
+    JSON.stringify({
+      sub: qaUser.username,
+      role: "USER",
+      exp: futureExpiration,
+    }),
   ).toString("base64url");
 
   await context.addCookies([
@@ -416,10 +421,7 @@ async function installAuthenticatedSession(
     if (pathname.endsWith("/users/me/notifications/read-all")) {
       return fulfillJson(route, {});
     }
-    if (
-      pathname.endsWith("/users/me/notifications") &&
-      method === "GET"
-    ) {
+    if (pathname.endsWith("/users/me/notifications") && method === "GET") {
       return fulfillJson(route, [
         {
           id: 7,
@@ -632,7 +634,9 @@ async function expectViewportLayout(
           return overflowX === "auto" || overflowX === "scroll";
         };
 
-        const nearestHorizontalScroller = (element: Element): Element | null => {
+        const nearestHorizontalScroller = (
+          element: Element,
+        ): Element | null => {
           let current = element.parentElement;
           while (current && current !== body && current !== root) {
             if (isHorizontalScroller(current)) return current;
@@ -785,8 +789,9 @@ async function expectViewportLayout(
 
           findings.push({
             component: describe(
-              element.closest("[data-testid], [role], article, section, form") ??
-                element,
+              element.closest(
+                "[data-testid], [role], article, section, form",
+              ) ?? element,
             ),
             selector: selectorFor(element),
             parent: describe(parent),
@@ -825,7 +830,10 @@ async function expectViewportLayout(
     }
   }
 
-  expect(metrics, `${label} at ${width}px produced no layout metrics`).toBeDefined();
+  expect(
+    metrics,
+    `${label} at ${width}px produced no layout metrics`,
+  ).toBeDefined();
 
   if (
     metrics!.documentWidth > metrics!.viewport + 1 ||
@@ -884,13 +892,18 @@ test.describe("ReadyRoad mobile visual identity", () => {
       const cards = widget.getByTestId("category-progress-card");
       await expect(widget).toBeVisible();
       await expect(cards).toHaveCount(longCategoryProgressFixtures.length);
+      await expect(
+        cards.first().getByTestId("category-progress-name"),
+      ).toHaveText(localizedInformationCategoryNames[locale]);
 
       for (const width of dashboardProgressViewports) {
         await page.setViewportSize({ width, height: 900 });
         await page.evaluate(
           () =>
             new Promise<void>((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
             ),
         );
 
@@ -992,13 +1005,16 @@ test.describe("ReadyRoad mobile visual identity", () => {
               cardRect.left < -1 && "card starts outside viewport",
               cardRect.right > viewport + 1 && "card ends outside viewport",
               card.scrollWidth > card.clientWidth + 1 && "card scrolls",
-              headerRect.left < cardRect.left - 1 && "header starts outside card",
-              headerRect.right > cardRect.right + 1 && "header ends outside card",
+              headerRect.left < cardRect.left - 1 &&
+                "header starts outside card",
+              headerRect.right > cardRect.right + 1 &&
+                "header ends outside card",
               header.scrollWidth > header.clientWidth + 1 && "header scrolls",
               nameRect.left < cardRect.left - 1 && "name starts outside card",
               nameRect.right > cardRect.right + 1 && "name ends outside card",
               nameStyle.whiteSpace === "nowrap" && "name cannot wrap",
-              nameStyle.webkitLineClamp !== "2" && "name is not clamped to two lines",
+              nameStyle.webkitLineClamp !== "2" &&
+                "name is not clamped to two lines",
               percentageRect.left < cardRect.left - 1 &&
                 "percentage starts outside card",
               percentageRect.right > cardRect.right + 1 &&
@@ -1085,9 +1101,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
           width >= 1280 || (width >= 768 && width < 1024) ? 2 : 1;
         expect(metrics.gridColumnCount).toBe(expectedGridColumns);
         expect(metrics.headerColumnCounts).toEqual(
-          Array(longCategoryProgressFixtures.length).fill(
-            width >= 768 ? 2 : 1,
-          ),
+          Array(longCategoryProgressFixtures.length).fill(width >= 768 ? 2 : 1),
         );
         expect(metrics.widgetScrollWidth).toBeLessThanOrEqual(
           metrics.widgetWidth + 1,
@@ -1100,6 +1114,108 @@ test.describe("ReadyRoad mobile visual identity", () => {
 
     expect(consoleErrors).toEqual([]);
     expect(pageErrors).toEqual([]);
+  });
+
+  test("approved homepage introduction is rendered once in every locale", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await seedCookieConsent(page);
+    await installAnonymousMocks(page);
+
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+
+    for (const locale of locales) {
+      await navigate(page, localizedPath("/", locale));
+      const heading = page.getByRole("heading", { level: 1 });
+      await expect(heading).toHaveText(approvedHomeHeadlines[locale]);
+
+      for (const width of [390, 1280, 1920]) {
+        await page.setViewportSize({ width, height: 900 });
+        const widths = await page.evaluate(() => ({
+          viewport: window.innerWidth,
+          document: document.documentElement.scrollWidth,
+          body: document.body.scrollWidth,
+        }));
+        expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+        expect(widths.body).toBeLessThanOrEqual(widths.viewport);
+        await expect(heading).toBeVisible();
+      }
+    }
+
+    expect(consoleErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("leaving an incomplete theory exam abandons it without stale result UI", async ({
+    context,
+    page,
+  }) => {
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+
+    const exam = {
+      examId: 42,
+      startedAt: "2026-08-09T00:00:00Z",
+      expiresAt: "2026-08-09T01:00:00Z",
+      questions: [1, 2, 3, 4].map((questionId) => ({
+        questionId,
+        questionOrder: questionId,
+        questionTextEn: `Question ${questionId}`,
+        questionTextNl: `Vraag ${questionId}`,
+        questionTextFr: `Question ${questionId}`,
+        questionTextAr: `السؤال ${questionId}`,
+        options: [
+          {
+            optionId: questionId * 10 + 1,
+            optionTextEn: "Answer A",
+            optionTextNl: "Antwoord A",
+            optionTextFr: "Réponse A",
+            optionTextAr: "الإجابة أ",
+          },
+          {
+            optionId: questionId * 10 + 2,
+            optionTextEn: "Answer B",
+            optionTextNl: "Antwoord B",
+            optionTextFr: "Réponse B",
+            optionTextAr: "الإجابة ب",
+          },
+        ],
+      })),
+    };
+    let abandoned = false;
+    await page.route("**/api/proxy/exams/simulations/active", (route) =>
+      fulfillJson(route, { hasActiveExam: true, activeExam: exam }),
+    );
+    await page.route("**/api/proxy/exams/simulations/42/abandon", (route) => {
+      abandoned = true;
+      return fulfillJson(route, {});
+    });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await navigate(page, "/ar/exam/42");
+    await expect(page.getByTestId("exam-question-title")).toHaveText(
+      "السؤال 1",
+    );
+    await expect(
+      page
+        .getByTestId("exam-question-title")
+        .locator("..")
+        .getByText("محاكي الامتحان النظري", { exact: true }),
+    ).toHaveCount(0);
+
+    await page.getByRole("button", { name: /العودة إلى التدريب/ }).click();
+    await expect(page.getByRole("dialog")).toContainText(
+      "لن تُحتسب ضمن نتائجك أو إحصاءاتك",
+    );
+    await page.getByRole("button", { name: /مغادرة الامتحان/ }).click();
+    await expect.poll(() => abandoned).toBe(true);
+    await expect(page).toHaveURL(/\/ar\/practice$/);
   });
 
   test("dashboard statistic cards use a consistent mobile content order", async ({
@@ -1134,7 +1250,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await page.evaluate(
           () =>
             new Promise<void>((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
             ),
         );
 
@@ -1182,8 +1300,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
                 "label is not centered",
               Math.abs(centerX(valueRect) - centerX(cardRect)) > 1 &&
                 "value is not centered",
-              iconRect.bottom > labelRect.top + 1 &&
-                "icon is not before label",
+              iconRect.bottom > labelRect.top + 1 && "icon is not before label",
               labelRect.bottom > valueRect.top + 1 &&
                 "label is not before value",
               ...parts.flatMap(([part, partRect]) =>
@@ -1227,12 +1344,14 @@ test.describe("ReadyRoad mobile visual identity", () => {
           });
         }
 
-        expect(metrics, `${locale} dashboard statistics at ${width}px`).toEqual({
-          viewport: width,
-          documentWidth: width,
-          bodyWidth: width,
-          invalidCards: [],
-        });
+        expect(metrics, `${locale} dashboard statistics at ${width}px`).toEqual(
+          {
+            viewport: width,
+            documentWidth: width,
+            bodyWidth: width,
+            invalidCards: [],
+          },
+        );
       }
 
       await page.setViewportSize({ width: 1280, height: 900 });
@@ -1399,7 +1518,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await page.evaluate(
           () =>
             new Promise<void>((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
             ),
         );
 
@@ -1565,8 +1686,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
             description: "Priority rules are misunderstood.",
             severity: "MODERATE",
             uniqueQuestions: 5,
-            recommendationKey:
-              "error_patterns.rec_priority_misunderstanding",
+            recommendationKey: "error_patterns.rec_priority_misunderstanding",
             sourceScope: "LAST_TWO_COMPLETED_EXAMS",
             groups: [
               {
@@ -1602,7 +1722,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await page.evaluate(
           () =>
             new Promise<void>((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
             ),
         );
 
@@ -1681,9 +1803,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
           metrics.invalidCards.length > 0
         ) {
           await page.screenshot({
-            path: testInfo.outputPath(
-              `error-summary-${locale}-${width}px.png`,
-            ),
+            path: testInfo.outputPath(`error-summary-${locale}-${width}px.png`),
             fullPage: true,
           });
         }
@@ -1796,7 +1916,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await page.evaluate(
           () =>
             new Promise<void>((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
             ),
         );
 
@@ -1831,9 +1953,15 @@ test.describe("ReadyRoad mobile visual identity", () => {
               return [{ index, reason: "exam result content is incomplete" }];
             }
 
-            const parts = [icon, name, status, date, score, progress, chevron].filter(
-              (part): part is Element => Boolean(part),
-            );
+            const parts = [
+              icon,
+              name,
+              status,
+              date,
+              score,
+              progress,
+              chevron,
+            ].filter((part): part is Element => Boolean(part));
             const partRects = parts.map((part) => part.getBoundingClientRect());
             const iconRect = icon.getBoundingClientRect();
             const scoreRect = score?.getBoundingClientRect();
@@ -1845,7 +1973,8 @@ test.describe("ReadyRoad mobile visual identity", () => {
               cardRect.right > viewport + 1 && "card ends outside viewport",
               card.scrollWidth > card.clientWidth + 1 && "card scrolls",
               Math.abs(iconRect.width - 40) > 1 && "icon container is not 40px",
-              Math.abs(iconRect.height - 40) > 1 && "icon container is not 40px",
+              Math.abs(iconRect.height - 40) > 1 &&
+                "icon container is not 40px",
               iconSvgRect &&
                 Math.abs(iconSvgRect.width - 20) > 1 &&
                 "status icon is not 20px",
@@ -1912,12 +2041,14 @@ test.describe("ReadyRoad mobile visual identity", () => {
           });
         }
 
-        expect(metrics, `${locale} official exam result at ${width}px`).toEqual({
-          viewport: width,
-          documentWidth: width,
-          bodyWidth: width,
-          invalidCards: [],
-        });
+        expect(metrics, `${locale} official exam result at ${width}px`).toEqual(
+          {
+            viewport: width,
+            documentWidth: width,
+            bodyWidth: width,
+            invalidCards: [],
+          },
+        );
       }
 
       await page.setViewportSize({ width: 1280, height: 900 });
@@ -2076,7 +2207,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await page.evaluate(
           () =>
             new Promise<void>((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
             ),
         );
 
@@ -2093,9 +2226,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
               "score",
               "progress",
               "chevron",
-            ].map((part) =>
-              card.querySelector(`[data-result-part="${part}"]`),
-            );
+            ].map((part) => card.querySelector(`[data-result-part="${part}"]`));
 
             if (parts.some((part) => !part)) {
               return [
@@ -2188,12 +2319,14 @@ test.describe("ReadyRoad mobile visual identity", () => {
           });
         }
 
-        expect(metrics, `${locale} unified exam results at ${width}px`).toEqual({
-          viewport: width,
-          documentWidth: width,
-          bodyWidth: width,
-          invalidCards: [],
-        });
+        expect(metrics, `${locale} unified exam results at ${width}px`).toEqual(
+          {
+            viewport: width,
+            documentWidth: width,
+            bodyWidth: width,
+            invalidCards: [],
+          },
+        );
       }
 
       await page.setViewportSize({ width: 1280, height: 900 });
@@ -2249,9 +2382,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
       await page.evaluate(
         () =>
           new Promise<void>((resolve) =>
-            requestAnimationFrame(() =>
-              requestAnimationFrame(() => resolve()),
-            ),
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
           ),
       );
 
@@ -2460,18 +2591,16 @@ test.describe("ReadyRoad mobile visual identity", () => {
           );
         }
 
-        expect(new Set(metrics.cardMetrics.map((card) => card.cardWidth)).size).toBe(
-          1,
-        );
+        expect(
+          new Set(metrics.cardMetrics.map((card) => card.cardWidth)).size,
+        ).toBe(1);
       }
 
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.evaluate(
         () =>
           new Promise<void>((resolve) =>
-            requestAnimationFrame(() =>
-              requestAnimationFrame(() => resolve()),
-            ),
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
           ),
       );
       const desktopMetrics = await cards.evaluateAll((cardElements) =>
@@ -2617,8 +2746,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
             const codeRect = code.getBoundingClientRect();
             const titleRect = title.getBoundingClientRect();
             const countRect = count.getBoundingClientRect();
-            const progressHeaderRect =
-              progress.children.item(0)?.getBoundingClientRect();
+            const progressHeaderRect = progress.children
+              .item(0)
+              ?.getBoundingClientRect();
             const progressBarRect = progressBar.getBoundingClientRect();
             const actionRect = action.getBoundingClientRect();
             const cardCenter = cardRect.left + cardRect.width / 2;
@@ -2642,7 +2772,8 @@ test.describe("ReadyRoad mobile visual identity", () => {
               const statCenter = statRect.left + statRect.width / 2;
               return {
                 height: statRect.height,
-                direction: getComputedStyle(statIcon.parentElement!).flexDirection,
+                direction: getComputedStyle(statIcon.parentElement!)
+                  .flexDirection,
                 iconBottom: statIconRect.bottom,
                 labelTop: statLabelRect.top,
                 labelBottom: statLabelRect.bottom,
@@ -2678,9 +2809,13 @@ test.describe("ReadyRoad mobile visual identity", () => {
               titleTop: titleRect.top,
               titleBottom: titleRect.bottom,
               countTop: countRect.top,
-              headerCenterDeltas: [iconRect, codeRect, titleRect, countRect].map(
-                (rect) =>
-                  Math.abs(rect.left + rect.width / 2 - cardCenter),
+              headerCenterDeltas: [
+                iconRect,
+                codeRect,
+                titleRect,
+                countRect,
+              ].map((rect) =>
+                Math.abs(rect.left + rect.width / 2 - cardCenter),
               ),
               statMetrics,
               progressHeaderBottom: progressHeaderRect?.bottom ?? 0,
@@ -2711,9 +2846,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
           expect(card.codeBottom).toBeLessThanOrEqual(card.titleTop + 1);
           expect(card.titleBottom).toBeLessThanOrEqual(card.countTop + 1);
           expect(Math.max(...card.headerCenterDeltas)).toBeLessThanOrEqual(1);
-          expect(new Set(card.statMetrics.map((stat) => stat.height)).size).toBe(
-            1,
-          );
+          expect(
+            new Set(card.statMetrics.map((stat) => stat.height)).size,
+          ).toBe(1);
           for (const stat of card.statMetrics) {
             expect(stat.direction).toBe("column");
             expect(stat.iconBottom).toBeLessThanOrEqual(stat.labelTop + 1);
@@ -2727,9 +2862,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
           );
           expect(card.progressBarBottom).toBeLessThanOrEqual(card.actionTop);
           expect(card.actionHeight).toBe(44);
-          expect(Math.abs(card.actionWidth - card.progressWidth)).toBeLessThanOrEqual(
-            1,
-          );
+          expect(
+            Math.abs(card.actionWidth - card.progressWidth),
+          ).toBeLessThanOrEqual(1);
           expect(card.progressBarWidth).toBeGreaterThan(0);
         }
       }
@@ -2738,9 +2873,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
       await page.evaluate(
         () =>
           new Promise<void>((resolve) =>
-            requestAnimationFrame(() =>
-              requestAnimationFrame(() => resolve()),
-            ),
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
           ),
       );
       const desktopMetrics = await cards.evaluateAll((cardElements) =>
@@ -2956,12 +3089,13 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await expect(trigger).toBeVisible();
         await trigger.click();
 
-        const popover = mobileNotifications.getByTestId(
-          "notification-popover",
-        );
+        const popover = mobileNotifications.getByTestId("notification-popover");
         await expect(popover).toBeVisible();
         const box = await popover.boundingBox();
-        expect(box, `${locale} notification panel at ${width}px`).not.toBeNull();
+        expect(
+          box,
+          `${locale} notification panel at ${width}px`,
+        ).not.toBeNull();
         expect(box!.x).toBeGreaterThanOrEqual(0);
         expect(box!.x + box!.width).toBeLessThanOrEqual(width + 1);
         await expectViewportLayout(
@@ -3017,7 +3151,9 @@ test.describe("ReadyRoad mobile visual identity", () => {
         const drawerRect = await drawer.boundingBox();
         expect(drawerRect, `${locale} drawer at ${width}px`).not.toBeNull();
         expect(drawerRect!.x).toBeGreaterThanOrEqual(-1);
-        expect(drawerRect!.x + drawerRect!.width).toBeLessThanOrEqual(width + 1);
+        expect(drawerRect!.x + drawerRect!.width).toBeLessThanOrEqual(
+          width + 1,
+        );
 
         await expectViewportLayout(
           page,
@@ -3147,12 +3283,16 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await page.evaluate(
           () =>
             new Promise<void>((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve()),
+              ),
             ),
         );
 
         const navbar = page.getByTestId("site-navbar");
-        const desktopNavigation = page.getByTestId("desktop-primary-navigation");
+        const desktopNavigation = page.getByTestId(
+          "desktop-primary-navigation",
+        );
         const actions = page.getByTestId("navbar-actions");
         const hamburger = navbar.locator("button:has(svg.lucide-menu)");
         await expect(navbar).toBeVisible();
@@ -3196,14 +3336,16 @@ test.describe("ReadyRoad mobile visual identity", () => {
           };
         });
 
-        expect(metrics, `${locale} desktop navbar at ${width}px`).toMatchObject({
-          viewport: width,
-          documentWidth: width,
-          bodyWidth: width,
-          linkRows: 1,
-          linksOutsideNavigation: false,
-          overlapsActions: false,
-        });
+        expect(metrics, `${locale} desktop navbar at ${width}px`).toMatchObject(
+          {
+            viewport: width,
+            documentWidth: width,
+            bodyWidth: width,
+            linkRows: 1,
+            linksOutsideNavigation: false,
+            overlapsActions: false,
+          },
+        );
         expect(metrics.linkCount).toBeGreaterThan(0);
         expect(metrics.navigationScrollWidth).toBeLessThanOrEqual(
           metrics.navigationClientWidth + 1,

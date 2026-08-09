@@ -85,6 +85,17 @@ interface DistributionResponse {
   total: number;
   positions: { label: string; count: number; percentage: number }[];
 }
+interface BalancePreviewResponse {
+  selectedQuestions: number;
+  before: BalanceGroup[];
+  after: BalanceGroup[];
+}
+interface BalanceGroup {
+  difficulty: string;
+  optionCount: number;
+  total: number;
+  positions: { label: string; count: number; percentage: number }[];
+}
 
 // ─── Constants ─────────────────────────────────────────
 
@@ -199,9 +210,13 @@ export default function AdminQuizzesPage() {
     type: "success" | "error";
   } | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
-  const [distribution, setDistribution] = useState<DistributionResponse | null>(null);
+  const [distribution, setDistribution] = useState<DistributionResponse | null>(
+    null,
+  );
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [shuffling, setShuffling] = useState(false);
+  const [balancePreview, setBalancePreview] =
+    useState<BalancePreviewResponse | null>(null);
 
   const fetchIdRef = useRef(0);
   const tRef = useRef(t);
@@ -209,7 +224,7 @@ export default function AdminQuizzesPage() {
 
   useEffect(() => {
     apiClient
-      .get<CategoryOption[]>("/categories")
+      .get<CategoryOption[]>(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CATEGORIES)
       .then((res) => setCategories(res.data))
       .catch(() => {});
   }, []);
@@ -415,16 +430,41 @@ export default function AdminQuizzesPage() {
   };
 
   const handleShuffle = async () => {
-    if (selectedIds.length === 0 || !window.confirm(t("admin.quizzes.shuffle_confirm"))) {
+    if (selectedIds.length === 0) {
       return;
     }
     try {
       setShuffling(true);
-      await apiClient.post(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.SHUFFLE, {
-        questionIds: selectedIds,
-      });
-      setToast({ message: t("admin.quizzes.shuffle_success"), type: "success" });
+      const request = { questionIds: selectedIds };
+      const preview = await apiClient.post<BalancePreviewResponse>(
+        API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.SHUFFLE_PREVIEW,
+        request,
+      );
+      setBalancePreview(preview.data);
+      const summary = preview.data.after
+        .map(
+          (group) =>
+            `${getDifficultyLabel(group.difficulty)} (${group.optionCount}): ${group.positions
+              .map((position) => `${position.label} ${position.count}`)
+              .join(" / ")}`,
+        )
+        .join("\n");
+      if (
+        !window.confirm(`${t("admin.quizzes.shuffle_confirm")}\n\n${summary}`)
+      ) {
+        return;
+      }
+      const applied = await apiClient.post<BalancePreviewResponse>(
+        API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.SHUFFLE,
+        request,
+      );
+      setBalancePreview(applied.data);
       await Promise.all([fetchQuestions(), fetchDistribution()]);
+      setSelectedIds([]);
+      setToast({
+        message: t("admin.quizzes.shuffle_success"),
+        type: "success",
+      });
     } catch (err) {
       logApiError("Failed to shuffle answer order", err);
       setToast({ message: t("admin.quizzes.shuffle_error"), type: "error" });
@@ -581,7 +621,10 @@ export default function AdminQuizzesPage() {
                 {t("admin.quizzes.distribution_title")}
               </h2>
               <p className="text-xs text-muted-foreground">
-                {t("admin.quizzes.distribution_total").replace("{count}", String(distribution.total))}
+                {t("admin.quizzes.distribution_total").replace(
+                  "{count}",
+                  String(distribution.total),
+                )}
               </p>
             </div>
             <Button
@@ -592,15 +635,77 @@ export default function AdminQuizzesPage() {
               className="gap-2"
             >
               <Shuffle className={cn("h-4 w-4", shuffling && "animate-spin")} />
-              {t("admin.quizzes.shuffle_selected").replace("{count}", String(selectedIds.length))}
+              {t("admin.quizzes.shuffle_selected").replace(
+                "{count}",
+                String(selectedIds.length),
+              )}
             </Button>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-3">
             {distribution.positions.map((position) => (
-              <div key={position.label} className="rounded-xl border border-border/50 bg-muted/25 p-3 text-center">
-                <p className="text-lg font-black text-primary">{position.label}</p>
-                <p className="text-sm font-bold text-foreground">{position.percentage.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground">{position.count}</p>
+              <div
+                key={position.label}
+                className="rounded-xl border border-border/50 bg-muted/25 p-3 text-center"
+              >
+                <p className="text-lg font-black text-primary">
+                  {position.label}
+                </p>
+                <p className="text-sm font-bold text-foreground">
+                  {position.percentage.toFixed(1)}%
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {position.count}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {balancePreview && (
+        <div
+          data-testid="answer-balance-preview"
+          className="rounded-2xl border border-border/50 bg-card p-4 shadow-sm"
+        >
+          <p className="text-sm font-black text-foreground">
+            {t("admin.quizzes.balance_selected").replace(
+              "{count}",
+              String(balancePreview.selectedQuestions),
+            )}
+          </p>
+          <div className="mt-3 grid gap-4 lg:grid-cols-2">
+            {[
+              [t("admin.quizzes.balance_before"), balancePreview.before],
+              [t("admin.quizzes.balance_after"), balancePreview.after],
+            ].map(([label, groups]) => (
+              <div
+                key={String(label)}
+                className="rounded-xl border border-border/50 p-3"
+              >
+                <p className="text-xs font-bold text-muted-foreground">
+                  {String(label)}
+                </p>
+                <div className="mt-2 space-y-2">
+                  {(groups as BalanceGroup[]).map((group) => (
+                    <div
+                      key={`${group.difficulty}-${group.optionCount}`}
+                      className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                    >
+                      <span className="font-semibold">
+                        {getDifficultyLabel(group.difficulty)} ·{" "}
+                        {group.optionCount}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {group.positions
+                          .map(
+                            (position) =>
+                              `${position.label}: ${position.count}`,
+                          )
+                          .join(" · ")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -701,9 +806,16 @@ export default function AdminQuizzesPage() {
                   <input
                     type="checkbox"
                     aria-label={t("admin.quizzes.select_page")}
-                    checked={questions.length > 0 && selectedIds.length === questions.length}
+                    checked={
+                      questions.length > 0 &&
+                      selectedIds.length === questions.length
+                    }
                     onChange={(event) =>
-                      setSelectedIds(event.target.checked ? questions.map((question) => question.id) : [])
+                      setSelectedIds(
+                        event.target.checked
+                          ? questions.map((question) => question.id)
+                          : [],
+                      )
                     }
                     className="h-4 w-4 accent-primary"
                   />
@@ -768,7 +880,9 @@ export default function AdminQuizzesPage() {
                       <td className="px-4 py-3 text-center">
                         <input
                           type="checkbox"
-                          aria-label={t("admin.quizzes.select_question").replace("{id}", String(q.id))}
+                          aria-label={t(
+                            "admin.quizzes.select_question",
+                          ).replace("{id}", String(q.id))}
                           checked={selectedIds.includes(q.id)}
                           onChange={(event) =>
                             setSelectedIds((current) =>
@@ -943,10 +1057,35 @@ export default function AdminQuizzesPage() {
                               {t("admin.quizzes.form.explanations")}
                             </p>
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-                              <DetailLang label={t("admin.settings_page.language_en")} text={q.explanationEn || ""} missingLabel={t("admin.quizzes.missing_translation")} />
-                              <DetailLang label={t("admin.settings_page.language_ar")} text={q.explanationAr || ""} dir="rtl" missingLabel={t("admin.quizzes.missing_translation")} />
-                              <DetailLang label={t("admin.settings_page.language_nl")} text={q.explanationNl || ""} missingLabel={t("admin.quizzes.missing_translation")} />
-                              <DetailLang label={t("admin.settings_page.language_fr")} text={q.explanationFr || ""} missingLabel={t("admin.quizzes.missing_translation")} />
+                              <DetailLang
+                                label={t("admin.settings_page.language_en")}
+                                text={q.explanationEn || ""}
+                                missingLabel={t(
+                                  "admin.quizzes.missing_translation",
+                                )}
+                              />
+                              <DetailLang
+                                label={t("admin.settings_page.language_ar")}
+                                text={q.explanationAr || ""}
+                                dir="rtl"
+                                missingLabel={t(
+                                  "admin.quizzes.missing_translation",
+                                )}
+                              />
+                              <DetailLang
+                                label={t("admin.settings_page.language_nl")}
+                                text={q.explanationNl || ""}
+                                missingLabel={t(
+                                  "admin.quizzes.missing_translation",
+                                )}
+                              />
+                              <DetailLang
+                                label={t("admin.settings_page.language_fr")}
+                                text={q.explanationFr || ""}
+                                missingLabel={t(
+                                  "admin.quizzes.missing_translation",
+                                )}
+                              />
                             </div>
                           </div>
 

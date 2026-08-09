@@ -18,6 +18,7 @@ interface ExitConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   onStay: () => void;
   onLeave: () => void;
+  context?: "exam" | "practice";
 }
 
 // ─── Component ───────────────────────────────────────────
@@ -27,6 +28,7 @@ export function ExitConfirmDialog({
   onOpenChange,
   onStay,
   onLeave,
+  context = "exam",
 }: ExitConfirmDialogProps) {
   const { t } = useLanguage();
 
@@ -44,21 +46,37 @@ export function ExitConfirmDialog({
       <DialogContent className="rounded-2xl">
         <DialogHeader>
           <DialogTitle className="font-black">
-            {t("exam.exit_title")}
+            {t(
+              context === "practice"
+                ? "practice.exit_title"
+                : "exam.exit_title",
+            )}
           </DialogTitle>
-          <DialogDescription>{t("exam.exit_message")}</DialogDescription>
+          <DialogDescription>
+            {t(
+              context === "practice"
+                ? "practice.exit_message"
+                : "exam.exit_message",
+            )}
+          </DialogDescription>
         </DialogHeader>
 
         <DialogFooter className="gap-2 sm:gap-2 sm:flex-row-reverse">
           <Button onClick={handleStay} className="rounded-xl">
-            {t("exam.exit_stay")}
+            {t(
+              context === "practice" ? "practice.exit_stay" : "exam.exit_stay",
+            )}
           </Button>
           <Button
             variant="outline"
             onClick={handleLeave}
             className="rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
           >
-            {t("exam.exit_leave")}
+            {t(
+              context === "practice"
+                ? "practice.exit_leave"
+                : "exam.exit_leave",
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

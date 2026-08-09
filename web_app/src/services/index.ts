@@ -4,10 +4,7 @@ export { updateProfile } from "./userService";
 
 // ─── Analytics ───────────────────────────────────────────
 
-export {
-  getWeakAreas,
-  type WeakAreasData,
-} from "./analyticsService";
+export { getWeakAreas, type WeakAreasData } from "./analyticsService";
 
 // ─── Progress ────────────────────────────────────────────
 
@@ -24,6 +21,7 @@ export {
   startPracticeSession,
   submitPracticeAnswer,
   getPracticeResults,
+  abandonPracticeSession,
   getExamQuestions,
   submitExam,
   getSignStatus,

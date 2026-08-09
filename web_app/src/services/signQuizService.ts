@@ -379,6 +379,10 @@ export async function getPracticeResults(
   return res.data;
 }
 
+export async function abandonPracticeSession(sessionId: number): Promise<void> {
+  await apiClient.post(API_ENDPOINTS.SIGN_QUIZ.ABANDON_PRACTICE(sessionId));
+}
+
 /** Get sign-specific practice history, including in-progress sessions. */
 export async function getPracticeHistory(): Promise<SignPracticeHistoryResponse> {
   const res = await apiClient.get<SignPracticeHistoryResponse>(
@@ -473,6 +477,14 @@ export async function submitRandomPracticeSession(
     { sessionId, answers },
   );
   return res.data;
+}
+
+export async function abandonRandomPracticeSession(
+  sessionId: number,
+): Promise<void> {
+  await apiClient.post(
+    API_ENDPOINTS.SIGN_QUIZ.ABANDON_RANDOM_PRACTICE(sessionId),
+  );
 }
 
 /** Get completed mixed-sign exam history for the current user. */

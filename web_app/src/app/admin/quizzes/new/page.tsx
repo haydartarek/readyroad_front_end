@@ -562,7 +562,7 @@ export default function AdminAddQuizQuestionPage() {
 
       <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
         {t("admin.quizzes.bank_theory_desc") ||
-          "Used by the current learner exam flow at /exam and /api/quiz/theory-exam."}
+          "This category classifies the question and supports learner performance analysis."}
       </div>
 
       {/* Quiz Form */}
@@ -705,7 +705,7 @@ export default function AdminAddQuizQuestionPage() {
             <div className="relative inline-block">
               <Image
                 src={resolveImageUrl(form.contentImageUrl)}
-                    alt={t("practice.question_image_alt")}
+                alt={t("practice.question_image_alt")}
                 width={320}
                 height={192}
                 unoptimized
@@ -830,26 +830,42 @@ export default function AdminAddQuizQuestionPage() {
               label={t("admin.quizzes.form.explanation_en")}
               value={form.explanationEn}
               onChange={(value) => setField("explanationEn", value)}
-              warning={!form.explanationEn.trim() ? t("admin.quizzes.missing_translation") : undefined}
+              warning={
+                !form.explanationEn.trim()
+                  ? t("admin.quizzes.missing_translation")
+                  : undefined
+              }
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_ar")}
               value={form.explanationAr}
               onChange={(value) => setField("explanationAr", value)}
               dir="rtl"
-              warning={!form.explanationAr.trim() ? t("admin.quizzes.missing_translation") : undefined}
+              warning={
+                !form.explanationAr.trim()
+                  ? t("admin.quizzes.missing_translation")
+                  : undefined
+              }
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_nl")}
               value={form.explanationNl}
               onChange={(value) => setField("explanationNl", value)}
-              warning={!form.explanationNl.trim() ? t("admin.quizzes.missing_translation") : undefined}
+              warning={
+                !form.explanationNl.trim()
+                  ? t("admin.quizzes.missing_translation")
+                  : undefined
+              }
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_fr")}
               value={form.explanationFr}
               onChange={(value) => setField("explanationFr", value)}
-              warning={!form.explanationFr.trim() ? t("admin.quizzes.missing_translation") : undefined}
+              warning={
+                !form.explanationFr.trim()
+                  ? t("admin.quizzes.missing_translation")
+                  : undefined
+              }
             />
           </div>
         </AdminSectionCard>

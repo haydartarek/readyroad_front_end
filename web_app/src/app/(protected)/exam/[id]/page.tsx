@@ -14,9 +14,17 @@ import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { convertToPublicImageUrl } from "@/lib/image-utils";
+import { API_ENDPOINTS } from "@/lib/constants";
+import { resolveTimedAttemptStep } from "@/lib/attempt-lifecycle";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { RefreshCw, ArrowLeft, ArrowRight, Clock, ImageOff } from "lucide-react";
+import {
+  RefreshCw,
+  ArrowLeft,
+  ArrowRight,
+  Clock,
+  ImageOff,
+} from "lucide-react";
 
 /** Seconds per question — Belgian theoretical driving exam rule */
 const QUESTION_TIME = 15;
@@ -169,6 +177,7 @@ export default function ExamQuestionsPage() {
 
   const isExamActive = useRef(true);
   const pendingNavigation = useRef<string | null>(null);
+  const consecutiveUnansweredRef = useRef(0);
   // Ref for submit so timer callback always sees the latest version
   const submitExamRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
@@ -289,7 +298,10 @@ export default function ExamQuestionsPage() {
       setAnswers((prev) => ({ ...prev, [questionId]: optionNumber }));
       const timeTakenSeconds = Math.min(
         QUESTION_TIME,
-        Math.max(0, Math.round((Date.now() - questionStartedAtRef.current) / 1000)),
+        Math.max(
+          0,
+          Math.round((Date.now() - questionStartedAtRef.current) / 1000),
+        ),
       );
 
       try {
@@ -313,6 +325,7 @@ export default function ExamQuestionsPage() {
   // ── Submit exam ─────────────────────────────────────────
   const submitExam = useCallback(async () => {
     if (!examData) return;
+    if (Object.keys(answers).length !== examData.questions.length) return;
     try {
       setIsSubmitting(true);
       isExamActive.current = false;
@@ -331,7 +344,34 @@ export default function ExamQuestionsPage() {
       }
       setIsSubmitting(false);
     }
-  }, [examData, examId, router, t]);
+  }, [answers, examData, examId, router, t]);
+
+  const abandonExam = useCallback(
+    async (target: string | null) => {
+      if (!examData) return;
+      try {
+        setIsSubmitting(true);
+        if (timerRef.current) clearInterval(timerRef.current);
+        await apiClient.post(API_ENDPOINTS.EXAMS.ABANDON(examId));
+        isExamActive.current = false;
+        localStorage.removeItem("current_exam");
+        if (target) {
+          router.push(target);
+        } else {
+          router.back();
+        }
+      } catch (err) {
+        logApiError("Failed to abandon exam", err);
+        isExamActive.current = true;
+        setIsSubmitting(false);
+        setQuestionTimeLeft(QUESTION_TIME);
+        if (!isServiceUnavailable(err)) {
+          toast.error(t("common.error"));
+        }
+      }
+    },
+    [examData, examId, router, t],
+  );
 
   // Keep ref in sync so timer callbacks always fire the latest version
   useEffect(() => {
@@ -339,16 +379,33 @@ export default function ExamQuestionsPage() {
   }, [submitExam]);
 
   // ── Advance to next question (or submit on last) ────────
-  const handleNextOrSubmit = useCallback(() => {
-    if (!examData) return;
-    const isLast = currentQuestionIndex === examData.questions.length - 1;
-    if (isLast) {
-      submitExamRef.current?.();
-    } else {
-      setCurrentQuestionIndex((prev) => prev + 1);
-      setQuestionTimeLeft(QUESTION_TIME);
-    }
-  }, [examData, currentQuestionIndex]);
+  const handleNextOrSubmit = useCallback(
+    (reason: "manual" | "timeout") => {
+      if (!examData) return;
+      const currentQuestion = examData.questions[currentQuestionIndex];
+      if (!currentQuestion) return;
+
+      const decision = resolveTimedAttemptStep({
+        reason,
+        isCurrentAnswered: answers[currentQuestion.id] !== undefined,
+        isLastQuestion: currentQuestionIndex === examData.questions.length - 1,
+        answeredCount: Object.keys(answers).length,
+        totalQuestions: examData.questions.length,
+        consecutiveUnanswered: consecutiveUnansweredRef.current,
+      });
+      consecutiveUnansweredRef.current = decision.consecutiveUnanswered;
+
+      if (decision.action === "submit") {
+        submitExamRef.current?.();
+      } else if (decision.action === "abandon") {
+        void abandonExam("/practice");
+      } else {
+        setCurrentQuestionIndex((prev) => prev + 1);
+        setQuestionTimeLeft(QUESTION_TIME);
+      }
+    },
+    [abandonExam, answers, examData, currentQuestionIndex],
+  );
 
   // Ref so the timer interval closure always sees the latest handler
   const handleNextOrSubmitRef = useRef(handleNextOrSubmit);
@@ -358,6 +415,10 @@ export default function ExamQuestionsPage() {
 
   // ── Per-question 15-second countdown ───────────────────
   useEffect(() => {
+    if (isSubmitting) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
     // Reset timer whenever the question changes
     setQuestionTimeLeft(QUESTION_TIME);
     questionStartedAtRef.current = Date.now();
@@ -368,7 +429,7 @@ export default function ExamQuestionsPage() {
         if (prev <= 1) {
           // Time's up — auto-advance
           clearInterval(timerRef.current!);
-          handleNextOrSubmitRef.current();
+          handleNextOrSubmitRef.current("timeout");
           return 0;
         }
         return prev - 1;
@@ -378,21 +439,16 @@ export default function ExamQuestionsPage() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentQuestionIndex]); // re-run only when question changes
+  }, [currentQuestionIndex, isSubmitting]);
 
   const handleExitStay = useCallback(() => {
     pendingNavigation.current = null;
   }, []);
   const handleExitLeave = useCallback(() => {
-    isExamActive.current = false;
     const target = pendingNavigation.current;
     pendingNavigation.current = null;
-    if (target) {
-      router.push(target);
-      return;
-    }
-    router.back();
-  }, [router]);
+    void abandonExam(target);
+  }, [abandonExam]);
 
   if (isLoading) return <LoadingSpinner message={t("exam.loading_active")} />;
 
@@ -500,14 +556,9 @@ export default function ExamQuestionsPage() {
     >
       <FocusedQuestionCard
         headerBadges={
-          <>
-            <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
-              {currentQuestionIndex + 1}
-            </span>
-            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-              {t("nav.exam")}
-            </span>
-          </>
+          <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
+            {currentQuestionIndex + 1}
+          </span>
         }
         media={
           questionImageUrl ? (
@@ -529,7 +580,10 @@ export default function ExamQuestionsPage() {
                   className="object-contain"
                   priority
                   onError={() => {
-                    console.error("Failed to load theoretical question image", questionImageUrl);
+                    console.error(
+                      "Failed to load theoretical question image",
+                      questionImageUrl,
+                    );
                     setFailedImageUrl(questionImageUrl);
                   }}
                 />
@@ -562,7 +616,7 @@ export default function ExamQuestionsPage() {
             <div className="flex justify-end">
               <Button
                 size="sm"
-                onClick={handleNextOrSubmit}
+                onClick={() => handleNextOrSubmit("manual")}
                 disabled={isSubmitting}
                 className="h-11 w-full gap-2 rounded-full px-6 font-semibold shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 sm:w-auto sm:min-w-[112px]"
               >

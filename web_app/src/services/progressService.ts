@@ -11,6 +11,10 @@ import {
 /** Category summary returned inside OverallProgress (weak/strong/mostStudied lists) */
 export interface CategoryProgressSummary {
   categoryName: string;
+  categoryNameEn?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
+  categoryNameAr?: string | null;
   categoryCode: string | null;
   accuracy: number; // BigDecimal serializes as number in JSON
   attempted: number;
@@ -165,6 +169,10 @@ export interface CategoryProgress {
   /** @deprecated alias for categoryCode, kept for backwards compatibility */
   category?: string;
   categoryName: string;
+  categoryNameEn?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
+  categoryNameAr?: string | null;
   questionsAttempted: number;
   correctAnswers: number;
   accuracyRate: number;
@@ -320,6 +328,10 @@ function normalizeCategoryProgress(
     categoryCode,
     category: categoryCode,
     categoryName: item.categoryName,
+    categoryNameEn: item.categoryNameEn,
+    categoryNameNl: item.categoryNameNl,
+    categoryNameFr: item.categoryNameFr,
+    categoryNameAr: item.categoryNameAr,
     questionsAttempted: item.questionsAttempted,
     correctAnswers: item.correctAnswers,
     accuracyRate,

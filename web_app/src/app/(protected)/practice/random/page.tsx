@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import Link from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,6 +16,7 @@ import {
 import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
 import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
 import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
+import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
 import { getExamOptionLabel } from "@/components/exam/exam-option-card";
 import { useLanguage } from "@/contexts/language-context";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
@@ -25,9 +27,11 @@ import {
   ResultDetailsToggle,
 } from "@/components/results/result-review";
 import { cn } from "@/lib/utils";
+import { resolveTimedAttemptStep } from "@/lib/attempt-lifecycle";
 import {
   startRandomPracticeSession,
   submitRandomPracticeSession,
+  abandonRandomPracticeSession,
   type SignQuizQuestion,
   type SignRandomPracticeResult,
   type SignRandomPracticeQuestionResult,
@@ -98,6 +102,7 @@ function LoadingState({ message }: { message: string }) {
 
 export default function RandomPracticePage() {
   const { t, language } = useLanguage();
+  const router = useLocalizedRouter();
   const isRTL = language === "ar";
 
   const [sessionId, setSessionId] = useState<number | null>(null);
@@ -114,9 +119,11 @@ export default function RandomPracticePage() {
   );
   const [startError, setStartError] = useState<string | null>(null);
   const [isLockedUi, setIsLockedUi] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   const answersRef = useRef<(number | null)[]>([]);
   const isAdvancingRef = useRef(false);
+  const consecutiveUnansweredRef = useRef(0);
 
   const localize = useCallback(
     (
@@ -182,6 +189,7 @@ export default function RandomPracticePage() {
         setTimeLeft(SECONDS_PER_QUESTION);
         setIsLockedUi(false);
         isAdvancingRef.current = false;
+        consecutiveUnansweredRef.current = 0;
         setPhase("exam");
       } else {
         setPhase("intro");
@@ -194,9 +202,39 @@ export default function RandomPracticePage() {
     }
   };
 
+  const abandonSession = useCallback(
+    async (target?: string) => {
+      if (!sessionId) return;
+      try {
+        await abandonRandomPracticeSession(sessionId);
+        answersRef.current = [];
+        consecutiveUnansweredRef.current = 0;
+        isAdvancingRef.current = false;
+        setSessionId(null);
+        setQuestions([]);
+        setSelectedOption(null);
+        setIsLockedUi(false);
+        setPhase("intro");
+        if (target) router.push(target);
+      } catch (err) {
+        logApiError("Failed to abandon sign practice", err);
+        setStartError(t("sign_practice.submit_error"));
+        setTimeLeft(SECONDS_PER_QUESTION);
+        setIsLockedUi(false);
+        isAdvancingRef.current = false;
+      }
+    },
+    [router, sessionId, t],
+  );
+
   const submitAll = useCallback(async () => {
     if (!sessionId) {
       setPhase("intro");
+      return;
+    }
+
+    if (answersRef.current.some((answer) => answer === null)) {
+      await abandonSession();
       return;
     }
 
@@ -218,7 +256,7 @@ export default function RandomPracticePage() {
       }
       setPhase("intro");
     }
-  }, [questions, sessionId, t]);
+  }, [abandonSession, questions, sessionId, t]);
 
   const selectOption = useCallback((choiceId: number) => {
     if (isAdvancingRef.current) return;
@@ -226,15 +264,34 @@ export default function RandomPracticePage() {
   }, []);
 
   const advanceToNext = useCallback(
-    (answerToSave: number | null) => {
+    (answerToSave: number | null, reason: "manual" | "timeout") => {
       if (isAdvancingRef.current) return;
       isAdvancingRef.current = true;
       setIsLockedUi(true);
 
+      const answeredCount =
+        answersRef.current.filter((answer) => answer !== null).length +
+        (answersRef.current[currentIndex] === null && answerToSave !== null
+          ? 1
+          : 0);
+      const decision = resolveTimedAttemptStep({
+        reason,
+        isCurrentAnswered: answerToSave !== null,
+        isLastQuestion: currentIndex + 1 >= questions.length,
+        answeredCount,
+        totalQuestions: questions.length,
+        consecutiveUnanswered: consecutiveUnansweredRef.current,
+      });
+      consecutiveUnansweredRef.current = decision.consecutiveUnanswered;
+      if (decision.action === "abandon") {
+        void abandonSession();
+        return;
+      }
+
       answersRef.current[currentIndex] = answerToSave;
 
       const nextIndex = currentIndex + 1;
-      if (nextIndex >= questions.length) {
+      if (decision.action === "submit") {
         void submitAll();
       } else {
         setSelectedOption(null);
@@ -244,7 +301,7 @@ export default function RandomPracticePage() {
         setCurrentIndex(nextIndex);
       }
     },
-    [currentIndex, questions.length, submitAll],
+    [abandonSession, currentIndex, questions.length, submitAll],
   );
 
   useEffect(() => {
@@ -253,7 +310,7 @@ export default function RandomPracticePage() {
 
     if (timeLeft <= 0) {
       const autoAdvance = setTimeout(() => {
-        advanceToNext(selectedOption);
+        advanceToNext(selectedOption, "timeout");
       }, 0);
       return () => clearTimeout(autoAdvance);
     }
@@ -416,11 +473,7 @@ export default function RandomPracticePage() {
                     <Timer className="h-4 w-4" />
                     {t("practice_exam.start_btn")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    asChild
-                  >
+                  <Button variant="outline" size="lg" asChild>
                     <Link href="/practice">{backToPracticeContent}</Link>
                   </Button>
                 </div>
@@ -575,123 +628,132 @@ export default function RandomPracticePage() {
       timeLeft <= 5 ? "#ef4444" : timeLeft <= 10 ? "#f97316" : "#22c55e";
 
     return (
-      <FocusedExamShell
-        dir={isRTL ? "rtl" : "ltr"}
-        backControl={
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 rounded-full px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
-            asChild
-          >
-            <Link href="/practice">{backToPracticeContent}</Link>
-          </Button>
-        }
-        timerPill={
-          <div
-            className={cn(
-              "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold tabular-nums transition-colors",
-              timerPillClass,
-            )}
-          >
-            <Clock className="h-3.5 w-3.5" />
-            {timeLeft}s
-          </div>
-        }
-        progressLabel={t("practice_exam.question_of")
-          .replace("{n}", String(currentIndex + 1))
-          .replace("{m}", String(questions.length))}
-        progressPercent={progressPct}
-      >
-        <FocusedQuestionCard
-          headerBadges={
-            <>
-              <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
-                {currentIndex + 1}
-              </span>
-              <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                {getRandomPracticeCategoryLabel(question.signCode, t)}
-              </span>
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold",
-                  question.difficulty === "EASY" && "bg-green-500 text-white",
-                  question.difficulty === "MEDIUM" &&
-                    "bg-orange-500 text-white",
-                  question.difficulty === "HARD" && "bg-red-500 text-white",
-                )}
-              >
-                {getDifficultyLabel(question.difficulty)}
-              </span>
-            </>
+      <>
+        <FocusedExamShell
+          dir={isRTL ? "rtl" : "ltr"}
+          backControl={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 rounded-full px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+              onClick={() => setShowExitDialog(true)}
+            >
+              {backToPracticeContent}
+            </Button>
           }
-          media={
-            question.showSign && question.signImagePath ? (
-              <ExamQuestionImageFrame>
-                <SignImage
-                  src={question.signImagePath}
-                  alt={question.signCode ?? "traffic sign"}
-                  className="object-contain"
-                />
-              </ExamQuestionImageFrame>
-            ) : null
+          timerPill={
+            <div
+              className={cn(
+                "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold tabular-nums transition-colors",
+                timerPillClass,
+              )}
+            >
+              <Clock className="h-3.5 w-3.5" />
+              {timeLeft}s
+            </div>
           }
-          title={localize(
-            question.questionEn,
-            question.questionAr,
-            question.questionNl,
-            question.questionFr,
-          )}
-          options={question.choices.map((choice) => ({
-            key: choice.id,
-            text: localize(
-              choice.textEn,
-              choice.textAr,
-              choice.textNl,
-              choice.textFr,
-            ),
-            selected: selectedOption === choice.id,
-            disabled: isLockedUi,
-            onSelect: () => selectOption(choice.id),
-          }))}
-          footer={
-            <>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${timerPct}%`,
-                    transition: "width 1s linear, background-color 0.5s ease",
-                    backgroundColor: timerBarColor,
-                  }}
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => advanceToNext(selectedOption)}
-                  disabled={isLockedUi}
+          progressLabel={t("practice_exam.question_of")
+            .replace("{n}", String(currentIndex + 1))
+            .replace("{m}", String(questions.length))}
+          progressPercent={progressPct}
+        >
+          <FocusedQuestionCard
+            headerBadges={
+              <>
+                <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
+                  {currentIndex + 1}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                  {getRandomPracticeCategoryLabel(question.signCode, t)}
+                </span>
+                <span
                   className={cn(
-                    "h-11 w-full gap-2 rounded-full px-5 font-semibold shadow-md transition-all sm:w-auto",
-                    selectedOption !== null
-                      ? "shadow-primary/20 hover:-translate-y-0.5"
-                      : "opacity-80",
+                    "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold",
+                    question.difficulty === "EASY" && "bg-green-500 text-white",
+                    question.difficulty === "MEDIUM" &&
+                      "bg-orange-500 text-white",
+                    question.difficulty === "HARD" && "bg-red-500 text-white",
                   )}
                 >
-                  {currentIndex + 1 === questions.length
-                    ? t("practice_exam.submit_btn")
-                    : t("practice_exam.next_btn")}
-                  {isRTL ? (
-                    <ArrowLeft className="h-4 w-4" />
-                  ) : (
-                    <ArrowRight className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </>
-          }
+                  {getDifficultyLabel(question.difficulty)}
+                </span>
+              </>
+            }
+            media={
+              question.showSign && question.signImagePath ? (
+                <ExamQuestionImageFrame>
+                  <SignImage
+                    src={question.signImagePath}
+                    alt={question.signCode ?? "traffic sign"}
+                    className="object-contain"
+                  />
+                </ExamQuestionImageFrame>
+              ) : null
+            }
+            title={localize(
+              question.questionEn,
+              question.questionAr,
+              question.questionNl,
+              question.questionFr,
+            )}
+            options={question.choices.map((choice) => ({
+              key: choice.id,
+              text: localize(
+                choice.textEn,
+                choice.textAr,
+                choice.textNl,
+                choice.textFr,
+              ),
+              selected: selectedOption === choice.id,
+              disabled: isLockedUi,
+              onSelect: () => selectOption(choice.id),
+            }))}
+            footer={
+              <>
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${timerPct}%`,
+                      transition: "width 1s linear, background-color 0.5s ease",
+                      backgroundColor: timerBarColor,
+                    }}
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => advanceToNext(selectedOption, "manual")}
+                    disabled={isLockedUi}
+                    className={cn(
+                      "h-11 w-full gap-2 rounded-full px-5 font-semibold shadow-md transition-all sm:w-auto",
+                      selectedOption !== null
+                        ? "shadow-primary/20 hover:-translate-y-0.5"
+                        : "opacity-80",
+                    )}
+                  >
+                    {currentIndex + 1 === questions.length
+                      ? t("practice_exam.submit_btn")
+                      : t("practice_exam.next_btn")}
+                    {isRTL ? (
+                      <ArrowLeft className="h-4 w-4" />
+                    ) : (
+                      <ArrowRight className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </>
+            }
+          />
+        </FocusedExamShell>
+        <ExitConfirmDialog
+          open={showExitDialog}
+          onOpenChange={setShowExitDialog}
+          onStay={() => undefined}
+          onLeave={() => void abandonSession("/practice")}
+          context="practice"
         />
-      </FocusedExamShell>
+      </>
     );
   }
 
@@ -1031,21 +1093,19 @@ function SignReviewCard({
       <div className="min-w-0 space-y-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="shrink-0">{statusIcon}</span>
-            <span className="text-xs font-semibold text-muted-foreground">
-              Q{qNum}
+          <span className="text-xs font-semibold text-muted-foreground">
+            Q{qNum}
+          </span>
+          {qr.signCode && (
+            <span className="text-xs text-muted-foreground">{qr.signCode}</span>
+          )}
+          {qr.difficulty && (
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full border ${getDifficultyColor(qr.difficulty)}`}
+            >
+              {getDifficultyLabel(qr.difficulty)}
             </span>
-            {qr.signCode && (
-              <span className="text-xs text-muted-foreground">
-                {qr.signCode}
-              </span>
-            )}
-            {qr.difficulty && (
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full border ${getDifficultyColor(qr.difficulty)}`}
-              >
-                {getDifficultyLabel(qr.difficulty)}
-              </span>
-            )}
+          )}
           <span
             className={cn(
               "ms-auto rounded-full border px-2.5 py-1 text-xs font-semibold",

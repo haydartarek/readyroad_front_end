@@ -54,6 +54,7 @@ import { ErrorPatternsContent } from "@/app/(protected)/analytics/error-patterns
 import { ExamResultsPageContent } from "@/app/(protected)/exam/results/page";
 import { ProfilePageContent } from "@/app/(protected)/profile/page";
 import { StudentIntelligencePanel } from "@/components/dashboard/student-intelligence-panel";
+import { localizedCategoryName } from "@/lib/student-intelligence-presentation";
 
 // ─── Progress Tracker types (inline, no extra file) ──────────────────────────
 
@@ -160,9 +161,11 @@ function GreetingHeader({
 function StrongAreasWidget({
   categories,
   t,
+  language,
 }: {
   categories: CategoryProgressSummary[];
   t: (key: string) => string;
+  language: "en" | "nl" | "fr" | "ar";
 }) {
   if (!categories || categories.length === 0) return null;
 
@@ -193,7 +196,11 @@ function StrongAreasWidget({
                   {cat.categoryCode ?? idx + 1}
                 </span>
                 <span className="text-sm font-semibold text-foreground truncate">
-                  {cat.categoryName}
+                  {localizedCategoryName(
+                    cat,
+                    language,
+                    t("common.not_available"),
+                  )}
                 </span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -498,7 +505,7 @@ function SignActivityWidget({
       </div>
 
       <div className="rounded-xl border border-border/40 bg-background/60 px-4 py-3">
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="font-medium text-foreground">
               {t("dashboard.sign_random_exams_passed")}
@@ -515,7 +522,7 @@ function SignActivityWidget({
               {lessonsCompletedCount}/{lessonsStartedCount}
             </span>
           </div>
-          <div className="flex items-center justify-between gap-3 text-sm md:col-span-2">
+          <div className="flex items-center justify-between gap-3 text-sm">
             <span className="font-medium text-foreground">
               {t("dashboard.incomplete_activity")}
             </span>
@@ -582,14 +589,11 @@ function WeakSignsWidget({
               className="rounded-xl border border-red-100 bg-red-50/40 px-3 py-3"
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-black text-foreground truncate">
-                    {sign.signCode}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {localizedName || sign.signNameEn || sign.signCode}
-                  </p>
-                </div>
+                <p className="min-w-0 break-words text-sm font-black text-foreground">
+                  {localizedName ||
+                    sign.signNameEn ||
+                    t("common.not_available")}
+                </p>
                 <p className="text-sm font-black text-destructive">
                   {sign.accuracy.toFixed(1)}%
                 </p>
@@ -762,7 +766,11 @@ function DashboardHome() {
         setCategoryProgress(
           categories.map((cat) => ({
             categoryCode: cat.categoryCode,
-            categoryName: cat.categoryName,
+            categoryName: localizedCategoryName(
+              cat,
+              language,
+              t("common.not_available"),
+            ),
             questionsAttempted: cat.questionsAttempted,
             correctAnswers: cat.correctAnswers,
             accuracy: cat.accuracyRate,
@@ -963,7 +971,7 @@ function DashboardHome() {
 
       {/* Strong Areas (only shown when user has ≥1 strong category) */}
       {strongAreas.length > 0 && (
-        <StrongAreasWidget categories={strongAreas} t={t} />
+        <StrongAreasWidget categories={strongAreas} t={t} language={language} />
       )}
     </div>
   );

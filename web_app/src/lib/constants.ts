@@ -121,6 +121,7 @@ export const API_ENDPOINTS = {
     HISTORY: "/exams/simulations/history", // ← مضاف
     DETAIL: (id: number) => `/exams/simulations/${id}`,
     RESULTS: (id: number) => `/exams/simulations/${id}/results`,
+    ABANDON: (id: number) => `/exams/simulations/${id}/abandon`,
     SUBMIT_ANSWER: (examId: number, questionId: number) =>
       `/exams/simulations/${examId}/questions/${questionId}/answer`, // ← مضاف
   },
@@ -158,6 +159,8 @@ export const API_ENDPOINTS = {
     PRACTICE_HISTORY: "/sign-quiz/practice/history",
     SUBMIT_ANSWER: (sessionId: number, questionId: number) =>
       `/sign-quiz/practice/${sessionId}/questions/${questionId}/answer`,
+    ABANDON_PRACTICE: (sessionId: number) =>
+      `/sign-quiz/practice/${sessionId}/abandon`,
     PRACTICE_RESULTS: (sessionId: number) =>
       `/sign-quiz/practice/${sessionId}/results`,
     EXAM_QUESTIONS: (signCode: string, examNumber: number) =>
@@ -174,6 +177,8 @@ export const API_ENDPOINTS = {
     RANDOM_PRACTICE_HISTORY: "/sign-quiz/random-practice/history",
     RANDOM_PRACTICE_RESULTS: (sessionId: number) =>
       `/sign-quiz/random-practice/${sessionId}/results`,
+    ABANDON_RANDOM_PRACTICE: (sessionId: number) =>
+      `/sign-quiz/random-practice/${sessionId}/abandon`,
   },
 
   HEALTH: "/actuator/health",
@@ -198,6 +203,7 @@ export const API_ENDPOINTS = {
       DELETE: (id: number | string) => `/admin/quiz/questions/${id}`,
       DISTRIBUTION: "/admin/quiz/correct-answer-distribution",
       SHUFFLE: "/admin/quiz/questions/shuffle-answer-order",
+      SHUFFLE_PREVIEW: "/admin/quiz/questions/shuffle-answer-order/preview",
     },
 
     DATA_IMPORT: {

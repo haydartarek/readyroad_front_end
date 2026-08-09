@@ -131,6 +131,9 @@ export function HeroSection() {
                 <p className="max-w-xl text-pretty text-sm font-medium leading-6 text-muted-foreground">
                   {t("home.hero.subtitle")}
                 </p>
+                <p className="max-w-xl text-pretty text-xs leading-5 text-muted-foreground/90">
+                  {t("home.hero.privacy")}
+                </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-1">

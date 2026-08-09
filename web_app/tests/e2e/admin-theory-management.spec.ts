@@ -9,11 +9,20 @@ const adminUser = {
 
 const categories = [
   {
-    code: "RULES",
+    code: "TH_RULES",
     nameEn: "Traffic rules",
     nameAr: "قواعد المرور",
     nameNl: "Verkeersregels",
     nameFr: "Règles de circulation",
+    contentScope: "THEORETICAL_EXAM",
+  },
+  {
+    code: "TH_SIGNS",
+    nameEn: "Traffic signs",
+    nameAr: "العلامات المرورية",
+    nameNl: "Verkeersborden",
+    nameFr: "Panneaux routiers",
+    contentScope: "BOTH",
   },
 ];
 
@@ -56,9 +65,9 @@ const question = {
 };
 
 async function mockAdmin(page: Page) {
-  const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString(
-    "base64url",
-  );
+  const header = Buffer.from(
+    JSON.stringify({ alg: "none", typ: "JWT" }),
+  ).toString("base64url");
   const payload = Buffer.from(
     JSON.stringify({ sub: "admin", role: "ADMIN", exp: 4_102_444_800 }),
   ).toString("base64url");
@@ -89,8 +98,9 @@ async function mockAdmin(page: Page) {
   await page.route("**/api/proxy/admin/upload/image", (route) =>
     route.fulfill({ json: { url: "/images/logo.png" } }),
   );
-  await page.route("**/api/proxy/users/me/notifications/unread-count", (route) =>
-    route.fulfill({ json: { unreadCount: 0 } }),
+  await page.route(
+    "**/api/proxy/users/me/notifications/unread-count",
+    (route) => route.fulfill({ json: { unreadCount: 0 } }),
   );
 }
 
@@ -124,7 +134,12 @@ test("Admin theoretical create and edit remain complete and responsive", async (
 
   await page.goto("/admin/quizzes/new");
   await expect(page.getByLabel("Category *")).toHaveValue("");
-  await expect(page.getByLabel("Category *").locator("option")).toHaveCount(2);
+  await expect(page.getByLabel("Category *").locator("option")).toHaveCount(3);
+  await expect(page.getByLabel("Category *").locator("option")).toContainText([
+    "Select a category...",
+    "Traffic rules (TH_RULES)",
+    "Traffic signs (TH_SIGNS)",
+  ]);
   for (const language of ["English", "Arabic", "Dutch", "French"]) {
     await expect(page.getByLabel(`Explanation (${language})`)).toBeVisible();
   }
@@ -138,9 +153,7 @@ test("Admin theoretical create and edit remain complete and responsive", async (
   await page.getByRole("button", { name: /^Remove C$/ }).click();
   await page.getByRole("button", { name: "Add Option" }).click();
   await expect(page.getByLabel("Difficulty Level")).toHaveValue("HARD");
-  await expect(page.getByLabel("Question Type")).toHaveValue(
-    "MULTIPLE_CHOICE",
-  );
+  await expect(page.getByLabel("Question Type")).toHaveValue("MULTIPLE_CHOICE");
 
   await page.locator('input[type="file"]').setInputFiles({
     name: "question.png",
@@ -150,9 +163,13 @@ test("Admin theoretical create and edit remain complete and responsive", async (
       "base64",
     ),
   });
-  await expect(page.getByRole("button", { name: /remove image/i })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /remove image/i }),
+  ).toBeVisible();
   await page.getByRole("button", { name: /remove image/i }).click();
-  await expect(page.getByRole("button", { name: /remove image/i })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /remove image/i })).toHaveCount(
+    0,
+  );
   await expectNoPageOverflow(page);
 
   await page.goto("/admin/quizzes/7/edit");
@@ -162,13 +179,106 @@ test("Admin theoretical create and edit remain complete and responsive", async (
   await expect(page.getByLabel("Explanation (Arabic)")).toHaveValue(
     question.explanationAr,
   );
-  await expect(page.getByRole("button", { name: /remove image/i })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /remove image/i }),
+  ).toBeVisible();
   await expectNoPageOverflow(page);
 
   expect({ browserErrors, failedResponses }).toEqual({
     browserErrors: [],
     failedResponses: [],
   });
+});
+
+test("Admin balances only selected theoretical answers after preview", async ({
+  page,
+}) => {
+  await mockAdmin(page);
+  const preview = {
+    selectedQuestions: 1,
+    before: [
+      {
+        difficulty: "EASY",
+        optionCount: 2,
+        total: 1,
+        positions: [
+          { label: "A", count: 1, percentage: 100 },
+          { label: "B", count: 0, percentage: 0 },
+        ],
+      },
+    ],
+    after: [
+      {
+        difficulty: "EASY",
+        optionCount: 2,
+        total: 1,
+        positions: [
+          { label: "A", count: 1, percentage: 100 },
+          { label: "B", count: 0, percentage: 0 },
+        ],
+      },
+    ],
+  };
+  let previewRequest: unknown;
+  let applyRequest: unknown;
+
+  await page.route("**/api/proxy/admin/quiz/questions?*", (route) =>
+    route.fulfill({
+      json: {
+        items: [question],
+        page: 0,
+        size: 20,
+        totalItems: 1,
+        totalPages: 1,
+      },
+    }),
+  );
+  await page.route(
+    "**/api/proxy/admin/quiz/correct-answer-distribution*",
+    (route) =>
+      route.fulfill({
+        json: {
+          total: 1,
+          positions: [
+            { label: "A", count: 1, percentage: 100 },
+            { label: "B", count: 0, percentage: 0 },
+            { label: "C", count: 0, percentage: 0 },
+          ],
+        },
+      }),
+  );
+  await page.route(
+    "**/api/proxy/admin/quiz/questions/shuffle-answer-order/preview",
+    async (route) => {
+      previewRequest = route.request().postDataJSON();
+      await route.fulfill({ json: preview });
+    },
+  );
+  await page.route(
+    "**/api/proxy/admin/quiz/questions/shuffle-answer-order",
+    async (route) => {
+      applyRequest = route.request().postDataJSON();
+      await route.fulfill({ json: preview });
+    },
+  );
+  page.on("dialog", (dialog) => dialog.accept());
+
+  await page.goto("/admin/quizzes");
+  const shuffle = page.getByRole("button", {
+    name: "Shuffle Answer Order (0)",
+  });
+  await expect(shuffle).toBeDisabled();
+  await page.getByLabel("Select question 7").check();
+  await page.getByRole("button", { name: "Shuffle Answer Order (1)" }).click();
+
+  await expect(page.getByTestId("answer-balance-preview")).toContainText(
+    "Before",
+  );
+  await expect(page.getByTestId("answer-balance-preview")).toContainText(
+    "After",
+  );
+  expect(previewRequest).toEqual({ questionIds: [7] });
+  expect(applyRequest).toEqual({ questionIds: [7] });
 });
 
 const navigationByLocale = [
@@ -272,7 +382,9 @@ for (const locale of navigationByLocale) {
         const navigation = document.querySelector(
           '[data-testid="desktop-primary-navigation"]',
         );
-        const actions = document.querySelector('[data-testid="navbar-actions"]');
+        const actions = document.querySelector(
+          '[data-testid="navbar-actions"]',
+        );
         if (!navigation || !actions) return Number.POSITIVE_INFINITY;
         const navigationRect = navigation.getBoundingClientRect();
         const actionsRect = actions.getBoundingClientRect();
@@ -286,7 +398,9 @@ for (const locale of navigationByLocale) {
       await expect(
         desktop.getByRole("link", { name: /FAQ|الأسئلة الشائعة/ }),
       ).toHaveCount(0);
-      const searchTrigger = page.getByRole("button", { name: /Search|بحث|Zoeken|Rechercher/ });
+      const searchTrigger = page.getByRole("button", {
+        name: /Search|بحث|Zoeken|Rechercher/,
+      });
       await expect(searchTrigger).toBeVisible();
       await searchTrigger.click();
       await expect(

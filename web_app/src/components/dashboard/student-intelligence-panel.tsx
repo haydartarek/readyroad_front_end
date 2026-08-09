@@ -30,7 +30,7 @@ export function StudentIntelligencePanel({
 
   if (data.dataStatus === "NO_DATA") {
     return (
-      <section className="rounded-lg border border-border bg-card px-5 py-6">
+      <section className="rounded-2xl border border-border bg-card px-5 py-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-sm font-semibold text-primary">
@@ -156,7 +156,7 @@ export function StudentIntelligencePanel({
 
   return (
     <section
-      className="rounded-lg border border-border bg-card"
+      className="rounded-2xl border border-border bg-card shadow-sm"
       aria-labelledby="student-intelligence-title"
     >
       <div className="grid gap-6 px-5 py-6 xl:grid-cols-[1fr_1.35fr]">
@@ -209,7 +209,7 @@ export function StudentIntelligencePanel({
           <h3 className="text-sm font-bold">
             {t("student_intelligence.next_steps")}
           </h3>
-          <div className="mt-3 space-y-2">
+          <div className="mt-3 grid gap-3">
             {data.recommendations.map((recommendation) => {
               const category = recommendation.categoryCode
                 ? data.learningPriorities.find(
@@ -221,7 +221,7 @@ export function StudentIntelligencePanel({
                 <Link
                   key={`${recommendation.priority}-${recommendation.key}`}
                   href={recommendation.actionPath}
-                  className="group flex min-h-11 items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                  className="group flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-primary/[0.04] px-4 py-3 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-primary/[0.07] hover:shadow-md"
                 >
                   <span>
                     {t(recommendation.key, {
@@ -240,7 +240,7 @@ export function StudentIntelligencePanel({
           </div>
 
           {data.learningPriorities.length > 0 && (
-            <p className="mt-4 text-xs text-muted-foreground">
+            <p className="mt-4 rounded-xl border border-secondary/15 bg-secondary/[0.05] px-3 py-2 text-xs font-medium text-muted-foreground">
               {t("student_intelligence.top_priority", {
                 category: localizedPriorityName(
                   data.learningPriorities[0],

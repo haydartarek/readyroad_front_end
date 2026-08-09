@@ -343,7 +343,7 @@ export function ErrorPatternsContent() {
               <BarChart2 className="w-10 h-10 text-primary" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-black tracking-tight">
+              <h2 className="text-xl font-black tracking-tight">
                 {t("error_patterns.empty_title")}
               </h2>
               <p className="text-sm font-medium text-muted-foreground max-w-sm">

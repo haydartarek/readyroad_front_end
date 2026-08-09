@@ -149,7 +149,7 @@ export function WeakAreasPageContent() {
 
             {/* Text */}
             <div className="space-y-2 max-w-sm">
-              <h2 className="break-words text-2xl font-black tracking-normal sm:text-3xl">
+              <h2 className="break-words text-xl font-black tracking-normal sm:text-2xl">
                 {t("weak_areas.no_weak_areas_title")}
               </h2>
               <p className="text-muted-foreground">

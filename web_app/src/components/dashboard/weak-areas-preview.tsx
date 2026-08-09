@@ -33,7 +33,7 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
   return (
     <Card className="rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="font-black text-secondary">
+        <CardTitle className="text-base font-black text-secondary">
           {t("analytics.weak_areas")}
         </CardTitle>
 
@@ -88,11 +88,7 @@ export function WeakAreasPreview({ weakAreas }: { weakAreas: WeakArea[] }) {
                 </div>
 
                 <Link
-                  href={
-                    area.categoryCode
-                      ? `/practice/${encodeURIComponent(area.categoryCode)}`
-                      : "/dashboard?section=weak-areas"
-                  }
+                  href="/exam"
                   className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80"
                 >
                   {t("dashboard.practice_this_category")}

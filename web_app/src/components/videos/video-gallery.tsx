@@ -11,12 +11,14 @@ import {
   Search,
   Video,
   Youtube,
+  X,
 } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -297,15 +299,28 @@ export function VideoGallery({
         <DialogContent
           className="w-[calc(100%-1.5rem)] max-w-4xl gap-4 p-3 sm:p-5"
           dir={isRTL ? "rtl" : "ltr"}
+          showCloseButton={false}
         >
-          <DialogHeader className="pe-9 text-start">
-            <DialogTitle className="break-words leading-6">
-              {selectedVideo?.title}
-            </DialogTitle>
-            <DialogDescription>
-              {t("videos.external_media_notice")}
-            </DialogDescription>
-          </DialogHeader>
+          <div
+            data-testid="video-dialog-header"
+            className="grid grid-cols-[minmax(0,1fr)_44px] items-start gap-3"
+          >
+            <DialogHeader className="min-w-0 text-start">
+              <DialogTitle className="break-words leading-6">
+                {selectedVideo?.title}
+              </DialogTitle>
+              <DialogDescription>
+                {t("videos.external_media_notice")}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogClose
+              data-testid="video-dialog-close"
+              aria-label={t("common.close")}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </DialogClose>
+          </div>
           {selectedVideo ? (
             <div className="aspect-video min-h-[200px] w-full overflow-hidden rounded-xl bg-black">
               <iframe
@@ -345,6 +360,7 @@ function FeaturedVideoCard({
         video={video}
         label={t("videos.watch_video")}
         sizes="(max-width: 1024px) 100vw, 60vw"
+        preload
         onPlay={onPlay}
       />
       <CardContent className="flex min-w-0 flex-col justify-center p-5 sm:p-7">
@@ -422,11 +438,13 @@ function VideoThumbnail({
   video,
   label,
   sizes,
+  preload = false,
   onPlay,
 }: {
   video: YouTubeVideo;
   label: string;
   sizes: string;
+  preload?: boolean;
   onPlay: (video: YouTubeVideo) => void;
 }) {
   return (
@@ -441,6 +459,7 @@ function VideoThumbnail({
         alt={video.title}
         fill
         sizes={sizes}
+        preload={preload}
         className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
       />
       <span className="absolute inset-0 bg-foreground/15 transition-colors group-hover:bg-foreground/25" />

@@ -62,7 +62,7 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
       <Card className="rounded-2xl border-border/50 bg-muted/20 shadow-sm">
         <CardContent className="py-16 text-center space-y-3">
           <div className="text-6xl">🎉</div>
-          <h3 className="text-2xl font-black text-foreground">
+          <h3 className="text-lg font-black text-foreground">
             {t("analytics.excellent_title")}
           </h3>
           <p className="text-muted-foreground">
@@ -83,13 +83,13 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
           <Card
             key={area.categoryCode}
             className={cn(
-              "rounded-2xl border-2 shadow-sm transition-all hover:shadow-md",
+              "rounded-2xl border border-border/60 shadow-sm transition-all hover:shadow-md",
               cfg?.card ?? "border-border/50",
             )}
           >
             {/* ── Header ── */}
             <CardHeader>
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-black text-foreground">
@@ -101,14 +101,14 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
                       </Badge>
                     )}
                   </div>
-                  <CardTitle className="text-2xl font-black">
+                  <CardTitle className="break-words text-base font-black">
                     {area.categoryName}
                   </CardTitle>
                 </div>
-                <div className="text-right flex-shrink-0">
+                <div className="flex-shrink-0 text-start sm:text-end">
                   <p
                     className={cn(
-                      "text-4xl font-black",
+                      "text-xl font-black",
                       cfg?.accuracy ?? "text-secondary",
                     )}
                   >
@@ -143,9 +143,9 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
                 ].map(({ label, value, color }) => (
                   <div
                     key={label}
-                    className="rounded-xl bg-card border border-border/50 p-4 text-center"
+                    className="rounded-xl border border-border/50 bg-card p-3 text-center"
                   >
-                    <p className={cn("text-2xl font-black", color)}>{value}</p>
+                    <p className={cn("text-lg font-black", color)}>{value}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {label}
                     </p>
@@ -254,12 +254,12 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
               )}
 
               {/* Actions */}
-              <div className="flex gap-2 pt-1">
+              <div className="grid gap-2 pt-1 sm:grid-cols-2">
                 <Button
                   asChild
                   className="flex-1 rounded-xl gap-2 shadow-sm shadow-primary/20"
                 >
-                  <Link href={`/practice/${area.categoryCode}`}>
+                  <Link href="/exam">
                     <ClipboardList className="w-4 h-4" />
                     {t("analytics.practice_now")}
                   </Link>
@@ -269,7 +269,7 @@ export function WeakAreaDetails({ weakAreas }: { weakAreas: WeakArea[] }) {
                   variant="outline"
                   className="flex-1 rounded-xl gap-2"
                 >
-                  <Link href={`/lessons?category=${area.categoryCode}`}>
+                  <Link href="/lessons">
                     <BookOpen className="w-4 h-4" />
                     {t("analytics.study_lessons")}
                   </Link>

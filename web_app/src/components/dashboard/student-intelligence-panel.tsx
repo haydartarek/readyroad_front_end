@@ -168,7 +168,7 @@ export function StudentIntelligencePanel({
             <div className="mt-1 flex flex-wrap items-center gap-3">
               <h2
                 id="student-intelligence-title"
-                className="text-2xl font-bold"
+                className="text-xl font-bold"
               >
                 {t(
                   `student_intelligence.level.${data.studentLevel.toLowerCase()}`,
@@ -199,7 +199,7 @@ export function StudentIntelligencePanel({
                   <Icon className="h-4 w-4 flex-none" aria-hidden />
                   <span className="truncate text-xs font-medium">{label}</span>
                 </div>
-                <p className="mt-1 text-xl font-bold">{value}</p>
+                <p className="mt-1 text-lg font-bold">{value}</p>
               </div>
             ))}
           </div>

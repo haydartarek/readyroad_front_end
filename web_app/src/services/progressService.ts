@@ -1,5 +1,4 @@
 import { apiClient } from "@/lib/api";
-import { API_ENDPOINTS } from "@/lib/constants";
 import {
   getPracticeHistory,
   getRandomPracticeHistory,
@@ -442,106 +441,67 @@ function requireFiniteMetric(value: unknown, field: string): number {
 
 /** Returns recent exam activity from persisted exam history */
 export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
-  const [
-    officialResult,
-    activeExamResult,
-    randomResult,
-    signExamResult,
-    signPracticeResult,
-  ] = await Promise.all([
-    apiClient.get<{
-      totalExams?: number;
-      exams?: Array<{
-        examId: number;
-        startedAt: string;
-        completedAt: string | null;
-        status?: "COMPLETED" | "IN_PROGRESS" | "EXPIRED" | "ABANDONED";
-        totalQuestions?: number;
-        correctAnswers?: number;
-        scorePercentage: number;
-        passed: boolean;
-      }>;
-    }>(ENDPOINTS.EXAM_HISTORY),
-    apiClient.get<{
-      hasActiveExam: boolean;
-      activeExam: {
-        examId: number;
-        startedAt: string;
-        expiresAt?: string;
-        totalQuestions?: number;
-      } | null;
-    }>(API_ENDPOINTS.EXAMS.ACTIVE),
-    getRandomPracticeHistory(),
-    getSignExamHistory(),
-    getPracticeHistory(),
-  ]);
+  const [officialResult, randomResult, signExamResult, signPracticeResult] =
+    await Promise.all([
+      apiClient.get<{
+        totalExams?: number;
+        exams?: Array<{
+          examId: number;
+          startedAt: string;
+          completedAt: string | null;
+          status?: "COMPLETED" | "IN_PROGRESS" | "EXPIRED" | "ABANDONED";
+          totalQuestions?: number;
+          correctAnswers?: number;
+          scorePercentage: number;
+          passed: boolean;
+        }>;
+      }>(ENDPOINTS.EXAM_HISTORY),
+      getRandomPracticeHistory(),
+      getSignExamHistory(),
+      getPracticeHistory(),
+    ]);
 
   const officialExams = officialResult.data.exams ?? [];
   const randomSessions = randomResult.sessions ?? [];
   const signExamSessions = signExamResult.results ?? [];
   const signPracticeSessions = signPracticeResult.sessions ?? [];
-  const activeExam = activeExamResult.data.hasActiveExam
-    ? activeExamResult.data.activeExam
-    : null;
+  const officialExamActivity: RecentActivity[] = officialExams
+    .filter((exam) => (exam.status ?? "COMPLETED") === "COMPLETED")
+    .map((exam) => ({
+      id: exam.examId,
+      type: "exam",
+      date: exam.completedAt ?? exam.startedAt,
+      status: "COMPLETED",
+      score: Math.round(
+        requireFiniteMetric(
+          exam.scorePercentage,
+          "official exam scorePercentage",
+        ),
+      ),
+      passed: exam.passed,
+      questionsAnswered: exam.totalQuestions,
+      totalQuestions: exam.totalQuestions,
+      link: `/exam/results/${exam.examId}`,
+    }));
 
-  const officialExamActivity: RecentActivity[] = officialExams.map((exam) => ({
-    id: exam.examId,
-    type: "exam",
-    date: exam.completedAt ?? exam.startedAt,
-    status: exam.status ?? "COMPLETED",
-    score:
-      exam.status === "COMPLETED"
-        ? Math.round(
-            requireFiniteMetric(
-              exam.scorePercentage,
-              "official exam scorePercentage",
-            ),
-          )
-        : undefined,
-    passed: exam.status === "COMPLETED" ? exam.passed : undefined,
-    questionsAnswered:
-      exam.status === "COMPLETED" ? exam.totalQuestions : undefined,
-    totalQuestions: exam.totalQuestions,
-    link: `/exam/results/${exam.examId}`,
-  }));
-
-  const activeTheoryExamActivity: RecentActivity[] = activeExam
-    ? [
-        {
-          id: activeExam.examId,
-          type: "exam",
-          date: activeExam.startedAt,
-          status: "IN_PROGRESS",
-          totalQuestions: activeExam.totalQuestions,
-          link: `/exam/${activeExam.examId}`,
-        },
-      ]
-    : [];
-
-  const randomSignExamActivity: RecentActivity[] = randomSessions.map(
-    (session) => ({
+  const randomSignExamActivity: RecentActivity[] = randomSessions
+    .filter((session) => session.status === "COMPLETED")
+    .map((session) => ({
       id: session.sessionId,
       type: "sign-exam",
       date: session.completedAt ?? session.startedAt,
       status: session.status,
-      score:
-        session.status === "COMPLETED"
-          ? Math.round(
-              requireFiniteMetric(
-                session.scorePercentage,
-                "random sign exam scorePercentage",
-              ),
-            )
-          : undefined,
-      passed: session.status === "COMPLETED" ? session.passed : undefined,
+      score: Math.round(
+        requireFiniteMetric(
+          session.scorePercentage,
+          "random sign exam scorePercentage",
+        ),
+      ),
+      passed: session.passed,
       questionsAnswered: session.answeredCount,
       totalQuestions: session.totalQuestions,
-      link:
-        session.status === "IN_PROGRESS"
-          ? "/practice/random"
-          : `/dashboard?section=exam-results&randomSignExamId=${session.sessionId}`,
-    }),
-  );
+      link: `/dashboard?section=exam-results&randomSignExamId=${session.sessionId}`,
+    }));
 
   const signSpecificExamActivity: RecentActivity[] = signExamSessions
     .filter((result): result is typeof result & { completedAt: string } =>
@@ -570,22 +530,20 @@ export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
       link: `/dashboard?section=exam-results&signExamResultId=${result.resultId}`,
     }));
 
-  const signPracticeActivity: RecentActivity[] = signPracticeSessions.map(
-    (session) => ({
+  const signPracticeActivity: RecentActivity[] = signPracticeSessions
+    .filter((session) => session.status === "COMPLETED")
+    .map((session) => ({
       id: session.sessionId,
       type: "practice",
       date: session.completedAt ?? session.startedAt,
       status: session.status,
-      score:
-        session.status === "COMPLETED"
-          ? Math.round(
-              requireFiniteMetric(
-                session.scorePercentage,
-                "sign practice scorePercentage",
-              ),
-            )
-          : undefined,
-      passed: session.status === "COMPLETED" ? session.passed : undefined,
+      score: Math.round(
+        requireFiniteMetric(
+          session.scorePercentage,
+          "sign practice scorePercentage",
+        ),
+      ),
+      passed: session.passed,
       category: session.signCode,
       signNameEn: session.nameEn,
       signNameNl: session.nameNl,
@@ -593,15 +551,10 @@ export async function getRecentActivity(limit = 10): Promise<RecentActivity[]> {
       signNameAr: session.nameAr,
       questionsAnswered: session.answeredCount,
       totalQuestions: session.totalQuestions,
-      link:
-        session.status === "IN_PROGRESS"
-          ? `/traffic-signs/${session.signCode}/practice`
-          : `/traffic-signs/${session.signCode}`,
-    }),
-  );
+      link: `/traffic-signs/${session.signCode}`,
+    }));
 
   return [
-    ...activeTheoryExamActivity,
     ...officialExamActivity,
     ...randomSignExamActivity,
     ...signSpecificExamActivity,

@@ -79,7 +79,7 @@ export function WeakAreaSummary({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-0.5">
-            <p className={cn("text-3xl font-black", color)}>
+            <p className={cn("text-xl font-black", color)}>
               {stats[key] === null
                 ? t("common.not_available")
                 : format(stats[key] as number)}

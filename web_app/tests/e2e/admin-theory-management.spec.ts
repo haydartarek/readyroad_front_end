@@ -9,26 +9,26 @@ const adminUser = {
 
 const categories = [
   {
-    code: "TH_RULES",
-    nameEn: "Traffic rules",
-    nameAr: "قواعد المرور",
-    nameNl: "Verkeersregels",
-    nameFr: "Règles de circulation",
+    code: "TH01",
+    nameEn: "Priority and intersections",
+    nameAr: "الأولوية والتقاطعات",
+    nameNl: "Voorrang en kruispunten",
+    nameFr: "Priorité et carrefours",
     contentScope: "THEORETICAL_EXAM",
   },
   {
-    code: "TH_SIGNS",
-    nameEn: "Traffic signs",
-    nameAr: "العلامات المرورية",
-    nameNl: "Verkeersborden",
-    nameFr: "Panneaux routiers",
-    contentScope: "BOTH",
+    code: "TH02",
+    nameEn: "Speed, roads and distances",
+    nameAr: "السرعة والطرق والمسافات",
+    nameNl: "Snelheid, wegen en afstanden",
+    nameFr: "Vitesse, routes et distances",
+    contentScope: "THEORETICAL_EXAM",
   },
 ];
 
 const question = {
   id: 7,
-  categoryCode: "RULES",
+  categoryCode: "TH01",
   difficultyLevel: "EASY",
   questionType: "MULTIPLE_CHOICE",
   questionEn: "Who has priority?",
@@ -137,8 +137,8 @@ test("Admin theoretical create and edit remain complete and responsive", async (
   await expect(page.getByLabel("Category *").locator("option")).toHaveCount(3);
   await expect(page.getByLabel("Category *").locator("option")).toContainText([
     "Select a category...",
-    "Traffic rules (TH_RULES)",
-    "Traffic signs (TH_SIGNS)",
+    "Priority and intersections",
+    "Speed, roads and distances",
   ]);
   for (const language of ["English", "Arabic", "Dutch", "French"]) {
     await expect(page.getByLabel(`Explanation (${language})`)).toBeVisible();
@@ -148,6 +148,13 @@ test("Admin theoretical create and edit remain complete and responsive", async (
   await expect(page.getByText("B", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Add Option" }).click();
   await expect(page.getByText("C", { exact: true })).toBeVisible();
+  const englishOptions = page.getByLabel("Option (English) *");
+  await englishOptions.nth(0).fill("First answer");
+  await englishOptions.nth(1).fill("Second answer");
+  await englishOptions.nth(2).fill("Third answer");
+  await page.getByRole("button", { name: "Move option up" }).nth(2).click();
+  await expect(englishOptions.nth(1)).toHaveValue("Third answer");
+  await expect(englishOptions.nth(2)).toHaveValue("Second answer");
   await expect(page.getByLabel("Difficulty Level")).toHaveValue("MEDIUM");
   await page.getByLabel("Difficulty Level").selectOption("HARD");
   await page.getByRole("button", { name: /^Remove C$/ }).click();
@@ -190,37 +197,10 @@ test("Admin theoretical create and edit remain complete and responsive", async (
   });
 });
 
-test("Admin balances only selected theoretical answers after preview", async ({
+test("Admin keeps answer distribution read-only and exposes no shuffle controls", async ({
   page,
 }) => {
   await mockAdmin(page);
-  const preview = {
-    selectedQuestions: 1,
-    before: [
-      {
-        difficulty: "EASY",
-        optionCount: 2,
-        total: 1,
-        positions: [
-          { label: "A", count: 1, percentage: 100 },
-          { label: "B", count: 0, percentage: 0 },
-        ],
-      },
-    ],
-    after: [
-      {
-        difficulty: "EASY",
-        optionCount: 2,
-        total: 1,
-        positions: [
-          { label: "A", count: 1, percentage: 100 },
-          { label: "B", count: 0, percentage: 0 },
-        ],
-      },
-    ],
-  };
-  let previewRequest: unknown;
-  let applyRequest: unknown;
 
   await page.route("**/api/proxy/admin/quiz/questions?*", (route) =>
     route.fulfill({
@@ -247,38 +227,14 @@ test("Admin balances only selected theoretical answers after preview", async ({
         },
       }),
   );
-  await page.route(
-    "**/api/proxy/admin/quiz/questions/shuffle-answer-order/preview",
-    async (route) => {
-      previewRequest = route.request().postDataJSON();
-      await route.fulfill({ json: preview });
-    },
-  );
-  await page.route(
-    "**/api/proxy/admin/quiz/questions/shuffle-answer-order",
-    async (route) => {
-      applyRequest = route.request().postDataJSON();
-      await route.fulfill({ json: preview });
-    },
-  );
-  page.on("dialog", (dialog) => dialog.accept());
-
   await page.goto("/admin/quizzes");
-  const shuffle = page.getByRole("button", {
-    name: "Shuffle Answer Order (0)",
-  });
-  await expect(shuffle).toBeDisabled();
-  await page.getByLabel("Select question 7").check();
-  await page.getByRole("button", { name: "Shuffle Answer Order (1)" }).click();
-
-  await expect(page.getByTestId("answer-balance-preview")).toContainText(
-    "Before",
-  );
-  await expect(page.getByTestId("answer-balance-preview")).toContainText(
-    "After",
-  );
-  expect(previewRequest).toEqual({ questionIds: [7] });
-  expect(applyRequest).toEqual({ questionIds: [7] });
+  await expect(page.getByText("Correct Answer Distribution")).toBeVisible();
+  await expect(
+    page.getByRole("table").getByText("Priority and intersections"),
+  ).toBeVisible();
+  await expect(page.getByText("TH01", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /shuffle/i })).toHaveCount(0);
+  await expect(page.getByRole("checkbox")).toHaveCount(0);
 });
 
 const navigationByLocale = [

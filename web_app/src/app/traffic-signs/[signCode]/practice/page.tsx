@@ -212,6 +212,16 @@ export default function TrafficSignPracticePage() {
 
   const routeCode = sign?.routeCode ?? routeParam;
 
+  const showAnswerReview = () => {
+    setShowReview(true);
+    window.setTimeout(() => {
+      const review = reviewRef.current;
+      if (!review) return;
+      review.scrollIntoView({ behavior: "smooth", block: "start" });
+      review.focus({ preventScroll: true });
+    }, 80);
+  };
+
   const initializeSession = useCallback(async (identifier: string) => {
     const [signResponse, practiceSession] = await Promise.all([
       apiClient.get<TrafficSign>(
@@ -624,6 +634,7 @@ export default function TrafficSignPracticePage() {
                     <SignImage
                       src={resolveTrafficSignImage(sign)}
                       alt={signName}
+                      preload
                       className="object-contain"
                     />
                   </div>
@@ -706,22 +717,13 @@ export default function TrafficSignPracticePage() {
                 {t("sign_quiz.practice.try_again")}
               </Button>
               <Button
+                data-testid="show-answer-review"
                 variant="outline"
                 className="h-11 rounded-xl border-primary/15 bg-background/80 font-semibold text-foreground hover:border-primary/25 hover:bg-primary/5 hover:text-primary"
-                onClick={() => {
-                  setShowReview((value) => !value);
-                  setTimeout(() => {
-                    reviewRef.current?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start",
-                    });
-                  }, 80);
-                }}
+                onClick={showAnswerReview}
               >
                 <ChartNoAxesColumn className="mr-2 h-4 w-4" />
-                {showReview
-                  ? t("common.close")
-                  : t("sign_quiz.exam.review_answers")}
+                {t("sign_quiz.exam.review_answers")}
               </Button>
               <Button
                 variant="outline"
@@ -741,7 +743,7 @@ export default function TrafficSignPracticePage() {
           </PageSectionSurface>
 
           {showReview && (
-            <div ref={reviewRef}>
+            <div id="answer-review" ref={reviewRef} tabIndex={-1}>
               <PageSectionSurface
                 title={t("sign_quiz.exam.review_answers")}
                 description={t("sign_quiz.practice.result_description")}

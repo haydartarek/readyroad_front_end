@@ -170,7 +170,7 @@ function StrongAreasWidget({
   if (!categories || categories.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4">
+    <div className="space-y-4 rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-xl bg-secondary/10 flex items-center justify-center">
           <CheckCircle className="w-4 h-4 text-secondary" />
@@ -189,13 +189,13 @@ function StrongAreasWidget({
           return (
             <div
               key={cat.categoryCode ?? cat.categoryName ?? idx}
-              className="flex items-center justify-between gap-3 rounded-xl border border-green-100 bg-green-50/40 px-3 py-2.5"
+              className="flex flex-col gap-2 rounded-xl border border-green-100 bg-green-50/40 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="w-6 h-6 flex items-center justify-center rounded-lg bg-green-100 text-xs font-black text-green-700 flex-shrink-0">
-                  {cat.categoryCode ?? idx + 1}
+                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-700">
+                  <CheckCircle className="h-4 w-4" aria-hidden />
                 </span>
-                <span className="text-sm font-semibold text-foreground truncate">
+                <span className="min-w-0 break-words text-sm font-semibold text-foreground">
                   {localizedCategoryName(
                     cat,
                     language,
@@ -203,9 +203,9 @@ function StrongAreasWidget({
                   )}
                 </span>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0">
                 <span className="text-xs text-muted-foreground">
-                  {cat.attempted} q
+                  {cat.attempted} {t("progress.questions_attempted")}
                 </span>
                 <span className="text-xs font-bold text-green-600">
                   {accuracyNum.toFixed(1)}%
@@ -237,26 +237,7 @@ function CategoryProgressWidget({
     return b.questionsAttempted - a.questionsAttempted;
   });
 
-  if (orderedCategories.length === 0) {
-    return (
-      <div className="rounded-2xl border border-border/50 bg-card py-12 text-center space-y-4">
-        <div className="w-16 h-16 rounded-3xl bg-muted flex items-center justify-center mx-auto text-4xl">
-          📊
-        </div>
-        <div>
-          <p className="font-bold text-lg">
-            {t("progress.no_categories_title")}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t("progress.no_categories_desc")}
-          </p>
-        </div>
-        <Button asChild variant="outline" className="rounded-full px-6">
-          <Link href="/practice">{t("progress.start_practicing")}</Link>
-        </Button>
-      </div>
-    );
-  }
+  if (orderedCategories.length === 0) return null;
 
   return (
     <div
@@ -297,10 +278,10 @@ function CategoryProgressWidget({
                 <div className="min-w-0">
                   <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2">
                     <span
-                      data-testid="category-progress-code"
-                      className="inline-flex h-7 min-w-7 max-w-full shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-xs font-black text-muted-foreground"
+                      data-testid="category-progress-icon"
+                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"
                     >
-                      {cat.categoryCode}
+                      <BookOpen className="h-4 w-4" aria-hidden />
                     </span>
                     <p
                       data-testid="category-progress-name"
@@ -378,7 +359,7 @@ function CategoryProgressWidget({
                   asChild
                   className="min-h-9 h-auto min-w-0 w-full gap-1 whitespace-normal rounded-full py-2 text-center transition-all hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:whitespace-nowrap sm:py-0"
                 >
-                  <Link href={`/practice/${cat.categoryCode}`}>
+                  <Link href="/exam">
                     <PenLine className="w-3.5 h-3.5 shrink-0" />
                     {t("progress.practice")}
                   </Link>
@@ -390,7 +371,7 @@ function CategoryProgressWidget({
                     asChild
                     className="min-h-9 h-auto min-w-0 w-full gap-1 whitespace-normal rounded-full py-2 text-center transition-all hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:whitespace-nowrap sm:py-0"
                   >
-                    <Link href={`/lessons?category=${cat.categoryCode}`}>
+                    <Link href="/lessons">
                       <BookOpen className="w-3.5 h-3.5 shrink-0" />
                       {t("progress.study")}
                     </Link>
@@ -412,9 +393,6 @@ function SignActivityWidget({
   randomExamCount,
   randomPassedCount,
   passedCount,
-  lessonsStartedCount,
-  lessonsCompletedCount,
-  incompleteActivitiesCount,
   t,
 }: {
   practiceCount: number;
@@ -422,9 +400,6 @@ function SignActivityWidget({
   randomExamCount: number;
   randomPassedCount: number;
   passedCount: number;
-  lessonsStartedCount: number;
-  lessonsCompletedCount: number;
-  incompleteActivitiesCount: number;
   t: (key: string) => string;
 }) {
   return (
@@ -438,7 +413,7 @@ function SignActivityWidget({
         </h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[
           {
             label: t("dashboard.sign_practice_sessions"),
@@ -467,13 +442,6 @@ function SignActivityWidget({
             color: "text-green-600",
             bg: "bg-green-100",
             icon: <CheckCircle className="w-4 h-4" />,
-          },
-          {
-            label: t("dashboard.lessons_completed"),
-            value: lessonsCompletedCount,
-            color: "text-secondary",
-            bg: "bg-secondary/10",
-            icon: <BookOpen className="w-4 h-4" />,
           },
         ].map((item, i) => (
           <div
@@ -504,39 +472,16 @@ function SignActivityWidget({
         ))}
       </div>
 
-      <div className="rounded-xl border border-border/40 bg-background/60 px-4 py-3">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-medium text-foreground">
-              {t("dashboard.sign_random_exams_passed")}
-            </span>
-            <span className="font-black text-orange-600">
-              {randomPassedCount}/{randomExamCount}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-medium text-foreground">
-              {t("dashboard.lessons_read_summary")}
-            </span>
-            <span className="font-black text-secondary">
-              {lessonsCompletedCount}/{lessonsStartedCount}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-medium text-foreground">
-              {t("dashboard.incomplete_activity")}
-            </span>
-            <span className="font-black text-primary">
-              {incompleteActivitiesCount}
-            </span>
-          </div>
-        </div>
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border/40 bg-background/60 px-4 py-3 text-sm">
+        <span className="font-medium text-foreground">
+          {t("dashboard.sign_random_exams_passed")}
+        </span>
+        <span className="font-black text-orange-600">
+          {randomPassedCount}/{randomExamCount}
+        </span>
       </div>
 
-      {practiceCount === 0 &&
-        examCount === 0 &&
-        randomExamCount === 0 &&
-        lessonsStartedCount === 0 && (
+      {practiceCount === 0 && examCount === 0 && randomExamCount === 0 && (
           <p className="text-xs text-muted-foreground text-center">
             {t("dashboard.sign_no_activity")}
           </p>
@@ -803,6 +748,17 @@ function DashboardHome() {
   }, [fetchKey, currentUserId, language]);
 
   const firstName = user?.firstName || user?.username || t("dashboard.learner");
+  const representedCategoryCodes = new Set([
+    ...weakAreas
+      .map((area) => area.categoryCode)
+      .filter((code): code is string => Boolean(code)),
+    ...strongAreas
+      .map((area) => area.categoryCode)
+      .filter((code): code is string => Boolean(code)),
+  ]);
+  const remainingCategoryProgress = categoryProgress.filter(
+    (category) => !representedCategoryCodes.has(category.categoryCode),
+  );
 
   if (isLoading) {
     return (
@@ -887,9 +843,6 @@ function DashboardHome() {
         subtitle={t("dashboard.subtitle")}
       />
 
-      <StudentIntelligencePanel data={studentIntelligence} />
-
-      {/* Recent Activity */}
       {/* Quick Stats Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
@@ -933,8 +886,8 @@ function DashboardHome() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <QuickActionsSection />
+      {/* Recent Activity */}
+      <RecentActivityList activities={recentActivities} />
 
       {/* Performance Overview */}
       <div className="grid grid-cols-1 xl:grid-cols-[1.35fr,1fr] gap-6">
@@ -945,9 +898,6 @@ function DashboardHome() {
           randomExamCount={progressData.signRandomExamCount}
           randomPassedCount={progressData.signRandomExamPassedCount}
           passedCount={progressData.signPassedCount}
-          lessonsStartedCount={progressData.lessonsStartedCount}
-          lessonsCompletedCount={progressData.lessonsCompletedCount}
-          incompleteActivitiesCount={progressData.incompleteActivitiesCount}
           t={t}
         />
       </div>
@@ -955,7 +905,7 @@ function DashboardHome() {
       {/* Weak Areas & Category Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <WeakAreasPreview weakAreas={weakAreas} />
-        <CategoryProgressWidget categories={categoryProgress} t={t} />
+        <CategoryProgressWidget categories={remainingCategoryProgress} t={t} />
       </div>
 
       {progressData.weakSigns.length > 0 && (
@@ -966,13 +916,14 @@ function DashboardHome() {
         />
       )}
 
-      {/* Recent Activity */}
-      <RecentActivityList activities={recentActivities} />
-
       {/* Strong Areas (only shown when user has ≥1 strong category) */}
       {strongAreas.length > 0 && (
         <StrongAreasWidget categories={strongAreas} t={t} language={language} />
       )}
+
+      {/* Recommendations / Next Action */}
+      <QuickActionsSection />
+      <StudentIntelligencePanel data={studentIntelligence} />
     </div>
   );
 }

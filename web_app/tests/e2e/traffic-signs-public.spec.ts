@@ -88,7 +88,7 @@ async function installPublicTrafficSignMocks(page: Page) {
 }
 
 test.describe("Public traffic sign detail page", () => {
-  test("progressively renders cards while exposing every catalog link", async ({
+  test("renders the complete catalog once without a Load More control", async ({
     page,
   }) => {
     await seedCookieConsent(page);
@@ -123,14 +123,20 @@ test.describe("Public traffic sign detail page", () => {
     );
     await expect(catalogLinks.first()).toBeAttached();
 
-    const initialCardCount = await cards.count();
     const discoverableLinkCount = await catalogLinks.count();
-    expect(initialCardCount).toBeGreaterThan(0);
-    expect(discoverableLinkCount).toBeGreaterThan(initialCardCount);
-
-    await page.getByRole("button", { name: "Load more signs" }).click();
-    await expect.poll(() => cards.count()).toBeGreaterThan(initialCardCount);
+    await expect(cards).toHaveCount(40);
+    expect(discoverableLinkCount).toBe(40);
     await expect(catalogLinks).toHaveCount(discoverableLinkCount);
+    await expect(
+      page.getByRole("button", { name: "Load more signs" }),
+    ).toHaveCount(0);
+
+    const hrefs = await cards.evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href")),
+    );
+    expect(hrefs).toEqual(
+      Array.from({ length: 40 }, (_, index) => `/traffic-signs/A${index + 1}`),
+    );
   });
 
   test("stays public without requesting optional progress anonymously", async ({

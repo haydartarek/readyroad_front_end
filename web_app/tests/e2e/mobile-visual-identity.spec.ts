@@ -19,10 +19,10 @@ const dashboardProgressViewports = [
 ] as const;
 
 const localizedInformationCategoryNames = {
-  en: "Information Signs",
-  nl: "Informatieborden",
-  fr: "Signaux d’information",
-  ar: "العلامات الإعلامية",
+  en: "Priority and intersections",
+  nl: "Voorrang en kruispunten",
+  fr: "Priorité et carrefours",
+  ar: "الأولوية والتقاطعات",
 } as const;
 
 const approvedHomeHeadlines = {
@@ -212,8 +212,8 @@ interface CategoryProgressFixture {
 
 const longCategoryProgressFixtures: CategoryProgressFixture[] = [
   {
-    categoryCode: "F",
-    categoryName: "Information and Temporary Traffic Signs",
+    categoryCode: "TH01",
+    categoryName: "Priority and intersections",
     categoryNameEn: localizedInformationCategoryNames.en,
     categoryNameNl: localizedInformationCategoryNames.nl,
     categoryNameFr: localizedInformationCategoryNames.fr,
@@ -225,8 +225,12 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "G",
-    categoryName: "Supplementary Signs",
+    categoryCode: "TH02",
+    categoryName: "Speed, roads and distances",
+    categoryNameEn: "Speed, roads and distances",
+    categoryNameNl: "Snelheid, wegen en afstanden",
+    categoryNameFr: "Vitesse, routes et distances",
+    categoryNameAr: "السرعة والطرق والمسافات",
     questionsAttempted: 8,
     correctAnswers: 3,
     accuracyRate: 37.5,
@@ -234,8 +238,12 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "A",
-    categoryName: "Danger Signs",
+    categoryCode: "TH03",
+    categoryName: "Manoeuvres, overtaking and lanes",
+    categoryNameEn: "Manoeuvres, overtaking and lanes",
+    categoryNameNl: "Manoeuvres, inhalen en rijstroken",
+    categoryNameFr: "Manœuvres, dépassement et voies",
+    categoryNameAr: "المناورات والتجاوز والمسارات",
     questionsAttempted: 42,
     correctAnswers: 21,
     accuracyRate: 50,
@@ -243,8 +251,12 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "E",
-    categoryName: "Parking and Standing Signs",
+    categoryCode: "TH04",
+    categoryName: "Parking, stopping and standing",
+    categoryNameEn: "Parking, stopping and standing",
+    categoryNameNl: "Parkeren, stoppen en stilstaan",
+    categoryNameFr: "Stationnement, arrêt et immobilisation",
+    categoryNameAr: "الوقوف والتوقف والاصطفاف",
     questionsAttempted: 7,
     correctAnswers: 4,
     accuracyRate: 57.1,
@@ -252,8 +264,12 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "C",
-    categoryName: "Prohibition Signs",
+    categoryCode: "TH05",
+    categoryName: "Signs, signals and traffic control",
+    categoryNameEn: "Signs, signals and traffic control",
+    categoryNameNl: "Verkeersborden, signalen en verkeersregeling",
+    categoryNameFr: "Panneaux, signaux et gestion de la circulation",
+    categoryNameAr: "العلامات والإشارات وتنظيم المرور",
     questionsAttempted: 5,
     correctAnswers: 3,
     accuracyRate: 60,
@@ -261,8 +277,12 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "H",
-    categoryName: "Signaux d'information et mesures temporaires de circulation",
+    categoryCode: "TH06",
+    categoryName: "Road users and public transport",
+    categoryNameEn: "Road users and public transport",
+    categoryNameNl: "Weggebruikers en openbaar vervoer",
+    categoryNameFr: "Usagers de la route et transports publics",
+    categoryNameAr: "مستخدمو الطريق والنقل العام",
     questionsAttempted: 6,
     correctAnswers: 4,
     accuracyRate: 66.7,
@@ -270,8 +290,12 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "M",
-    categoryName: "Cyclist & Moped Advisory Signs",
+    categoryCode: "TH07",
+    categoryName: "Vehicle and technical safety",
+    categoryNameEn: "Vehicle and technical safety",
+    categoryNameNl: "Voertuig en technische veiligheid",
+    categoryNameFr: "Véhicule et sécurité technique",
+    categoryNameAr: "المركبة والسلامة التقنية",
     questionsAttempted: 9,
     correctAnswers: 7,
     accuracyRate: 77.8,
@@ -279,30 +303,16 @@ const longCategoryProgressFixtures: CategoryProgressFixture[] = [
     lastPracticed: null,
   },
   {
-    categoryCode: "B",
-    categoryName: "Priority Signs",
+    categoryCode: "TH08",
+    categoryName: "Driver, law and safety",
+    categoryNameEn: "Driver, law and safety",
+    categoryNameNl: "Bestuurder, wetgeving en veiligheid",
+    categoryNameFr: "Conducteur, législation et sécurité",
+    categoryNameAr: "السائق والقانون والسلامة",
     questionsAttempted: 32,
     correctAnswers: 18,
     accuracyRate: 56.3,
     accuracy: 56.3,
-    lastPracticed: null,
-  },
-  {
-    categoryCode: "D",
-    categoryName: "Mandatory Signs",
-    questionsAttempted: 14,
-    correctAnswers: 8,
-    accuracyRate: 57.1,
-    accuracy: 57.1,
-    lastPracticed: null,
-  },
-  {
-    categoryCode: "Z",
-    categoryName: "العلامات المعلوماتية والإجراءات المرورية المؤقتة",
-    questionsAttempted: 27,
-    correctAnswers: 20,
-    accuracyRate: 74.1,
-    accuracy: 74.1,
     lastPracticed: null,
   },
 ];
@@ -931,8 +941,8 @@ test.describe("ReadyRoad mobile visual identity", () => {
               '[data-testid="category-progress-percentage"]',
             );
             const progress = card.querySelector('[role="progressbar"]');
-            const code = card.querySelector(
-              '[data-testid="category-progress-code"]',
+            const icon = card.querySelector(
+              '[data-testid="category-progress-icon"]',
             );
             const trend = card.querySelector(
               '[data-testid="category-progress-trend"]',
@@ -950,7 +960,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
               !name ||
               !percentage ||
               !progress ||
-              !code ||
+              !icon ||
               !trend ||
               !counts ||
               !actions
@@ -977,7 +987,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
             const progressRect = rect(progress);
             const nameStyle = getComputedStyle(name);
             const boundedElements = [
-              ["code", code],
+              ["icon", icon],
               ["trend", trend],
               ["counts", counts],
               ["actions", actions],
@@ -1110,10 +1120,177 @@ test.describe("ReadyRoad mobile visual identity", () => {
           metrics.gridWidth + 1,
         );
       }
+
+      await expect(widget.getByText("TH01", { exact: true })).toHaveCount(0);
     }
 
     expect(consoleErrors).toEqual([]);
     expect(pageErrors).toEqual([]);
+  });
+
+  test("dashboard separates theory from sign performance and avoids repeated category scores", async ({
+    context,
+    page,
+  }) => {
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+    const theoryCategories = longCategoryProgressFixtures.slice(0, 3);
+
+    await page.route("**/api/proxy/users/me/progress/overall", (route) =>
+      fulfillJson(route, {
+        ...emptyOverallProgress,
+        strongCategories: [
+          {
+            categoryCode: "TH02",
+            categoryName: "Speed, roads and distances",
+            categoryNameEn: "Speed, roads and distances",
+            categoryNameNl: "Snelheid, wegen en afstanden",
+            categoryNameFr: "Vitesse, routes et distances",
+            categoryNameAr: "السرعة والطرق والمسافات",
+            attempted: 20,
+            accuracy: 90,
+          },
+        ],
+      }),
+    );
+    await page.route("**/api/proxy/users/me/progress/categories", (route) =>
+      fulfillJson(route, {
+        categories: theoryCategories,
+        overallAccuracy: 40,
+      }),
+    );
+    await page.route("**/api/proxy/users/me/analytics/weak-areas", (route) =>
+      fulfillJson(route, {
+        weakAreas: [
+          {
+            categoryId: 1,
+            categoryCode: "TH01",
+            categoryName: "Priority and intersections",
+            categoryNameEn: "Priority and intersections",
+            categoryNameNl: "Voorrang en kruispunten",
+            categoryNameFr: "Priorite et intersections",
+            categoryNameAr: "الاولوية والتقاطعات",
+            currentAccuracy: 33.3,
+            targetAccuracy: 80,
+            accuracyGap: 46.7,
+            recommendedQuestions: 10,
+            recommendedDifficulty: "MEDIUM",
+            estimatedTimeMinutes: 15,
+            priority: 1,
+            questionsAttempted: 3,
+          },
+        ],
+        totalPracticedCategories: 3,
+        overallAccuracy: 40,
+      }),
+    );
+
+    await page.setViewportSize({ width: 1280, height: 1200 });
+    await navigate(page, "/dashboard");
+    const main = page.getByRole("main");
+    const widget = page.getByTestId("category-progress-widget");
+
+    await expect(widget.getByTestId("category-progress-card")).toHaveCount(1);
+    await expect(widget).toContainText("Manoeuvres, overtaking and lanes");
+    await expect(main.getByText(/^TH0[1-8]$/)).toHaveCount(0);
+    await expect(widget.locator('a[href="/exam"]')).toBeVisible();
+    await expect(widget.locator('a[href="/lessons"]')).toBeVisible();
+    await expect(widget.locator('a[href^="/practice/TH"]')).toHaveCount(0);
+
+    const headings = [
+      "Recent Activity",
+      "Theoretical Exam Performance",
+      "Traffic Sign Practice Performance",
+      "Weak Areas",
+      "Strong Areas",
+      "Learning overview",
+    ];
+    const tops: number[] = [];
+    for (const heading of headings) {
+      const candidates = main.getByText(heading, { exact: true });
+      let visibleTop: number | null = null;
+      for (let index = 0; index < (await candidates.count()); index += 1) {
+        const candidate = candidates.nth(index);
+        if (await candidate.isVisible()) {
+          visibleTop = (await candidate.boundingBox())?.y ?? null;
+          break;
+        }
+      }
+      expect(visibleTop, `${heading} has a visible dashboard heading`).not.toBeNull();
+      tops.push(visibleTop ?? -1);
+    }
+    expect(tops).toEqual([...tops].sort((a, b) => a - b));
+  });
+
+  test("affected dashboard sections preserve responsive RTL and LTR containment", async ({
+    context,
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    const serverErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    page.on("response", (response) => {
+      if (response.status() >= 500) {
+        serverErrors.push(`${response.status()} ${response.url()}`);
+      }
+    });
+
+    const routes = [
+      "/dashboard",
+      "/dashboard?section=weak-areas",
+      "/dashboard?section=error-patterns",
+      "/dashboard?section=exam-results",
+      "/dashboard?section=profile",
+    ];
+
+    for (const locale of locales) {
+      for (const route of routes) {
+        await page.setViewportSize({ width: 390, height: 1000 });
+        await navigate(page, localizedPath(route, locale));
+        await expect(page.getByRole("main")).toBeVisible();
+
+        for (const width of [390, 1280, 1920]) {
+          await page.setViewportSize({ width, height: 1000 });
+          await page.evaluate(
+            () =>
+              new Promise<void>((resolve) =>
+                requestAnimationFrame(() =>
+                  requestAnimationFrame(() => resolve()),
+                ),
+              ),
+          );
+
+          const dimensions = await page.evaluate(() => ({
+            viewport: window.innerWidth,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            dir: document.documentElement.dir,
+          }));
+          expect(dimensions.documentWidth).toBeLessThanOrEqual(width);
+          expect(dimensions.bodyWidth).toBeLessThanOrEqual(width);
+          expect(dimensions.dir).toBe(locale === "ar" ? "rtl" : "ltr");
+
+          const sidebar = page.locator("aside");
+          if (width >= 1280) {
+            await expect(sidebar).toBeVisible();
+          } else {
+            await expect(sidebar).toBeHidden();
+          }
+        }
+      }
+    }
+
+    expect(consoleErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+    expect(serverErrors).toEqual([]);
   });
 
   test("approved homepage introduction is rendered once in every locale", async ({
@@ -1218,6 +1395,104 @@ test.describe("ReadyRoad mobile visual identity", () => {
     await expect(page).toHaveURL(/\/ar\/practice$/);
   });
 
+  test("theory exam keeps timer, progress and constrained media in one responsive flow", async ({
+    context,
+    page,
+  }) => {
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+
+    const exam = {
+      examId: 42,
+      startedAt: "2026-08-09T00:00:00Z",
+      expiresAt: "2026-08-09T01:00:00Z",
+      questions: [
+        {
+          questionId: 1,
+          questionOrder: 1,
+          questionTextEn: "Who has priority at this intersection?",
+          questionTextNl: "Wie heeft voorrang op dit kruispunt?",
+          questionTextFr: "Qui a la priorité à ce carrefour ?",
+          questionTextAr: "من له الأولوية عند هذا التقاطع؟",
+          imageUrl: "/images/logo.png",
+          options: [
+            {
+              optionId: 11,
+              optionTextEn: "Vehicle A",
+              optionTextNl: "Voertuig A",
+              optionTextFr: "Véhicule A",
+              optionTextAr: "المركبة أ",
+            },
+            {
+              optionId: 12,
+              optionTextEn: "Vehicle B",
+              optionTextNl: "Voertuig B",
+              optionTextFr: "Véhicule B",
+              optionTextAr: "المركبة ب",
+            },
+          ],
+        },
+      ],
+    };
+    await page.route("**/api/proxy/exams/simulations/active", (route) =>
+      fulfillJson(route, { hasActiveExam: true, activeExam: exam }),
+    );
+
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text());
+    });
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+
+    for (const locale of locales) {
+      for (const width of [390, 1280, 1920]) {
+        await page.setViewportSize({ width, height: 900 });
+        await navigate(page, localizedPath("/exam/42", locale));
+        await expect(page.getByTestId("exam-question-title")).toBeVisible();
+
+        const measurements = await page.evaluate(() => {
+          const status = document.querySelector<HTMLElement>(
+            '[data-testid="exam-status-card"]',
+          );
+          const timer = document.querySelector<HTMLElement>(
+            '[data-testid="exam-timer-slot"]',
+          );
+          const image = document.querySelector<HTMLElement>(
+            '[data-testid="exam-question-image"]',
+          );
+          if (!status || !timer || !image) return null;
+          const statusRect = status.getBoundingClientRect();
+          const timerRect = timer.getBoundingClientRect();
+          const imageRect = image.getBoundingClientRect();
+          return {
+            viewport: window.innerWidth,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            timerInsideStatus:
+              timerRect.left >= statusRect.left - 1 &&
+              timerRect.right <= statusRect.right + 1 &&
+              timerRect.top >= statusRect.top - 1 &&
+              timerRect.bottom <= statusRect.bottom + 1,
+            imageWidth: imageRect.width,
+            imageInsideViewport:
+              imageRect.left >= -1 && imageRect.right <= window.innerWidth + 1,
+          };
+        });
+
+        expect(measurements, `${locale} exam at ${width}px`).not.toBeNull();
+        expect(measurements?.documentWidth).toBeLessThanOrEqual(width);
+        expect(measurements?.bodyWidth).toBeLessThanOrEqual(width);
+        expect(measurements?.timerInsideStatus).toBe(true);
+        expect(measurements?.imageInsideViewport).toBe(true);
+        expect(measurements?.imageWidth).toBeLessThanOrEqual(640);
+      }
+    }
+
+    expect(consoleErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  });
+
   test("dashboard statistic cards use a consistent mobile content order", async ({
     context,
     page,
@@ -1243,7 +1518,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
       await page.evaluate(() => document.fonts.ready);
 
       const statCards = page.getByTestId("dashboard-stat-card");
-      await expect(statCards).toHaveCount(9);
+      await expect(statCards).toHaveCount(8);
 
       for (const width of mobileWidths) {
         await page.setViewportSize({ width, height: 900 });
@@ -1511,7 +1786,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
       await page.evaluate(() => document.fonts.ready);
 
       const cards = page.getByTestId("recent-activity-card");
-      await expect(cards).toHaveCount(5);
+      await expect(cards).toHaveCount(3);
 
       for (const width of [320, 360, 375, 390, 428] as const) {
         await page.setViewportSize({ width, height: 900 });

@@ -202,8 +202,6 @@ export const API_ENDPOINTS = {
       UPDATE: (id: number | string) => `/admin/quiz/questions/${id}`,
       DELETE: (id: number | string) => `/admin/quiz/questions/${id}`,
       DISTRIBUTION: "/admin/quiz/correct-answer-distribution",
-      SHUFFLE: "/admin/quiz/questions/shuffle-answer-order",
-      SHUFFLE_PREVIEW: "/admin/quiz/questions/shuffle-answer-order/preview",
     },
 
     DATA_IMPORT: {

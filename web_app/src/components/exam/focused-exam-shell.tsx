@@ -8,6 +8,7 @@ interface FocusedExamShellProps {
   timerPill: ReactNode;
   progressLabel: string;
   progressPercent: number;
+  integratedStatusRow?: boolean;
   children: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function FocusedExamShell({
   timerPill,
   progressLabel,
   progressPercent,
+  integratedStatusRow = false,
   children,
 }: FocusedExamShellProps) {
   return (
@@ -26,25 +28,52 @@ export function FocusedExamShell({
     >
       <div className="container mx-auto max-w-[860px] px-4 py-0.5 md:py-1">
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2.5">
+          <div
+            className={
+              integratedStatusRow
+                ? "flex items-center gap-2.5"
+                : "flex items-center justify-between gap-2.5"
+            }
+          >
             {backControl}
-            {timerPill}
+            {!integratedStatusRow ? timerPill : null}
           </div>
 
-          <div className="rounded-[1.3rem] border border-border/50 bg-card/88 px-3 py-2 shadow-sm backdrop-blur">
-            <div className="mb-1 flex items-center justify-between gap-3">
-              <span className="text-[11px] font-semibold text-muted-foreground">
-                {progressLabel}
-              </span>
-              <span className="text-[11px] font-bold text-primary">
-                {Math.round(progressPercent)}%
-              </span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-500"
-                style={{ width: `${progressPercent}%` }}
-              />
+          <div
+            data-testid="exam-status-card"
+            className="rounded-[1.3rem] border border-border/50 bg-card/88 px-3 py-2 shadow-sm backdrop-blur"
+          >
+            <div
+              className={
+                integratedStatusRow
+                  ? "flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
+                  : undefined
+              }
+            >
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-semibold text-muted-foreground">
+                    {progressLabel}
+                  </span>
+                  <span className="text-[11px] font-bold text-primary">
+                    {Math.round(progressPercent)}%
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-500"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
+              {integratedStatusRow ? (
+                <div
+                  data-testid="exam-timer-slot"
+                  className="flex shrink-0 justify-center sm:justify-normal"
+                >
+                  {timerPill}
+                </div>
+              ) : null}
             </div>
           </div>
 

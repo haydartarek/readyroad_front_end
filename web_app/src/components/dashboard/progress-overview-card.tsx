@@ -60,7 +60,7 @@ function MetricCard({
             {label}
           </p>
 
-          <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-foreground">
+          <p className="mt-0.5 text-xl font-extrabold tracking-tight text-foreground">
             {value}
           </p>
 

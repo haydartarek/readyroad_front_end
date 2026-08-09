@@ -737,7 +737,7 @@ export default function AdminEditQuizQuestionPage() {
                 </option>
                 {categories.map((cat) => (
                   <option key={cat.code} value={cat.code}>
-                    {getCategoryName(cat)} ({cat.code})
+                    {getCategoryName(cat)}
                   </option>
                 ))}
               </select>

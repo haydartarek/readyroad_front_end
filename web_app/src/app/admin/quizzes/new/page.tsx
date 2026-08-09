@@ -33,6 +33,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   ClipboardList,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────
@@ -329,6 +331,22 @@ export default function AdminAddQuizQuestionPage() {
     }));
   };
 
+  const moveOption = (idx: number, direction: -1 | 1) => {
+    const target = idx + direction;
+    if (target < 0 || target >= form.options.length) return;
+    setForm((prev) => {
+      const options = [...prev.options];
+      [options[idx], options[target]] = [options[target], options[idx]];
+      return {
+        ...prev,
+        options: options.map((option, optionIdx) => ({
+          ...option,
+          displayOrder: optionIdx + 1,
+        })),
+      };
+    });
+  };
+
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
     if (!form.categoryCode.trim())
@@ -607,7 +625,7 @@ export default function AdminAddQuizQuestionPage() {
                 </option>
                 {categories.map((cat) => (
                   <option key={cat.code} value={cat.code}>
-                    {getCategoryName(cat)} ({cat.code})
+                    {getCategoryName(cat)}
                   </option>
                 ))}
               </select>
@@ -949,6 +967,26 @@ export default function AdminAddQuizQuestionPage() {
                         {t("admin.quizzes.form.mark_correct")}
                       </span>
                     </label>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveOption(idx, -1)}
+                        disabled={idx === 0}
+                        aria-label={t("admin.quizzes.form.move_up")}
+                        className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveOption(idx, 1)}
+                        disabled={idx === form.options.length - 1}
+                        aria-label={t("admin.quizzes.form.move_down")}
+                        className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </button>
+                    </div>
                     {form.options.length > 2 && (
                       <button
                         type="button"

@@ -95,9 +95,9 @@ function SidebarNavLink({
     <Link
       href={item.href}
       className={cn(
-        "group relative flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-all duration-200",
+        "group relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-200",
         isActive
-          ? "border-primary/20 bg-primary/[0.07] text-foreground shadow-sm"
+          ? "border-primary/15 bg-primary/[0.06] text-foreground"
           : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/60 hover:text-foreground",
       )}
     >
@@ -110,7 +110,7 @@ function SidebarNavLink({
       />
       <div
         className={cn(
-          "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border transition-all duration-200",
+          "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border transition-all duration-200",
           isActive
             ? "border-primary/20 bg-primary/10 text-primary"
             : "border-border/60 bg-muted/35 text-muted-foreground group-hover:border-primary/15 group-hover:bg-primary/10 group-hover:text-primary",
@@ -150,15 +150,15 @@ function UserSidebarInner() {
   return (
     <aside
       className={cn(
-        "sticky top-16 hidden h-[calc(100vh-4rem)] w-72 shrink-0 overflow-y-auto border-border/60 bg-background/95 shadow-[8px_0_28px_rgba(15,23,42,0.04)] backdrop-blur lg:flex lg:flex-col",
+        "sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-border/60 bg-background/95 shadow-[6px_0_20px_rgba(15,23,42,0.035)] backdrop-blur lg:flex lg:flex-col",
         isRTL ? "border-l" : "border-r",
       )}
     >
       <div className="border-b border-border/60 px-5 pb-5 pt-5">
-        <div className="rounded-[1.75rem] border border-border/60 bg-card p-4 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-sm font-black text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-sm font-black text-primary">
                 {avatarInitial}
               </div>
               {unreadCount > 0 ? (
@@ -240,9 +240,9 @@ function UserSidebarInner() {
         <div className="space-y-1.5">
           <Link
             href="/contact"
-            className="group flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:border-border/70 hover:bg-muted/70 hover:text-foreground"
+            className="group flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:border-border/70 hover:bg-muted/70 hover:text-foreground"
           >
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-muted/35 text-muted-foreground transition-all duration-200 group-hover:border-primary/15 group-hover:bg-primary/10 group-hover:text-primary">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/35 text-muted-foreground transition-all duration-200 group-hover:border-primary/15 group-hover:bg-primary/10 group-hover:text-primary">
               <MessageCircle className="h-4 w-4" />
             </div>
             <span className="flex-1 truncate font-medium">
@@ -254,9 +254,9 @@ function UserSidebarInner() {
             onClick={() => {
               void logout();
             }}
-            className="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm text-red-600/85 transition-all duration-200 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/25"
+            className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-red-600/85 transition-all duration-200 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/25"
           >
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border border-red-200/60 bg-red-50 text-red-500 transition-colors group-hover:border-red-300 group-hover:bg-red-100">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-red-200/60 bg-red-50 text-red-500 transition-colors group-hover:border-red-300 group-hover:bg-red-100">
               <LogOut className="h-4 w-4" />
             </div>
             <span className="flex-1 text-start font-semibold">

@@ -553,6 +553,7 @@ export default function ExamQuestionsPage() {
       }
       progressLabel={questionProgressLabel}
       progressPercent={progressPercent}
+      integratedStatusRow
     >
       <FocusedQuestionCard
         headerBadges={
@@ -576,7 +577,7 @@ export default function ExamQuestionsPage() {
                   src={questionImageUrl}
                   alt={t("practice.question_image_alt")}
                   fill
-                  sizes="(max-width: 768px) 100vw, 1200px"
+                  sizes="(max-width: 768px) 100vw, 640px"
                   className="object-contain"
                   priority
                   onError={() => {

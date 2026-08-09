@@ -34,10 +34,8 @@ describe("public content governance", () => {
       expect(ALL_MESSAGES[language]["home.hero.headline"]).toContain(
         "ReadyRoad",
       );
-      expect(ALL_MESSAGES[language]["home.hero.subtitle"]).toContain(
-        "ReadyRoad",
-      );
-      expect(ALL_MESSAGES[language]["home.hero.subtitle"]).toContain("Google");
+      expect(ALL_MESSAGES[language]["home.hero.subtitle"].trim()).not.toBe("");
+      expect(ALL_MESSAGES[language]["home.hero.privacy"]).toContain("Google");
     }
   });
 

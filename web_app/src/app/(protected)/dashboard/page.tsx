@@ -404,11 +404,11 @@ function SignActivityWidget({
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+      <div className="flex min-w-0 items-start gap-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10">
           <Shield className="w-4 h-4 text-primary" />
         </div>
-        <h3 className="font-black text-secondary">
+        <h3 className="min-w-0 break-words font-black text-secondary">
           {t("dashboard.learning_activity_title")}
         </h3>
       </div>

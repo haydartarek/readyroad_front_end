@@ -46,7 +46,7 @@ function MetricCard({
   const showTrend = trend && trend !== "neutral" && TrendIcon && trendLabel;
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur">
+    <div className="group relative min-w-0 overflow-hidden rounded-2xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur">
       <div className="pointer-events-none absolute inset-0 ring-1 ring-border/60" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
@@ -56,7 +56,7 @@ function MetricCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="min-w-0 break-words text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {label}
           </p>
 
@@ -67,7 +67,7 @@ function MetricCard({
           {showTrend && (
             <div
               className={cn(
-                "mt-1 inline-flex items-center gap-1 text-xs font-medium",
+                "mt-1 inline-flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words text-xs font-medium",
                 trendClass,
               )}
             >
@@ -141,15 +141,15 @@ export function ProgressOverviewCard({ data }: { data: ProgressData }) {
   ];
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <Card className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-extrabold tracking-tight text-secondary">
+        <CardTitle className="min-w-0 break-words text-lg font-extrabold tracking-tight text-secondary">
           {t("dashboard.exam_performance_title")}
         </CardTitle>
       </CardHeader>
 
       <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {metrics.map((metric) => (
             <MetricCard key={metric.label} {...metric} />
           ))}

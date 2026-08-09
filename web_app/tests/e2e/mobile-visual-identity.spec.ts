@@ -352,6 +352,31 @@ async function navigate(page: Page, pathname: string) {
   throw new Error(`Unable to navigate to ${pathname}`);
 }
 
+async function waitForDocumentContainment(
+  page: Page,
+  width: number,
+  label: string,
+) {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => ({
+          viewport: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          bodyWidth: document.body.scrollWidth,
+        })),
+      {
+        message: `${label} did not settle inside ${width}px`,
+        timeout: 5_000,
+      },
+    )
+    .toEqual({
+      viewport: width,
+      documentWidth: width,
+      bodyWidth: width,
+    });
+}
+
 async function installAnonymousMocks(page: Page) {
   await page.route("**/api/auth/me", (route) =>
     fulfillJson(route, { authenticated: false, user: null }),
@@ -916,6 +941,11 @@ test.describe("ReadyRoad mobile visual identity", () => {
               ),
             ),
         );
+        await waitForDocumentContainment(
+          page,
+          width,
+          `${locale} dashboard progress`,
+        );
 
         const metrics = await widget.evaluate((element) => {
           const viewport = window.innerWidth;
@@ -1056,7 +1086,6 @@ test.describe("ReadyRoad mobile visual identity", () => {
           const widgetStyle = getComputedStyle(element);
           const htmlStyle = getComputedStyle(document.documentElement);
           const bodyStyle = getComputedStyle(document.body);
-
           return {
             viewport,
             documentWidth: document.documentElement.scrollWidth,
@@ -1530,6 +1559,11 @@ test.describe("ReadyRoad mobile visual identity", () => {
               ),
             ),
         );
+        await waitForDocumentContainment(
+          page,
+          width,
+          `${locale} dashboard statistics`,
+        );
 
         const metrics = await statCards.evaluateAll((cards) => {
           const viewport = window.innerWidth;
@@ -1797,6 +1831,11 @@ test.describe("ReadyRoad mobile visual identity", () => {
                 requestAnimationFrame(() => resolve()),
               ),
             ),
+        );
+        await waitForDocumentContainment(
+          page,
+          width,
+          `${locale} recent activity`,
         );
 
         const metrics = await cards.evaluateAll((activityCards) => {

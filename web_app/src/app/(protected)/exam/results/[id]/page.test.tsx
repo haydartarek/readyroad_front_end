@@ -6,6 +6,14 @@ import apiClient from "@/lib/api";
 let mockLanguage: "en" | "ar" | "nl" | "fr" = "ar";
 const mockT = (key: string) =>
   ({
+    "common.not_available":
+      mockLanguage === "ar"
+        ? "غير متوفر"
+        : mockLanguage === "nl"
+          ? "Niet beschikbaar"
+          : mockLanguage === "fr"
+            ? "Non disponible"
+            : "Not available",
     "practice_exam.review_show_details": "Show details",
     "practice_exam.review_hide_details": "Hide details",
     "practice_exam.review_explanation": "Explanation",
@@ -56,12 +64,12 @@ function result(explanationFr: string | null = "Explication enregistrée") {
     questionTextFr: "Question française",
     selectedOptionText: "English selected",
     selectedOptionTextEn: "English selected",
-    selectedOptionTextAr: "الإجابة المختارة",
+    selectedOptionTextAr: "الإجابة المختارة" as string | null,
     selectedOptionTextNl: "Gekozen antwoord",
     selectedOptionTextFr: "Réponse choisie",
     correctOptionText: "English correct",
     correctOptionTextEn: "English correct",
-    correctOptionTextAr: "الإجابة الصحيحة",
+    correctOptionTextAr: "الإجابة الصحيحة" as string | null,
     correctOptionTextNl: "Juist antwoord",
     correctOptionTextFr: "Bonne réponse",
     explanationEn: "Saved English explanation",
@@ -101,10 +109,39 @@ function result(explanationFr: string | null = "Explication enregistrée") {
 }
 
 describe("localized theory exam review", () => {
+  const scrollIntoView = jest.fn();
+
   beforeEach(() => {
     mockLanguage = "ar";
     mockedApiGet.mockReset();
     mockedApiGet.mockResolvedValue({ data: result() });
+    scrollIntoView.mockReset();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+  });
+
+  it("opens, scrolls to, and focuses the first review question without changing route", async () => {
+    render(<ExamResultsPage />);
+    await waitFor(() => expect(mockedApiGet).toHaveBeenCalled());
+    const pathBefore = window.location.pathname;
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "exam.results_toggle_review",
+      }),
+    );
+
+    const firstQuestion = await screen.findByTestId(
+      "result-review-first-question",
+    );
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    }));
+    expect(firstQuestion).toHaveFocus();
+    expect(window.location.pathname).toBe(pathBefore);
   });
 
   it.each([
@@ -156,5 +193,41 @@ describe("localized theory exam review", () => {
     expect(
       screen.queryByText("Saved English explanation"),
     ).not.toBeInTheDocument();
+  });
+
+  it("does not fall back to English when a localized answer is missing", async () => {
+    const missingArabicAnswer = result();
+    missingArabicAnswer.allAnswers[0].selectedOptionTextAr = null;
+    missingArabicAnswer.allAnswers[0].correctOptionTextAr = null;
+    mockedApiGet.mockResolvedValue({ data: missingArabicAnswer });
+    render(<ExamResultsPage />);
+
+    await waitFor(() => expect(mockedApiGet).toHaveBeenCalled());
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "practice_exam.review_title",
+      }),
+    );
+
+    expect(await screen.findByText("غير متوفر")).toBeVisible();
+    expect(screen.queryByText("English selected")).not.toBeInTheDocument();
+  });
+
+  it("keeps question/category and status in responsive header groups", async () => {
+    render(<ExamResultsPage />);
+
+    await waitFor(() => expect(mockedApiGet).toHaveBeenCalled());
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "practice_exam.review_title",
+      }),
+    );
+
+    const header = await screen.findByTestId("result-review-header");
+    expect(header).toHaveClass("grid", "sm:grid-cols-[minmax(0,1fr)_auto]");
+    expect(
+      screen.getByTestId("result-review-question-category"),
+    ).toBeVisible();
+    expect(screen.getByTestId("result-review-status")).toBeVisible();
   });
 });

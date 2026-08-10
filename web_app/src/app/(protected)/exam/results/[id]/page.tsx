@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
@@ -240,6 +240,36 @@ export default function ExamResultsPage() {
   const [reviewFilter, setReviewFilter] = useState<"all" | "wrong" | "correct">(
     "wrong",
   );
+  const reviewSectionRef = useRef<HTMLElement>(null);
+  const firstReviewQuestionRef = useRef<HTMLDivElement>(null);
+  const pendingReviewNavigationRef = useRef(false);
+
+  const focusFirstReviewQuestion = useCallback(() => {
+    const destination =
+      firstReviewQuestionRef.current ?? reviewSectionRef.current;
+    if (!destination) return;
+
+    destination.scrollIntoView({ behavior: "smooth", block: "start" });
+    destination.focus({ preventScroll: true });
+  }, []);
+
+  const handleReviewNavigation = () => {
+    if (showReview && reviewFilter === "all") {
+      focusFirstReviewQuestion();
+      return;
+    }
+
+    pendingReviewNavigationRef.current = true;
+    setReviewFilter("all");
+    setShowReview(true);
+  };
+
+  useEffect(() => {
+    if (!showReview || !pendingReviewNavigationRef.current) return;
+
+    focusFirstReviewQuestion();
+    pendingReviewNavigationRef.current = false;
+  }, [focusFirstReviewQuestion, reviewFilter, showReview]);
 
   useEffect(() => {
     if (!Number.isFinite(examId) || examId <= 0) {
@@ -563,7 +593,9 @@ export default function ExamResultsPage() {
                 <Button
                   variant="secondary"
                   className="h-11 w-full rounded-xl font-medium"
-                  onClick={() => setShowReview((current) => !current)}
+                  data-testid="show-exam-answer-review"
+                  aria-controls="exam-answer-review"
+                  onClick={handleReviewNavigation}
                 >
                   {t("exam.results_toggle_review")}
                 </Button>
@@ -720,12 +752,24 @@ export default function ExamResultsPage() {
           </aside>
         </div>
 
-        <section className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/85 shadow-sm">
+        <section
+          ref={reviewSectionRef}
+          id="exam-answer-review"
+          tabIndex={-1}
+          aria-labelledby="exam-answer-review-title"
+          className="scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/85 shadow-sm outline-none"
+        >
           <button
+            type="button"
+            aria-expanded={showReview}
+            aria-controls="exam-answer-review-content"
             className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-muted/20"
             onClick={() => setShowReview((current) => !current)}
           >
-            <span className="text-base font-black text-foreground">
+            <span
+              id="exam-answer-review-title"
+              className="text-base font-black text-foreground"
+            >
               {t("practice_exam.review_title")}
             </span>
             {showReview ? (
@@ -736,7 +780,10 @@ export default function ExamResultsPage() {
           </button>
 
           {showReview && (
-            <div className="space-y-4 border-t border-border/40 px-5 pb-5 pt-4">
+            <div
+              id="exam-answer-review-content"
+              className="space-y-4 border-t border-border/40 px-5 pb-5 pt-4"
+            >
               <div className="flex flex-wrap gap-2">
                 {(["all", "wrong", "correct"] as const).map((filterValue) => (
                   <button
@@ -757,14 +804,25 @@ export default function ExamResultsPage() {
               {filteredAnswers.length > 0 ? (
                 <div className="space-y-3">
                   {filteredAnswers.map((answer, index) => (
-                    <ExamReviewCard
+                    <div
                       key={answer.questionId}
-                      answer={answer}
-                      index={index + 1}
-                      language={language}
-                      localize={localize}
-                      t={t}
-                    />
+                      ref={index === 0 ? firstReviewQuestionRef : undefined}
+                      data-testid={
+                        index === 0
+                          ? "result-review-first-question"
+                          : undefined
+                      }
+                      tabIndex={index === 0 ? -1 : undefined}
+                      className="scroll-mt-24 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
+                    >
+                      <ExamReviewCard
+                        answer={answer}
+                        index={index + 1}
+                        language={language}
+                        localize={localize}
+                        t={t}
+                      />
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -802,19 +860,29 @@ function ExamReviewCard({
 }) {
   const [expanded, setExpanded] = useState(false);
 
+  const localizeRequiredReviewText = (
+    en?: string | null,
+    ar?: string | null,
+    nl?: string | null,
+    fr?: string | null,
+  ): string => {
+    const requested = { en, ar, nl, fr }[language];
+    return typeof requested === "string" ? requested.trim() : "";
+  };
+
   const questionText = localize(
     answer.questionTextEn,
     answer.questionTextAr,
     answer.questionTextNl,
     answer.questionTextFr,
   );
-  const selectedOptionText = localize(
+  const selectedOptionText = localizeRequiredReviewText(
     answer.selectedOptionTextEn ?? answer.selectedOptionText,
     answer.selectedOptionTextAr,
     answer.selectedOptionTextNl,
     answer.selectedOptionTextFr,
   );
-  const correctOptionText = localize(
+  const correctOptionText = localizeRequiredReviewText(
     answer.correctOptionTextEn ?? answer.correctOptionText,
     answer.correctOptionTextAr,
     answer.correctOptionTextNl,
@@ -841,13 +909,13 @@ function ExamReviewCard({
     ? {
         icon: <CheckCircle2 className="h-4 w-4 text-green-600" />,
         accent: "bg-green-500",
-        card: "border-green-200/60 bg-green-50/40",
+        card: "border-green-200/60 bg-card/90",
         badge: "border-green-200 bg-green-100 text-green-700",
       }
     : {
         icon: <XCircle className="h-4 w-4 text-red-500" />,
         accent: "bg-red-500",
-        card: "border-red-200/60 bg-red-50/40",
+        card: "border-red-200/60 bg-card/90",
         badge: "border-red-200 bg-red-100 text-red-700",
       };
 
@@ -863,22 +931,23 @@ function ExamReviewCard({
       <div className="space-y-4 p-4 ps-5 sm:p-5 sm:ps-6">
         <div
           data-testid="result-review-header"
-          className="flex min-w-0 flex-wrap items-center gap-2"
+          className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
         >
-          <span className="text-xs font-black text-foreground/70">
-            Q{index}
-          </span>
-          <span
-            className={cn(
-              "min-w-0 max-w-full break-words rounded-full border px-2.5 py-1 text-xs font-semibold",
-              statusConfig.badge,
-            )}
+          <div
+            data-testid="result-review-question-category"
+            className="flex min-w-0 items-start gap-2"
           >
-            {categoryName}
-          </span>
+            <span className="shrink-0 pt-1 text-xs font-black text-foreground/70">
+              Q{index}
+            </span>
+            <span className="min-w-0 max-w-full break-words rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-xs font-semibold text-foreground/75">
+              {categoryName}
+            </span>
+          </div>
           <span
+            data-testid="result-review-status"
             className={cn(
-              "ms-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold",
+              "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold sm:justify-self-end",
               statusConfig.badge,
             )}
           >
@@ -910,16 +979,23 @@ function ExamReviewCard({
           <ResultAnswerBlock
             label={t("exam.your_answer")}
             tone={answer.isCorrect ? "correct" : "incorrect"}
+            className={cn(
+              "text-foreground shadow-none",
+              answer.isCorrect
+                ? "border-green-200/70 bg-green-50/45 dark:bg-green-950/20"
+                : "border-red-200/70 bg-red-50/45 dark:bg-red-950/20",
+            )}
           >
-            {selectedOptionText || "—"}
+            {selectedOptionText || t("common.not_available")}
           </ResultAnswerBlock>
 
           {!answer.isCorrect && expanded && (
             <ResultAnswerBlock
               label={t("exam.correct_answer")}
               tone="correct"
+              className="border-green-200/70 bg-green-50/45 text-foreground shadow-none dark:bg-green-950/20"
             >
-              {correctOptionText || "—"}
+              {correctOptionText || t("common.not_available")}
             </ResultAnswerBlock>
           )}
 
@@ -927,6 +1003,7 @@ function ExamReviewCard({
             <ResultAnswerBlock
               label={t("practice_exam.review_explanation")}
               tone="neutral"
+              className="border-primary/15 bg-primary/[0.035] text-foreground shadow-none"
             >
               {explanation}
             </ResultAnswerBlock>

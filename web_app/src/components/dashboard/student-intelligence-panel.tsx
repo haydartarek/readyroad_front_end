@@ -18,6 +18,7 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
+  ChevronDown,
 } from "lucide-react";
 
 export function StudentIntelligencePanel({
@@ -253,12 +254,23 @@ export function StudentIntelligencePanel({
         </div>
       </div>
 
-      <details className="border-t border-border px-5 py-4">
-        <summary className="cursor-pointer text-sm font-bold outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          {t("student_intelligence.history_details")}
+      <details className="group mx-5 mb-5 overflow-hidden rounded-2xl border border-border/60 bg-background/70 shadow-sm">
+        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold outline-none transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <CalendarCheck2 className="h-4 w-4" aria-hidden />
+            </span>
+            <span className="min-w-0 break-words">
+              {t("student_intelligence.history_details")}
+            </span>
+          </span>
+          <ChevronDown
+            className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+            aria-hidden
+          />
         </summary>
 
-        <div className="mt-5 space-y-6">
+        <div className="space-y-6 border-t border-border/60 px-4 py-5">
           <div>
             <h3 className="text-sm font-bold">
               {t("student_intelligence.exam_history")}

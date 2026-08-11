@@ -1,19 +1,14 @@
 export const QUIZ_DIFFICULTIES = ["EASY", "MEDIUM", "HARD"] as const;
 
-export const QUIZ_QUESTION_TYPES = [
-  "MULTIPLE_CHOICE",
-  "TRUE_FALSE",
-  "IMAGE_BASED",
-] as const;
-
-export function difficultyAfterAddingOption(
+export function isDifficultyCompatibleWithOptions(
   optionCount: number,
-  currentDifficulty: string,
-  manuallyChanged: boolean,
-): string {
-  return optionCount === 2 && !manuallyChanged
-    ? "MEDIUM"
-    : currentDifficulty;
+  difficulty: string,
+): boolean {
+  return (
+    (optionCount === 2 && difficulty === "HARD") ||
+    (optionCount === 3 &&
+      (difficulty === "EASY" || difficulty === "MEDIUM"))
+  );
 }
 
 export function optionDisplayLabel(index: number): string {

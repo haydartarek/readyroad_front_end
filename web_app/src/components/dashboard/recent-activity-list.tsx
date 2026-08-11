@@ -34,7 +34,20 @@ const DATE_FORMAT: Intl.DateTimeFormatOptions = {
   month: "short",
   day: "numeric",
   year: "numeric",
+  calendar: "gregory",
 };
+
+export function formatActivityDate(date: string, language: string): string {
+  const locale =
+    language === "ar"
+      ? "ar-BE-u-ca-gregory"
+      : language === "nl"
+        ? "nl-BE-u-ca-gregory"
+        : language === "fr"
+          ? "fr-BE-u-ca-gregory"
+          : "en-GB-u-ca-gregory";
+  return new Intl.DateTimeFormat(locale, DATE_FORMAT).format(new Date(date));
+}
 
 export function RecentActivityList({ activities }: { activities: Activity[] }) {
   const { t, language } = useLanguage();
@@ -156,16 +169,7 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
                       className="mt-1 flex min-w-0 max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:mt-0.5 sm:justify-start"
                     >
                       <span>
-                        {new Date(activity.date).toLocaleDateString(
-                          language === "ar"
-                            ? "ar-SA"
-                            : language === "nl"
-                              ? "nl-BE"
-                              : language === "fr"
-                                ? "fr-BE"
-                                : "en-GB",
-                          DATE_FORMAT,
-                        )}
+                        {formatActivityDate(activity.date, language)}
                       </span>
                       {progressLabel && <span>• {progressLabel}</span>}
                     </div>

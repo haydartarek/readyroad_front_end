@@ -148,7 +148,7 @@ const TYPE_I18N: Record<string, string> = {
 // ─── Component ────────────────────────────────────────────
 
 export function NotificationPanel() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { unreadCount, markAllRead } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -374,6 +374,21 @@ export function NotificationPanel() {
                             string | number
                           >)
                         : undefined;
+                      if (notif.type === "WEAK_AREA" && params) {
+                        const localizedCategory =
+                          params[
+                            language === "ar"
+                              ? "categoryAr"
+                              : language === "nl"
+                                ? "categoryNl"
+                                : language === "fr"
+                                  ? "categoryFr"
+                                  : "categoryEn"
+                          ];
+                        if (localizedCategory) {
+                          params.category = localizedCategory;
+                        }
+                      }
                       return t(notif.messageKey, params);
                     } catch {
                       return notif.message;

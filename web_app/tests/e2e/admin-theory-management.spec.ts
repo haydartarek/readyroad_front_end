@@ -29,7 +29,7 @@ const categories = [
 const question = {
   id: 7,
   categoryCode: "TH01",
-  difficultyLevel: "EASY",
+  difficultyLevel: "HARD",
   questionType: "MULTIPLE_CHOICE",
   questionEn: "Who has priority?",
   questionAr: "من له الأولوية؟",
@@ -155,12 +155,12 @@ test("Admin theoretical create and edit remain complete and responsive", async (
   await page.getByRole("button", { name: "Move option up" }).nth(2).click();
   await expect(englishOptions.nth(1)).toHaveValue("Third answer");
   await expect(englishOptions.nth(2)).toHaveValue("Second answer");
-  await expect(page.getByLabel("Difficulty Level")).toHaveValue("MEDIUM");
+  await expect(page.getByLabel("Difficulty Level")).toHaveValue("EASY");
   await page.getByLabel("Difficulty Level").selectOption("HARD");
   await page.getByRole("button", { name: /^Remove C$/ }).click();
   await page.getByRole("button", { name: "Add Option" }).click();
   await expect(page.getByLabel("Difficulty Level")).toHaveValue("HARD");
-  await expect(page.getByLabel("Question Type")).toHaveValue("MULTIPLE_CHOICE");
+  await expect(page.getByLabel("Question Type")).toHaveCount(0);
 
   await page.locator('input[type="file"]').setInputFiles({
     name: "question.png",
@@ -182,7 +182,7 @@ test("Admin theoretical create and edit remain complete and responsive", async (
   await page.goto("/admin/quizzes/7/edit");
   await expect(page.getByLabel("Category *")).toBeEnabled();
   await expect(page.getByLabel("Difficulty Level")).toBeEnabled();
-  await expect(page.getByLabel("Question Type")).toBeEnabled();
+  await expect(page.getByLabel("Question Type")).toHaveCount(0);
   await expect(page.getByLabel("Explanation (Arabic)")).toHaveValue(
     question.explanationAr,
   );

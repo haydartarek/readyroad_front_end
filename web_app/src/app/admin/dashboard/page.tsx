@@ -23,6 +23,11 @@ interface DashboardStats {
   totalSigns: number;
   totalUsers: number;
   totalQuizQuestions: number;
+  quizQuestionDifficultyCounts: {
+    EASY: number;
+    MEDIUM: number;
+    HARD: number;
+  };
 }
 
 function getRoleLabelKey(role?: string) {
@@ -166,7 +171,16 @@ export default function AdminDashboard() {
           value={data?.totalQuizQuestions?.toLocaleString()}
           icon={<ClipboardList className="w-6 h-6" />}
           iconClassName="bg-primary/10 text-primary"
-          description={t("admin.total_quizzes_desc")}
+          description={
+            data?.quizQuestionDifficultyCounts
+              ? ["EASY", "MEDIUM", "HARD"]
+                  .map(
+                    (difficulty) =>
+                      `${t(`difficulty.${difficulty.toLowerCase()}`)}: ${data.quizQuestionDifficultyCounts[difficulty as keyof DashboardStats["quizQuestionDifficultyCounts"]].toLocaleString()}`,
+                  )
+                  .join(" · ")
+              : t("admin.total_quizzes_desc")
+          }
         />
       </div>
 

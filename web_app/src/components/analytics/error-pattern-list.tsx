@@ -377,10 +377,10 @@ export function ErrorPatternList({
                   )}
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex flex-col gap-2 pt-1 sm:flex-row">
                     <Button
                       size="sm"
-                      className="rounded-xl gap-2 shadow-sm shadow-primary/20"
+                      className="w-full gap-2 rounded-xl shadow-sm shadow-primary/20 sm:w-auto"
                       asChild
                     >
                       <Link href={practiceHref}>
@@ -391,7 +391,7 @@ export function ErrorPatternList({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="rounded-xl gap-2"
+                      className="w-full gap-2 rounded-xl sm:w-auto"
                     >
                       <BookOpen className="w-3.5 h-3.5" />
                       {t("error_patterns.study_material")}

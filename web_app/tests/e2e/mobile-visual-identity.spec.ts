@@ -1286,7 +1286,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await navigate(page, localizedPath(route, locale));
         await expect(page.getByRole("main")).toBeVisible();
 
-        for (const width of [390, 1280, 1920]) {
+        for (const width of [390, 768, 1280, 1920]) {
           await page.setViewportSize({ width, height: 1000 });
           await page.evaluate(
             () =>
@@ -1415,7 +1415,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
         .getByText("محاكي الامتحان النظري", { exact: true }),
     ).toHaveCount(0);
 
-    await page.getByRole("button", { name: /العودة إلى التدريب/ }).click();
+    await page.getByRole("button", { name: /إنهاء الامتحان/ }).click();
     await expect(page.getByRole("dialog")).toContainText(
       "لن تُحتسب ضمن نتائجك أو إحصاءاتك",
     );
@@ -1482,27 +1482,19 @@ test.describe("ReadyRoad mobile visual identity", () => {
 
         const measurements = await page.evaluate(() => {
           const status = document.querySelector<HTMLElement>(
-            '[data-testid="exam-status-card"]',
-          );
-          const timer = document.querySelector<HTMLElement>(
-            '[data-testid="exam-timer-slot"]',
+            '[data-testid="active-exam-status"]',
           );
           const image = document.querySelector<HTMLElement>(
             '[data-testid="exam-question-image"]',
           );
-          if (!status || !timer || !image) return null;
+          if (!status || !image) return null;
           const statusRect = status.getBoundingClientRect();
-          const timerRect = timer.getBoundingClientRect();
           const imageRect = image.getBoundingClientRect();
           return {
             viewport: window.innerWidth,
             documentWidth: document.documentElement.scrollWidth,
             bodyWidth: document.body.scrollWidth,
-            timerInsideStatus:
-              timerRect.left >= statusRect.left - 1 &&
-              timerRect.right <= statusRect.right + 1 &&
-              timerRect.top >= statusRect.top - 1 &&
-              timerRect.bottom <= statusRect.bottom + 1,
+            statusAfterImage: statusRect.top >= imageRect.bottom - 1,
             imageWidth: imageRect.width,
             imageInsideViewport:
               imageRect.left >= -1 && imageRect.right <= window.innerWidth + 1,
@@ -1512,7 +1504,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
         expect(measurements, `${locale} exam at ${width}px`).not.toBeNull();
         expect(measurements?.documentWidth).toBeLessThanOrEqual(width);
         expect(measurements?.bodyWidth).toBeLessThanOrEqual(width);
-        expect(measurements?.timerInsideStatus).toBe(true);
+        expect(measurements?.statusAfterImage).toBe(true);
         expect(measurements?.imageInsideViewport).toBe(true);
         expect(measurements?.imageWidth).toBeLessThanOrEqual(640);
       }

@@ -40,7 +40,6 @@ interface QuizQuestion {
   categoryCode: string;
   categoryNameEn: string;
   difficultyLevel: string;
-  questionType: string;
   questionEn: string;
   questionAr: string;
   questionNl: string;
@@ -98,12 +97,6 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   EASY: "bg-green-500/10 text-green-600",
   MEDIUM: "bg-amber-500/10 text-amber-600",
   HARD: "bg-destructive/10 text-destructive",
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  MULTIPLE_CHOICE: "MCQ",
-  TRUE_FALSE: "T/F",
-  IMAGE_BASED: "IMG",
 };
 
 type SortField = "id" | "questionEn" | "difficultyLevel" | "createdAt";
@@ -699,9 +692,6 @@ export default function AdminQuizzesPage() {
                   <SortIcon field="difficultyLevel" />
                 </th>
                 <th className="px-4 py-3 text-center font-semibold">
-                  {t("admin.quizzes.col_type")}
-                </th>
-                <th className="px-4 py-3 text-center font-semibold">
                   {t("admin.quizzes.col_image")}
                 </th>
                 <th className="px-4 py-3 text-center font-semibold">
@@ -718,7 +708,7 @@ export default function AdminQuizzesPage() {
             <tbody className="divide-y divide-border/30">
               {questions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-16 text-center">
+                  <td colSpan={8} className="px-4 py-16 text-center">
                     <div className="space-y-2">
                       <div className="text-4xl">📋</div>
                       <p className="text-muted-foreground">
@@ -759,11 +749,6 @@ export default function AdminQuizzesPage() {
                         >
                           {getDifficultyLabel(q.difficultyLevel)}
                         </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="font-mono text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-lg">
-                          {TYPE_LABELS[q.questionType] || q.questionType}
-                        </span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span
@@ -852,7 +837,7 @@ export default function AdminQuizzesPage() {
                     {/* Expanded Row */}
                     {expandedId === q.id && (
                       <tr className="bg-primary/5">
-                        <td colSpan={10} className="px-6 py-4 space-y-4">
+                        <td colSpan={8} className="px-6 py-4 space-y-4">
                           {q.contentImageUrl && (
                             <div className="rounded-2xl border border-border/40 bg-card/80 p-4">
                               <p className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3">

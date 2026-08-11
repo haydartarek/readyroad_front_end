@@ -41,7 +41,11 @@ const labels: Record<Language, Record<string, string>> = {
 
 jest.mock("@/contexts/language-context", () => ({
   useLanguage: () => ({
-    t: (key: string) => labels[mockLanguage][key] ?? key,
+    language: mockLanguage,
+    t: (key: string, params?: Record<string, string | number>) =>
+      key === "notif.msg.weak_area"
+        ? `Weak area: ${params?.category}`
+        : labels[mockLanguage][key] ?? key,
   }),
 }));
 
@@ -107,6 +111,34 @@ beforeEach(() => {
 });
 
 describe("NotificationPanel latest notifications action", () => {
+  test.each([
+    ["en", "Information signs"],
+    ["nl", "Informatieborden"],
+    ["fr", "Signaux d'information"],
+    ["ar", "علامات المعلومات"],
+  ] as const)("renders the weak-area category in %s", async (language, expected) => {
+    mockLanguage = language;
+    mockGetNotifications.mockResolvedValueOnce([
+      {
+        ...notification(1),
+        type: "WEAK_AREA",
+        messageKey: "notif.msg.weak_area",
+        messageParams: JSON.stringify({
+          category: "Information signs",
+          categoryEn: "Information signs",
+          categoryNl: "Informatieborden",
+          categoryFr: "Signaux d'information",
+          categoryAr: "علامات المعلومات",
+        }),
+      },
+    ]);
+
+    render(<NotificationPanel />);
+    await openPanel();
+
+    expect(screen.getByText(`Weak area: ${expected}`)).toBeInTheDocument();
+  });
+
   test.each([
     ["en"],
     ["nl"],

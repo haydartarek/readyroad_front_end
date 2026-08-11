@@ -7,8 +7,6 @@ import {
   AlertCircle,
   ClipboardList,
   LayoutDashboard,
-  LogOut,
-  MessageCircle,
   TrendingDown,
   User,
 } from "lucide-react";
@@ -126,7 +124,7 @@ function SidebarNavLink({
 }
 
 function UserSidebarInner() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { t, isRTL } = useLanguage();
   const { unreadCount } = useNotifications();
   const pathname = useRoutePathname();
@@ -236,35 +234,6 @@ function UserSidebarInner() {
         </div>
       </nav>
 
-      <div className="border-t border-border/60 px-4 py-4">
-        <div className="space-y-1.5">
-          <Link
-            href="/contact"
-            className="group flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:border-border/70 hover:bg-muted/70 hover:text-foreground"
-          >
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/35 text-muted-foreground transition-all duration-200 group-hover:border-primary/15 group-hover:bg-primary/10 group-hover:text-primary">
-              <MessageCircle className="h-4 w-4" />
-            </div>
-            <span className="flex-1 truncate font-medium">
-              {t("user_sidebar.support")}
-            </span>
-          </Link>
-
-          <button
-            onClick={() => {
-              void logout();
-            }}
-            className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-red-600/85 transition-all duration-200 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/25"
-          >
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-red-200/60 bg-red-50 text-red-500 transition-colors group-hover:border-red-300 group-hover:bg-red-100">
-              <LogOut className="h-4 w-4" />
-            </div>
-            <span className="flex-1 text-start font-semibold">
-              {t("auth.logout")}
-            </span>
-          </button>
-        </div>
-      </div>
     </aside>
   );
 }

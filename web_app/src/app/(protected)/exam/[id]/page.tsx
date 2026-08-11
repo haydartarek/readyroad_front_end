@@ -522,43 +522,32 @@ export default function ExamQuestionsPage() {
   return (
     <FocusedExamShell
       dir={isRTL ? "rtl" : "ltr"}
-      backControl={
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 rounded-full px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
-          onClick={() => {
-            pendingNavigation.current = "/practice";
-            setShowExitDialog(true);
-          }}
-        >
-          {isRTL ? (
-            <ArrowRight className="me-2 h-4 w-4" />
-          ) : (
-            <ArrowLeft className="me-2 h-4 w-4" />
-          )}
-          {t("practice_exam.back_practice")}
-        </Button>
-      }
-      timerPill={
-        <div
-          className={cn(
-            "inline-flex items-center gap-2 rounded-[1.35rem] border px-4 py-2.5 text-base font-black tabular-nums shadow-sm",
-            timerToneClass,
-          )}
-        >
-          <Clock className="h-4 w-4" />
-          {questionTimeLeft}s
+      showStatusCard={false}
+      afterCard={
+        <div className="flex justify-center pb-3 pt-1">
+          <Button
+            variant="outline"
+            className="min-h-11 rounded-full border-destructive/30 px-6 text-destructive hover:bg-destructive/5 hover:text-destructive"
+            onClick={() => {
+              pendingNavigation.current = "/practice";
+              setShowExitDialog(true);
+            }}
+          >
+            {t("practice_exam.end_exam")}
+          </Button>
+          <ExitConfirmDialog
+            open={showExitDialog}
+            onOpenChange={setShowExitDialog}
+            onStay={handleExitStay}
+            onLeave={handleExitLeave}
+          />
         </div>
       }
-      progressLabel={questionProgressLabel}
-      progressPercent={progressPercent}
-      integratedStatusRow
     >
       <FocusedQuestionCard
         headerBadges={
-          <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
-            {currentQuestionIndex + 1}
+          <span className="inline-flex min-h-8 items-center rounded-full bg-primary/10 px-3 text-xs font-black text-primary">
+            {questionProgressLabel}
           </span>
         }
         media={
@@ -592,6 +581,39 @@ export default function ExamQuestionsPage() {
             </ExamQuestionImageFrame>
           ) : null
         }
+        statusAfterMedia={
+          <div
+            data-testid="active-exam-status"
+            className="space-y-2 rounded-2xl border border-border/50 bg-muted/25 p-3"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-muted-foreground">
+                {answeredCount} {t("practice_exam.answered")}
+              </span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-black tabular-nums",
+                  timerToneClass,
+                )}
+              >
+                <Clock className="h-4 w-4" />
+                {questionTimeLeft}s
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ease-linear ${timerColor(questionTimeLeft)}`}
+                style={{ width: `${timerWidthPct}%` }}
+              />
+            </div>
+          </div>
+        }
         title={questionText}
         options={currentQuestion.options.map((option) => ({
           key: option.id,
@@ -606,15 +628,7 @@ export default function ExamQuestionsPage() {
           onSelect: () => handleAnswerSelect(option.number),
         }))}
         footer={
-          <>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ease-linear ${timerColor(questionTimeLeft)}`}
-                style={{ width: `${timerWidthPct}%` }}
-              />
-            </div>
-
-            <div className="flex justify-end">
+          <div className="flex justify-end">
               <Button
                 size="sm"
                 onClick={() => handleNextOrSubmit("manual")}
@@ -631,16 +645,8 @@ export default function ExamQuestionsPage() {
                     <ArrowRight className="h-4 w-4" />
                   ))}
               </Button>
-            </div>
-          </>
+          </div>
         }
-      />
-
-      <ExitConfirmDialog
-        open={showExitDialog}
-        onOpenChange={setShowExitDialog}
-        onStay={handleExitStay}
-        onLeave={handleExitLeave}
       />
     </FocusedExamShell>
   );

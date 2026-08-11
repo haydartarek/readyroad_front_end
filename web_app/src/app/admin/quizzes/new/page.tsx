@@ -18,10 +18,9 @@ import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { NATIVE_SELECT_CLASS } from "@/lib/native-select-styles";
 import { cn } from "@/lib/utils";
 import {
-  difficultyAfterAddingOption,
+  isDifficultyCompatibleWithOptions,
   optionDisplayLabel,
   QUIZ_DIFFICULTIES,
-  QUIZ_QUESTION_TYPES,
 } from "@/lib/admin-quiz-form";
 import {
   ArrowLeft,
@@ -51,7 +50,6 @@ interface OptionForm {
 interface QuestionForm {
   categoryCode: string;
   difficultyLevel: string;
-  questionType: string;
   questionEn: string;
   questionAr: string;
   questionNl: string;
@@ -84,7 +82,6 @@ const BLANK_OPTION: OptionForm = {
 const INITIAL_FORM: QuestionForm = {
   categoryCode: "",
   difficultyLevel: "EASY",
-  questionType: "MULTIPLE_CHOICE",
   questionEn: "",
   questionAr: "",
   questionNl: "",
@@ -227,7 +224,6 @@ export default function AdminAddQuizQuestionPage() {
   const [uploading, setUploading] = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const difficultyManuallyChangedRef = useRef(false);
 
   useEffect(() => {
     apiClient
@@ -250,10 +246,12 @@ export default function AdminAddQuizQuestionPage() {
       form.questionAr.trim() !== "" &&
       form.questionNl.trim() !== "" &&
       form.questionFr.trim() !== "" &&
-      (form.questionType !== "IMAGE_BASED" ||
-        form.contentImageUrl.trim() !== "") &&
       form.options.length >= 2 &&
       form.options.length <= 3 &&
+      isDifficultyCompatibleWithOptions(
+        form.options.length,
+        form.difficultyLevel,
+      ) &&
       form.options.filter((o) => o.isCorrect).length === 1 &&
       form.options.every(
         (o) =>
@@ -309,11 +307,6 @@ export default function AdminAddQuizQuestionPage() {
     if (form.options.length >= 3) return;
     setForm((prev) => ({
       ...prev,
-      difficultyLevel: difficultyAfterAddingOption(
-        prev.options.length,
-        prev.difficultyLevel,
-        difficultyManuallyChangedRef.current,
-      ),
       options: [
         ...prev.options,
         { ...BLANK_OPTION, displayOrder: prev.options.length + 1 },
@@ -360,11 +353,6 @@ export default function AdminAddQuizQuestionPage() {
           "Question text is required in all four languages";
       }
     });
-    if (form.questionType === "IMAGE_BASED" && !form.contentImageUrl.trim()) {
-      errors.contentImageUrl =
-        t("admin.quizzes.form.error_image_required") ||
-        "An image is required for image-based questions";
-    }
     if (form.options.length < 2)
       errors.options =
         t("admin.quizzes.form.error_min_options") ||
@@ -373,6 +361,18 @@ export default function AdminAddQuizQuestionPage() {
       errors.options =
         t("admin.quizzes.form.error_max_options") ||
         "Maximum 3 options allowed";
+    if (
+      form.options.length >= 2 &&
+      form.options.length <= 3 &&
+      !isDifficultyCompatibleWithOptions(
+        form.options.length,
+        form.difficultyLevel,
+      )
+    ) {
+      errors.difficultyLevel =
+        t("admin.quizzes.form.error_difficulty_options") ||
+        "Hard questions require 2 options; easy and medium questions require 3";
+    }
     const correctCount = form.options.filter((o) => o.isCorrect).length;
     if (correctCount === 0)
       errors.correct =
@@ -482,7 +482,6 @@ export default function AdminAddQuizQuestionPage() {
       await apiClient.post(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CREATE, {
         categoryCode: form.categoryCode.trim(),
         difficultyLevel: form.difficultyLevel,
-        questionType: form.questionType,
         questionEn: form.questionEn.trim(),
         questionAr: form.questionAr.trim() || "",
         questionNl: form.questionNl.trim() || "",
@@ -648,10 +647,7 @@ export default function AdminAddQuizQuestionPage() {
                 id="admin-quiz-new-difficulty"
                 name="difficultyLevel"
                 value={form.difficultyLevel}
-                onChange={(e) => {
-                  difficultyManuallyChangedRef.current = true;
-                  setField("difficultyLevel", e.target.value);
-                }}
+                onChange={(e) => setField("difficultyLevel", e.target.value)}
                 className={cn("w-full", NATIVE_SELECT_CLASS)}
               >
                 {QUIZ_DIFFICULTIES.map((difficulty) => (
@@ -660,29 +656,11 @@ export default function AdminAddQuizQuestionPage() {
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* Question Type */}
-            <div className="space-y-1">
-              <label
-                htmlFor="admin-quiz-new-question-type"
-                className="block text-xs font-semibold text-foreground"
-              >
-                {t("admin.quizzes.form.question_type") || "Question Type"}
-              </label>
-              <select
-                id="admin-quiz-new-question-type"
-                name="questionType"
-                value={form.questionType}
-                onChange={(e) => setField("questionType", e.target.value)}
-                className={cn("w-full", NATIVE_SELECT_CLASS)}
-              >
-                {QUIZ_QUESTION_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {t(`admin.quizzes.type_${type.toLowerCase()}`)}
-                  </option>
-                ))}
-              </select>
+              {fieldErrors.difficultyLevel && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.difficultyLevel}
+                </p>
+              )}
             </div>
           </div>
 

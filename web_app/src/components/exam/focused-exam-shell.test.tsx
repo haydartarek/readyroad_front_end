@@ -23,4 +23,19 @@ describe("FocusedExamShell", () => {
     expect(within(statusCard).getByText("Question 2 of 50")).toBeVisible();
     expect(screen.getAllByText("15s")).toHaveLength(1);
   });
+
+  it("supports question-owned status and a separate end action", () => {
+    render(
+      <FocusedExamShell
+        showStatusCard={false}
+        afterCard={<button type="button">End exam</button>}
+      >
+        <p>Question content</p>
+      </FocusedExamShell>,
+    );
+
+    expect(screen.queryByTestId("exam-status-card")).not.toBeInTheDocument();
+    expect(screen.getByText("Question content")).toBeVisible();
+    expect(screen.getByRole("button", { name: "End exam" })).toBeVisible();
+  });
 });

@@ -15,6 +15,7 @@ interface FocusedQuestionOption {
 interface FocusedQuestionCardProps {
   headerBadges?: ReactNode;
   media?: ReactNode;
+  statusAfterMedia?: ReactNode;
   title: string;
   titleClassName?: string;
   options: FocusedQuestionOption[];
@@ -24,6 +25,7 @@ interface FocusedQuestionCardProps {
 export function FocusedQuestionCard({
   headerBadges,
   media,
+  statusAfterMedia,
   title,
   titleClassName,
   options,
@@ -36,6 +38,8 @@ export function FocusedQuestionCard({
       ) : null}
 
       {media ? <div className="flex justify-center">{media}</div> : null}
+
+      {statusAfterMedia ? <div>{statusAfterMedia}</div> : null}
 
       <h1
         data-testid="exam-question-title"

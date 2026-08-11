@@ -31,4 +31,21 @@ describe("FocusedQuestionCard", () => {
     expect(screen.queryByText("C")).not.toBeInTheDocument();
     expect(screen.getAllByTestId("exam-option-card")).toHaveLength(2);
   });
+
+  it("renders the exam status directly after the media", () => {
+    render(
+      <FocusedQuestionCard
+        media={<div data-testid="question-media">Image</div>}
+        statusAfterMedia={<div data-testid="question-status">15s</div>}
+        title="Question"
+        options={[]}
+      />,
+    );
+
+    const media = screen.getByTestId("question-media");
+    const status = screen.getByTestId("question-status");
+    expect(media.compareDocumentPosition(status)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
 });

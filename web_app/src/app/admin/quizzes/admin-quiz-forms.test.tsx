@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import AdminAddQuizQuestionPage from "@/app/admin/quizzes/new/page";
 import AdminEditQuizQuestionPage from "@/app/admin/quizzes/[id]/edit/page";
 import { apiClient } from "@/lib/api";
+import { isDifficultyCompatibleWithOptions } from "@/lib/admin-quiz-form";
 
 const mockPush = jest.fn();
 
@@ -42,7 +43,7 @@ const category = {
 const question = {
   id: 7,
   categoryCode: "A",
-  difficultyLevel: "EASY",
+  difficultyLevel: "HARD",
   questionType: "MULTIPLE_CHOICE",
   questionEn: "Question EN",
   questionAr: "سؤال",
@@ -101,11 +102,14 @@ describe("Admin theoretical question forms", () => {
     fireEvent.click(
       screen.getByRole("button", { name: /admin.quizzes.form.add_option/ }),
     );
-    expect(difficulty.value).toBe("MEDIUM");
+    expect(difficulty.value).toBe("EASY");
     expect(screen.getAllByText("C")).toHaveLength(1);
+    expect(
+      screen.queryByLabelText("admin.quizzes.form.question_type"),
+    ).not.toBeInTheDocument();
   });
 
-  test("create preserves a manual difficulty after adding option C", async () => {
+  test("create never mutates a selected difficulty after adding option C", async () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [category] });
     render(<AdminAddQuizQuestionPage />);
     await waitFor(() => expect(apiClient.get).toHaveBeenCalled());
@@ -136,12 +140,20 @@ describe("Admin theoretical question forms", () => {
       screen.getByLabelText("admin.quizzes.form.difficulty"),
     ).not.toBeDisabled();
     expect(
-      screen.getByLabelText("admin.quizzes.form.question_type"),
-    ).not.toBeDisabled();
+      screen.queryByLabelText("admin.quizzes.form.question_type"),
+    ).not.toBeInTheDocument();
     for (const language of ["en", "ar", "nl", "fr"]) {
       expect(
         screen.getByLabelText(`admin.quizzes.form.explanation_${language}`),
       ).toBeInTheDocument();
     }
+  });
+
+  test("enforces the option-count difficulty policy without mutation", () => {
+    expect(isDifficultyCompatibleWithOptions(2, "HARD")).toBe(true);
+    expect(isDifficultyCompatibleWithOptions(2, "EASY")).toBe(false);
+    expect(isDifficultyCompatibleWithOptions(3, "EASY")).toBe(true);
+    expect(isDifficultyCompatibleWithOptions(3, "MEDIUM")).toBe(true);
+    expect(isDifficultyCompatibleWithOptions(3, "HARD")).toBe(false);
   });
 });

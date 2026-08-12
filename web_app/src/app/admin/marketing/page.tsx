@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Activity,
   AlertTriangle,
+  BarChart3,
   Bot,
   CheckCircle2,
   ClipboardCheck,
@@ -12,6 +13,7 @@ import {
   ListTodo,
   RefreshCw,
   RotateCcw,
+  SearchCheck,
   Settings2,
   ShieldCheck,
   XCircle,
@@ -32,12 +34,15 @@ import {
   type MarketingTask,
   type MarketingTaskPage,
   type MarketingWorkerHealth,
+  type AnalyticsDiscovery,
+  type AnalyticsSettingsView,
+  type AnalyticsStatus,
   formatSettingValue,
   statusTone,
   taskCount,
 } from "@/lib/marketing-admin";
 
-type View = "overview" | "agents" | "tasks" | "approvals" | "errors" | "audit" | "settings";
+type View = "overview" | "analytics" | "discovery" | "agents" | "tasks" | "approvals" | "errors" | "audit" | "settings";
 
 interface PlatformData {
   overview: MarketingOverview;
@@ -47,10 +52,16 @@ interface PlatformData {
   audit: MarketingAuditItem[];
   settings: MarketingSettings;
   worker: MarketingWorkerHealth;
+  analyticsStatus: AnalyticsStatus;
+  analyticsSettings: AnalyticsSettingsView;
+  discovery: AnalyticsDiscovery;
+  reports: Array<Record<string, unknown>>;
 }
 
 const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
   { key: "overview", icon: Activity },
+  { key: "analytics", icon: BarChart3 },
+  { key: "discovery", icon: SearchCheck },
   { key: "agents", icon: Bot },
   { key: "tasks", icon: ListTodo },
   { key: "approvals", icon: ClipboardCheck },
@@ -88,7 +99,7 @@ export default function MarketingAdminPage() {
     setLoading(true);
     setError(false);
     try {
-      const [overview, agents, tasks, errors, audit, settings, worker] = await Promise.all([
+      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports] = await Promise.all([
         apiClient.get<MarketingOverview>("/admin/marketing/overview"),
         apiClient.get<MarketingAgent[]>("/admin/marketing/agents"),
         apiClient.get<MarketingTaskPage>("/admin/marketing/tasks", { limit: 100 }),
@@ -96,6 +107,10 @@ export default function MarketingAdminPage() {
         apiClient.get<MarketingAuditItem[]>("/admin/marketing/audit", { limit: 50 }),
         apiClient.get<MarketingSettings>("/admin/marketing/settings"),
         apiClient.get<MarketingWorkerHealth>("/admin/marketing/worker-health"),
+        apiClient.get<AnalyticsStatus>("/admin/marketing/analytics/status"),
+        apiClient.get<AnalyticsSettingsView>("/admin/marketing/analytics/settings"),
+        apiClient.get<AnalyticsDiscovery>("/admin/marketing/analytics/organic-discovery", { limit: 100 }),
+        apiClient.get<Array<Record<string, unknown>>>("/admin/marketing/analytics/reports", { limit: 20 }),
       ]);
       setData({
         overview: overview.data,
@@ -105,6 +120,10 @@ export default function MarketingAdminPage() {
         audit: audit.data,
         settings: settings.data,
         worker: worker.data,
+        analyticsStatus: analyticsStatus.data,
+        analyticsSettings: analyticsSettings.data,
+        discovery: discovery.data,
+        reports: reports.data,
       });
     } catch (requestError) {
       logApiError("Failed to load marketing admin platform", requestError);
@@ -192,6 +211,30 @@ export default function MarketingAdminPage() {
       {!loading && data && !error ? (
         <div role="tabpanel">
           {view === "overview" ? <Overview data={data} t={t} formatDate={formatDate} /> : null}
+          {view === "analytics" ? (
+            <AnalyticsPanel
+              data={data}
+              busy={busy}
+              t={t}
+              onSync={() => mutate(
+                "analytics-sync",
+                () => apiClient.post("/admin/marketing/analytics/sync", {
+                  idempotencyKey: `analytics-sync-${crypto.randomUUID()}`,
+                }),
+                "admin.marketing.analytics_sync_created",
+              )}
+              onSettings={(policy, thresholds) => mutate(
+                "analytics-settings",
+                () => apiClient.put("/admin/marketing/analytics/settings", {
+                  policy,
+                  thresholds,
+                  idempotencyKey: `analytics-settings-${crypto.randomUUID()}`,
+                }),
+                "admin.marketing.analytics_settings_saved",
+              )}
+            />
+          ) : null}
+          {view === "discovery" ? <DiscoveryPanel data={data.discovery} t={t} /> : null}
           {view === "agents" ? (
             <Agents
               agents={data.agents}
@@ -335,4 +378,62 @@ function Audit({ items, t, formatDate }: { items: MarketingAuditItem[]; t: Trans
 
 function Settings({ data, t, formatDate }: { data: PlatformData; t: Translate; formatDate: DateFormatter }) {
   return <div className="grid gap-5 xl:grid-cols-2"><section className="rounded-2xl border border-border/60 bg-card p-5"><h2 className="font-black">{t("admin.marketing.runtime_settings")}</h2><dl className="mt-4 grid grid-cols-2 gap-3"><Metric label={t("admin.marketing.poll_interval")} value={`${data.worker.pollIntervalMs} ms`} /><Metric label={t("admin.marketing.batch_size")} value={data.worker.batchSize} /><Metric label={t("admin.marketing.lock_ttl")} value={`${data.worker.lockTtlSeconds} s`} /><Metric label={t("admin.marketing.expired_locks")} value={data.worker.expiredLocks} /></dl></section><section className="rounded-2xl border border-border/60 bg-card p-5"><h2 className="font-black">{t("admin.marketing.agent_settings")}</h2><div className="mt-4 space-y-3">{data.settings.settings.length ? data.settings.settings.map((setting) => <div key={setting.id} className="min-w-0 rounded-xl bg-muted/40 p-3"><p className="break-words font-bold">{setting.agentType} · {setting.key}</p><code className="mt-1 block max-w-full whitespace-pre-wrap break-all text-xs text-muted-foreground">{formatSettingValue(setting.value)}</code><p className="mt-2 text-xs text-muted-foreground">{t("admin.marketing.updated")}: {formatDate(setting.updatedAt)}</p></div>) : <Empty t={t} />}</div></section><section className="rounded-2xl border border-border/60 bg-card p-5 xl:col-span-2"><h2 className="font-black">{t("admin.marketing.schedules")}</h2><div className="mt-4 grid gap-3 lg:grid-cols-2">{data.settings.schedules.length ? data.settings.schedules.map((schedule) => <div key={schedule.id} className="rounded-xl bg-muted/40 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-bold">{schedule.key}</p><StatusBadge status={schedule.enabled ? "ENABLED" : "DISABLED"} /></div><p className="mt-1 break-words text-xs text-muted-foreground">{schedule.agentType} · {schedule.cronExpression} · {schedule.zoneId}</p><p className="mt-1 text-xs text-muted-foreground">{t("admin.marketing.next_run")}: {formatDate(schedule.nextRunAt)}</p></div>) : <Empty t={t} />}</div></section></div>;
+}
+
+function AnalyticsPanel({ data, busy, t, onSync, onSettings }: { data: PlatformData; busy: string | null; t: Translate; onSync: () => void; onSettings: (policy: Record<string, number>, thresholds: Record<string, number>) => void }) {
+  const [policy, setPolicy] = useState(data.analyticsSettings.policy);
+  const [thresholds, setThresholds] = useState(data.analyticsSettings.thresholds);
+  const status = data.analyticsStatus;
+  const numberField = (group: "policy" | "thresholds", key: string, value: number) => (
+    <label key={`${group}-${key}`} className="min-w-0 space-y-1 text-xs font-semibold text-muted-foreground">
+      <span className="break-words">{t(`admin.marketing.analytics_${key}`)}</span>
+      <input
+        type="number"
+        min="0"
+        step="any"
+        value={value}
+        onChange={(event) => {
+          const next = Number(event.target.value);
+          if (group === "policy") setPolicy((current) => ({ ...current, [key]: next }));
+          else setThresholds((current) => ({ ...current, [key]: next }));
+        }}
+        className="h-10 w-full rounded-xl border border-border/60 bg-background px-3 text-foreground outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+      />
+    </label>
+  );
+  return <div className="space-y-5">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <AdminMetricCard icon={<ShieldCheck />} label={t("admin.marketing.analytics_auth")} value={status.serviceAccountConfigured ? t("admin.marketing.configured") : t("admin.marketing.not_configured")} valueClassName={status.serviceAccountConfigured ? "text-green-600" : "text-amber-600"} />
+      <AdminMetricCard icon={<BarChart3 />} label="GA4" value={status.ga4PropertyResource} />
+      <AdminMetricCard icon={<SearchCheck />} label="Search Console" value={status.searchConsoleSiteUrl} />
+      <AdminMetricCard icon={<History />} label={t("admin.marketing.latest_data")} value={status.latestSearchConsoleDate ?? t("admin.marketing.never")} />
+    </div>
+    {status.alerts.length ? <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-sm font-semibold text-amber-800">{status.alerts.join(" · ")}</div> : null}
+    <div className="flex flex-wrap gap-2">
+      <Button onClick={onSync} disabled={!status.serviceAccountConfigured || busy === "analytics-sync"}><RefreshCw className={cn("h-4 w-4", busy === "analytics-sync" && "animate-spin")} />{t("admin.marketing.analytics_sync")}</Button>
+    </div>
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+      <h2 className="font-black">{t("admin.marketing.analytics_thresholds")}</h2>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {Object.entries(policy).map(([key, value]) => numberField("policy", key, value))}
+        {Object.entries(thresholds).map(([key, value]) => numberField("thresholds", key, value))}
+      </div>
+      <Button className="mt-4" variant="outline" disabled={busy === "analytics-settings"} onClick={() => onSettings(policy, thresholds)}>{t("admin.marketing.save_settings")}</Button>
+    </section>
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+      <h2 className="font-black">{t("admin.marketing.analytics_reports")}</h2>
+      <div className="mt-4 space-y-3">{data.reports.length ? data.reports.map((report) => <pre key={String(report.id)} className="max-w-full overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(report, null, 2)}</pre>) : <Empty t={t} />}</div>
+    </section>
+  </div>;
+}
+
+function DiscoveryPanel({ data, t }: { data: AnalyticsDiscovery; t: Translate }) {
+  const cards = [
+    ["opportunities", data.opportunities],
+    ["content_gaps", data.contentGaps],
+    ["query_classifications", data.queryClassifications],
+    ["language_performance", data.languages],
+    ["device_performance", data.devices],
+  ] as const;
+  return <div className="grid gap-5 xl:grid-cols-2">{cards.map(([key, items]) => <section key={key} className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"><h2 className="font-black">{t(`admin.marketing.${key}`)}</h2><div className="mt-4 space-y-3">{items.length ? items.map((item, index) => <pre key={`${key}-${index}`} className="max-w-full overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(item, null, 2)}</pre>) : <Empty t={t} />}</div></section>)}</div>;
 }

@@ -79,6 +79,29 @@ const responses: Record<string, unknown> = {
     lockTtlSeconds: 600,
     checkedAt: "2026-08-12T10:00:00Z",
   },
+  "/admin/marketing/analytics/status": {
+    serviceAccountConfigured: false,
+    authenticationMode: "DEDICATED_READ_ONLY_SERVICE_ACCOUNT",
+    ga4AccountId: "403159538",
+    ga4PropertyResource: "properties/548176182",
+    searchConsoleSiteUrl: "sc-domain:readyroad.be",
+    latestSearchConsoleDate: null,
+    sources: [],
+    alerts: ["GOOGLE_SERVICE_ACCOUNT_NOT_CONFIGURED"],
+  },
+  "/admin/marketing/analytics/settings": {
+    values: {},
+    policy: { initialBackfillDays: 90, intervalDays: 3, noDataDays: 6, sourceFailureHours: 3 },
+    thresholds: { windowDays: 28, opportunityImpressions: 50 },
+  },
+  "/admin/marketing/analytics/organic-discovery": {
+    opportunities: [],
+    contentGaps: [],
+    queryClassifications: [],
+    languages: [],
+    devices: [],
+  },
+  "/admin/marketing/analytics/reports": [],
 };
 
 describe("MarketingAdminPage", () => {
@@ -97,8 +120,9 @@ describe("MarketingAdminPage", () => {
 
     expect(await screen.findByText("admin.marketing.tasks_today")).toBeInTheDocument();
     expect(screen.getAllByText("HEALTHY").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("tab")).toHaveLength(7);
+    expect(screen.getAllByRole("tab")).toHaveLength(9);
     expect(get).toHaveBeenCalledWith("/admin/marketing/tasks", { limit: 100 });
+    expect(get).toHaveBeenCalledWith("/admin/marketing/analytics/organic-discovery", { limit: 100 });
   });
 
   it("requests an approval-bound agent state change instead of toggling locally", async () => {

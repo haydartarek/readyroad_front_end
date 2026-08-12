@@ -85,10 +85,56 @@ export interface MarketingSchedule {
   key: string;
   taskType: string;
   cronExpression: string;
+  intervalDays: number | null;
   zoneId: string;
   enabled: boolean;
   lastRunAt: string | null;
   nextRunAt: string | null;
+}
+
+export interface AnalyticsStatus {
+  serviceAccountConfigured: boolean;
+  authenticationMode: string;
+  ga4AccountId: string;
+  ga4PropertyResource: string;
+  searchConsoleSiteUrl: string;
+  latestSearchConsoleDate: string | null;
+  sources: Array<Record<string, unknown>>;
+  alerts: string[];
+}
+
+export interface AnalyticsValues {
+  initialBackfillDays: number;
+  intervalDays: number;
+  noDataDays: number;
+  sourceFailureHours: number;
+  windowDays: number;
+  emergingImpressions: number;
+  emergingPositionMin: number;
+  emergingPositionMax: number;
+  opportunityImpressions: number;
+  opportunityPositionMin: number;
+  opportunityPositionMax: number;
+  establishedPositionMax: number;
+  establishedClicks: number;
+  positionDecline: number;
+  clicksDeclinePercent: number;
+  ctrDeclinePercent: number;
+  stableWindows: number;
+}
+
+export interface AnalyticsSettingsView {
+  values: AnalyticsValues;
+  policy: Record<string, number>;
+  thresholds: Record<string, number>;
+}
+
+export interface AnalyticsDiscovery {
+  opportunities: Array<Record<string, unknown>>;
+  contentGaps: Array<Record<string, unknown>>;
+  queryClassifications: Array<Record<string, unknown>>;
+  languages: Array<Record<string, unknown>>;
+  devices: Array<Record<string, unknown>>;
 }
 
 export interface MarketingSettings {

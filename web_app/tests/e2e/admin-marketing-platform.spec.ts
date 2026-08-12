@@ -66,6 +66,36 @@ const responses: Record<string, unknown> = {
     lockTtlSeconds: 600,
     checkedAt: now,
   },
+  "/admin/marketing/analytics/status": {
+    serviceAccountConfigured: true,
+    authenticationMode: "DEDICATED_READ_ONLY_SERVICE_ACCOUNT",
+    ga4AccountId: "403159538",
+    ga4PropertyResource: "properties/548176182",
+    searchConsoleSiteUrl: "sc-domain:readyroad.be",
+    latestSearchConsoleDate: "2026-08-10",
+    sources: [],
+    alerts: [],
+  },
+  "/admin/marketing/analytics/settings": {
+    values: {},
+    policy: { initialBackfillDays: 90, intervalDays: 3, noDataDays: 6, sourceFailureHours: 3 },
+    thresholds: {
+      windowDays: 28,
+      emergingImpressions: 20,
+      opportunityImpressions: 50,
+      establishedClicks: 10,
+    },
+  },
+  "/admin/marketing/analytics/organic-discovery": {
+    opportunities: [
+      { id: 1, query: "belgian driving theory questions", state: "OPPORTUNITY", impressions: 500 },
+    ],
+    contentGaps: [],
+    queryClassifications: [],
+    languages: [],
+    devices: [],
+  },
+  "/admin/marketing/analytics/reports": [],
 };
 
 async function mockAdmin(page: Page, mutations: Request[]) {
@@ -123,7 +153,16 @@ test("Marketing operations remain usable on mobile and preserve approval control
 
   await page.goto("/admin/marketing");
   await expect(page.getByRole("heading", { name: "Marketing Operations" })).toBeVisible();
-  await expect(page.getByRole("tab")).toHaveCount(7);
+  await expect(page.getByRole("tab")).toHaveCount(9);
+  await expectNoOverflow(page);
+
+  await page.getByRole("tab", { name: "Analytics" }).click();
+  await expect(page.getByText("properties/548176182")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run full sync" })).toBeEnabled();
+  await expectNoOverflow(page);
+
+  await page.getByRole("tab", { name: "Organic Discovery" }).click();
+  await expect(page.getByText(/belgian driving theory questions/)).toBeVisible();
   await expectNoOverflow(page);
 
   await page.getByRole("tab", { name: "Agents" }).click();

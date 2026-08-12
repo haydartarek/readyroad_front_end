@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   BarChart2,
   Settings2,
+  Bot,
   type LucideIcon,
 } from "lucide-react";
 
@@ -152,6 +153,13 @@ export const ADMIN_ROUTES: AdminRoute[] = [
 
   // ── Insights ──
   {
+    key: "marketing",
+    path: "/admin/marketing",
+    labelKey: "admin.sidebar.marketing",
+    icon: Bot,
+    group: "insights",
+  },
+  {
     key: "analytics",
     path: "/admin/analytics",
     labelKey: "admin.sidebar.analytics",
@@ -178,6 +186,7 @@ const SEGMENT_LABEL_KEYS: Record<string, string> = {
   quizzes: "admin.sidebar.quizzes",
   users: "admin.sidebar.users",
   analytics: "admin.sidebar.analytics",
+  marketing: "admin.sidebar.marketing",
   settings: "admin.sidebar.settings",
   moderation: "admin.sidebar.moderation",
   "data-import": "admin.sidebar.data_import",

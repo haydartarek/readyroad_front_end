@@ -28,6 +28,7 @@ describe("AdminSidebar", () => {
     expect(screen.queryByText("admin.sidebar.panel_title")).not.toBeInTheDocument();
     expect(screen.queryByText("admin.sidebar.back_to_site")).not.toBeInTheDocument();
     expect(screen.queryByText("auth.logout")).not.toBeInTheDocument();
+    expect(screen.getByText("admin.sidebar.marketing")).toBeInTheDocument();
   });
 
   it("closes the drawer for a navigation action", () => {

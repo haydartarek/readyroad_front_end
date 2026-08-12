@@ -1376,6 +1376,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
         questionTextNl: `Vraag ${questionId}`,
         questionTextFr: `Question ${questionId}`,
         questionTextAr: `السؤال ${questionId}`,
+        difficultyLevel: "MEDIUM",
         options: [
           {
             optionId: questionId * 10 + 1,
@@ -1408,12 +1409,10 @@ test.describe("ReadyRoad mobile visual identity", () => {
     await expect(page.getByTestId("exam-question-title")).toHaveText(
       "السؤال 1",
     );
-    await expect(
-      page
-        .getByTestId("exam-question-title")
-        .locator("..")
-        .getByText("محاكي الامتحان النظري", { exact: true }),
-    ).toHaveCount(0);
+    await expect(page.getByTestId("exam-shell-header")).toContainText(
+      "محاكي الامتحان النظري",
+    );
+    await expect(page.getByText("متوسط", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: /إنهاء الامتحان/ }).click();
     await expect(page.getByRole("dialog")).toContainText(
@@ -1421,13 +1420,14 @@ test.describe("ReadyRoad mobile visual identity", () => {
     );
     await page.getByRole("button", { name: /مغادرة الامتحان/ }).click();
     await expect.poll(() => abandoned).toBe(true);
-    await expect(page).toHaveURL(/\/ar\/practice$/);
+    await expect(page).toHaveURL(/\/ar\/exam$/);
   });
 
   test("theory exam keeps timer, progress and constrained media in one responsive flow", async ({
     context,
     page,
   }) => {
+    test.setTimeout(180_000);
     await seedCookieConsent(page);
     await installAuthenticatedSession(context, page);
 
@@ -1443,6 +1443,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
           questionTextNl: "Wie heeft voorrang op dit kruispunt?",
           questionTextFr: "Qui a la priorité à ce carrefour ?",
           questionTextAr: "من له الأولوية عند هذا التقاطع؟",
+          difficultyLevel: "MEDIUM",
           imageUrl: "/images/logo.png",
           options: [
             {
@@ -1474,39 +1475,73 @@ test.describe("ReadyRoad mobile visual identity", () => {
     });
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
+    const viewports = [
+      { width: 320, height: 800 },
+      { width: 390, height: 844 },
+      { width: 768, height: 1024 },
+      { width: 1280, height: 800 },
+      { width: 1366, height: 768 },
+      { width: 1440, height: 900 },
+      { width: 1536, height: 864 },
+      { width: 1920, height: 1080 },
+    ];
+
     for (const locale of locales) {
-      for (const width of [390, 1280, 1920]) {
-        await page.setViewportSize({ width, height: 900 });
+      for (const viewport of viewports) {
+        const { width } = viewport;
+        await page.setViewportSize(viewport);
         await navigate(page, localizedPath("/exam/42", locale));
         await expect(page.getByTestId("exam-question-title")).toBeVisible();
+        await expect(page.getByTestId("exam-shell-header")).toBeVisible();
+        await expect(page.getByTestId("exam-actions")).toBeVisible();
 
         const measurements = await page.evaluate(() => {
           const status = document.querySelector<HTMLElement>(
-            '[data-testid="active-exam-status"]',
+            '[data-testid="exam-status-card"]',
+          );
+          const mainCard = document.querySelector<HTMLElement>(
+            '[data-testid="exam-main-card"]',
           );
           const image = document.querySelector<HTMLElement>(
             '[data-testid="exam-question-image"]',
           );
-          if (!status || !image) return null;
+          const content = document.querySelector<HTMLElement>(
+            '[data-testid="exam-question-content"]',
+          );
+          if (!status || !mainCard || !image || !content) return null;
           const statusRect = status.getBoundingClientRect();
+          const mainCardRect = mainCard.getBoundingClientRect();
           const imageRect = image.getBoundingClientRect();
+          const contentRect = content.getBoundingClientRect();
+          const radius = Number.parseFloat(getComputedStyle(image).borderRadius);
           return {
             viewport: window.innerWidth,
             documentWidth: document.documentElement.scrollWidth,
             bodyWidth: document.body.scrollWidth,
-            statusAfterImage: statusRect.top >= imageRect.bottom - 1,
+            statusAfterCard: statusRect.top >= mainCardRect.bottom - 1,
             imageWidth: imageRect.width,
+            imageRadius: radius,
             imageInsideViewport:
               imageRect.left >= -1 && imageRect.right <= window.innerWidth + 1,
+            sideBySide:
+              imageRect.right <= contentRect.left + 1 ||
+              contentRect.right <= imageRect.left + 1,
+            stacked: contentRect.top >= imageRect.bottom - 1,
           };
         });
 
         expect(measurements, `${locale} exam at ${width}px`).not.toBeNull();
         expect(measurements?.documentWidth).toBeLessThanOrEqual(width);
         expect(measurements?.bodyWidth).toBeLessThanOrEqual(width);
-        expect(measurements?.statusAfterImage).toBe(true);
+        expect(measurements?.statusAfterCard).toBe(true);
         expect(measurements?.imageInsideViewport).toBe(true);
         expect(measurements?.imageWidth).toBeLessThanOrEqual(640);
+        expect(measurements?.imageRadius).toBeLessThanOrEqual(8);
+        if (width >= 1024) {
+          expect(measurements?.sideBySide).toBe(true);
+        } else {
+          expect(measurements?.stacked).toBe(true);
+        }
       }
     }
 

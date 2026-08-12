@@ -19,15 +19,30 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+type QuizDifficultyCounts = {
+  EASY: number;
+  MEDIUM: number;
+  HARD: number;
+  UNCLASSIFIED?: number;
+};
+
 interface DashboardStats {
   totalSigns: number;
   totalUsers: number;
   totalQuizQuestions: number;
-  quizQuestionDifficultyCounts: {
-    EASY: number;
-    MEDIUM: number;
-    HARD: number;
-  };
+  quizQuestionDifficultyCounts: QuizDifficultyCounts;
+}
+
+export function getVisibleDifficultyCounts(counts: QuizDifficultyCounts) {
+  const visible: Array<readonly [keyof QuizDifficultyCounts, number]> = (
+    ["EASY", "MEDIUM", "HARD"] as const
+  ).map((difficulty) => [difficulty, counts[difficulty]] as const);
+
+  if ((counts.UNCLASSIFIED ?? 0) > 0) {
+    visible.push(["UNCLASSIFIED", counts.UNCLASSIFIED ?? 0]);
+  }
+
+  return visible;
 }
 
 function getRoleLabelKey(role?: string) {
@@ -173,10 +188,10 @@ export default function AdminDashboard() {
           iconClassName="bg-primary/10 text-primary"
           description={
             data?.quizQuestionDifficultyCounts
-              ? ["EASY", "MEDIUM", "HARD"]
+              ? getVisibleDifficultyCounts(data.quizQuestionDifficultyCounts)
                   .map(
-                    (difficulty) =>
-                      `${t(`difficulty.${difficulty.toLowerCase()}`)}: ${data.quizQuestionDifficultyCounts[difficulty as keyof DashboardStats["quizQuestionDifficultyCounts"]].toLocaleString()}`,
+                    ([difficulty, count]) =>
+                      `${t(`difficulty.${difficulty.toLowerCase()}`)}: ${count.toLocaleString()}`,
                   )
                   .join(" · ")
               : t("admin.total_quizzes_desc")

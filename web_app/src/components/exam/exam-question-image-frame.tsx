@@ -22,7 +22,7 @@ export function ExamQuestionImageFrame({
       <div
         data-testid="exam-question-image"
         className={cn(
-          "relative max-w-full overflow-hidden rounded-2xl border border-border/60 bg-white p-3 shadow-sm",
+          "relative max-w-full overflow-hidden rounded-[8px] border border-border/60 bg-white p-3 shadow-sm",
           SIZE_CLASSES[variant],
           className,
         )}

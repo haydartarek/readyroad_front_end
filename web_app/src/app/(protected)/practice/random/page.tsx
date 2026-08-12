@@ -53,6 +53,7 @@ import {
   Shuffle,
   Shapes,
   Info,
+  Flag,
 } from "lucide-react";
 
 // --- Types ---
@@ -616,7 +617,7 @@ export default function RandomPracticePage() {
   if (phase === "exam" && questions.length > 0) {
     const question = questions[currentIndex];
     const progressPct =
-      questions.length > 0 ? (currentIndex / questions.length) * 100 : 0;
+      questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
     const timerPct = (timeLeft / SECONDS_PER_QUESTION) * 100;
     const timerPillClass =
       timeLeft <= 5
@@ -624,23 +625,22 @@ export default function RandomPracticePage() {
         : timeLeft <= 10
           ? "bg-orange-500/10 border-orange-400/30 text-orange-500"
           : "bg-muted border-border text-muted-foreground";
-    const timerBarColor =
-      timeLeft <= 5 ? "#ef4444" : timeLeft <= 10 ? "#f97316" : "#22c55e";
+    const timerBarClass =
+      timeLeft <= 5
+        ? "bg-red-500"
+        : timeLeft <= 10
+          ? "bg-orange-500"
+          : "bg-green-500";
+    const questionProgressLabel = t("practice_exam.question_of")
+      .replace("{n}", String(currentIndex + 1))
+      .replace("{m}", String(questions.length));
 
     return (
       <>
         <FocusedExamShell
           dir={isRTL ? "rtl" : "ltr"}
-          backControl={
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 rounded-full px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
-              onClick={() => setShowExitDialog(true)}
-            >
-              {backToPracticeContent}
-            </Button>
-          }
+          title={t("nav.exam")}
+          counter={questionProgressLabel}
           timerPill={
             <div
               className={cn(
@@ -652,17 +652,60 @@ export default function RandomPracticePage() {
               {timeLeft}s
             </div>
           }
-          progressLabel={t("practice_exam.question_of")
-            .replace("{n}", String(currentIndex + 1))
-            .replace("{m}", String(questions.length))}
+          progressLabel={questionProgressLabel}
           progressPercent={progressPct}
+          timerProgressPercent={timerPct}
+          timerProgressClassName={timerBarClass}
+          afterCard={
+            <div
+              data-testid="exam-actions"
+              className="grid gap-2 pb-3 pt-1 sm:grid-cols-3"
+            >
+              <Button
+                variant="destructive"
+                size="lg"
+                className="order-3 w-full sm:order-1"
+                onClick={() => setShowExitDialog(true)}
+              >
+                {t("practice_exam.end_exam")}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="order-2 w-full"
+                asChild
+              >
+                <Link href="/contact">
+                  <Flag className="h-4 w-4" />
+                  {t("practice_exam.report_question")}
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => advanceToNext(selectedOption, "manual")}
+                disabled={isLockedUi}
+                className={cn(
+                  "order-1 w-full shadow-md transition-all sm:order-3",
+                  selectedOption !== null
+                    ? "shadow-primary/20 hover:-translate-y-0.5"
+                    : "opacity-80",
+                )}
+              >
+                {currentIndex + 1 === questions.length
+                  ? t("practice_exam.submit_btn")
+                  : t("practice_exam.next_btn")}
+                {isRTL ? (
+                  <ArrowLeft className="h-4 w-4" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          }
         >
           <FocusedQuestionCard
             headerBadges={
               <>
-                <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
-                  {currentIndex + 1}
-                </span>
                 <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                   {getRandomPracticeCategoryLabel(question.signCode, t)}
                 </span>
@@ -708,42 +751,6 @@ export default function RandomPracticePage() {
               disabled: isLockedUi,
               onSelect: () => selectOption(choice.id),
             }))}
-            footer={
-              <>
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${timerPct}%`,
-                      transition: "width 1s linear, background-color 0.5s ease",
-                      backgroundColor: timerBarColor,
-                    }}
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    onClick={() => advanceToNext(selectedOption, "manual")}
-                    disabled={isLockedUi}
-                    className={cn(
-                      "h-11 w-full gap-2 rounded-full px-5 font-semibold shadow-md transition-all sm:w-auto",
-                      selectedOption !== null
-                        ? "shadow-primary/20 hover:-translate-y-0.5"
-                        : "opacity-80",
-                    )}
-                  >
-                    {currentIndex + 1 === questions.length
-                      ? t("practice_exam.submit_btn")
-                      : t("practice_exam.next_btn")}
-                    {isRTL ? (
-                      <ArrowLeft className="h-4 w-4" />
-                    ) : (
-                      <ArrowRight className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </>
-            }
           />
         </FocusedExamShell>
         <ExitConfirmDialog

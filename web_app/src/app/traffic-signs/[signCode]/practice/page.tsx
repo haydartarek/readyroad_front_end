@@ -1054,33 +1054,16 @@ export default function TrafficSignPracticePage() {
             )}
 
             {answerState && (
-              <div
-                className={cn(
-                  "rounded-[1rem] border px-3.5 py-3",
+              <ResultAnswerBlock
+                label={
                   answerState.response.isCorrect
-                    ? "border-green-200 bg-green-50"
-                    : "border-red-200 bg-red-50",
-                )}
-              >
-                <p
-                  className={cn(
-                    "text-sm font-semibold",
-                    answerState.response.isCorrect
-                      ? "text-green-700"
-                      : "text-red-700",
-                  )}
-                >
-                  {answerState.response.isCorrect
                     ? t("practice.answer_correct")
-                    : t("practice.answer_incorrect")}
-                </p>
-
-                {getExplanation(answerState.response, currentLanguage) && (
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {getExplanation(answerState.response, currentLanguage)}
-                  </p>
-                )}
-              </div>
+                    : t("practice.answer_incorrect")
+                }
+                tone={answerState.response.isCorrect ? "correct" : "incorrect"}
+              >
+                {getExplanation(answerState.response, currentLanguage) || null}
+              </ResultAnswerBlock>
             )}
 
             <div
@@ -1089,6 +1072,7 @@ export default function TrafficSignPracticePage() {
             >
               {!answerState ? (
                 <Button
+                  data-testid="submit-practice-answer"
                   className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
                   disabled={selectedChoice === null || submitting}
                   onClick={handleSubmit}

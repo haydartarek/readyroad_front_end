@@ -118,6 +118,83 @@ async function prepareCompletedPractice(page: Page) {
   });
 }
 
+async function prepareActivePractice(page: Page) {
+  await seedCookieConsent(page);
+  await page.context().addCookies([
+    {
+      name: "token",
+      value: "test-token",
+      url: "http://127.0.0.1:3005",
+      httpOnly: true,
+      sameSite: "Lax",
+    },
+  ]);
+  await page.route("**/api/auth/me", (route) =>
+    fulfillJson(route, {
+      authenticated: true,
+      user: { userId: 42, username: "learner", role: "USER" },
+    }),
+  );
+  await page.route("**/api/proxy/**", (route) => {
+    const url = new URL(route.request().url());
+    const path = url.pathname.replace("/api/proxy", "");
+
+    if (path === "/traffic-signs/A1b") return fulfillJson(route, sign);
+    if (path === "/sign-quiz/practice/A1b") {
+      return fulfillJson(route, {
+        sessionId: 77,
+        signCode: "A1b",
+        status: "IN_PROGRESS",
+        totalQuestions: 2,
+        correctCount: 0,
+        startedAt: "2026-08-09T10:00:00Z",
+        questions: [question],
+      });
+    }
+    if (path === "/sign-quiz/practice/77/results") {
+      return fulfillJson(route, {
+        sessionId: 77,
+        signCode: "A1b",
+        status: "IN_PROGRESS",
+        totalQuestions: 2,
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        scorePercentage: 0,
+        passed: false,
+        startedAt: "2026-08-09T10:00:00Z",
+        questionResults: [],
+      });
+    }
+    if (path === "/sign-quiz/practice/77/questions/11/answer") {
+      return fulfillJson(route, {
+        questionId: 11,
+        isCorrect: false,
+        selectedChoiceId: 102,
+        selectedTextEn: "Accelerate",
+        selectedTextNl: "Versnellen",
+        selectedTextFr: "Accélérer",
+        selectedTextAr: "زيادة السرعة",
+        correctChoiceId: 101,
+        correctTextEn: "Reduce speed",
+        correctTextNl: "Snelheid verminderen",
+        correctTextFr: "Réduire la vitesse",
+        correctTextAr: "تخفيف السرعة",
+        explanationEn: "Reduce speed before the bend.",
+        explanationNl: "Verminder snelheid voor de bocht.",
+        explanationFr: "Réduisez la vitesse avant le virage.",
+        explanationAr: "خفف السرعة قبل المنعطف.",
+        questionsAnswered: 1,
+        totalQuestions: 2,
+        sessionCompleted: false,
+        signAccuracyPercentage: 0,
+        signTotalAttempts: 1,
+      });
+    }
+
+    return route.fulfill({ status: 404, json: { error: path } });
+  });
+}
+
 test("review answers reveals and focuses the existing section without navigation", async ({
   page,
 }) => {
@@ -142,5 +219,41 @@ test("review answers reveals and focuses the existing section without navigation
     );
     expect(page.url()).toBe(urlBefore);
     await expect(review.getByText(answer, { exact: true }).first()).toBeVisible();
+  }
+});
+
+test("practice keeps immediate localized feedback without an exam timer", async ({
+  page,
+}) => {
+  await prepareActivePractice(page);
+
+  for (const { path, explanation } of [
+    {
+      path: "/traffic-signs/A1b/practice",
+      explanation: "Reduce speed before the bend.",
+    },
+    {
+      path: "/nl/traffic-signs/A1b/practice",
+      explanation: "Verminder snelheid voor de bocht.",
+    },
+    {
+      path: "/fr/traffic-signs/A1b/practice",
+      explanation: "Réduisez la vitesse avant le virage.",
+    },
+    {
+      path: "/ar/traffic-signs/A1b/practice",
+      explanation: "خفف السرعة قبل المنعطف.",
+    },
+  ]) {
+    await page.goto(path);
+    await expect(page.getByTestId("exam-timer-slot")).toHaveCount(0);
+    await page.getByTestId("exam-option-card").nth(1).click();
+    await page.getByTestId("submit-practice-answer").click();
+
+    const feedback = page.locator(
+      '[data-testid="result-answer-block"][data-answer-tone="incorrect"]',
+    );
+    await expect(feedback).toBeVisible();
+    await expect(feedback).toContainText(explanation);
   }
 });

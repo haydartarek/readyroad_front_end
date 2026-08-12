@@ -12,7 +12,29 @@ describe("ResultAnswerBlock", () => {
     const block = screen.getByTestId("result-answer-block");
     expect(block).toHaveAttribute("data-answer-marker", "A");
     expect(block).toHaveAttribute("data-answer-tone", "incorrect");
+    expect(screen.getByTestId("result-answer-label")).toHaveClass(
+      "text-red-800",
+    );
+    expect(screen.getByTestId("result-answer-body")).toHaveClass(
+      "text-red-950",
+      "dark:text-red-50",
+    );
     expect(screen.getByText("A")).toBeInTheDocument();
     expect(screen.getByText("A deliberately wrong answer")).toBeInTheDocument();
+  });
+
+  it("uses explicit readable foregrounds for neutral explanations", () => {
+    render(
+      <ResultAnswerBlock label="Explanation" tone="neutral">
+        Long legal explanation
+      </ResultAnswerBlock>,
+    );
+
+    expect(screen.getByTestId("result-answer-label")).toHaveClass(
+      "text-foreground",
+    );
+    expect(screen.getByTestId("result-answer-body")).toHaveClass(
+      "text-foreground",
+    );
   });
 });

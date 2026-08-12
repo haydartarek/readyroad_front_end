@@ -32,19 +32,19 @@ describe("FocusedQuestionCard", () => {
     expect(screen.getAllByTestId("exam-option-card")).toHaveLength(2);
   });
 
-  it("renders the exam status directly after the media", () => {
+  it("keeps media and question content in one responsive grid", () => {
     render(
       <FocusedQuestionCard
         media={<div data-testid="question-media">Image</div>}
-        statusAfterMedia={<div data-testid="question-status">15s</div>}
         title="Question"
         options={[]}
       />,
     );
 
     const media = screen.getByTestId("question-media");
-    const status = screen.getByTestId("question-status");
-    expect(media.compareDocumentPosition(status)).toBe(
+    const content = screen.getByTestId("exam-question-content");
+    expect(screen.getByTestId("exam-question-layout")).toHaveClass("grid");
+    expect(media.compareDocumentPosition(content)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });

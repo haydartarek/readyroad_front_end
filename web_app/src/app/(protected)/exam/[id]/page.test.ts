@@ -18,6 +18,7 @@ describe("persistent exam question images", () => {
           questionTextNl: "Welk bord wordt getoond?",
           questionTextFr: "Quel panneau est affiché ?",
           imageUrl: "/images/quiz/priority-question.png",
+          difficultyLevel: "MEDIUM",
           options: [
             {
               optionId: 11,
@@ -34,13 +35,16 @@ describe("persistent exam question images", () => {
     expect(exam.questions[0].imageUrl).toBe(
       "/images/quiz/priority-question.png",
     );
+    expect(exam.questions[0].difficultyLevel).toBe("MEDIUM");
   });
 });
 
 describe("theoretical exam attempt progression", () => {
-  it("does not render the redundant active-exam label badge", () => {
+  it("uses the localized exam title and returns abandoned attempts to exams", () => {
     const source = fs.readFileSync(path.join(__dirname, "page.tsx"), "utf8");
-    expect(source).not.toContain('t("nav.exam")');
+    expect(source).toContain('title={t("nav.exam")}');
+    expect(source).not.toContain('abandonExam("/practice")');
+    expect(source).toContain('pendingNavigation.current = "/exam"');
   });
 
   it("abandons after three consecutive timed-out unanswered questions", () => {

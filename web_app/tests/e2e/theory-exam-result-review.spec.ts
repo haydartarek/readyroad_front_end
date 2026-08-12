@@ -179,6 +179,119 @@ for (const [language, content] of Object.entries(localized)) {
       await expect(firstQuestion.getByText(content.correct, { exact: true })).toBeVisible();
       await expect(firstQuestion.getByText(content.explanation, { exact: true })).toBeVisible();
 
+      if (width === 390) {
+        for (const dark of [false, true]) {
+          await page.evaluate((useDarkMode) => {
+            document.documentElement.classList.toggle("dark", useDarkMode);
+          }, dark);
+
+          const contrastRatios = await firstQuestion
+            .getByTestId("result-answer-block")
+            .evaluateAll((blocks) => {
+              const rgba = (value: string) => {
+                const canvas = document.createElement("canvas");
+                canvas.width = 1;
+                canvas.height = 1;
+                const context = canvas.getContext("2d", {
+                  willReadFrequently: true,
+                });
+                if (!context) {
+                  throw new Error("Canvas color conversion is unavailable");
+                }
+                context.clearRect(0, 0, 1, 1);
+                context.fillStyle = value;
+                context.fillRect(0, 0, 1, 1);
+                const values = context.getImageData(0, 0, 1, 1).data;
+                return {
+                  r: values[0],
+                  g: values[1],
+                  b: values[2],
+                  a: values[3] / 255,
+                };
+              };
+              const blend = (
+                foreground: ReturnType<typeof rgba>,
+                background: ReturnType<typeof rgba>,
+              ) => ({
+                r:
+                  foreground.r * foreground.a +
+                  background.r * (1 - foreground.a),
+                g:
+                  foreground.g * foreground.a +
+                  background.g * (1 - foreground.a),
+                b:
+                  foreground.b * foreground.a +
+                  background.b * (1 - foreground.a),
+                a: 1,
+              });
+              const luminance = (color: ReturnType<typeof rgba>) => {
+                const channels = [color.r, color.g, color.b].map((channel) => {
+                  const value = channel / 255;
+                  return value <= 0.03928
+                    ? value / 12.92
+                    : ((value + 0.055) / 1.055) ** 2.4;
+                });
+                return (
+                  channels[0] * 0.2126 +
+                  channels[1] * 0.7152 +
+                  channels[2] * 0.0722
+                );
+              };
+              const ratio = (
+                foreground: ReturnType<typeof rgba>,
+                background: ReturnType<typeof rgba>,
+              ) => {
+                const light = Math.max(
+                  luminance(foreground),
+                  luminance(background),
+                );
+                const darkValue = Math.min(
+                  luminance(foreground),
+                  luminance(background),
+                );
+                return (light + 0.05) / (darkValue + 0.05);
+              };
+              const pageBackground = rgba(
+                getComputedStyle(document.body).backgroundColor,
+              );
+
+              return blocks.flatMap((block) => {
+                const blockBackground = blend(
+                  rgba(getComputedStyle(block).backgroundColor),
+                  pageBackground,
+                );
+                return [
+                  block.querySelector<HTMLElement>(
+                    '[data-testid="result-answer-label"]',
+                  ),
+                  block.querySelector<HTMLElement>(
+                    '[data-testid="result-answer-body"]',
+                  ),
+                ]
+                  .filter((element): element is HTMLElement => Boolean(element))
+                  .map((element) => ({
+                    tone: block.getAttribute("data-answer-tone"),
+                    part: element.getAttribute("data-testid"),
+                    color: getComputedStyle(element).color,
+                    background: getComputedStyle(block).backgroundColor,
+                    ratio: ratio(
+                      rgba(getComputedStyle(element).color),
+                      blockBackground,
+                    ),
+                  }));
+              });
+            });
+
+          const minimumContrast = Math.min(
+            ...contrastRatios.map((measurement) => measurement.ratio),
+          );
+          expect(
+            minimumContrast,
+            `${language} ${dark ? "dark" : "light"} result contrast: ${JSON.stringify(contrastRatios)}`,
+          ).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+
       const widths = await page.evaluate(() => ({
         viewport: window.innerWidth,
         document: document.documentElement.scrollWidth,

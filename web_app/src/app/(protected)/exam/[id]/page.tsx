@@ -4,6 +4,7 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import Link from "@/components/localized-link";
 import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
 import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
 import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
@@ -23,6 +24,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Clock,
+  Flag,
   ImageOff,
 } from "lucide-react";
 
@@ -36,6 +38,7 @@ interface Question {
   questionTextNl: string;
   questionTextFr: string;
   imageUrl?: string;
+  difficultyLevel?: "EASY" | "MEDIUM" | "HARD";
   options: Array<{
     id: number;
     number: 1 | 2 | 3;
@@ -61,6 +64,7 @@ interface BackendQuestion {
   questionTextNl: string;
   questionTextFr: string;
   imageUrl?: string;
+  difficultyLevel?: "EASY" | "MEDIUM" | "HARD";
   options: Array<{
     optionId: number;
     optionTextEn: string;
@@ -93,6 +97,7 @@ export function normalizeExamData(backendData: BackendExamData): ExamData {
       questionTextNl: q.questionTextNl,
       questionTextFr: q.questionTextFr,
       imageUrl: q.imageUrl,
+      difficultyLevel: q.difficultyLevel,
       options: (q.options ?? []).slice(0, 3).map((opt, optIndex) => ({
         id: opt.optionId,
         number: (optIndex + 1) as 1 | 2 | 3,
@@ -398,7 +403,7 @@ export default function ExamQuestionsPage() {
       if (decision.action === "submit") {
         submitExamRef.current?.();
       } else if (decision.action === "abandon") {
-        void abandonExam("/practice");
+        void abandonExam("/exam");
       } else {
         setCurrentQuestionIndex((prev) => prev + 1);
         setQuestionTimeLeft(QUESTION_TIME);
@@ -494,9 +499,8 @@ export default function ExamQuestionsPage() {
 
   const currentQuestion = examData.questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === examData.questions.length - 1;
-  const answeredCount = Object.keys(answers).length;
   const progressPercent = Math.round(
-    (answeredCount / examData.questions.length) * 100,
+    ((currentQuestionIndex + 1) / examData.questions.length) * 100,
   );
   const timerWidthPct = Math.round((questionTimeLeft / QUESTION_TIME) * 100);
   const questionProgressLabel = t("practice_exam.question_of")
@@ -518,37 +522,91 @@ export default function ExamQuestionsPage() {
   const questionImageUrl = currentQuestion.imageUrl
     ? (convertToPublicImageUrl(currentQuestion.imageUrl) ?? null)
     : null;
+  const difficultyLabel = currentQuestion.difficultyLevel
+    ? t(`practice_exam.difficulty_${currentQuestion.difficultyLevel.toLowerCase()}`)
+    : null;
 
   return (
     <FocusedExamShell
       dir={isRTL ? "rtl" : "ltr"}
-      showStatusCard={false}
+      title={t("nav.exam")}
+      counter={questionProgressLabel}
+      timerPill={
+        <span
+          className={cn(
+            "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-black tabular-nums",
+            timerToneClass,
+          )}
+        >
+          <Clock className="h-4 w-4" />
+          {questionTimeLeft}s
+        </span>
+      }
+      progressLabel={questionProgressLabel}
+      progressPercent={progressPercent}
+      timerProgressPercent={timerWidthPct}
+      timerProgressClassName={timerColor(questionTimeLeft)}
       afterCard={
-        <div className="flex justify-center pb-3 pt-1">
+        <>
+          <div
+            data-testid="exam-actions"
+            className="grid gap-2 pb-3 pt-1 sm:grid-cols-3"
+          >
           <Button
-            variant="outline"
-            className="min-h-11 rounded-full border-destructive/30 px-6 text-destructive hover:bg-destructive/5 hover:text-destructive"
+            variant="destructive"
+            size="lg"
+            className="order-3 w-full sm:order-1"
             onClick={() => {
-              pendingNavigation.current = "/practice";
+              pendingNavigation.current = "/exam";
               setShowExitDialog(true);
             }}
           >
             {t("practice_exam.end_exam")}
           </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="order-2 w-full"
+            asChild
+          >
+            <Link href="/contact">
+              <Flag className="h-4 w-4" />
+              {t("practice_exam.report_question")}
+            </Link>
+          </Button>
+          <Button
+            size="lg"
+            onClick={() => handleNextOrSubmit("manual")}
+            disabled={isSubmitting}
+            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
+          >
+            {isLastQuestion
+              ? t("practice_exam.submit_btn")
+              : t("practice_exam.next_btn")}
+            {!isLastQuestion &&
+              (isRTL ? (
+                <ArrowLeft className="h-4 w-4" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              ))}
+          </Button>
+          </div>
           <ExitConfirmDialog
             open={showExitDialog}
             onOpenChange={setShowExitDialog}
             onStay={handleExitStay}
             onLeave={handleExitLeave}
           />
-        </div>
+        </>
       }
     >
       <FocusedQuestionCard
         headerBadges={
-          <span className="inline-flex min-h-8 items-center rounded-full bg-primary/10 px-3 text-xs font-black text-primary">
-            {questionProgressLabel}
-          </span>
+          difficultyLabel ? (
+            <span className="inline-flex min-h-8 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-black text-primary">
+              {difficultyLabel}
+            </span>
+          ) : null
         }
         media={
           questionImageUrl ? (
@@ -556,7 +614,7 @@ export default function ExamQuestionsPage() {
               {failedImageUrl === questionImageUrl ? (
                 <div
                   role="status"
-                  className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl bg-muted/40 p-4 text-center text-sm text-muted-foreground"
+                  className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[8px] bg-muted/40 p-4 text-center text-sm text-muted-foreground"
                 >
                   <ImageOff className="h-6 w-6" />
                   <span>{t("practice.question_image_error")}</span>
@@ -581,39 +639,6 @@ export default function ExamQuestionsPage() {
             </ExamQuestionImageFrame>
           ) : null
         }
-        statusAfterMedia={
-          <div
-            data-testid="active-exam-status"
-            className="space-y-2 rounded-2xl border border-border/50 bg-muted/25 p-3"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-muted-foreground">
-                {answeredCount} {t("practice_exam.answered")}
-              </span>
-              <span
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-black tabular-nums",
-                  timerToneClass,
-                )}
-              >
-                <Clock className="h-4 w-4" />
-                {questionTimeLeft}s
-              </span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-500"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ease-linear ${timerColor(questionTimeLeft)}`}
-                style={{ width: `${timerWidthPct}%` }}
-              />
-            </div>
-          </div>
-        }
         title={questionText}
         options={currentQuestion.options.map((option) => ({
           key: option.id,
@@ -627,26 +652,6 @@ export default function ExamQuestionsPage() {
           selected: answers[currentQuestion.id] === option.number,
           onSelect: () => handleAnswerSelect(option.number),
         }))}
-        footer={
-          <div className="flex justify-end">
-              <Button
-                size="sm"
-                onClick={() => handleNextOrSubmit("manual")}
-                disabled={isSubmitting}
-                className="h-11 w-full gap-2 rounded-full px-6 font-semibold shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 sm:w-auto sm:min-w-[112px]"
-              >
-                {isLastQuestion
-                  ? t("practice_exam.submit_btn")
-                  : t("practice_exam.next_btn")}
-                {!isLastQuestion &&
-                  (isRTL ? (
-                    <ArrowLeft className="h-4 w-4" />
-                  ) : (
-                    <ArrowRight className="h-4 w-4" />
-                  ))}
-              </Button>
-          </div>
-        }
       />
     </FocusedExamShell>
   );

@@ -14,17 +14,23 @@ type AnswerTone = "correct" | "incorrect" | "neutral";
 
 const ANSWER_TONE_CLASSES: Record<AnswerTone, string> = {
   correct:
-    "border-green-200 bg-green-50/80 text-green-900 dark:border-green-900/60 dark:bg-green-950/30 dark:text-green-100",
+    "border-emerald-200 bg-emerald-50/85 dark:border-emerald-800 dark:bg-emerald-950/55",
   incorrect:
-    "border-red-200 bg-red-50/80 text-red-900 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-100",
+    "border-red-200 bg-red-50/85 dark:border-red-800 dark:bg-red-950/55",
   neutral:
-    "border-border/60 bg-background/85 text-foreground",
+    "border-primary/15 bg-primary/[0.045] dark:border-primary/25 dark:bg-primary/[0.10]",
 };
 
 const ANSWER_LABEL_CLASSES: Record<AnswerTone, string> = {
-  correct: "text-green-700 dark:text-green-300",
-  incorrect: "text-red-700 dark:text-red-300",
-  neutral: "text-muted-foreground",
+  correct: "text-emerald-800 dark:text-emerald-200",
+  incorrect: "text-red-800 dark:text-red-200",
+  neutral: "text-foreground",
+};
+
+const ANSWER_BODY_CLASSES: Record<AnswerTone, string> = {
+  correct: "text-emerald-950 dark:text-emerald-50",
+  incorrect: "text-red-950 dark:text-red-50",
+  neutral: "text-foreground",
 };
 
 export function ResultAnswerBlock({
@@ -36,7 +42,7 @@ export function ResultAnswerBlock({
 }: {
   label: string;
   tone: AnswerTone;
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   marker?: string;
 }) {
@@ -74,6 +80,7 @@ export function ResultAnswerBlock({
           </span>
         ) : null}
         <p
+          data-testid="result-answer-label"
           className={cn(
             "min-w-0 break-words text-[11px] font-bold uppercase tracking-[0.12em]",
             ANSWER_LABEL_CLASSES[tone],
@@ -82,9 +89,17 @@ export function ResultAnswerBlock({
           {label}
         </p>
       </div>
-      <div className="mt-1 min-w-0 break-words text-sm font-semibold leading-6">
-        {children}
-      </div>
+      {children ? (
+        <div
+          data-testid="result-answer-body"
+          className={cn(
+            "mt-1 min-w-0 break-words text-sm font-semibold leading-6",
+            ANSWER_BODY_CLASSES[tone],
+          )}
+        >
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }

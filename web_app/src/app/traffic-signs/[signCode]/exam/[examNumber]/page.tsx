@@ -38,6 +38,7 @@ import {
   XCircle,
   Lock,
   Shapes,
+  Flag,
 } from "lucide-react";
 import {
   getExamQuestions,
@@ -229,7 +230,8 @@ export default function ExamPage() {
   const questionProgressLabel = t("practice_exam.question_of")
     .replace("{n}", String(currentIdx + 1))
     .replace("{m}", String(total));
-  const questionProgressPercent = total > 0 ? (currentIdx / total) * 100 : 0;
+  const questionProgressPercent =
+    total > 0 ? ((currentIdx + 1) / total) * 100 : 0;
   const timerPillClass =
     timeLeft >= 7
       ? "border-green-200 bg-green-50 text-green-700"
@@ -664,23 +666,8 @@ export default function ExamPage() {
   return (
     <FocusedExamShell
       dir={isRTL ? "rtl" : "ltr"}
-      backControl={
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 rounded-full px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
-          asChild
-        >
-          <Link href={`/traffic-signs/${routeCode}`}>
-            {isRTL ? (
-              <ArrowRight className="me-2 h-4 w-4" />
-            ) : (
-              <ArrowLeft className="me-2 h-4 w-4" />
-            )}
-            {t("sign_quiz.exam.back_to_sign")}
-          </Link>
-        </Button>
-      }
+      title={t("nav.exam")}
+      counter={questionProgressLabel}
       timerPill={
         <div
           className={cn(
@@ -694,13 +681,66 @@ export default function ExamPage() {
       }
       progressLabel={questionProgressLabel}
       progressPercent={questionProgressPercent}
+      timerProgressPercent={Math.round((timeLeft / QUESTION_TIME) * 100)}
+      timerProgressClassName={timerColor(timeLeft)}
+      afterCard={
+        <div
+          data-testid="exam-actions"
+          className="grid gap-2 pb-3 pt-1 sm:grid-cols-3"
+        >
+          <Button
+            variant="outline"
+            size="lg"
+            className="order-3 w-full border-destructive/25 text-destructive hover:bg-destructive/5 hover:text-destructive sm:order-1"
+            asChild
+          >
+            <Link href={`/traffic-signs/${routeCode}`}>
+              {isRTL ? (
+                <ArrowRight className="h-4 w-4" />
+              ) : (
+                <ArrowLeft className="h-4 w-4" />
+              )}
+              {t("sign_quiz.exam.back_to_sign")}
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="order-2 w-full"
+            asChild
+          >
+            <Link href="/contact">
+              <Flag className="h-4 w-4" />
+              {t("practice_exam.report_question")}
+            </Link>
+          </Button>
+          <Button
+            size="lg"
+            onClick={
+              currentIdx < total - 1
+                ? () => setCurrentIdx((i) => i + 1)
+                : handleForceSubmit
+            }
+            disabled={submitting || !answers.has(current.id)}
+            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
+          >
+            {currentIdx + 1 === total
+              ? submitting
+                ? t("sign_quiz.exam.submitting")
+                : t("sign_quiz.exam.submit_exam")
+              : t("sign_quiz.practice.next_question")}
+            {currentIdx + 1 === total ? null : isRTL ? (
+              <ArrowLeft className="h-4 w-4" />
+            ) : (
+              <ArrowRight className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      }
     >
       <FocusedQuestionCard
         headerBadges={
           <>
-            <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
-              {currentIdx + 1}
-            </span>
             <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
               {sign.signCode}
             </span>
@@ -737,45 +777,6 @@ export default function ExamPage() {
           selected: answers.get(current.id) === choice.id,
           onSelect: () => handleSelect(current.id, choice.id),
         }))}
-        footer={
-          <>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-1000 ease-linear",
-                  timerColor(timeLeft),
-                )}
-                style={{
-                  width: `${Math.round((timeLeft / QUESTION_TIME) * 100)}%`,
-                }}
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <Button
-                size="sm"
-                onClick={
-                  currentIdx < total - 1
-                    ? () => setCurrentIdx((i) => i + 1)
-                    : handleForceSubmit
-                }
-                disabled={submitting || !answers.has(current.id)}
-                className="h-11 w-full gap-2 rounded-full px-5 font-semibold shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 sm:w-auto sm:min-w-[112px]"
-              >
-                {currentIdx + 1 === total
-                  ? submitting
-                    ? t("sign_quiz.exam.submitting")
-                    : t("sign_quiz.exam.submit_exam")
-                  : t("sign_quiz.practice.next_question")}
-                {currentIdx + 1 === total ? null : isRTL ? (
-                  <ArrowLeft className="h-4 w-4" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </>
-        }
       />
     </FocusedExamShell>
   );

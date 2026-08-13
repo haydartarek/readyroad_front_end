@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import AdminAddQuizQuestionPage from "@/app/admin/quizzes/new/page";
 import AdminEditQuizQuestionPage from "@/app/admin/quizzes/[id]/edit/page";
 import { apiClient } from "@/lib/api";
-import { isDifficultyCompatibleWithOptions } from "@/lib/admin-quiz-form";
+import { isValidQuizOptionCount } from "@/lib/admin-quiz-form";
 
 const mockPush = jest.fn();
 
@@ -149,11 +149,8 @@ describe("Admin theoretical question forms", () => {
     }
   });
 
-  test("enforces the option-count difficulty policy without mutation", () => {
-    expect(isDifficultyCompatibleWithOptions(2, "HARD")).toBe(true);
-    expect(isDifficultyCompatibleWithOptions(2, "EASY")).toBe(false);
-    expect(isDifficultyCompatibleWithOptions(3, "EASY")).toBe(true);
-    expect(isDifficultyCompatibleWithOptions(3, "MEDIUM")).toBe(true);
-    expect(isDifficultyCompatibleWithOptions(3, "HARD")).toBe(false);
+  test("accepts the two-to-three option policy independently of difficulty", () => {
+    expect(isValidQuizOptionCount(2)).toBe(true);
+    expect(isValidQuizOptionCount(3)).toBe(true);
   });
 });

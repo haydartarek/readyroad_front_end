@@ -66,6 +66,7 @@ jest.mock("@/lib/api", () => ({
 
 const question = {
   id: 7,
+  version: 3,
   categoryCode: "A",
   categoryNameEn: "Danger signs",
   difficultyLevel: "MEDIUM",
@@ -149,6 +150,7 @@ describe("Admin theoretical question editing", () => {
     await waitFor(() => expect(mockedPut).toHaveBeenCalledTimes(1));
     expect(mockedPut.mock.calls[0][1]).toEqual(
       expect.objectContaining({
+        version: 3,
         explanationAr: "شرح عربي",
         options: [
           expect.objectContaining({ id: 101, textEn: "Stop now", isCorrect: false }),
@@ -157,6 +159,25 @@ describe("Admin theoretical question editing", () => {
         ],
       }),
     );
+  });
+
+  it("shows a translated conflict instead of silently overwriting a newer edit", async () => {
+    mockedPut.mockRejectedValue({ response: { status: 409, data: {} } });
+    render(<AdminEditQuizQuestionPage />);
+    await screen.findAllByLabelText("admin.quizzes.form.option_text_en *");
+
+    fireEvent.click(screen.getByRole("button", { name: /admin.quizzes.form.add_option/ }));
+    const fillLast = (label: string, value: string) => {
+      const fields = screen.getAllByLabelText(label);
+      fireEvent.change(fields[fields.length - 1], { target: { value } });
+    };
+    fillLast("admin.quizzes.form.option_text_en *", "Wait");
+    fillLast("admin.quizzes.form.option_text_ar *", "انتظر");
+    fillLast("admin.quizzes.form.option_text_nl *", "Wacht");
+    fillLast("admin.quizzes.form.option_text_fr *", "Attendez");
+    fireEvent.click(screen.getByRole("button", { name: "admin.quizzes.form.update" }));
+
+    expect(await screen.findByText("admin.quizzes.form.edit_conflict")).toBeInTheDocument();
   });
 
   it("removes option C and removes the image reference without stale payload data", async () => {

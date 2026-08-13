@@ -18,7 +18,7 @@ import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { NATIVE_SELECT_CLASS } from "@/lib/native-select-styles";
 import { cn } from "@/lib/utils";
 import {
-  isDifficultyCompatibleWithOptions,
+  isValidQuizOptionCount,
   optionDisplayLabel,
   QUIZ_DIFFICULTIES,
 } from "@/lib/admin-quiz-form";
@@ -248,10 +248,7 @@ export default function AdminAddQuizQuestionPage() {
       form.questionFr.trim() !== "" &&
       form.options.length >= 2 &&
       form.options.length <= 3 &&
-      isDifficultyCompatibleWithOptions(
-        form.options.length,
-        form.difficultyLevel,
-      ) &&
+      isValidQuizOptionCount(form.options.length) &&
       form.options.filter((o) => o.isCorrect).length === 1 &&
       form.options.every(
         (o) =>
@@ -361,18 +358,6 @@ export default function AdminAddQuizQuestionPage() {
       errors.options =
         t("admin.quizzes.form.error_max_options") ||
         "Maximum 3 options allowed";
-    if (
-      form.options.length >= 2 &&
-      form.options.length <= 3 &&
-      !isDifficultyCompatibleWithOptions(
-        form.options.length,
-        form.difficultyLevel,
-      )
-    ) {
-      errors.difficultyLevel =
-        t("admin.quizzes.form.error_difficulty_options") ||
-        "Hard questions require 2 options; easy and medium questions require 3";
-    }
     const correctCount = form.options.filter((o) => o.isCorrect).length;
     if (correctCount === 0)
       errors.correct =

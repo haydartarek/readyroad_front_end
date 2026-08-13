@@ -1,5 +1,5 @@
 import {
-  isDifficultyCompatibleWithOptions,
+  isValidQuizOptionCount,
   QUIZ_DIFFICULTIES,
   optionDisplayLabel,
 } from "@/lib/admin-quiz-form";
@@ -9,12 +9,11 @@ describe("admin theoretical question form contract", () => {
     expect(QUIZ_DIFFICULTIES).toEqual(["EASY", "MEDIUM", "HARD"]);
   });
 
-  test("validates option count without mutating difficulty", () => {
-    expect(isDifficultyCompatibleWithOptions(2, "HARD")).toBe(true);
-    expect(isDifficultyCompatibleWithOptions(2, "EASY")).toBe(false);
-    expect(isDifficultyCompatibleWithOptions(3, "EASY")).toBe(true);
-    expect(isDifficultyCompatibleWithOptions(3, "MEDIUM")).toBe(true);
-    expect(isDifficultyCompatibleWithOptions(3, "HARD")).toBe(false);
+  test("allows every admin difficulty with two or three options", () => {
+    expect(isValidQuizOptionCount(2)).toBe(true);
+    expect(isValidQuizOptionCount(3)).toBe(true);
+    expect(isValidQuizOptionCount(1)).toBe(false);
+    expect(isValidQuizOptionCount(4)).toBe(false);
   });
 
   test("uses A, B and C as display labels only", () => {

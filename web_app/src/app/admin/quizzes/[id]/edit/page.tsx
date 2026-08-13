@@ -19,7 +19,7 @@ import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { NATIVE_SELECT_CLASS } from "@/lib/native-select-styles";
 import { cn } from "@/lib/utils";
 import {
-  isDifficultyCompatibleWithOptions,
+  isValidQuizOptionCount,
   optionDisplayLabel,
   QUIZ_DIFFICULTIES,
 } from "@/lib/admin-quiz-form";
@@ -49,6 +49,7 @@ interface OptionForm {
   displayOrder: number;
 }
 interface QuestionForm {
+  version: number;
   categoryCode: string;
   difficultyLevel: string;
   questionEn: string;
@@ -72,6 +73,7 @@ interface CategoryOption {
 }
 interface AdminQuizQuestionResponse {
   id: number;
+  version: number;
   categoryCode: string;
   categoryNameEn: string;
   difficultyLevel: string;
@@ -225,6 +227,7 @@ export default function AdminEditQuizQuestionPage() {
   const { t, language } = useLanguage();
 
   const [form, setForm] = useState<QuestionForm>({
+    version: 0,
     categoryCode: "",
     difficultyLevel: "EASY",
     questionEn: "",
@@ -269,6 +272,7 @@ export default function AdminEditQuizQuestionPage() {
         const options = Array.isArray(q.options) ? q.options : [];
         setIsReferenced(Boolean(q.isReferenced));
         setForm({
+          version: q.version,
           categoryCode: q.categoryCode || "",
           difficultyLevel: q.difficultyLevel || "EASY",
           questionEn: q.questionEn || "",
@@ -328,10 +332,7 @@ export default function AdminEditQuizQuestionPage() {
       form.questionFr.trim() !== "" &&
       form.options.length >= 2 &&
       form.options.length <= 3 &&
-      isDifficultyCompatibleWithOptions(
-        form.options.length,
-        form.difficultyLevel,
-      ) &&
+      isValidQuizOptionCount(form.options.length) &&
       form.options.filter((o) => o.isCorrect).length === 1 &&
       form.options.every(
         (o) =>
@@ -441,18 +442,6 @@ export default function AdminEditQuizQuestionPage() {
       errors.options =
         t("admin.quizzes.form.error_max_options") ||
         "Maximum 3 options allowed";
-    if (
-      form.options.length >= 2 &&
-      form.options.length <= 3 &&
-      !isDifficultyCompatibleWithOptions(
-        form.options.length,
-        form.difficultyLevel,
-      )
-    ) {
-      errors.difficultyLevel =
-        t("admin.quizzes.form.error_difficulty_options") ||
-        "Hard questions require 2 options; easy and medium questions require 3";
-    }
     const correctCount = form.options.filter((o) => o.isCorrect).length;
     if (correctCount === 0)
       errors.correct =
@@ -570,6 +559,7 @@ export default function AdminEditQuizQuestionPage() {
       await apiClient.put(
         API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.UPDATE(questionId),
         {
+          version: form.version,
           categoryCode: form.categoryCode.trim(),
           difficultyLevel: form.difficultyLevel,
           questionEn: form.questionEn.trim(),
@@ -615,13 +605,14 @@ export default function AdminEditQuizQuestionPage() {
           axiosErr?.response?.data?.error ||
           axiosErr?.response?.data?.message ||
           axiosErr?.message;
-        setErrorMsg(
-          String(
-            msg ||
-              t("admin.quizzes.form.update_error") ||
-              "Failed to update question",
-          ),
-        );
+        setErrorMsg(String(
+          axiosErr?.response?.status === 409
+            ? t("admin.quizzes.form.edit_conflict") ||
+                "This question changed in another session. Reload it before saving."
+            : msg ||
+                t("admin.quizzes.form.update_error") ||
+                "Failed to update question",
+        ));
       }
     } finally {
       setSubmitting(false);

@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const SIZE_CLASSES = {
-  sign: "h-36 w-36 sm:h-44 sm:w-44 md:h-48 md:w-48",
-  wide: "h-44 w-full max-w-[520px] sm:h-52 md:h-60",
-  theory: "aspect-video w-full max-w-[640px]",
+  sign: "aspect-video w-full max-w-[560px]",
+  wide: "aspect-video w-full max-w-[640px]",
+  theory: "aspect-video w-full max-w-[760px]",
   review: "h-28 w-28 sm:h-36 sm:w-36",
 } as const;
 

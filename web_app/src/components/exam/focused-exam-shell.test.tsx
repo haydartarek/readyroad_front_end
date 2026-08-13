@@ -3,16 +3,13 @@ import { render, screen, within } from "@testing-library/react";
 import { FocusedExamShell } from "./focused-exam-shell";
 
 describe("FocusedExamShell", () => {
-  it("renders the localized header and keeps timing below the main card", () => {
+  it("renders one compact information bar below the question card", () => {
     render(
       <FocusedExamShell
-        title="Theory Exam Simulator"
-        counter="Question 2 of 50"
-        backControl={<button type="button">Back</button>}
+        counter="2 / 50"
+        difficultyLabel="Easy"
         timerPill={<span>15s</span>}
-        progressLabel="Question 2 of 50"
         progressPercent={4}
-        timerProgressPercent={80}
       >
         <p>Question content</p>
       </FocusedExamShell>,
@@ -22,33 +19,35 @@ describe("FocusedExamShell", () => {
     const timerSlot = within(statusCard).getByTestId("exam-timer-slot");
     const mainCard = screen.getByTestId("exam-main-card");
 
-    expect(screen.getByTestId("exam-shell-header")).toHaveTextContent(
-      "Theory Exam Simulator",
-    );
+    expect(screen.queryByTestId("exam-shell-header")).not.toBeInTheDocument();
     expect(timerSlot).toHaveTextContent("15s");
-    expect(within(statusCard).getByText("Question 2 of 50")).toBeVisible();
+    expect(within(statusCard).getByText("2 / 50")).toBeVisible();
+    expect(within(statusCard).getByText("Easy")).toBeVisible();
+    expect(within(statusCard).getByText("4%")).toBeVisible();
     expect(screen.getAllByText("15s")).toHaveLength(1);
     expect(mainCard.compareDocumentPosition(statusCard)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
-    expect(screen.getByTestId("exam-timer-progress")).toHaveStyle({
-      width: "80%",
+    expect(screen.getByTestId("exam-question-progress")).toHaveStyle({
+      width: "4%",
     });
   });
 
-  it("supports question-owned status and a separate end action", () => {
+  it("removes the timer column for untimed practice", () => {
     render(
       <FocusedExamShell
-        title="Theory Exam Simulator"
-        counter="Question 1 of 50"
-        showStatusCard={false}
+        counter="1 / 10"
+        difficultyLabel="Medium"
+        progressPercent={10}
         afterCard={<button type="button">End exam</button>}
       >
         <p>Question content</p>
       </FocusedExamShell>,
     );
 
-    expect(screen.queryByTestId("exam-status-card")).not.toBeInTheDocument();
+    expect(screen.getByTestId("exam-status-card")).toBeVisible();
+    expect(screen.queryByTestId("exam-timer-slot")).not.toBeInTheDocument();
+    expect(screen.getByText("1 / 10")).toBeVisible();
     expect(screen.getByText("Question content")).toBeVisible();
     expect(screen.getByRole("button", { name: "End exam" })).toBeVisible();
   });

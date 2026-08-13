@@ -4,25 +4,21 @@ import { seedCookieConsent } from "./helpers/consent";
 const locales = {
   en: {
     prefix: "",
-    title: "Theory Exam Simulator",
     difficulty: "Easy",
     start: "Start Exam",
   },
   ar: {
     prefix: "/ar",
-    title: "محاكي الامتحان النظري",
     difficulty: "سهل",
     start: "بدء الامتحان",
   },
   nl: {
     prefix: "/nl",
-    title: "Theorie-examensimulator",
     difficulty: "Makkelijk",
     start: "Examen starten",
   },
   fr: {
     prefix: "/fr",
-    title: "Simulateur d’examen théorique",
     difficulty: "Facile",
     start: "Commencer l'examen",
   },
@@ -132,8 +128,9 @@ async function prepare(page: Page) {
 }
 
 async function expectUnifiedLayout(page: Page, width: number) {
-  await expect(page.getByTestId("exam-shell-header")).toBeVisible();
+  await expect(page.getByTestId("exam-shell-header")).toHaveCount(0);
   await expect(page.getByTestId("exam-status-card")).toBeVisible();
+  await expect(page.getByTestId("exam-information-bar")).toBeVisible();
   await expect(page.getByTestId("exam-actions")).toBeVisible();
   await expect(
     page.getByTestId("exam-actions").locator(":scope > a, :scope > button"),
@@ -179,6 +176,19 @@ async function expectUnifiedLayout(page: Page, width: number) {
   );
 }
 
+async function expectSingleVisibleText(page: Page, text: string) {
+  const matches = page.getByText(text, { exact: true });
+  await expect
+    .poll(async () => {
+      let visible = 0;
+      for (let index = 0; index < (await matches.count()); index += 1) {
+        if (await matches.nth(index).isVisible()) visible += 1;
+      }
+      return visible;
+    })
+    .toBe(1);
+}
+
 for (const [locale, labels] of Object.entries(locales)) {
   test(`${locale} traffic-sign and random exams share the responsive shell`, async ({
     page,
@@ -187,24 +197,30 @@ for (const [locale, labels] of Object.entries(locales)) {
     await prepare(page);
 
     for (const viewport of [
+      { width: 320, height: 800 },
+      { width: 360, height: 800 },
+      { width: 375, height: 812 },
       { width: 390, height: 844 },
+      { width: 393, height: 852 },
+      { width: 414, height: 896 },
+      { width: 430, height: 932 },
+      { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
+      { width: 1280, height: 800 },
       { width: 1366, height: 768 },
+      { width: 1440, height: 900 },
+      { width: 1536, height: 864 },
+      { width: 1920, height: 1080 },
     ]) {
       await page.setViewportSize(viewport);
 
       await page.goto(`${labels.prefix}/traffic-signs/A1b/exam/1`);
-      await expect(page.getByTestId("exam-shell-header")).toContainText(
-        labels.title,
-      );
-      await expect(page.getByText(labels.difficulty, { exact: true })).toBeVisible();
+      await expectSingleVisibleText(page, labels.difficulty);
       await expectUnifiedLayout(page, viewport.width);
 
       await page.goto(`${labels.prefix}/practice/random`);
       await page.getByRole("button", { name: labels.start }).click();
-      await expect(page.getByTestId("exam-shell-header")).toContainText(
-        labels.title,
-      );
-      await expect(page.getByText(labels.difficulty, { exact: true })).toBeVisible();
+      await expectSingleVisibleText(page, labels.difficulty);
       await expectUnifiedLayout(page, viewport.width);
     }
   });

@@ -79,12 +79,6 @@ const DIFF_COLORS: Record<string, string> = {
 
 const QUESTION_TIME = 10; // seconds per question
 
-function timerColor(secondsLeft: number): string {
-  if (secondsLeft >= 7) return "bg-green-500";
-  if (secondsLeft >= 4) return "bg-orange-400";
-  return "bg-red-500";
-}
-
 // ─── Page ───────────────────────────────────────────────
 
 export default function ExamPage() {
@@ -227,17 +221,15 @@ export default function ExamPage() {
 
   const questionText = current ? qText(current, lang) : "";
   const questionImageUrl = sign ? resolveTrafficSignImage(sign) : null;
-  const questionProgressLabel = t("practice_exam.question_of")
-    .replace("{n}", String(currentIdx + 1))
-    .replace("{m}", String(total));
+  const questionCounter = `${currentIdx + 1} / ${total}`;
   const questionProgressPercent =
     total > 0 ? ((currentIdx + 1) / total) * 100 : 0;
   const timerPillClass =
     timeLeft >= 7
-      ? "border-green-200 bg-green-50 text-green-700"
+      ? "text-green-700"
       : timeLeft >= 4
-        ? "border-orange-200 bg-orange-50 text-orange-600"
-        : "border-red-200 bg-red-50 text-red-600 animate-pulse";
+        ? "text-orange-600"
+        : "text-red-600 animate-pulse";
 
   // ── Loading ──
   if (loading) {
@@ -666,12 +658,13 @@ export default function ExamPage() {
   return (
     <FocusedExamShell
       dir={isRTL ? "rtl" : "ltr"}
-      title={t("nav.exam")}
-      counter={questionProgressLabel}
+      counter={questionCounter}
+      difficultyLabel={t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
+      difficultyClassName={DIFF_COLORS[current.difficulty]}
       timerPill={
         <div
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold tabular-nums transition-colors",
+            "inline-flex items-center gap-1.5 text-sm font-bold tabular-nums transition-colors",
             timerPillClass,
           )}
         >
@@ -679,14 +672,11 @@ export default function ExamPage() {
           {timeLeft}s
         </div>
       }
-      progressLabel={questionProgressLabel}
       progressPercent={questionProgressPercent}
-      timerProgressPercent={Math.round((timeLeft / QUESTION_TIME) * 100)}
-      timerProgressClassName={timerColor(timeLeft)}
       afterCard={
         <div
           data-testid="exam-actions"
-          className="grid gap-2 pb-3 pt-1 sm:grid-cols-3"
+          className="grid grid-cols-2 gap-2 pb-3 pt-1 sm:grid-cols-3"
         >
           <Button
             variant="outline"
@@ -722,7 +712,7 @@ export default function ExamPage() {
                 : handleForceSubmit
             }
             disabled={submitting || !answers.has(current.id)}
-            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
+            className="order-1 col-span-2 w-full shadow-md shadow-primary/20 sm:order-3 sm:col-span-1"
           >
             {currentIdx + 1 === total
               ? submitting
@@ -747,17 +737,17 @@ export default function ExamPage() {
             <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
               {t("sign_quiz.exam.title").replace("{n}", String(examNum))}
             </span>
-            <span
-              className={cn(
-                "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold",
-                current.difficulty === "EASY" && "bg-green-500 text-white",
-                current.difficulty === "MEDIUM" && "bg-orange-500 text-white",
-                current.difficulty === "HARD" && "bg-red-500 text-white",
-              )}
-            >
-              {t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
-            </span>
           </>
+        }
+        difficultyBadge={
+          <span
+            className={cn(
+              "inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-bold",
+              DIFF_COLORS[current.difficulty],
+            )}
+          >
+            {t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
+          </span>
         }
         media={
           questionImageUrl ? (

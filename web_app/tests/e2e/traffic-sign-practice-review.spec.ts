@@ -257,3 +257,88 @@ test("practice keeps immediate localized feedback without an exam timer", async 
     await expect(feedback).toContainText(explanation);
   }
 });
+
+test("practice uses the shared responsive question flow without reserving timer space", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await prepareActivePractice(page);
+
+  const paths = [
+    "/traffic-signs/A1b/practice",
+    "/nl/traffic-signs/A1b/practice",
+    "/fr/traffic-signs/A1b/practice",
+    "/ar/traffic-signs/A1b/practice",
+  ];
+  const viewports = [
+    { width: 320, height: 800 },
+    { width: 360, height: 800 },
+    { width: 375, height: 812 },
+    { width: 390, height: 844 },
+    { width: 393, height: 852 },
+    { width: 414, height: 896 },
+    { width: 430, height: 932 },
+    { width: 768, height: 1024 },
+    { width: 1024, height: 768 },
+    { width: 1280, height: 800 },
+    { width: 1366, height: 768 },
+    { width: 1440, height: 900 },
+    { width: 1536, height: 864 },
+    { width: 1920, height: 1080 },
+  ];
+
+  for (const path of paths) {
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.goto(path);
+
+      await expect(page.getByTestId("exam-shell-header")).toHaveCount(0);
+      await expect(page.getByTestId("exam-timer-slot")).toHaveCount(0);
+      await expect(page.getByTestId("exam-question-title")).toBeVisible();
+      await expect(page.getByTestId("exam-status-card")).toBeVisible();
+      await expect(page.getByTestId("exam-actions")).toBeVisible();
+
+      const measurements = await page.evaluate(() => {
+        const image = document.querySelector<HTMLElement>(
+          '[data-testid="exam-question-image"]',
+        );
+        const content = document.querySelector<HTMLElement>(
+          '[data-testid="exam-question-content"]',
+        );
+        const options = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            '[data-testid="exam-option-card"]',
+          ),
+        );
+        if (!image || !content) return null;
+        const imageRect = image.getBoundingClientRect();
+        const contentRect = content.getBoundingClientRect();
+        return {
+          documentWidth: document.documentElement.scrollWidth,
+          bodyWidth: document.body.scrollWidth,
+          imageInside:
+            imageRect.left >= -1 && imageRect.right <= window.innerWidth + 1,
+          optionsInside: options.every((option) => {
+            const rect = option.getBoundingClientRect();
+            return rect.left >= -1 && rect.right <= window.innerWidth + 1;
+          }),
+          sideBySide:
+            imageRect.right <= contentRect.left + 1 ||
+            contentRect.right <= imageRect.left + 1,
+          stacked: contentRect.top >= imageRect.bottom - 1,
+        };
+      });
+
+      expect(measurements, `${path} at ${viewport.width}px`).not.toBeNull();
+      expect(measurements?.documentWidth).toBeLessThanOrEqual(viewport.width);
+      expect(measurements?.bodyWidth).toBeLessThanOrEqual(viewport.width);
+      expect(measurements?.imageInside).toBe(true);
+      expect(measurements?.optionsInside).toBe(true);
+      expect(
+        viewport.width >= 1024
+          ? measurements?.sideBySide
+          : measurements?.stacked,
+      ).toBe(true);
+    }
+  }
+});

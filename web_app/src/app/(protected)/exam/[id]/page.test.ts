@@ -40,9 +40,10 @@ describe("persistent exam question images", () => {
 });
 
 describe("theoretical exam attempt progression", () => {
-  it("uses the localized exam title and returns abandoned attempts to exams", () => {
+  it("omits the old exam title block and returns abandoned attempts to exams", () => {
     const source = fs.readFileSync(path.join(__dirname, "page.tsx"), "utf8");
-    expect(source).toContain('title={t("nav.exam")}');
+    expect(source).not.toContain('title={t("nav.exam")}');
+    expect(source).toContain("counter={questionCounter}");
     expect(source).not.toContain('abandonExam("/practice")');
     expect(source).toContain('pendingNavigation.current = "/exam"');
   });

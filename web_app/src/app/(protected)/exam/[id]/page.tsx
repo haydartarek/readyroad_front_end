@@ -110,13 +110,6 @@ export function normalizeExamData(backendData: BackendExamData): ExamData {
   };
 }
 
-/** Returns Tailwind color classes based on seconds remaining */
-function timerColor(secondsLeft: number): string {
-  if (secondsLeft >= 10) return "bg-green-500";
-  if (secondsLeft >= 5) return "bg-orange-400";
-  return "bg-red-500";
-}
-
 function localizeText(
   language: string,
   en?: string,
@@ -502,16 +495,13 @@ export default function ExamQuestionsPage() {
   const progressPercent = Math.round(
     ((currentQuestionIndex + 1) / examData.questions.length) * 100,
   );
-  const timerWidthPct = Math.round((questionTimeLeft / QUESTION_TIME) * 100);
-  const questionProgressLabel = t("practice_exam.question_of")
-    .replace("{n}", String(currentQuestionIndex + 1))
-    .replace("{m}", String(examData.questions.length));
+  const questionCounter = `${currentQuestionIndex + 1} / ${examData.questions.length}`;
   const timerToneClass =
     questionTimeLeft >= 10
-      ? "border-green-200 bg-green-50 text-green-700"
+      ? "text-green-700"
       : questionTimeLeft >= 5
-        ? "border-orange-200 bg-orange-50 text-orange-600"
-        : "border-red-200 bg-red-50 text-red-600 animate-pulse";
+        ? "text-orange-600"
+        : "text-red-600 animate-pulse";
   const questionText = localizeText(
     language,
     currentQuestion.questionTextEn,
@@ -529,12 +519,13 @@ export default function ExamQuestionsPage() {
   return (
     <FocusedExamShell
       dir={isRTL ? "rtl" : "ltr"}
-      title={t("nav.exam")}
-      counter={questionProgressLabel}
+      counter={questionCounter}
+      difficultyLabel={difficultyLabel ?? undefined}
+      difficultyClassName="bg-primary/10 text-primary"
       timerPill={
         <span
           className={cn(
-            "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-black tabular-nums",
+            "inline-flex items-center gap-1.5 text-sm font-black tabular-nums",
             timerToneClass,
           )}
         >
@@ -542,15 +533,12 @@ export default function ExamQuestionsPage() {
           {questionTimeLeft}s
         </span>
       }
-      progressLabel={questionProgressLabel}
       progressPercent={progressPercent}
-      timerProgressPercent={timerWidthPct}
-      timerProgressClassName={timerColor(questionTimeLeft)}
       afterCard={
         <>
           <div
             data-testid="exam-actions"
-            className="grid gap-2 pb-3 pt-1 sm:grid-cols-3"
+            className="grid grid-cols-2 gap-2 pb-3 pt-1 sm:grid-cols-3"
           >
           <Button
             variant="destructive"
@@ -578,7 +566,7 @@ export default function ExamQuestionsPage() {
             size="lg"
             onClick={() => handleNextOrSubmit("manual")}
             disabled={isSubmitting}
-            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
+            className="order-1 col-span-2 w-full shadow-md shadow-primary/20 sm:order-3 sm:col-span-1"
           >
             {isLastQuestion
               ? t("practice_exam.submit_btn")
@@ -601,7 +589,7 @@ export default function ExamQuestionsPage() {
       }
     >
       <FocusedQuestionCard
-        headerBadges={
+        difficultyBadge={
           difficultyLabel ? (
             <span className="inline-flex min-h-8 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-black text-primary">
               {difficultyLabel}

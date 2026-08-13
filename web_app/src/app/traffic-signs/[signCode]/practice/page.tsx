@@ -12,6 +12,7 @@ import {
   BookOpen,
   ChartNoAxesColumn,
   CheckCircle2,
+  Flag,
   RotateCcw,
   Shapes,
   Target,
@@ -20,11 +21,10 @@ import {
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { SignImage } from "@/components/traffic-signs/sign-image";
-import {
-  ExamOptionCard,
-  getExamOptionLabel,
-} from "@/components/exam/exam-option-card";
+import { getExamOptionLabel } from "@/components/exam/exam-option-card";
 import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
+import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
+import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
 import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
 import { ResultAnswerBlock } from "@/components/results/result-review";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -890,216 +890,164 @@ export default function TrafficSignPracticePage() {
     );
   }
 
+  const difficultyLabel = currentQuestion
+    ? t(`sign_quiz.${currentQuestion.difficulty.toLowerCase()}`)
+    : undefined;
+
   return (
-    <div
+    <FocusedExamShell
       dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+      counter={`${displayQuestionNumber} / ${session.totalQuestions}`}
+      difficultyLabel={difficultyLabel}
+      difficultyClassName={
+        currentQuestion
+          ? DIFFICULTY_STYLES[currentQuestion.difficulty]
+          : undefined
+      }
+      progressPercent={progressPercentage}
+      afterCard={
+        <div
+          ref={actionRef}
+          data-testid="exam-actions"
+          className="grid grid-cols-2 gap-2 pb-3 pt-1 sm:grid-cols-3"
+        >
+          {!answerState ? (
+            <Button
+              data-testid="submit-practice-answer"
+              size="lg"
+              className="order-1 col-span-2 w-full shadow-md shadow-primary/20 sm:order-3 sm:col-span-1"
+              disabled={selectedChoice === null || submitting}
+              onClick={handleSubmit}
+            >
+              {submitting
+                ? t("practice.submitting")
+                : t("sign_quiz.practice.select_answer")}
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="order-1 col-span-2 w-full shadow-md shadow-primary/20 sm:order-3 sm:col-span-1"
+              onClick={handleNext}
+            >
+              {currentIndex + 1 < questions.length
+                ? t("sign_quiz.practice.next_question")
+                : t("sign_quiz.practice.session_complete")}
+              {isRTL ? (
+                <ArrowLeft className="h-4 w-4" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+          <Button variant="outline" size="lg" className="order-2 w-full" asChild>
+            <Link href="/contact">
+              <Flag className="h-4 w-4" />
+              {t("practice_exam.report_question")}
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="order-3 w-full border-destructive/25 text-destructive hover:bg-destructive/5 hover:text-destructive sm:order-1"
+            onClick={() => setShowExitDialog(true)}
+          >
+            {isRTL ? (
+              <ArrowRight className="h-4 w-4" />
+            ) : (
+              <ArrowLeft className="h-4 w-4" />
+            )}
+            {t("sign_quiz.practice.back_to_sign")}
+          </Button>
+        </div>
+      }
     >
-      <div className="container mx-auto max-w-7xl px-3 py-2 md:px-4 md:py-3 space-y-2">
-        <Breadcrumb items={breadcrumbItems} />
-
-        <PageHeroSurface contentClassName="p-3 md:p-3.5">
-          <div className="grid gap-3 md:grid-cols-[180px_minmax(0,1fr)] lg:grid-cols-[200px_minmax(0,1fr)] md:items-start">
-            <div className="space-y-1.5">
-              <div className="rounded-xl border border-border/60 bg-background/85 p-2 shadow-sm">
-                <div className="relative mx-auto aspect-square w-full max-w-[144px] md:max-w-[168px]">
-                  <SignImage
-                    src={resolveTrafficSignImage(sign)}
-                    alt={signName}
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                className="h-9 w-full rounded-lg px-2.5 text-[11px] font-semibold"
-                onClick={() => setShowExitDialog(true)}
+      {currentQuestion ? (
+        <FocusedQuestionCard
+          headerBadges={
+            <>
+              <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${style.chip}`}
               >
-                {isRTL ? (
-                  <ArrowRight className="mr-1.5 h-3.5 w-3.5" />
-                ) : (
-                  <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                {t("sign_quiz.practice.back_to_sign")}
-              </Button>
-            </div>
+                {info.title[currentLanguage]}
+              </span>
+              <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary">
+                {t("sign_quiz.practice_mode")}
+              </span>
+            </>
+          }
+          difficultyBadge={
+            difficultyLabel ? (
+              <span
+                className={`inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-bold ${DIFFICULTY_STYLES[currentQuestion.difficulty] || "border-border bg-muted text-foreground"}`}
+              >
+                {difficultyLabel}
+              </span>
+            ) : null
+          }
+          media={
+            <ExamQuestionImageFrame>
+              <SignImage
+                src={resolveTrafficSignImage(sign)}
+                alt={signName}
+                className="object-contain"
+              />
+            </ExamQuestionImageFrame>
+          }
+          title={getQuestionText(currentQuestion, currentLanguage)}
+          options={currentQuestion.choices.map((choice) => {
+            const isSelected = selectedChoice === choice.id;
+            const isCorrect = answerState?.response.correctChoiceId === choice.id;
+            const isWrong =
+              !!answerState && isSelected && !answerState.response.isCorrect;
 
-            <div className="space-y-2.5">
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span
-                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${style.chip}`}
-                  >
-                    {info.title[currentLanguage]}
-                  </span>
-                  <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                    {t("sign_quiz.practice_mode")}
-                  </span>
-                </div>
-
-                <div className="space-y-1">
-                  <h1 className="text-[1.22rem] font-black leading-tight tracking-tight text-foreground md:text-[1.4rem]">
-                    {signName}
-                  </h1>
-                  <p className="text-[11px] leading-4.5 text-muted-foreground">
-                    {t("sign_quiz.practice.question_of")
-                      .replace("{n}", String(displayQuestionNumber))
-                      .replace("{m}", String(session.totalQuestions))}
+            return {
+              key: choice.id,
+              text: getChoiceText(choice, currentLanguage),
+              disabled: !!answerState,
+              state: !answerState
+                ? isSelected
+                  ? "selected"
+                  : "idle"
+                : isCorrect
+                  ? "correct"
+                  : isWrong
+                    ? "incorrect"
+                    : "neutral",
+              selected: isSelected,
+              onSelect: () => {
+                setSelectedChoice(choice.id);
+                setSubmissionError(null);
+              },
+            };
+          })}
+          feedback={
+            <>
+              {submissionError && !answerState ? (
+                <div className="rounded-[1rem] border border-red-200 bg-red-50 px-3.5 py-3">
+                  <p className="text-sm font-medium text-red-700">
+                    {submissionError}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t("practice.submission_error_hint")}
                   </p>
                 </div>
-              </div>
-
-              <div className="grid gap-0.5 md:grid-cols-3">
-                <PageMetricCard
-                  icon={<Shapes className="h-3 w-3" />}
-                  label={t("sign_quiz.practice.group_label")}
-                  value={info.title[currentLanguage]}
-                  hint={sign.signCode}
-                  size="sm"
-                />
-                <PageMetricCard
-                  icon={<BookOpen className="h-3 w-3" />}
-                  label={t("sign_practice.metric_questions")}
-                  value={`${displayQuestionNumber}/${session.totalQuestions}`}
-                  hint={`${answeredCount}/${session.totalQuestions}`}
-                  size="sm"
-                />
-                <PageMetricCard
-                  icon={<CheckCircle2 className="h-3 w-3" />}
-                  label={t("sign_quiz.practice.progress_label")}
-                  value={`${Math.round(progressPercentage)}%`}
-                  hint={t("sign_quiz.practice.question_of")
-                    .replace("{n}", String(displayQuestionNumber))
-                    .replace("{m}", String(session.totalQuestions))}
-                  tone={progressPercentage >= 80 ? "success" : "primary"}
-                  size="sm"
-                />
-              </div>
-            </div>
-          </div>
-        </PageHeroSurface>
-
-        {currentQuestion && (
-          <PageSectionSurface
-            className="xl:min-h-[calc(100vh-20rem)]"
-            contentClassName="flex flex-col gap-4"
-          >
-            <div className="space-y-2 text-center">
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <Badge
-                  className={`border ${DIFFICULTY_STYLES[currentQuestion.difficulty] || "border-border bg-muted text-foreground"}`}
+              ) : null}
+              {answerState ? (
+                <ResultAnswerBlock
+                  label={
+                    answerState.response.isCorrect
+                      ? t("practice.answer_correct")
+                      : t("practice.answer_incorrect")
+                  }
+                  tone={answerState.response.isCorrect ? "correct" : "incorrect"}
                 >
-                  {t(`sign_quiz.${currentQuestion.difficulty.toLowerCase()}`)}
-                </Badge>
-                <span className="text-xs font-semibold text-muted-foreground">
-                  {t("sign_quiz.practice.question_of")
-                    .replace("{n}", String(displayQuestionNumber))
-                    .replace("{m}", String(session.totalQuestions))}
-                </span>
-              </div>
-              <h2
-                data-testid="exam-question-title"
-                className="mx-auto max-w-3xl break-words text-center text-lg font-black leading-8 text-foreground sm:text-xl md:text-[1.35rem]"
-              >
-                {getQuestionText(currentQuestion, currentLanguage)}
-              </h2>
-            </div>
-
-            <div className="space-y-2.5">
-              {currentQuestion.choices.map((choice, index) => {
-                const isSelected = selectedChoice === choice.id;
-                const isCorrect =
-                  answerState?.response.correctChoiceId === choice.id;
-                const isWrong =
-                  !!answerState &&
-                  isSelected &&
-                  !answerState.response.isCorrect;
-
-                return (
-                  <ExamOptionCard
-                    key={choice.id}
-                    index={index}
-                    text={getChoiceText(choice, currentLanguage)}
-                    disabled={!!answerState}
-                    state={
-                      !answerState
-                        ? isSelected
-                          ? "selected"
-                          : "idle"
-                        : isCorrect
-                          ? "correct"
-                          : isWrong
-                            ? "incorrect"
-                            : "neutral"
-                    }
-                    onSelect={() => {
-                      setSelectedChoice(choice.id);
-                      setSubmissionError(null);
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            {submissionError && !answerState && (
-              <div className="rounded-[1rem] border border-red-200 bg-red-50 px-3.5 py-3">
-                <p className="text-sm font-medium text-red-700">
-                  {submissionError}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t("practice.submission_error_hint")}
-                </p>
-              </div>
-            )}
-
-            {answerState && (
-              <ResultAnswerBlock
-                label={
-                  answerState.response.isCorrect
-                    ? t("practice.answer_correct")
-                    : t("practice.answer_incorrect")
-                }
-                tone={answerState.response.isCorrect ? "correct" : "incorrect"}
-              >
-                {getExplanation(answerState.response, currentLanguage) || null}
-              </ResultAnswerBlock>
-            )}
-
-            <div
-              ref={actionRef}
-              className="sticky bottom-1 z-10 mt-auto -mx-2 bg-gradient-to-t from-card via-card to-transparent px-2 pt-2.5"
-            >
-              {!answerState ? (
-                <Button
-                  data-testid="submit-practice-answer"
-                  className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
-                  disabled={selectedChoice === null || submitting}
-                  onClick={handleSubmit}
-                >
-                  {submitting
-                    ? t("practice.submitting")
-                    : t("sign_quiz.practice.select_answer")}
-                </Button>
-              ) : (
-                <Button
-                  className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm"
-                  onClick={handleNext}
-                >
-                  {currentIndex + 1 < questions.length
-                    ? t("sign_quiz.practice.next_question")
-                    : t("sign_quiz.practice.session_complete")}
-                  {isRTL ? (
-                    <ArrowLeft className="ml-2 h-4 w-4" />
-                  ) : (
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  )}
-                </Button>
-              )}
-            </div>
-          </PageSectionSurface>
-        )}
-      </div>
+                  {getExplanation(answerState.response, currentLanguage) || null}
+                </ResultAnswerBlock>
+              ) : null}
+            </>
+          }
+        />
+      ) : null}
       <ExitConfirmDialog
         open={showExitDialog}
         onOpenChange={setShowExitDialog}
@@ -1107,6 +1055,6 @@ export default function TrafficSignPracticePage() {
         onLeave={() => void handleAbandon()}
         context="practice"
       />
-    </div>
+    </FocusedExamShell>
   );
 }

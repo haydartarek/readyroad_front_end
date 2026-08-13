@@ -1409,10 +1409,10 @@ test.describe("ReadyRoad mobile visual identity", () => {
     await expect(page.getByTestId("exam-question-title")).toHaveText(
       "السؤال 1",
     );
-    await expect(page.getByTestId("exam-shell-header")).toContainText(
-      "محاكي الامتحان النظري",
+    await expect(page.getByTestId("exam-shell-header")).toHaveCount(0);
+    await expect(page.getByTestId("exam-mobile-difficulty")).toHaveText(
+      "متوسط",
     );
-    await expect(page.getByText("متوسط", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: /إنهاء الامتحان/ }).click();
     await expect(page.getByRole("dialog")).toContainText(
@@ -1477,8 +1477,14 @@ test.describe("ReadyRoad mobile visual identity", () => {
 
     const viewports = [
       { width: 320, height: 800 },
+      { width: 360, height: 800 },
+      { width: 375, height: 812 },
       { width: 390, height: 844 },
+      { width: 393, height: 852 },
+      { width: 414, height: 896 },
+      { width: 430, height: 932 },
       { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
       { width: 1280, height: 800 },
       { width: 1366, height: 768 },
       { width: 1440, height: 900 },
@@ -1492,7 +1498,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
         await page.setViewportSize(viewport);
         await navigate(page, localizedPath("/exam/42", locale));
         await expect(page.getByTestId("exam-question-title")).toBeVisible();
-        await expect(page.getByTestId("exam-shell-header")).toBeVisible();
+        await expect(page.getByTestId("exam-shell-header")).toHaveCount(0);
         await expect(page.getByTestId("exam-actions")).toBeVisible();
 
         const measurements = await page.evaluate(() => {
@@ -1535,7 +1541,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
         expect(measurements?.bodyWidth).toBeLessThanOrEqual(width);
         expect(measurements?.statusAfterCard).toBe(true);
         expect(measurements?.imageInsideViewport).toBe(true);
-        expect(measurements?.imageWidth).toBeLessThanOrEqual(640);
+        expect(measurements?.imageWidth).toBeLessThanOrEqual(760);
         expect(measurements?.imageRadius).toBeLessThanOrEqual(8);
         if (width >= 1024) {
           expect(measurements?.sideBySide).toBe(true);

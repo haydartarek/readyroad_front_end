@@ -618,33 +618,31 @@ export default function RandomPracticePage() {
     const question = questions[currentIndex];
     const progressPct =
       questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
-    const timerPct = (timeLeft / SECONDS_PER_QUESTION) * 100;
     const timerPillClass =
       timeLeft <= 5
-        ? "bg-destructive/10 border-destructive/30 text-destructive animate-pulse"
+        ? "text-destructive animate-pulse"
         : timeLeft <= 10
-          ? "bg-orange-500/10 border-orange-400/30 text-orange-500"
-          : "bg-muted border-border text-muted-foreground";
-    const timerBarClass =
-      timeLeft <= 5
-        ? "bg-red-500"
-        : timeLeft <= 10
-          ? "bg-orange-500"
-          : "bg-green-500";
-    const questionProgressLabel = t("practice_exam.question_of")
-      .replace("{n}", String(currentIndex + 1))
-      .replace("{m}", String(questions.length));
+          ? "text-orange-500"
+          : "text-muted-foreground";
+    const questionCounter = `${currentIndex + 1} / ${questions.length}`;
+    const difficultyLabel = getDifficultyLabel(question.difficulty);
+    const difficultyClassName = cn(
+      question.difficulty === "EASY" && "bg-green-100 text-green-800",
+      question.difficulty === "MEDIUM" && "bg-orange-100 text-orange-800",
+      question.difficulty === "HARD" && "bg-red-100 text-red-800",
+    );
 
     return (
       <>
         <FocusedExamShell
           dir={isRTL ? "rtl" : "ltr"}
-          title={t("nav.exam")}
-          counter={questionProgressLabel}
+          counter={questionCounter}
+          difficultyLabel={difficultyLabel}
+          difficultyClassName={difficultyClassName}
           timerPill={
             <div
               className={cn(
-                "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold tabular-nums transition-colors",
+                "flex items-center gap-1.5 text-sm font-bold tabular-nums transition-colors",
                 timerPillClass,
               )}
             >
@@ -652,14 +650,11 @@ export default function RandomPracticePage() {
               {timeLeft}s
             </div>
           }
-          progressLabel={questionProgressLabel}
           progressPercent={progressPct}
-          timerProgressPercent={timerPct}
-          timerProgressClassName={timerBarClass}
           afterCard={
             <div
               data-testid="exam-actions"
-              className="grid gap-2 pb-3 pt-1 sm:grid-cols-3"
+              className="grid grid-cols-2 gap-2 pb-3 pt-1 sm:grid-cols-3"
             >
               <Button
                 variant="destructive"
@@ -685,7 +680,7 @@ export default function RandomPracticePage() {
                 onClick={() => advanceToNext(selectedOption, "manual")}
                 disabled={isLockedUi}
                 className={cn(
-                  "order-1 w-full shadow-md transition-all sm:order-3",
+                  "order-1 col-span-2 w-full shadow-md transition-all sm:order-3 sm:col-span-1",
                   selectedOption !== null
                     ? "shadow-primary/20 hover:-translate-y-0.5"
                     : "opacity-80",
@@ -705,22 +700,19 @@ export default function RandomPracticePage() {
         >
           <FocusedQuestionCard
             headerBadges={
-              <>
-                <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                  {getRandomPracticeCategoryLabel(question.signCode, t)}
-                </span>
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold",
-                    question.difficulty === "EASY" && "bg-green-500 text-white",
-                    question.difficulty === "MEDIUM" &&
-                      "bg-orange-500 text-white",
-                    question.difficulty === "HARD" && "bg-red-500 text-white",
-                  )}
-                >
-                  {getDifficultyLabel(question.difficulty)}
-                </span>
-              </>
+              <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                {getRandomPracticeCategoryLabel(question.signCode, t)}
+              </span>
+            }
+            difficultyBadge={
+              <span
+                className={cn(
+                  "inline-flex min-h-8 items-center rounded-full px-3 text-xs font-bold",
+                  difficultyClassName,
+                )}
+              >
+                {difficultyLabel}
+              </span>
             }
             media={
               question.showSign && question.signImagePath ? (

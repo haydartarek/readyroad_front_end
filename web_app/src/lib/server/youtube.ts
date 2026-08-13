@@ -10,6 +10,7 @@ import {
   type YouTubeChannel,
   type YouTubeVideoPage,
 } from "@/lib/youtube";
+import { getPublicBackendApiUrl } from "@/lib/server/public-catalog";
 
 const YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3";
 const YOUTUBE_CACHE_TAG = "readyroad-youtube-videos";
@@ -97,6 +98,24 @@ async function fetchVideoPage(
   };
 }
 
+async function fetchPersistedVideoPage(
+  pageToken: string,
+): Promise<YouTubeVideoPage | null> {
+  const url = new URL(`${getPublicBackendApiUrl()}/youtube/videos`);
+  if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as YouTubeVideoPage;
+  } catch {
+    return null;
+  }
+}
+
 const getCachedYouTubeChannel = unstable_cache(
   fetchChannel,
   ["readyroad", "youtube", "channel", YOUTUBE_CHANNEL_HANDLE],
@@ -130,6 +149,16 @@ export async function getYouTubeChannel(): Promise<YouTubeChannel> {
 export async function getYouTubeVideoPage(
   pageToken = "",
 ): Promise<YouTubeVideoPage> {
+  const persisted = await fetchPersistedVideoPage(pageToken);
+  if (persisted) {
+    lastSuccessfulChannel = persisted.channel;
+    lastSuccessfulPages.set(
+      `${persisted.channel.uploadsPlaylistId}:${pageToken}`,
+      persisted,
+    );
+    return persisted;
+  }
+
   const channel = await getYouTubeChannel();
   const cacheKey = `${channel.uploadsPlaylistId}:${pageToken}`;
 

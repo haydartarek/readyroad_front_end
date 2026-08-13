@@ -1,7 +1,7 @@
 export const YOUTUBE_CHANNEL_HANDLE = "@RijBewijsBe";
 export const YOUTUBE_CHANNEL_URL =
   "https://www.youtube.com/@RijBewijsBe/featured";
-export const YOUTUBE_REVALIDATE_SECONDS = 7 * 24 * 60 * 60;
+export const YOUTUBE_REVALIDATE_SECONDS = 24 * 60 * 60;
 export const YOUTUBE_PAGE_SIZE = 13;
 
 const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;

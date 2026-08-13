@@ -96,6 +96,19 @@ const responses: Record<string, unknown> = {
     devices: [],
   },
   "/admin/marketing/analytics/reports": [],
+  "/admin/marketing/youtube/status": {
+    apiKeyConfigured: true,
+    readOnly: true,
+    channelHandle: "@RijBewijsBe",
+    channelId: "UCs_IDQXCz6zADuHIdfS2C2w",
+    monitoringIntervalHours: 24,
+    videoCount: 13,
+    contentPackageCount: 13,
+    socialDraftCount: 52,
+    latestSync: { status: "COMPLETED" },
+    latestVideos: [],
+    bestVideos: [],
+  },
 };
 
 async function mockAdmin(page: Page, mutations: Request[]) {
@@ -153,7 +166,7 @@ test("Marketing operations remain usable on mobile and preserve approval control
 
   await page.goto("/admin/marketing");
   await expect(page.getByRole("heading", { name: "Marketing Operations" })).toBeVisible();
-  await expect(page.getByRole("tab")).toHaveCount(9);
+  await expect(page.getByRole("tab")).toHaveCount(10);
   await expectNoOverflow(page);
 
   await page.getByRole("tab", { name: "Analytics" }).click();
@@ -165,12 +178,20 @@ test("Marketing operations remain usable on mobile and preserve approval control
   await expect(page.getByText(/belgian driving theory questions/)).toBeVisible();
   await expectNoOverflow(page);
 
+  await page.getByRole("tab", { name: "YouTube" }).click();
+  await expect(page.getByText("@RijBewijsBe")).toBeVisible();
+  await page.getByRole("button", { name: "Sync channel" }).click();
+  await expect.poll(() => mutations.length).toBe(1);
+  expect(mutations[0].postDataJSON()).toMatchObject({
+    idempotencyKey: expect.stringMatching(/^youtube-sync-/),
+  });
+
   await page.getByRole("tab", { name: "Agents" }).click();
   await expect(page.getByText("Strategy Engine")).toBeVisible();
   await page.getByRole("button", { name: "Request disable" }).click();
-  await expect.poll(() => mutations.length).toBe(1);
-  expect(mutations[0].method()).toBe("PUT");
-  expect(mutations[0].postDataJSON()).toMatchObject({
+  await expect.poll(() => mutations.length).toBe(2);
+  expect(mutations[1].method()).toBe("PUT");
+  expect(mutations[1].postDataJSON()).toMatchObject({
     enabled: false,
     idempotencyKey: expect.stringMatching(/^agent-control-STRATEGY-/),
   });

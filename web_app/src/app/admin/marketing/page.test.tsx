@@ -13,6 +13,7 @@ jest.mock("@/lib/api", () => ({
 
 const get = apiClient.get as jest.Mock;
 const put = apiClient.put as jest.Mock;
+const post = apiClient.post as jest.Mock;
 
 const responses: Record<string, unknown> = {
   "/admin/marketing/overview": {
@@ -102,6 +103,19 @@ const responses: Record<string, unknown> = {
     devices: [],
   },
   "/admin/marketing/analytics/reports": [],
+  "/admin/marketing/youtube/status": {
+    apiKeyConfigured: true,
+    readOnly: true,
+    channelHandle: "@RijBewijsBe",
+    channelId: "UCs_IDQXCz6zADuHIdfS2C2w",
+    monitoringIntervalHours: 24,
+    videoCount: 13,
+    contentPackageCount: 13,
+    socialDraftCount: 52,
+    latestSync: { status: "COMPLETED" },
+    latestVideos: [],
+    bestVideos: [],
+  },
 };
 
 describe("MarketingAdminPage", () => {
@@ -113,6 +127,7 @@ describe("MarketingAdminPage", () => {
     });
     get.mockImplementation((url: string) => Promise.resolve({ data: responses[url] }));
     put.mockResolvedValue({ data: { status: "WAITING_APPROVAL" } });
+    post.mockResolvedValue({ data: { status: "PENDING" } });
   });
 
   it("loads the operational overview and exposes every basic platform tab", async () => {
@@ -120,9 +135,28 @@ describe("MarketingAdminPage", () => {
 
     expect(await screen.findByText("admin.marketing.tasks_today")).toBeInTheDocument();
     expect(screen.getAllByText("HEALTHY").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("tab")).toHaveLength(9);
+    expect(screen.getAllByRole("tab")).toHaveLength(10);
     expect(get).toHaveBeenCalledWith("/admin/marketing/tasks", { limit: 100 });
     expect(get).toHaveBeenCalledWith("/admin/marketing/analytics/organic-discovery", { limit: 100 });
+  });
+
+  it("shows the read-only YouTube monitor and requests a task-based sync", async () => {
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_youtube" }));
+    expect(screen.getByText("@RijBewijsBe")).toBeInTheDocument();
+    expect(screen.getAllByText("13")).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.youtube_sync" }));
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/admin/marketing/youtube/sync",
+        expect.objectContaining({
+          idempotencyKey: expect.stringMatching(/^youtube-sync-/),
+        }),
+      );
+    });
   });
 
   it("requests an approval-bound agent state change instead of toggling locally", async () => {

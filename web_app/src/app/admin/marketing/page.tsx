@@ -16,6 +16,7 @@ import {
   SearchCheck,
   Settings2,
   ShieldCheck,
+  Youtube,
   XCircle,
 } from "lucide-react";
 import { apiClient, logApiError } from "@/lib/api";
@@ -37,12 +38,13 @@ import {
   type AnalyticsDiscovery,
   type AnalyticsSettingsView,
   type AnalyticsStatus,
+  type YouTubeStatus,
   formatSettingValue,
   statusTone,
   taskCount,
 } from "@/lib/marketing-admin";
 
-type View = "overview" | "analytics" | "discovery" | "agents" | "tasks" | "approvals" | "errors" | "audit" | "settings";
+type View = "overview" | "analytics" | "youtube" | "discovery" | "agents" | "tasks" | "approvals" | "errors" | "audit" | "settings";
 
 interface PlatformData {
   overview: MarketingOverview;
@@ -56,11 +58,13 @@ interface PlatformData {
   analyticsSettings: AnalyticsSettingsView;
   discovery: AnalyticsDiscovery;
   reports: Array<Record<string, unknown>>;
+  youtubeStatus: YouTubeStatus;
 }
 
 const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
   { key: "overview", icon: Activity },
   { key: "analytics", icon: BarChart3 },
+  { key: "youtube", icon: Youtube },
   { key: "discovery", icon: SearchCheck },
   { key: "agents", icon: Bot },
   { key: "tasks", icon: ListTodo },
@@ -99,7 +103,7 @@ export default function MarketingAdminPage() {
     setLoading(true);
     setError(false);
     try {
-      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports] = await Promise.all([
+      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports, youtubeStatus] = await Promise.all([
         apiClient.get<MarketingOverview>("/admin/marketing/overview"),
         apiClient.get<MarketingAgent[]>("/admin/marketing/agents"),
         apiClient.get<MarketingTaskPage>("/admin/marketing/tasks", { limit: 100 }),
@@ -111,6 +115,7 @@ export default function MarketingAdminPage() {
         apiClient.get<AnalyticsSettingsView>("/admin/marketing/analytics/settings"),
         apiClient.get<AnalyticsDiscovery>("/admin/marketing/analytics/organic-discovery", { limit: 100 }),
         apiClient.get<Array<Record<string, unknown>>>("/admin/marketing/analytics/reports", { limit: 20 }),
+        apiClient.get<YouTubeStatus>("/admin/marketing/youtube/status"),
       ]);
       setData({
         overview: overview.data,
@@ -124,6 +129,7 @@ export default function MarketingAdminPage() {
         analyticsSettings: analyticsSettings.data,
         discovery: discovery.data,
         reports: reports.data,
+        youtubeStatus: youtubeStatus.data,
       });
     } catch (requestError) {
       logApiError("Failed to load marketing admin platform", requestError);
@@ -234,6 +240,20 @@ export default function MarketingAdminPage() {
               )}
             />
           ) : null}
+          {view === "youtube" ? (
+            <YouTubePanel
+              status={data.youtubeStatus}
+              busy={busy}
+              t={t}
+              onSync={() => mutate(
+                "youtube-sync",
+                () => apiClient.post("/admin/marketing/youtube/sync", {
+                  idempotencyKey: `youtube-sync-${crypto.randomUUID()}`,
+                }),
+                "admin.marketing.youtube_sync_created",
+              )}
+            />
+          ) : null}
           {view === "discovery" ? <DiscoveryPanel data={data.discovery} t={t} /> : null}
           {view === "agents" ? (
             <Agents
@@ -285,7 +305,7 @@ export default function MarketingAdminPage() {
   );
 }
 
-type Translate = (key: string) => string;
+type Translate = (key: string, variables?: Record<string, string | number>) => string;
 type DateFormatter = (value: string | null) => string;
 
 function LoadingState() {
@@ -425,6 +445,55 @@ function AnalyticsPanel({ data, busy, t, onSync, onSettings }: { data: PlatformD
       <div className="mt-4 space-y-3">{data.reports.length ? data.reports.map((report) => <pre key={String(report.id)} className="max-w-full overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(report, null, 2)}</pre>) : <Empty t={t} />}</div>
     </section>
   </div>;
+}
+
+function YouTubePanel({ status, busy, t, onSync }: { status: YouTubeStatus; busy: string | null; t: Translate; onSync: () => void }) {
+  return <div className="space-y-5">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <AdminMetricCard icon={<Youtube />} label={t("admin.marketing.youtube_channel")} value={status.channelHandle} />
+      <AdminMetricCard icon={<Activity />} label={t("admin.marketing.youtube_videos")} value={status.videoCount} />
+      <AdminMetricCard icon={<ClipboardCheck />} label={t("admin.marketing.youtube_packages")} value={status.contentPackageCount} />
+      <AdminMetricCard icon={<ListTodo />} label={t("admin.marketing.youtube_social_drafts")} value={status.socialDraftCount} />
+    </div>
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="font-black">{t("admin.marketing.youtube_monitor")}</h2>
+          <p className="mt-1 break-words text-sm text-muted-foreground">
+            {t("admin.marketing.youtube_interval", { hours: status.monitoringIntervalHours })}
+          </p>
+        </div>
+        <Button onClick={onSync} disabled={!status.apiKeyConfigured || busy === "youtube-sync"}>
+          <RefreshCw className={cn("h-4 w-4", busy === "youtube-sync" && "animate-spin")} />
+          {t("admin.marketing.youtube_sync")}
+        </Button>
+      </div>
+      <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Metric label={t("admin.marketing.status")} value={<StatusBadge status={status.apiKeyConfigured ? "CONFIGURED" : "NOT_CONFIGURED"} />} />
+        <Metric label={t("admin.marketing.youtube_access")} value={status.readOnly ? t("admin.marketing.read_only") : "—"} />
+        <Metric label={t("admin.marketing.youtube_channel_id")} value={status.channelId} />
+        <Metric label={t("admin.marketing.youtube_last_sync")} value={String(status.latestSync.status ?? t("admin.marketing.never"))} />
+      </dl>
+    </section>
+    <div className="grid gap-5 xl:grid-cols-2">
+      <YouTubeVideoList title={t("admin.marketing.youtube_latest")} videos={status.latestVideos} t={t} />
+      <YouTubeVideoList title={t("admin.marketing.youtube_best")} videos={status.bestVideos} t={t} />
+    </div>
+  </div>;
+}
+
+function YouTubeVideoList({ title, videos, t }: { title: string; videos: Array<Record<string, unknown>>; t: Translate }) {
+  return <section className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+    <h2 className="font-black">{title}</h2>
+    <div className="mt-4 space-y-3">
+      {videos.length ? videos.map((video) => <article key={String(video.video_id)} className="min-w-0 rounded-xl bg-muted/40 p-3">
+        <p className="break-words text-sm font-bold">{String(video.title)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t("admin.marketing.youtube_views")}: {String(video.view_count ?? 0)}
+        </p>
+      </article>) : <Empty t={t} />}
+    </div>
+  </section>;
 }
 
 function DiscoveryPanel({ data, t }: { data: AnalyticsDiscovery; t: Translate }) {

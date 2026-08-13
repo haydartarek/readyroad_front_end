@@ -137,6 +137,20 @@ export interface AnalyticsDiscovery {
   devices: Array<Record<string, unknown>>;
 }
 
+export interface YouTubeStatus {
+  apiKeyConfigured: boolean;
+  readOnly: boolean;
+  channelHandle: string;
+  channelId: string;
+  monitoringIntervalHours: number;
+  videoCount: number;
+  contentPackageCount: number;
+  socialDraftCount: number;
+  latestSync: Record<string, unknown>;
+  latestVideos: Array<Record<string, unknown>>;
+  bestVideos: Array<Record<string, unknown>>;
+}
+
 export interface MarketingSettings {
   settings: MarketingSetting[];
   schedules: MarketingSchedule[];

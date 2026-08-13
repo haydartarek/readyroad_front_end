@@ -654,7 +654,7 @@ export default function RandomPracticePage() {
           afterCard={
             <div
               data-testid="exam-actions"
-              className="grid grid-cols-2 gap-2 pb-3 pt-1 sm:grid-cols-3"
+              className="grid grid-cols-1 gap-2 pb-3 pt-1 sm:grid-cols-3"
             >
               <Button
                 variant="destructive"
@@ -680,7 +680,7 @@ export default function RandomPracticePage() {
                 onClick={() => advanceToNext(selectedOption, "manual")}
                 disabled={isLockedUi}
                 className={cn(
-                  "order-1 col-span-2 w-full shadow-md transition-all sm:order-3 sm:col-span-1",
+                  "order-1 w-full shadow-md transition-all sm:order-3",
                   selectedOption !== null
                     ? "shadow-primary/20 hover:-translate-y-0.5"
                     : "opacity-80",

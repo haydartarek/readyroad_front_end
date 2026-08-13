@@ -909,13 +909,13 @@ export default function TrafficSignPracticePage() {
         <div
           ref={actionRef}
           data-testid="exam-actions"
-          className="grid grid-cols-2 gap-2 pb-3 pt-1 sm:grid-cols-3"
+          className="grid grid-cols-1 gap-2 pb-3 pt-1 sm:grid-cols-3"
         >
           {!answerState ? (
             <Button
               data-testid="submit-practice-answer"
               size="lg"
-              className="order-1 col-span-2 w-full shadow-md shadow-primary/20 sm:order-3 sm:col-span-1"
+              className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
               disabled={selectedChoice === null || submitting}
               onClick={handleSubmit}
             >
@@ -926,7 +926,7 @@ export default function TrafficSignPracticePage() {
           ) : (
             <Button
               size="lg"
-              className="order-1 col-span-2 w-full shadow-md shadow-primary/20 sm:order-3 sm:col-span-1"
+              className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
               onClick={handleNext}
             >
               {currentIndex + 1 < questions.length

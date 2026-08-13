@@ -538,7 +538,7 @@ export default function ExamQuestionsPage() {
         <>
           <div
             data-testid="exam-actions"
-            className="grid grid-cols-2 gap-2 pb-3 pt-1 sm:grid-cols-3"
+            className="grid grid-cols-1 gap-2 pb-3 pt-1 sm:grid-cols-3"
           >
           <Button
             variant="destructive"
@@ -566,7 +566,7 @@ export default function ExamQuestionsPage() {
             size="lg"
             onClick={() => handleNextOrSubmit("manual")}
             disabled={isSubmitting}
-            className="order-1 col-span-2 w-full shadow-md shadow-primary/20 sm:order-3 sm:col-span-1"
+            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
           >
             {isLastQuestion
               ? t("practice_exam.submit_btn")

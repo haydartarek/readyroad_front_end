@@ -24,6 +24,7 @@ interface FocusedQuestionCardProps {
   titleClassName?: string;
   options: FocusedQuestionOption[];
   feedback?: ReactNode;
+  compactOptionGap?: boolean;
 }
 
 export function FocusedQuestionCard({
@@ -34,6 +35,7 @@ export function FocusedQuestionCard({
   titleClassName,
   options,
   feedback,
+  compactOptionGap = false,
 }: FocusedQuestionCardProps) {
   return (
     <div
@@ -66,7 +68,7 @@ export function FocusedQuestionCard({
           {title}
         </h2>
 
-        <div className="space-y-2">
+        <div className={compactOptionGap ? "space-y-1.5" : "space-y-2"}>
           {options.map((option, index) => (
             <ExamOptionCard
               key={option.key}

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface FocusedExamShellProps {
   dir?: "ltr" | "rtl";
@@ -10,6 +11,7 @@ interface FocusedExamShellProps {
   timerPill?: ReactNode;
   progressPercent?: number;
   afterCard?: ReactNode;
+  compactInformationBar?: boolean;
   children: ReactNode;
 }
 
@@ -21,6 +23,7 @@ export function FocusedExamShell({
   timerPill,
   progressPercent = 0,
   afterCard,
+  compactInformationBar = false,
   children,
 }: FocusedExamShellProps) {
   const informationGridClass = timerPill
@@ -47,14 +50,17 @@ export function FocusedExamShell({
 
           <div
             data-testid="exam-status-card"
-            className="rounded-lg border border-border/50 bg-card/92 px-3 py-2.5 shadow-sm backdrop-blur sm:px-4"
+            className={cn(
+              "rounded-lg border border-border/50 bg-card/92 px-3 shadow-sm backdrop-blur sm:px-4",
+              compactInformationBar ? "py-2" : "py-2.5",
+            )}
           >
             <div
               data-testid="exam-information-bar"
               dir="ltr"
               className={`grid ${informationGridClass} items-center [&>*+*]:border-s [&>*+*]:border-border/50`}
             >
-              <div className="flex min-w-0 items-center justify-center px-1.5 text-sm font-black tabular-nums text-primary sm:text-base">
+              <div className={cn("flex min-w-0 items-center justify-center px-1.5 font-black tabular-nums text-primary", compactInformationBar ? "text-[13px] sm:text-sm" : "text-sm sm:text-base")}>
                 {Math.round(progressPercent)}%
               </div>
               {timerPill ? (
@@ -75,7 +81,7 @@ export function FocusedExamShell({
                   </span>
                 </div>
               ) : null}
-              <div className="flex min-w-0 items-center justify-center px-1.5 text-sm font-black tabular-nums text-foreground sm:text-base">
+              <div className={cn("flex min-w-0 items-center justify-center px-1.5 font-black tabular-nums text-foreground", compactInformationBar ? "text-[13px] sm:text-sm" : "text-sm sm:text-base")}>
                 {counter}
               </div>
             </div>

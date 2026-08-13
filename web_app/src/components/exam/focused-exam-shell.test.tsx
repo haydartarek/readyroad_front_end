@@ -50,5 +50,23 @@ describe("FocusedExamShell", () => {
     expect(screen.getByText("1 / 10")).toBeVisible();
     expect(screen.getByText("Question content")).toBeVisible();
     expect(screen.getByRole("button", { name: "End exam" })).toBeVisible();
+    expect(screen.getByTestId("exam-status-card")).toHaveClass("py-2.5");
+  });
+
+  it("uses the approved compact information metrics only when requested", () => {
+    render(
+      <FocusedExamShell
+        counter="2 / 50"
+        timerPill={<span>2s</span>}
+        progressPercent={4}
+        compactInformationBar
+      >
+        <p>Question</p>
+      </FocusedExamShell>,
+    );
+
+    expect(screen.getByTestId("exam-status-card")).toHaveClass("py-2");
+    expect(screen.getByText("4%")).toHaveClass("text-[13px]");
+    expect(screen.getByText("2 / 50")).toHaveClass("text-[13px]");
   });
 });

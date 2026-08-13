@@ -77,4 +77,27 @@ describe("FocusedQuestionCard", () => {
       "line-clamp-2",
     );
   });
+
+  it("slightly reduces only the external answer gap for real exams", () => {
+    render(
+      <FocusedQuestionCard
+        title="Question"
+        compactOptionGap
+        options={[1, 2].map((key) => ({
+          key,
+          text: `Answer ${key}`,
+          selected: false,
+          onSelect: jest.fn(),
+        }))}
+      />,
+    );
+
+    expect(screen.getAllByTestId("exam-option-card")[0].parentElement).toHaveClass(
+      "space-y-1.5",
+    );
+    expect(screen.getAllByTestId("exam-option-card")[0]).toHaveClass(
+      "min-h-12",
+      "py-3",
+    );
+  });
 });

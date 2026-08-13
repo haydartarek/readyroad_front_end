@@ -525,7 +525,7 @@ export default function ExamQuestionsPage() {
       timerPill={
         <span
           className={cn(
-            "inline-flex items-center gap-1.5 text-sm font-black tabular-nums",
+            "inline-flex items-center gap-1.5 text-[13px] font-black tabular-nums sm:text-sm",
             timerToneClass,
           )}
         >
@@ -534,6 +534,7 @@ export default function ExamQuestionsPage() {
         </span>
       }
       progressPercent={progressPercent}
+      compactInformationBar
       afterCard={
         <>
           <div
@@ -589,6 +590,7 @@ export default function ExamQuestionsPage() {
       }
     >
       <FocusedQuestionCard
+        compactOptionGap
         difficultyBadge={
           difficultyLabel ? (
             <span className="inline-flex min-h-8 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-black text-primary">

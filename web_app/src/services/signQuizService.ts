@@ -412,10 +412,14 @@ export async function submitExam(
   signCode: string,
   examNumber: 1 | 2,
   answers: SignExamAnswerItem[],
+  idempotencyKey?: string,
 ): Promise<SignExamResult> {
   const res = await apiClient.post<SignExamResult>(
     API_ENDPOINTS.SIGN_QUIZ.SUBMIT_EXAM(signCode, examNumber),
     { answers },
+    idempotencyKey
+      ? { headers: { "X-Idempotency-Key": idempotencyKey } }
+      : undefined,
   );
   return res.data;
 }

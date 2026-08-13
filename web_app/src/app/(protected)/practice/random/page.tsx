@@ -247,7 +247,7 @@ export default function RandomPracticePage() {
     try {
       const res = await submitRandomPracticeSession(sessionId, payload);
       setResult(res);
-      setPhase("results");
+      router.push(`/exam/results?randomSignExamId=${res.sessionId}`);
     } catch (err) {
       logApiError("Failed to check sign practice answers", err);
       if (isServiceUnavailable(err)) {
@@ -257,7 +257,7 @@ export default function RandomPracticePage() {
       }
       setPhase("intro");
     }
-  }, [abandonSession, questions, sessionId, t]);
+  }, [abandonSession, questions, router, sessionId, t]);
 
   const selectOption = useCallback((choiceId: number) => {
     if (isAdvancingRef.current) return;
@@ -642,7 +642,7 @@ export default function RandomPracticePage() {
           timerPill={
             <div
               className={cn(
-                "flex items-center gap-1.5 text-sm font-bold tabular-nums transition-colors",
+                "flex items-center gap-1.5 text-[13px] font-bold tabular-nums transition-colors sm:text-sm",
                 timerPillClass,
               )}
             >
@@ -651,6 +651,7 @@ export default function RandomPracticePage() {
             </div>
           }
           progressPercent={progressPct}
+          compactInformationBar
           afterCard={
             <div
               data-testid="exam-actions"
@@ -699,6 +700,7 @@ export default function RandomPracticePage() {
           }
         >
           <FocusedQuestionCard
+            compactOptionGap
             headerBadges={
               <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                 {getRandomPracticeCategoryLabel(question.signCode, t)}

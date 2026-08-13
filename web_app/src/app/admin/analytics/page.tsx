@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "@/components/localized-link";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
@@ -18,6 +19,12 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  type AdminExamSummary,
+  type AdminLearningPage,
+  type StudentLearningSummary,
+  examTypeKey,
+} from "@/lib/admin-learning";
 
 type DashboardStats = {
   totalUsers: number;
@@ -48,21 +55,6 @@ type CategoryStat = {
   avgAccuracy: number;
   userCount: number;
 };
-type RecentExam = {
-  examId: number;
-  score: number;
-  totalQuestions: number;
-  scorePercentage: number;
-  passed: boolean;
-  startedAt: string;
-  completedAt: string;
-  timeTakenSeconds: number | null;
-  userId: number;
-  username: string;
-  fullName: string;
-};
-type RecentExamsResponse = { exams: RecentExam[]; total: number };
-
 // ─── Sub-components ────────────────────────────────────────────────────
 
 function formatDuration(seconds: number | null): string {
@@ -141,22 +133,21 @@ export default function AdminAnalyticsPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
   const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
-  const [recentExams, setRecentExams] = useState<RecentExamsResponse | null>(
-    null,
-  );
+  const [recentExams, setRecentExams] = useState<AdminLearningPage<AdminExamSummary> | null>(null);
+  const [students, setStudents] = useState<AdminLearningPage<StudentLearningSummary> | null>(null);
+  const [examPage, setExamPage] = useState(0);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [dashRes, quizRes, catRes, examRes] = await Promise.allSettled([
+      const [dashRes, quizRes, catRes, examRes, studentRes] = await Promise.allSettled([
         apiClient.get<DashboardStats>("/admin/dashboard"),
         apiClient.get<QuizStats>("/admin/analytics/quiz-stats"),
         apiClient.get<CategoryStat[]>("/admin/analytics/category-stats"),
-        apiClient.get<RecentExamsResponse>(
-          "/admin/analytics/recent-exams?limit=20",
-        ),
+        apiClient.get<AdminLearningPage<AdminExamSummary>>("/admin/learning/exams", { page: examPage, size: 20 }),
+        apiClient.get<AdminLearningPage<StudentLearningSummary>>("/admin/learning/users", { page: 0, size: 10 }),
       ]);
       if (dashRes.status === "fulfilled") setStats(dashRes.value.data);
       if (quizRes.status === "fulfilled") setQuizStats(quizRes.value.data);
@@ -165,6 +156,7 @@ export default function AdminAnalyticsPage() {
         setCategoryStats(Array.isArray(data) ? data : []);
       }
       if (examRes.status === "fulfilled") setRecentExams(examRes.value.data);
+      if (studentRes.status === "fulfilled") setStudents(studentRes.value.data);
       if (dashRes.status === "rejected")
         setError(t("admin.analytics.fetch_error"));
     } catch (e: unknown) {
@@ -174,7 +166,7 @@ export default function AdminAnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [examPage, t]);
 
   useEffect(() => {
     fetchAll();
@@ -394,17 +386,50 @@ export default function AdminAnalyticsPage() {
         </AdminSectionCard>
       </div>
 
+      <AdminSectionCard title={t("admin.learning.students_title")}>
+        {students && students.items.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {students.items.map((student) => (
+              <Link
+                key={student.userId}
+                href={`/admin/users/${student.userId}/learning`}
+                className="grid gap-2 rounded-xl border border-border/50 p-4 transition-colors hover:bg-muted/30 sm:grid-cols-[minmax(0,1fr)_auto]"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-bold text-foreground">
+                    {student.displayName || student.username}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">{student.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{student.totalCompletedExams}</Badge>
+                  <Badge variant="outline">
+                    {student.latestExamScore == null ? "—" : `${Math.round(student.latestExamScore)}%`}
+                  </Badge>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="py-8 text-center text-sm text-muted-foreground">{t("admin.learning.no_data")}</p>
+        )}
+      </AdminSectionCard>
+
       {/* Recent Exams Table */}
       <AdminSectionCard title={t("admin.analytics.recent_exams")}>
         {loading ? (
           <LoadingPlaceholder />
-        ) : recentExams && recentExams.exams.length > 0 ? (
+        ) : recentExams && recentExams.items.length > 0 ? (
+          <div className="space-y-3">
           <div className="overflow-x-auto rounded-xl border border-border/40">
             <table className="min-w-full text-sm">
               <thead className="bg-muted/50 border-b border-border/40">
                 <tr className="text-xs uppercase tracking-wide text-muted-foreground">
                   <th className="px-4 py-3 text-left font-semibold">
                     {t("admin.analytics.exam_user")}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t("admin.learning.exam_type")}
                   </th>
                   <th className="px-4 py-3 text-left font-semibold">
                     {t("admin.analytics.exam_score")}
@@ -421,23 +446,28 @@ export default function AdminAnalyticsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
-                {recentExams.exams.map((exam) => (
+                {recentExams.items.map((exam) => (
                   <tr
                     key={exam.examId}
                     className="hover:bg-muted/30 transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-semibold text-foreground">
+                      <Link href={`/admin/users/${exam.userId}/learning`} className="font-semibold text-primary hover:underline">
                         {exam.username || "-"}
-                      </span>
-                      {exam.fullName && (
+                      </Link>
+                      {exam.displayName && (
                         <span className="text-xs text-muted-foreground ml-1.5">
-                          ({exam.fullName})
+                          ({exam.displayName})
                         </span>
                       )}
                     </td>
+                    <td className="px-4 py-3">
+                      <Link href={`/admin/users/${exam.userId}/learning/exams/${exam.examType}/${exam.examId}`} className="font-semibold text-primary hover:underline">
+                        {t(examTypeKey(exam.examType))}{exam.subjectCode ? ` · ${exam.subjectCode}` : ""}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 font-semibold text-foreground">
-                      {exam.score}/{exam.totalQuestions}
+                      {exam.correctAnswers}/{exam.totalQuestions}
                       {exam.scorePercentage != null && (
                         <span className="text-xs text-muted-foreground ml-1">
                           ({Math.round(exam.scorePercentage)}%)
@@ -459,7 +489,7 @@ export default function AdminAnalyticsPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
-                      {formatDuration(exam.timeTakenSeconds)}
+                      {formatDuration(exam.durationSeconds)}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {exam.completedAt
@@ -479,6 +509,12 @@ export default function AdminAnalyticsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <Button size="sm" variant="outline" disabled={examPage === 0} onClick={() => setExamPage((value) => Math.max(0, value - 1))}>{t("common.back_previous")}</Button>
+            <span className="text-xs text-muted-foreground">{examPage + 1} / {Math.max(1, recentExams.totalPages)}</span>
+            <Button size="sm" variant="outline" disabled={examPage + 1 >= recentExams.totalPages} onClick={() => setExamPage((value) => value + 1)}>{t("admin.learning.next")}</Button>
+          </div>
           </div>
         ) : (
           <div className="text-center py-12 space-y-2">

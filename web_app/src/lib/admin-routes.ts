@@ -192,6 +192,8 @@ const SEGMENT_LABEL_KEYS: Record<string, string> = {
   "data-import": "admin.sidebar.data_import",
   new: "admin.breadcrumb.new",
   edit: "admin.breadcrumb.edit",
+  learning: "admin.learning.profile_title",
+  exams: "admin.learning.section.exams",
 };
 
 const NUMERIC_SEGMENT_RE = /^\d+$/;

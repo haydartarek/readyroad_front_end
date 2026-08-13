@@ -107,6 +107,12 @@ export default function ExamPage() {
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reviewRef = useRef<HTMLDivElement | null>(null);
+  const submissionKeyRef = useRef(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `sign-exam-${Date.now()}`,
+  );
+  const submissionInFlightRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,7 +175,8 @@ export default function ExamPage() {
   }, []);
 
   const handleForceSubmit = useCallback(async () => {
-    if (!examData || submitting) return;
+    if (!examData || submitting || submissionInFlightRef.current) return;
+    submissionInFlightRef.current = true;
     setSubmitting(true);
     const payload = questions
       .map((q) => ({
@@ -178,14 +185,24 @@ export default function ExamPage() {
       }))
       .filter((a) => a.choiceId !== -1);
     try {
-      const res = await submitExam(requestedCode, examNum, payload);
-      setResult(res);
+      const res = await submitExam(
+        requestedCode,
+        examNum,
+        payload,
+        submissionKeyRef.current,
+      );
+      if (res.resultId) {
+        router.push(`/exam/results?signExamResultId=${res.resultId}`);
+      } else {
+        setResult(res);
+      }
     } catch (err) {
       logApiError("Submit exam error", err);
     } finally {
+      submissionInFlightRef.current = false;
       setSubmitting(false);
     }
-  }, [examData, submitting, questions, answers, requestedCode, examNum]);
+  }, [examData, submitting, questions, answers, requestedCode, examNum, router]);
 
   // ── Per-question countdown timer ─────────────────────────────────────────
   useEffect(() => {
@@ -664,7 +681,7 @@ export default function ExamPage() {
       timerPill={
         <div
           className={cn(
-            "inline-flex items-center gap-1.5 text-sm font-bold tabular-nums transition-colors",
+            "inline-flex items-center gap-1.5 text-[13px] font-bold tabular-nums transition-colors sm:text-sm",
             timerPillClass,
           )}
         >
@@ -673,6 +690,7 @@ export default function ExamPage() {
         </div>
       }
       progressPercent={questionProgressPercent}
+      compactInformationBar
       afterCard={
         <div
           data-testid="exam-actions"
@@ -729,6 +747,7 @@ export default function ExamPage() {
       }
     >
       <FocusedQuestionCard
+        compactOptionGap
         headerBadges={
           <>
             <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">

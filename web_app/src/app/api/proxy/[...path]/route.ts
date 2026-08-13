@@ -131,7 +131,9 @@ async function proxyRequest(
       return buildUnreadNotificationsFallbackResponse();
     }
 
-    const responseBody = await backendResponse.arrayBuffer();
+    const responseBody = [204, 205, 304].includes(backendResponse.status)
+      ? null
+      : await backendResponse.arrayBuffer();
 
     // Build forwarded response headers
     const responseHeaders = new Headers();

@@ -6,6 +6,7 @@ const localeCases = [
     locale: "en",
     path: "/about",
     direction: "ltr",
+    languageLabel: "English",
     disclaimerPath: "/disclaimer",
     contactPath: "/contact",
   },
@@ -13,6 +14,7 @@ const localeCases = [
     locale: "ar",
     path: "/ar/about",
     direction: "rtl",
+    languageLabel: "العربية",
     disclaimerPath: "/ar/disclaimer",
     contactPath: "/ar/contact",
   },
@@ -68,9 +70,7 @@ test.describe("Footer bottom row", () => {
         await expect(language).toBeVisible();
         await expect(copyright).toBeVisible();
         await expect(languageTrigger).toHaveAttribute("role", "combobox");
-        await expect(
-          language.locator('input[name="language"][autocomplete="language"]'),
-        ).toHaveValue(localeCase.locale);
+        await expect(languageTrigger).toContainText(localeCase.languageLabel);
 
         const legalHrefs = await legal.locator("a").evaluateAll((links) =>
           links.map((link) => link.getAttribute("href")),

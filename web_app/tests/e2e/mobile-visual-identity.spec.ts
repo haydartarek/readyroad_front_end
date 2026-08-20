@@ -487,6 +487,9 @@ async function installAuthenticatedSession(
         overallAccuracy,
       });
     }
+    if (pathname.endsWith("/users/me/progress/theory-timeouts")) {
+      return fulfillJson(route, { totalTimeouts: 0, items: [] });
+    }
     if (pathname.endsWith("/users/me/analytics/weak-areas")) {
       return fulfillJson(route, {
         weakAreas: [],

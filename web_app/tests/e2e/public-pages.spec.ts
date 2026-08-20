@@ -2,7 +2,7 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 import { seedCookieConsent } from "./helpers/consent";
 
 const publicPages = [
-  { path: "/about", heading: "About ReadyRoad" },
+  { path: "/about", heading: "About RijVia" },
   { path: "/contact", heading: "Contact Us" },
   { path: "/privacy-policy", heading: "Privacy Policy" },
   { path: "/cookie-policy", heading: "Cookie Policy" },
@@ -193,7 +193,7 @@ test.describe("Public information and legal pages", () => {
     await page.goto("/faq");
     const question = page
       .locator("details summary")
-      .filter({ hasText: "Is ReadyRoad free?" });
+      .filter({ hasText: "Is RijVia free?" });
 
     await question.focus();
     await page.keyboard.press("Enter");

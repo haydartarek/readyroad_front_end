@@ -36,7 +36,7 @@ export function AuthPageFrame({
             <div className="mb-8 flex min-w-0 w-full items-center justify-center gap-3 lg:hidden">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-background ring-2 ring-primary/20 shadow-sm">
                 <Image
-                  src="/images/logo.png"
+                  src="/icons/icon-192.png"
                   alt=""
                   aria-hidden="true"
                   width={40}

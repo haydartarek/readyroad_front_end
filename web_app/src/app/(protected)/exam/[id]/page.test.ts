@@ -1,4 +1,7 @@
-import { resolveTheoryTimedAttemptStep } from "@/lib/attempt-lifecycle";
+import {
+  resolveNextTheoryQuestionIndex,
+  resolveTheoryTimedAttemptStep,
+} from "@/lib/attempt-lifecycle";
 import { normalizeExamData } from "./page";
 import fs from "node:fs";
 import path from "node:path";
@@ -115,5 +118,33 @@ describe("theoretical exam attempt progression", () => {
     expect(source).toContain("currentQuestionIndex + 1");
     expect(source).toContain("examData.questions.length");
     expect(source).toContain("transitionInFlightRef.current");
+    expect(source).toContain(
+      "lastAdvancedQuestionIdRef.current === currentQuestion.id",
+    );
+  });
+
+  it("advances the counter only once when Next and timeout race", () => {
+    let visibleIndex = 6;
+
+    visibleIndex = resolveNextTheoryQuestionIndex({
+      currentIndex: visibleIndex,
+      transitionFromIndex: 6,
+      totalQuestions: 50,
+    });
+    visibleIndex = resolveNextTheoryQuestionIndex({
+      currentIndex: visibleIndex,
+      transitionFromIndex: 6,
+      totalQuestions: 50,
+    });
+
+    expect(visibleIndex).toBe(7);
+
+    visibleIndex = resolveNextTheoryQuestionIndex({
+      currentIndex: visibleIndex,
+      transitionFromIndex: 7,
+      totalQuestions: 50,
+    });
+
+    expect(visibleIndex).toBe(8);
   });
 });

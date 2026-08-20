@@ -60,7 +60,7 @@ export function StatusScreen({
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/images/logo.png"
+                  src="/icons/icon-192.png"
                   alt=""
                   aria-hidden="true"
                   width={52}
@@ -105,7 +105,7 @@ export function StatusScreen({
             <div className="min-w-0 w-full rounded-[2.25rem] border border-border/60 bg-card/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:p-8">
               <div className="mb-8 flex items-center justify-center gap-3 xl:hidden">
                 <Image
-                  src="/images/logo.png"
+                  src="/icons/icon-192.png"
                   alt=""
                   aria-hidden="true"
                   width={48}

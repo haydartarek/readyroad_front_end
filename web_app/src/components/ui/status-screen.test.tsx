@@ -14,7 +14,7 @@ describe("RijVia error identity", () => {
 
     expect(container).toHaveTextContent("RijVia");
     expect(
-      container.querySelector('img[src*="logo.png"][aria-hidden="true"]'),
+      container.querySelector('img[src*="icon-192.png"][aria-hidden="true"]'),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /retry/i }));

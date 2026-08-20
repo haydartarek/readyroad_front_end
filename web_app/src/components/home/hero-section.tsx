@@ -187,6 +187,7 @@ export function HeroSection() {
                         fill
                         sizes="(max-width: 768px) 224px, 224px"
                         className="object-contain dark:hidden"
+                        loading="eager"
                         priority
                       />
                       <Image
@@ -195,6 +196,7 @@ export function HeroSection() {
                         fill
                         sizes="(max-width: 768px) 224px, 224px"
                         className="hidden object-contain dark:block"
+                        loading="eager"
                         priority
                       />
                     </div>

@@ -151,6 +151,34 @@ export interface YouTubeStatus {
   bestVideos: Array<Record<string, unknown>>;
 }
 
+export interface SeoMigrationImport {
+  id?: number;
+  sourceFileName?: string;
+  fileSha256?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  sheetCounts?: Record<string, number>;
+  ignoredRowCount?: number;
+  status?: string;
+  importedAt?: string;
+}
+
+export interface SeoMigrationWorkspace {
+  localImportEnabled: boolean;
+  publishingEnabled: boolean;
+  canonicalActivation: string;
+  targetDomain: string;
+  latestImport: SeoMigrationImport;
+  opportunities: Array<Record<string, unknown>>;
+  migrationReadiness: Record<string, unknown>;
+  internalLinks: Array<Record<string, unknown>>;
+  contentBacklog: Record<string, unknown>;
+  strategy: Record<string, unknown>;
+  authority: Record<string, unknown>;
+  social: Record<string, unknown>;
+  ownerDecisionsRequired: string[];
+}
+
 export interface MarketingSettings {
   settings: MarketingSetting[];
   schedules: MarketingSchedule[];

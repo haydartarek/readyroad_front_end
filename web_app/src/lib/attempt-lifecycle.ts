@@ -1,5 +1,25 @@
 export type TimedAttemptStepAction = "advance" | "submit" | "abandon";
 
+export function resolveNextTheoryQuestionIndex({
+  currentIndex,
+  transitionFromIndex,
+  totalQuestions,
+}: {
+  currentIndex: number;
+  transitionFromIndex: number;
+  totalQuestions: number;
+}): number {
+  if (
+    currentIndex !== transitionFromIndex ||
+    currentIndex < 0 ||
+    currentIndex >= totalQuestions - 1
+  ) {
+    return currentIndex;
+  }
+
+  return currentIndex + 1;
+}
+
 export function resolveTheoryTimedAttemptStep({
   reason,
   isLastQuestion,

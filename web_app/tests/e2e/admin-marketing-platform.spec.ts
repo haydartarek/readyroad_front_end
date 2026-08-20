@@ -109,10 +109,33 @@ const responses: Record<string, unknown> = {
     latestVideos: [],
     bestVideos: [],
   },
+  "/admin/marketing/seo-migration/workspace": {
+    localImportEnabled: true,
+    publishingEnabled: false,
+    canonicalActivation: "PENDING_RELEASE",
+    targetDomain: "rijvia.be",
+    latestImport: {
+      id: 3,
+      sourceFileName: "search-console.xlsx",
+      periodStart: "2026-05-22",
+      periodEnd: "2026-08-19",
+      sheetCounts: { "طلبات البحث": 504, "الصفحات": 629 },
+      status: "COMPLETE",
+    },
+    opportunities: [{ id: 1, query: "rijbewijs belgie", state: "OPPORTUNITY", priority: "P0" }],
+    migrationReadiness: { blockedMappings: [] },
+    internalLinks: [],
+    contentBacklog: { draftBriefs: [], officialTopics: [] },
+    strategy: { usps: [] },
+    authority: { mode: "FREE_OR_EARNED_ONLY" },
+    social: { publishing: "DISABLED" },
+    ownerDecisionsRequired: [],
+  },
 };
 
 async function mockAdmin(page: Page, mutations: Request[]) {
   await seedCookieConsent(page);
+  const appUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";
   const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString("base64url");
   const payload = Buffer.from(
     JSON.stringify({ sub: "admin", role: "ADMIN", exp: 4_102_444_800 }),
@@ -121,14 +144,14 @@ async function mockAdmin(page: Page, mutations: Request[]) {
     {
       name: "token",
       value: `${header}.${payload}.test-signature`,
-      url: "http://127.0.0.1:3005",
+      url: appUrl,
       httpOnly: true,
       sameSite: "Lax",
     },
     {
       name: "csrf_token",
       value: "playwright-csrf-token",
-      url: "http://127.0.0.1:3005",
+      url: appUrl,
       sameSite: "Lax",
     },
   ]);
@@ -166,7 +189,7 @@ test("Marketing operations remain usable on mobile and preserve approval control
 
   await page.goto("/admin/marketing");
   await expect(page.getByRole("heading", { name: "Marketing Operations" })).toBeVisible();
-  await expect(page.getByRole("tab")).toHaveCount(10);
+  await expect(page.getByRole("tab")).toHaveCount(11);
   await expectNoOverflow(page);
 
   await page.getByRole("tab", { name: "Analytics" }).click();
@@ -176,6 +199,12 @@ test("Marketing operations remain usable on mobile and preserve approval control
 
   await page.getByRole("tab", { name: "Organic Discovery" }).click();
   await expect(page.getByText(/belgian driving theory questions/)).toBeVisible();
+  await expectNoOverflow(page);
+
+  await page.getByRole("tab", { name: "SEO Migration" }).click();
+  await expect(page.getByText("504")).toBeVisible();
+  await expect(page.getByText("629")).toBeVisible();
+  await expect(page.getByText(/rijbewijs belgie/)).toBeVisible();
   await expectNoOverflow(page);
 
   await page.getByRole("tab", { name: "YouTube" }).click();

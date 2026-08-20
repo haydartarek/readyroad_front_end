@@ -10,7 +10,7 @@ export type PublicPageKey =
   | "faq";
 
 export const PUBLIC_CONTACT = {
-  email: "heydertarek2000@gmail.com",
+  email: "info@rijvia.be",
   github: "https://github.com/haydartarek",
   linkedin: "https://www.linkedin.com/in/haydartarek-dev/",
 } as const;

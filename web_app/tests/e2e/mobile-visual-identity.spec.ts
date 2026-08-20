@@ -1558,6 +1558,87 @@ test.describe("ReadyRoad mobile visual identity", () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test("mobile theory counter advances once after timeout and once after Next in every locale", async ({
+    context,
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+
+    const exam = {
+      examId: 42,
+      startedAt: "2026-08-20T00:00:00Z",
+      expiresAt: "2026-08-20T01:00:00Z",
+      questions: [1, 2, 3, 4].map((questionId) => ({
+        questionId,
+        questionOrder: questionId,
+        questionTextEn: `Question ${questionId}`,
+        questionTextNl: `Vraag ${questionId}`,
+        questionTextFr: `Question ${questionId}`,
+        questionTextAr: `السؤال ${questionId}`,
+        difficultyLevel: "MEDIUM",
+        options: [
+          {
+            optionId: questionId * 10 + 1,
+            optionTextEn: "Answer A",
+            optionTextNl: "Antwoord A",
+            optionTextFr: "Réponse A",
+            optionTextAr: "الإجابة أ",
+          },
+          {
+            optionId: questionId * 10 + 2,
+            optionTextEn: "Answer B",
+            optionTextNl: "Antwoord B",
+            optionTextFr: "Réponse B",
+            optionTextAr: "الإجابة ب",
+          },
+        ],
+      })),
+    };
+    await page.route("**/api/proxy/exams/simulations/active", (route) =>
+      fulfillJson(route, { hasActiveExam: true, activeExam: exam }),
+    );
+
+    for (const locale of locales) {
+      await page.setViewportSize({ width: 320, height: 800 });
+      await navigate(page, localizedPath("/exam/42", locale));
+
+      const status = page.getByTestId("exam-status-card");
+      await expect(status.getByText("1 / 4", { exact: true })).toBeVisible();
+
+      await expect
+        .poll(
+          async () =>
+            (await status.getByText(/^[1-4] \/ 4$/).textContent())?.trim(),
+          { timeout: 18_000 },
+        )
+        .toBe("2 / 4");
+
+      await page.getByTestId("exam-option-card").first().click();
+      const nextButton = page
+        .getByTestId("exam-actions")
+        .locator("button")
+        .last();
+      await expect(nextButton).toBeEnabled();
+      await nextButton.click();
+
+      await expect(status.getByText("3 / 4", { exact: true })).toBeVisible();
+      await expect(status.getByText("4 / 4", { exact: true })).toHaveCount(0);
+
+      const widths = await page.evaluate(() => ({
+        viewport: window.innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        bodyWidth: document.body.scrollWidth,
+      }));
+      expect(widths).toEqual({
+        viewport: 320,
+        documentWidth: 320,
+        bodyWidth: 320,
+      });
+    }
+  });
+
   test("dashboard statistic cards use a consistent mobile content order", async ({
     context,
     page,

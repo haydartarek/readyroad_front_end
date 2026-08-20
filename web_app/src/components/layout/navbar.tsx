@@ -92,7 +92,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-lg px-0.5 py-2 text-[10px] font-semibold transition-all duration-200 min-[1800px]:px-2 min-[1800px]:text-xs",
+        "shrink-0 whitespace-nowrap rounded-lg px-0 py-2 text-[10px] font-semibold transition-all duration-200 min-[1366px]:px-0.5 min-[1800px]:px-2 min-[1800px]:text-xs",
         isActive
           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
           : "text-muted-foreground hover:bg-background/85 hover:text-foreground",
@@ -223,13 +223,13 @@ export function Navbar() {
           aria-label="RijVia"
           className="flex shrink-0 items-center"
         >
-          <span className="relative block h-10 w-[120px] shrink-0 min-[1536px]:h-11 min-[1536px]:w-[132px]">
+          <span className="relative block h-11 w-[132px] shrink-0 min-[1536px]:h-12 min-[1536px]:w-[144px]">
             <Image
               src="/images/logo.png"
               alt=""
               aria-hidden="true"
               fill
-              sizes="(min-width: 1536px) 132px, 120px"
+              sizes="(min-width: 1536px) 144px, 132px"
               className="object-contain dark:hidden"
               priority
             />
@@ -238,7 +238,7 @@ export function Navbar() {
               alt=""
               aria-hidden="true"
               fill
-              sizes="(min-width: 1536px) 132px, 120px"
+              sizes="(min-width: 1536px) 144px, 132px"
               className="hidden object-contain dark:block"
               priority
             />

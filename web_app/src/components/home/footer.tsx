@@ -137,13 +137,13 @@ export function Footer() {
                 aria-label="RijVia"
                 className="inline-flex items-center no-underline"
               >
-                <span className="relative block h-[52px] w-[156px] shrink-0">
+                <span className="relative block h-[60px] w-[180px] shrink-0">
                   <Image
                     src="/images/logo.png"
                     alt=""
                     aria-hidden="true"
                     fill
-                    sizes="156px"
+                    sizes="180px"
                     className="object-contain dark:hidden"
                   />
                   <Image
@@ -151,7 +151,7 @@ export function Footer() {
                     alt=""
                     aria-hidden="true"
                     fill
-                    sizes="156px"
+                    sizes="180px"
                     className="hidden object-contain dark:block"
                   />
                 </span>
@@ -410,13 +410,6 @@ export function Footer() {
                   <label htmlFor="footer-lang" className="sr-only">
                     {t("home.footer.language")}
                   </label>
-                  <input
-                    type="hidden"
-                    name="language"
-                    autoComplete="language"
-                    value={language}
-                    readOnly
-                  />
                   <Select
                     dir={isRTL ? "rtl" : "ltr"}
                     value={language}

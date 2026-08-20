@@ -2,7 +2,7 @@ import { buildLocalizedUrl } from "@/lib/i18n-routing";
 
 export type SiteLocale = "en" | "ar" | "fr" | "nl";
 
-export const DEFAULT_APP_URL = "https://readyroad.be";
+export const DEFAULT_APP_URL = "https://rijvia.be";
 export const DEFAULT_SITE_LOCALE: SiteLocale = "en";
 
 const SHARED_KEYWORDS = [

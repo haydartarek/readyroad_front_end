@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   History,
+  Import,
   ListTodo,
   RefreshCw,
   RotateCcw,
@@ -39,12 +40,13 @@ import {
   type AnalyticsSettingsView,
   type AnalyticsStatus,
   type YouTubeStatus,
+  type SeoMigrationWorkspace,
   formatSettingValue,
   statusTone,
   taskCount,
 } from "@/lib/marketing-admin";
 
-type View = "overview" | "analytics" | "youtube" | "discovery" | "agents" | "tasks" | "approvals" | "errors" | "audit" | "settings";
+type View = "overview" | "analytics" | "youtube" | "discovery" | "seo" | "agents" | "tasks" | "approvals" | "errors" | "audit" | "settings";
 
 interface PlatformData {
   overview: MarketingOverview;
@@ -59,6 +61,7 @@ interface PlatformData {
   discovery: AnalyticsDiscovery;
   reports: Array<Record<string, unknown>>;
   youtubeStatus: YouTubeStatus;
+  seoMigration: SeoMigrationWorkspace;
 }
 
 const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
@@ -66,6 +69,7 @@ const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
   { key: "analytics", icon: BarChart3 },
   { key: "youtube", icon: Youtube },
   { key: "discovery", icon: SearchCheck },
+  { key: "seo", icon: Import },
   { key: "agents", icon: Bot },
   { key: "tasks", icon: ListTodo },
   { key: "approvals", icon: ClipboardCheck },
@@ -103,7 +107,7 @@ export default function MarketingAdminPage() {
     setLoading(true);
     setError(false);
     try {
-      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports, youtubeStatus] = await Promise.all([
+      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports, youtubeStatus, seoMigration] = await Promise.all([
         apiClient.get<MarketingOverview>("/admin/marketing/overview"),
         apiClient.get<MarketingAgent[]>("/admin/marketing/agents"),
         apiClient.get<MarketingTaskPage>("/admin/marketing/tasks", { limit: 100 }),
@@ -116,6 +120,7 @@ export default function MarketingAdminPage() {
         apiClient.get<AnalyticsDiscovery>("/admin/marketing/analytics/organic-discovery", { limit: 100 }),
         apiClient.get<Array<Record<string, unknown>>>("/admin/marketing/analytics/reports", { limit: 20 }),
         apiClient.get<YouTubeStatus>("/admin/marketing/youtube/status"),
+        apiClient.get<SeoMigrationWorkspace>("/admin/marketing/seo-migration/workspace"),
       ]);
       setData({
         overview: overview.data,
@@ -130,6 +135,7 @@ export default function MarketingAdminPage() {
         discovery: discovery.data,
         reports: reports.data,
         youtubeStatus: youtubeStatus.data,
+        seoMigration: seoMigration.data,
       });
     } catch (requestError) {
       logApiError("Failed to load marketing admin platform", requestError);
@@ -255,6 +261,24 @@ export default function MarketingAdminPage() {
             />
           ) : null}
           {view === "discovery" ? <DiscoveryPanel data={data.discovery} t={t} /> : null}
+          {view === "seo" ? (
+            <SeoMigrationPanel
+              workspace={data.seoMigration}
+              busy={busy}
+              t={t}
+              onImport={(file) => mutate(
+                "seo-import",
+                () => {
+                  const formData = new FormData();
+                  formData.append("file", file);
+                  return apiClient.post("/admin/marketing/seo-migration/import", formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                  });
+                },
+                "admin.marketing.seo_import_complete",
+              )}
+            />
+          ) : null}
           {view === "agents" ? (
             <Agents
               agents={data.agents}
@@ -505,4 +529,86 @@ function DiscoveryPanel({ data, t }: { data: AnalyticsDiscovery; t: Translate })
     ["device_performance", data.devices],
   ] as const;
   return <div className="grid gap-5 xl:grid-cols-2">{cards.map(([key, items]) => <section key={key} className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"><h2 className="font-black">{t(`admin.marketing.${key}`)}</h2><div className="mt-4 space-y-3">{items.length ? items.map((item, index) => <pre key={`${key}-${index}`} className="max-w-full overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(item, null, 2)}</pre>) : <Empty t={t} />}</div></section>)}</div>;
+}
+
+function SeoMigrationPanel({
+  workspace,
+  busy,
+  t,
+  onImport,
+}: {
+  workspace: SeoMigrationWorkspace;
+  busy: string | null;
+  t: Translate;
+  onImport: (file: File) => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const latest = workspace.latestImport;
+  const counts = latest.sheetCounts ?? {};
+  const sections: Array<[string, unknown]> = [
+    ["migration_readiness", workspace.migrationReadiness],
+    ["internal_links", workspace.internalLinks],
+    ["content_backlog", workspace.contentBacklog],
+    ["strategy_context", workspace.strategy],
+    ["authority", workspace.authority],
+    ["social", workspace.social],
+  ];
+
+  return <div className="space-y-5">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <AdminMetricCard icon={<Import />} label={t("admin.marketing.seo_snapshot")} value={latest.status ?? t("admin.marketing.never")} />
+      <AdminMetricCard icon={<SearchCheck />} label={t("admin.marketing.seo_queries")} value={counts["طلبات البحث"] ?? 0} />
+      <AdminMetricCard icon={<BarChart3 />} label={t("admin.marketing.seo_pages")} value={counts["الصفحات"] ?? 0} />
+      <AdminMetricCard icon={<ShieldCheck />} label={t("admin.marketing.seo_canonical")} value={`${workspace.targetDomain} · ${workspace.canonicalActivation}`} />
+    </div>
+
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <h2 className="font-black">{t("admin.marketing.seo_import_title")}</h2>
+          <p className="mt-1 break-words text-sm text-muted-foreground">{t("admin.marketing.seo_import_description")}</p>
+          {latest.sourceFileName ? <p className="mt-2 break-all text-xs text-muted-foreground">{latest.sourceFileName} · {latest.periodStart} — {latest.periodEnd}</p> : null}
+        </div>
+        {workspace.localImportEnabled ? <div className="flex w-full max-w-xl flex-col gap-2 sm:flex-row">
+          <input
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            aria-label={t("admin.marketing.seo_choose_file")}
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-border/60 bg-background px-3 py-2 text-sm file:me-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:font-semibold file:text-primary"
+          />
+          <Button disabled={!file || busy === "seo-import"} onClick={() => file && onImport(file)}>
+            <Import className={cn("h-4 w-4", busy === "seo-import" && "animate-pulse")} />
+            {t("admin.marketing.seo_import")}
+          </Button>
+        </div> : <StatusBadge status="IMPORT_DISABLED" />}
+      </div>
+    </section>
+
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-black">{t("admin.marketing.opportunities")}</h2>
+        <Badge variant="outline">{workspace.opportunities.length}</Badge>
+      </div>
+      <div className="mt-4 space-y-3">
+        {workspace.opportunities.length ? workspace.opportunities.slice(0, 25).map((item, index) => (
+          <pre key={`seo-opportunity-${String(item.id ?? index)}`} className="max-w-full overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(item, null, 2)}</pre>
+        )) : <Empty t={t} />}
+      </div>
+    </section>
+
+    <div className="grid gap-5 xl:grid-cols-2">
+      {sections.map(([key, value]) => <section key={key} className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+        <h2 className="font-black">{t(`admin.marketing.seo_${key}`)}</h2>
+        <pre className="mt-4 max-h-[32rem] max-w-full overflow-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(value, null, 2)}</pre>
+      </section>)}
+    </div>
+
+    {workspace.ownerDecisionsRequired.length ? <section className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 text-amber-900">
+      <h2 className="font-black">{t("admin.marketing.seo_owner_decisions")}</h2>
+      <ul className="mt-3 list-inside list-disc space-y-2 text-sm">
+        {workspace.ownerDecisionsRequired.map((decision) => <li key={decision}>{decision}</li>)}
+      </ul>
+    </section> : null}
+  </div>;
 }

@@ -118,4 +118,24 @@ describe("RijVia brand assets", () => {
       expect(fs.existsSync(publicPath(...asset.slice(1).split("/")))).toBe(true);
     }
   });
+
+  it("gives the light and dark wordmarks enough uncropped layout space", () => {
+    const navbarSource = fs.readFileSync(
+      path.join(process.cwd(), "src", "components", "layout", "navbar.tsx"),
+      "utf8",
+    );
+    const footerSource = fs.readFileSync(
+      path.join(process.cwd(), "src", "components", "home", "footer.tsx"),
+      "utf8",
+    );
+
+    for (const source of [navbarSource, footerSource]) {
+      expect(source).toContain('src="/images/logo.png"');
+      expect(source).toContain('src="/images/logo-dark.png"');
+      expect(source).toContain("object-contain");
+    }
+
+    expect(navbarSource).toContain("h-11 w-[132px]");
+    expect(footerSource).toContain("h-[60px] w-[180px]");
+  });
 });

@@ -1,4 +1,5 @@
 import {
+  PUBLIC_CONTACT,
   getAllPublicContent,
   type PublicDocumentKey,
   type PublicPageKey,
@@ -28,6 +29,11 @@ const PLACEHOLDER_PATTERN =
 
 describe("public content governance", () => {
   const content = getAllPublicContent();
+
+  it("uses the approved RijVia public contact identity", () => {
+    expect(PUBLIC_CONTACT.email).toBe("info@rijvia.be");
+    expect(JSON.stringify(content)).not.toContain("heydertarek2000@gmail.com");
+  });
 
   it("identifies RijVia and explains Google sign-in on every homepage", () => {
     for (const language of LANGUAGES) {

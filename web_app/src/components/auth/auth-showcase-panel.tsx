@@ -47,7 +47,7 @@ export function AuthShowcasePanel({
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 ring-2 ring-primary/35 shadow-[0_12px_30px_rgba(223,88,48,0.22)]">
               <Image
-                src="/images/logo.png"
+                src="/icons/icon-192.png"
                 alt=""
                 aria-hidden="true"
                 width={40}

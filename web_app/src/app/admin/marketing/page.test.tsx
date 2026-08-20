@@ -116,6 +116,28 @@ const responses: Record<string, unknown> = {
     latestVideos: [],
     bestVideos: [],
   },
+  "/admin/marketing/seo-migration/workspace": {
+    localImportEnabled: true,
+    publishingEnabled: false,
+    canonicalActivation: "PENDING_RELEASE",
+    targetDomain: "rijvia.be",
+    latestImport: {
+      id: 3,
+      sourceFileName: "search-console.xlsx",
+      periodStart: "2026-05-22",
+      periodEnd: "2026-08-19",
+      sheetCounts: { "طلبات البحث": 504, "الصفحات": 629 },
+      status: "COMPLETE",
+    },
+    opportunities: [{ id: 1, priority: "P0", state: "MIGRATION_RISK" }],
+    migrationReadiness: { blockedMappings: [] },
+    internalLinks: [],
+    contentBacklog: { draftBriefs: [], officialTopics: [] },
+    strategy: { usps: [] },
+    authority: { mode: "FREE_OR_EARNED_ONLY" },
+    social: { publishing: "DISABLED" },
+    ownerDecisionsRequired: [],
+  },
 };
 
 describe("MarketingAdminPage", () => {
@@ -135,9 +157,34 @@ describe("MarketingAdminPage", () => {
 
     expect(await screen.findByText("admin.marketing.tasks_today")).toBeInTheDocument();
     expect(screen.getAllByText("HEALTHY").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("tab")).toHaveLength(10);
+    expect(screen.getAllByRole("tab")).toHaveLength(11);
     expect(get).toHaveBeenCalledWith("/admin/marketing/tasks", { limit: 100 });
     expect(get).toHaveBeenCalledWith("/admin/marketing/analytics/organic-discovery", { limit: 100 });
+  });
+
+  it("shows the evidence-backed SEO workspace and imports the selected XLSX", async () => {
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_seo" }));
+    expect(screen.getByText("504")).toBeInTheDocument();
+    expect(screen.getByText("629")).toBeInTheDocument();
+
+    const file = new File(["PK-test"], "search-console.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    fireEvent.change(screen.getByLabelText("admin.marketing.seo_choose_file"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.seo_import" }));
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/admin/marketing/seo-migration/import",
+        expect.any(FormData),
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+    });
   });
 
   it("shows the read-only YouTube monitor and requests a task-based sync", async () => {

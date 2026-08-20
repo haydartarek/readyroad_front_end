@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { PUBLIC_CONTACT } from "@/lib/public-content";
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -149,8 +150,8 @@ export async function POST(req: NextRequest) {
     }
 
     await transporter.sendMail({
-      from: `"${copy.mail.fromName}" <${process.env.SMTP_USER}>`,
-      to: process.env.CONTACT_TO,
+      from: `"${copy.mail.fromName}" <${process.env.SMTP_FROM ?? process.env.SMTP_USER}>`,
+      to: process.env.CONTACT_TO ?? PUBLIC_CONTACT.email,
       replyTo: `"${firstName} ${lastName}" <${email}>`,
       subject: `[${copy.mail.subjectPrefix}] ${subject}`,
       html: `

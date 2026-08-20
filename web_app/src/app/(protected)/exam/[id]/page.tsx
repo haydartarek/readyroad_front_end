@@ -17,7 +17,10 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { API_ENDPOINTS, EXAM_RULES } from "@/lib/constants";
 import { useExamQuestionPresentation } from "@/hooks/use-exam-question-presentation";
-import { resolveTheoryTimedAttemptStep } from "@/lib/attempt-lifecycle";
+import {
+  resolveNextTheoryQuestionIndex,
+  resolveTheoryTimedAttemptStep,
+} from "@/lib/attempt-lifecycle";
 import { StatusScreen } from "@/components/ui/status-screen";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -186,6 +189,7 @@ export default function ExamQuestionsPage() {
   const continuousInactivitySecondsRef = useRef(0);
   const finalizedQuestionIdsRef = useRef<Set<number>>(new Set());
   const transitionInFlightRef = useRef(false);
+  const lastAdvancedQuestionIdRef = useRef<number | null>(null);
   // Ref for submit so timer callback always sees the latest version
   const submitExamRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
@@ -432,6 +436,7 @@ export default function ExamQuestionsPage() {
       if (!examData || transitionInFlightRef.current) return;
       const currentQuestion = examData.questions[currentQuestionIndex];
       if (!currentQuestion) return;
+      if (lastAdvancedQuestionIdRef.current === currentQuestion.id) return;
 
       transitionInFlightRef.current = true;
       try {
@@ -469,7 +474,14 @@ export default function ExamQuestionsPage() {
         } else if (decision.action === "abandon") {
           await terminateForInactivity();
         } else {
-          setCurrentQuestionIndex((prev) => prev + 1);
+          lastAdvancedQuestionIdRef.current = currentQuestion.id;
+          setCurrentQuestionIndex((previousIndex) =>
+            resolveNextTheoryQuestionIndex({
+              currentIndex: previousIndex,
+              transitionFromIndex: currentQuestionIndex,
+              totalQuestions: examData.questions.length,
+            }),
+          );
           setQuestionTimeLeft(QUESTION_TIME);
         }
       } catch (err) {

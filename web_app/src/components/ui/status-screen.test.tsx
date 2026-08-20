@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { LocalizedErrorScreen } from "@/components/ui/localized-error-screen";
 
-describe("ReadyRoad error identity", () => {
+describe("RijVia error identity", () => {
   beforeEach(() => {
     document.cookie = "readyroad_locale=en; path=/";
   });
@@ -12,7 +12,7 @@ describe("ReadyRoad error identity", () => {
       <LocalizedErrorScreen reset={reset} fullscreen />,
     );
 
-    expect(container).toHaveTextContent("ReadyRoad");
+    expect(container).toHaveTextContent("RijVia");
     expect(
       container.querySelector('img[src*="logo.png"][aria-hidden="true"]'),
     ).toBeInTheDocument();

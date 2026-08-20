@@ -70,10 +70,8 @@ export function StatusScreen({
                 />
                 <div>
                   <p className="text-[1.7rem] font-black tracking-tight">
-                    <span className="text-primary">R</span>
-                    <span className="text-foreground">eady</span>
-                    <span className="text-primary">R</span>
-                    <span className="text-foreground">oad</span>
+                    <span className="text-primary">Rij</span>
+                    <span className="text-foreground">Via</span>
                   </p>
                   {brandCaption ? (
                     <p className="text-sm font-medium text-muted-foreground">
@@ -116,10 +114,8 @@ export function StatusScreen({
                   priority
                 />
                 <p className="text-2xl font-black tracking-tight text-foreground">
-                  <span className="text-primary">R</span>
-                  <span>eady</span>
-                  <span className="text-primary">R</span>
-                  <span>oad</span>
+                  <span className="text-primary">Rij</span>
+                  <span>Via</span>
                 </p>
               </div>
 

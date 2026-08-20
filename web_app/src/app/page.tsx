@@ -35,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: copy.openGraphTitle,
       description: copy.openGraphDescription,
       url: canonical,
-      siteName: "ReadyRoad",
+      siteName: "RijVia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [ogImage],

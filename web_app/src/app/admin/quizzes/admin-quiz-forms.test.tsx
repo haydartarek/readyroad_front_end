@@ -12,6 +12,7 @@ jest.mock("@/hooks/use-localized-router", () => ({
 
 jest.mock("next/navigation", () => ({
   useParams: () => ({ id: "7" }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("@/contexts/language-context", () => ({
@@ -78,9 +79,19 @@ const question = {
   ],
 };
 
+const originalFetch = global.fetch;
+
 describe("Admin theoretical question forms", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ url: "/api/admin/images/priority-rule-ab12cd34ef56.png" }),
+    }) as jest.Mock;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
   });
 
   test("create uses theoretical categories and exposes all explanation fields", async () => {
@@ -148,6 +159,44 @@ describe("Admin theoretical question forms", () => {
       ).toBeInTheDocument();
     }
   });
+
+  test.each([
+    ["create", AdminAddQuizQuestionPage, "admin-quiz-new-image-filename"],
+    ["edit", AdminEditQuizQuestionPage, "admin-quiz-edit-image-filename"],
+  ] as const)(
+    "%s upload sends the requested safe filename to the backend",
+    async (mode, Page, filenameInputId) => {
+      (apiClient.get as jest.Mock).mockImplementation((url: string) =>
+        Promise.resolve({
+          data:
+            mode === "edit" && url !== "/admin/quiz/categories"
+              ? question
+              : [category],
+        }),
+      );
+      const { container } = render(<Page />);
+      await waitFor(() => expect(apiClient.get).toHaveBeenCalled());
+
+      fireEvent.change(container.querySelector(`#${filenameInputId}`)!, {
+        target: { value: "priority-rule" },
+      });
+      const fileInput = container.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
+      fireEvent.change(fileInput, {
+        target: {
+          files: [new File(["image"], "source.png", { type: "image/png" })],
+        },
+      });
+
+      await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+      const request = (global.fetch as jest.Mock).mock.calls[0][1] as {
+        body: FormData;
+      };
+      expect(request.body.get("filename")).toBe("priority-rule");
+      expect(request.body.get("file")).toBeInstanceOf(File);
+    },
+  );
 
   test("accepts the two-to-three option policy independently of difficulty", () => {
     expect(isValidQuizOptionCount(2)).toBe(true);

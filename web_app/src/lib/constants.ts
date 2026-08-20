@@ -1,11 +1,15 @@
-// ─── App Constants — ReadyRoad ────────────────────────────
+// ─── App Constants — RijVia ────────────────────────────
 // BFF proxy model: all API calls go through /api/proxy (see api.ts)
 
 // ─── Exam Rules (Belgian Driving License) ────────────────
 
 export const EXAM_RULES = {
   TOTAL_QUESTIONS: 50,
-  DURATION_MINUTES: 30, // ← Backend spec: timeLimitMinutes = 30 (وليس 45)
+  QUESTION_TIME_SECONDS: 15,
+  DURATION_SECONDS: 50 * 15,
+  DURATION_MINUTES: (50 * 15) / 60,
+  DURATION_WHOLE_MINUTES: Math.floor((50 * 15) / 60),
+  DURATION_REMAINING_SECONDS: (50 * 15) % 60,
   PASS_PERCENTAGE: 82,
   PASSING_SCORE: 41, // 82% of 50
 } as const;
@@ -122,6 +126,8 @@ export const API_ENDPOINTS = {
     DETAIL: (id: number) => `/exams/simulations/${id}`,
     RESULTS: (id: number) => `/exams/simulations/${id}/results`,
     ABANDON: (id: number) => `/exams/simulations/${id}/abandon`,
+    PRESENTED: (examId: number, questionId: number) =>
+      `/exams/simulations/${examId}/questions/${questionId}/presented`,
     SUBMIT_ANSWER: (examId: number, questionId: number) =>
       `/exams/simulations/${examId}/questions/${questionId}/answer`, // ← مضاف
   },

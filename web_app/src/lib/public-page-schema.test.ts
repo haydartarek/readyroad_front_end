@@ -11,8 +11,8 @@ describe("public page structured data", () => {
     const page = createPublicPageSchema({
       appUrl,
       path: "/about",
-      title: "About ReadyRoad",
-      description: "ReadyRoad public information.",
+      title: "About RijVia",
+      description: "RijVia public information.",
       language: "en",
       pageType: "AboutPage",
     });
@@ -20,7 +20,7 @@ describe("public page structured data", () => {
       appUrl,
       path: "/about",
       homeLabel: "Home",
-      currentLabel: "About ReadyRoad",
+      currentLabel: "About RijVia",
       language: "en",
     });
 
@@ -38,7 +38,7 @@ describe("public page structured data", () => {
 
   it("uses the visible FAQ copy without adding rating or commercial claims", () => {
     const items = [
-      { question: "Is ReadyRoad free?", answer: "ReadyRoad is free to use." },
+      { question: "Is RijVia free?", answer: "RijVia is free to use." },
     ];
     const schema = createFaqSchema(items, "en");
     const serialized = JSON.stringify(schema);

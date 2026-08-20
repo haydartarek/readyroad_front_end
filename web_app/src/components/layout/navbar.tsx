@@ -220,22 +220,28 @@ export function Navbar() {
         <Link
           href="/"
           prefetch={false}
-          aria-label="ReadyRoad"
-          className="flex shrink-0 items-center gap-2 max-[359px]:gap-0"
+          aria-label="RijVia"
+          className="flex shrink-0 items-center"
         >
-          <Image
-            src="/images/logo.png"
-            alt=""
-            aria-hidden="true"
-            width={48}
-            height={48}
-            className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-border/50 min-[1536px]:h-11 min-[1536px]:w-11"
-          />
-          <span className="text-[1.05rem] font-black leading-none tracking-normal max-[359px]:hidden min-[1280px]:hidden min-[2048px]:inline">
-            <span className="text-primary">R</span>
-            <span className="text-secondary">eady</span>
-            <span className="text-primary">R</span>
-            <span className="text-secondary">oad</span>
+          <span className="relative block h-10 w-[120px] shrink-0 min-[1536px]:h-11 min-[1536px]:w-[132px]">
+            <Image
+              src="/images/logo.png"
+              alt=""
+              aria-hidden="true"
+              fill
+              sizes="(min-width: 1536px) 132px, 120px"
+              className="object-contain dark:hidden"
+              priority
+            />
+            <Image
+              src="/images/logo-dark.png"
+              alt=""
+              aria-hidden="true"
+              fill
+              sizes="(min-width: 1536px) 132px, 120px"
+              className="hidden object-contain dark:block"
+              priority
+            />
           </span>
         </Link>
 

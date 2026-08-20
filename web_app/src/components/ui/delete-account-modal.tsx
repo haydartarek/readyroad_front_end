@@ -109,12 +109,12 @@ function DeleteAccountModalContent({
             className="absolute top-4 right-8 w-10 h-10 rounded-full bg-white/8"
           />
 
-          {/* ReadyRoad wordmark */}
+          {/* RijVia wordmark */}
           <p
             className="relative z-10 text-xs font-bold tracking-[0.2em] uppercase mb-5 select-none"
             style={{ color: "rgba(255,255,255,0.5)" }}
           >
-            ReadyRoad
+            RijVia
           </p>
 
           {/* Icon — overlaps header/body boundary */}

@@ -11,6 +11,7 @@ import {
   getStudentIntelligence,
   getProgressByCategory,
   getRecentActivity,
+  getTheoryTimeoutAnalysis,
   getWeakAreas,
 } from "@/services";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
@@ -41,11 +42,13 @@ import {
   CheckCircle,
   Clock3,
   AlertTriangle,
+  TimerOff,
 } from "lucide-react";
 import type {
   CategoryProgressSummary,
   SignWeaknessSummary,
   StudentIntelligence,
+  TheoryTimeoutAnalysis,
 } from "@/services/progressService";
 import { QuickActionsSection } from "@/components/dashboard/quick-actions-section";
 import { RecentActivityList } from "@/components/dashboard/recent-activity-list";
@@ -569,6 +572,88 @@ function WeakSignsWidget({
   );
 }
 
+export function TheoryTimeoutWidget({
+  analysis,
+  t,
+  language,
+}: {
+  analysis: TheoryTimeoutAnalysis;
+  t: (key: string) => string;
+  language: "en" | "nl" | "fr" | "ar";
+}) {
+  if (analysis.totalTimeouts === 0 || analysis.items.length === 0) return null;
+
+  const localized = (
+    item: TheoryTimeoutAnalysis["items"][number],
+    prefix: "questionText" | "categoryName",
+  ) => {
+    const values = {
+      en: item[`${prefix}En`],
+      nl: item[`${prefix}Nl`],
+      fr: item[`${prefix}Fr`],
+      ar: item[`${prefix}Ar`],
+    };
+    return values[language] || values.en || Object.values(values).find(Boolean) || "";
+  };
+
+  return (
+    <section
+      data-testid="theory-timeout-analysis"
+      className="space-y-4 rounded-2xl border border-amber-200/70 bg-card p-5 shadow-sm"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+            <TimerOff className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="font-black text-foreground">
+              {t("dashboard.theory_timeouts_title")}
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              {t("dashboard.theory_timeouts_description")}
+            </p>
+          </div>
+        </div>
+        <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-black text-amber-800">
+          {analysis.totalTimeouts} {t("dashboard.theory_timeouts_count")}
+        </span>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        {analysis.items.map((item) => {
+          const question = localized(item, "questionText");
+          const category = localized(item, "categoryName") || item.categoryCode;
+          const occurredAt = new Intl.DateTimeFormat(
+            `${language}-u-ca-gregory`,
+            { dateStyle: "medium" },
+          ).format(new Date(item.timedOutAt));
+          return (
+            <article
+              key={`${item.examId}-${item.questionId}`}
+              className="flex min-w-0 flex-col gap-3 rounded-xl border border-border/60 bg-background/75 p-4"
+            >
+              <div className="min-w-0 space-y-1">
+                <p className="break-words text-sm font-bold leading-6 text-foreground">
+                  {question}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {[category, occurredAt].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+              <Button asChild variant="outline" size="sm" className="mt-auto w-full">
+                <Link href={item.reviewPath}>
+                  {t("dashboard.theory_timeouts_review")}
+                </Link>
+              </Button>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function DashboardHome() {
   const { user } = useAuth();
   const { t, language } = useLanguage();
@@ -595,6 +680,8 @@ function DashboardHome() {
   const [loadError, setLoadError] = useState(false);
   const [studentIntelligence, setStudentIntelligence] =
     useState<StudentIntelligence | null>(null);
+  const [theoryTimeouts, setTheoryTimeouts] =
+    useState<TheoryTimeoutAnalysis | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
 
   // Reset all dashboard state when the user changes (login / logout).
@@ -611,6 +698,7 @@ function DashboardHome() {
     setServiceUnavailable(false);
     setLoadError(false);
     setStudentIntelligence(null);
+    setTheoryTimeouts(null);
   }, [currentUserId]);
 
   useEffect(() => {
@@ -630,15 +718,18 @@ function DashboardHome() {
           weakAreasData,
           recentActivityData,
           categoryProgressResponse,
+          timeoutAnalysis,
         ] = await Promise.all([
           getOverallProgress(),
           getStudentIntelligence(),
           getWeakAreas(language),
           getRecentActivity(5),
           getProgressByCategory(),
+          getTheoryTimeoutAnalysis(5),
         ]);
 
         setStudentIntelligence(intelligence);
+        setTheoryTimeouts(timeoutAnalysis);
 
         setProgressData({
           totalExamsTaken: progress.totalExamsTaken,
@@ -888,6 +979,14 @@ function DashboardHome() {
 
       {/* Recent Activity */}
       <RecentActivityList activities={recentActivities} />
+
+      {theoryTimeouts ? (
+        <TheoryTimeoutWidget
+          analysis={theoryTimeouts}
+          t={t}
+          language={language}
+        />
+      ) : null}
 
       {/* Performance Overview */}
       <div className="grid grid-cols-1 xl:grid-cols-[1.35fr,1fr] gap-6">

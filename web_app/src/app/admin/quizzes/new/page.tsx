@@ -222,6 +222,7 @@ export default function AdminAddQuizQuestionPage() {
     type: "success" | "error";
   } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [imageFilename, setImageFilename] = useState("");
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -415,6 +416,9 @@ export default function AdminAddQuizQuestionPage() {
       setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
+      if (imageFilename.trim()) {
+        formData.append("filename", imageFilename.trim());
+      }
       // Use native fetch so the browser sets the correct multipart boundary automatically.
       const headers: Record<string, string> = {};
       const csrf = getCsrfToken();
@@ -708,6 +712,27 @@ export default function AdminAddQuizQuestionPage() {
               </button>
             </div>
           )}
+
+          <div className="space-y-1">
+            <label
+              htmlFor="admin-quiz-new-image-filename"
+              className="block text-xs font-semibold text-foreground"
+            >
+              {t("admin.quizzes.upload.filename")}
+            </label>
+            <input
+              id="admin-quiz-new-image-filename"
+              name="contentImageFilename"
+              value={imageFilename}
+              maxLength={100}
+              placeholder={t("admin.quizzes.upload.filename_placeholder")}
+              onChange={(event) => setImageFilename(event.target.value)}
+              className="w-full rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("admin.quizzes.upload.filename_hint")}
+            </p>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 space-y-1">

@@ -29,10 +29,10 @@ const PLACEHOLDER_PATTERN =
 describe("public content governance", () => {
   const content = getAllPublicContent();
 
-  it("identifies ReadyRoad and explains Google sign-in on every homepage", () => {
+  it("identifies RijVia and explains Google sign-in on every homepage", () => {
     for (const language of LANGUAGES) {
       expect(ALL_MESSAGES[language]["home.hero.headline"]).toContain(
-        "ReadyRoad",
+        "RijVia",
       );
       expect(ALL_MESSAGES[language]["home.hero.subtitle"].trim()).not.toBe("");
       expect(ALL_MESSAGES[language]["home.hero.privacy"]).toContain("Google");

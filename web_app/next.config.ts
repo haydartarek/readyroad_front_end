@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const appOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const isHttpsDeployment = appOrigin.startsWith("https://");
+
 const scriptSource =
   process.env.NODE_ENV === "production"
     ? "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com"
@@ -21,7 +24,7 @@ const contentSecurityPolicy = [
   "frame-src 'self' https://www.youtube-nocookie.com",
   "manifest-src 'self'",
   "media-src 'self'",
-  "upgrade-insecure-requests",
+  ...(isHttpsDeployment ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const nextConfig: NextConfig = {
@@ -91,10 +94,14 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: [
           { key: "X-DNS-Prefetch-Control", value: "on" },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
-          },
+          ...(isHttpsDeployment
+            ? [
+                {
+                  key: "Strict-Transport-Security",
+                  value: "max-age=63072000; includeSubDomains; preload",
+                },
+              ]
+            : []),
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-XSS-Protection", value: "1; mode=block" },

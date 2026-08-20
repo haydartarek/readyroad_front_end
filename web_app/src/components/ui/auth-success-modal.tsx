@@ -116,9 +116,9 @@ function AuthSuccessModalContent({
             className="absolute top-4 right-8 w-10 h-10 rounded-full bg-white/10"
           />
 
-          {/* ReadyRoad wordmark */}
+          {/* RijVia wordmark */}
           <p className="relative z-10 text-xs font-bold tracking-[0.2em] uppercase text-white/70 mb-5 select-none">
-            ReadyRoad
+            RijVia
           </p>
 
           {/* Pulsing ring + SVG checkmark — overlaps header/body boundary */}

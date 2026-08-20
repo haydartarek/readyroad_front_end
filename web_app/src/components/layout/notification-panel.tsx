@@ -149,7 +149,7 @@ const TYPE_I18N: Record<string, string> = {
 
 export function NotificationPanel() {
   const { t, language } = useLanguage();
-  const { unreadCount, markAllRead } = useNotifications();
+  const { unreadCount, markAllRead, revision } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
   const [items, setItems] = useState<AppNotification[]>([]);
@@ -157,6 +157,7 @@ export function NotificationPanel() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [visibleCount, setVisibleCount] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
+  const syncedRevisionRef = useRef(revision);
 
   // ── Helpers ──────────────────────────────────────────────
 
@@ -198,6 +199,7 @@ export function NotificationPanel() {
 
   // ── Load + auto-mark-all-read when panel opens ────────
   const openPanel = useCallback(async () => {
+    syncedRevisionRef.current = revision;
     setIsOpen(true);
     setIsLoading(true);
     try {
@@ -216,7 +218,31 @@ export function NotificationPanel() {
     } finally {
       setIsLoading(false);
     }
-  }, [unreadCount, markAllRead]);
+  }, [unreadCount, markAllRead, revision]);
+
+  useEffect(() => {
+    if (!isOpen || revision <= syncedRevisionRef.current) return;
+
+    let cancelled = false;
+    const syncOpenPanel = async () => {
+      try {
+        const latest = await getNotifications();
+        if (cancelled) return;
+        setItems((current) => mergeUniqueNotifications(latest, current));
+        if (latest.length < MAX_VISIBLE_NOTIFICATIONS) {
+          setVisibleCount((current) => Math.max(current, latest.length));
+        }
+        syncedRevisionRef.current = revision;
+        await markAllRead();
+      } catch {
+        // The next successful poll can retry without interrupting the current UI.
+      }
+    };
+    void syncOpenPanel();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, revision, markAllRead]);
 
   const showLatestNotifications = useCallback(async () => {
     setIsLoadingMore(true);
@@ -374,19 +400,25 @@ export function NotificationPanel() {
                             string | number
                           >)
                         : undefined;
-                      if (notif.type === "WEAK_AREA" && params) {
-                        const localizedCategory =
-                          params[
-                            language === "ar"
-                              ? "categoryAr"
-                              : language === "nl"
-                                ? "categoryNl"
-                                : language === "fr"
-                                  ? "categoryFr"
-                                  : "categoryEn"
-                          ];
-                        if (localizedCategory) {
-                          params.category = localizedCategory;
+                      if (params) {
+                        const suffix =
+                          language === "ar"
+                            ? "Ar"
+                            : language === "nl"
+                              ? "Nl"
+                              : language === "fr"
+                                ? "Fr"
+                                : "En";
+                        if (notif.type === "WEAK_AREA") {
+                          const localizedCategory = params[`category${suffix}`];
+                          if (localizedCategory) params.category = localizedCategory;
+                        }
+                        if (
+                          notif.type === "LESSON_PROGRESS" ||
+                          notif.type === "NEXT_STEP"
+                        ) {
+                          const localizedLesson = params[`lesson${suffix}`];
+                          if (localizedLesson) params.lesson = localizedLesson;
                         }
                       }
                       return t(notif.messageKey, params);

@@ -45,9 +45,13 @@ function readIcoDimensions(filePath: string) {
   });
 }
 
-describe("ReadyRoad brand assets", () => {
+describe("RijVia brand assets", () => {
   it("provides a genuine multi-size favicon", () => {
-    expect(readIcoDimensions(publicPath("favicon.ico"))).toEqual([
+    expect(
+      readIcoDimensions(publicPath("favicon.ico")).sort(
+        (left, right) => left.width - right.width,
+      ),
+    ).toEqual([
       { width: 16, height: 16 },
       { width: 32, height: 32 },
       { width: 48, height: 48 },
@@ -67,8 +71,8 @@ describe("ReadyRoad brand assets", () => {
     ) as WebManifest;
 
     expect(manifest).toMatchObject({
-      name: "ReadyRoad - Belgian Driving Theory",
-      short_name: "ReadyRoad",
+      name: "RijVia - Belgian Driving Theory",
+      short_name: "RijVia",
       id: "/",
       start_url: "/",
       scope: "/",
@@ -103,8 +107,8 @@ describe("ReadyRoad brand assets", () => {
 
     for (const asset of [
       "/favicon.ico",
-      "/favicon-16x16.png",
-      "/favicon-32x32.png",
+      "/favicon.svg",
+      "/favicon-96x96.png",
       "/icons/icon-192.png",
       "/icons/icon-512.png",
       "/apple-touch-icon.png",

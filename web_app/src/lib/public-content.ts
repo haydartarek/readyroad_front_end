@@ -84,81 +84,81 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
     breadcrumbHome: "Home",
     metadata: {
       about: {
-        title: "About ReadyRoad",
+        title: "About RijVia",
         description:
-          "Learn how ReadyRoad supports Belgian driving theory study through multilingual content, official-source review, and structured practice.",
-        openGraphTitle: "About ReadyRoad | Belgian Driving Theory Learning",
+          "Learn how RijVia supports Belgian driving theory study through multilingual content, official-source review, and structured practice.",
+        openGraphTitle: "About RijVia | Belgian Driving Theory Learning",
         openGraphDescription:
-          "Discover ReadyRoad's mission, multilingual approach, official-source policy, and independent educational role.",
-        imageAlt: "About the ReadyRoad learning platform",
+          "Discover RijVia's mission, multilingual approach, official-source policy, and independent educational role.",
+        imageAlt: "About the RijVia learning platform",
       },
       contact: {
-        title: "Contact ReadyRoad",
+        title: "Contact RijVia",
         description:
-          "Contact ReadyRoad for account support, accessibility help, content corrections, privacy requests, or platform feedback.",
-        openGraphTitle: "Contact ReadyRoad Support",
+          "Contact RijVia for account support, accessibility help, content corrections, privacy requests, or platform feedback.",
+        openGraphTitle: "Contact RijVia Support",
         openGraphDescription:
-          "Send ReadyRoad a support request, report a content issue, or share feedback through the secure contact form.",
-        imageAlt: "Contact ReadyRoad support",
+          "Send RijVia a support request, report a content issue, or share feedback through the secure contact form.",
+        imageAlt: "Contact RijVia support",
       },
       privacy: {
         title: "Privacy Policy",
         description:
-          "Read how ReadyRoad collects, uses, stores, and protects account, learning, authentication, and contact data under the GDPR.",
-        openGraphTitle: "ReadyRoad Privacy Policy",
+          "Read how RijVia collects, uses, stores, and protects account, learning, authentication, and contact data under the GDPR.",
+        openGraphTitle: "RijVia Privacy Policy",
         openGraphDescription:
-          "How ReadyRoad handles personal data, account security, retention, service providers, and GDPR rights.",
-        imageAlt: "ReadyRoad privacy policy",
+          "How RijVia handles personal data, account security, retention, service providers, and GDPR rights.",
+        imageAlt: "RijVia privacy policy",
       },
       cookies: {
         title: "Cookie Policy",
         description:
-          "See which essential and optional cookies ReadyRoad uses for login security, language, preferences, Google sign-in, and consent-based analytics.",
-        openGraphTitle: "ReadyRoad Cookie Policy",
+          "See which essential and optional cookies RijVia uses for login security, language, preferences, Google sign-in, and consent-based analytics.",
+        openGraphTitle: "RijVia Cookie Policy",
         openGraphDescription:
-          "A transparent inventory of ReadyRoad cookies, browser storage, purposes, and retention periods.",
-        imageAlt: "ReadyRoad cookie policy",
+          "A transparent inventory of RijVia cookies, browser storage, purposes, and retention periods.",
+        imageAlt: "RijVia cookie policy",
       },
       terms: {
         title: "Terms of Service",
         description:
-          "Read the rules for ReadyRoad accounts, acceptable use, educational content, intellectual property, and service availability.",
-        openGraphTitle: "ReadyRoad Terms of Service",
+          "Read the rules for RijVia accounts, acceptable use, educational content, intellectual property, and service availability.",
+        openGraphTitle: "RijVia Terms of Service",
         openGraphDescription:
-          "Terms governing accounts, responsible use, educational materials, availability, and liability on ReadyRoad.",
-        imageAlt: "ReadyRoad terms of service",
+          "Terms governing accounts, responsible use, educational materials, availability, and liability on RijVia.",
+        imageAlt: "RijVia terms of service",
       },
       disclaimer: {
         title: "Educational Disclaimer",
         description:
-          "Understand ReadyRoad's independent educational role and why official Belgian law and examination authorities remain decisive.",
-        openGraphTitle: "ReadyRoad Educational Disclaimer",
+          "Understand RijVia's independent educational role and why official Belgian law and examination authorities remain decisive.",
+        openGraphTitle: "RijVia Educational Disclaimer",
         openGraphDescription:
-          "ReadyRoad supports study but does not replace Belgian legislation, official instructions, or professional advice.",
-        imageAlt: "ReadyRoad educational disclaimer",
+          "RijVia supports study but does not replace Belgian legislation, official instructions, or professional advice.",
+        imageAlt: "RijVia educational disclaimer",
       },
       faq: {
         title: "Frequently Asked Questions",
         description:
-          "Find answers about ReadyRoad accounts, free access, lessons, traffic signs, practice, exams, progress, languages, and updates.",
-        openGraphTitle: "ReadyRoad Frequently Asked Questions",
+          "Find answers about RijVia accounts, free access, lessons, traffic signs, practice, exams, progress, languages, and updates.",
+        openGraphTitle: "RijVia Frequently Asked Questions",
         openGraphDescription:
-          "Answers about studying Belgian driving theory with ReadyRoad, including accounts, practice, progress, and languages.",
-        imageAlt: "ReadyRoad frequently asked questions",
+          "Answers about studying Belgian driving theory with RijVia, including accounts, practice, progress, and languages.",
+        imageAlt: "RijVia frequently asked questions",
       },
     },
     documents: {
       about: {
         eyebrow: "Independent learning platform",
-        title: "About ReadyRoad",
+        title: "About RijVia",
         lastUpdated: "Last reviewed: 21 July 2026",
         intro:
-          "ReadyRoad is an independent, free learning platform that helps people study Belgian driving theory in a structured and accessible way.",
+          "RijVia is an independent, free learning platform that helps people study Belgian driving theory in a structured and accessible way.",
         sections: [
           {
-            title: "Why ReadyRoad exists",
+            title: "Why RijVia exists",
             paragraphs: [
-              "Belgian driving theory is spread across legal rules, regional examination guidance, signs, and practical situations. ReadyRoad brings study material, practice, and progress tracking into one coherent experience without claiming to replace official authorities.",
+              "Belgian driving theory is spread across legal rules, regional examination guidance, signs, and practical situations. RijVia brings study material, practice, and progress tracking into one coherent experience without claiming to replace official authorities.",
             ],
           },
           {
@@ -170,7 +170,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "What makes the platform different",
             paragraphs: [
-              "ReadyRoad combines a reviewed catalogue of 184 traffic signs with structured lessons, category practice, exam-style sessions, and progress insights. Content is maintained from canonical source files and checked for cross-language and cross-file consistency.",
+              "RijVia combines a reviewed catalogue of 184 traffic signs with structured lessons, category practice, exam-style sessions, and progress insights. Content is maintained from canonical source files and checked for cross-language and cross-file consistency.",
             ],
           },
           {
@@ -182,7 +182,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Official-source approach",
             paragraphs: [
-              "ReadyRoad reviews educational content against Belgian official sources and records future-law items separately. The competent authorities and the published legal text always take priority over a summary on this platform.",
+              "RijVia reviews educational content against Belgian official sources and records future-law items separately. The competent authorities and the published legal text always take priority over a summary on this platform.",
             ],
             references: [
               {
@@ -200,7 +200,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Project stewardship",
             paragraphs: [
-              "ReadyRoad is created and maintained by Haydar Tarek. It is not a government body, examination centre, driving school, or legal adviser, and no affiliation with Belgian examination authorities is implied.",
+              "RijVia is created and maintained by Haydar Tarek. It is not a government body, examination centre, driving school, or legal adviser, and no affiliation with Belgian examination authorities is implied.",
             ],
             references: [
               {
@@ -222,19 +222,19 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Privacy Policy",
         lastUpdated: "Last reviewed: 3 August 2026",
         intro:
-          "This policy explains how ReadyRoad processes personal data when you browse the public website, create an account, sign in, study, or contact us.",
+          "This policy explains how RijVia processes personal data when you browse the public website, create an account, sign in, study, or contact us.",
         sections: [
           {
             title: "1. Who is responsible",
             paragraphs: [
-              "Haydar Tarek, as the operator of ReadyRoad, is the controller for the personal data described in this policy. Privacy and data-rights requests can be sent through the contact form by selecting a clear privacy-related subject.",
+              "Haydar Tarek, as the operator of RijVia, is the controller for the personal data described in this policy. Privacy and data-rights requests can be sent through the contact form by selecting a clear privacy-related subject.",
             ],
           },
           {
             title: "2. Data we process",
             paragraphs: [
-              "Account data includes username, full name, email address, password hash, role, account status, and timestamps. If you choose Google sign-in, ReadyRoad receives only your verified name and email address from Google to create, link, or securely sign in to your account. ReadyRoad does not sell this information or share it with third parties for advertising. Learning data includes lesson progress, practice and exam attempts, answers, scores, weak areas, achievements, and notifications.",
-              "Contact data includes the name, email address, subject, and message you submit. Limited technical and security data may be processed in server logs to operate, diagnose, and protect the service. If you consent to Analytics, Google Analytics processes pseudonymous browser, device, page, session, interaction, traffic-source, and approximate-location data; ReadyRoad does not send it your account name, email address, or internal user ID. ReadyRoad does not ask for payment-card data.",
+              "Account data includes username, full name, email address, password hash, role, account status, and timestamps. If you choose Google sign-in, RijVia receives only your verified name and email address from Google to create, link, or securely sign in to your account. RijVia does not sell this information or share it with third parties for advertising. Learning data includes lesson progress, practice and exam attempts, answers, scores, weak areas, achievements, and notifications.",
+              "Contact data includes the name, email address, subject, and message you submit. Limited technical and security data may be processed in server logs to operate, diagnose, and protect the service. If you consent to Analytics, Google Analytics processes pseudonymous browser, device, page, session, interaction, traffic-source, and approximate-location data; RijVia does not send it your account name, email address, or internal user ID. RijVia does not ask for payment-card data.",
             ],
           },
           {
@@ -246,13 +246,13 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. Authentication and cookies",
             paragraphs: [
-              "ReadyRoad stores the signed authentication token in a Secure HttpOnly cookie in production, so client-side scripts cannot read it. A separate CSRF token protects state-changing requests. Language is retained for a consistent multilingual experience; the optional theme preference is stored only after Preferences consent. Google sign-in is optional and uses short-lived security cookies. The complete inventory and consent controls are available in the Cookie Policy.",
+              "RijVia stores the signed authentication token in a Secure HttpOnly cookie in production, so client-side scripts cannot read it. A separate CSRF token protects state-changing requests. Language is retained for a consistent multilingual experience; the optional theme preference is stored only after Preferences consent. Google sign-in is optional and uses short-lived security cookies. The complete inventory and consent controls are available in the Cookie Policy.",
             ],
           },
           {
             title: "5. Service providers and transfers",
             paragraphs: [
-              "The production service uses Hostinger for frontend and backend hosting and Supabase for the PostgreSQL database. Google provides optional sign-in and, only after Analytics consent, Google Analytics usage measurement. Sign-in provides the verified name and email address needed to create, link, or securely access your account; Analytics receives no ReadyRoad account identity. These providers may operate infrastructure in different countries under their own privacy and transfer safeguards. ReadyRoad does not sell personal data or use it for third-party advertising.",
+              "The production service uses Hostinger for frontend and backend hosting and Supabase for the PostgreSQL database. Google provides optional sign-in and, only after Analytics consent, Google Analytics usage measurement. Sign-in provides the verified name and email address needed to create, link, or securely access your account; Analytics receives no RijVia account identity. These providers may operate infrastructure in different countries under their own privacy and transfer safeguards. RijVia does not sell personal data or use it for third-party advertising.",
             ],
           },
           {
@@ -264,7 +264,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "7. Your GDPR rights",
             paragraphs: [
-              "Subject to the conditions in the GDPR, you may request access, correction, erasure, restriction, portability, or object to processing. You may withdraw consent at any time where processing relies on consent. You can delete your ReadyRoad account from the profile flow or submit another rights request through the contact page. You may also lodge a complaint with the Belgian Data Protection Authority.",
+              "Subject to the conditions in the GDPR, you may request access, correction, erasure, restriction, portability, or object to processing. You may withdraw consent at any time where processing relies on consent. You can delete your RijVia account from the profile flow or submit another rights request through the contact page. You may also lodge a complaint with the Belgian Data Protection Authority.",
             ],
             references: [
               {
@@ -292,12 +292,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Cookie Policy",
         lastUpdated: "Last reviewed: 3 August 2026",
         intro:
-          "ReadyRoad uses necessary cookies and browser storage for security, sign-in, language, and consent choices. Optional preferences and Google Analytics remain disabled until you consent. Marketing services are not used.",
+          "RijVia uses necessary cookies and browser storage for security, sign-in, language, and consent choices. Optional preferences and Google Analytics remain disabled until you consent. Marketing services are not used.",
         sections: [
           {
             title: "1. What this policy covers",
             paragraphs: [
-              "Cookies are small values stored by a website in your browser. Similar technologies, including local storage, can remember preferences. This policy lists what ReadyRoad itself uses and why.",
+              "Cookies are small values stored by a website in your browser. Similar technologies, including local storage, can remember preferences. This policy lists what RijVia itself uses and why.",
             ],
           },
           {
@@ -306,10 +306,10 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
               "The following cookies support services explicitly requested by the user and are not used for advertising or cross-site tracking.",
             ],
             items: [
-              "token — ReadyRoad domain, path /, authentication session, HttpOnly, up to 7 days or earlier token expiry/logout.",
-              "csrf_token — ReadyRoad domain, path /, protects state-changing requests, up to 7 days or logout.",
-              "readyroad_locale — ReadyRoad domain, path /, remembers the selected language, up to 1 year.",
-              "google_oauth_state, google_oauth_code_verifier, google_oauth_mode, and google_oauth_return_to — ReadyRoad domain, path /, secure an optional Google sign-in attempt and are deleted after the callback or expire after about 10 minutes.",
+              "token — RijVia domain, path /, authentication session, HttpOnly, up to 7 days or earlier token expiry/logout.",
+              "csrf_token — RijVia domain, path /, protects state-changing requests, up to 7 days or logout.",
+              "readyroad_locale — RijVia domain, path /, remembers the selected language, up to 1 year.",
+              "google_oauth_state, google_oauth_code_verifier, google_oauth_mode, and google_oauth_return_to — RijVia domain, path /, secure an optional Google sign-in attempt and are deleted after the callback or expire after about 10 minutes.",
             ],
           },
           {
@@ -322,17 +322,17 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. Analytics and marketing",
             paragraphs: [
-              "ReadyRoad uses Google Analytics 4 with Measurement ID G-1P4EJH6D2T only after you enable Analytics. It measures page views, sessions, approximate location, browser and device details, traffic sources, and interactions. Before consent, Google Analytics scripts and requests are not loaded. Google Consent Mode v2 keeps analytics and advertising storage denied by default; advertising, remarketing, social-media pixels, and profiling are not used. Analytics consent can create the following first-party cookies, which are removed when you withdraw that consent.",
+              "RijVia uses Google Analytics 4 with Measurement ID G-1P4EJH6D2T only after you enable Analytics. It measures page views, sessions, approximate location, browser and device details, traffic sources, and interactions. Before consent, Google Analytics scripts and requests are not loaded. Google Consent Mode v2 keeps analytics and advertising storage denied by default; advertising, remarketing, social-media pixels, and profiling are not used. Analytics consent can create the following first-party cookies, which are removed when you withdraw that consent.",
             ],
             items: [
-              "_ga — ReadyRoad domain, path /, distinguishes browsers for aggregate usage measurement, up to 2 years or until Analytics consent is withdrawn.",
-              "_ga_1P4EJH6D2T — ReadyRoad domain, path /, maintains GA4 session state, up to 2 years or until Analytics consent is withdrawn.",
+              "_ga — RijVia domain, path /, distinguishes browsers for aggregate usage measurement, up to 2 years or until Analytics consent is withdrawn.",
+              "_ga_1P4EJH6D2T — RijVia domain, path /, maintains GA4 session state, up to 2 years or until Analytics consent is withdrawn.",
             ],
           },
           {
             title: "5. Consent and future changes",
             paragraphs: [
-              "Strictly necessary storage remains active so the requested service can work. The banner offers equally accessible Accept all, Reject optional, and Customize choices. Consent version 2 stores the decision locally. If the version changes, ReadyRoad asks again. Optional services may load only after the matching category is accepted.",
+              "Strictly necessary storage remains active so the requested service can work. The banner offers equally accessible Accept all, Reject optional, and Customize choices. Consent version 2 stores the decision locally. If the version changes, RijVia asks again. Optional services may load only after the matching category is accepted.",
             ],
             references: [
               {
@@ -351,16 +351,16 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         ],
       },
       terms: {
-        eyebrow: "Rules for using ReadyRoad",
+        eyebrow: "Rules for using RijVia",
         title: "Terms of Service",
         lastUpdated: "Last reviewed: 21 July 2026",
         intro:
-          "These terms govern use of ReadyRoad. By using the platform, you agree to use it lawfully and understand its independent educational purpose.",
+          "These terms govern use of RijVia. By using the platform, you agree to use it lawfully and understand its independent educational purpose.",
         sections: [
           {
             title: "1. Service and eligibility",
             paragraphs: [
-              "ReadyRoad provides study material, traffic-sign references, practice, simulated exams, and progress tools for Belgian driving theory. You must be able to accept these terms under the law applicable to you; a parent or guardian should supervise use where required.",
+              "RijVia provides study material, traffic-sign references, practice, simulated exams, and progress tools for Belgian driving theory. You must be able to accept these terms under the law applicable to you; a parent or guardian should supervise use where required.",
             ],
           },
           {
@@ -372,7 +372,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. Educational nature",
             paragraphs: [
-              "ReadyRoad is a preparation aid, not an official examination service, driving school, government authority, or source of legal advice. Completion, scores, or recommendations do not guarantee admission to or success in an official examination.",
+              "RijVia is a preparation aid, not an official examination service, driving school, government authority, or source of legal advice. Completion, scores, or recommendations do not guarantee admission to or success in an official examination.",
             ],
           },
           {
@@ -384,7 +384,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Intellectual property",
             paragraphs: [
-              "ReadyRoad's original software, interface, branding, explanations, question structure, and other original materials are protected by applicable intellectual-property rules. Official legal texts and public traffic-sign material remain subject to their own legal status. Personal study use does not grant permission to republish or commercially exploit the platform's original content.",
+              "RijVia's original software, interface, branding, explanations, question structure, and other original materials are protected by applicable intellectual-property rules. Official legal texts and public traffic-sign material remain subject to their own legal status. Personal study use does not grant permission to republish or commercially exploit the platform's original content.",
             ],
           },
           {
@@ -402,13 +402,13 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "8. Liability and applicable law",
             paragraphs: [
-              "To the extent permitted by law, ReadyRoad is not responsible for examination decisions, changes in legislation, reliance on outdated cached material, or indirect loss resulting from use of an educational summary. Nothing in these terms excludes liability or consumer rights that cannot legally be excluded. Belgian law applies subject to mandatory rules protecting users in their country of residence.",
+              "To the extent permitted by law, RijVia is not responsible for examination decisions, changes in legislation, reliance on outdated cached material, or indirect loss resulting from use of an educational summary. Nothing in these terms excludes liability or consumer rights that cannot legally be excluded. Belgian law applies subject to mandatory rules protecting users in their country of residence.",
             ],
           },
           {
             title: "9. Contact",
             paragraphs: [
-              "Questions about these terms can be submitted through the ReadyRoad contact page. Include a clear subject so the request can be routed correctly.",
+              "Questions about these terms can be submitted through the RijVia contact page. Include a clear subject so the request can be routed correctly.",
             ],
           },
         ],
@@ -418,12 +418,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Educational Disclaimer",
         lastUpdated: "Last reviewed: 21 July 2026",
         intro:
-          "ReadyRoad supports study and revision. It does not replace Belgian legislation, official examination instructions, or advice from a qualified professional.",
+          "RijVia supports study and revision. It does not replace Belgian legislation, official examination instructions, or advice from a qualified professional.",
         sections: [
           {
             title: "Independent platform",
             paragraphs: [
-              "ReadyRoad is not affiliated with the Belgian federal or regional governments, police, an examination centre, or a driving school. Brand names and links to authorities are used only to identify official sources.",
+              "RijVia is not affiliated with the Belgian federal or regional governments, police, an examination centre, or a driving school. Brand names and links to authorities are used only to identify official sources.",
             ],
           },
           {
@@ -453,13 +453,13 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "No guarantee of examination outcome",
             paragraphs: [
-              "Practice scores indicate activity within ReadyRoad only. They do not predict or guarantee an official result. Question format, scoring, eligibility, and procedures may differ by region, licence category, examination centre, and date.",
+              "Practice scores indicate activity within RijVia only. They do not predict or guarantee an official result. Question format, scoring, eligibility, and procedures may differ by region, licence category, examination centre, and date.",
             ],
           },
           {
             title: "Reporting a correction",
             paragraphs: [
-              "If content appears inconsistent with a current official source, use the contact page and include the page, language, disputed text, and official reference. ReadyRoad reviews documented corrections through its content-governance process.",
+              "If content appears inconsistent with a current official source, use the contact page and include the page, language, disputed text, and official reference. RijVia reviews documented corrections through its content-governance process.",
             ],
           },
         ],
@@ -469,12 +469,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       eyebrow: "Help centre",
       title: "Frequently Asked Questions",
       intro:
-        "Quick answers about accounts, learning tools, languages, progress, and the legal status of ReadyRoad content.",
+        "Quick answers about accounts, learning tools, languages, progress, and the legal status of RijVia content.",
       items: [
         {
-          question: "Is ReadyRoad free?",
+          question: "Is RijVia free?",
           answer:
-            "Yes. ReadyRoad currently provides its core learning platform without a subscription or payment-card requirement.",
+            "Yes. RijVia currently provides its core learning platform without a subscription or payment-card requirement.",
         },
         {
           question: "Do I need an account?",
@@ -484,7 +484,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "Which languages are available?",
           answer:
-            "ReadyRoad supports English, Dutch, French, and Arabic. Arabic is displayed right to left; the other languages are displayed left to right.",
+            "RijVia supports English, Dutch, French, and Arabic. Arabic is displayed right to left; the other languages are displayed left to right.",
         },
         {
           question: "What is Smart Quiz or random practice?",
@@ -499,12 +499,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "How is progress calculated?",
           answer:
-            "ReadyRoad records completed lessons, practice answers, attempts, scores, and recurring weak areas linked to your account. Dashboard indicators summarise activity inside ReadyRoad only.",
+            "RijVia records completed lessons, practice answers, attempts, scores, and recurring weak areas linked to your account. Dashboard indicators summarise activity inside RijVia only.",
         },
         {
-          question: "Can ReadyRoad guarantee that I will pass?",
+          question: "Can RijVia guarantee that I will pass?",
           answer:
-            "No. Study consistency can improve preparation, but ReadyRoad cannot guarantee an official result. Always check the current requirements for your region and licence category.",
+            "No. Study consistency can improve preparation, but RijVia cannot guarantee an official result. Always check the current requirements for your region and licence category.",
         },
         {
           question: "How is the content updated?",
@@ -523,88 +523,88 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         },
       ],
       contactPrompt: "Still need help?",
-      contactLabel: "Contact ReadyRoad",
+      contactLabel: "Contact RijVia",
     },
   },
   nl: {
     breadcrumbHome: "Home",
     metadata: {
       about: {
-        title: "Over ReadyRoad",
+        title: "Over RijVia",
         description:
-          "Lees hoe ReadyRoad Belgische rijtheorie toegankelijk maakt met meertalige inhoud, controle van officiële bronnen en gestructureerde oefeningen.",
-        openGraphTitle: "Over ReadyRoad | Belgische rijtheorie leren",
+          "Lees hoe RijVia Belgische rijtheorie toegankelijk maakt met meertalige inhoud, controle van officiële bronnen en gestructureerde oefeningen.",
+        openGraphTitle: "Over RijVia | Belgische rijtheorie leren",
         openGraphDescription:
-          "Ontdek de missie, meertalige aanpak, bronnenpolitiek en onafhankelijke educatieve rol van ReadyRoad.",
-        imageAlt: "Over het leerplatform ReadyRoad",
+          "Ontdek de missie, meertalige aanpak, bronnenpolitiek en onafhankelijke educatieve rol van RijVia.",
+        imageAlt: "Over het leerplatform RijVia",
       },
       contact: {
-        title: "Contact met ReadyRoad",
+        title: "Contact met RijVia",
         description:
-          "Neem contact op met ReadyRoad voor accounthulp, toegankelijkheid, inhoudelijke correcties, privacyverzoeken of feedback.",
-        openGraphTitle: "Contact met ReadyRoad-support",
+          "Neem contact op met RijVia voor accounthulp, toegankelijkheid, inhoudelijke correcties, privacyverzoeken of feedback.",
+        openGraphTitle: "Contact met RijVia-support",
         openGraphDescription:
-          "Stuur een supportvraag, meld een inhoudelijk probleem of deel feedback via het contactformulier van ReadyRoad.",
-        imageAlt: "Contact met ReadyRoad-support",
+          "Stuur een supportvraag, meld een inhoudelijk probleem of deel feedback via het contactformulier van RijVia.",
+        imageAlt: "Contact met RijVia-support",
       },
       privacy: {
         title: "Privacybeleid",
         description:
-          "Lees hoe ReadyRoad account-, leer-, authenticatie- en contactgegevens verzamelt, gebruikt, bewaart en beveiligt onder de AVG.",
-        openGraphTitle: "Privacybeleid van ReadyRoad",
+          "Lees hoe RijVia account-, leer-, authenticatie- en contactgegevens verzamelt, gebruikt, bewaart en beveiligt onder de AVG.",
+        openGraphTitle: "Privacybeleid van RijVia",
         openGraphDescription:
-          "Hoe ReadyRoad persoonsgegevens, accountbeveiliging, bewaartermijnen, dienstverleners en AVG-rechten behandelt.",
-        imageAlt: "Privacybeleid van ReadyRoad",
+          "Hoe RijVia persoonsgegevens, accountbeveiliging, bewaartermijnen, dienstverleners en AVG-rechten behandelt.",
+        imageAlt: "Privacybeleid van RijVia",
       },
       cookies: {
         title: "Cookiebeleid",
         description:
-          "Bekijk welke noodzakelijke en optionele cookies ReadyRoad gebruikt voor inlogbeveiliging, taal, voorkeuren, Google-login en analyse na toestemming.",
-        openGraphTitle: "Cookiebeleid van ReadyRoad",
+          "Bekijk welke noodzakelijke en optionele cookies RijVia gebruikt voor inlogbeveiliging, taal, voorkeuren, Google-login en analyse na toestemming.",
+        openGraphTitle: "Cookiebeleid van RijVia",
         openGraphDescription:
-          "Een transparant overzicht van ReadyRoad-cookies, browseropslag, doeleinden en bewaartermijnen.",
-        imageAlt: "Cookiebeleid van ReadyRoad",
+          "Een transparant overzicht van RijVia-cookies, browseropslag, doeleinden en bewaartermijnen.",
+        imageAlt: "Cookiebeleid van RijVia",
       },
       terms: {
         title: "Gebruiksvoorwaarden",
         description:
-          "Lees de regels voor ReadyRoad-accounts, toegestaan gebruik, educatieve inhoud, intellectuele eigendom en beschikbaarheid.",
-        openGraphTitle: "Gebruiksvoorwaarden van ReadyRoad",
+          "Lees de regels voor RijVia-accounts, toegestaan gebruik, educatieve inhoud, intellectuele eigendom en beschikbaarheid.",
+        openGraphTitle: "Gebruiksvoorwaarden van RijVia",
         openGraphDescription:
-          "Voorwaarden voor accounts, verantwoord gebruik, leermateriaal, beschikbaarheid en aansprakelijkheid op ReadyRoad.",
-        imageAlt: "Gebruiksvoorwaarden van ReadyRoad",
+          "Voorwaarden voor accounts, verantwoord gebruik, leermateriaal, beschikbaarheid en aansprakelijkheid op RijVia.",
+        imageAlt: "Gebruiksvoorwaarden van RijVia",
       },
       disclaimer: {
         title: "Educatieve disclaimer",
         description:
-          "Begrijp de onafhankelijke educatieve rol van ReadyRoad en waarom Belgische wetgeving en officiële instanties altijd doorslaggevend zijn.",
-        openGraphTitle: "Educatieve disclaimer van ReadyRoad",
+          "Begrijp de onafhankelijke educatieve rol van RijVia en waarom Belgische wetgeving en officiële instanties altijd doorslaggevend zijn.",
+        openGraphTitle: "Educatieve disclaimer van RijVia",
         openGraphDescription:
-          "ReadyRoad ondersteunt studie maar vervangt geen Belgische wetgeving, officiële instructies of professioneel advies.",
-        imageAlt: "Educatieve disclaimer van ReadyRoad",
+          "RijVia ondersteunt studie maar vervangt geen Belgische wetgeving, officiële instructies of professioneel advies.",
+        imageAlt: "Educatieve disclaimer van RijVia",
       },
       faq: {
         title: "Veelgestelde vragen",
         description:
-          "Vind antwoorden over ReadyRoad-accounts, gratis toegang, lessen, verkeersborden, oefeningen, examens, voortgang, talen en updates.",
-        openGraphTitle: "Veelgestelde vragen over ReadyRoad",
+          "Vind antwoorden over RijVia-accounts, gratis toegang, lessen, verkeersborden, oefeningen, examens, voortgang, talen en updates.",
+        openGraphTitle: "Veelgestelde vragen over RijVia",
         openGraphDescription:
-          "Antwoorden over Belgische rijtheorie studeren met ReadyRoad, waaronder accounts, oefeningen, voortgang en talen.",
-        imageAlt: "Veelgestelde vragen over ReadyRoad",
+          "Antwoorden over Belgische rijtheorie studeren met RijVia, waaronder accounts, oefeningen, voortgang en talen.",
+        imageAlt: "Veelgestelde vragen over RijVia",
       },
     },
     documents: {
       about: {
         eyebrow: "Onafhankelijk leerplatform",
-        title: "Over ReadyRoad",
+        title: "Over RijVia",
         lastUpdated: "Laatst nagekeken: 21 juli 2026",
         intro:
-          "ReadyRoad is een onafhankelijk en gratis leerplatform dat helpt om de Belgische rijtheorie gestructureerd en toegankelijk te bestuderen.",
+          "RijVia is een onafhankelijk en gratis leerplatform dat helpt om de Belgische rijtheorie gestructureerd en toegankelijk te bestuderen.",
         sections: [
           {
-            title: "Waarom ReadyRoad bestaat",
+            title: "Waarom RijVia bestaat",
             paragraphs: [
-              "Belgische rijtheorie is verspreid over wettelijke regels, regionale examenrichtlijnen, verkeersborden en praktijksituaties. ReadyRoad brengt studiemateriaal, oefeningen en voortgang samen zonder te beweren officiële instanties te vervangen.",
+              "Belgische rijtheorie is verspreid over wettelijke regels, regionale examenrichtlijnen, verkeersborden en praktijksituaties. RijVia brengt studiemateriaal, oefeningen en voortgang samen zonder te beweren officiële instanties te vervangen.",
             ],
           },
           {
@@ -616,7 +616,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Wat het platform onderscheidt",
             paragraphs: [
-              "ReadyRoad combineert een nagekeken catalogus van 184 verkeersborden met gestructureerde lessen, oefeningen per categorie, examensimulaties en voortgangsinzichten. De inhoud komt uit canonieke bronbestanden en wordt op taal- en bestandsconsistentie gecontroleerd.",
+              "RijVia combineert een nagekeken catalogus van 184 verkeersborden met gestructureerde lessen, oefeningen per categorie, examensimulaties en voortgangsinzichten. De inhoud komt uit canonieke bronbestanden en wordt op taal- en bestandsconsistentie gecontroleerd.",
             ],
           },
           {
@@ -628,7 +628,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Werken met officiële bronnen",
             paragraphs: [
-              "ReadyRoad controleert educatieve inhoud aan de hand van officiële Belgische bronnen en houdt toekomstige regels apart. De bevoegde instanties en gepubliceerde wetgeving hebben altijd voorrang op een samenvatting op dit platform.",
+              "RijVia controleert educatieve inhoud aan de hand van officiële Belgische bronnen en houdt toekomstige regels apart. De bevoegde instanties en gepubliceerde wetgeving hebben altijd voorrang op een samenvatting op dit platform.",
             ],
             references: [
               {
@@ -646,7 +646,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Projectbeheer",
             paragraphs: [
-              "ReadyRoad is gemaakt en wordt onderhouden door Haydar Tarek. Het is geen overheidsdienst, examencentrum, rijschool of juridisch adviseur en suggereert geen band met Belgische exameninstanties.",
+              "RijVia is gemaakt en wordt onderhouden door Haydar Tarek. Het is geen overheidsdienst, examencentrum, rijschool of juridisch adviseur en suggereert geen band met Belgische exameninstanties.",
             ],
             references: [
               {
@@ -668,37 +668,37 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Privacybeleid",
         lastUpdated: "Laatst nagekeken: 3 augustus 2026",
         intro:
-          "Dit beleid legt uit hoe ReadyRoad persoonsgegevens verwerkt wanneer u de openbare website bezoekt, een account maakt, inlogt, studeert of contact opneemt.",
+          "Dit beleid legt uit hoe RijVia persoonsgegevens verwerkt wanneer u de openbare website bezoekt, een account maakt, inlogt, studeert of contact opneemt.",
         sections: [
           {
             title: "1. Wie is verantwoordelijk?",
             paragraphs: [
-              "Haydar Tarek is als beheerder van ReadyRoad de verwerkingsverantwoordelijke voor de gegevens in dit beleid. Privacy- en rechtenverzoeken kunnen via het contactformulier worden ingediend met een duidelijk privacyonderwerp.",
+              "Haydar Tarek is als beheerder van RijVia de verwerkingsverantwoordelijke voor de gegevens in dit beleid. Privacy- en rechtenverzoeken kunnen via het contactformulier worden ingediend met een duidelijk privacyonderwerp.",
             ],
           },
           {
             title: "2. Gegevens die we verwerken",
             paragraphs: [
               "Accountgegevens omvatten gebruikersnaam, volledige naam, e-mailadres, wachtwoordhash, rol, accountstatus en tijdstippen. Bij Google-login verwerken we alleen de identiteitsgegevens die nodig zijn om het account te maken of te koppelen. Leergegevens omvatten lesvoortgang, oefen- en examenpogingen, antwoorden, scores, zwakke punten, prestaties en meldingen.",
-              "Contactgegevens omvatten naam, e-mailadres, onderwerp en bericht. Beperkte technische en beveiligingsgegevens kunnen in serverlogs worden verwerkt om de dienst te beheren, onderzoeken en beschermen. Als u toestemming geeft voor Analyse, verwerkt Google Analytics pseudonieme browser-, apparaat-, pagina-, sessie-, interactie-, verkeersbron- en locatiegegevens bij benadering; ReadyRoad stuurt geen accountnaam, e-mailadres of interne gebruikers-ID mee. ReadyRoad vraagt niet om betaalkaartgegevens.",
+              "Contactgegevens omvatten naam, e-mailadres, onderwerp en bericht. Beperkte technische en beveiligingsgegevens kunnen in serverlogs worden verwerkt om de dienst te beheren, onderzoeken en beschermen. Als u toestemming geeft voor Analyse, verwerkt Google Analytics pseudonieme browser-, apparaat-, pagina-, sessie-, interactie-, verkeersbron- en locatiegegevens bij benadering; RijVia stuurt geen accountnaam, e-mailadres of interne gebruikers-ID mee. RijVia vraagt niet om betaalkaartgegevens.",
             ],
           },
           {
             title: "3. Doeleinden en rechtsgronden",
             paragraphs: [
-              "Account- en leergegevens zijn nodig om de gevraagde dienst te leveren, gebruikers te authenticeren, voortgang te bewaren en resultaten te tonen. Als je Google-login kiest, ontvangt ReadyRoad van Google alleen je geverifieerde naam en e-mailadres om je account aan te maken, te koppelen of je veilig aan te melden. ReadyRoad verkoopt deze gegevens niet en deelt ze niet met derden voor advertenties. Beveiliging, fraudepreventie, diagnose en inhoudskwaliteit steunen op ons gerechtvaardigd belang in een veilig en betrouwbaar platform. Wettelijke verplichtingen gelden waar nodig. Optionele verwerking waarvoor toestemming vereist is, wordt niet geactiveerd zonder geldige toestemming.",
+              "Account- en leergegevens zijn nodig om de gevraagde dienst te leveren, gebruikers te authenticeren, voortgang te bewaren en resultaten te tonen. Als je Google-login kiest, ontvangt RijVia van Google alleen je geverifieerde naam en e-mailadres om je account aan te maken, te koppelen of je veilig aan te melden. RijVia verkoopt deze gegevens niet en deelt ze niet met derden voor advertenties. Beveiliging, fraudepreventie, diagnose en inhoudskwaliteit steunen op ons gerechtvaardigd belang in een veilig en betrouwbaar platform. Wettelijke verplichtingen gelden waar nodig. Optionele verwerking waarvoor toestemming vereist is, wordt niet geactiveerd zonder geldige toestemming.",
             ],
           },
           {
             title: "4. Authenticatie en cookies",
             paragraphs: [
-              "In productie bewaart ReadyRoad het ondertekende authenticatietoken in een Secure HttpOnly-cookie, zodat clientscripts het niet kunnen lezen. Een afzonderlijk CSRF-token beschermt wijzigende verzoeken. De taal blijft bewaard voor een consistente meertalige ervaring; het optionele thema wordt alleen na toestemming voor Voorkeuren opgeslagen. Google-login is optioneel en gebruikt kortlevende beveiligingscookies. Het volledige overzicht en de toestemmingskeuzes staan in het Cookiebeleid.",
+              "In productie bewaart RijVia het ondertekende authenticatietoken in een Secure HttpOnly-cookie, zodat clientscripts het niet kunnen lezen. Een afzonderlijk CSRF-token beschermt wijzigende verzoeken. De taal blijft bewaard voor een consistente meertalige ervaring; het optionele thema wordt alleen na toestemming voor Voorkeuren opgeslagen. Google-login is optioneel en gebruikt kortlevende beveiligingscookies. Het volledige overzicht en de toestemmingskeuzes staan in het Cookiebeleid.",
             ],
           },
           {
             title: "5. Dienstverleners en doorgiften",
             paragraphs: [
-              "De productiedienst gebruikt Hostinger voor frontend- en backendhosting en Supabase voor PostgreSQL. Google verzorgt de optionele login en, uitsluitend na toestemming voor Analyse, gebruiksmeting met Google Analytics. De login levert de geverifieerde naam en het e-mailadres voor het account; Analytics ontvangt geen ReadyRoad-accountidentiteit. Deze dienstverleners kunnen infrastructuur in verschillende landen gebruiken onder hun eigen privacy- en doorgiftemaatregelen. ReadyRoad verkoopt geen persoonsgegevens en gebruikt ze niet voor advertenties van derden.",
+              "De productiedienst gebruikt Hostinger voor frontend- en backendhosting en Supabase voor PostgreSQL. Google verzorgt de optionele login en, uitsluitend na toestemming voor Analyse, gebruiksmeting met Google Analytics. De login levert de geverifieerde naam en het e-mailadres voor het account; Analytics ontvangt geen RijVia-accountidentiteit. Deze dienstverleners kunnen infrastructuur in verschillende landen gebruiken onder hun eigen privacy- en doorgiftemaatregelen. RijVia verkoopt geen persoonsgegevens en gebruikt ze niet voor advertenties van derden.",
             ],
           },
           {
@@ -738,12 +738,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Cookiebeleid",
         lastUpdated: "Laatst nagekeken: 3 augustus 2026",
         intro:
-          "ReadyRoad gebruikt noodzakelijke cookies en browseropslag voor beveiliging, inloggen, taal en toestemmingskeuzes. Optionele voorkeuren en Google Analytics blijven uitgeschakeld totdat u toestemming geeft. Marketingdiensten worden niet gebruikt.",
+          "RijVia gebruikt noodzakelijke cookies en browseropslag voor beveiliging, inloggen, taal en toestemmingskeuzes. Optionele voorkeuren en Google Analytics blijven uitgeschakeld totdat u toestemming geeft. Marketingdiensten worden niet gebruikt.",
         sections: [
           {
             title: "1. Reikwijdte",
             paragraphs: [
-              "Cookies zijn kleine waarden die een website in de browser bewaart. Vergelijkbare technieken, zoals local storage, onthouden voorkeuren. Dit beleid vermeldt wat ReadyRoad zelf gebruikt en waarom.",
+              "Cookies zijn kleine waarden die een website in de browser bewaart. Vergelijkbare technieken, zoals local storage, onthouden voorkeuren. Dit beleid vermeldt wat RijVia zelf gebruikt en waarom.",
             ],
           },
           {
@@ -752,10 +752,10 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
               "Deze cookies ondersteunen uitdrukkelijk gevraagde diensten en worden niet gebruikt voor advertenties of tracking tussen websites.",
             ],
             items: [
-              "token — ReadyRoad-domein, pad /, authenticatiesessie, HttpOnly, maximaal 7 dagen of tot eerdere tokenvervaldatum/uitloggen.",
-              "csrf_token — ReadyRoad-domein, pad /, beschermt wijzigende verzoeken, maximaal 7 dagen of tot uitloggen.",
-              "readyroad_locale — ReadyRoad-domein, pad /, onthoudt de gekozen taal, maximaal 1 jaar.",
-              "google_oauth_state, google_oauth_code_verifier, google_oauth_mode en google_oauth_return_to — ReadyRoad-domein, pad /, beveiligen optionele Google-login en worden na de callback gewist of verlopen na ongeveer 10 minuten.",
+              "token — RijVia-domein, pad /, authenticatiesessie, HttpOnly, maximaal 7 dagen of tot eerdere tokenvervaldatum/uitloggen.",
+              "csrf_token — RijVia-domein, pad /, beschermt wijzigende verzoeken, maximaal 7 dagen of tot uitloggen.",
+              "readyroad_locale — RijVia-domein, pad /, onthoudt de gekozen taal, maximaal 1 jaar.",
+              "google_oauth_state, google_oauth_code_verifier, google_oauth_mode en google_oauth_return_to — RijVia-domein, pad /, beveiligen optionele Google-login en worden na de callback gewist of verlopen na ongeveer 10 minuten.",
             ],
           },
           {
@@ -768,17 +768,17 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. Analyse en marketing",
             paragraphs: [
-              "ReadyRoad gebruikt Google Analytics 4 met Measurement ID G-1P4EJH6D2T alleen nadat u Analyse inschakelt. Het meet paginaweergaven, sessies, locatie bij benadering, browser- en apparaatgegevens, verkeersbronnen en interacties. Vóór toestemming worden geen Google Analytics-scripts of -verzoeken geladen. Google Consent Mode v2 weigert analytische en advertentieopslag standaard; advertenties, remarketing, socialmediapixels en profilering worden niet gebruikt. Toestemming voor Analyse kan de volgende first-partycookies aanmaken; bij intrekking worden ze verwijderd.",
+              "RijVia gebruikt Google Analytics 4 met Measurement ID G-1P4EJH6D2T alleen nadat u Analyse inschakelt. Het meet paginaweergaven, sessies, locatie bij benadering, browser- en apparaatgegevens, verkeersbronnen en interacties. Vóór toestemming worden geen Google Analytics-scripts of -verzoeken geladen. Google Consent Mode v2 weigert analytische en advertentieopslag standaard; advertenties, remarketing, socialmediapixels en profilering worden niet gebruikt. Toestemming voor Analyse kan de volgende first-partycookies aanmaken; bij intrekking worden ze verwijderd.",
             ],
             items: [
-              "_ga — ReadyRoad-domein, pad /, onderscheidt browsers voor geaggregeerde gebruiksmeting, maximaal 2 jaar of tot intrekking van toestemming voor Analyse.",
-              "_ga_1P4EJH6D2T — ReadyRoad-domein, pad /, bewaart de GA4-sessiestatus, maximaal 2 jaar of tot intrekking van toestemming voor Analyse.",
+              "_ga — RijVia-domein, pad /, onderscheidt browsers voor geaggregeerde gebruiksmeting, maximaal 2 jaar of tot intrekking van toestemming voor Analyse.",
+              "_ga_1P4EJH6D2T — RijVia-domein, pad /, bewaart de GA4-sessiestatus, maximaal 2 jaar of tot intrekking van toestemming voor Analyse.",
             ],
           },
           {
             title: "5. Toestemming en toekomstige wijzigingen",
             paragraphs: [
-              "Strikt noodzakelijke opslag blijft actief om de gevraagde dienst te leveren. De banner biedt even toegankelijke keuzes voor alles accepteren, optionele weigeren en aanpassen. Toestemmingsversie 2 bewaart de keuze lokaal. Bij een nieuwe versie vraagt ReadyRoad opnieuw. Een optionele dienst mag pas na toestemming voor de juiste categorie laden.",
+              "Strikt noodzakelijke opslag blijft actief om de gevraagde dienst te leveren. De banner biedt even toegankelijke keuzes voor alles accepteren, optionele weigeren en aanpassen. Toestemmingsversie 2 bewaart de keuze lokaal. Bij een nieuwe versie vraagt RijVia opnieuw. Een optionele dienst mag pas na toestemming voor de juiste categorie laden.",
             ],
             references: [
               {
@@ -797,16 +797,16 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         ],
       },
       terms: {
-        eyebrow: "Regels voor ReadyRoad",
+        eyebrow: "Regels voor RijVia",
         title: "Gebruiksvoorwaarden",
         lastUpdated: "Laatst nagekeken: 21 juli 2026",
         intro:
-          "Deze voorwaarden gelden voor het gebruik van ReadyRoad. Door het platform te gebruiken, stemt u in met rechtmatig gebruik en begrijpt u het onafhankelijke educatieve doel.",
+          "Deze voorwaarden gelden voor het gebruik van RijVia. Door het platform te gebruiken, stemt u in met rechtmatig gebruik en begrijpt u het onafhankelijke educatieve doel.",
         sections: [
           {
             title: "1. Dienst en geschiktheid",
             paragraphs: [
-              "ReadyRoad biedt studiemateriaal, verkeersborden, oefeningen, examensimulaties en voortgangstools voor Belgische rijtheorie. U moet deze voorwaarden rechtsgeldig kunnen aanvaarden; toezicht door een ouder of voogd geldt waar de wet dat vereist.",
+              "RijVia biedt studiemateriaal, verkeersborden, oefeningen, examensimulaties en voortgangstools voor Belgische rijtheorie. U moet deze voorwaarden rechtsgeldig kunnen aanvaarden; toezicht door een ouder of voogd geldt waar de wet dat vereist.",
             ],
           },
           {
@@ -818,7 +818,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. Educatief karakter",
             paragraphs: [
-              "ReadyRoad is een studiehulpmiddel en geen officiële examendienst, rijschool, overheid of juridisch adviseur. Voltooiing, scores of aanbevelingen garanderen geen toelating tot of slagen voor een officieel examen.",
+              "RijVia is een studiehulpmiddel en geen officiële examendienst, rijschool, overheid of juridisch adviseur. Voltooiing, scores of aanbevelingen garanderen geen toelating tot of slagen voor een officieel examen.",
             ],
           },
           {
@@ -830,7 +830,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Intellectuele eigendom",
             paragraphs: [
-              "De originele software, interface, huisstijl, uitleg, vraagstructuur en overige originele materialen van ReadyRoad zijn beschermd. Officiële wetgeving en openbaar verkeersbordmateriaal behouden hun eigen juridische status. Persoonlijk studiegebruik geeft geen recht op herpublicatie of commerciële exploitatie van originele ReadyRoad-inhoud.",
+              "De originele software, interface, huisstijl, uitleg, vraagstructuur en overige originele materialen van RijVia zijn beschermd. Officiële wetgeving en openbaar verkeersbordmateriaal behouden hun eigen juridische status. Persoonlijk studiegebruik geeft geen recht op herpublicatie of commerciële exploitatie van originele RijVia-inhoud.",
             ],
           },
           {
@@ -848,7 +848,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "8. Aansprakelijkheid en recht",
             paragraphs: [
-              "Voor zover wettelijk toegestaan is ReadyRoad niet aansprakelijk voor examenbeslissingen, wetswijzigingen, verouderde gecachte inhoud of indirect verlies door gebruik van een educatieve samenvatting. Wettelijk niet-uitsluitbare aansprakelijkheid en consumentenrechten blijven bestaan. Belgisch recht geldt met eerbiediging van dwingende bescherming in het woonland van de gebruiker.",
+              "Voor zover wettelijk toegestaan is RijVia niet aansprakelijk voor examenbeslissingen, wetswijzigingen, verouderde gecachte inhoud of indirect verlies door gebruik van een educatieve samenvatting. Wettelijk niet-uitsluitbare aansprakelijkheid en consumentenrechten blijven bestaan. Belgisch recht geldt met eerbiediging van dwingende bescherming in het woonland van de gebruiker.",
             ],
           },
           {
@@ -864,12 +864,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Educatieve disclaimer",
         lastUpdated: "Laatst nagekeken: 21 juli 2026",
         intro:
-          "ReadyRoad ondersteunt studie en herhaling, maar vervangt geen Belgische wetgeving, officiële exameninstructies of advies van een bevoegde professional.",
+          "RijVia ondersteunt studie en herhaling, maar vervangt geen Belgische wetgeving, officiële exameninstructies of advies van een bevoegde professional.",
         sections: [
           {
             title: "Onafhankelijk platform",
             paragraphs: [
-              "ReadyRoad is niet verbonden aan de federale of regionale overheid, politie, examencentra of rijscholen. Namen en links van instanties worden uitsluitend gebruikt om officiële bronnen te identificeren.",
+              "RijVia is niet verbonden aan de federale of regionale overheid, politie, examencentra of rijscholen. Namen en links van instanties worden uitsluitend gebruikt om officiële bronnen te identificeren.",
             ],
           },
           {
@@ -899,7 +899,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Geen garantie op een examenresultaat",
             paragraphs: [
-              "Oefenscores tonen alleen activiteit binnen ReadyRoad en voorspellen of garanderen geen officieel resultaat. Formaat, score, voorwaarden en procedures kunnen per gewest, categorie, examencentrum en datum verschillen.",
+              "Oefenscores tonen alleen activiteit binnen RijVia en voorspellen of garanderen geen officieel resultaat. Formaat, score, voorwaarden en procedures kunnen per gewest, categorie, examencentrum en datum verschillen.",
             ],
           },
           {
@@ -915,12 +915,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       eyebrow: "Helpcentrum",
       title: "Veelgestelde vragen",
       intro:
-        "Snelle antwoorden over accounts, leermiddelen, talen, voortgang en de juridische status van ReadyRoad-inhoud.",
+        "Snelle antwoorden over accounts, leermiddelen, talen, voortgang en de juridische status van RijVia-inhoud.",
       items: [
         {
-          question: "Is ReadyRoad gratis?",
+          question: "Is RijVia gratis?",
           answer:
-            "Ja. ReadyRoad biedt het kernplatform momenteel zonder abonnement of betaalkaartvereiste aan.",
+            "Ja. RijVia biedt het kernplatform momenteel zonder abonnement of betaalkaartvereiste aan.",
         },
         {
           question: "Heb ik een account nodig?",
@@ -930,7 +930,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "Welke talen zijn beschikbaar?",
           answer:
-            "ReadyRoad ondersteunt Nederlands, Engels, Frans en Arabisch. Arabisch wordt van rechts naar links weergegeven; de andere talen van links naar rechts.",
+            "RijVia ondersteunt Nederlands, Engels, Frans en Arabisch. Arabisch wordt van rechts naar links weergegeven; de andere talen van links naar rechts.",
         },
         {
           question: "Wat is Smart Quiz of willekeurig oefenen?",
@@ -945,10 +945,10 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "Hoe wordt voortgang berekend?",
           answer:
-            "ReadyRoad registreert voltooide lessen, oefenantwoorden, pogingen, scores en terugkerende zwakke punten van uw account. Dashboardcijfers vatten alleen activiteit binnen ReadyRoad samen.",
+            "RijVia registreert voltooide lessen, oefenantwoorden, pogingen, scores en terugkerende zwakke punten van uw account. Dashboardcijfers vatten alleen activiteit binnen RijVia samen.",
         },
         {
-          question: "Kan ReadyRoad garanderen dat ik slaag?",
+          question: "Kan RijVia garanderen dat ik slaag?",
           answer:
             "Nee. Regelmatig studeren kan de voorbereiding verbeteren, maar een officieel resultaat kan niet worden gegarandeerd. Controleer steeds de actuele eisen voor uw gewest en rijbewijscategorie.",
         },
@@ -969,88 +969,88 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         },
       ],
       contactPrompt: "Nog hulp nodig?",
-      contactLabel: "Contact met ReadyRoad",
+      contactLabel: "Contact met RijVia",
     },
   },
   fr: {
     breadcrumbHome: "Accueil",
     metadata: {
       about: {
-        title: "À propos de ReadyRoad",
+        title: "À propos de RijVia",
         description:
-          "Découvrez comment ReadyRoad facilite l'étude de la théorie belge grâce à un contenu multilingue, des sources officielles et un entraînement structuré.",
-        openGraphTitle: "À propos de ReadyRoad | Théorie de conduite belge",
+          "Découvrez comment RijVia facilite l'étude de la théorie belge grâce à un contenu multilingue, des sources officielles et un entraînement structuré.",
+        openGraphTitle: "À propos de RijVia | Théorie de conduite belge",
         openGraphDescription:
-          "Découvrez la mission, l'approche multilingue, la politique de sources et le rôle pédagogique indépendant de ReadyRoad.",
-        imageAlt: "À propos de la plateforme ReadyRoad",
+          "Découvrez la mission, l'approche multilingue, la politique de sources et le rôle pédagogique indépendant de RijVia.",
+        imageAlt: "À propos de la plateforme RijVia",
       },
       contact: {
-        title: "Contacter ReadyRoad",
+        title: "Contacter RijVia",
         description:
-          "Contactez ReadyRoad pour une aide de compte, l'accessibilité, une correction de contenu, une demande de confidentialité ou un retour.",
-        openGraphTitle: "Contacter l'assistance ReadyRoad",
+          "Contactez RijVia pour une aide de compte, l'accessibilité, une correction de contenu, une demande de confidentialité ou un retour.",
+        openGraphTitle: "Contacter l'assistance RijVia",
         openGraphDescription:
-          "Envoyez une demande d'aide, signalez un problème de contenu ou partagez un retour via le formulaire ReadyRoad.",
-        imageAlt: "Contacter l'assistance ReadyRoad",
+          "Envoyez une demande d'aide, signalez un problème de contenu ou partagez un retour via le formulaire RijVia.",
+        imageAlt: "Contacter l'assistance RijVia",
       },
       privacy: {
         title: "Politique de confidentialité",
         description:
-          "Découvrez comment ReadyRoad collecte, utilise, conserve et protège les données de compte, d'apprentissage, d'authentification et de contact.",
-        openGraphTitle: "Politique de confidentialité ReadyRoad",
+          "Découvrez comment RijVia collecte, utilise, conserve et protège les données de compte, d'apprentissage, d'authentification et de contact.",
+        openGraphTitle: "Politique de confidentialité RijVia",
         openGraphDescription:
-          "Traitement des données personnelles, sécurité du compte, conservation, prestataires et droits RGPD chez ReadyRoad.",
-        imageAlt: "Politique de confidentialité ReadyRoad",
+          "Traitement des données personnelles, sécurité du compte, conservation, prestataires et droits RGPD chez RijVia.",
+        imageAlt: "Politique de confidentialité RijVia",
       },
       cookies: {
         title: "Politique relative aux cookies",
         description:
-          "Consultez les cookies nécessaires et facultatifs utilisés par ReadyRoad pour la connexion, la langue, les préférences, Google et l'analyse soumise au consentement.",
-        openGraphTitle: "Politique relative aux cookies ReadyRoad",
+          "Consultez les cookies nécessaires et facultatifs utilisés par RijVia pour la connexion, la langue, les préférences, Google et l'analyse soumise au consentement.",
+        openGraphTitle: "Politique relative aux cookies RijVia",
         openGraphDescription:
-          "Inventaire transparent des cookies ReadyRoad, du stockage navigateur, de leurs finalités et durées.",
-        imageAlt: "Politique relative aux cookies ReadyRoad",
+          "Inventaire transparent des cookies RijVia, du stockage navigateur, de leurs finalités et durées.",
+        imageAlt: "Politique relative aux cookies RijVia",
       },
       terms: {
         title: "Conditions d'utilisation",
         description:
-          "Lisez les règles concernant les comptes ReadyRoad, l'usage autorisé, le contenu pédagogique, la propriété intellectuelle et la disponibilité.",
-        openGraphTitle: "Conditions d'utilisation ReadyRoad",
+          "Lisez les règles concernant les comptes RijVia, l'usage autorisé, le contenu pédagogique, la propriété intellectuelle et la disponibilité.",
+        openGraphTitle: "Conditions d'utilisation RijVia",
         openGraphDescription:
           "Conditions applicables aux comptes, à l'usage responsable, aux contenus, à la disponibilité et à la responsabilité.",
-        imageAlt: "Conditions d'utilisation ReadyRoad",
+        imageAlt: "Conditions d'utilisation RijVia",
       },
       disclaimer: {
         title: "Avertissement pédagogique",
         description:
-          "Comprenez le rôle pédagogique indépendant de ReadyRoad et la priorité de la loi belge et des autorités officielles.",
-        openGraphTitle: "Avertissement pédagogique ReadyRoad",
+          "Comprenez le rôle pédagogique indépendant de RijVia et la priorité de la loi belge et des autorités officielles.",
+        openGraphTitle: "Avertissement pédagogique RijVia",
         openGraphDescription:
-          "ReadyRoad aide à étudier sans remplacer la législation belge, les instructions officielles ou un conseil professionnel.",
-        imageAlt: "Avertissement pédagogique ReadyRoad",
+          "RijVia aide à étudier sans remplacer la législation belge, les instructions officielles ou un conseil professionnel.",
+        imageAlt: "Avertissement pédagogique RijVia",
       },
       faq: {
         title: "Questions fréquentes",
         description:
-          "Trouvez des réponses sur les comptes ReadyRoad, l'accès gratuit, les leçons, panneaux, exercices, examens, progrès, langues et mises à jour.",
-        openGraphTitle: "Questions fréquentes sur ReadyRoad",
+          "Trouvez des réponses sur les comptes RijVia, l'accès gratuit, les leçons, panneaux, exercices, examens, progrès, langues et mises à jour.",
+        openGraphTitle: "Questions fréquentes sur RijVia",
         openGraphDescription:
-          "Réponses sur l'étude de la théorie belge avec ReadyRoad : comptes, entraînement, progrès et langues.",
-        imageAlt: "Questions fréquentes sur ReadyRoad",
+          "Réponses sur l'étude de la théorie belge avec RijVia : comptes, entraînement, progrès et langues.",
+        imageAlt: "Questions fréquentes sur RijVia",
       },
     },
     documents: {
       about: {
         eyebrow: "Plateforme pédagogique indépendante",
-        title: "À propos de ReadyRoad",
+        title: "À propos de RijVia",
         lastUpdated: "Dernière vérification : 21 juillet 2026",
         intro:
-          "ReadyRoad est une plateforme indépendante et gratuite qui aide à étudier la théorie de conduite belge de manière structurée et accessible.",
+          "RijVia est une plateforme indépendante et gratuite qui aide à étudier la théorie de conduite belge de manière structurée et accessible.",
         sections: [
           {
-            title: "Pourquoi ReadyRoad existe",
+            title: "Pourquoi RijVia existe",
             paragraphs: [
-              "La théorie belge est répartie entre règles juridiques, consignes régionales d'examen, panneaux et situations pratiques. ReadyRoad réunit étude, entraînement et suivi dans une expérience cohérente sans prétendre remplacer les autorités officielles.",
+              "La théorie belge est répartie entre règles juridiques, consignes régionales d'examen, panneaux et situations pratiques. RijVia réunit étude, entraînement et suivi dans une expérience cohérente sans prétendre remplacer les autorités officielles.",
             ],
           },
           {
@@ -1062,7 +1062,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Ce qui distingue la plateforme",
             paragraphs: [
-              "ReadyRoad associe un catalogue vérifié de 184 panneaux à des leçons structurées, des exercices par catégorie, des simulations d'examen et un suivi des progrès. Le contenu provient de fichiers canoniques et fait l'objet de contrôles de cohérence entre langues et fichiers.",
+              "RijVia associe un catalogue vérifié de 184 panneaux à des leçons structurées, des exercices par catégorie, des simulations d'examen et un suivi des progrès. Le contenu provient de fichiers canoniques et fait l'objet de contrôles de cohérence entre langues et fichiers.",
             ],
           },
           {
@@ -1074,7 +1074,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Approche fondée sur les sources officielles",
             paragraphs: [
-              "ReadyRoad vérifie le contenu pédagogique auprès de sources officielles belges et sépare les règles futures. Les autorités compétentes et les textes publiés priment toujours sur un résumé de la plateforme.",
+              "RijVia vérifie le contenu pédagogique auprès de sources officielles belges et sépare les règles futures. Les autorités compétentes et les textes publiés priment toujours sur un résumé de la plateforme.",
             ],
             references: [
               {
@@ -1092,7 +1092,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Responsable du projet",
             paragraphs: [
-              "ReadyRoad est créé et maintenu par Haydar Tarek. Ce n'est ni un organisme public, ni un centre d'examen, ni une auto-école, ni un conseiller juridique, et aucune affiliation avec les autorités d'examen n'est suggérée.",
+              "RijVia est créé et maintenu par Haydar Tarek. Ce n'est ni un organisme public, ni un centre d'examen, ni une auto-école, ni un conseiller juridique, et aucune affiliation avec les autorités d'examen n'est suggérée.",
             ],
             references: [
               {
@@ -1114,19 +1114,19 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Politique de confidentialité",
         lastUpdated: "Dernière vérification : 3 août 2026",
         intro:
-          "Cette politique explique comment ReadyRoad traite les données personnelles lorsque vous consultez le site public, créez un compte, vous connectez, étudiez ou nous contactez.",
+          "Cette politique explique comment RijVia traite les données personnelles lorsque vous consultez le site public, créez un compte, vous connectez, étudiez ou nous contactez.",
         sections: [
           {
             title: "1. Responsable du traitement",
             paragraphs: [
-              "Haydar Tarek, en tant qu'opérateur de ReadyRoad, est responsable du traitement décrit ici. Les demandes relatives à la vie privée et aux droits peuvent être envoyées via le formulaire de contact avec un objet explicite.",
+              "Haydar Tarek, en tant qu'opérateur de RijVia, est responsable du traitement décrit ici. Les demandes relatives à la vie privée et aux droits peuvent être envoyées via le formulaire de contact avec un objet explicite.",
             ],
           },
           {
             title: "2. Données traitées",
             paragraphs: [
-              "Les données de compte comprennent le nom d'utilisateur, le nom complet, l'adresse e-mail, le hash du mot de passe, le rôle, l'état du compte et les horodatages. Si vous choisissez la connexion Google, ReadyRoad reçoit uniquement votre nom vérifié et votre adresse e-mail afin de créer, lier ou ouvrir votre compte en toute sécurité. ReadyRoad ne vend pas ces informations et ne les partage pas avec des tiers à des fins publicitaires. Les données d'apprentissage comprennent la progression, les tentatives, les réponses, les scores, les points faibles, les réussites et les notifications.",
-              "Les données de contact comprennent nom, e-mail, objet et message. Des données techniques et de sécurité limitées peuvent figurer dans les journaux pour exploiter, diagnostiquer et protéger le service. Si vous consentez à l'Analyse, Google Analytics traite des données pseudonymes relatives au navigateur, à l'appareil, aux pages, aux sessions, aux interactions, aux sources de trafic et à la localisation approximative ; ReadyRoad ne lui envoie ni nom de compte, ni adresse e-mail, ni identifiant utilisateur interne. ReadyRoad ne demande aucune donnée de carte bancaire.",
+              "Les données de compte comprennent le nom d'utilisateur, le nom complet, l'adresse e-mail, le hash du mot de passe, le rôle, l'état du compte et les horodatages. Si vous choisissez la connexion Google, RijVia reçoit uniquement votre nom vérifié et votre adresse e-mail afin de créer, lier ou ouvrir votre compte en toute sécurité. RijVia ne vend pas ces informations et ne les partage pas avec des tiers à des fins publicitaires. Les données d'apprentissage comprennent la progression, les tentatives, les réponses, les scores, les points faibles, les réussites et les notifications.",
+              "Les données de contact comprennent nom, e-mail, objet et message. Des données techniques et de sécurité limitées peuvent figurer dans les journaux pour exploiter, diagnostiquer et protéger le service. Si vous consentez à l'Analyse, Google Analytics traite des données pseudonymes relatives au navigateur, à l'appareil, aux pages, aux sessions, aux interactions, aux sources de trafic et à la localisation approximative ; RijVia ne lui envoie ni nom de compte, ni adresse e-mail, ni identifiant utilisateur interne. RijVia ne demande aucune donnée de carte bancaire.",
             ],
           },
           {
@@ -1144,7 +1144,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Prestataires et transferts",
             paragraphs: [
-              "Le service utilise Hostinger pour l'hébergement du frontend et du backend et Supabase pour PostgreSQL. Google fournit la connexion facultative et, uniquement après consentement à l'Analyse, la mesure d'usage avec Google Analytics. La connexion transmet le nom vérifié et l'adresse e-mail nécessaires au compte ; Analytics ne reçoit aucune identité de compte ReadyRoad. Ces prestataires peuvent exploiter une infrastructure dans différents pays selon leurs garanties. ReadyRoad ne vend pas de données et ne les utilise pas pour la publicité de tiers.",
+              "Le service utilise Hostinger pour l'hébergement du frontend et du backend et Supabase pour PostgreSQL. Google fournit la connexion facultative et, uniquement après consentement à l'Analyse, la mesure d'usage avec Google Analytics. La connexion transmet le nom vérifié et l'adresse e-mail nécessaires au compte ; Analytics ne reçoit aucune identité de compte RijVia. Ces prestataires peuvent exploiter une infrastructure dans différents pays selon leurs garanties. RijVia ne vend pas de données et ne les utilise pas pour la publicité de tiers.",
             ],
           },
           {
@@ -1184,12 +1184,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Politique relative aux cookies",
         lastUpdated: "Dernière vérification : 3 août 2026",
         intro:
-          "ReadyRoad utilise les cookies et le stockage nécessaires à la sécurité, à la connexion, à la langue et aux choix de consentement. Les préférences facultatives et Google Analytics restent désactivés jusqu'à votre consentement. Aucun service marketing n'est utilisé.",
+          "RijVia utilise les cookies et le stockage nécessaires à la sécurité, à la connexion, à la langue et aux choix de consentement. Les préférences facultatives et Google Analytics restent désactivés jusqu'à votre consentement. Aucun service marketing n'est utilisé.",
         sections: [
           {
             title: "1. Champ d'application",
             paragraphs: [
-              "Un cookie est une petite valeur enregistrée dans le navigateur. Des techniques similaires, comme le stockage local, mémorisent des préférences. Cette politique décrit ce que ReadyRoad utilise directement et pourquoi.",
+              "Un cookie est une petite valeur enregistrée dans le navigateur. Des techniques similaires, comme le stockage local, mémorisent des préférences. Cette politique décrit ce que RijVia utilise directement et pourquoi.",
             ],
           },
           {
@@ -1198,10 +1198,10 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
               "Ces cookies fournissent des services expressément demandés et ne servent ni à la publicité ni au suivi entre sites.",
             ],
             items: [
-              "token — domaine ReadyRoad, chemin /, session d'authentification, HttpOnly, jusqu'à 7 jours ou expiration/déconnexion antérieure.",
-              "csrf_token — domaine ReadyRoad, chemin /, protège les requêtes de modification, jusqu'à 7 jours ou déconnexion.",
-              "readyroad_locale — domaine ReadyRoad, chemin /, mémorise la langue, jusqu'à 1 an.",
-              "google_oauth_state, google_oauth_code_verifier, google_oauth_mode et google_oauth_return_to — domaine ReadyRoad, chemin /, sécurisent la connexion Google facultative et sont effacés après le retour ou expirent après environ 10 minutes.",
+              "token — domaine RijVia, chemin /, session d'authentification, HttpOnly, jusqu'à 7 jours ou expiration/déconnexion antérieure.",
+              "csrf_token — domaine RijVia, chemin /, protège les requêtes de modification, jusqu'à 7 jours ou déconnexion.",
+              "readyroad_locale — domaine RijVia, chemin /, mémorise la langue, jusqu'à 1 an.",
+              "google_oauth_state, google_oauth_code_verifier, google_oauth_mode et google_oauth_return_to — domaine RijVia, chemin /, sécurisent la connexion Google facultative et sont effacés après le retour ou expirent après environ 10 minutes.",
             ],
           },
           {
@@ -1214,11 +1214,11 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. Analyse et marketing",
             paragraphs: [
-              "ReadyRoad utilise Google Analytics 4 avec l'identifiant de mesure G-1P4EJH6D2T uniquement après activation de l'Analyse. Il mesure les pages vues, les sessions, la localisation approximative, les informations sur le navigateur et l'appareil, les sources de trafic et les interactions. Avant votre consentement, aucun script ni aucune requête Google Analytics n'est chargé. Google Consent Mode v2 refuse par défaut le stockage analytique et publicitaire ; ReadyRoad n'utilise ni publicité, ni remarketing, ni pixel social, ni profilage. Le consentement à l'Analyse peut créer les cookies internes suivants, supprimés lors du retrait.",
+              "RijVia utilise Google Analytics 4 avec l'identifiant de mesure G-1P4EJH6D2T uniquement après activation de l'Analyse. Il mesure les pages vues, les sessions, la localisation approximative, les informations sur le navigateur et l'appareil, les sources de trafic et les interactions. Avant votre consentement, aucun script ni aucune requête Google Analytics n'est chargé. Google Consent Mode v2 refuse par défaut le stockage analytique et publicitaire ; RijVia n'utilise ni publicité, ni remarketing, ni pixel social, ni profilage. Le consentement à l'Analyse peut créer les cookies internes suivants, supprimés lors du retrait.",
             ],
             items: [
-              "_ga — domaine ReadyRoad, chemin /, distingue les navigateurs pour la mesure agrégée de l'usage, jusqu'à 2 ans ou jusqu'au retrait du consentement à l'Analyse.",
-              "_ga_1P4EJH6D2T — domaine ReadyRoad, chemin /, conserve l'état de session GA4, jusqu'à 2 ans ou jusqu'au retrait du consentement à l'Analyse.",
+              "_ga — domaine RijVia, chemin /, distingue les navigateurs pour la mesure agrégée de l'usage, jusqu'à 2 ans ou jusqu'au retrait du consentement à l'Analyse.",
+              "_ga_1P4EJH6D2T — domaine RijVia, chemin /, conserve l'état de session GA4, jusqu'à 2 ans ou jusqu'au retrait du consentement à l'Analyse.",
             ],
           },
           {
@@ -1243,16 +1243,16 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         ],
       },
       terms: {
-        eyebrow: "Règles d'utilisation de ReadyRoad",
+        eyebrow: "Règles d'utilisation de RijVia",
         title: "Conditions d'utilisation",
         lastUpdated: "Dernière vérification : 21 juillet 2026",
         intro:
-          "Ces conditions régissent ReadyRoad. En utilisant la plateforme, vous acceptez un usage licite et reconnaissez son objectif pédagogique indépendant.",
+          "Ces conditions régissent RijVia. En utilisant la plateforme, vous acceptez un usage licite et reconnaissez son objectif pédagogique indépendant.",
         sections: [
           {
             title: "1. Service et capacité",
             paragraphs: [
-              "ReadyRoad propose des supports, panneaux, exercices, examens simulés et outils de progression pour la théorie belge. Vous devez pouvoir accepter ces conditions; la supervision d'un parent ou tuteur s'applique lorsque la loi l'exige.",
+              "RijVia propose des supports, panneaux, exercices, examens simulés et outils de progression pour la théorie belge. Vous devez pouvoir accepter ces conditions; la supervision d'un parent ou tuteur s'applique lorsque la loi l'exige.",
             ],
           },
           {
@@ -1264,7 +1264,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. Nature pédagogique",
             paragraphs: [
-              "ReadyRoad est une aide à l'étude, pas un service officiel d'examen, une auto-école, une autorité ou un conseiller juridique. Achèvement, scores et recommandations ne garantissent ni admission ni réussite officielle.",
+              "RijVia est une aide à l'étude, pas un service officiel d'examen, une auto-école, une autorité ou un conseiller juridique. Achèvement, scores et recommandations ne garantissent ni admission ni réussite officielle.",
             ],
           },
           {
@@ -1276,7 +1276,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. Propriété intellectuelle",
             paragraphs: [
-              "Le logiciel, l'interface, la marque, les explications, la structure des questions et les autres créations ReadyRoad sont protégés. Textes officiels et signalisation publique gardent leur statut propre. L'étude personnelle n'autorise pas la republication ni l'exploitation commerciale du contenu original.",
+              "Le logiciel, l'interface, la marque, les explications, la structure des questions et les autres créations RijVia sont protégés. Textes officiels et signalisation publique gardent leur statut propre. L'étude personnelle n'autorise pas la republication ni l'exploitation commerciale du contenu original.",
             ],
           },
           {
@@ -1294,7 +1294,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "8. Responsabilité et droit applicable",
             paragraphs: [
-              "Dans les limites légales, ReadyRoad n'est pas responsable des décisions d'examen, changements de loi, contenus en cache devenus anciens ou pertes indirectes liées à un résumé éducatif. Rien n'exclut une responsabilité ou un droit du consommateur légalement impératif. Le droit belge s'applique sous réserve des protections obligatoires du pays de résidence.",
+              "Dans les limites légales, RijVia n'est pas responsable des décisions d'examen, changements de loi, contenus en cache devenus anciens ou pertes indirectes liées à un résumé éducatif. Rien n'exclut une responsabilité ou un droit du consommateur légalement impératif. Le droit belge s'applique sous réserve des protections obligatoires du pays de résidence.",
             ],
           },
           {
@@ -1310,12 +1310,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Avertissement pédagogique",
         lastUpdated: "Dernière vérification : 21 juillet 2026",
         intro:
-          "ReadyRoad aide à étudier et réviser. Il ne remplace pas la législation belge, les instructions officielles ou l'avis d'un professionnel qualifié.",
+          "RijVia aide à étudier et réviser. Il ne remplace pas la législation belge, les instructions officielles ou l'avis d'un professionnel qualifié.",
         sections: [
           {
             title: "Plateforme indépendante",
             paragraphs: [
-              "ReadyRoad n'est affilié ni aux autorités fédérales ou régionales, ni à la police, aux centres d'examen ou aux auto-écoles. Les noms et liens servent seulement à identifier des sources officielles.",
+              "RijVia n'est affilié ni aux autorités fédérales ou régionales, ni à la police, aux centres d'examen ou aux auto-écoles. Les noms et liens servent seulement à identifier des sources officielles.",
             ],
           },
           {
@@ -1345,7 +1345,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "Aucune garantie de résultat",
             paragraphs: [
-              "Les scores ReadyRoad reflètent uniquement l'activité sur la plateforme. Format, notation, admissibilité et procédures peuvent varier selon la région, la catégorie, le centre et la date.",
+              "Les scores RijVia reflètent uniquement l'activité sur la plateforme. Format, notation, admissibilité et procédures peuvent varier selon la région, la catégorie, le centre et la date.",
             ],
           },
           {
@@ -1361,12 +1361,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       eyebrow: "Centre d'aide",
       title: "Questions fréquentes",
       intro:
-        "Réponses rapides sur les comptes, outils d'étude, langues, progression et statut juridique du contenu ReadyRoad.",
+        "Réponses rapides sur les comptes, outils d'étude, langues, progression et statut juridique du contenu RijVia.",
       items: [
         {
-          question: "ReadyRoad est-il gratuit ?",
+          question: "RijVia est-il gratuit ?",
           answer:
-            "Oui. ReadyRoad fournit actuellement sa plateforme principale sans abonnement ni carte de paiement.",
+            "Oui. RijVia fournit actuellement sa plateforme principale sans abonnement ni carte de paiement.",
         },
         {
           question: "Faut-il un compte ?",
@@ -1376,7 +1376,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "Quelles langues sont disponibles ?",
           answer:
-            "ReadyRoad prend en charge le français, le néerlandais, l'anglais et l'arabe. L'arabe s'affiche de droite à gauche; les autres langues de gauche à droite.",
+            "RijVia prend en charge le français, le néerlandais, l'anglais et l'arabe. L'arabe s'affiche de droite à gauche; les autres langues de gauche à droite.",
         },
         {
           question: "Qu'est-ce que Smart Quiz ou l'entraînement aléatoire ?",
@@ -1391,10 +1391,10 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "Comment la progression est-elle calculée ?",
           answer:
-            "ReadyRoad enregistre les leçons terminées, réponses, tentatives, scores et points faibles du compte. Le tableau de bord résume uniquement l'activité ReadyRoad.",
+            "RijVia enregistre les leçons terminées, réponses, tentatives, scores et points faibles du compte. Le tableau de bord résume uniquement l'activité RijVia.",
         },
         {
-          question: "ReadyRoad peut-il garantir ma réussite ?",
+          question: "RijVia peut-il garantir ma réussite ?",
           answer:
             "Non. Une étude régulière peut améliorer la préparation, mais aucun résultat officiel n'est garanti. Vérifiez les exigences actuelles de votre région et catégorie.",
         },
@@ -1415,88 +1415,88 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         },
       ],
       contactPrompt: "Besoin d'une autre aide ?",
-      contactLabel: "Contacter ReadyRoad",
+      contactLabel: "Contacter RijVia",
     },
   },
   ar: {
     breadcrumbHome: "الرئيسية",
     metadata: {
       about: {
-        title: "عن ReadyRoad",
+        title: "عن RijVia",
         description:
-          "تعرّف على طريقة ReadyRoad في مساعدتك على دراسة قواعد السياقة البلجيكية من خلال محتوى متعدد اللغات ومصادر رسمية وتدريب منظم.",
-        openGraphTitle: "عن ReadyRoad | تعلّم قواعد السياقة البلجيكية",
+          "تعرّف على طريقة RijVia في مساعدتك على دراسة قواعد السياقة البلجيكية من خلال محتوى متعدد اللغات ومصادر رسمية وتدريب منظم.",
+        openGraphTitle: "عن RijVia | تعلّم قواعد السياقة البلجيكية",
         openGraphDescription:
-          "اكتشف رسالة ReadyRoad ونهجه متعدد اللغات وسياسة المصادر ودوره التعليمي المستقل.",
-        imageAlt: "عن منصة ReadyRoad التعليمية",
+          "اكتشف رسالة RijVia ونهجه متعدد اللغات وسياسة المصادر ودوره التعليمي المستقل.",
+        imageAlt: "عن منصة RijVia التعليمية",
       },
       contact: {
-        title: "التواصل مع ReadyRoad",
+        title: "التواصل مع RijVia",
         description:
-          "تواصل مع ReadyRoad لدعم الحساب أو الوصول أو تصحيح المحتوى أو طلبات الخصوصية أو ملاحظات المنصة.",
-        openGraphTitle: "التواصل مع دعم ReadyRoad",
+          "تواصل مع RijVia لدعم الحساب أو الوصول أو تصحيح المحتوى أو طلبات الخصوصية أو ملاحظات المنصة.",
+        openGraphTitle: "التواصل مع دعم RijVia",
         openGraphDescription:
-          "أرسل طلب دعم أو بلّغ عن مشكلة في المحتوى أو شارك ملاحظاتك عبر نموذج ReadyRoad.",
-        imageAlt: "التواصل مع دعم ReadyRoad",
+          "أرسل طلب دعم أو بلّغ عن مشكلة في المحتوى أو شارك ملاحظاتك عبر نموذج RijVia.",
+        imageAlt: "التواصل مع دعم RijVia",
       },
       privacy: {
         title: "سياسة الخصوصية",
         description:
-          "اقرأ كيف تجمع ReadyRoad بيانات الحساب والتعلم والمصادقة والتواصل وتستخدمها وتحفظها وتحميها وفق اللائحة العامة لحماية البيانات.",
-        openGraphTitle: "سياسة خصوصية ReadyRoad",
+          "اقرأ كيف تجمع RijVia بيانات الحساب والتعلم والمصادقة والتواصل وتستخدمها وتحفظها وتحميها وفق اللائحة العامة لحماية البيانات.",
+        openGraphTitle: "سياسة خصوصية RijVia",
         openGraphDescription:
-          "كيفية تعامل ReadyRoad مع البيانات الشخصية وأمن الحساب والاحتفاظ ومقدمي الخدمة وحقوق GDPR.",
-        imageAlt: "سياسة خصوصية ReadyRoad",
+          "كيفية تعامل RijVia مع البيانات الشخصية وأمن الحساب والاحتفاظ ومقدمي الخدمة وحقوق GDPR.",
+        imageAlt: "سياسة خصوصية RijVia",
       },
       cookies: {
         title: "سياسة ملفات الارتباط",
         description:
-          "اطّلع على ملفات الارتباط الضرورية والاختيارية التي تستخدمها ReadyRoad لتأمين الدخول واللغة والتفضيلات وتسجيل Google والتحليلات المشروطة بالموافقة.",
-        openGraphTitle: "سياسة ملفات الارتباط في ReadyRoad",
+          "اطّلع على ملفات الارتباط الضرورية والاختيارية التي تستخدمها RijVia لتأمين الدخول واللغة والتفضيلات وتسجيل Google والتحليلات المشروطة بالموافقة.",
+        openGraphTitle: "سياسة ملفات الارتباط في RijVia",
         openGraphDescription:
-          "جرد شفاف لملفات ارتباط ReadyRoad وتخزين المتصفح وأغراضها ومددها.",
-        imageAlt: "سياسة ملفات الارتباط في ReadyRoad",
+          "جرد شفاف لملفات ارتباط RijVia وتخزين المتصفح وأغراضها ومددها.",
+        imageAlt: "سياسة ملفات الارتباط في RijVia",
       },
       terms: {
         title: "شروط الاستخدام",
         description:
-          "اقرأ قواعد حسابات ReadyRoad والاستخدام المقبول والمحتوى التعليمي والملكية الفكرية وتوفر الخدمة.",
-        openGraphTitle: "شروط استخدام ReadyRoad",
+          "اقرأ قواعد حسابات RijVia والاستخدام المقبول والمحتوى التعليمي والملكية الفكرية وتوفر الخدمة.",
+        openGraphTitle: "شروط استخدام RijVia",
         openGraphDescription:
-          "الشروط المنظمة للحسابات والاستخدام المسؤول والمواد التعليمية والتوفر والمسؤولية في ReadyRoad.",
-        imageAlt: "شروط استخدام ReadyRoad",
+          "الشروط المنظمة للحسابات والاستخدام المسؤول والمواد التعليمية والتوفر والمسؤولية في RijVia.",
+        imageAlt: "شروط استخدام RijVia",
       },
       disclaimer: {
         title: "إخلاء المسؤولية التعليمي",
         description:
-          "افهم دور ReadyRoad التعليمي المستقل ولماذا تبقى القوانين البلجيكية والجهات الرسمية هي المرجع الحاسم.",
-        openGraphTitle: "إخلاء المسؤولية التعليمي في ReadyRoad",
+          "افهم دور RijVia التعليمي المستقل ولماذا تبقى القوانين البلجيكية والجهات الرسمية هي المرجع الحاسم.",
+        openGraphTitle: "إخلاء المسؤولية التعليمي في RijVia",
         openGraphDescription:
-          "تساعد ReadyRoad على الدراسة ولا تستبدل التشريع البلجيكي أو التعليمات الرسمية أو المشورة المهنية.",
-        imageAlt: "إخلاء المسؤولية التعليمي في ReadyRoad",
+          "تساعد RijVia على الدراسة ولا تستبدل التشريع البلجيكي أو التعليمات الرسمية أو المشورة المهنية.",
+        imageAlt: "إخلاء المسؤولية التعليمي في RijVia",
       },
       faq: {
         title: "الأسئلة الشائعة",
         description:
-          "اعثر على إجابات حول حساب ReadyRoad والوصول المجاني والدروس والعلامات والتدريب والامتحانات والتقدم واللغات والتحديثات.",
-        openGraphTitle: "الأسئلة الشائعة عن ReadyRoad",
+          "اعثر على إجابات حول حساب RijVia والوصول المجاني والدروس والعلامات والتدريب والامتحانات والتقدم واللغات والتحديثات.",
+        openGraphTitle: "الأسئلة الشائعة عن RijVia",
         openGraphDescription:
-          "إجابات عن دراسة قواعد السياقة البلجيكية في ReadyRoad، بما فيها الحسابات والتدريب والتقدم واللغات.",
-        imageAlt: "الأسئلة الشائعة عن ReadyRoad",
+          "إجابات عن دراسة قواعد السياقة البلجيكية في RijVia، بما فيها الحسابات والتدريب والتقدم واللغات.",
+        imageAlt: "الأسئلة الشائعة عن RijVia",
       },
     },
     documents: {
       about: {
         eyebrow: "منصة تعليمية مستقلة",
-        title: "عن ReadyRoad",
+        title: "عن RijVia",
         lastUpdated: "آخر مراجعة: 21 يوليو 2026",
         intro:
-          "ReadyRoad منصة تعليمية مستقلة ومجانية تساعدك على دراسة قواعد السياقة البلجيكية بطريقة منظمة وسهلة.",
+          "RijVia منصة تعليمية مستقلة ومجانية تساعدك على دراسة قواعد السياقة البلجيكية بطريقة منظمة وسهلة.",
         sections: [
           {
-            title: "لماذا أُنشئت ReadyRoad؟",
+            title: "لماذا أُنشئت RijVia؟",
             paragraphs: [
-              "تشمل قواعد السياقة البلجيكية الأحكام القانونية وإرشادات الامتحانات الإقليمية والعلامات المرورية والمواقف العملية. تجمع ReadyRoad الدراسة والتدريب ومتابعة التقدم في مكان واحد، من دون أن تدّعي أنها بديل عن الجهات الرسمية.",
+              "تشمل قواعد السياقة البلجيكية الأحكام القانونية وإرشادات الامتحانات الإقليمية والعلامات المرورية والمواقف العملية. تجمع RijVia الدراسة والتدريب ومتابعة التقدم في مكان واحد، من دون أن تدّعي أنها بديل عن الجهات الرسمية.",
             ],
           },
           {
@@ -1508,7 +1508,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "ما الذي يميز المنصة؟",
             paragraphs: [
-              "تجمع ReadyRoad فهرسًا مُراجعًا يضم 184 علامة مرورية مع دروس منظمة وتدريب حسب الفئة ومحاكاة للامتحان ومؤشرات للتقدم. تُدار البيانات من ملفات مصدرية معيارية وتُفحص لضمان الاتساق بين اللغات والملفات.",
+              "تجمع RijVia فهرسًا مُراجعًا يضم 184 علامة مرورية مع دروس منظمة وتدريب حسب الفئة ومحاكاة للامتحان ومؤشرات للتقدم. تُدار البيانات من ملفات مصدرية معيارية وتُفحص لضمان الاتساق بين اللغات والملفات.",
             ],
           },
           {
@@ -1520,7 +1520,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "الاعتماد على المصادر الرسمية",
             paragraphs: [
-              "تراجع ReadyRoad المحتوى التعليمي بالرجوع إلى المصادر البلجيكية الرسمية، وتفصل القوانين المستقبلية عن القانون النافذ. تبقى الجهة المختصة والنص القانوني المنشور مقدّمين دائمًا على أي ملخص في المنصة.",
+              "تراجع RijVia المحتوى التعليمي بالرجوع إلى المصادر البلجيكية الرسمية، وتفصل القوانين المستقبلية عن القانون النافذ. تبقى الجهة المختصة والنص القانوني المنشور مقدّمين دائمًا على أي ملخص في المنصة.",
             ],
             references: [
               {
@@ -1538,7 +1538,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "إدارة المشروع",
             paragraphs: [
-              "أنشأ Haydar Tarek منصة ReadyRoad ويتولى صيانتها. المنصة ليست جهة حكومية أو مركز امتحان أو مدرسة قيادة أو مستشارًا قانونيًا، ولا تدّعي وجود ارتباط بجهات الامتحان البلجيكية.",
+              "أنشأ Haydar Tarek منصة RijVia ويتولى صيانتها. المنصة ليست جهة حكومية أو مركز امتحان أو مدرسة قيادة أو مستشارًا قانونيًا، ولا تدّعي وجود ارتباط بجهات الامتحان البلجيكية.",
             ],
             references: [
               {
@@ -1560,19 +1560,19 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "سياسة الخصوصية",
         lastUpdated: "آخر مراجعة: 3 أغسطس 2026",
         intro:
-          "توضح هذه السياسة كيفية معالجة ReadyRoad للبيانات الشخصية عند تصفح الموقع العام أو إنشاء حساب أو تسجيل الدخول أو الدراسة أو التواصل معنا.",
+          "توضح هذه السياسة كيفية معالجة RijVia للبيانات الشخصية عند تصفح الموقع العام أو إنشاء حساب أو تسجيل الدخول أو الدراسة أو التواصل معنا.",
         sections: [
           {
             title: "1. المسؤول عن المعالجة",
             paragraphs: [
-              "يُعد Haydar Tarek، بصفته مشغّل ReadyRoad، مسؤول المعالجة للبيانات الموضحة في هذه السياسة. يمكن إرسال طلبات الخصوصية وحقوق البيانات عبر نموذج التواصل مع كتابة موضوع واضح يتعلق بالخصوصية.",
+              "يُعد Haydar Tarek، بصفته مشغّل RijVia، مسؤول المعالجة للبيانات الموضحة في هذه السياسة. يمكن إرسال طلبات الخصوصية وحقوق البيانات عبر نموذج التواصل مع كتابة موضوع واضح يتعلق بالخصوصية.",
             ],
           },
           {
             title: "2. البيانات التي نعالجها",
             paragraphs: [
-              "تشمل بيانات الحساب اسم المستخدم والاسم الكامل والبريد الإلكتروني وتجزئة كلمة المرور والدور وحالة الحساب والتواريخ. وعند اختيار تسجيل الدخول عبر Google، تستلم ReadyRoad من Google اسمك الموثق وعنوان بريدك الإلكتروني فقط لإنشاء حسابك أو ربطه أو تسجيل دخولك بأمان. لا تبيع ReadyRoad هذه المعلومات ولا تشاركها مع أطراف أخرى لأغراض إعلانية. وتشمل بيانات التعلم تقدم الدروس ومحاولات التدريب والامتحان والإجابات والدرجات ونقاط الضعف والإنجازات والإشعارات.",
-              "تشمل بيانات التواصل الاسم والبريد والموضوع والرسالة. وقد تُعالج بيانات تقنية وأمنية محدودة في سجلات الخادم لتشغيل الخدمة وتشخيصها وحمايتها. وعند موافقتك على التحليلات، يعالج Google Analytics بيانات مستعارة عن المتصفح والجهاز والصفحات والجلسات والتفاعلات ومصادر الزيارة والموقع التقريبي؛ ولا ترسل إليه ReadyRoad اسم الحساب أو البريد الإلكتروني أو معرّف المستخدم الداخلي. لا تطلب ReadyRoad بيانات بطاقات الدفع.",
+              "تشمل بيانات الحساب اسم المستخدم والاسم الكامل والبريد الإلكتروني وتجزئة كلمة المرور والدور وحالة الحساب والتواريخ. وعند اختيار تسجيل الدخول عبر Google، تستلم RijVia من Google اسمك الموثق وعنوان بريدك الإلكتروني فقط لإنشاء حسابك أو ربطه أو تسجيل دخولك بأمان. لا تبيع RijVia هذه المعلومات ولا تشاركها مع أطراف أخرى لأغراض إعلانية. وتشمل بيانات التعلم تقدم الدروس ومحاولات التدريب والامتحان والإجابات والدرجات ونقاط الضعف والإنجازات والإشعارات.",
+              "تشمل بيانات التواصل الاسم والبريد والموضوع والرسالة. وقد تُعالج بيانات تقنية وأمنية محدودة في سجلات الخادم لتشغيل الخدمة وتشخيصها وحمايتها. وعند موافقتك على التحليلات، يعالج Google Analytics بيانات مستعارة عن المتصفح والجهاز والصفحات والجلسات والتفاعلات ومصادر الزيارة والموقع التقريبي؛ ولا ترسل إليه RijVia اسم الحساب أو البريد الإلكتروني أو معرّف المستخدم الداخلي. لا تطلب RijVia بيانات بطاقات الدفع.",
             ],
           },
           {
@@ -1584,13 +1584,13 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. المصادقة وملفات الارتباط",
             paragraphs: [
-              "تخزن ReadyRoad في بيئة الإنتاج رمز المصادقة الموقّع داخل ملف ارتباط Secure وHttpOnly، فلا تستطيع برمجيات المتصفح قراءته. ويحمي رمز CSRF منفصل الطلبات التي تغيّر البيانات. تُحفظ اللغة لضمان تجربة متعددة اللغات، ولا يُحفظ المظهر الاختياري إلا بعد الموافقة على التفضيلات. تسجيل Google اختياري ويستخدم ملفات أمنية قصيرة المدة. يرد الجرد الكامل وأدوات التحكم في سياسة ملفات الارتباط.",
+              "تخزن RijVia في بيئة الإنتاج رمز المصادقة الموقّع داخل ملف ارتباط Secure وHttpOnly، فلا تستطيع برمجيات المتصفح قراءته. ويحمي رمز CSRF منفصل الطلبات التي تغيّر البيانات. تُحفظ اللغة لضمان تجربة متعددة اللغات، ولا يُحفظ المظهر الاختياري إلا بعد الموافقة على التفضيلات. تسجيل Google اختياري ويستخدم ملفات أمنية قصيرة المدة. يرد الجرد الكامل وأدوات التحكم في سياسة ملفات الارتباط.",
             ],
           },
           {
             title: "5. مقدمو الخدمة ونقل البيانات",
             paragraphs: [
-              "تستخدم الخدمة Hostinger لاستضافة الواجهة والخادم الخلفي وSupabase لقاعدة PostgreSQL. ويوفّر Google تسجيل الدخول الاختياري، ويوفّر قياس الاستخدام عبر Google Analytics فقط بعد الموافقة على التحليلات. يرسل تسجيل الدخول الاسم الموثق والبريد اللازمين للحساب، بينما لا يتلقى Analytics هوية حساب ReadyRoad. قد يشغّل هؤلاء المزودون بنية في بلدان مختلفة وفق ضماناتهم. لا تبيع ReadyRoad البيانات الشخصية ولا تستخدمها لإعلانات الغير.",
+              "تستخدم الخدمة Hostinger لاستضافة الواجهة والخادم الخلفي وSupabase لقاعدة PostgreSQL. ويوفّر Google تسجيل الدخول الاختياري، ويوفّر قياس الاستخدام عبر Google Analytics فقط بعد الموافقة على التحليلات. يرسل تسجيل الدخول الاسم الموثق والبريد اللازمين للحساب، بينما لا يتلقى Analytics هوية حساب RijVia. قد يشغّل هؤلاء المزودون بنية في بلدان مختلفة وفق ضماناتهم. لا تبيع RijVia البيانات الشخصية ولا تستخدمها لإعلانات الغير.",
             ],
           },
           {
@@ -1630,12 +1630,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "سياسة ملفات الارتباط",
         lastUpdated: "آخر مراجعة: 3 أغسطس 2026",
         intro:
-          "تستخدم ReadyRoad ملفات الارتباط وتخزين المتصفح الضروريين للأمان وتسجيل الدخول واللغة وخيارات الموافقة. وتبقى التفضيلات الاختيارية وGoogle Analytics معطّلة حتى توافق عليها. ولا تُستخدم خدمات تسويقية.",
+          "تستخدم RijVia ملفات الارتباط وتخزين المتصفح الضروريين للأمان وتسجيل الدخول واللغة وخيارات الموافقة. وتبقى التفضيلات الاختيارية وGoogle Analytics معطّلة حتى توافق عليها. ولا تُستخدم خدمات تسويقية.",
         sections: [
           {
             title: "1. نطاق السياسة",
             paragraphs: [
-              "ملف الارتباط قيمة صغيرة يحفظها الموقع في المتصفح. ويمكن لتقنيات مشابهة، مثل التخزين المحلي، تذكر التفضيلات. توضح هذه السياسة ما تستخدمه ReadyRoad مباشرة وسببه.",
+              "ملف الارتباط قيمة صغيرة يحفظها الموقع في المتصفح. ويمكن لتقنيات مشابهة، مثل التخزين المحلي، تذكر التفضيلات. توضح هذه السياسة ما تستخدمه RijVia مباشرة وسببه.",
             ],
           },
           {
@@ -1644,10 +1644,10 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
               "تدعم هذه الملفات خدمات يطلبها المستخدم صراحة، ولا تُستخدم للإعلان أو التتبع عبر المواقع.",
             ],
             items: [
-              "token — نطاق ReadyRoad، المسار /، جلسة المصادقة، HttpOnly، حتى 7 أيام أو انتهاء الرمز/تسجيل الخروج قبل ذلك.",
-              "csrf_token — نطاق ReadyRoad، المسار /، يحمي الطلبات التي تغيّر البيانات، حتى 7 أيام أو تسجيل الخروج.",
-              "readyroad_locale — نطاق ReadyRoad، المسار /، يتذكر اللغة المختارة، حتى سنة واحدة.",
-              "google_oauth_state وgoogle_oauth_code_verifier وgoogle_oauth_mode وgoogle_oauth_return_to — نطاق ReadyRoad، المسار /، تؤمّن محاولة Google الاختيارية وتُحذف بعد العودة أو تنتهي بعد نحو 10 دقائق.",
+              "token — نطاق RijVia، المسار /، جلسة المصادقة، HttpOnly، حتى 7 أيام أو انتهاء الرمز/تسجيل الخروج قبل ذلك.",
+              "csrf_token — نطاق RijVia، المسار /، يحمي الطلبات التي تغيّر البيانات، حتى 7 أيام أو تسجيل الخروج.",
+              "readyroad_locale — نطاق RijVia، المسار /، يتذكر اللغة المختارة، حتى سنة واحدة.",
+              "google_oauth_state وgoogle_oauth_code_verifier وgoogle_oauth_mode وgoogle_oauth_return_to — نطاق RijVia، المسار /، تؤمّن محاولة Google الاختيارية وتُحذف بعد العودة أو تنتهي بعد نحو 10 دقائق.",
             ],
           },
           {
@@ -1660,11 +1660,11 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "4. التحليلات والتسويق",
             paragraphs: [
-              "تستخدم ReadyRoad خدمة Google Analytics 4 بمعرّف القياس G-1P4EJH6D2T بعد تفعيلك للتحليلات فقط. وتقيس مشاهدات الصفحات والجلسات والموقع التقريبي ومعلومات المتصفح والجهاز ومصادر الزيارة والتفاعلات. ولا تُحمّل قبل الموافقة أي برمجية أو طلب تابع لـGoogle Analytics. يرفض Google Consent Mode v2 تخزين التحليلات والإعلانات افتراضيًا، ولا تستخدم ReadyRoad الإعلانات أو إعادة الاستهداف أو بكسلات الشبكات الاجتماعية أو التنميط. قد تنشئ موافقة التحليلات ملفي الارتباط التاليين من الطرف الأول، ويُحذفان عند سحبها.",
+              "تستخدم RijVia خدمة Google Analytics 4 بمعرّف القياس G-1P4EJH6D2T بعد تفعيلك للتحليلات فقط. وتقيس مشاهدات الصفحات والجلسات والموقع التقريبي ومعلومات المتصفح والجهاز ومصادر الزيارة والتفاعلات. ولا تُحمّل قبل الموافقة أي برمجية أو طلب تابع لـGoogle Analytics. يرفض Google Consent Mode v2 تخزين التحليلات والإعلانات افتراضيًا، ولا تستخدم RijVia الإعلانات أو إعادة الاستهداف أو بكسلات الشبكات الاجتماعية أو التنميط. قد تنشئ موافقة التحليلات ملفي الارتباط التاليين من الطرف الأول، ويُحذفان عند سحبها.",
             ],
             items: [
-              "_ga — نطاق ReadyRoad، المسار /، يميّز المتصفحات لقياس الاستخدام المجمّع، حتى سنتين أو إلى حين سحب موافقة التحليلات.",
-              "_ga_1P4EJH6D2T — نطاق ReadyRoad، المسار /، يحفظ حالة جلسة GA4، حتى سنتين أو إلى حين سحب موافقة التحليلات.",
+              "_ga — نطاق RijVia، المسار /، يميّز المتصفحات لقياس الاستخدام المجمّع، حتى سنتين أو إلى حين سحب موافقة التحليلات.",
+              "_ga_1P4EJH6D2T — نطاق RijVia، المسار /، يحفظ حالة جلسة GA4، حتى سنتين أو إلى حين سحب موافقة التحليلات.",
             ],
           },
           {
@@ -1689,16 +1689,16 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         ],
       },
       terms: {
-        eyebrow: "قواعد استخدام ReadyRoad",
+        eyebrow: "قواعد استخدام RijVia",
         title: "شروط الاستخدام",
         lastUpdated: "آخر مراجعة: 21 يوليو 2026",
         intro:
-          "تنظم هذه الشروط استخدام ReadyRoad. وباستخدام المنصة، توافق على استعمالها بصورة قانونية وتفهم غرضها التعليمي المستقل.",
+          "تنظم هذه الشروط استخدام RijVia. وباستخدام المنصة، توافق على استعمالها بصورة قانونية وتفهم غرضها التعليمي المستقل.",
         sections: [
           {
             title: "1. الخدمة والأهلية",
             paragraphs: [
-              "توفر ReadyRoad مواد دراسية وعلامات مرورية وتدريبًا ومحاكاة للامتحان وأدوات لمتابعة التقدم في قواعد السياقة البلجيكية. يجب أن تكون قادرًا قانونيًا على قبول الشروط، ويشرف ولي الأمر حيث يقتضي القانون.",
+              "توفر RijVia مواد دراسية وعلامات مرورية وتدريبًا ومحاكاة للامتحان وأدوات لمتابعة التقدم في قواعد السياقة البلجيكية. يجب أن تكون قادرًا قانونيًا على قبول الشروط، ويشرف ولي الأمر حيث يقتضي القانون.",
             ],
           },
           {
@@ -1710,7 +1710,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "3. الطبيعة التعليمية",
             paragraphs: [
-              "ReadyRoad أداة تحضير وليست خدمة امتحان رسمية أو مدرسة قيادة أو جهة حكومية أو مستشارًا قانونيًا. ولا يضمن الإكمال أو الدرجات أو التوصيات دخول الامتحان الرسمي أو النجاح فيه.",
+              "RijVia أداة تحضير وليست خدمة امتحان رسمية أو مدرسة قيادة أو جهة حكومية أو مستشارًا قانونيًا. ولا يضمن الإكمال أو الدرجات أو التوصيات دخول الامتحان الرسمي أو النجاح فيه.",
             ],
           },
           {
@@ -1722,7 +1722,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "5. الملكية الفكرية",
             paragraphs: [
-              "تحمي القواعد المطبقة برمجيات ReadyRoad الأصلية وواجهتها وعلامتها وشروحاتها وبنية أسئلتها. وتبقى النصوص الرسمية ومواد العلامات العامة خاضعة لوضعها القانوني الخاص. لا يمنح الاستخدام الدراسي الشخصي حق إعادة نشر المحتوى الأصلي أو استغلاله تجاريًا.",
+              "تحمي القواعد المطبقة برمجيات RijVia الأصلية وواجهتها وعلامتها وشروحاتها وبنية أسئلتها. وتبقى النصوص الرسمية ومواد العلامات العامة خاضعة لوضعها القانوني الخاص. لا يمنح الاستخدام الدراسي الشخصي حق إعادة نشر المحتوى الأصلي أو استغلاله تجاريًا.",
             ],
           },
           {
@@ -1740,7 +1740,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "8. المسؤولية والقانون المطبق",
             paragraphs: [
-              "بالقدر الذي يسمح به القانون، لا تتحمل ReadyRoad مسؤولية قرارات الامتحان أو تغير القانون أو المحتوى المؤقت القديم أو الخسائر غير المباشرة الناتجة عن الاعتماد على ملخص تعليمي. لا تستبعد الشروط مسؤولية أو حقوق مستهلك لا يجوز استبعادها قانونًا. يسري القانون البلجيكي مع احترام الحماية الإلزامية في بلد إقامة المستخدم.",
+              "بالقدر الذي يسمح به القانون، لا تتحمل RijVia مسؤولية قرارات الامتحان أو تغير القانون أو المحتوى المؤقت القديم أو الخسائر غير المباشرة الناتجة عن الاعتماد على ملخص تعليمي. لا تستبعد الشروط مسؤولية أو حقوق مستهلك لا يجوز استبعادها قانونًا. يسري القانون البلجيكي مع احترام الحماية الإلزامية في بلد إقامة المستخدم.",
             ],
           },
           {
@@ -1756,12 +1756,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "إخلاء المسؤولية التعليمي",
         lastUpdated: "آخر مراجعة: 21 يوليو 2026",
         intro:
-          "تدعم ReadyRoad الدراسة والمراجعة، لكنها لا تستبدل التشريع البلجيكي أو تعليمات الامتحان الرسمية أو مشورة متخصص مؤهل.",
+          "تدعم RijVia الدراسة والمراجعة، لكنها لا تستبدل التشريع البلجيكي أو تعليمات الامتحان الرسمية أو مشورة متخصص مؤهل.",
         sections: [
           {
             title: "منصة مستقلة",
             paragraphs: [
-              "لا ترتبط ReadyRoad بالحكومة الاتحادية أو الإقليمية أو الشرطة أو مراكز الامتحان أو مدارس تعليم السياقة. تُستخدم أسماء الجهات وروابطها فقط للتعريف بالمصادر الرسمية.",
+              "لا ترتبط RijVia بالحكومة الاتحادية أو الإقليمية أو الشرطة أو مراكز الامتحان أو مدارس تعليم السياقة. تُستخدم أسماء الجهات وروابطها فقط للتعريف بالمصادر الرسمية.",
             ],
           },
           {
@@ -1791,7 +1791,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
           {
             title: "لا ضمان لنتيجة الامتحان",
             paragraphs: [
-              "تعكس درجات التدريب نشاطك داخل ReadyRoad فقط، ولا تتنبأ بنتيجة رسمية ولا تضمنها. قد يختلف الشكل والتقييم والأهلية والإجراء حسب الإقليم والفئة والمركز والتاريخ.",
+              "تعكس درجات التدريب نشاطك داخل RijVia فقط، ولا تتنبأ بنتيجة رسمية ولا تضمنها. قد يختلف الشكل والتقييم والأهلية والإجراء حسب الإقليم والفئة والمركز والتاريخ.",
             ],
           },
           {
@@ -1807,12 +1807,12 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
       eyebrow: "مركز المساعدة",
       title: "الأسئلة الشائعة",
       intro:
-        "إجابات سريعة عن الحسابات وأدوات التعلم واللغات والتقدم والوضع القانوني لمحتوى ReadyRoad.",
+        "إجابات سريعة عن الحسابات وأدوات التعلم واللغات والتقدم والوضع القانوني لمحتوى RijVia.",
       items: [
         {
-          question: "هل ReadyRoad مجانية؟",
+          question: "هل RijVia مجانية؟",
           answer:
-            "نعم. توفر ReadyRoad حاليًا منصتها التعليمية الأساسية دون اشتراك أو طلب بيانات بطاقة دفع.",
+            "نعم. توفر RijVia حاليًا منصتها التعليمية الأساسية دون اشتراك أو طلب بيانات بطاقة دفع.",
         },
         {
           question: "هل أحتاج إلى حساب؟",
@@ -1822,7 +1822,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "ما اللغات المتاحة؟",
           answer:
-            "تدعم ReadyRoad العربية والهولندية والفرنسية والإنجليزية. تُعرض العربية من اليمين إلى اليسار وبقية اللغات من اليسار إلى اليمين.",
+            "تدعم RijVia العربية والهولندية والفرنسية والإنجليزية. تُعرض العربية من اليمين إلى اليسار وبقية اللغات من اليسار إلى اليمين.",
         },
         {
           question: "ما Smart Quiz أو التدريب العشوائي؟",
@@ -1837,10 +1837,10 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "كيف يُحسب التقدم؟",
           answer:
-            "تسجل ReadyRoad الدروس المكتملة والإجابات والمحاولات والدرجات ونقاط الضعف المرتبطة بحسابك. تلخص لوحة التحكم النشاط داخل ReadyRoad فقط.",
+            "تسجل RijVia الدروس المكتملة والإجابات والمحاولات والدرجات ونقاط الضعف المرتبطة بحسابك. تلخص لوحة التحكم النشاط داخل RijVia فقط.",
         },
         {
-          question: "هل تضمن ReadyRoad نجاحي؟",
+          question: "هل تضمن RijVia نجاحي؟",
           answer:
             "لا. قد تحسن الدراسة المنتظمة استعدادك، لكن لا يمكن ضمان نتيجة رسمية. تحقق دائمًا من الشروط الحالية في إقليمك وفئة رخصتك.",
         },
@@ -1861,7 +1861,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         },
       ],
       contactPrompt: "هل ما زلت تحتاج إلى مساعدة؟",
-      contactLabel: "تواصل مع ReadyRoad",
+      contactLabel: "تواصل مع RijVia",
     },
   },
 };

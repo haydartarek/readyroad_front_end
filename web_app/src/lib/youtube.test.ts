@@ -21,7 +21,7 @@ describe("YouTube data normalization", () => {
           {
             id: "UC-readyroad",
             snippet: {
-              title: "ReadyRoad",
+              title: "RijVia",
               description: "Belgian driving theory videos",
               thumbnails: thumbnail,
             },
@@ -34,7 +34,7 @@ describe("YouTube data normalization", () => {
     ).toEqual({
       id: "UC-readyroad",
       handle: YOUTUBE_CHANNEL_HANDLE,
-      title: "ReadyRoad",
+      title: "RijVia",
       description: "Belgian driving theory videos",
       thumbnail: thumbnail.high,
       uploadsPlaylistId: "UU-readyroad",
@@ -51,7 +51,7 @@ describe("YouTube data normalization", () => {
             snippet: {
               title: "Older lesson",
               description: "First lesson",
-              channelTitle: "ReadyRoad",
+              channelTitle: "RijVia",
               position: 2,
               thumbnails: thumbnail,
               resourceId: { videoId: "abcdefghijk" },
@@ -110,7 +110,7 @@ describe("YouTube data normalization", () => {
           },
         ],
       },
-      "ReadyRoad",
+      "RijVia",
     );
 
     expect(result.nextPageToken).toBe("NEXT_PAGE");

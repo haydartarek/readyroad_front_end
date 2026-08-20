@@ -26,7 +26,7 @@ export async function generateMetadata({
 
   if (!sign) {
     return {
-      title: { absolute: "Traffic Sign Not Found | ReadyRoad" },
+      title: { absolute: "Traffic Sign Not Found | RijVia" },
       robots: { index: false, follow: false },
     };
   }
@@ -52,7 +52,7 @@ export async function generateMetadata({
       title,
       description,
       url: canonical,
-      siteName: "ReadyRoad",
+      siteName: "RijVia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       type: "article",

@@ -161,7 +161,10 @@ export function HowItWorksSection() {
                 <p className="mb-5 flex-1 text-sm font-medium leading-6 text-muted-foreground">
                   {t(step.descKey, {
                     questions: EXAM_RULES.TOTAL_QUESTIONS,
-                    minutes: EXAM_RULES.DURATION_MINUTES,
+                    duration: t("exam.duration_value", {
+                      minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
+                      seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
+                    }),
                   })}
                 </p>
 

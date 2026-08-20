@@ -48,6 +48,7 @@ import {
   Loader2,
   Shuffle,
   Shield,
+  TimerOff,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────
@@ -96,6 +97,8 @@ interface AllAnsweredQuestion {
   categoryCode: string;
   contentImageUrl?: string;
   isCorrect: boolean;
+  wasTimeout?: boolean;
+  difficulty?: "EASY" | "MEDIUM" | "HARD" | null;
 }
 
 interface CategoryBreakdown {
@@ -765,11 +768,13 @@ export function ExamResultsPageContent() {
                                 return (
                                 <div
                                   key={q.questionId}
-                                  className={cn(
-                                    "rounded-xl border p-4 space-y-2.5",
-                                    q.isCorrect
-                                      ? "border-green-200 bg-green-50/40"
-                                      : "border-red-200 bg-red-50/40",
+                                    className={cn(
+                                      "rounded-xl border p-4 space-y-2.5",
+                                      q.wasTimeout
+                                        ? "border-amber-200 bg-amber-50/40"
+                                        : q.isCorrect
+                                        ? "border-green-200 bg-green-50/40"
+                                        : "border-red-200 bg-red-50/40",
                                   )}
                                 >
                                   {/* Header row */}
@@ -781,8 +786,17 @@ export function ExamResultsPageContent() {
                                       <span className="text-xs font-medium text-muted-foreground">
                                         {categoryName}
                                       </span>
+                                      {q.difficulty ? (
+                                        <span className="text-xs font-medium text-muted-foreground">
+                                          {t(
+                                            `practice_exam.difficulty_${q.difficulty.toLowerCase()}`,
+                                          )}
+                                        </span>
+                                      ) : null}
                                     </div>
-                                    {q.isCorrect ? (
+                                    {q.wasTimeout ? (
+                                      <TimerOff className="h-4 w-4 shrink-0 text-amber-600" />
+                                    ) : q.isCorrect ? (
                                       <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
                                     ) : (
                                       <XCircle className="h-4 w-4 text-red-500 shrink-0" />
@@ -807,10 +821,16 @@ export function ExamResultsPageContent() {
                                     <ResultAnswerBlock
                                       label={t("exam.your_answer")}
                                       tone={
-                                        q.isCorrect ? "correct" : "incorrect"
+                                        q.wasTimeout
+                                          ? "neutral"
+                                          : q.isCorrect
+                                            ? "correct"
+                                            : "incorrect"
                                       }
                                     >
-                                      {selectedOptionText || "—"}
+                                      {q.wasTimeout
+                                        ? t("practice_exam.score_timeout")
+                                        : selectedOptionText || "—"}
                                     </ResultAnswerBlock>
                                     {!q.isCorrect && (
                                       <ResultAnswerBlock

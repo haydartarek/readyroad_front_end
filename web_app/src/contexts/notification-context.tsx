@@ -4,7 +4,7 @@
  * NotificationContext
  *
  * Single source of truth for unread notification count.
- * - Polls /api/users/me/notifications/count every 30 s (base interval)
+ * - Polls the unread-count notification endpoint every 30 s (base interval)
  * - Exponential backoff up to MAX_ERRORS consecutive failures, then stops
  * - Deduplicates rapid calls (DEDUPE_MS guard)
  * - Refreshes on tab-focus (visibilitychange)
@@ -42,6 +42,8 @@ export interface NotificationCtx {
   unreadCount: number;
   /** Force an immediate re-fetch (bypasses DEDUPE_MS guard) */
   refresh: () => void;
+  /** Changes when polling discovers new unread notification state. */
+  revision: number;
   /**
    * Optimistically sets count to 0 and fires markAllNotificationsAsRead.
    * Call this whenever the user explicitly clears notifications.
@@ -52,6 +54,7 @@ export interface NotificationCtx {
 const NotificationContext = createContext<NotificationCtx>({
   unreadCount: 0,
   refresh: () => {},
+  revision: 0,
   markAllRead: async () => {},
 });
 
@@ -61,6 +64,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
 
   const [unreadCount, setUnreadCount] = useState(0);
+  const [revision, setRevision] = useState(0);
+  const unreadCountRef = useRef(0);
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const errorsRef = useRef(0);
   const lastFetchRef = useRef(0);
@@ -118,7 +123,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     try {
       const count = await getUnreadNotificationCount(controller.signal);
       if (controller.signal.aborted) return;
-      setUnreadCount(count);
+      if (count !== unreadCountRef.current) {
+        unreadCountRef.current = count;
+        setUnreadCount(count);
+        setRevision((current) => current + 1);
+      }
       errorsRef.current = 0;
       scheduleFetch(BASE_POLL_MS);
     } catch {
@@ -154,6 +163,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user || !isAuthenticated || isLoading) {
       stopPolling();
+      unreadCountRef.current = 0;
       setUnreadCount(0);
       return;
     }
@@ -189,6 +199,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // ── Public API ────────────────────────────────────────
 
   const markAllRead = useCallback(async () => {
+    unreadCountRef.current = 0;
     setUnreadCount(0); // optimistic
     await markAllNotificationsAsRead().catch(() => {});
   }, []);
@@ -202,6 +213,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     <NotificationContext.Provider
       value={{
         unreadCount: user ? unreadCount : 0,
+        revision,
         markAllRead,
         refresh,
       }}

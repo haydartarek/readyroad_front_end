@@ -1,5 +1,5 @@
 /**
- * API Client — ReadyRoad Next.js BFF Proxy
+ * API Client — RijVia Next.js BFF Proxy
  *
  * SECURITY MODEL:
  * - All requests proxied through Next.js BFF (Client → /api/proxy/{path} → Backend)
@@ -25,14 +25,14 @@ const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const AUTH_PATHS = ["/auth/login", "/auth/register"];
 const CSRF_HEADER = "x-csrf-token";
 
-export type ReadyRoadRequestConfig = AxiosRequestConfig & {
+export type RijViaRequestConfig = AxiosRequestConfig & {
   skipAuthRedirect?: boolean;
 };
 
 export function shouldRedirectOnAuthError(
   status: number | undefined,
   requestUrl: string,
-  config?: ReadyRoadRequestConfig,
+  config?: RijViaRequestConfig,
 ): boolean {
   const isAuthError =
     status === 401 || (status === 403 && requestUrl.includes("/users/me"));
@@ -82,7 +82,7 @@ class ApiClient {
         const status = error.response?.status;
         const requestUrl = error.config?.url ?? "";
         const requestConfig = error.config as
-          | ReadyRoadRequestConfig
+          | RijViaRequestConfig
           | undefined;
 
         if (
@@ -112,7 +112,7 @@ class ApiClient {
   get<T>(
     url: string,
     params?: Record<string, unknown>,
-    config?: ReadyRoadRequestConfig,
+    config?: RijViaRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.instance.get<T>(url, { ...config, params });
   }
@@ -120,7 +120,7 @@ class ApiClient {
   post<T>(
     url: string,
     data?: unknown,
-    config?: ReadyRoadRequestConfig,
+    config?: RijViaRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.instance.post<T>(url, data, config);
   }
@@ -128,7 +128,7 @@ class ApiClient {
   put<T>(
     url: string,
     data?: unknown,
-    config?: ReadyRoadRequestConfig,
+    config?: RijViaRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.instance.put<T>(url, data, config);
   }
@@ -136,14 +136,14 @@ class ApiClient {
   patch<T>(
     url: string,
     data?: unknown,
-    config?: ReadyRoadRequestConfig,
+    config?: RijViaRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.instance.patch<T>(url, data, config);
   }
 
   delete<T>(
     url: string,
-    config?: ReadyRoadRequestConfig,
+    config?: RijViaRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.instance.delete<T>(url, config);
   }

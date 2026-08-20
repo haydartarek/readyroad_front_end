@@ -3,7 +3,7 @@
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "@/components/localized-link";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
@@ -22,6 +22,7 @@ import {
   isValidQuizOptionCount,
   optionDisplayLabel,
   QUIZ_DIFFICULTIES,
+  resolveAdminQuizReturnTo,
 } from "@/lib/admin-quiz-form";
 import {
   ArrowLeft,
@@ -223,8 +224,13 @@ function FormTextarea({
 export default function AdminEditQuizQuestionPage() {
   const router = useLocalizedRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const questionId = params.id as string;
   const { t, language } = useLanguage();
+  const returnTo = useMemo(
+    () => resolveAdminQuizReturnTo(searchParams.get("returnTo")),
+    [searchParams],
+  );
 
   const [form, setForm] = useState<QuestionForm>({
     version: 0,
@@ -252,6 +258,7 @@ export default function AdminEditQuizQuestionPage() {
     type: "success" | "error";
   } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [imageFilename, setImageFilename] = useState("");
   const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
   const [isReferenced, setIsReferenced] = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
@@ -508,6 +515,9 @@ export default function AdminEditQuizQuestionPage() {
       setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
+      if (imageFilename.trim()) {
+        formData.append("filename", imageFilename.trim());
+      }
       const headers: Record<string, string> = {};
       const csrf = getCsrfToken();
       if (csrf) headers["x-csrf-token"] = csrf;
@@ -589,7 +599,7 @@ export default function AdminEditQuizQuestionPage() {
           "Question updated successfully",
         type: "success",
       });
-      setTimeout(() => router.push("/admin/quizzes"), 600);
+      setTimeout(() => router.push(returnTo), 600);
     } catch (err: unknown) {
       logApiError("Failed to update quiz question", err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
@@ -666,7 +676,7 @@ export default function AdminEditQuizQuestionPage() {
         }
         actions={
           <Button variant="outline" asChild className="gap-2">
-            <Link href="/admin/quizzes">
+            <Link href={returnTo}>
               <ArrowLeft className="w-4 h-4" />
               {t("common.back") || "Back"}
             </Link>
@@ -836,6 +846,27 @@ export default function AdminEditQuizQuestionPage() {
               </button>
             </div>
           )}
+
+          <div className="space-y-1">
+            <label
+              htmlFor="admin-quiz-edit-image-filename"
+              className="block text-xs font-semibold text-foreground"
+            >
+              {t("admin.quizzes.upload.filename")}
+            </label>
+            <input
+              id="admin-quiz-edit-image-filename"
+              name="contentImageFilename"
+              value={imageFilename}
+              maxLength={100}
+              placeholder={t("admin.quizzes.upload.filename_placeholder")}
+              onChange={(event) => setImageFilename(event.target.value)}
+              className="w-full rounded-xl border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("admin.quizzes.upload.filename_hint")}
+            </p>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 space-y-1">
@@ -1133,7 +1164,7 @@ export default function AdminEditQuizQuestionPage() {
           </p>
           <div className="flex items-center gap-3">
             <Button variant="outline" asChild>
-              <Link href="/admin/quizzes">
+              <Link href={returnTo}>
                 {t("admin.quizzes.cancel") || "Cancel"}
               </Link>
             </Button>

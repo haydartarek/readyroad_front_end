@@ -211,6 +211,26 @@ export interface RecentActivity {
   link?: string;
 }
 
+export interface TheoryTimeoutAnalysis {
+  totalTimeouts: number;
+  items: Array<{
+    examId: number;
+    questionId: number;
+    questionTextEn?: string | null;
+    questionTextNl?: string | null;
+    questionTextFr?: string | null;
+    questionTextAr?: string | null;
+    categoryCode?: string | null;
+    categoryNameEn?: string | null;
+    categoryNameNl?: string | null;
+    categoryNameFr?: string | null;
+    categoryNameAr?: string | null;
+    difficulty?: "EASY" | "MEDIUM" | "HARD" | null;
+    timedOutAt: string;
+    reviewPath: string;
+  }>;
+}
+
 // ─── Constants ───────────────────────────────────────────
 
 const ENDPOINTS = {
@@ -218,6 +238,7 @@ const ENDPOINTS = {
   INTELLIGENCE: "/users/me/progress/intelligence",
   BY_CATEGORY: "/users/me/progress/categories",
   EXAM_HISTORY: "/exams/simulations/history",
+  THEORY_TIMEOUTS: "/users/me/progress/theory-timeouts",
 } as const;
 
 const REQUIRED_INTELLIGENCE_FIELDS = [
@@ -430,6 +451,22 @@ export async function getProgressByCategory(): Promise<ProgressByCategory> {
           "category progress overallAccuracy",
         ),
   };
+}
+
+export async function getTheoryTimeoutAnalysis(
+  limit = 5,
+): Promise<TheoryTimeoutAnalysis> {
+  const response = await apiClient.get<TheoryTimeoutAnalysis>(
+    ENDPOINTS.THEORY_TIMEOUTS,
+    { params: { limit } },
+  );
+  if (
+    !Number.isFinite(response.data?.totalTimeouts) ||
+    !Array.isArray(response.data?.items)
+  ) {
+    throw new Error("Theory timeout analysis response is invalid");
+  }
+  return response.data;
 }
 
 function requireFiniteMetric(value: unknown, field: string): number {

@@ -2,11 +2,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ImageResponse } from "next/og";
 
-const readyRoadLogo = `data:image/png;base64,${readFileSync(
+const rijViaLogo = `data:image/png;base64,${readFileSync(
   path.join(process.cwd(), "public", "icons", "icon-192.png"),
 ).toString("base64")}`;
 
-export const alt = "ReadyRoad Belgian driving theory exam preparation";
+export const alt = "RijVia Belgian driving theory exam preparation";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -41,14 +41,14 @@ export default function OpenGraphImage() {
         <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={readyRoadLogo}
+            src={rijViaLogo}
             alt=""
             width={78}
             height={78}
             style={{ borderRadius: 18 }}
           />
           <div style={{ display: "flex", fontSize: 42, fontWeight: 800 }}>
-            ReadyRoad
+            RijVia
           </div>
         </div>
 

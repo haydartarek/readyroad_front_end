@@ -7,6 +7,10 @@ const translate = (key: string) => key;
 
 jest.mock("next/navigation", () => ({
   useParams: () => ({ id: "7" }),
+  useSearchParams: () =>
+    new URLSearchParams(
+      "returnTo=%2Fadmin%2Fquizzes%3Fpage%3D4%26q%3Dpriority",
+    ),
 }));
 
 jest.mock("next/image", () => ({

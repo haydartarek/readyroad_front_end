@@ -26,10 +26,10 @@ const localizedInformationCategoryNames = {
 } as const;
 
 const approvedHomeHeadlines = {
-  en: "ReadyRoad | Prepare for the Belgian driving theory exam with confidence",
-  nl: "ReadyRoad | Bereid je voor op het Belgische theorie-examen met vertrouwen",
-  fr: "ReadyRoad | Préparez l’examen théorique belge en toute confiance",
-  ar: "ReadyRoad | استعد لامتحان السياقة النظري في بلجيكا بثقة",
+  en: "RijVia | Prepare for the Belgian driving theory exam with confidence",
+  nl: "RijVia | Bereid je voor op het Belgische theorie-examen met vertrouwen",
+  fr: "RijVia | Préparez l’examen théorique belge en toute confiance",
+  ar: "RijVia | استعد لامتحان السياقة النظري في بلجيكا بثقة",
 } as const;
 
 const publicRoutes = [

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { NATIVE_SELECT_COMPACT_CLASS } from "@/lib/native-select-styles";
+import { buildAdminQuizEditHref } from "@/lib/admin-quiz-form";
 import { cn } from "@/lib/utils";
 import {
   ClipboardList,
@@ -798,7 +799,7 @@ export default function AdminQuizzesPage() {
                           </button>
                           {/* Edit */}
                           <Link
-                            href={`/admin/quizzes/${q.id}/edit`}
+                            href={buildAdminQuizEditHref(q.id, searchParams)}
                             className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 transition-all"
                           >
                             <Pencil className="w-3.5 h-3.5" />

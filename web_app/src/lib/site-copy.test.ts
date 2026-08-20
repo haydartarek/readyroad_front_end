@@ -23,16 +23,16 @@ const mockedGetRequestLocale = jest.mocked(getRequestLocale);
 
 describe("home metadata titles", () => {
   it.each([
-    [ar, "ReadyRoad | استعد لامتحان السياقة النظري في بلجيكا بثقة"],
+    [ar, "RijVia | استعد لامتحان السياقة النظري في بلجيكا بثقة"],
     [
       en,
-      "ReadyRoad | Prepare for the Belgian driving theory exam with confidence",
+      "RijVia | Prepare for the Belgian driving theory exam with confidence",
     ],
     [
       nl,
-      "ReadyRoad | Bereid je voor op het Belgische theorie-examen met vertrouwen",
+      "RijVia | Bereid je voor op het Belgische theorie-examen met vertrouwen",
     ],
-    [fr, "ReadyRoad | Préparez l’examen théorique belge en toute confiance"],
+    [fr, "RijVia | Préparez l’examen théorique belge en toute confiance"],
   ])(
     "keeps the approved educational and privacy hierarchy",
     (messages, headline) => {
@@ -45,19 +45,19 @@ describe("home metadata titles", () => {
   );
 
   it.each([
-    ["en", "ReadyRoad | Belgian Driving Theory Test Practice"],
-    ["ar", "ReadyRoad | امتحان السياقة النظري في بلجيكا"],
-    ["nl", "ReadyRoad | Theorie-examen rijbewijs B oefenen België"],
-    ["fr", "ReadyRoad | Examen théorique permis B Belgique"],
+    ["en", "RijVia | Belgian Driving Theory Test Practice"],
+    ["ar", "RijVia | امتحان السياقة النظري في بلجيكا"],
+    ["nl", "RijVia | Theorie-examen rijbewijs B oefenen België"],
+    ["fr", "RijVia | Examen théorique permis B Belgique"],
   ] as const)(
-    "uses one pipe-separated ReadyRoad title for %s",
+    "uses one pipe-separated RijVia title for %s",
     (locale, title) => {
       const copy = getHomeMetadataCopy(locale);
 
       expect(copy.title).toBe(title);
       expect(copy.openGraphTitle).toBe(title);
-      expect(copy.title).not.toContain("ReadyRoad:");
-      expect(copy.title.match(/ReadyRoad/g)).toHaveLength(1);
+      expect(copy.title).not.toContain("RijVia:");
+      expect(copy.title.match(/RijVia/g)).toHaveLength(1);
     },
   );
 
@@ -73,11 +73,11 @@ describe("home metadata titles", () => {
         absolute: getHomeMetadataCopy(locale).title,
       });
       expect(videosMetadata.title).toEqual({
-        absolute: expect.stringContaining("| ReadyRoad"),
+        absolute: expect.stringContaining("| RijVia"),
       });
       expect(
         String((videosMetadata.title as { absolute: string }).absolute).match(
-          /ReadyRoad/g,
+          /RijVia/g,
         ),
       ).toHaveLength(1);
     },

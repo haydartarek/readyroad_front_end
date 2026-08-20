@@ -1,4 +1,4 @@
-import { resolveTimedAttemptStep } from "@/lib/attempt-lifecycle";
+import { resolveTheoryTimedAttemptStep } from "@/lib/attempt-lifecycle";
 import { normalizeExamData } from "./page";
 import fs from "node:fs";
 import path from "node:path";
@@ -48,60 +48,72 @@ describe("theoretical exam attempt progression", () => {
     expect(source).toContain('pendingNavigation.current = "/exam"');
   });
 
-  it("abandons after three consecutive timed-out unanswered questions", () => {
-    const first = resolveTimedAttemptStep({
+  it("abandons only after 60 continuous seconds of unanswered time", () => {
+    const first = resolveTheoryTimedAttemptStep({
       reason: "timeout",
-      isCurrentAnswered: false,
       isLastQuestion: false,
-      answeredCount: 0,
+      finalizedCount: 1,
       totalQuestions: 50,
-      consecutiveUnanswered: 0,
+      continuousInactivitySeconds: 0,
     });
-    const second = resolveTimedAttemptStep({
+    const second = resolveTheoryTimedAttemptStep({
       reason: "timeout",
-      isCurrentAnswered: false,
       isLastQuestion: false,
-      answeredCount: 0,
+      finalizedCount: 2,
       totalQuestions: 50,
-      consecutiveUnanswered: first.consecutiveUnanswered,
+      continuousInactivitySeconds: first.continuousInactivitySeconds,
     });
-    const third = resolveTimedAttemptStep({
+    const third = resolveTheoryTimedAttemptStep({
       reason: "timeout",
-      isCurrentAnswered: false,
       isLastQuestion: false,
-      answeredCount: 0,
+      finalizedCount: 3,
       totalQuestions: 50,
-      consecutiveUnanswered: second.consecutiveUnanswered,
+      continuousInactivitySeconds: second.continuousInactivitySeconds,
+    });
+    const fourth = resolveTheoryTimedAttemptStep({
+      reason: "timeout",
+      isLastQuestion: false,
+      finalizedCount: 4,
+      totalQuestions: 50,
+      continuousInactivitySeconds: third.continuousInactivitySeconds,
     });
 
     expect(first.action).toBe("advance");
     expect(second.action).toBe("advance");
-    expect(third.action).toBe("abandon");
+    expect(third.action).toBe("advance");
+    expect(fourth.action).toBe("abandon");
+    expect(fourth.continuousInactivitySeconds).toBe(60);
   });
 
-  it("does not submit an exam with unanswered questions", () => {
-    expect(
-      resolveTimedAttemptStep({
-        reason: "manual",
-        isCurrentAnswered: true,
-        isLastQuestion: true,
-        answeredCount: 49,
-        totalQuestions: 50,
-        consecutiveUnanswered: 0,
-      }).action,
-    ).toBe("abandon");
+  it("resets the continuous inactivity window after a persisted answer", () => {
+    const decision = resolveTheoryTimedAttemptStep({
+      reason: "answered",
+      isLastQuestion: false,
+      finalizedCount: 4,
+      totalQuestions: 50,
+      continuousInactivitySeconds: 45,
+    });
+
+    expect(decision.action).toBe("advance");
+    expect(decision.continuousInactivitySeconds).toBe(0);
   });
 
-  it("submits only after all required questions are answered", () => {
+  it("submits a completed exam whose final question timed out", () => {
     expect(
-      resolveTimedAttemptStep({
-        reason: "manual",
-        isCurrentAnswered: true,
+      resolveTheoryTimedAttemptStep({
+        reason: "timeout",
         isLastQuestion: true,
-        answeredCount: 50,
+        finalizedCount: 50,
         totalQuestions: 50,
-        consecutiveUnanswered: 0,
+        continuousInactivitySeconds: 15,
       }).action,
     ).toBe("submit");
+  });
+
+  it("keeps the mobile counter dynamic and tied to the visible index", () => {
+    const source = fs.readFileSync(path.join(__dirname, "page.tsx"), "utf8");
+    expect(source).toContain("currentQuestionIndex + 1");
+    expect(source).toContain("examData.questions.length");
+    expect(source).toContain("transitionInFlightRef.current");
   });
 });

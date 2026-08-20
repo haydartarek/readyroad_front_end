@@ -43,7 +43,7 @@ export async function generateMetadata({
   const locale = await getRequestLocale();
   const lessonCopy = getLocalizedLessonSeo(lesson, locale);
   const pageTitle = getPageField(page, locale, "title");
-  const title = `${pageTitle} | ${lessonCopy.name} | ReadyRoad`;
+  const title = `${pageTitle} | ${lessonCopy.name} | RijVia`;
   const description = toMetadataDescription(
     getPageField(page, locale, "content"),
     lessonCopy.fallbackDescription,
@@ -60,7 +60,7 @@ export async function generateMetadata({
       title,
       description,
       url: canonical,
-      siteName: "ReadyRoad",
+      siteName: "RijVia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       type: "article",

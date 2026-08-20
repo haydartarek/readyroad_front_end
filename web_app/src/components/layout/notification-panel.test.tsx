@@ -15,6 +15,7 @@ const mockGetNotifications = jest.fn<Promise<AppNotification[]>, []>();
 const mockMarkNotificationAsRead = jest.fn();
 const mockMarkAllRead = jest.fn();
 let mockLanguage: Language = "en";
+let mockRevision = 0;
 
 const labels: Record<Language, Record<string, string>> = {
   en: {
@@ -45,6 +46,8 @@ jest.mock("@/contexts/language-context", () => ({
     t: (key: string, params?: Record<string, string | number>) =>
       key === "notif.msg.weak_area"
         ? `Weak area: ${params?.category}`
+        : key === "notif.msg.lesson_progress"
+          ? `Lesson: ${params?.lesson}`
         : labels[mockLanguage][key] ?? key,
   }),
 }));
@@ -52,6 +55,7 @@ jest.mock("@/contexts/language-context", () => ({
 jest.mock("@/contexts/notification-context", () => ({
   useNotifications: () => ({
     unreadCount: 0,
+    revision: mockRevision,
     markAllRead: mockMarkAllRead,
   }),
 }));
@@ -105,6 +109,7 @@ async function openPanel() {
 
 beforeEach(() => {
   mockLanguage = "en";
+  mockRevision = 0;
   mockGetNotifications.mockReset();
   mockMarkNotificationAsRead.mockReset();
   mockMarkAllRead.mockReset();
@@ -137,6 +142,50 @@ describe("NotificationPanel latest notifications action", () => {
     await openPanel();
 
     expect(screen.getByText(`Weak area: ${expected}`)).toBeInTheDocument();
+  });
+
+  test.each([
+    ["en", "Priority rules"],
+    ["nl", "Voorrangsregels"],
+    ["fr", "Règles de priorité"],
+    ["ar", "قواعد الأولوية"],
+  ] as const)("renders the lesson title in %s", async (language, expected) => {
+    mockLanguage = language;
+    mockGetNotifications.mockResolvedValueOnce([
+      {
+        ...notification(1),
+        type: "LESSON_PROGRESS",
+        messageKey: "notif.msg.lesson_progress",
+        messageParams: JSON.stringify({
+          lesson: "Priority rules",
+          lessonEn: "Priority rules",
+          lessonNl: "Voorrangsregels",
+          lessonFr: "Règles de priorité",
+          lessonAr: "قواعد الأولوية",
+        }),
+      },
+    ]);
+
+    render(<NotificationPanel />);
+    await openPanel();
+
+    expect(screen.getByText(`Lesson: ${expected}`)).toBeInTheDocument();
+  });
+
+  test("refreshes an open panel when polling detects a new notification", async () => {
+    mockGetNotifications
+      .mockResolvedValueOnce([notification(1)])
+      .mockResolvedValueOnce([notification(2), notification(1)]);
+
+    const view = render(<NotificationPanel />);
+    await openPanel();
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+
+    mockRevision = 1;
+    view.rerender(<NotificationPanel />);
+
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(2));
+    expect(mockMarkAllRead).toHaveBeenCalled();
   });
 
   test.each([

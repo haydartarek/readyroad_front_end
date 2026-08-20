@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { localizeHref } from "@/lib/i18n-routing";
 
 function source(relativePath: string): string {
   return fs.readFileSync(path.join(process.cwd(), "src", relativePath), "utf8");
@@ -24,6 +25,24 @@ describe("exam completion routing contracts", () => {
     expect(source("services/signQuizService.ts")).toContain(
       '"X-Idempotency-Key": idempotencyKey',
     );
+  });
+
+  it.each([
+    ["en", "/exam/results/42"],
+    ["ar", "/ar/exam/results/42"],
+    ["nl", "/nl/exam/results/42"],
+    ["fr", "/fr/exam/results/42"],
+  ] as const)("preserves the %s locale on theory result routing", (locale, expected) => {
+    expect(localizeHref("/exam/results/42", locale)).toBe(expected);
+  });
+
+  it.each([
+    ["en", "/exam/results?randomSignExamId=9"],
+    ["ar", "/ar/exam/results?randomSignExamId=9"],
+    ["nl", "/nl/exam/results?randomSignExamId=9"],
+    ["fr", "/fr/exam/results?randomSignExamId=9"],
+  ] as const)("preserves the %s locale on shared sign-result routing", (locale, expected) => {
+    expect(localizeHref("/exam/results?randomSignExamId=9", locale)).toBe(expected);
   });
 
   it("does not apply the compact exam-only controls to traffic sign practice", () => {

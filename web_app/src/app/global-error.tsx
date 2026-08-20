@@ -21,7 +21,7 @@ export default function GlobalError({
       suppressHydrationWarning
     >
       <head>
-        <title>{`${translateMessage(language, "common.error_title")} | ReadyRoad`}</title>
+        <title>{`${translateMessage(language, "common.error_title")} | RijVia`}</title>
         <meta name="robots" content="noindex,nofollow" />
       </head>
       <body>

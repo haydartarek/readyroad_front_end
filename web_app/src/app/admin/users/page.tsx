@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/language-context";
+import Link from "@/components/localized-link";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminMetricCard from "@/components/admin/AdminMetricCard";
@@ -36,6 +37,7 @@ import {
   ChevronLeft,
   ChevronRight,
   UserPlus,
+  BarChart3,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────
@@ -600,30 +602,41 @@ export default function AdminUsersPage() {
 
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => toggleLock(user)}
-                          disabled={isLoading || isCurrentUser}
-                          className={cn(
-                            "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border transition-all disabled:opacity-50",
-                            user.isLocked
-                              ? "border-emerald-200 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
-                              : "border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20",
-                          )}
-                        >
-                          {isLoading && actionLoading[user.id] === "lock" ? (
-                            <RefreshCw className="w-3 h-3 animate-spin" />
-                          ) : user.isLocked ? (
-                            <>
-                              <Unlock className="w-3 h-3" />{" "}
-                              {t("admin.users.unlock")}
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="w-3 h-3" />{" "}
-                              {t("admin.users.lock")}
-                            </>
-                          )}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          {user.role === "USER" ? (
+                            <Link
+                              href={`/admin/users/${user.id}/learning`}
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                            >
+                              <BarChart3 className="h-3 w-3" />
+                              {t("admin.users.learning_profile")}
+                            </Link>
+                          ) : null}
+                          <button
+                            onClick={() => toggleLock(user)}
+                            disabled={isLoading || isCurrentUser}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold border transition-all disabled:opacity-50",
+                              user.isLocked
+                                ? "border-emerald-200 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                                : "border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20",
+                            )}
+                          >
+                            {isLoading && actionLoading[user.id] === "lock" ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : user.isLocked ? (
+                              <>
+                                <Unlock className="w-3 h-3" />{" "}
+                                {t("admin.users.unlock")}
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="w-3 h-3" />{" "}
+                                {t("admin.users.lock")}
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

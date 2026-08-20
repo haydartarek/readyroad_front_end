@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
 import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   PageHeroSurface,
@@ -18,6 +17,7 @@ import {
   ResultDetailsToggle,
 } from "@/components/results/result-review";
 import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
@@ -41,6 +41,7 @@ import {
   RefreshCw,
   RotateCcw,
   Timer,
+  TimerOff,
   Trophy,
   XCircle,
 } from "lucide-react";
@@ -119,6 +120,8 @@ interface AllAnsweredQuestion {
   categoryCode: string;
   contentImageUrl?: string;
   isCorrect: boolean;
+  wasTimeout?: boolean;
+  difficulty?: "EASY" | "MEDIUM" | "HARD" | null;
 }
 
 interface ExamResults {
@@ -171,6 +174,8 @@ interface ReviewAnswer {
   categoryCode: string;
   contentImageUrl?: string;
   isCorrect: boolean;
+  wasTimeout?: boolean;
+  difficulty?: "EASY" | "MEDIUM" | "HARD" | null;
 }
 
 function LoadingSpinner({
@@ -202,6 +207,7 @@ function LoadingSpinner({
 export default function ExamResultsPage() {
   const params = useParams();
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const isRTL = language === "ar";
 
   const localize = (
@@ -404,11 +410,13 @@ export default function ExamResultsPage() {
           categoryCode: question.categoryCode,
           contentImageUrl: question.contentImageUrl,
           isCorrect: false,
+          wasTimeout: false,
         }));
 
   const filteredAnswers = allAnswers.filter((answer) => {
     if (reviewFilter === "correct") return answer.isCorrect;
-    if (reviewFilter === "wrong") return !answer.isCorrect;
+    if (reviewFilter === "wrong")
+      return !answer.isCorrect && !answer.wasTimeout;
     return true;
   });
 
@@ -423,6 +431,13 @@ export default function ExamResultsPage() {
       ),
     }),
   );
+  const firstName =
+    user?.firstName?.trim() ||
+    user?.fullName?.trim().split(/\s+/)[0] ||
+    "";
+  const passedSubtitle = firstName
+    ? t("exam.results_passed_subtitle_named", { firstName })
+    : t("exam.results_passed_subtitle");
 
   return (
     <div
@@ -436,7 +451,7 @@ export default function ExamResultsPage() {
           )}
         >
           <div className="grid min-w-0 gap-5 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
-            <div className="space-y-4 text-center lg:text-start">
+            <div className="text-center lg:text-start">
               <div
                 className={cn(
                   "mx-auto flex h-24 w-24 items-center justify-center rounded-[1.5rem] border shadow-sm sm:h-28 sm:w-28 lg:aspect-square lg:h-auto lg:w-full lg:max-w-[160px] lg:rounded-[1.7rem]",
@@ -451,38 +466,25 @@ export default function ExamResultsPage() {
                   <XCircle className="h-10 w-10 text-red-500 sm:h-12 sm:w-12 lg:h-14 lg:w-14" />
                 )}
               </div>
-
-              <div className="space-y-2">
-                <Badge
-                  className={cn(
-                    "border",
-                    results.passed
-                      ? "border-green-200 bg-green-100 text-green-800"
-                      : "border-red-200 bg-red-100 text-red-700",
-                  )}
-                >
-                  {t("exam.results_badge")}
-                </Badge>
-                <p className="text-sm text-muted-foreground">
-                  {t("practice_exam.badge")}
-                </p>
-              </div>
             </div>
 
             <div className="min-w-0 space-y-4">
               <div className="flex min-w-0 flex-col items-center gap-4 text-center lg:flex-row lg:items-center lg:justify-between lg:text-start">
-                <div className="min-w-0 space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    {t("exam.results_score_label")}
-                  </p>
-                  <PageHeroTitle>
+                <div className="min-w-0 space-y-2">
+                  <PageHeroTitle>{t("exam.results_score_label")}</PageHeroTitle>
+                  <p
+                    className={cn(
+                      "text-lg font-black sm:text-xl",
+                      results.passed ? "text-green-700" : "text-red-700",
+                    )}
+                  >
                     {results.passed
                       ? t("exam.results_passed_title")
                       : t("exam.results_failed_title")}
-                  </PageHeroTitle>
+                  </p>
                   <p className="mx-auto max-w-xl text-sm leading-6 text-muted-foreground lg:mx-0">
                     {results.passed
-                      ? t("exam.results_passed_subtitle")
+                      ? passedSubtitle
                       : t("exam.results_failed_subtitle")}
                   </p>
                 </div>
@@ -905,19 +907,29 @@ function ExamReviewCard({
     t("practice_exam.review_explanation_unavailable"),
   );
 
-  const statusConfig = answer.isCorrect
+  const statusConfig = answer.wasTimeout
     ? {
-        icon: <CheckCircle2 className="h-4 w-4 text-green-600" />,
-        accent: "bg-green-500",
-        card: "border-green-200/60 bg-card/90",
-        badge: "border-green-200 bg-green-100 text-green-700",
+        icon: <TimerOff className="h-4 w-4 text-amber-600" />,
+        accent: "bg-amber-500",
+        card: "border-amber-200/70 bg-card/90",
+        badge: "border-amber-200 bg-amber-100 text-amber-800",
+        label: t("practice_exam.score_timeout"),
       }
-    : {
-        icon: <XCircle className="h-4 w-4 text-red-500" />,
-        accent: "bg-red-500",
-        card: "border-red-200/60 bg-card/90",
-        badge: "border-red-200 bg-red-100 text-red-700",
-      };
+    : answer.isCorrect
+      ? {
+          icon: <CheckCircle2 className="h-4 w-4 text-green-600" />,
+          accent: "bg-green-500",
+          card: "border-green-200/60 bg-card/90",
+          badge: "border-green-200 bg-green-100 text-green-700",
+          label: t("practice_exam.filter_correct"),
+        }
+      : {
+          icon: <XCircle className="h-4 w-4 text-red-500" />,
+          accent: "bg-red-500",
+          card: "border-red-200/60 bg-card/90",
+          badge: "border-red-200 bg-red-100 text-red-700",
+          label: t("practice_exam.filter_wrong"),
+        };
 
   return (
     <div
@@ -943,6 +955,13 @@ function ExamReviewCard({
             <span className="min-w-0 max-w-full break-words rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-xs font-semibold text-foreground/75">
               {categoryName}
             </span>
+            {answer.difficulty ? (
+              <span className="shrink-0 rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-xs font-semibold text-foreground/75">
+                {t(
+                  `practice_exam.difficulty_${answer.difficulty.toLowerCase()}`,
+                )}
+              </span>
+            ) : null}
           </div>
           <span
             data-testid="result-review-status"
@@ -952,9 +971,7 @@ function ExamReviewCard({
             )}
           >
             {statusConfig.icon}
-            {answer.isCorrect
-              ? t("practice_exam.filter_correct")
-              : t("practice_exam.filter_wrong")}
+            {statusConfig.label}
           </span>
         </div>
 
@@ -978,15 +995,25 @@ function ExamReviewCard({
         <div className="grid min-w-0 grid-cols-1 gap-2.5">
           <ResultAnswerBlock
             label={t("exam.your_answer")}
-            tone={answer.isCorrect ? "correct" : "incorrect"}
+            tone={
+              answer.wasTimeout
+                ? "neutral"
+                : answer.isCorrect
+                  ? "correct"
+                  : "incorrect"
+            }
             className={cn(
               "text-foreground shadow-none",
-              answer.isCorrect
-                ? "border-green-200/70 bg-green-50/45 dark:bg-green-950/20"
-                : "border-red-200/70 bg-red-50/45 dark:bg-red-950/20",
+              answer.wasTimeout
+                ? "border-amber-200/70 bg-amber-50/45 dark:bg-amber-950/20"
+                : answer.isCorrect
+                  ? "border-green-200/70 bg-green-50/45 dark:bg-green-950/20"
+                  : "border-red-200/70 bg-red-50/45 dark:bg-red-950/20",
             )}
           >
-            {selectedOptionText || t("common.not_available")}
+            {answer.wasTimeout
+              ? t("practice_exam.score_timeout")
+              : selectedOptionText || t("common.not_available")}
           </ResultAnswerBlock>
 
           {!answer.isCorrect && expanded && (

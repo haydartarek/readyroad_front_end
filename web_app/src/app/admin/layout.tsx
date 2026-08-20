@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
  * Feature: Sidebar follows selected language (EN, NL, FR, AR)
  *          RTL direction applied dynamically for Arabic
  *
- * @author ReadyRoad Team
+ * @author RijVia Team
  * @since 2026-02-04
  */
 export default function AdminLayout({

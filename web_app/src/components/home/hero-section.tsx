@@ -115,7 +115,7 @@ export function HeroSection() {
               </div>
 
               <div className="space-y-3">
-                <h1 className="text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-secondary sm:text-5xl lg:text-6xl">
+                <h1 className="text-balance text-4xl font-extrabold leading-[1.12] tracking-tight text-secondary sm:text-5xl lg:text-6xl">
                   {t("home.hero.headline")}{" "}
                   <span className="relative inline-block">
                     <span className="relative z-10">
@@ -183,10 +183,18 @@ export function HeroSection() {
                     <div className="relative aspect-square w-full">
                       <Image
                         src="/images/logo.png"
-                        alt="ReadyRoad"
+                        alt="RijVia"
                         fill
                         sizes="(max-width: 768px) 224px, 224px"
-                        className="object-contain"
+                        className="object-contain dark:hidden"
+                        priority
+                      />
+                      <Image
+                        src="/images/logo-dark.png"
+                        alt="RijVia"
+                        fill
+                        sizes="(max-width: 768px) 224px, 224px"
+                        className="hidden object-contain dark:block"
                         priority
                       />
                     </div>

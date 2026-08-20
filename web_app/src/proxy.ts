@@ -243,6 +243,6 @@ export default function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|images|icons|favicon.ico|favicon-16x16.png|favicon-32x32.png|apple-touch-icon.png|manifest.json|opengraph-image|twitter-image).*)",
+    "/((?!api|_next/static|_next/image|images|icons|favicon.ico|favicon.svg|favicon-96x96.png|apple-touch-icon.png|manifest.json|opengraph-image|twitter-image).*)",
   ],
 };

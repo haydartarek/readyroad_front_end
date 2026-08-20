@@ -13,6 +13,7 @@ export {
   getStudentIntelligence,
   getProgressByCategory,
   getRecentActivity,
+  getTheoryTimeoutAnalysis,
 } from "./progressService";
 
 // ─── Sign Quiz ────────────────────────────────────────────

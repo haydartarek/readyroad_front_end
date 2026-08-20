@@ -1,5 +1,50 @@
 export type TimedAttemptStepAction = "advance" | "submit" | "abandon";
 
+export function resolveTheoryTimedAttemptStep({
+  reason,
+  isLastQuestion,
+  finalizedCount,
+  totalQuestions,
+  continuousInactivitySeconds,
+  questionTimeoutSeconds = 15,
+  inactivityLimitSeconds = 60,
+}: {
+  reason: "answered" | "timeout";
+  isLastQuestion: boolean;
+  finalizedCount: number;
+  totalQuestions: number;
+  continuousInactivitySeconds: number;
+  questionTimeoutSeconds?: number;
+  inactivityLimitSeconds?: number;
+}): {
+  action: TimedAttemptStepAction;
+  continuousInactivitySeconds: number;
+} {
+  const nextInactivitySeconds =
+    reason === "answered"
+      ? 0
+      : continuousInactivitySeconds + questionTimeoutSeconds;
+
+  if (nextInactivitySeconds >= inactivityLimitSeconds) {
+    return {
+      action: "abandon",
+      continuousInactivitySeconds: nextInactivitySeconds,
+    };
+  }
+
+  if (!isLastQuestion) {
+    return {
+      action: "advance",
+      continuousInactivitySeconds: nextInactivitySeconds,
+    };
+  }
+
+  return {
+    action: finalizedCount === totalQuestions ? "submit" : "abandon",
+    continuousInactivitySeconds: nextInactivitySeconds,
+  };
+}
+
 export function resolveTimedAttemptStep({
   reason,
   isCurrentAnswered,

@@ -8,7 +8,7 @@ function pngDimensions(buffer: Buffer) {
   };
 }
 
-test.describe("ReadyRoad brand assets", () => {
+test.describe("RijVia brand assets", () => {
   test("manifest, favicon, touch icon and install icons are valid", async ({
     request,
   }) => {
@@ -19,8 +19,8 @@ test.describe("ReadyRoad brand assets", () => {
     );
     const manifest = await manifestResponse.json();
 
-    expect(manifest.name).toBe("ReadyRoad - Belgian Driving Theory");
-    expect(manifest.short_name).toBe("ReadyRoad");
+    expect(manifest.name).toBe("RijVia - Belgian Driving Theory");
+    expect(manifest.short_name).toBe("RijVia");
     expect(manifest.icons).toHaveLength(4);
 
     for (const icon of manifest.icons) {
@@ -77,13 +77,13 @@ test.describe("ReadyRoad brand assets", () => {
     });
   });
 
-  test("404 keeps ReadyRoad identity and noindex behavior", async ({ page }) => {
+  test("404 keeps RijVia identity and noindex behavior", async ({ page }) => {
     const response = await page.goto("/this-page-does-not-exist");
 
     expect(response?.status()).toBe(404);
     await expect(page.locator('img[src*="logo.png"]').first()).toBeVisible();
     await expect(
-      page.getByTestId("site-navbar").getByRole("link", { name: "ReadyRoad" }),
+      page.getByTestId("site-navbar").getByRole("link", { name: "RijVia" }),
     ).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       "content",

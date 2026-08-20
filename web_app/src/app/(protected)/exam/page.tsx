@@ -52,6 +52,7 @@ interface ExamStartResponse {
   examId: number;
   totalQuestions: number;
   timeLimitMinutes: number;
+  timeLimitSeconds: number;
   status: "IN_PROGRESS";
   startedAt: string;
   expiresAt: string;
@@ -186,7 +187,10 @@ export default function TheoryExamPage() {
                 />
                 <PageMetricCard
                   icon={<Clock3 className="h-5 w-5" />}
-                  value={`${EXAM_RULES.DURATION_MINUTES} min`}
+                  value={t("exam.duration_value", {
+                    minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
+                    seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
+                  })}
                   label={t("exam.duration")}
                   tone="primary"
                   mobileStacked

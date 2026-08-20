@@ -28,10 +28,10 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "traffic signs Belgium",
       "Belgian road signs",
     ],
-    openGraphTitle: "Belgian Traffic Signs and Meanings | ReadyRoad",
+    openGraphTitle: "Belgian Traffic Signs and Meanings | RijVia",
     openGraphDescription:
       "Browse 184 Belgian traffic signs by family with clear multilingual explanations.",
-    imageAlt: "Belgian traffic signs and meanings on ReadyRoad",
+    imageAlt: "Belgian traffic signs and meanings on RijVia",
   },
   nl: {
     title: "Verkeersborden België: betekenis en uitleg",
@@ -42,10 +42,10 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "Belgische verkeersborden",
       "verkeersborden België oefenen",
     ],
-    openGraphTitle: "Verkeersborden België: betekenis en uitleg | ReadyRoad",
+    openGraphTitle: "Verkeersborden België: betekenis en uitleg | RijVia",
     openGraphDescription:
       "Bekijk 184 Belgische verkeersborden per familie met duidelijke meertalige uitleg.",
-    imageAlt: "Belgische verkeersborden met betekenis op ReadyRoad",
+    imageAlt: "Belgische verkeersborden met betekenis op RijVia",
   },
   fr: {
     title: "Panneaux de signalisation Belgique : signification",
@@ -57,7 +57,7 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "panneaux routiers belges",
     ],
     openGraphTitle:
-      "Panneaux de signalisation Belgique : signification | ReadyRoad",
+      "Panneaux de signalisation Belgique : signification | RijVia",
     openGraphDescription:
       "Parcourez 184 panneaux belges par famille avec des explications multilingues claires.",
     imageAlt: "Panneaux de signalisation belges et leur signification",
@@ -71,10 +71,10 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "العلامات المرورية في بلجيكا بالعربية",
       "معاني العلامات المرورية البلجيكية",
     ],
-    openGraphTitle: "العلامات المرورية في بلجيكا ومعانيها | ReadyRoad",
+    openGraphTitle: "العلامات المرورية في بلجيكا ومعانيها | RijVia",
     openGraphDescription:
       "تصفح 184 علامة مرورية بلجيكية مرتبة حسب الفئة، مع شرح واضح بأربع لغات.",
-    imageAlt: "العلامات المرورية البلجيكية ومعانيها على ReadyRoad",
+    imageAlt: "العلامات المرورية البلجيكية ومعانيها على RijVia",
   },
 };
 
@@ -88,10 +88,10 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "category B theory Belgium",
       "Belgian road rules explained",
     ],
-    openGraphTitle: "Belgian Category B Driving Theory Lessons | ReadyRoad",
+    openGraphTitle: "Belgian Category B Driving Theory Lessons | RijVia",
     openGraphDescription:
       "Study 30 structured lessons about Belgian road rules in English, Dutch, French, and Arabic.",
-    imageAlt: "Belgian category B driving theory lessons on ReadyRoad",
+    imageAlt: "Belgian category B driving theory lessons on RijVia",
   },
   nl: {
     title: "Theorie rijbewijs B België: 30 lessen",
@@ -102,10 +102,10 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "rijtheorie lessen België",
       "Belgische verkeersregels leren",
     ],
-    openGraphTitle: "Theorie rijbewijs B België: 30 lessen | ReadyRoad",
+    openGraphTitle: "Theorie rijbewijs B België: 30 lessen | RijVia",
     openGraphDescription:
       "Bestudeer Belgische verkeersregels in 30 gestructureerde lessen en vier talen.",
-    imageAlt: "Belgische rijtheorie voor rijbewijs B op ReadyRoad",
+    imageAlt: "Belgische rijtheorie voor rijbewijs B op RijVia",
   },
   fr: {
     title: "Théorie permis B Belgique : 30 leçons",
@@ -116,10 +116,10 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "cours théorie permis B Belgique",
       "règles de circulation Belgique",
     ],
-    openGraphTitle: "Théorie permis B Belgique : 30 leçons | ReadyRoad",
+    openGraphTitle: "Théorie permis B Belgique : 30 leçons | RijVia",
     openGraphDescription:
       "Étudiez les règles de circulation belges avec 30 leçons structurées en quatre langues.",
-    imageAlt: "Leçons de théorie du permis B belge sur ReadyRoad",
+    imageAlt: "Leçons de théorie du permis B belge sur RijVia",
   },
   ar: {
     title: "دروس امتحان السياقة النظري في بلجيكا",
@@ -130,10 +130,10 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "امتحان رخصة السياقة النظري في بلجيكا",
       "قواعد المرور البلجيكية بالعربية",
     ],
-    openGraphTitle: "دروس السياقة النظرية في بلجيكا | ReadyRoad",
+    openGraphTitle: "دروس السياقة النظرية في بلجيكا | RijVia",
     openGraphDescription:
       "تعلّم قواعد المرور البلجيكية من خلال 30 درسًا منظمًا بأربع لغات.",
-    imageAlt: "دروس السياقة النظرية البلجيكية على ReadyRoad",
+    imageAlt: "دروس السياقة النظرية البلجيكية على RijVia",
   },
 };
 
@@ -249,7 +249,7 @@ export function getLocalizedTrafficSignSeo(
   return {
     name,
     description,
-    title: `${sign.signCode}: ${name} | ReadyRoad`,
+    title: `${sign.signCode}: ${name} | RijVia`,
     fallbackDescription: `${resource.contextLabel} ${sign.signCode}: ${name}.`,
     imageAlt: `${sign.signCode}: ${name}`,
     ...resource,
@@ -273,9 +273,9 @@ export function getLocalizedLessonSeo(
   return {
     name: title,
     description,
-    title: `${title} | ${resource.contextLabel} | ReadyRoad`,
+    title: `${title} | ${resource.contextLabel} | RijVia`,
     fallbackDescription: `${resource.contextLabel}: ${title}.`,
-    imageAlt: `${title} | ReadyRoad`,
+    imageAlt: `${title} | RijVia`,
     ...resource,
   };
 }

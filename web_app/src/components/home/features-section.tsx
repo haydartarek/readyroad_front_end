@@ -38,7 +38,10 @@ export function FeaturesSection() {
       title: t("home.features.exam_title"),
       description: t("home.features.exam_desc", {
         questions: EXAM_RULES.TOTAL_QUESTIONS,
-        minutes: EXAM_RULES.DURATION_MINUTES,
+        duration: t("exam.duration_value", {
+          minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
+          seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
+        }),
       }),
       isPrimary: false,
       href: "/exam",

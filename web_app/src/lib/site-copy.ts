@@ -9,7 +9,7 @@ const SHARED_KEYWORDS = [
   "Belgian driving license exam",
   "Belgian driving theory test",
   "traffic signs Belgium",
-  "ReadyRoad",
+  "RijVia",
   "rijbewijs theorie examen",
   "rijexamen oefenen",
   "verkeerstekens België",
@@ -52,81 +52,81 @@ const SITE_COPY: Record<
   }
 > = {
   en: {
-    sharedOgAlt: "ReadyRoad | Belgian driving theory exam preparation",
+    sharedOgAlt: "RijVia | Belgian driving theory exam preparation",
     homeMetadata: {
-      title: "ReadyRoad | Belgian Driving Theory Test Practice",
+      title: "RijVia | Belgian Driving Theory Test Practice",
       description:
         "Prepare for the Belgian driving theory exam with traffic signs, structured lessons, focused practice, and one clear progress dashboard.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "ReadyRoad | Belgian Driving Theory Test Practice",
+      openGraphTitle: "RijVia | Belgian Driving Theory Test Practice",
       openGraphDescription:
         "Study traffic signs, review theory lessons, practise by category, and track your progress in one place.",
     },
     layoutMetadata: {
-      defaultTitle: "ReadyRoad | Belgian Driving Theory Exam Preparation",
+      defaultTitle: "RijVia | Belgian Driving Theory Exam Preparation",
       description:
-        "ReadyRoad helps learners prepare for the Belgian driving theory exam with traffic signs, lessons, timed practice, and progress insights.",
+        "RijVia helps learners prepare for the Belgian driving theory exam with traffic signs, lessons, timed practice, and progress insights.",
       keywords: SHARED_KEYWORDS,
       openGraphDescription:
         "Practice Belgian theory topics, study traffic signs, and track your progress from one dashboard.",
       twitterDescription:
-        "Practice theory topics, study traffic signs, and track your progress with ReadyRoad.",
+        "Practice theory topics, study traffic signs, and track your progress with RijVia.",
       organizationDescription:
-        "ReadyRoad is an independent learning platform for Belgian driving theory exam preparation.",
+        "RijVia is an independent learning platform for Belgian driving theory exam preparation.",
       websiteDescription: "Belgian driving theory exam preparation platform.",
       softwareDescription:
         "Prepare for the Belgian driving theory exam with practice flows, traffic signs, lessons, and progress analytics.",
     },
   },
   ar: {
-    sharedOgAlt: "ReadyRoad | الاستعداد لامتحان السياقة النظري في بلجيكا",
+    sharedOgAlt: "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا",
     homeMetadata: {
-      title: "ReadyRoad | امتحان السياقة النظري في بلجيكا",
+      title: "RijVia | امتحان السياقة النظري في بلجيكا",
       description:
         "استعد لامتحان السياقة النظري في بلجيكا من خلال الدروس والعلامات المرورية والاختبارات التدريبية، وتابع تقدمك في مكان واحد.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "ReadyRoad | امتحان السياقة النظري في بلجيكا",
+      openGraphTitle: "RijVia | امتحان السياقة النظري في بلجيكا",
       openGraphDescription:
         "تعلّم العلامات المرورية، واقرأ الدروس النظرية، وتدرّب حسب الفئة، وتابع تقدمك في مكان واحد.",
     },
     layoutMetadata: {
-      defaultTitle: "ReadyRoad | الاستعداد لامتحان السياقة النظري في بلجيكا",
+      defaultTitle: "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا",
       description:
-        "يساعدك ReadyRoad على الاستعداد لامتحان السياقة النظري في بلجيكا من خلال العلامات المرورية والدروس والتدريب ومتابعة التقدم.",
+        "يساعدك RijVia على الاستعداد لامتحان السياقة النظري في بلجيكا من خلال العلامات المرورية والدروس والتدريب ومتابعة التقدم.",
       keywords: SHARED_KEYWORDS,
       openGraphDescription:
         "تدرّب على مواضيع الامتحان النظري البلجيكي، وتعلّم العلامات المرورية، وتابع تقدمك من لوحة تحكم واحدة.",
       twitterDescription:
-        "تدرّب على مواضيع الامتحان النظري، وتعلّم العلامات المرورية، وتابع تقدمك مع ReadyRoad.",
+        "تدرّب على مواضيع الامتحان النظري، وتعلّم العلامات المرورية، وتابع تقدمك مع RijVia.",
       organizationDescription:
-        "ReadyRoad منصة تعليمية مستقلة للاستعداد لامتحان السياقة النظري في بلجيكا.",
+        "RijVia منصة تعليمية مستقلة للاستعداد لامتحان السياقة النظري في بلجيكا.",
       websiteDescription: "منصة للاستعداد لامتحان السياقة النظري في بلجيكا.",
       softwareDescription:
         "استعد لامتحان السياقة النظري في بلجيكا من خلال التدريب والعلامات المرورية والدروس ومتابعة التقدم.",
     },
   },
   fr: {
-    sharedOgAlt: "ReadyRoad | préparation à l'examen théorique belge",
+    sharedOgAlt: "RijVia | préparation à l'examen théorique belge",
     homeMetadata: {
-      title: "ReadyRoad | Examen théorique permis B Belgique",
+      title: "RijVia | Examen théorique permis B Belgique",
       description:
         "Préparez l'examen théorique belge avec les panneaux, des leçons structurées, un entraînement ciblé et un tableau de bord clair.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "ReadyRoad | Examen théorique permis B Belgique",
+      openGraphTitle: "RijVia | Examen théorique permis B Belgique",
       openGraphDescription:
         "Étudiez les panneaux, révisez la théorie, entraînez-vous par catégorie et suivez vos progrès au même endroit.",
     },
     layoutMetadata: {
-      defaultTitle: "ReadyRoad | préparation à l'examen théorique belge",
+      defaultTitle: "RijVia | préparation à l'examen théorique belge",
       description:
-        "ReadyRoad aide les apprenants à préparer l'examen théorique belge grâce aux panneaux, aux leçons, à l'entraînement chronométré et au suivi des progrès.",
+        "RijVia aide les apprenants à préparer l'examen théorique belge grâce aux panneaux, aux leçons, à l'entraînement chronométré et au suivi des progrès.",
       keywords: SHARED_KEYWORDS,
       openGraphDescription:
         "Entraînez-vous sur la théorie belge, étudiez les panneaux et suivez vos progrès depuis un tableau de bord unique.",
       twitterDescription:
-        "Travaillez la théorie, étudiez les panneaux et suivez vos progrès avec ReadyRoad.",
+        "Travaillez la théorie, étudiez les panneaux et suivez vos progrès avec RijVia.",
       organizationDescription:
-        "ReadyRoad est une plateforme d'apprentissage indépendante dédiée à la préparation de l'examen théorique belge.",
+        "RijVia est une plateforme d'apprentissage indépendante dédiée à la préparation de l'examen théorique belge.",
       websiteDescription:
         "Plateforme de préparation à l'examen théorique belge.",
       softwareDescription:
@@ -134,28 +134,28 @@ const SITE_COPY: Record<
     },
   },
   nl: {
-    sharedOgAlt: "ReadyRoad | voorbereiding op het Belgische theorie-examen",
+    sharedOgAlt: "RijVia | voorbereiding op het Belgische theorie-examen",
     homeMetadata: {
-      title: "ReadyRoad | Theorie-examen rijbewijs B oefenen België",
+      title: "RijVia | Theorie-examen rijbewijs B oefenen België",
       description:
         "Bereid je voor op het Belgische theorie-examen met verkeersborden, gestructureerde lessen, gerichte oefening en een duidelijk voortgangsdashboard.",
       keywords: SHARED_KEYWORDS,
       openGraphTitle:
-        "ReadyRoad | Theorie-examen rijbewijs B oefenen België",
+        "RijVia | Theorie-examen rijbewijs B oefenen België",
       openGraphDescription:
         "Bestudeer verkeersborden, herhaal theorielessen, oefen per categorie en volg je vooruitgang op één plek.",
     },
     layoutMetadata: {
-      defaultTitle: "ReadyRoad | voorbereiding op het Belgische theorie-examen",
+      defaultTitle: "RijVia | voorbereiding op het Belgische theorie-examen",
       description:
-        "ReadyRoad helpt leerlingen zich voor te bereiden op het Belgische theorie-examen met verkeersborden, lessen, getimede oefening en voortgangsinzichten.",
+        "RijVia helpt leerlingen zich voor te bereiden op het Belgische theorie-examen met verkeersborden, lessen, getimede oefening en voortgangsinzichten.",
       keywords: SHARED_KEYWORDS,
       openGraphDescription:
         "Oefen Belgische theoriethema's, bestudeer verkeersborden en volg je vooruitgang vanuit één dashboard.",
       twitterDescription:
-        "Oefen theorieonderwerpen, bestudeer verkeersborden en volg je vooruitgang met ReadyRoad.",
+        "Oefen theorieonderwerpen, bestudeer verkeersborden en volg je vooruitgang met RijVia.",
       organizationDescription:
-        "ReadyRoad is een onafhankelijk leerplatform voor de voorbereiding op het Belgische theorie-examen.",
+        "RijVia is een onafhankelijk leerplatform voor de voorbereiding op het Belgische theorie-examen.",
       websiteDescription:
         "Platform voor voorbereiding op het Belgische theorie-examen.",
       softwareDescription:
@@ -203,7 +203,7 @@ export function createOrganizationSchema(appUrl: string, locale: SiteLocale) {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${appUrl}/#organization`,
-    name: "ReadyRoad",
+    name: "RijVia",
     url: appUrl,
     logo: {
       "@type": "ImageObject",
@@ -242,7 +242,7 @@ export function createWebsiteSchema(appUrl: string, locale: SiteLocale) {
     "@type": "WebSite",
     "@id": `${appUrl}/#website`,
     url: localizedRoot,
-    name: "ReadyRoad",
+    name: "RijVia",
     description: copy.websiteDescription,
     publisher: {
       "@id": `${appUrl}/#organization`,
@@ -264,7 +264,7 @@ export function createEducationalAppSchema(appUrl: string, locale: SiteLocale) {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "ReadyRoad",
+    name: "RijVia",
     applicationCategory: "EducationalApplication",
     operatingSystem: "Web",
     url: buildLocalizedUrl("/", locale, appUrl),

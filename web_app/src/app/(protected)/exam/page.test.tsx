@@ -13,7 +13,10 @@ jest.mock("@/hooks/use-localized-router", () => ({
 
 jest.mock("@/contexts/language-context", () => ({
   useLanguage: () => ({
-    t: (key: string) => key,
+    t: (key: string, values?: Record<string, string | number>) =>
+      key === "exam.duration_value"
+        ? `${values?.minutes} min ${values?.seconds} sec`
+        : key,
     language: "ar",
   }),
 }));
@@ -40,10 +43,11 @@ const originalAdapter = client.defaults.adapter;
 const examResponse = {
   examId: 42,
   totalQuestions: 50,
-  timeLimitMinutes: 30,
+  timeLimitMinutes: 12.5,
+  timeLimitSeconds: 750,
   status: "IN_PROGRESS",
   startedAt: "2026-07-28T10:00:00Z",
-  expiresAt: "2026-07-28T10:30:00Z",
+  expiresAt: "2026-07-28T10:12:30Z",
   questions: [],
 };
 
@@ -97,6 +101,7 @@ describe("TheoryExamPage persistent exam flow", () => {
     render(<TheoryExamPage />);
 
     expect(document.querySelector('[dir="rtl"]')).toBeInTheDocument();
+    expect(screen.getByText("12 min 30 sec")).toBeVisible();
 
     const startButton = await screen.findByRole("button", {
       name: "practice_exam.start_btn",

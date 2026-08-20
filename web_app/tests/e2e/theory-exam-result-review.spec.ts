@@ -7,24 +7,28 @@ const localized = {
     selected: "Selected English answer",
     correct: "Correct English answer",
     explanation: "Saved English explanation",
+    timeout: "Timeout",
   },
   ar: {
     path: "/ar/exam/results/77",
     selected: "الإجابة الإنجليزية غير معروضة",
     correct: "الإجابة العربية الصحيحة",
     explanation: "الشرح العربي المحفوظ",
+    timeout: "انتهى الوقت",
   },
   nl: {
     path: "/nl/exam/results/77",
     selected: "Gekozen Nederlands antwoord",
     correct: "Correct Nederlands antwoord",
     explanation: "Opgeslagen Nederlandse uitleg",
+    timeout: "Tijdoverschrijding",
   },
   fr: {
     path: "/fr/exam/results/77",
     selected: "Réponse française choisie",
     correct: "Bonne réponse française",
     explanation: "Explication française enregistrée",
+    timeout: "Délai dépassé",
   },
 } as const;
 
@@ -59,11 +63,25 @@ const reviewAnswer = {
   isCorrect: false,
 };
 
+const timeoutAnswer = {
+  ...reviewAnswer,
+  questionId: 13,
+  selectedOptionId: null,
+  selectedOptionText: null,
+  selectedOptionTextEn: null,
+  selectedOptionTextAr: null,
+  selectedOptionTextNl: null,
+  selectedOptionTextFr: null,
+  isCorrect: false,
+  wasTimeout: true,
+  difficulty: "HARD",
+};
+
 const result = {
   examId: 77,
   userId: 42,
   completedAt: "2026-08-09T10:00:00Z",
-  totalQuestions: 1,
+  totalQuestions: 2,
   correctAnswers: 0,
   wrongAnswers: 1,
   scorePercentage: 0,
@@ -74,11 +92,11 @@ const result = {
   timeTakenSeconds: 45,
   averageTimePerQuestion: 45,
   answeredCount: 1,
-  unansweredCount: 0,
+  unansweredCount: 1,
   weakCategories: ["TH04"],
   categoryBreakdown: [],
   incorrectQuestions: [reviewAnswer],
-  allAnswers: [reviewAnswer],
+  allAnswers: [reviewAnswer, timeoutAnswer],
 };
 
 async function fulfillJson(route: Route, body: unknown, status = 200) {
@@ -95,7 +113,7 @@ async function prepareResult(page: Page) {
     {
       name: "token",
       value: "result-review-test-token",
-      url: "http://127.0.0.1:3005",
+      url: String(test.info().project.use.baseURL ?? "http://localhost:3000"),
       httpOnly: true,
       sameSite: "Lax",
     },
@@ -133,7 +151,12 @@ for (const [language, content] of Object.entries(localized)) {
       const consoleErrors: string[] = [];
       const serverErrors: string[] = [];
       page.on("console", (message) => {
-        if (message.type() === "error") consoleErrors.push(message.text());
+        if (message.type() === "error") {
+          const location = message.location();
+          consoleErrors.push(
+            `${message.text()}${location.url ? ` (${location.url})` : ""}`,
+          );
+        }
       });
       page.on("response", (response) => {
         if (response.status() >= 500) serverErrors.push(response.url());
@@ -178,6 +201,7 @@ for (const [language, content] of Object.entries(localized)) {
       await firstQuestion.locator('button[aria-expanded="false"]').click();
       await expect(firstQuestion.getByText(content.correct, { exact: true })).toBeVisible();
       await expect(firstQuestion.getByText(content.explanation, { exact: true })).toBeVisible();
+      await expect(page.getByText(content.timeout, { exact: true }).first()).toBeVisible();
 
       if (width === 390) {
         for (const dark of [false, true]) {

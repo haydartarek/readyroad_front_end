@@ -64,6 +64,64 @@ export type ActivityAvailability = {
   videoReason: string;
 };
 
+export type TheoryCoverageCategory = {
+  categoryId: number;
+  categoryCode: string;
+  categoryName: string;
+  eligibleQuestions: number;
+  uniqueQuestionsSeen: number;
+  unseenQuestions: number;
+  coveragePercentage: number | null;
+  timesPresented: number;
+  timesAnswered: number;
+  timesCorrect: number;
+  timesIncorrect: number;
+  accuracyPercentage: number | null;
+};
+
+export type TheoryCoverage = {
+  languageCode: string;
+  eligibleQuestions: number;
+  uniqueQuestionsSeen: number;
+  unseenQuestions: number;
+  coveragePercentage: number | null;
+  timesPresented: number;
+  timesAnswered: number;
+  timesCorrect: number;
+  timesIncorrect: number;
+  accuracyPercentage: number | null;
+  categories: TheoryCoverageCategory[];
+};
+
+export type DifficultyPerformance = {
+  difficulty: "EASY" | "MEDIUM" | "HARD";
+  answeredQuestions: number;
+  correctAnswers: number;
+  accuracy: number;
+};
+
+export type DifficultyPerformanceResponse = {
+  items: DifficultyPerformance[];
+  snapshotBackedAnswers: number;
+  legacyAnswersExcluded: number;
+  evidenceStatus: "NO_DATA" | "LEGACY_ONLY" | "SNAPSHOT_COMPLETE" | "SNAPSHOT_PARTIAL";
+};
+
+export type HistoricalContentStatus =
+  | "SNAPSHOT_COMPLETE"
+  | "SNAPSHOT_PARTIAL"
+  | "LEGACY_NO_SNAPSHOT"
+  | "STORED_RESULT";
+
+export type AdminExamDetailResponse = {
+  userId: number;
+  examType: AdminExamSummary["examType"];
+  examId: number;
+  summary: AdminExamSummary;
+  historicalContentStatus: HistoricalContentStatus;
+  result: Record<string, unknown>;
+};
+
 export type PracticeSummary = {
   sessionId: number;
   signCode: string;

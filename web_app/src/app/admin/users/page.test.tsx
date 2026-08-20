@@ -10,6 +10,13 @@ jest.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: { username: "admin" } }),
 }));
 
+jest.mock("@/components/localized-link", () => ({
+  __esModule: true,
+  default: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={String(href)} {...props}>{children}</a>
+  ),
+}));
+
 jest.mock("@/components/admin/AdminPageHeader", () => ({
   __esModule: true,
   default: ({ title, actions }: { title: string; actions: React.ReactNode }) => (
@@ -76,5 +83,37 @@ describe("Admin user creation", () => {
         isActive: true,
       }),
     );
+  });
+
+  it("links real learners to their user-specific learning profile only", async () => {
+    mockedGet.mockImplementation((url: string) =>
+      Promise.resolve({
+        data: url.endsWith("/summary")
+          ? { total: 2, active: 2, locked: 0, inactive: 0, newThisWeek: 0, newSince: "" }
+          : {
+              users: [
+                { id: 42, username: "learner", email: "learner@test.local", fullName: "Learner", role: "USER", isActive: true, isLocked: false, createdAt: "2026-08-20T10:00:00Z" },
+                { id: 1, username: "admin", email: "admin@test.local", fullName: "Admin", role: "ADMIN", isActive: true, isLocked: false, createdAt: "2026-08-20T10:00:00Z" },
+              ],
+              total: 2,
+              page: 0,
+              size: 20,
+              totalPages: 1,
+            },
+      }),
+    );
+
+    render(<AdminUsersPage />);
+
+    await waitFor(() => {
+      const profileLinks = screen.getAllByRole("link", {
+        name: "admin.users.learning_profile",
+      });
+      expect(profileLinks).toHaveLength(1);
+      expect(profileLinks[0]).toHaveAttribute(
+        "href",
+        "/admin/users/42/learning",
+      );
+    });
   });
 });

@@ -15,8 +15,10 @@ import { useLanguage } from "@/contexts/language-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { convertToPublicImageUrl } from "@/lib/image-utils";
-import { API_ENDPOINTS } from "@/lib/constants";
-import { resolveTimedAttemptStep } from "@/lib/attempt-lifecycle";
+import { API_ENDPOINTS, EXAM_RULES } from "@/lib/constants";
+import { useExamQuestionPresentation } from "@/hooks/use-exam-question-presentation";
+import { resolveTheoryTimedAttemptStep } from "@/lib/attempt-lifecycle";
+import { StatusScreen } from "@/components/ui/status-screen";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -26,10 +28,11 @@ import {
   Clock,
   Flag,
   ImageOff,
+  TimerOff,
 } from "lucide-react";
 
-/** Seconds per question — Belgian theoretical driving exam rule */
-const QUESTION_TIME = 15;
+/** Seconds per question from the shared Theory Exam timing contract. */
+const QUESTION_TIME = EXAM_RULES.QUESTION_TIME_SECONDS;
 
 interface Question {
   id: number;
@@ -167,15 +170,22 @@ export default function ExamQuestionsPage() {
   const [fetchKey, setFetchKey] = useState(0);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [finalizedQuestionIds, setFinalizedQuestionIds] = useState<Set<number>>(
+    () => new Set(),
+  );
 
   // ── Per-question countdown ──────────────────────────────
-  const [questionTimeLeft, setQuestionTimeLeft] = useState(QUESTION_TIME);
+  const [questionTimeLeft, setQuestionTimeLeft] = useState<number>(QUESTION_TIME);
+  const [timerRestartKey, setTimerRestartKey] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionStartedAtRef = useRef(Date.now());
 
   const isExamActive = useRef(true);
   const pendingNavigation = useRef<string | null>(null);
-  const consecutiveUnansweredRef = useRef(0);
+  const continuousInactivitySecondsRef = useRef(0);
+  const finalizedQuestionIdsRef = useRef<Set<number>>(new Set());
+  const transitionInFlightRef = useRef(false);
   // Ref for submit so timer callback always sees the latest version
   const submitExamRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
@@ -259,6 +269,14 @@ export default function ExamQuestionsPage() {
     fetchExamData();
   }, [examId, fetchKey, router, t]);
 
+  const presentedQuestionId =
+    examData?.questions[currentQuestionIndex]?.id;
+  useExamQuestionPresentation(
+    examId,
+    presentedQuestionId,
+    Boolean(examData) && !isSubmitting && !sessionEnded,
+  );
+
   // ── Save answer ─────────────────────────────────────────
   const handleAnswerSelect = useCallback(
     async (optionNumber: number) => {
@@ -292,7 +310,8 @@ export default function ExamQuestionsPage() {
         return;
       }
 
-      // Optimistic local update — user can still change during the 15s window
+      const previousAnswer = answers[questionId];
+      // Optimistic local update — user can still change during the 15s window.
       setAnswers((prev) => ({ ...prev, [questionId]: optionNumber }));
       const timeTakenSeconds = Math.min(
         QUESTION_TIME,
@@ -310,20 +329,32 @@ export default function ExamQuestionsPage() {
             timeTakenSeconds,
           },
         );
+        continuousInactivitySecondsRef.current = 0;
+        finalizedQuestionIdsRef.current.add(questionId);
+        setFinalizedQuestionIds(new Set(finalizedQuestionIdsRef.current));
       } catch (err) {
+        setAnswers((prev) => {
+          const next = { ...prev };
+          if (previousAnswer === undefined) delete next[questionId];
+          else next[questionId] = previousAnswer;
+          return next;
+        });
         logApiError("Failed to save answer", err);
         if (!isServiceUnavailable(err)) {
           toast.error(t("exam.answer_save_failed"));
         }
       }
     },
-    [currentQuestionIndex, examData, examId, t],
+    [answers, currentQuestionIndex, examData, examId, t],
   );
 
   // ── Submit exam ─────────────────────────────────────────
   const submitExam = useCallback(async () => {
     if (!examData) return;
-    if (Object.keys(answers).length !== examData.questions.length) return;
+    if (
+      finalizedQuestionIdsRef.current.size !== examData.questions.length
+    )
+      return;
     try {
       setIsSubmitting(true);
       isExamActive.current = false;
@@ -342,7 +373,7 @@ export default function ExamQuestionsPage() {
       }
       setIsSubmitting(false);
     }
-  }, [answers, examData, examId, router, t]);
+  }, [examData, examId, router, t]);
 
   const abandonExam = useCallback(
     async (target: string | null) => {
@@ -371,6 +402,25 @@ export default function ExamQuestionsPage() {
     [examData, examId, router, t],
   );
 
+  const terminateForInactivity = useCallback(async () => {
+    if (!examData) return;
+    try {
+      setIsSubmitting(true);
+      if (timerRef.current) clearInterval(timerRef.current);
+      await apiClient.post(API_ENDPOINTS.EXAMS.ABANDON(examId));
+      isExamActive.current = false;
+      localStorage.removeItem("current_exam");
+      setSessionEnded(true);
+      setIsSubmitting(false);
+    } catch (err) {
+      logApiError("Failed to terminate inactive exam", err);
+      isExamActive.current = true;
+      setIsSubmitting(false);
+      setQuestionTimeLeft(QUESTION_TIME);
+      if (!isServiceUnavailable(err)) toast.error(t("common.error"));
+    }
+  }, [examData, examId, t]);
+
   // Keep ref in sync so timer callbacks always fire the latest version
   useEffect(() => {
     submitExamRef.current = submitExam;
@@ -378,31 +428,62 @@ export default function ExamQuestionsPage() {
 
   // ── Advance to next question (or submit on last) ────────
   const handleNextOrSubmit = useCallback(
-    (reason: "manual" | "timeout") => {
-      if (!examData) return;
+    async (reason: "answered" | "timeout") => {
+      if (!examData || transitionInFlightRef.current) return;
       const currentQuestion = examData.questions[currentQuestionIndex];
       if (!currentQuestion) return;
 
-      const decision = resolveTimedAttemptStep({
-        reason,
-        isCurrentAnswered: answers[currentQuestion.id] !== undefined,
-        isLastQuestion: currentQuestionIndex === examData.questions.length - 1,
-        answeredCount: Object.keys(answers).length,
-        totalQuestions: examData.questions.length,
-        consecutiveUnanswered: consecutiveUnansweredRef.current,
-      });
-      consecutiveUnansweredRef.current = decision.consecutiveUnanswered;
+      transitionInFlightRef.current = true;
+      try {
+        let resolvedReason = reason;
+        if (reason === "timeout") {
+          if (finalizedQuestionIdsRef.current.has(currentQuestion.id)) {
+            resolvedReason = "answered";
+          } else {
+            await apiClient.post(
+              `/exams/simulations/${examId}/questions/${currentQuestion.id}/timeout`,
+            );
+            finalizedQuestionIdsRef.current.add(currentQuestion.id);
+            setFinalizedQuestionIds(
+              new Set(finalizedQuestionIdsRef.current),
+            );
+          }
+        } else if (!finalizedQuestionIdsRef.current.has(currentQuestion.id)) {
+          return;
+        }
 
-      if (decision.action === "submit") {
-        submitExamRef.current?.();
-      } else if (decision.action === "abandon") {
-        void abandonExam("/exam");
-      } else {
-        setCurrentQuestionIndex((prev) => prev + 1);
+        const decision = resolveTheoryTimedAttemptStep({
+          reason: resolvedReason,
+          isLastQuestion:
+            currentQuestionIndex === examData.questions.length - 1,
+          finalizedCount: finalizedQuestionIdsRef.current.size,
+          totalQuestions: examData.questions.length,
+          continuousInactivitySeconds:
+            continuousInactivitySecondsRef.current,
+        });
+        continuousInactivitySecondsRef.current =
+          decision.continuousInactivitySeconds;
+
+        if (decision.action === "submit") {
+          await submitExamRef.current?.();
+        } else if (decision.action === "abandon") {
+          await terminateForInactivity();
+        } else {
+          setCurrentQuestionIndex((prev) => prev + 1);
+          setQuestionTimeLeft(QUESTION_TIME);
+        }
+      } catch (err) {
+        logApiError("Failed to finalize timed exam question", err);
         setQuestionTimeLeft(QUESTION_TIME);
+        setTimerRestartKey((current) => current + 1);
+        if (!isServiceUnavailable(err)) {
+          toast.error(t("exam.answer_save_failed"));
+        }
+      } finally {
+        transitionInFlightRef.current = false;
       }
     },
-    [abandonExam, answers, examData, currentQuestionIndex],
+    [currentQuestionIndex, examData, examId, t, terminateForInactivity],
   );
 
   // Ref so the timer interval closure always sees the latest handler
@@ -413,7 +494,7 @@ export default function ExamQuestionsPage() {
 
   // ── Per-question 15-second countdown ───────────────────
   useEffect(() => {
-    if (isSubmitting) {
+    if (isSubmitting || sessionEnded) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
@@ -427,7 +508,7 @@ export default function ExamQuestionsPage() {
         if (prev <= 1) {
           // Time's up — auto-advance
           clearInterval(timerRef.current!);
-          handleNextOrSubmitRef.current("timeout");
+          void handleNextOrSubmitRef.current("timeout");
           return 0;
         }
         return prev - 1;
@@ -437,7 +518,7 @@ export default function ExamQuestionsPage() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentQuestionIndex, isSubmitting]);
+  }, [currentQuestionIndex, isSubmitting, sessionEnded, timerRestartKey]);
 
   const handleExitStay = useCallback(() => {
     pendingNavigation.current = null;
@@ -461,6 +542,23 @@ export default function ExamQuestionsPage() {
           className="max-w-md"
         />
       </div>
+    );
+  }
+
+  if (sessionEnded) {
+    return (
+      <StatusScreen
+        dir={isRTL ? "rtl" : "ltr"}
+        badge={t("exam.session_ended_badge")}
+        title={t("exam.session_ended_title")}
+        description={t("exam.session_ended_description")}
+        icon={<TimerOff className="h-10 w-10" />}
+        primaryAction={{
+          label: t("exam.session_ended_action"),
+          href: "/exam",
+        }}
+        brandCaption="RijVia"
+      />
     );
   }
 
@@ -565,8 +663,10 @@ export default function ExamQuestionsPage() {
           </Button>
           <Button
             size="lg"
-            onClick={() => handleNextOrSubmit("manual")}
-            disabled={isSubmitting}
+            onClick={() => void handleNextOrSubmit("answered")}
+            disabled={
+              isSubmitting || !finalizedQuestionIds.has(currentQuestion.id)
+            }
             className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
           >
             {isLastQuestion

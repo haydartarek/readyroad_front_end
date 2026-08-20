@@ -48,7 +48,7 @@ type SettingsModel = {
 };
 
 const DEFAULTS: SettingsModel = {
-  siteName: "ReadyRoad",
+  siteName: "RijVia",
   defaultLanguage: "en",
   maintenanceMode: false,
   allowRegistrations: true,
@@ -541,8 +541,9 @@ export default function AdminSettingsPage() {
                   name="examDurationMinutes"
                   type="number"
                   autoComplete="off"
-                  min={10}
+                  min={1}
                   max={120}
+                  step={0.25}
                   value={settings.examDurationMinutes}
                   disabled={!settings.examSettingsEditable}
                   onChange={(e) =>

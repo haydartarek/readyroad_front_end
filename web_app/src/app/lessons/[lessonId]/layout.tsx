@@ -26,7 +26,7 @@ export async function generateMetadata({
 
   if (!lesson) {
     return {
-      title: { absolute: "Lesson Not Found | ReadyRoad" },
+      title: { absolute: "Lesson Not Found | RijVia" },
       robots: { index: false, follow: false },
     };
   }
@@ -51,7 +51,7 @@ export async function generateMetadata({
       title,
       description,
       url: canonical,
-      siteName: "ReadyRoad",
+      siteName: "RijVia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       type: "article",

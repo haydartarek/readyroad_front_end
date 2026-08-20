@@ -134,21 +134,26 @@ export function Footer() {
               <Link
                 href="/"
                 prefetch={false}
-                className="inline-flex items-center gap-3 no-underline"
+                aria-label="RijVia"
+                className="inline-flex items-center no-underline"
               >
-                <Image
-                  src="/images/logo.png"
-                  alt=""
-                  aria-hidden="true"
-                  width={42}
-                  height={42}
-                  className="rounded-2xl ring-1 ring-border/50"
-                />
-                <span className="text-[1.2rem] font-black tracking-tight">
-                  <span className="text-primary">R</span>
-                  <span className="text-secondary">eady</span>
-                  <span className="text-primary">R</span>
-                  <span className="text-secondary">oad</span>
+                <span className="relative block h-[52px] w-[156px] shrink-0">
+                  <Image
+                    src="/images/logo.png"
+                    alt=""
+                    aria-hidden="true"
+                    fill
+                    sizes="156px"
+                    className="object-contain dark:hidden"
+                  />
+                  <Image
+                    src="/images/logo-dark.png"
+                    alt=""
+                    aria-hidden="true"
+                    fill
+                    sizes="156px"
+                    className="hidden object-contain dark:block"
+                  />
                 </span>
               </Link>
 
@@ -451,7 +456,7 @@ export function Footer() {
                   data-testid="footer-copyright"
                   className="mx-auto block w-full max-w-3xl break-words text-center text-xs font-medium leading-5 text-muted-foreground"
                 >
-                  &copy; {CURRENT_YEAR} ReadyRoad. {t("home.footer.operator")}{" "}
+                  &copy; {CURRENT_YEAR} RijVia. {t("home.footer.operator")}{" "}
                   {t("home.footer.rights")}
                 </span>
               </div>

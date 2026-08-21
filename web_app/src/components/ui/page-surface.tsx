@@ -244,7 +244,7 @@ export function PageMetricCard({
                 "row-start-4 min-w-0 max-w-full break-words font-medium text-foreground/80 sm:col-span-2 sm:justify-self-start",
                 isSmall
                   ? "text-[9px] leading-3.5 md:text-[9px]"
-                  : "text-[11px] leading-4.5 md:text-xs",
+                  : "text-sm leading-4.5 md:text-base",
               )}
             >
               {hint}
@@ -300,7 +300,7 @@ export function PageMetricCard({
                   "break-words font-medium text-foreground/80",
                   isSmall
                     ? "text-[9px] leading-3.5 md:text-[9px]"
-                    : "text-[11px] leading-4.5 md:text-xs",
+                    : "text-sm leading-4.5 md:text-base",
                 )}
               >
                 {hint}
@@ -312,3 +312,4 @@ export function PageMetricCard({
     </div>
   );
 }
+

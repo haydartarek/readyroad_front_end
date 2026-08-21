@@ -547,7 +547,7 @@ export default function RandomPracticePage() {
                     <span className="text-xs font-semibold text-foreground">
                       {t("practice_exam.difficulty_mix")}
                     </span>
-                    <span className="text-[11px] font-semibold text-muted-foreground">
+                    <span className="text-sm font-semibold text-muted-foreground">
                       20 · 20 · 10
                     </span>
                   </div>
@@ -576,7 +576,7 @@ export default function RandomPracticePage() {
                       },
                     ].map((item) => (
                       <div key={item.label} className="space-y-1">
-                        <div className="flex items-center justify-between text-[11px] font-semibold">
+                        <div className="flex items-center justify-between text-sm font-semibold">
                           <span className={item.tone}>{item.label}</span>
                           <span className="text-muted-foreground">
                             {item.value}/50

@@ -69,7 +69,7 @@ function SidebarSectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 px-1 pb-2 pt-3">
       <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+      <p className="text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">
         {children}
       </p>
     </div>
@@ -167,7 +167,7 @@ function UserSidebarInner() {
             </div>
 
             <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-primary/80">
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-primary/80">
                 {t("user_sidebar.workspace_title")}
               </p>
               <p className="truncate text-sm font-bold text-foreground">

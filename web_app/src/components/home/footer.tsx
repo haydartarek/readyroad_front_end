@@ -45,7 +45,7 @@ type LangCode = "en" | "ar" | "nl" | "fr";
 const CURRENT_YEAR = new Date().getFullYear();
 
 const sectionTitleClasses =
-  "mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground";
+  "mb-3 text-sm font-black uppercase tracking-[0.18em] text-muted-foreground";
 const navItemClasses =
   "group flex items-center justify-between gap-3 rounded-2xl border border-transparent px-2.5 py-2 text-sm font-semibold text-foreground/80 transition-all duration-200 hover:border-border/60 hover:bg-background/85 hover:text-foreground";
 const socialButtonClasses =
@@ -160,7 +160,7 @@ export function Footer() {
               <p className="max-w-sm text-[13px] leading-6 text-foreground/78">
                 {t("home.footer.description")}
               </p>
-              <p className="max-w-sm text-[11px] leading-5 text-muted-foreground">
+              <p className="max-w-sm text-sm leading-5 text-muted-foreground">
                 {t("home.footer.disclaimer")}
               </p>
 

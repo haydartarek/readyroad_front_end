@@ -1,0 +1,17 @@
+﻿ web_app/src/app/(protected)/practice/random/page.tsx   |  4 ++--
+ web_app/src/app/traffic-signs/traffic-signs-client.tsx |  4 ++--
+ web_app/src/components/admin/AdminSidebar.tsx          |  2 +-
+ web_app/src/components/auth/auth-showcase-panel.tsx    |  2 +-
+ web_app/src/components/home/footer.tsx                 |  4 ++--
+ web_app/src/components/home/how-it-works-section.tsx   |  2 +-
+ web_app/src/components/layout/UserSidebar.tsx          |  4 ++--
+ web_app/src/components/layout/navbar.tsx               | 18 ++++++++++++++----
+ web_app/src/components/lessons/lessons-grid.tsx        |  2 +-
+ .../src/components/privacy/cookie-consent-manager.tsx  |  2 +-
+ web_app/src/components/results/result-review.tsx       |  2 +-
+ .../components/traffic-signs/traffic-signs-filters.tsx |  6 +++---
+ .../components/traffic-signs/traffic-signs-grid.tsx    |  4 ++--
+ web_app/src/components/ui/dropdown-menu.tsx            |  2 +-
+ web_app/src/components/ui/page-surface.tsx             |  4 ++--
+ web_app/src/components/ui/select.tsx                   |  2 +-
+ 16 files changed, 37 insertions(+), 27 deletions(-)

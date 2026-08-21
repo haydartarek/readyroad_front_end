@@ -58,7 +58,7 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
                 <div className="space-y-2">
                   <Badge
                     variant="outline"
-                    className="rounded-full border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-bold text-primary"
+                    className="rounded-full border-primary/20 bg-primary/5 px-3 py-1 text-sm font-bold text-primary"
                   >
                     {t("lessons.lesson")} {lesson.displayOrder}
                   </Badge>

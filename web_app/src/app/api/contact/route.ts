@@ -3,9 +3,9 @@ import nodemailer from "nodemailer";
 import { PUBLIC_CONTACT } from "@/lib/public-content";
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: Number(process.env.SMTP_PORT) === 465,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -191,3 +191,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: copy.errors.generic }, { status: 500 });
   }
 }
+

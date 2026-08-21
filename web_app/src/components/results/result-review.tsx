@@ -82,7 +82,7 @@ export function ResultAnswerBlock({
         <p
           data-testid="result-answer-label"
           className={cn(
-            "min-w-0 break-words text-[11px] font-bold uppercase tracking-[0.12em]",
+            "min-w-0 break-words text-sm font-bold uppercase tracking-[0.12em]",
             ANSWER_LABEL_CLASSES[tone],
           )}
         >

@@ -40,10 +40,10 @@ export function TrafficSignsGrid({
             >
               <CardContent className="flex h-full flex-col p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {info.title[lang]}
                   </p>
-                  <span className="rounded-full border border-border/60 bg-background px-3 py-1 font-mono text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  <span className="rounded-full border border-border/60 bg-background px-3 py-1 font-mono text-sm font-semibold tracking-wide text-muted-foreground">
                     {sign.signCode}
                   </span>
                 </div>

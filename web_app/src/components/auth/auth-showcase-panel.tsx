@@ -60,7 +60,7 @@ export function AuthShowcasePanel({
               <p className="text-[1.45rem] font-black tracking-tight text-white">
                 {t("app.name")}
               </p>
-              <p className="max-w-xs text-[11px] font-medium leading-[1.1rem] text-white/70">
+              <p className="max-w-xs text-sm font-medium leading-[1.1rem] text-white/70">
                 {t("auth.showcase_brand_caption")}
               </p>
             </div>

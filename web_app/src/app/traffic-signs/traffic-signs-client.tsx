@@ -348,7 +348,7 @@ function TrafficSignsContent({
               </div>
 
               <span
-                className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-[11px] font-semibold ${activeGroup.style.chip}`}
+                className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-sm font-semibold ${activeGroup.style.chip}`}
               >
                 {t("traffic_signs.section_count", {
                   count: filteredSigns.length,
@@ -396,7 +396,7 @@ function TrafficSignsContent({
                   </div>
 
                   <span
-                    className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-[11px] font-semibold ${style.chip}`}
+                    className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-sm font-semibold ${style.chip}`}
                   >
                     {t("traffic_signs.section_count", { count: totalCount })}
                   </span>

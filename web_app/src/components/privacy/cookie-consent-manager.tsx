@@ -55,7 +55,7 @@ function ConsentToggle({
           />
           <span className="pointer-events-none h-6 w-11 rounded-full border border-border bg-muted transition-colors peer-checked:border-primary peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-disabled:opacity-70 after:absolute after:start-[6px] after:top-1/2 after:h-4 after:w-4 after:-translate-y-1/2 after:rounded-full after:bg-background after:shadow-sm after:transition-transform peer-checked:after:translate-x-5 rtl:peer-checked:after:-translate-x-5" />
         </label>
-        <span className="text-[11px] font-semibold text-muted-foreground">
+        <span className="text-sm font-semibold text-muted-foreground">
           {status}
         </span>
       </div>

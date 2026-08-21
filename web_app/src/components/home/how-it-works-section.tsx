@@ -137,7 +137,7 @@ export function HowItWorksSection() {
                 <div className="pointer-events-none absolute inset-0 ring-1 ring-border/60" />
 
                 <div className="mb-5 flex items-center justify-between">
-                  <span className="inline-flex items-center rounded-full border bg-background/60 px-3 py-1 text-[11px] font-semibold tracking-widest text-primary">
+                  <span className="inline-flex items-center rounded-full border bg-background/60 px-3 py-1 text-sm font-semibold tracking-widest text-primary">
                     {step.number}
                   </span>
 

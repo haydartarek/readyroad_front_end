@@ -2,7 +2,13 @@
 
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Image from "next/image";
 import Link from "@/components/localized-link";
 import {
@@ -92,7 +98,7 @@ function NavLink({
       href={href}
       prefetch={false}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-lg px-0 py-2 text-[10px] font-semibold transition-all duration-200 min-[1366px]:px-0.5 min-[1800px]:px-2 min-[1800px]:text-xs",
+        "shrink-0 whitespace-nowrap rounded-lg px-2.5 py-2.5 text-sm font-semibold transition-all duration-200 sm:px-3 xl:px-2 xl:text-sm min-[1536px]:px-3 min-[1536px]:text-base min-[1800px]:px-4 min-[1800px]:text-base",
         isActive
           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
           : "text-muted-foreground hover:bg-background/85 hover:text-foreground",
@@ -174,7 +180,11 @@ export function Navbar() {
         e.preventDefault();
         setDesktopSearchOpen(false);
         handleClear();
-      } else if (e.key === "Enter" && searchResults.length > 0 && isSearchOpen) {
+      } else if (
+        e.key === "Enter" &&
+        searchResults.length > 0 &&
+        isSearchOpen
+      ) {
         e.preventDefault();
         const hit = searchResults[highlightedIndex];
         if (hit) handleSelectResult(hit);
@@ -249,7 +259,7 @@ export function Navbar() {
           data-testid="desktop-primary-navigation"
           className="hidden min-w-0 flex-1 items-center justify-center xl:flex"
         >
-          <div className="flex min-w-0 items-center gap-0 rounded-xl bg-muted/40 p-0.5 min-[1800px]:gap-0.5 min-[1800px]:p-1">
+          <div className="flex min-w-0 items-center gap-1 rounded-xl bg-muted/40 p-1 min-[1800px]:gap-1.5 min-[1800px]:p-1.5">
             {primaryNavigationItems.map((item) => (
               <NavLink
                 key={item.href}

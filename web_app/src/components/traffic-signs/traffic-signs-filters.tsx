@@ -76,7 +76,7 @@ export function TrafficSignsFilters({
               placeholder={t("traffic_signs.search_placeholder")}
               value={search}
               onChange={(e) => handleSearchInput(e.target.value)}
-              className={`h-8 rounded-full border-border/60 bg-card/80 text-[11px] shadow-none md:h-9 md:text-xs ${isRTL ? "pr-10 pl-3.5" : "pl-10 pr-3.5"}`}
+              className={`h-8 rounded-full border-border/60 bg-card/80 text-sm shadow-none md:h-9 md:text-xs ${isRTL ? "pr-10 pl-3.5" : "pl-10 pr-3.5"}`}
             />
           </div>
 
@@ -84,7 +84,7 @@ export function TrafficSignsFilters({
             <Button
               variant="outline"
               onClick={onClearFilters}
-              className="h-8 gap-1 rounded-full border-border/60 px-3 text-[11px] md:h-9 md:text-xs"
+              className="h-8 gap-1 rounded-full border-border/60 px-3 text-sm md:h-9 md:text-xs"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
               {t("traffic_signs.clear_filters")}
@@ -104,7 +104,7 @@ export function TrafficSignsFilters({
                 key={cat.value}
                 variant={isSelected ? "default" : "outline"}
                 onClick={() => onCategoryChange(cat.value)}
-                className="h-7 flex-shrink-0 rounded-full px-2.5 text-[10px] font-semibold whitespace-nowrap md:h-8 md:px-3 md:text-[11px]"
+                className="h-7 flex-shrink-0 rounded-full px-2.5 text-[10px] font-semibold whitespace-nowrap md:h-8 md:px-3 md:text-sm"
                 size="sm"
               >
                 <span>{cat.label}</span>

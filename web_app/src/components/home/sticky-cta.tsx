@@ -7,25 +7,67 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 
-// ─── Constants ───────────────────────────────────────────
+// ─── Constants ─────────────────────────────────────────────────────
 
 const SCROLL_THRESHOLD = 600;
 
-// ─── Component ───────────────────────────────────────────
+// ─── Component ─────────────────────────────────────────────────────
 
 export function StickyCTA() {
   const { t } = useLanguage();
   const { isAuthenticated, isLoading } = useAuth();
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [shouldHide, setShouldHide] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > SCROLL_THRESHOLD);
+    const cta = document.querySelector<HTMLElement>("#exam-cta");
+    const footer = document.querySelector<HTMLElement>("footer");
+    if (!cta || !footer) return;
+
+    const ctaTop = cta.offsetTop;
+    const footerTop = footer.offsetTop;
+
+    const onScroll = () => {
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+
+      // Show after threshold
+      const shouldBeVisible = scrollY > SCROLL_THRESHOLD;
+
+      // Hide when CTA or footer is in view
+      const ctaInView = scrollY + viewportHeight >= ctaTop + 100;
+      const footerInView = scrollY + viewportHeight >= footerTop + 100;
+
+      setShouldHide(ctaInView || footerInView);
+      setVisible(shouldBeVisible);
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
-  if (dismissed || isLoading || !visible || isAuthenticated) return null;
+  // Restore session dismissal
+  useEffect(() => {
+    const key = "readyroad_sticky_cta_dismissed";
+    const saved = sessionStorage.getItem(key);
+    if (saved === "1") setDismissed(true);
+  }, []);
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    sessionStorage.setItem("readyroad_sticky_cta_dismissed", "1");
+  };
+
+  if (dismissed || isLoading || !visible || shouldHide || isAuthenticated) {
+    return null;
+  }
 
   return (
     <div
@@ -48,7 +90,7 @@ export function StickyCTA() {
           </Button>
 
           <button
-            onClick={() => setDismissed(true)}
+            onClick={handleDismiss}
             aria-label={t("home.sticky.dismiss_label")}
             className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >

@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "@/components/localized-link";
-import { Target, SignpostBig, FileText, ArrowRight } from "lucide-react";
+import { ArrowRight, FileText, SignpostBig, Target } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { EXAM_RULES } from "@/lib/constants";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
@@ -13,7 +13,6 @@ interface Step {
   icon: React.ElementType;
   iconWrap: string;
   iconTone: string;
-  glow: string;
   titleKey: string;
   descKey: string;
   ctaKey: string;
@@ -28,36 +27,46 @@ const STEP_BASES = [
     number: "01",
     href: "/practice",
     icon: Target,
-    iconWrap: "border-secondary/20 bg-secondary/10 ring-1 ring-secondary/10",
+    iconWrap: "border-secondary/20 bg-secondary/10",
     iconTone: "text-secondary",
-    glow: "bg-secondary/10",
   },
   {
     number: "02",
     href: "/traffic-signs",
     icon: SignpostBig,
-    iconWrap:
-      "border-emerald-500/20 bg-emerald-500/10 ring-1 ring-emerald-500/10",
+    iconWrap: "border-emerald-500/20 bg-emerald-500/10",
     iconTone: "text-emerald-600 dark:text-emerald-400",
-    glow: "bg-emerald-500/10",
   },
   {
     number: "03",
     href: "/exam",
     icon: FileText,
-    iconWrap: "border-primary/20 bg-primary/10 ring-1 ring-primary/10",
+    iconWrap: "border-primary/20 bg-primary/10",
     iconTone: "text-primary",
-    glow: "bg-primary/10",
   },
 ] as const;
 
 function buildSteps(): Step[] {
-  return STEP_BASES.map((s, i) => ({
-    ...s,
-    titleKey: `home.how.step${i + 1}_title`,
-    descKey: `home.how.step${i + 1}_desc`,
-    ctaKey: `home.how.step${i + 1}_cta`,
+  return STEP_BASES.map((step, index) => ({
+    ...step,
+    titleKey: `home.how.step${index + 1}_title`,
+    descKey: `home.how.step${index + 1}_desc`,
+    ctaKey: `home.how.step${index + 1}_cta`,
   }));
+}
+
+function StepArrow({ isRTL }: { isRTL: boolean }) {
+  return (
+    <ArrowRight
+      aria-hidden
+      className={[
+        "h-4 w-4 transition-transform",
+        isRTL
+          ? "rotate-180 group-hover:-translate-x-0.5"
+          : "group-hover:translate-x-0.5",
+      ].join(" ")}
+    />
+  );
 }
 
 export function HowItWorksSection() {
@@ -66,18 +75,18 @@ export function HowItWorksSection() {
   const hasTriggered = useRef(false);
   const [visible, setVisible] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
-
   const steps = buildSteps();
 
   useEffect(() => {
     if (visible) return;
+
     if (prefersReducedMotion || typeof IntersectionObserver === "undefined") {
       const frame = window.requestAnimationFrame(() => setVisible(true));
       return () => window.cancelAnimationFrame(frame);
     }
 
-    const el = sectionRef.current;
-    if (!el) return;
+    const element = sectionRef.current;
+    if (!element) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -90,7 +99,7 @@ export function HowItWorksSection() {
       { threshold: OBSERVER_THRESHOLD },
     );
 
-    observer.observe(el);
+    observer.observe(element);
     return () => observer.disconnect();
   }, [prefersReducedMotion, visible]);
 
@@ -101,98 +110,97 @@ export function HowItWorksSection() {
       className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/20 py-16 lg:py-24"
     >
       <div className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+
       <div className="container relative mx-auto px-4">
         <div className="mb-10 text-center lg:mb-14">
+          <span className="mb-4 inline-flex items-center rounded-full border border-primary/15 bg-primary/5 px-4 py-1.5 text-xs font-bold tracking-wide text-primary">
+            3
+          </span>
+
           <h2
             id={HEADING_ID}
             className="mb-3 text-balance text-2xl font-extrabold tracking-tight text-secondary md:text-3xl lg:text-4xl"
           >
             {t("home.how.title")}
           </h2>
+
           <p className="mx-auto max-w-xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
             {t("home.how.subtitle")}
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
-          {steps.map((step, i) => {
-            const Icon = step.icon;
+        <div className="relative mx-auto max-w-6xl">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute start-[16.66%] end-[16.66%] top-10 hidden h-px bg-gradient-to-r from-secondary/30 via-primary/30 to-emerald-500/30 lg:block"
+          />
 
-            return (
-              <article
-                key={step.number}
-                className={[
-                  "group relative flex flex-col overflow-hidden rounded-3xl border bg-card/80 p-6 shadow-sm backdrop-blur",
-                  "transition-all duration-500 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20",
-                  "lg:p-8",
-                  visible
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-6 opacity-0",
-                ].join(" ")}
-                style={{
-                  transitionDelay: visible ? `${i * STAGGER_MS}ms` : "0ms",
-                }}
-              >
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/35 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-                <div className="pointer-events-none absolute inset-0 ring-1 ring-border/60" />
+          <div className="grid gap-5 lg:grid-cols-3 lg:gap-8">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
 
-                <div className="mb-5 flex items-center justify-between">
-                  <span className="inline-flex items-center rounded-full border bg-background/60 px-3 py-1 text-sm font-semibold tracking-widest text-primary">
-                    {step.number}
-                  </span>
-
-                  <div
-                    className={[
-                      "flex h-12 w-12 items-center justify-center rounded-2xl border shadow-sm transition-transform duration-200 group-hover:scale-[1.03]",
-                      step.iconWrap,
-                    ].join(" ")}
-                  >
-                    <Icon
-                      className={["h-5 w-5", step.iconTone].join(" ")}
-                      aria-hidden
-                    />
-                  </div>
-                </div>
-
-                <h3 className="mb-2 text-base font-semibold tracking-tight text-secondary sm:text-lg">
-                  {t(step.titleKey)}
-                </h3>
-
-                <p className="mb-5 flex-1 text-sm font-medium leading-6 text-muted-foreground">
-                  {t(step.descKey, {
-                    questions: EXAM_RULES.TOTAL_QUESTIONS,
-                    duration: t("exam.duration_value", {
-                      minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
-                      seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
-                    }),
-                  })}
-                </p>
-
-                <Link
-                  href={step.href}
-                  className="inline-flex w-fit items-center gap-2 rounded-full border bg-background/60 px-4 py-2 text-sm font-semibold text-primary shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  {t(step.ctaKey)}
-                  <ArrowRight
-                    className={[
-                      "h-4 w-4 transition-transform",
-                      isRTL
-                        ? "rotate-180 group-hover:-translate-x-0.5"
-                        : "group-hover:translate-x-0.5",
-                    ].join(" ")}
-                    aria-hidden
-                  />
-                </Link>
-
-                <div
+              return (
+                <article
+                  key={step.number}
                   className={[
-                    "pointer-events-none absolute -bottom-12 -end-12 h-40 w-40 rounded-full blur-3xl opacity-0 transition-opacity group-hover:opacity-100",
-                    step.glow,
+                    "group relative flex min-h-[19rem] flex-col rounded-2xl border bg-card p-6 shadow-sm",
+                    "transition-all duration-500 ease-out hover:-translate-y-1 hover:border-primary/25 hover:shadow-lg",
+                    "lg:p-7",
+                    visible
+                      ? "translate-y-0 opacity-100"
+                      : "translate-y-6 opacity-0",
                   ].join(" ")}
-                />
-              </article>
-            );
-          })}
+                  style={{
+                    transitionDelay: visible ? `${index * STAGGER_MS}ms` : "0ms",
+                  }}
+                >
+                  <div className="mb-6 flex items-center justify-between">
+                    <span className="text-sm font-black tracking-[0.2em] text-primary">
+                      {step.number}
+                    </span>
+
+                    <span
+                      className={[
+                        "grid h-12 w-12 place-items-center rounded-2xl border bg-background shadow-sm",
+                        step.iconWrap,
+                      ].join(" ")}
+                    >
+                      <Icon
+                        className={["h-5 w-5", step.iconTone].join(" ")}
+                        aria-hidden
+                      />
+                    </span>
+                  </div>
+
+                  <div className="flex-1">
+                    <h3 className="mb-2 text-xl font-bold tracking-tight text-secondary">
+                      {t(step.titleKey)}
+                    </h3>
+
+                    <p className="text-sm font-medium leading-6 text-muted-foreground">
+                      {t(step.descKey, {
+                        questions: EXAM_RULES.TOTAL_QUESTIONS,
+                        duration: t("exam.duration_value", {
+                          minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
+                          seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
+                        }),
+                      })}
+                    </p>
+                  </div>
+
+                  <Link
+                    href={step.href}
+                    className="mt-6 inline-flex w-fit items-center gap-2 border-b border-primary/25 pb-1 text-sm font-bold text-primary transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {t(step.ctaKey)}
+                    <StepArrow isRTL={isRTL} />
+                  </Link>
+
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 origin-start scale-x-0 bg-primary transition-transform duration-300 group-hover:scale-x-100" />
+                </article>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

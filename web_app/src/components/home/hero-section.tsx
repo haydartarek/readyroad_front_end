@@ -1,8 +1,11 @@
-"use client";
+﻿"use client";
 
 import Link from "@/components/localized-link";
-import Image from "next/image";
-import { BadgeCheck, Lock, Shield, Gift } from "lucide-react";
+import {
+  Circle,
+  Gift,
+  Lock,
+  Shield,} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -96,6 +99,106 @@ function MemberCtas({
   );
 }
 
+function PreviewOption({
+  selected = false,
+  width,
+}: {
+  selected?: boolean;
+  width: string;
+}) {
+  return (
+    <div
+      className={[
+        "flex h-11 items-center gap-3 rounded-xl border px-3 transition-colors",
+        selected
+          ? "border-primary/40 bg-primary/10 shadow-sm"
+          : "border-border bg-background",
+      ].join(" ")}
+    >
+      <span
+        className={[
+          "grid h-5 w-5 shrink-0 place-items-center rounded-full border",
+          selected
+            ? "border-primary bg-primary"
+            : "border-muted-foreground/40 bg-background",
+        ].join(" ")}
+      >
+        {selected ? (
+          <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+        ) : (
+          <Circle className="h-2.5 w-2.5 text-transparent" />
+        )}
+      </span>
+
+      <span
+        className="h-2.5 rounded-full bg-muted-foreground/20"
+        style={{ width }}
+      />
+    </div>
+  );
+}
+
+function ExamPreview() {
+  return (
+    <div className="relative mx-auto w-full max-w-md" aria-hidden="true">
+      <div className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white p-4 shadow-xl shadow-secondary/10 dark:border-slate-700 dark:bg-slate-950 sm:p-5">
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary/10 to-transparent" />
+
+        <div className="relative space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-xs font-black text-secondary-foreground shadow-sm">
+                12
+              </span>
+
+              <div className="space-y-1">
+                <div className="h-2.5 w-20 rounded-full bg-secondary/20" />
+                <div className="h-2 w-12 rounded-full bg-muted" />
+              </div>
+            </div>
+
+            <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary">
+              50
+            </span>
+          </div>
+
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-[24%] rounded-full bg-primary" />
+          </div>
+
+          <div className="rounded-2xl border border-border/80 bg-slate-50 p-4 dark:bg-slate-900 sm:p-5">
+            <div className="flex items-center gap-4">
+              <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl border-4 border-white bg-rose-500 shadow-sm ring-1 ring-rose-600/25 dark:border-slate-950">
+                <div className="grid h-14 w-14 place-items-center rounded-full border-[6px] border-white bg-rose-500">
+                  <div className="h-1.5 w-9 rotate-[-45deg] rounded-full bg-white" />
+                </div>
+              </div>
+
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-3 w-full rounded-full bg-secondary/85" />
+                <div className="h-3 w-4/5 rounded-full bg-secondary/85" />
+                <div className="h-2.5 w-3/5 rounded-full bg-muted-foreground/25" />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <PreviewOption width="60%" />
+            <PreviewOption selected width="80%" />
+            <PreviewOption width="68%" />
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute -bottom-12 -end-12 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -top-16 -start-16 h-32 w-32 rounded-full bg-secondary/15 blur-3xl" />
+      </div>
+
+      <div className="pointer-events-none absolute -bottom-5 -start-5 -z-10 h-28 w-28 rounded-full bg-primary/15 blur-2xl" />
+      <div className="pointer-events-none absolute -end-5 -top-5 -z-10 h-24 w-24 rounded-full bg-secondary/15 blur-2xl" />
+    </div>
+  );
+}
+
 export function HeroSection() {
   const { t } = useLanguage();
   const { isLoading, isAuthenticated } = useAuth();
@@ -109,11 +212,6 @@ export function HeroSection() {
 
           <div className="relative grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
             <div className="space-y-6 lg:space-y-7">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary shadow-sm">
-                <BadgeCheck className="h-4 w-4" aria-hidden />
-                <span>{t("home.hero.badge")}</span>
-              </div>
-
               <div className="space-y-3">
                 <h1 className="text-balance text-4xl font-extrabold leading-[1.12] tracking-tight text-secondary sm:text-5xl lg:text-6xl">
                   {t("home.hero.headline")}{" "}
@@ -131,6 +229,7 @@ export function HeroSection() {
                 <p className="max-w-xl text-pretty text-sm font-medium leading-6 text-muted-foreground">
                   {t("home.hero.subtitle")}
                 </p>
+
                 <p className="max-w-xl text-pretty text-xs leading-5 text-muted-foreground/90">
                   {t("home.hero.privacy")}
                 </p>
@@ -176,36 +275,7 @@ export function HeroSection() {
             </div>
 
             <div className="relative flex items-center justify-center">
-              <div className="relative w-full max-w-md">
-                <div className="relative overflow-hidden rounded-3xl border bg-card p-8 shadow-sm lg:p-10">
-                  <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-transparent" />
-                  <div className="relative z-10 mx-auto grid aspect-square w-56 place-items-center rounded-3xl border bg-background/70 p-6">
-                    <div className="relative aspect-square w-full">
-                      <Image
-                        src="/images/logo.png"
-                        alt="RijVia"
-                        fill
-                        sizes="(max-width: 768px) 224px, 224px"
-                        className="object-contain dark:hidden"
-                        loading="eager"
-                        priority
-                      />
-                      <Image
-                        src="/images/logo-dark.png"
-                        alt="RijVia"
-                        fill
-                        sizes="(max-width: 768px) 224px, 224px"
-                        className="hidden object-contain dark:block"
-                        loading="eager"
-                        priority
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pointer-events-none absolute -bottom-10 -start-10 h-44 w-44 rounded-full bg-primary/10 blur-2xl" />
-                  <div className="pointer-events-none absolute -end-10 -top-10 h-36 w-36 rounded-full bg-secondary/10 blur-2xl" />
-                </div>
-              </div>
+              <ExamPreview />
             </div>
           </div>
 
@@ -215,3 +285,5 @@ export function HeroSection() {
     </section>
   );
 }
+
+

@@ -24,7 +24,6 @@ import {
   Languages,
   MapPinned,
   Search,
-  Sparkles,
   X,
 } from "lucide-react";
 import type { Lesson } from "@/lib/types";
@@ -138,11 +137,6 @@ export default function LessonsClient({
         <PageHeroSurface>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)] lg:items-start">
             <div className="space-y-5">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-bold text-primary">
-                <Sparkles className="h-3.5 w-3.5" />
-                {t("lessons.hero_badge")}
-              </div>
-
               <div className="space-y-3">
                 <PageHeroTitle className="max-w-3xl">
                   {t("lessons.page_title")}

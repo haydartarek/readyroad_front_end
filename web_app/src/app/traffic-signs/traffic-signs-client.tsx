@@ -280,11 +280,6 @@ function TrafficSignsContent({
         <PageHeroSurface contentClassName="space-y-3">
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                <Shapes className="h-4 w-4" />
-                {t("traffic_signs.hero_badge")}
-              </div>
-
               <div className="space-y-1">
                 <PageHeroTitle className="max-w-3xl text-balance">
                   {t("traffic_signs.page_title")}

@@ -191,11 +191,6 @@ export default function PracticePage() {
           <div className="space-y-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary">
-                  <BookOpen className="w-4 h-4" />
-                  {t("practice.mode_badge")}
-                </div>
-
                 <PageHeroTitle className="max-w-3xl text-balance">
                   {t("practice.title")}
                 </PageHeroTitle>

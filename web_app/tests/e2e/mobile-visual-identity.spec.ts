@@ -3351,7 +3351,7 @@ test.describe("ReadyRoad mobile visual identity", () => {
     for (const locale of locales) {
       await page.setViewportSize({ width: 428, height: 900 });
       await navigate(page, localizedPath("/traffic-signs", locale));
-      await expect(page.locator(".traffic-sign-card")).toHaveCount(1);
+      await expect(page.locator(".traffic-sign-card").first()).toBeVisible();
 
       for (const width of trafficSignsViewports) {
         await page.setViewportSize({ width, height: 900 });

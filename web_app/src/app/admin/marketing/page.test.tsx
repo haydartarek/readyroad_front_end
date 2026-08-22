@@ -140,6 +140,7 @@ const responses: Record<string, unknown> = {
   },
   "/admin/marketing/editorial/editor": {
     languages: ["AR", "NL", "FR", "EN"],
+    qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
     topics: [
       {
         topicId: 1,
@@ -257,6 +258,103 @@ describe("MarketingAdminPage", () => {
     expect(within(preview).getByText("Preview summary")).toBeInTheDocument();
     expect(within(preview).getByText("Unsaved preview body")).toBeInTheDocument();
     expect(put).not.toHaveBeenCalled();
+  });
+
+  it("submits the exact saved article versions for human approval", async () => {
+    const currentVersions = ["AR", "NL", "FR", "EN"].map((language, index) => ({
+      language,
+      versionNumber: 1,
+      title: `${language} article`,
+      slug: `${language.toLowerCase()}-article`,
+      status: "DRAFT",
+      createdAt: "2026-08-22T10:00:00Z",
+      createdBy: "admin",
+      id: 21 + index,
+      articleId: 11,
+      summary: null,
+      body: `${language} body`,
+      current: true,
+    }));
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({
+          data: {
+            languages: ["AR", "NL", "FR", "EN"],
+            qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+            topics: [{
+              ...((responses["/admin/marketing/editorial/editor"] as { topics: Record<string, unknown>[] }).topics[0]),
+              articleId: 11,
+              lifecycleState: "IMAGE_REQUIRED",
+              canonicalLanguage: "AR",
+              currentVersions,
+            }],
+          },
+        });
+      }
+      if (url === "/admin/marketing/editorial/editor/articles/11/versions") {
+        return Promise.resolve({ data: [currentVersions[0]] });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    await screen.findByTestId("editorial-approval-request");
+
+    const requestButton = screen.getByRole("button", { name: "admin.marketing.editorial_request_approval" });
+    expect(requestButton).toBeDisabled();
+    fireEvent.click(screen.getByLabelText("admin.marketing.editorial_approval_confirm"));
+    fireEvent.change(screen.getByLabelText("admin.marketing.editorial_approval_reason"), {
+      target: { value: "All required evidence was reviewed." },
+    });
+    fireEvent.click(requestButton);
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/admin/marketing/editorial/editor/articles/11/approval-requests",
+        {
+          passedQualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+          reason: "All required evidence was reviewed.",
+        },
+      );
+    });
+  });
+
+  it("requires a reason for an article approval decision", async () => {
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/tasks") {
+        return Promise.resolve({
+          data: {
+            total: 1,
+            items: [{
+              ...((responses["/admin/marketing/tasks"] as { items: Record<string, unknown>[] }).items[0]),
+              agentType: "CONTENT",
+              taskType: "ARTICLE_APPROVAL",
+            }],
+          },
+        });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_approvals" }));
+
+    const approve = screen.getByRole("button", { name: "admin.marketing.approve" });
+    expect(approve).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("admin.marketing.editorial_approval_decision_reason"), {
+      target: { value: "Verified exact versions." },
+    });
+    fireEvent.click(approve);
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/admin/marketing/tasks/7/approve",
+        { reason: "Verified exact versions." },
+      );
+    });
   });
 
   it("shows the evidence-backed SEO workspace and imports the selected XLSX", async () => {

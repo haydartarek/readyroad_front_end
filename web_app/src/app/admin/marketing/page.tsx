@@ -44,6 +44,7 @@ import {
   type YouTubeStatus,
   type SeoMigrationWorkspace,
   type EditorialLanguage,
+  type EditorialApprovalRequest,
   type EditorialSaveRequest,
   type EditorialSaveResult,
   type EditorialWorkspace,
@@ -203,6 +204,27 @@ export default function MarketingAdminPage() {
     }
   };
 
+  const requestEditorialApproval = async (
+    articleId: number,
+    request: EditorialApprovalRequest,
+  ) => {
+    setBusy("editorial-approval");
+    try {
+      await apiClient.post(
+        `/admin/marketing/editorial/editor/articles/${articleId}/approval-requests`,
+        request,
+      );
+      toast.success(t("admin.marketing.editorial_approval_requested"));
+      await load();
+    } catch (requestError) {
+      logApiError("Editorial approval request failed", requestError);
+      toast.error(t("admin.marketing.action_failed"));
+      throw requestError;
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const formatDate = (value: string | null) =>
     value
       ? new Intl.DateTimeFormat(`${language}-BE`, {
@@ -303,6 +325,7 @@ export default function MarketingAdminPage() {
               t={t}
               formatDate={formatDate}
               onSave={saveEditorial}
+              onRequestApproval={requestEditorialApproval}
             />
           ) : null}
           {view === "seo" ? (
@@ -357,9 +380,12 @@ export default function MarketingAdminPage() {
               tasks={approvals}
               busy={busy}
               t={t}
-              onDecision={(task, decision) => mutate(
+              onDecision={(task, decision, reason) => mutate(
                 `${decision}-${task.id}`,
-                () => apiClient.post(`/admin/marketing/tasks/${task.id}/${decision}`, {}),
+                () => apiClient.post(
+                  `/admin/marketing/tasks/${task.id}/${decision}`,
+                  reason ? { reason } : {},
+                ),
                 decision === "approve" ? "admin.marketing.approved" : "admin.marketing.rejected",
               )}
             />
@@ -447,13 +473,33 @@ function Tasks({ tasks, busy, t, formatDate, onRetry }: { tasks: MarketingTask[]
   ))}</div> : <Empty t={t} />;
 }
 
-function Approvals({ tasks, busy, t, onDecision }: { tasks: MarketingTask[]; busy: string | null; t: Translate; onDecision: (task: MarketingTask, decision: "approve" | "reject") => void }) {
-  return tasks.length ? <div className="space-y-3">{tasks.map((task) => (
-    <article key={task.id} className="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0"><p className="font-black">#{task.id} · {task.agentType}</p><p className="break-words text-sm text-muted-foreground">{task.taskType}</p></div>
-      <div className="flex flex-wrap gap-2"><Button size="sm" disabled={busy === `approve-${task.id}`} onClick={() => onDecision(task, "approve")}><ShieldCheck />{t("admin.marketing.approve")}</Button><Button size="sm" variant="outline" disabled={busy === `reject-${task.id}`} onClick={() => onDecision(task, "reject")}><XCircle />{t("admin.marketing.reject")}</Button></div>
-    </article>
-  ))}</div> : <Empty t={t} />;
+function Approvals({ tasks, busy, t, onDecision }: { tasks: MarketingTask[]; busy: string | null; t: Translate; onDecision: (task: MarketingTask, decision: "approve" | "reject", reason?: string) => void }) {
+  const [reasons, setReasons] = useState<Record<number, string>>({});
+  return tasks.length ? <div className="space-y-3">{tasks.map((task) => {
+    const requiresReason = task.taskType === "ARTICLE_APPROVAL";
+    const reason = reasons[task.id] ?? "";
+    const reasonMissing = requiresReason && !reason.trim();
+    return (
+      <article key={task.id} className="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0"><p className="font-black">#{task.id} · {task.agentType}</p><p className="break-words text-sm text-muted-foreground">{task.taskType}</p></div>
+        <div className="min-w-0 space-y-2 lg:w-[28rem]">
+          {requiresReason ? (
+            <label className="block space-y-1 text-sm font-semibold">
+              <span>{t("admin.marketing.editorial_approval_decision_reason")}</span>
+              <textarea
+                value={reason}
+                onChange={(event) => setReasons((current) => ({ ...current, [task.id]: event.target.value }))}
+                maxLength={1000}
+                rows={2}
+                className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              />
+            </label>
+          ) : null}
+          <div className="flex flex-wrap gap-2"><Button size="sm" disabled={busy === `approve-${task.id}` || reasonMissing} onClick={() => onDecision(task, "approve", reason.trim() || undefined)}><ShieldCheck />{t("admin.marketing.approve")}</Button><Button size="sm" variant="outline" disabled={busy === `reject-${task.id}` || reasonMissing} onClick={() => onDecision(task, "reject", reason.trim() || undefined)}><XCircle />{t("admin.marketing.reject")}</Button></div>
+        </div>
+      </article>
+    );
+  })}</div> : <Empty t={t} />;
 }
 
 function Errors({ items, t, formatDate }: { items: MarketingErrorItem[]; t: Translate; formatDate: DateFormatter }) {

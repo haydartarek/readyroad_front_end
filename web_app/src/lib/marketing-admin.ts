@@ -209,7 +209,13 @@ export interface EditorialTopic {
 
 export interface EditorialWorkspace {
   languages: EditorialLanguage[];
+  qualityGates: string[];
   topics: EditorialTopic[];
+}
+
+export interface EditorialApprovalRequest {
+  passedQualityGates: string[];
+  reason: string;
 }
 
 export interface EditorialVersion extends EditorialCurrentVersion {

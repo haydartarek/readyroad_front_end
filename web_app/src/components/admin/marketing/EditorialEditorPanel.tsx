@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Eye, FileClock, FilePenLine, Loader2, Save, Search } from "lucide-react";
+import { Eye, FileClock, FilePenLine, Loader2, Save, Search, ShieldCheck } from "lucide-react";
 import { apiClient, logApiError } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type {
+  EditorialApprovalRequest,
   EditorialLanguage,
   EditorialSaveRequest,
   EditorialSaveResult,
@@ -36,6 +37,10 @@ interface EditorialEditorPanelProps {
     language: EditorialLanguage,
     request: EditorialSaveRequest,
   ) => Promise<EditorialSaveResult>;
+  onRequestApproval: (
+    articleId: number,
+    request: EditorialApprovalRequest,
+  ) => Promise<void>;
 }
 
 interface FormState {
@@ -60,6 +65,7 @@ export default function EditorialEditorPanel({
   t,
   formatDate,
   onSave,
+  onRequestApproval,
 }: EditorialEditorPanelProps) {
   const [search, setSearch] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(
@@ -75,6 +81,8 @@ export default function EditorialEditorPanel({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [approvalConfirmed, setApprovalConfirmed] = useState(false);
+  const [approvalReason, setApprovalReason] = useState("");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [baseline, setBaseline] = useState<FormState>(EMPTY_FORM);
 
@@ -95,6 +103,32 @@ export default function EditorialEditorPanel({
   const currentVersionNumber = currentSummary?.versionNumber;
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
   const saving = busy === "editorial-save";
+  const requestingApproval = busy === "editorial-approval";
+  const lifecycleState = selectedTopic?.lifecycleState;
+  const editorLocked = [
+    "WAITING_APPROVAL",
+    "APPROVED",
+    "SCHEDULED",
+    "PUBLISHED",
+    "REJECTED",
+    "ARCHIVED",
+  ].includes(lifecycleState ?? "");
+  const hasEveryLanguage = workspace.languages.every((item) =>
+    selectedTopic?.currentVersions.some((version) => version.language === item),
+  );
+  const canRequestApproval = Boolean(
+    selectedTopic?.articleId
+      && lifecycleState === "IMAGE_REQUIRED"
+      && hasEveryLanguage
+      && !dirty
+      && approvalConfirmed
+      && approvalReason.trim(),
+  );
+
+  useEffect(() => {
+    setApprovalConfirmed(false);
+    setApprovalReason("");
+  }, [selectedTopicId, lifecycleState]);
 
   useEffect(() => {
     let active = true;
@@ -173,6 +207,14 @@ export default function EditorialEditorPanel({
     };
     setForm(next);
     setBaseline(next);
+  };
+
+  const requestApproval = async () => {
+    if (!selectedTopic?.articleId || !canRequestApproval) return;
+    await onRequestApproval(selectedTopic.articleId, {
+      passedQualityGates: workspace.qualityGates,
+      reason: approvalReason.trim(),
+    });
   };
 
   if (!workspace.topics.length) {
@@ -260,6 +302,7 @@ export default function EditorialEditorPanel({
             <Field label={t("admin.marketing.editorial_title")} required>
               <Input
                 value={form.title}
+                disabled={editorLocked}
                 onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
                 maxLength={500}
               />
@@ -268,6 +311,7 @@ export default function EditorialEditorPanel({
               <Input
                 dir="ltr"
                 value={form.slug}
+                disabled={editorLocked}
                 onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
                 maxLength={255}
               />
@@ -276,6 +320,7 @@ export default function EditorialEditorPanel({
           <Field label={t("admin.marketing.editorial_summary")}>
             <textarea
               value={form.summary}
+              disabled={editorLocked}
               onChange={(event) => setForm((current) => ({ ...current, summary: event.target.value }))}
               maxLength={2000}
               rows={3}
@@ -285,6 +330,7 @@ export default function EditorialEditorPanel({
           <Field label={t("admin.marketing.editorial_body")} required>
             <textarea
               value={form.body}
+              disabled={editorLocked}
               onChange={(event) => setForm((current) => ({ ...current, body: event.target.value }))}
               maxLength={500000}
               rows={18}
@@ -312,7 +358,7 @@ export default function EditorialEditorPanel({
               </Button>
               <Button
                 onClick={() => void save()}
-                disabled={saving || !form.title.trim() || !form.body.trim()}
+                disabled={editorLocked || saving || !form.title.trim() || !form.body.trim()}
                 className="w-full sm:w-auto"
               >
                 {saving ? <Loader2 className="animate-spin" /> : <Save />}
@@ -320,6 +366,69 @@ export default function EditorialEditorPanel({
               </Button>
             </div>
           </div>
+
+          {lifecycleState === "IMAGE_REQUIRED" ? (
+            <section className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-4" data-testid="editorial-approval-request">
+              <div>
+                <h3 className="flex items-center gap-2 font-black">
+                  <ShieldCheck className="h-4 w-4" />
+                  {t("admin.marketing.editorial_approval_title")}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t("admin.marketing.editorial_approval_description")}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-1.5" aria-label={t("admin.marketing.editorial_quality_gates")}>
+                {workspace.qualityGates.map((gate) => (
+                  <Badge key={gate} variant="outline" className="bg-background/80">{gate.replaceAll("_", " ")}</Badge>
+                ))}
+              </div>
+              <label className="flex items-start gap-3 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={approvalConfirmed}
+                  onChange={(event) => setApprovalConfirmed(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                />
+                <span>{t("admin.marketing.editorial_approval_confirm")}</span>
+              </label>
+              <label className="block space-y-1.5 text-sm font-semibold">
+                <span>{t("admin.marketing.editorial_approval_reason")}</span>
+                <textarea
+                  value={approvalReason}
+                  onChange={(event) => setApprovalReason(event.target.value)}
+                  maxLength={1000}
+                  rows={3}
+                  className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                />
+              </label>
+              {!hasEveryLanguage ? (
+                <p className="text-sm font-semibold text-destructive">
+                  {t("admin.marketing.editorial_approval_languages_required")}
+                </p>
+              ) : null}
+              {dirty ? (
+                <p className="text-sm font-semibold text-destructive">
+                  {t("admin.marketing.editorial_approval_save_first")}
+                </p>
+              ) : null}
+              <Button
+                type="button"
+                onClick={() => void requestApproval()}
+                disabled={requestingApproval || !canRequestApproval}
+              >
+                {requestingApproval ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
+                {t("admin.marketing.editorial_request_approval")}
+              </Button>
+            </section>
+          ) : null}
+
+          {lifecycleState === "WAITING_APPROVAL" ? (
+            <section className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4" data-testid="editorial-awaiting-approval">
+              <h3 className="flex items-center gap-2 font-black"><ShieldCheck className="h-4 w-4" />{t("admin.marketing.editorial_waiting_approval")}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{t("admin.marketing.editorial_waiting_approval_description")}</p>
+            </section>
+          ) : null}
 
           <section className="border-t border-border/50 pt-4">
             <h3 className="flex items-center gap-2 font-bold"><FileClock className="h-4 w-4" />{t("admin.marketing.editorial_history")}</h3>

@@ -133,6 +133,7 @@ const responses: Record<string, unknown> = {
   },
   "/admin/marketing/editorial/editor": {
     languages: ["AR", "NL", "FR", "EN"],
+    qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
     topics: [
       {
         topicId: 1,
@@ -153,7 +154,11 @@ const responses: Record<string, unknown> = {
   },
 };
 
-async function mockAdmin(page: Page, mutations: Request[]) {
+async function mockAdmin(
+  page: Page,
+  mutations: Request[],
+  overrides: Record<string, unknown> = {},
+) {
   await seedCookieConsent(page);
   const appUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";
   const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString("base64url");
@@ -214,7 +219,7 @@ async function mockAdmin(page: Page, mutations: Request[]) {
       }
       return route.fulfill({ status: 202, json: { id: 11, status: "WAITING_APPROVAL" } });
     }
-    return route.fulfill({ json: responses[path] });
+    return route.fulfill({ json: overrides[path] ?? responses[path] });
   });
 }
 
@@ -311,6 +316,93 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
     body: "Targeted editorial draft",
     expectedCurrentVersion: null,
   });
+  await expectNoOverflow(page);
+});
+
+test("Admin requests and decides exact-version article approval", async ({ page }) => {
+  const mutations: Request[] = [];
+  const currentVersions = ["AR", "NL", "FR", "EN"].map((language, index) => ({
+    id: 21 + index,
+    articleId: 11,
+    language,
+    versionNumber: 1,
+    title: `${language} article`,
+    slug: `${language.toLowerCase()}-article`,
+    summary: null,
+    body: `${language} body`,
+    status: "DRAFT",
+    current: true,
+    createdAt: now,
+    createdBy: "admin",
+  }));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockAdmin(page, mutations, {
+    "/admin/marketing/editorial/editor": {
+      languages: ["AR", "NL", "FR", "EN"],
+      qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+      topics: [{
+        topicId: 1,
+        topicKey: "OFFICIAL-001",
+        order: 1,
+        sourceType: "OFFICIAL_STRATEGIC_BACKLOG",
+        title: "Belgian theory exam guide",
+        titleLanguage: "EN",
+        primaryLanguage: "EN",
+        priority: "P0",
+        strategyContextResolved: true,
+        articleId: 11,
+        lifecycleState: "IMAGE_REQUIRED",
+        canonicalLanguage: "EN",
+        currentVersions,
+      }],
+    },
+    "/admin/marketing/editorial/editor/articles/11/versions": [currentVersions[3]],
+    "/admin/marketing/tasks": {
+      total: 1,
+      items: [{
+        id: 17,
+        agentType: "CONTENT",
+        taskType: "ARTICLE_APPROVAL",
+        status: "WAITING_APPROVAL",
+        priority: "CRITICAL",
+        attempts: 0,
+        maxAttempts: 4,
+        requiresApproval: true,
+        approvalMode: "HUMAN_APPROVAL",
+        errorCode: null,
+        errorMessage: null,
+        scheduledAt: null,
+        nextRetryAt: null,
+        createdAt: now,
+        updatedAt: now,
+      }],
+    },
+  });
+
+  await page.goto("/admin/marketing");
+  await page.getByRole("tab", { name: "Editorial" }).click();
+  const request = page.getByTestId("editorial-approval-request");
+  await request.getByLabel("I confirm that every listed quality gate has been checked for these exact saved versions.").check();
+  await request.getByLabel("Approval request reason").fill("All exact versions were reviewed.");
+  await request.getByRole("button", { name: "Request approval" }).click();
+
+  await expect.poll(() => mutations.length).toBe(1);
+  expect(new URL(mutations[0].url()).pathname).toContain(
+    "/admin/marketing/editorial/editor/articles/11/approval-requests",
+  );
+  expect(mutations[0].postDataJSON()).toEqual({
+    passedQualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+    reason: "All exact versions were reviewed.",
+  });
+
+  await page.getByRole("tab", { name: "Approvals" }).click();
+  const approval = page.getByText("ARTICLE_APPROVAL").locator("..").locator("..");
+  await approval.getByLabel("Decision reason").fill("Approved exact versions.");
+  await approval.getByRole("button", { name: "Approve" }).click();
+
+  await expect.poll(() => mutations.length).toBe(2);
+  expect(new URL(mutations[1].url()).pathname).toContain("/admin/marketing/tasks/17/approve");
+  expect(mutations[1].postDataJSON()).toEqual({ reason: "Approved exact versions." });
   await expectNoOverflow(page);
 });
 

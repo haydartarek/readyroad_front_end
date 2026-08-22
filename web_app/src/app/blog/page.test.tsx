@@ -1,0 +1,44 @@
+import { render, screen } from "@testing-library/react";
+import { getPublicArticles } from "@/lib/server/articles";
+import { getRequestLocale } from "@/lib/server/request-locale";
+import BlogPage from "./page";
+
+jest.mock("@/lib/server/articles", () => ({ getPublicArticles: jest.fn() }));
+jest.mock("@/lib/server/request-locale", () => ({ getRequestLocale: jest.fn() }));
+
+const getArticles = getPublicArticles as jest.Mock;
+const getLocale = getRequestLocale as jest.Mock;
+
+describe("localized public blog index", () => {
+  beforeEach(() => {
+    getArticles.mockReset();
+    getLocale.mockReset();
+    getArticles.mockResolvedValue([
+      {
+        language: "EN",
+        slug: "safe-driving",
+        title: "Safer driving in Belgium",
+        summary: "A concise published summary.",
+        publishedAt: "2026-08-22T10:00:00Z",
+      },
+    ]);
+  });
+
+  it.each([
+    ["en", "/blog/safe-driving"],
+    ["nl", "/nl/blog/safe-driving"],
+    ["fr", "/fr/blog/safe-driving"],
+    ["ar", "/ar/blog/safe-driving"],
+  ])("renders published summaries at the %s route", async (locale, href) => {
+    getLocale.mockResolvedValue(locale);
+
+    render(await BlogPage());
+
+    expect(getArticles).toHaveBeenCalledWith(locale);
+    expect(screen.getByRole("link", { name: /Safer driving in Belgium/i })).toHaveAttribute(
+      "href",
+      href,
+    );
+    expect(screen.queryByText("Draft body")).not.toBeInTheDocument();
+  });
+});

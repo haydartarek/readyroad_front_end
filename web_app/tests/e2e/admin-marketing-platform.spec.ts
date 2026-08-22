@@ -287,7 +287,16 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   await page.getByRole("tab", { name: "Editorial" }).click();
   await expect(page.getByRole("heading", { name: "Belgian theory exam guide" })).toBeVisible();
   await page.getByLabel("URL slug").fill("belgian-theory-guide");
+  await page.getByLabel("Summary").fill("Targeted preview summary");
   await page.getByLabel("Article body *").fill("Targeted editorial draft");
+  await page.getByRole("button", { name: "Preview" }).click();
+  const preview = page.getByRole("dialog", { name: "Article preview" });
+  await expect(preview).toBeVisible();
+  await expect(preview.getByText("Targeted preview summary")).toBeVisible();
+  await expect(preview.getByText("Targeted editorial draft")).toBeVisible();
+  await expect(preview.getByTestId("editorial-preview")).toHaveAttribute("dir", "ltr");
+  expect(mutations).toHaveLength(0);
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Save draft" }).click();
 
   await expect.poll(() => mutations.length).toBe(1);
@@ -298,6 +307,7 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   expect(mutations[0].postDataJSON()).toMatchObject({
     title: "Belgian theory exam guide",
     slug: "belgian-theory-guide",
+    summary: "Targeted preview summary",
     body: "Targeted editorial draft",
     expectedCurrentVersion: null,
   });

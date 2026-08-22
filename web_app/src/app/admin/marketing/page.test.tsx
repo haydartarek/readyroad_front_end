@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import MarketingAdminPage from "./page";
 import { apiClient } from "@/lib/api";
 
@@ -235,6 +235,28 @@ describe("MarketingAdminPage", () => {
         },
       );
     });
+  });
+
+  it("previews the current editorial form without saving it", async () => {
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_summary/), {
+      target: { value: "Preview summary" },
+    });
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_body/), {
+      target: { value: "Unsaved preview body" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.editorial_preview" }));
+
+    expect(screen.getByRole("dialog", { name: "admin.marketing.editorial_preview_title" }))
+      .toBeInTheDocument();
+    const preview = screen.getByTestId("editorial-preview");
+    expect(preview).toHaveAttribute("dir", "rtl");
+    expect(within(preview).getByText("Preview summary")).toBeInTheDocument();
+    expect(within(preview).getByText("Unsaved preview body")).toBeInTheDocument();
+    expect(put).not.toHaveBeenCalled();
   });
 
   it("shows the evidence-backed SEO workspace and imports the selected XLSX", async () => {

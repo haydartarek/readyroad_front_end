@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { FileClock, FilePenLine, Loader2, Save, Search } from "lucide-react";
+import { Eye, FileClock, FilePenLine, Loader2, Save, Search } from "lucide-react";
 import { apiClient, logApiError } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type {
@@ -67,6 +74,7 @@ export default function EditorialEditorPanel({
   const [history, setHistory] = useState<EditorialVersion[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [baseline, setBaseline] = useState<FormState>(EMPTY_FORM);
 
@@ -291,14 +299,26 @@ export default function EditorialEditorPanel({
                 : t("admin.marketing.editorial_first_version")}
               {dirty ? ` · ${t("admin.marketing.editorial_unsaved")}` : ""}
             </p>
-            <Button
-              onClick={() => void save()}
-              disabled={saving || !form.title.trim() || !form.body.trim()}
-              className="w-full sm:w-auto"
-            >
-              {saving ? <Loader2 className="animate-spin" /> : <Save />}
-              {t("admin.marketing.editorial_save")}
-            </Button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setPreviewOpen(true)}
+                disabled={!form.title.trim() || !form.body.trim()}
+                className="w-full sm:w-auto"
+              >
+                <Eye />
+                {t("admin.marketing.editorial_preview")}
+              </Button>
+              <Button
+                onClick={() => void save()}
+                disabled={saving || !form.title.trim() || !form.body.trim()}
+                className="w-full sm:w-auto"
+              >
+                {saving ? <Loader2 className="animate-spin" /> : <Save />}
+                {t("admin.marketing.editorial_save")}
+              </Button>
+            </div>
           </div>
 
           <section className="border-t border-border/50 pt-4">
@@ -326,6 +346,36 @@ export default function EditorialEditorPanel({
               </p>
             ) : null}
           </section>
+
+          <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl lg:max-w-4xl">
+              <DialogHeader className="text-start">
+                <DialogTitle>{t("admin.marketing.editorial_preview_title")}</DialogTitle>
+                <DialogDescription>
+                  {t("admin.marketing.editorial_preview_description")}
+                </DialogDescription>
+              </DialogHeader>
+              <article
+                lang={language.toLowerCase()}
+                dir={language === "AR" ? "rtl" : "ltr"}
+                className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 text-start shadow-sm sm:p-8"
+                data-testid="editorial-preview"
+              >
+                <Badge variant="outline">{language}</Badge>
+                <h1 className="mt-4 break-words text-2xl font-black leading-tight sm:text-3xl">
+                  {form.title}
+                </h1>
+                {form.summary ? (
+                  <p className="mt-4 whitespace-pre-wrap break-words text-base leading-7 text-muted-foreground">
+                    {form.summary}
+                  </p>
+                ) : null}
+                <div className="mt-6 whitespace-pre-wrap break-words text-base leading-8 text-foreground">
+                  {form.body}
+                </div>
+              </article>
+            </DialogContent>
+          </Dialog>
         </section>
       ) : null}
     </div>

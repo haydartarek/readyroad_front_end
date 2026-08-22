@@ -57,12 +57,28 @@ import { useRoutePathname } from "@/hooks/use-route-pathname";
 type LangCode = "en" | "ar" | "nl" | "fr";
 
 const NAV_ITEMS = [
-  { name: "nav.home", href: "/" },
-  { name: "nav.lessons", href: ROUTES.LESSONS },
-  { name: "nav.traffic_signs", href: ROUTES.TRAFFIC_SIGNS },
-  { name: "nav.practice", href: ROUTES.PRACTICE },
-  { name: "nav.exam", href: ROUTES.EXAM },
-  { name: "nav.videos", href: ROUTES.VIDEOS },
+  { name: "nav.home", compactName: "nav.compact_home", href: "/" },
+  {
+    name: "nav.lessons",
+    compactName: "nav.compact_lessons",
+    href: ROUTES.LESSONS,
+  },
+  {
+    name: "nav.traffic_signs",
+    compactName: "nav.compact_traffic_signs",
+    href: ROUTES.TRAFFIC_SIGNS,
+  },
+  {
+    name: "nav.practice",
+    compactName: "nav.compact_practice",
+    href: ROUTES.PRACTICE,
+  },
+  { name: "nav.exam", compactName: "nav.compact_exam", href: ROUTES.EXAM },
+  {
+    name: "nav.videos",
+    compactName: "nav.compact_videos",
+    href: ROUTES.VIDEOS,
+  },
 ] as const;
 
 const AUTH_PATHS = [
@@ -85,10 +101,12 @@ function getRoleLabelKey(role?: string) {
 function NavLink({
   href,
   label,
+  compactLabel,
   pathname,
 }: {
   href: string;
   label: string;
+  compactLabel: string;
   pathname: string;
 }) {
   const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -97,14 +115,15 @@ function NavLink({
     <Link
       href={href}
       prefetch={false}
+      aria-label={label}
       className={cn(
-        "shrink-0 whitespace-nowrap rounded-lg px-2.5 py-2.5 text-sm font-semibold transition-all duration-200 sm:px-3 xl:px-1 xl:text-xs min-[1536px]:px-2 min-[1536px]:text-sm min-[1800px]:px-3 min-[1800px]:text-base",
+        "shrink-0 whitespace-nowrap rounded-lg px-2.5 py-2.5 text-sm font-semibold transition-all duration-200 sm:px-3 xl:px-2 xl:text-sm min-[1800px]:px-3",
         isActive
           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
           : "text-muted-foreground hover:bg-background/85 hover:text-foreground",
       )}
     >
-      {label}
+      {compactLabel}
     </Link>
   );
 }
@@ -265,6 +284,7 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 label={t(item.name)}
+                compactLabel={t(item.compactName)}
                 pathname={pathname}
               />
             ))}

@@ -312,10 +312,10 @@ for (const locale of navigationByLocale) {
       await expect(
         page.getByRole("button", { name: locale.openMenu }),
       ).toBeHidden();
-      const labels = await desktop.locator("a").allTextContents();
-      expect(labels.slice(0, 5).map((label) => label.trim())).toEqual(
-        locale.labels,
+      const labels = await desktop.locator("a").evaluateAll((links) =>
+        links.map((link) => link.getAttribute("aria-label") ?? ""),
       );
+      expect(labels.slice(0, 5)).toEqual(locale.labels);
       const navigationFit = await desktop.evaluate((navigation) => {
         const navigationRect = navigation.getBoundingClientRect();
         const links = Array.from(navigation.querySelectorAll("a")).map((link) =>

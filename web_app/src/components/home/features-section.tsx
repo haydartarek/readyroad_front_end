@@ -105,6 +105,7 @@ export function FeaturesSection() {
       href: "#footer-lang",
     },
   ];
+  const features = [...primaryFeatures, ...supportingFeatures];
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/20 py-16 lg:py-24">
@@ -123,9 +124,9 @@ export function FeaturesSection() {
 
         <div
           data-testid="home-features-grid"
-          className="grid gap-5 lg:grid-cols-3 lg:gap-7"
+          className="grid auto-rows-fr gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-7"
         >
-          {primaryFeatures.map((feature) => {
+          {features.map((feature) => {
             const Icon = feature.icon;
             const isPrimary = feature.emphasis === "primary";
 
@@ -173,14 +174,15 @@ export function FeaturesSection() {
                     </CardTitle>
                   </CardHeader>
 
-                  <CardContent className="relative flex flex-col pb-7 pt-1">
+                  <CardContent className="relative flex flex-1 flex-col pb-7 pt-1">
                     <p className="min-h-[4.5rem] text-sm font-medium leading-6 text-muted-foreground">
                       {feature.description}
                     </p>
 
                     <span
+                      data-testid="home-feature-cta"
                       className={[
-                        "mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-all",
+                        "mt-auto inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-all",
                         isPrimary
                           ? "bg-primary text-primary-foreground shadow-sm group-hover:shadow-md"
                           : "border border-border bg-background text-secondary group-hover:border-primary/25 group-hover:bg-primary/5",
@@ -191,53 +193,6 @@ export function FeaturesSection() {
                     </span>
                   </CardContent>
                 </Card>
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="my-8 h-px bg-border/70 lg:my-10" />
-
-        <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-          {supportingFeatures.map((feature) => {
-            const Icon = feature.icon;
-
-            return (
-              <Link
-                key={feature.title}
-                href={feature.href}
-                prefetch={false}
-                aria-label={`${feature.cta}: ${feature.title}`}
-                className="group min-w-0 rounded-2xl outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
-              >
-                <article className="flex h-full items-start gap-4 rounded-2xl border bg-card/65 p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card hover:shadow-md">
-                  <span
-                    className={[
-                      "grid h-11 w-11 shrink-0 place-items-center rounded-xl border bg-background shadow-sm",
-                      feature.iconWrap,
-                    ].join(" ")}
-                  >
-                    <Icon
-                      className={["h-5 w-5", feature.iconTone].join(" ")}
-                      aria-hidden
-                    />
-                  </span>
-
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-base font-bold tracking-tight text-secondary">
-                      {feature.title}
-                    </span>
-
-                    <span className="mt-1.5 block text-sm leading-5 text-muted-foreground">
-                      {feature.description}
-                    </span>
-
-                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary">
-                      {feature.cta}
-                      <FeatureArrow isRTL={isRTL} />
-                    </span>
-                  </span>
-                </article>
               </Link>
             );
           })}

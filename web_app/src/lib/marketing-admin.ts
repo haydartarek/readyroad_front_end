@@ -223,6 +223,8 @@ export interface EditorialVersion extends EditorialCurrentVersion {
   articleId: number;
   summary: string | null;
   body: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
   current: boolean;
 }
 
@@ -231,6 +233,8 @@ export interface EditorialSaveRequest {
   slug: string | null;
   summary: string | null;
   body: string;
+  metaTitle: string;
+  metaDescription: string;
   expectedCurrentVersion: number | null;
 }
 

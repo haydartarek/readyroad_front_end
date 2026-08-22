@@ -186,6 +186,8 @@ describe("MarketingAdminPage", () => {
               title: "Belgian theory exam guide",
               slug: "theory-guide",
               summary: null,
+              metaTitle: "Belgian theory exam guide | RijVia",
+              metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
               body: "Draft body",
               status: "DRAFT",
               current: true,
@@ -222,6 +224,12 @@ describe("MarketingAdminPage", () => {
     fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_body/), {
       target: { value: "Draft body" },
     });
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_meta_title/), {
+      target: { value: "Belgian theory exam guide | RijVia" },
+    });
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_meta_description/), {
+      target: { value: "Prepare for the Belgian theory exam with this reviewed RijVia guide." },
+    });
     fireEvent.click(screen.getByRole("button", { name: "admin.marketing.editorial_save" }));
 
     await waitFor(() => {
@@ -232,6 +240,8 @@ describe("MarketingAdminPage", () => {
           slug: "theory-guide",
           summary: null,
           body: "Draft body",
+          metaTitle: "Belgian theory exam guide | RijVia",
+          metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
           expectedCurrentVersion: null,
         },
       );
@@ -272,6 +282,8 @@ describe("MarketingAdminPage", () => {
       id: 21 + index,
       articleId: 11,
       summary: null,
+      metaTitle: `${language} article | RijVia`,
+      metaDescription: `${language} article metadata description`,
       body: `${language} body`,
       current: true,
     }));

@@ -1837,6 +1837,8 @@
   "admin.marketing.editorial_title": "عنوان المقال",
   "admin.marketing.editorial_slug": "مسار الرابط",
   "admin.marketing.editorial_summary": "الملخص",
+  "admin.marketing.editorial_meta_title": "عنوان SEO",
+  "admin.marketing.editorial_meta_description": "وصف نتائج البحث",
   "admin.marketing.editorial_body": "محتوى المقال",
   "admin.marketing.editorial_current_version": "النسخة الحالية v{version}",
   "admin.marketing.editorial_first_version": "سيؤدي الحفظ إلى إنشاء النسخة الأولى",

@@ -1837,6 +1837,8 @@
   "admin.marketing.editorial_title": "Artikeltitel",
   "admin.marketing.editorial_slug": "URL-slug",
   "admin.marketing.editorial_summary": "Samenvatting",
+  "admin.marketing.editorial_meta_title": "SEO-titel",
+  "admin.marketing.editorial_meta_description": "Metabeschrijving",
   "admin.marketing.editorial_body": "Artikelinhoud",
   "admin.marketing.editorial_current_version": "Huidige versie v{version}",
   "admin.marketing.editorial_first_version": "Hiermee wordt de eerste versie gemaakt",

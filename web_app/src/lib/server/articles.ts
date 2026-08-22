@@ -23,6 +23,8 @@ export type PublicArticleSummary = Readonly<{
 export type PublicArticle = PublicArticleSummary &
   Readonly<{
     body: string;
+    metaTitle: string;
+    metaDescription: string;
     alternateSlugs: Readonly<Record<string, string>>;
   }>;
 

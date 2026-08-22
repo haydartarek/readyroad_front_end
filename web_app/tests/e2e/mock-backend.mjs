@@ -106,6 +106,8 @@ function publishedArticle(language) {
     slug: articleSlugs[language],
     title: articleTitles[language],
     summary: `${articleTitles[language]} published summary`,
+    metaTitle: `${articleTitles[language]} | RijVia`,
+    metaDescription: `${articleTitles[language]} reviewed metadata description.`,
     body: "Immutable published body.\n\nSecond reviewed paragraph.",
     publishedAt: "2026-08-22T10:00:00Z",
     alternateSlugs: articleSlugs,

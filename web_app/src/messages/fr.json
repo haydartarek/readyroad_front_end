@@ -1837,6 +1837,8 @@
   "admin.marketing.editorial_title": "Titre de l’article",
   "admin.marketing.editorial_slug": "Slug d’URL",
   "admin.marketing.editorial_summary": "Résumé",
+  "admin.marketing.editorial_meta_title": "Titre SEO",
+  "admin.marketing.editorial_meta_description": "Méta-description",
   "admin.marketing.editorial_body": "Contenu de l’article",
   "admin.marketing.editorial_current_version": "Version actuelle v{version}",
   "admin.marketing.editorial_first_version": "Cet enregistrement créera la première version",

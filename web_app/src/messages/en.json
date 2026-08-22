@@ -1837,6 +1837,8 @@
   "admin.marketing.editorial_title": "Article title",
   "admin.marketing.editorial_slug": "URL slug",
   "admin.marketing.editorial_summary": "Summary",
+  "admin.marketing.editorial_meta_title": "SEO title",
+  "admin.marketing.editorial_meta_description": "Meta description",
   "admin.marketing.editorial_body": "Article body",
   "admin.marketing.editorial_current_version": "Current version v{version}",
   "admin.marketing.editorial_first_version": "This will create the first version",

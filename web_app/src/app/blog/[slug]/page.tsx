@@ -1,8 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { articleParagraphs, formatArticleDate } from "@/app/blog/blog-format";
 import { localizePathname } from "@/lib/i18n-routing";
+import { createArticleMetadata } from "@/lib/article-metadata";
 import { translateMessage } from "@/lib/messages";
 import { getPublicArticle } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
@@ -10,6 +12,15 @@ import { getRequestLocale } from "@/lib/server/request-locale";
 type BlogArticlePageProps = Readonly<{
   params: Promise<{ slug: string }>;
 }>;
+
+export async function generateMetadata({ params }: BlogArticlePageProps): Promise<Metadata> {
+  const [{ slug }, locale] = await Promise.all([params, getRequestLocale()]);
+  const article = await getPublicArticle(locale, slug);
+
+  return article
+    ? createArticleMetadata(article, locale)
+    : { robots: { index: false, follow: false } };
+}
 
 export default async function BlogArticlePage({ params }: BlogArticlePageProps) {
   const [{ slug }, locale] = await Promise.all([params, getRequestLocale()]);

@@ -1,10 +1,51 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight, BookOpenText, CalendarDays } from "lucide-react";
 import { formatArticleDate } from "@/app/blog/blog-format";
-import { localizePathname } from "@/lib/i18n-routing";
+import { buildLocalizedUrl, localizePathname } from "@/lib/i18n-routing";
+import { getLocalizedAlternates } from "@/lib/localized-seo";
 import { translateMessage } from "@/lib/messages";
 import { getPublicArticles } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
+import {
+  DEFAULT_APP_URL,
+  getAlternateOpenGraphLocales,
+  getOpenGraphLocale,
+  getSharedOgImage,
+} from "@/lib/site-copy";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const title = translateMessage(locale, "blog.title");
+  const description = translateMessage(locale, "blog.introduction");
+  const canonical = buildLocalizedUrl("/blog", locale, APP_URL);
+  const image = { ...getSharedOgImage(locale), alt: title };
+
+  return {
+    title,
+    description,
+    alternates: getLocalizedAlternates("/blog", locale, APP_URL),
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: canonical,
+      siteName: "RijVia",
+      locale: getOpenGraphLocale(locale),
+      alternateLocale: getAlternateOpenGraphLocales(locale),
+      images: [image],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image.url],
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 export default async function BlogPage() {
   const locale = await getRequestLocale();

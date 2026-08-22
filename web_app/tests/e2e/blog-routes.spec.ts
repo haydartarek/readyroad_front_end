@@ -50,9 +50,26 @@ test.describe("localized public blog routes", () => {
         "href",
         `${article.indexPath}/${article.slug}`,
       );
-      await link.click();
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+        "href",
+        `https://rijvia.be${article.indexPath}`,
+      );
+      const articleResponse = await page.goto(`${article.indexPath}/${article.slug}`);
+      expect(articleResponse?.status(), `${article.indexPath}/${article.slug}`).toBe(200);
       await expect(page).toHaveURL(
         new RegExp(`${article.indexPath}/${article.slug}$`),
+      );
+      const canonicalUrl = `https://rijvia.be${article.indexPath}/${article.slug}`;
+      await expect(page).toHaveTitle(`${article.title} | RijVia`);
+      await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+        "href",
+        canonicalUrl,
+      );
+      await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(5);
+      await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute(
+        "href",
+        "https://rijvia.be/blog/safe-driving-belgium",
       );
       await expect(page.getByRole("heading", { name: article.title })).toBeVisible();
       await expect(page.getByText(/immutable published body/i)).toBeVisible();

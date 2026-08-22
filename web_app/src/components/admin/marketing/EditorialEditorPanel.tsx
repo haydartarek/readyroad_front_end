@@ -48,6 +48,8 @@ interface FormState {
   slug: string;
   summary: string;
   body: string;
+  metaTitle: string;
+  metaDescription: string;
   expectedCurrentVersion: number | null;
 }
 
@@ -56,6 +58,8 @@ const EMPTY_FORM: FormState = {
   slug: "",
   summary: "",
   body: "",
+  metaTitle: "",
+  metaDescription: "",
   expectedCurrentVersion: null,
 };
 
@@ -159,6 +163,8 @@ export default function EditorialEditorPanel({
               slug: current.slug ?? "",
               summary: current.summary ?? "",
               body: current.body,
+              metaTitle: current.metaTitle ?? "",
+              metaDescription: current.metaDescription ?? "",
               expectedCurrentVersion: current.versionNumber,
             }
           : EMPTY_FORM;
@@ -193,12 +199,20 @@ export default function EditorialEditorPanel({
   };
 
   const save = async () => {
-    if (!selectedTopic || !form.title.trim() || !form.body.trim()) return;
+    if (
+      !selectedTopic
+      || !form.title.trim()
+      || !form.body.trim()
+      || !form.metaTitle.trim()
+      || !form.metaDescription.trim()
+    ) return;
     const result = await onSave(selectedTopic.topicId, language, {
       title: form.title.trim(),
       slug: form.slug.trim() || null,
       summary: form.summary.trim() || null,
       body: form.body,
+      metaTitle: form.metaTitle.trim(),
+      metaDescription: form.metaDescription.trim(),
       expectedCurrentVersion: form.expectedCurrentVersion,
     });
     const next = {
@@ -327,6 +341,32 @@ export default function EditorialEditorPanel({
               className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
             />
           </Field>
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+            <Field label={t("admin.marketing.editorial_meta_title")} required>
+              <Input
+                value={form.metaTitle}
+                disabled={editorLocked}
+                onChange={(event) => setForm((current) => ({
+                  ...current,
+                  metaTitle: event.target.value,
+                }))}
+                maxLength={500}
+              />
+            </Field>
+            <Field label={t("admin.marketing.editorial_meta_description")} required>
+              <textarea
+                value={form.metaDescription}
+                disabled={editorLocked}
+                onChange={(event) => setForm((current) => ({
+                  ...current,
+                  metaDescription: event.target.value,
+                }))}
+                maxLength={2000}
+                rows={3}
+                className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+              />
+            </Field>
+          </div>
           <Field label={t("admin.marketing.editorial_body")} required>
             <textarea
               value={form.body}
@@ -358,7 +398,14 @@ export default function EditorialEditorPanel({
               </Button>
               <Button
                 onClick={() => void save()}
-                disabled={editorLocked || saving || !form.title.trim() || !form.body.trim()}
+                disabled={
+                  editorLocked
+                  || saving
+                  || !form.title.trim()
+                  || !form.body.trim()
+                  || !form.metaTitle.trim()
+                  || !form.metaDescription.trim()
+                }
                 className="w-full sm:w-auto"
               >
                 {saving ? <Loader2 className="animate-spin" /> : <Save />}

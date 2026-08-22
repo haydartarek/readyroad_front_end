@@ -17,7 +17,11 @@ export function StickyCTA() {
   const { t } = useLanguage();
   const { isAuthenticated, isLoading } = useAuth();
   const [visible, setVisible] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("readyroad_sticky_cta_dismissed") === "1",
+  );
   const [shouldHide, setShouldHide] = useState(false);
 
   useEffect(() => {
@@ -51,13 +55,6 @@ export function StickyCTA() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
-
-  // Restore session dismissal
-  useEffect(() => {
-    const key = "readyroad_sticky_cta_dismissed";
-    const saved = sessionStorage.getItem(key);
-    if (saved === "1") setDismissed(true);
   }, []);
 
   const handleDismiss = () => {

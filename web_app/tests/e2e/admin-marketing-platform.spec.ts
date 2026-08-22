@@ -209,6 +209,8 @@ async function mockAdmin(
               slug: "belgian-theory-guide",
               summary: null,
               body: "Targeted editorial draft",
+              metaTitle: "Belgian theory exam guide | RijVia",
+              metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
               status: "DRAFT",
               current: true,
               createdAt: now,
@@ -293,6 +295,10 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   await expect(page.getByRole("heading", { name: "Belgian theory exam guide" })).toBeVisible();
   await page.getByLabel("URL slug").fill("belgian-theory-guide");
   await page.getByLabel("Summary").fill("Targeted preview summary");
+  await page.getByLabel("SEO title").fill("Belgian theory exam guide | RijVia");
+  await page.getByLabel("Meta description").fill(
+    "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
+  );
   await page.getByLabel("Article body *").fill("Targeted editorial draft");
   await page.getByRole("button", { name: "Preview" }).click();
   const preview = page.getByRole("dialog", { name: "Article preview" });
@@ -314,6 +320,8 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
     slug: "belgian-theory-guide",
     summary: "Targeted preview summary",
     body: "Targeted editorial draft",
+    metaTitle: "Belgian theory exam guide | RijVia",
+    metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
     expectedCurrentVersion: null,
   });
   await expectNoOverflow(page);
@@ -330,6 +338,8 @@ test("Admin requests and decides exact-version article approval", async ({ page 
     slug: `${language.toLowerCase()}-article`,
     summary: null,
     body: `${language} body`,
+    metaTitle: `${language} article | RijVia`,
+    metaDescription: `${language} article metadata description`,
     status: "DRAFT",
     current: true,
     createdAt: now,

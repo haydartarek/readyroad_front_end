@@ -2039,5 +2039,13 @@
   "admin.learning.correct_answer": "Juiste antwoord",
   "admin.learning.students_title": "Leerprofielen van leerlingen",
   "admin.learning.previous": "Vorige",
-  "admin.learning.next": "Volgende"
+  "admin.learning.next": "Volgende",
+  "blog.eyebrow": "RijVia-artikelen",
+  "blog.title": "Begrijp de Belgische verkeerstheorie duidelijker",
+  "blog.introduction": "Lees praktische, nagekeken artikelen die je lessen, oefeningen en voorbereiding op het Belgische theorie-examen ondersteunen.",
+  "blog.empty_title": "Er zijn nog geen artikelen gepubliceerd",
+  "blog.empty_description": "Nagekeken leerartikelen verschijnen hier zodra ze zijn gepubliceerd.",
+  "blog.read_article": "Lees het artikel",
+  "blog.published": "Gepubliceerd",
+  "blog.back": "Terug naar artikelen"
 }

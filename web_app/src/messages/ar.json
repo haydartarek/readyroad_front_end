@@ -2039,5 +2039,13 @@
   "admin.learning.correct_answer": "الإجابة الصحيحة",
   "admin.learning.students_title": "ملفات تعلم الطلاب",
   "admin.learning.previous": "السابق",
-  "admin.learning.next": "التالي"
+  "admin.learning.next": "التالي",
+  "blog.eyebrow": "مقالات RijVia",
+  "blog.title": "افهم نظرية السياقة البلجيكية بصورة أوضح",
+  "blog.introduction": "اقرأ مقالات عملية ومراجعة تدعم دروسك وتدريبك واستعدادك لامتحان السياقة النظري في بلجيكا.",
+  "blog.empty_title": "لا توجد مقالات منشورة حاليًا",
+  "blog.empty_description": "ستظهر هنا المقالات التعليمية بعد مراجعتها ونشرها.",
+  "blog.read_article": "اقرأ المقال",
+  "blog.published": "نُشر في",
+  "blog.back": "العودة إلى المقالات"
 }

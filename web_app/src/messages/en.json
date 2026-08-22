@@ -2039,5 +2039,13 @@
   "admin.learning.correct_answer": "Correct answer",
   "admin.learning.students_title": "Student learning profiles",
   "admin.learning.previous": "Previous",
-  "admin.learning.next": "Next"
+  "admin.learning.next": "Next",
+  "blog.eyebrow": "RijVia articles",
+  "blog.title": "Understand Belgian driving theory more clearly",
+  "blog.introduction": "Read practical, reviewed articles that support your lessons, practice and preparation for the Belgian driving theory exam.",
+  "blog.empty_title": "No articles are published yet",
+  "blog.empty_description": "Reviewed learning articles will appear here after publication.",
+  "blog.read_article": "Read article",
+  "blog.published": "Published",
+  "blog.back": "Back to articles"
 }

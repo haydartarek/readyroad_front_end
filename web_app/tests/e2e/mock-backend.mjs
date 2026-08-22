@@ -86,6 +86,32 @@ const trafficSign = {
   exceptionsAr: ["قد تحدد لوحة إضافية المسافة."],
 };
 
+const articleSlugs = {
+  EN: "safe-driving-belgium",
+  NL: "veilig-rijden-belgie",
+  FR: "conduite-sure-belgique",
+  AR: "al-qiyada-al-amina",
+};
+
+const articleTitles = {
+  EN: "Safer driving in Belgium",
+  NL: "Veiliger rijden in België",
+  FR: "Conduire plus sûrement en Belgique",
+  AR: "القيادة الآمنة في بلجيكا",
+};
+
+function publishedArticle(language) {
+  return {
+    language,
+    slug: articleSlugs[language],
+    title: articleTitles[language],
+    summary: `${articleTitles[language]} published summary`,
+    body: "Immutable published body.\n\nSecond reviewed paragraph.",
+    publishedAt: "2026-08-22T10:00:00Z",
+    alternateSlugs: articleSlugs,
+  };
+}
+
 const server = http.createServer((request, response) => {
   response.setHeader("Content-Type", "application/json; charset=utf-8");
 
@@ -119,6 +145,34 @@ const server = http.createServer((request, response) => {
         supportedLanguagesCount: 4,
       }),
     );
+    return;
+  }
+
+  const requestUrl = new URL(request.url, `http://127.0.0.1:${port}`);
+  if (requestUrl.pathname === "/api/articles") {
+    const language = requestUrl.searchParams.get("language") ?? "EN";
+    const article = articleSlugs[language] ? publishedArticle(language) : null;
+    response.end(JSON.stringify(article ? [{
+      language: article.language,
+      slug: article.slug,
+      title: article.title,
+      summary: article.summary,
+      publishedAt: article.publishedAt,
+    }] : []));
+    return;
+  }
+
+  const articleMatch = requestUrl.pathname.match(/^\/api\/articles\/([^/]+)$/);
+  if (articleMatch) {
+    const language = requestUrl.searchParams.get("language") ?? "EN";
+    const requestedSlug = decodeURIComponent(articleMatch[1]);
+    const knownSlug = Object.values(articleSlugs).includes(requestedSlug);
+    if (articleSlugs[language] && knownSlug && requestedSlug !== "unpublished") {
+      response.end(JSON.stringify(publishedArticle(language)));
+      return;
+    }
+    response.statusCode = 404;
+    response.end(JSON.stringify({ message: "Not found" }));
     return;
   }
 

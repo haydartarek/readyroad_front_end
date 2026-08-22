@@ -2039,5 +2039,13 @@
   "admin.learning.correct_answer": "Bonne réponse",
   "admin.learning.students_title": "Profils d'apprentissage des élèves",
   "admin.learning.previous": "Précédent",
-  "admin.learning.next": "Suivant"
+  "admin.learning.next": "Suivant",
+  "blog.eyebrow": "Articles RijVia",
+  "blog.title": "Comprenez plus clairement la théorie de la conduite belge",
+  "blog.introduction": "Lisez des articles pratiques et vérifiés qui accompagnent vos leçons, vos exercices et votre préparation à l’examen théorique belge.",
+  "blog.empty_title": "Aucun article n’est encore publié",
+  "blog.empty_description": "Les articles pédagogiques vérifiés apparaîtront ici après leur publication.",
+  "blog.read_article": "Lire l’article",
+  "blog.published": "Publié le",
+  "blog.back": "Retour aux articles"
 }

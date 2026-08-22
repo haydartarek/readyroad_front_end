@@ -9,6 +9,7 @@ import {
   Bot,
   CheckCircle2,
   ClipboardCheck,
+  FilePenLine,
   History,
   Import,
   ListTodo,
@@ -27,6 +28,7 @@ import AdminMetricCard from "@/components/admin/AdminMetricCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import EditorialEditorPanel from "@/components/admin/marketing/EditorialEditorPanel";
 import {
   type MarketingAgent,
   type MarketingAuditItem,
@@ -41,12 +43,16 @@ import {
   type AnalyticsStatus,
   type YouTubeStatus,
   type SeoMigrationWorkspace,
+  type EditorialLanguage,
+  type EditorialSaveRequest,
+  type EditorialSaveResult,
+  type EditorialWorkspace,
   formatSettingValue,
   statusTone,
   taskCount,
 } from "@/lib/marketing-admin";
 
-type View = "overview" | "analytics" | "youtube" | "discovery" | "seo" | "agents" | "tasks" | "approvals" | "errors" | "audit" | "settings";
+type View = "overview" | "analytics" | "youtube" | "discovery" | "editorial" | "seo" | "agents" | "tasks" | "approvals" | "errors" | "audit" | "settings";
 
 interface PlatformData {
   overview: MarketingOverview;
@@ -62,6 +68,7 @@ interface PlatformData {
   reports: Array<Record<string, unknown>>;
   youtubeStatus: YouTubeStatus;
   seoMigration: SeoMigrationWorkspace;
+  editorial: EditorialWorkspace;
 }
 
 const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
@@ -69,6 +76,7 @@ const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
   { key: "analytics", icon: BarChart3 },
   { key: "youtube", icon: Youtube },
   { key: "discovery", icon: SearchCheck },
+  { key: "editorial", icon: FilePenLine },
   { key: "seo", icon: Import },
   { key: "agents", icon: Bot },
   { key: "tasks", icon: ListTodo },
@@ -107,7 +115,7 @@ export default function MarketingAdminPage() {
     setLoading(true);
     setError(false);
     try {
-      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports, youtubeStatus, seoMigration] = await Promise.all([
+      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports, youtubeStatus, seoMigration, editorial] = await Promise.all([
         apiClient.get<MarketingOverview>("/admin/marketing/overview"),
         apiClient.get<MarketingAgent[]>("/admin/marketing/agents"),
         apiClient.get<MarketingTaskPage>("/admin/marketing/tasks", { limit: 100 }),
@@ -121,6 +129,7 @@ export default function MarketingAdminPage() {
         apiClient.get<Array<Record<string, unknown>>>("/admin/marketing/analytics/reports", { limit: 20 }),
         apiClient.get<YouTubeStatus>("/admin/marketing/youtube/status"),
         apiClient.get<SeoMigrationWorkspace>("/admin/marketing/seo-migration/workspace"),
+        apiClient.get<EditorialWorkspace>("/admin/marketing/editorial/editor"),
       ]);
       setData({
         overview: overview.data,
@@ -136,6 +145,7 @@ export default function MarketingAdminPage() {
         reports: reports.data,
         youtubeStatus: youtubeStatus.data,
         seoMigration: seoMigration.data,
+        editorial: editorial.data,
       });
     } catch (requestError) {
       logApiError("Failed to load marketing admin platform", requestError);
@@ -167,6 +177,31 @@ export default function MarketingAdminPage() {
     () => data?.tasks.items.filter((task) => task.status === "WAITING_APPROVAL") ?? [],
     [data],
   );
+
+  const saveEditorial = async (
+    topicId: number,
+    editorLanguage: EditorialLanguage,
+    request: EditorialSaveRequest,
+  ) => {
+    setBusy("editorial-save");
+    try {
+      const response = await apiClient.put<EditorialSaveResult>(
+        `/admin/marketing/editorial/editor/topics/${topicId}/versions/${editorLanguage}`,
+        request,
+      );
+      toast.success(t(response.data.created
+        ? "admin.marketing.editorial_saved"
+        : "admin.marketing.editorial_unchanged"));
+      await load();
+      return response.data;
+    } catch (requestError) {
+      logApiError("Editorial draft save failed", requestError);
+      toast.error(t("admin.marketing.action_failed"));
+      throw requestError;
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const formatDate = (value: string | null) =>
     value
@@ -261,6 +296,15 @@ export default function MarketingAdminPage() {
             />
           ) : null}
           {view === "discovery" ? <DiscoveryPanel data={data.discovery} t={t} /> : null}
+          {view === "editorial" ? (
+            <EditorialEditorPanel
+              workspace={data.editorial}
+              busy={busy}
+              t={t}
+              formatDate={formatDate}
+              onSave={saveEditorial}
+            />
+          ) : null}
           {view === "seo" ? (
             <SeoMigrationPanel
               workspace={data.seoMigration}

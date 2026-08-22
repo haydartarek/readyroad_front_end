@@ -131,6 +131,26 @@ const responses: Record<string, unknown> = {
     social: { publishing: "DISABLED" },
     ownerDecisionsRequired: [],
   },
+  "/admin/marketing/editorial/editor": {
+    languages: ["AR", "NL", "FR", "EN"],
+    topics: [
+      {
+        topicId: 1,
+        topicKey: "OFFICIAL-001",
+        order: 1,
+        sourceType: "OFFICIAL_STRATEGIC_BACKLOG",
+        title: "Belgian theory exam guide",
+        titleLanguage: "EN",
+        primaryLanguage: "EN",
+        priority: "P0",
+        strategyContextResolved: true,
+        articleId: null,
+        lifecycleState: null,
+        canonicalLanguage: null,
+        currentVersions: [],
+      },
+    ],
+  },
 };
 
 async function mockAdmin(page: Page, mutations: Request[]) {
@@ -166,6 +186,32 @@ async function mockAdmin(page: Page, mutations: Request[]) {
     const path = new URL(request.url()).pathname.replace("/api/proxy", "");
     if (request.method() !== "GET") {
       mutations.push(request);
+      if (path.includes("/editorial/editor/topics/")) {
+        return route.fulfill({
+          status: 200,
+          json: {
+            topicId: 1,
+            articleId: 11,
+            lifecycleState: "PLANNED",
+            articleCreated: true,
+            created: true,
+            version: {
+              id: 21,
+              articleId: 11,
+              versionNumber: 1,
+              language: "EN",
+              title: "Belgian theory exam guide",
+              slug: "belgian-theory-guide",
+              summary: null,
+              body: "Targeted editorial draft",
+              status: "DRAFT",
+              current: true,
+              createdAt: now,
+              createdBy: "admin",
+            },
+          },
+        });
+      }
       return route.fulfill({ status: 202, json: { id: 11, status: "WAITING_APPROVAL" } });
     }
     return route.fulfill({ json: responses[path] });
@@ -189,7 +235,7 @@ test("Marketing operations remain usable on mobile and preserve approval control
 
   await page.goto("/admin/marketing");
   await expect(page.getByRole("heading", { name: "Marketing Operations" })).toBeVisible();
-  await expect(page.getByRole("tab")).toHaveCount(11);
+  await expect(page.getByRole("tab")).toHaveCount(12);
   await expectNoOverflow(page);
 
   await page.getByRole("tab", { name: "Analytics" }).click();
@@ -229,6 +275,32 @@ test("Marketing operations remain usable on mobile and preserve approval control
   await expect(page.getByText("Runtime settings")).toBeVisible();
   await expect(page.getByText("Agent settings")).toBeVisible();
   await expect(page.getByText("Europe/Brussels")).toBeVisible();
+  await expectNoOverflow(page);
+});
+
+test("Admin can save a versioned editorial draft without mobile overflow", async ({ page }) => {
+  const mutations: Request[] = [];
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockAdmin(page, mutations);
+
+  await page.goto("/admin/marketing");
+  await page.getByRole("tab", { name: "Editorial" }).click();
+  await expect(page.getByRole("heading", { name: "Belgian theory exam guide" })).toBeVisible();
+  await page.getByLabel("URL slug").fill("belgian-theory-guide");
+  await page.getByLabel("Article body *").fill("Targeted editorial draft");
+  await page.getByRole("button", { name: "Save draft" }).click();
+
+  await expect.poll(() => mutations.length).toBe(1);
+  expect(mutations[0].method()).toBe("PUT");
+  expect(new URL(mutations[0].url()).pathname).toContain(
+    "/admin/marketing/editorial/editor/topics/1/versions/EN",
+  );
+  expect(mutations[0].postDataJSON()).toMatchObject({
+    title: "Belgian theory exam guide",
+    slug: "belgian-theory-guide",
+    body: "Targeted editorial draft",
+    expectedCurrentVersion: null,
+  });
   await expectNoOverflow(page);
 });
 

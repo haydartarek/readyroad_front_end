@@ -138,6 +138,26 @@ const responses: Record<string, unknown> = {
     social: { publishing: "DISABLED" },
     ownerDecisionsRequired: [],
   },
+  "/admin/marketing/editorial/editor": {
+    languages: ["AR", "NL", "FR", "EN"],
+    topics: [
+      {
+        topicId: 1,
+        topicKey: "OFFICIAL-001",
+        order: 1,
+        sourceType: "OFFICIAL_STRATEGIC_BACKLOG",
+        title: "Belgian theory exam guide",
+        titleLanguage: "AR",
+        primaryLanguage: "AR",
+        priority: "P0",
+        strategyContextResolved: true,
+        articleId: null,
+        lifecycleState: null,
+        canonicalLanguage: null,
+        currentVersions: [],
+      },
+    ],
+  },
 };
 
 describe("MarketingAdminPage", () => {
@@ -148,7 +168,34 @@ describe("MarketingAdminPage", () => {
       value: () => "00000000-0000-4000-8000-000000000001",
     });
     get.mockImplementation((url: string) => Promise.resolve({ data: responses[url] }));
-    put.mockResolvedValue({ data: { status: "WAITING_APPROVAL" } });
+    put.mockImplementation((url: string) => {
+      if (url.includes("/editorial/editor/topics/")) {
+        return Promise.resolve({
+          data: {
+            topicId: 1,
+            articleId: 11,
+            lifecycleState: "PLANNED",
+            articleCreated: true,
+            created: true,
+            version: {
+              id: 21,
+              articleId: 11,
+              versionNumber: 1,
+              language: "AR",
+              title: "Belgian theory exam guide",
+              slug: "theory-guide",
+              summary: null,
+              body: "Draft body",
+              status: "DRAFT",
+              current: true,
+              createdAt: "2026-08-22T10:00:00Z",
+              createdBy: "admin",
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { status: "WAITING_APPROVAL" } });
+    });
     post.mockResolvedValue({ data: { status: "PENDING" } });
   });
 
@@ -157,9 +204,37 @@ describe("MarketingAdminPage", () => {
 
     expect(await screen.findByText("admin.marketing.tasks_today")).toBeInTheDocument();
     expect(screen.getAllByText("HEALTHY").length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("tab")).toHaveLength(11);
+    expect(screen.getAllByRole("tab")).toHaveLength(12);
     expect(get).toHaveBeenCalledWith("/admin/marketing/tasks", { limit: 100 });
     expect(get).toHaveBeenCalledWith("/admin/marketing/analytics/organic-discovery", { limit: 100 });
+  });
+
+  it("edits a localized article draft through the versioned editorial contract", async () => {
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    expect(screen.getAllByText("Belgian theory exam guide")).toHaveLength(2);
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_slug/), {
+      target: { value: "theory-guide" },
+    });
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_body/), {
+      target: { value: "Draft body" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.editorial_save" }));
+
+    await waitFor(() => {
+      expect(put).toHaveBeenCalledWith(
+        "/admin/marketing/editorial/editor/topics/1/versions/AR",
+        {
+          title: "Belgian theory exam guide",
+          slug: "theory-guide",
+          summary: null,
+          body: "Draft body",
+          expectedCurrentVersion: null,
+        },
+      );
+    });
   });
 
   it("shows the evidence-backed SEO workspace and imports the selected XLSX", async () => {

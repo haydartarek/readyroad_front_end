@@ -179,6 +179,64 @@ export interface SeoMigrationWorkspace {
   ownerDecisionsRequired: string[];
 }
 
+export type EditorialLanguage = "AR" | "NL" | "FR" | "EN";
+
+export interface EditorialCurrentVersion {
+  language: EditorialLanguage;
+  versionNumber: number;
+  title: string;
+  slug: string | null;
+  status: string;
+  createdAt: string;
+  createdBy: string | null;
+}
+
+export interface EditorialTopic {
+  topicId: number;
+  topicKey: string;
+  order: number;
+  sourceType: string;
+  title: string;
+  titleLanguage: EditorialLanguage;
+  primaryLanguage: EditorialLanguage | null;
+  priority: string | null;
+  strategyContextResolved: boolean;
+  articleId: number | null;
+  lifecycleState: string | null;
+  canonicalLanguage: EditorialLanguage | null;
+  currentVersions: EditorialCurrentVersion[];
+}
+
+export interface EditorialWorkspace {
+  languages: EditorialLanguage[];
+  topics: EditorialTopic[];
+}
+
+export interface EditorialVersion extends EditorialCurrentVersion {
+  id: number;
+  articleId: number;
+  summary: string | null;
+  body: string;
+  current: boolean;
+}
+
+export interface EditorialSaveRequest {
+  title: string;
+  slug: string | null;
+  summary: string | null;
+  body: string;
+  expectedCurrentVersion: number | null;
+}
+
+export interface EditorialSaveResult {
+  topicId: number;
+  articleId: number;
+  lifecycleState: string;
+  articleCreated: boolean;
+  created: boolean;
+  version: EditorialVersion;
+}
+
 export interface MarketingSettings {
   settings: MarketingSetting[];
   schedules: MarketingSchedule[];

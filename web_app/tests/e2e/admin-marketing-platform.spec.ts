@@ -73,7 +73,7 @@ const responses: Record<string, unknown> = {
     ga4PropertyResource: "properties/548176182",
     searchConsoleSiteUrl: "sc-domain:readyroad.be",
     latestSearchConsoleDate: "2026-08-10",
-    sources: [],
+    sources: [{ source: "GA4", status: "HEALTHY", read_only: true, last_success_at: now }],
     alerts: [],
   },
   "/admin/marketing/analytics/settings": {
@@ -95,7 +95,15 @@ const responses: Record<string, unknown> = {
     languages: [],
     devices: [],
   },
-  "/admin/marketing/analytics/reports": [],
+  "/admin/marketing/analytics/reports": [{
+    id: 8,
+    snapshot_type: "WEEKLY_REPORT",
+    period_start: "2026-08-03",
+    period_end: "2026-08-09",
+    metrics: { clicks: 12, impressions: 840, ctr: 0.0143 },
+    evidence: { source: "SEARCH_CONSOLE" },
+    created_at: now,
+  }],
   "/admin/marketing/youtube/status": {
     apiKeyConfigured: true,
     readOnly: true,
@@ -248,16 +256,20 @@ test("Marketing operations remain usable on mobile and preserve approval control
   await page.getByRole("tab", { name: "Analytics" }).click();
   await expect(page.getByText("properties/548176182")).toBeVisible();
   await expect(page.getByRole("button", { name: "Run full sync" })).toBeEnabled();
+  await expect(page.getByText("Weekly Report")).toBeVisible();
+  await expect(page.getByText("Metrics", { exact: true })).toBeVisible();
+  await expect(page.locator("pre:visible")).toHaveCount(0);
   await expectNoOverflow(page);
 
   await page.getByRole("tab", { name: "Organic Discovery" }).click();
-  await expect(page.getByText(/belgian driving theory questions/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "belgian driving theory questions" })).toBeVisible();
   await expectNoOverflow(page);
 
   await page.getByRole("tab", { name: "SEO Migration" }).click();
-  await expect(page.getByText("504")).toBeVisible();
-  await expect(page.getByText("629")).toBeVisible();
-  await expect(page.getByText(/rijbewijs belgie/)).toBeVisible();
+  await expect(page.getByText("504").first()).toBeVisible();
+  await expect(page.getByText("629").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "rijbewijs belgie" })).toBeVisible();
+  await expect(page.locator("pre:visible")).toHaveCount(0);
   await expectNoOverflow(page);
 
   await page.getByRole("tab", { name: "YouTube" }).click();
@@ -269,7 +281,7 @@ test("Marketing operations remain usable on mobile and preserve approval control
   });
 
   await page.getByRole("tab", { name: "Agents" }).click();
-  await expect(page.getByText("Strategy Engine")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Strategy engine" })).toBeVisible();
   await page.getByRole("button", { name: "Request disable" }).click();
   await expect.poll(() => mutations.length).toBe(2);
   expect(mutations[1].method()).toBe("PUT");
@@ -281,7 +293,7 @@ test("Marketing operations remain usable on mobile and preserve approval control
   await page.getByRole("tab", { name: "Settings" }).click();
   await expect(page.getByText("Runtime settings")).toBeVisible();
   await expect(page.getByText("Agent settings")).toBeVisible();
-  await expect(page.getByText("Europe/Brussels")).toBeVisible();
+  await expect(page.getByText("Europe/Brussels", { exact: true })).toBeVisible();
   await expectNoOverflow(page);
 });
 
@@ -325,6 +337,22 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
     expectedCurrentVersion: null,
   });
   await expectNoOverflow(page);
+});
+
+test("Marketing operations preserve localized responsive layouts", async ({ page }) => {
+  const mutations: Request[] = [];
+  await mockAdmin(page, mutations);
+
+  const routes = ["/admin/marketing", "/ar/admin/marketing", "/nl/admin/marketing", "/fr/admin/marketing"];
+  const widths = [390, 768, 1280];
+  for (const route of routes) {
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: width < 600 ? 844 : 900 });
+      await page.goto(route);
+      await expect(page.getByRole("tab")).toHaveCount(12);
+      await expectNoOverflow(page);
+    }
+  }
 });
 
 test("Admin requests and decides exact-version article approval", async ({ page }) => {

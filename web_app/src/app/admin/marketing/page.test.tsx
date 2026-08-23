@@ -206,7 +206,7 @@ describe("MarketingAdminPage", () => {
     render(<MarketingAdminPage />);
 
     expect(await screen.findByText("admin.marketing.tasks_today")).toBeInTheDocument();
-    expect(screen.getAllByText("HEALTHY").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Healthy").length).toBeGreaterThan(0);
     expect(screen.getAllByRole("tab")).toHaveLength(12);
     expect(get).toHaveBeenCalledWith("/admin/marketing/tasks", { limit: 100 });
     expect(get).toHaveBeenCalledWith("/admin/marketing/analytics/organic-discovery", { limit: 100 });
@@ -374,8 +374,8 @@ describe("MarketingAdminPage", () => {
     await screen.findByText("admin.marketing.tasks_today");
 
     fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_seo" }));
-    expect(screen.getByText("504")).toBeInTheDocument();
-    expect(screen.getByText("629")).toBeInTheDocument();
+    expect(screen.getAllByText("504").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("629").length).toBeGreaterThan(0);
 
     const file = new File(["PK-test"], "search-console.xlsx", {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -428,5 +428,74 @@ describe("MarketingAdminPage", () => {
         idempotencyKey: expect.stringMatching(/^agent-control-STRATEGY-/),
       });
     });
+  });
+
+  it("renders operational records as readable fields and keeps raw payloads inside technical details", async () => {
+    const originalSettings = responses["/admin/marketing/analytics/settings"];
+    const originalReports = responses["/admin/marketing/analytics/reports"];
+    const originalDiscovery = responses["/admin/marketing/analytics/organic-discovery"];
+
+    responses["/admin/marketing/analytics/settings"] = {
+      values: {},
+      policy: {
+        initialBackfillDays: 90,
+        intervalDays: 3,
+        noDataDays: 6,
+        sourceFailureHours: 3,
+        containerNode: 1,
+      },
+      thresholds: { windowDays: 28, opportunityImpressions: 50, pojo: 1 },
+    };
+    responses["/admin/marketing/analytics/reports"] = [{
+      id: 8,
+      snapshot_type: "WEEKLY_REPORT",
+      period_start: "2026-08-10",
+      period_end: "2026-08-16",
+      metrics: { clicks: 12, impressions: 840, ctr: 0.0143 },
+      evidence: { source: "SEARCH_CONSOLE" },
+      created_at: "2026-08-17T08:00:00Z",
+    }];
+    responses["/admin/marketing/analytics/organic-discovery"] = {
+      opportunities: [{
+        id: 11,
+        query: "belgian theory exam",
+        page: "/lessons",
+        language: "EN",
+        state: "OPPORTUNITY",
+        impressions: 120,
+        clicks: 9,
+        ctr: 0.075,
+        average_position: 8.4,
+        evidence: { source: "SEARCH_CONSOLE" },
+      }],
+      contentGaps: [],
+      queryClassifications: [],
+      languages: [],
+      devices: [],
+    };
+
+    try {
+      render(<MarketingAdminPage />);
+      await screen.findByText("admin.marketing.tasks_today");
+
+      fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_analytics" }));
+      expect(screen.getByText("Weekly Report")).toBeInTheDocument();
+      expect(screen.getByText("Metrics")).toBeInTheDocument();
+      expect(screen.queryByText("Container Node")).not.toBeInTheDocument();
+      expect(screen.queryByText("Pojo")).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_discovery" }));
+      expect(screen.getByText("belgian theory exam")).toBeInTheDocument();
+      expect(screen.getByText("Average Position")).toBeInTheDocument();
+      expect(screen.getByText("7.5%")).toBeInTheDocument();
+
+      const rawBlocks = Array.from(document.querySelectorAll("pre"));
+      expect(rawBlocks.length).toBeGreaterThan(0);
+      expect(rawBlocks.every((block) => block.closest("details"))).toBe(true);
+    } finally {
+      responses["/admin/marketing/analytics/settings"] = originalSettings;
+      responses["/admin/marketing/analytics/reports"] = originalReports;
+      responses["/admin/marketing/analytics/organic-discovery"] = originalDiscovery;
+    }
   });
 });

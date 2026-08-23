@@ -30,6 +30,13 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import EditorialEditorPanel from "@/components/admin/marketing/EditorialEditorPanel";
 import {
+  HumanStatusBadge,
+  StructuredData,
+  StructuredRecordCard,
+  TechnicalDetails,
+  machineLabel,
+} from "@/components/admin/marketing/MarketingDataPresentation";
+import {
   type MarketingAgent,
   type MarketingAuditItem,
   type MarketingErrorItem,
@@ -48,8 +55,6 @@ import {
   type EditorialSaveRequest,
   type EditorialSaveResult,
   type EditorialWorkspace,
-  formatSettingValue,
-  statusTone,
   taskCount,
 } from "@/lib/marketing-admin";
 
@@ -87,21 +92,8 @@ const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
   { key: "settings", icon: Settings2 },
 ];
 
-function StatusBadge({ status }: { status: string }) {
-  const tone = statusTone(status);
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        "border-border/60 bg-muted/30",
-        tone === "success" && "border-green-200 bg-green-50 text-green-700",
-        tone === "danger" && "border-red-200 bg-red-50 text-red-700",
-        tone === "warning" && "border-amber-200 bg-amber-50 text-amber-700",
-      )}
-    >
-      {status.replaceAll("_", " ")}
-    </Badge>
-  );
+function StatusBadge({ status, t, showCode = false }: { status: string; t: Translate; showCode?: boolean }) {
+  return <HumanStatusBadge status={status} t={t} showCode={showCode} />;
 }
 
 export default function MarketingAdminPage() {
@@ -240,7 +232,7 @@ export default function MarketingAdminPage() {
         icon={<Bot className="h-6 w-6" />}
         title={t("admin.marketing.title")}
         description={t("admin.marketing.description")}
-        badge={data ? <StatusBadge status={data.worker.status} /> : undefined}
+        badge={data ? <StatusBadge status={data.worker.status} t={t} /> : undefined}
         actions={
           <Button variant="outline" onClick={load} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
@@ -285,6 +277,7 @@ export default function MarketingAdminPage() {
               data={data}
               busy={busy}
               t={t}
+              formatDate={formatDate}
               onSync={() => mutate(
                 "analytics-sync",
                 () => apiClient.post("/admin/marketing/analytics/sync", {
@@ -317,7 +310,7 @@ export default function MarketingAdminPage() {
               )}
             />
           ) : null}
-          {view === "discovery" ? <DiscoveryPanel data={data.discovery} t={t} /> : null}
+          {view === "discovery" ? <DiscoveryPanel data={data.discovery} t={t} formatDate={formatDate} /> : null}
           {view === "editorial" ? (
             <EditorialEditorPanel
               workspace={data.editorial}
@@ -333,6 +326,7 @@ export default function MarketingAdminPage() {
               workspace={data.seoMigration}
               busy={busy}
               t={t}
+              formatDate={formatDate}
               onImport={(file) => mutate(
                 "seo-import",
                 () => {
@@ -410,6 +404,19 @@ function Empty({ t }: { t: Translate }) {
   return <p className="py-10 text-center text-sm text-muted-foreground">{t("admin.marketing.empty")}</p>;
 }
 
+function ownerDecisionText(decision: string, t: Translate) {
+  if (decision.startsWith("Upload the local Search Console XLSX export")) {
+    return t("admin.marketing.owner_decision_import_search_console");
+  }
+  if (decision.startsWith("Confirm official RijVia social handles")) {
+    return t("admin.marketing.owner_decision_confirm_social");
+  }
+  if (decision.startsWith("Approve or reject each local content brief")) {
+    return t("admin.marketing.owner_decision_review_content_briefs");
+  }
+  return decision;
+}
+
 function Overview({ data, t, formatDate }: { data: PlatformData; t: Translate; formatDate: DateFormatter }) {
   const counts = data.overview.tasksByStatus;
   return (
@@ -424,7 +431,7 @@ function Overview({ data, t, formatDate }: { data: PlatformData; t: Translate; f
         <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h2 className="font-black">{t("admin.marketing.worker_health")}</h2>
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <Metric label={t("admin.marketing.status")} value={<StatusBadge status={data.worker.status} />} />
+            <Metric label={t("admin.marketing.status")} value={<StatusBadge status={data.worker.status} t={t} />} />
             <Metric label={t("admin.marketing.active_agents")} value={data.overview.activeAgents} />
             <Metric label={t("admin.marketing.active_workers")} value={data.worker.activeWorkers} />
             <Metric label={t("admin.marketing.running_tasks")} value={data.worker.runningTasks} />
@@ -437,7 +444,11 @@ function Overview({ data, t, formatDate }: { data: PlatformData; t: Translate; f
           <div className="mt-4 space-y-3">
             {data.overview.recentActivity.length ? data.overview.recentActivity.map((item) => (
               <div key={item.id} className="flex min-w-0 items-start justify-between gap-3 border-b border-border/50 pb-3 last:border-0">
-                <div className="min-w-0"><p className="break-words text-sm font-semibold">{item.eventType}</p><p className="text-xs text-muted-foreground">{item.actor}</p></div>
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold">{machineLabel(t, item.eventType)}</p>
+                  <p dir="ltr" className="mt-0.5 max-w-full break-all text-start text-[11px] text-muted-foreground">{item.eventType}</p>
+                  <p dir="ltr" className="mt-1 max-w-full break-all text-start text-xs text-muted-foreground">{item.actor}</p>
+                </div>
                 <time className="shrink-0 text-xs text-muted-foreground">{formatDate(item.createdAt)}</time>
               </div>
             )) : <Empty t={t} />}
@@ -456,7 +467,7 @@ function Agents({ agents, busy, t, formatDate, onToggle }: { agents: MarketingAg
   return agents.length ? <div className="grid gap-4 lg:grid-cols-2">{agents.map((agent) => (
     <article key={agent.agentType} className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h2 className="break-words font-black">{agent.displayName}</h2><StatusBadge status={agent.enabled ? "ENABLED" : "DISABLED"} /></div><p className="mt-1 break-words text-sm text-muted-foreground">{agent.description}</p></div>
+        <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h2 className="break-words font-black">{machineLabel(t, agent.agentType)}</h2><StatusBadge status={agent.enabled ? "ENABLED" : "DISABLED"} t={t} /></div><p className="mt-1 break-words text-sm text-muted-foreground">{agent.description}</p><p dir="ltr" className="mt-1 break-all text-start text-[11px] text-muted-foreground">{agent.displayName} · {agent.agentType}</p></div>
         {agent.agentType !== "ADMIN_PLATFORM" ? <Button size="sm" variant="outline" disabled={busy === `agent-${agent.agentType}`} onClick={() => onToggle(agent)}>{agent.enabled ? t("admin.marketing.request_disable") : t("admin.marketing.request_enable")}</Button> : null}
       </div>
       <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4"><Metric label={t("admin.marketing.tasks_today")} value={agent.tasksToday} /><Metric label={t("admin.marketing.success_rate")} value={`${agent.successRate}%`} /><Metric label={t("admin.marketing.retries")} value={agent.retryCount} /><Metric label={t("admin.marketing.last_run")} value={formatDate(agent.lastRunAt)} /></dl>
@@ -467,7 +478,7 @@ function Agents({ agents, busy, t, formatDate, onToggle }: { agents: MarketingAg
 function Tasks({ tasks, busy, t, formatDate, onRetry }: { tasks: MarketingTask[]; busy: string | null; t: Translate; formatDate: DateFormatter; onRetry: (task: MarketingTask) => void }) {
   return tasks.length ? <div className="space-y-3">{tasks.map((task) => (
     <article key={task.id} className="flex flex-col gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-      <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-black">#{task.id}</span><StatusBadge status={task.status} /><Badge variant="outline">{task.priority}</Badge></div><p className="mt-2 break-words text-sm font-semibold">{task.agentType} / {task.taskType}</p><p className="mt-1 text-xs text-muted-foreground">{formatDate(task.createdAt)} · {task.attempts}/{task.maxAttempts}</p>{task.errorCode ? <p className="mt-2 break-words text-xs text-destructive">{task.errorCode}: {task.errorMessage}</p> : null}</div>
+      <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-black">#{task.id}</span><StatusBadge status={task.status} t={t} /><StatusBadge status={task.priority} t={t} /></div><p className="mt-2 break-words text-sm font-semibold">{machineLabel(t, task.agentType)} · {machineLabel(t, task.taskType)}</p><p dir="ltr" className="mt-0.5 break-all text-start text-[11px] text-muted-foreground">{task.agentType} / {task.taskType}</p><p className="mt-1 text-xs text-muted-foreground">{formatDate(task.createdAt)} · {task.attempts}/{task.maxAttempts}</p>{task.errorCode ? <div className="mt-2"><p className="break-words text-xs font-semibold text-destructive">{machineLabel(t, task.errorCode)}</p><code dir="ltr" className="block break-all text-start text-[11px] text-destructive/80">{task.errorCode}</code><p className="mt-1 break-words text-xs text-destructive">{task.errorMessage}</p></div> : null}</div>
       {task.status === "FAILED" ? <Button variant="outline" disabled={busy === `retry-${task.id}`} onClick={() => onRetry(task)}><RotateCcw />{t("admin.marketing.retry")}</Button> : null}
     </article>
   ))}</div> : <Empty t={t} />;
@@ -503,20 +514,89 @@ function Approvals({ tasks, busy, t, onDecision }: { tasks: MarketingTask[]; bus
 }
 
 function Errors({ items, t, formatDate }: { items: MarketingErrorItem[]; t: Translate; formatDate: DateFormatter }) {
-  return items.length ? <div className="space-y-3">{items.map((item) => <article key={item.id} className="rounded-2xl border border-destructive/20 bg-destructive/[0.03] p-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-black text-destructive">{item.eventCode}</p><time className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</time></div><p className="mt-2 break-words text-sm">{item.message}</p><p className="mt-1 text-xs text-muted-foreground">Task #{item.taskId}</p></article>)}</div> : <Empty t={t} />;
+  return items.length ? <div className="space-y-3">{items.map((item) => <article key={item.id} className="rounded-2xl border border-destructive/20 bg-destructive/[0.03] p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0"><p className="break-words font-black text-destructive">{machineLabel(t, item.eventCode)}</p><code dir="ltr" className="mt-0.5 block max-w-full break-all text-start text-[11px] text-destructive/80">{item.eventCode}</code></div><time className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</time></div><p className="mt-2 break-words text-sm">{item.message}</p><p dir="ltr" className="mt-1 text-start text-xs text-muted-foreground">Task #{item.taskId}{item.attemptId ? ` · Attempt #${item.attemptId}` : ""}</p></article>)}</div> : <Empty t={t} />;
 }
 
 function Audit({ items, t, formatDate }: { items: MarketingAuditItem[]; t: Translate; formatDate: DateFormatter }) {
-  return items.length ? <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card"><table className="w-full min-w-[720px] text-sm"><thead className="bg-muted/50 text-start text-muted-foreground"><tr><th className="p-3 text-start">{t("admin.marketing.event")}</th><th className="p-3 text-start">{t("admin.marketing.actor")}</th><th className="p-3 text-start">{t("admin.marketing.entity")}</th><th className="p-3 text-start">{t("admin.marketing.date")}</th></tr></thead><tbody>{items.map((item) => <tr key={item.id} className="border-t border-border/50"><td className="p-3 font-semibold">{item.eventType}</td><td className="p-3">{item.actor}</td><td className="p-3">{item.entityType ?? "—"} {item.entityId ?? ""}</td><td className="p-3 text-muted-foreground">{formatDate(item.createdAt)}</td></tr>)}</tbody></table></div> : <Empty t={t} />;
+  return items.length ? <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card"><table className="w-full min-w-[720px] text-sm"><thead className="bg-muted/50 text-start text-muted-foreground"><tr><th className="p-3 text-start">{t("admin.marketing.event")}</th><th className="p-3 text-start">{t("admin.marketing.actor")}</th><th className="p-3 text-start">{t("admin.marketing.entity")}</th><th className="p-3 text-start">{t("admin.marketing.date")}</th></tr></thead><tbody>{items.map((item) => <tr key={item.id} className="border-t border-border/50"><td className="p-3"><p className="font-semibold">{machineLabel(t, item.eventType)}</p><code dir="ltr" className="block break-all text-start text-[11px] text-muted-foreground">{item.eventType}</code></td><td dir="ltr" className="max-w-64 break-all p-3 text-start">{item.actor}</td><td className="p-3"><p>{item.entityType ? machineLabel(t, item.entityType) : "—"}</p>{item.entityId ? <code dir="ltr" className="block max-w-64 break-all text-start text-[11px] text-muted-foreground">{item.entityId}</code> : null}</td><td className="p-3 text-muted-foreground">{formatDate(item.createdAt)}</td></tr>)}</tbody></table></div> : <Empty t={t} />;
 }
 
 function Settings({ data, t, formatDate }: { data: PlatformData; t: Translate; formatDate: DateFormatter }) {
-  return <div className="grid gap-5 xl:grid-cols-2"><section className="rounded-2xl border border-border/60 bg-card p-5"><h2 className="font-black">{t("admin.marketing.runtime_settings")}</h2><dl className="mt-4 grid grid-cols-2 gap-3"><Metric label={t("admin.marketing.poll_interval")} value={`${data.worker.pollIntervalMs} ms`} /><Metric label={t("admin.marketing.batch_size")} value={data.worker.batchSize} /><Metric label={t("admin.marketing.lock_ttl")} value={`${data.worker.lockTtlSeconds} s`} /><Metric label={t("admin.marketing.expired_locks")} value={data.worker.expiredLocks} /></dl></section><section className="rounded-2xl border border-border/60 bg-card p-5"><h2 className="font-black">{t("admin.marketing.agent_settings")}</h2><div className="mt-4 space-y-3">{data.settings.settings.length ? data.settings.settings.map((setting) => <div key={setting.id} className="min-w-0 rounded-xl bg-muted/40 p-3"><p className="break-words font-bold">{setting.agentType} · {setting.key}</p><code className="mt-1 block max-w-full whitespace-pre-wrap break-all text-xs text-muted-foreground">{formatSettingValue(setting.value)}</code><p className="mt-2 text-xs text-muted-foreground">{t("admin.marketing.updated")}: {formatDate(setting.updatedAt)}</p></div>) : <Empty t={t} />}</div></section><section className="rounded-2xl border border-border/60 bg-card p-5 xl:col-span-2"><h2 className="font-black">{t("admin.marketing.schedules")}</h2><div className="mt-4 grid gap-3 lg:grid-cols-2">{data.settings.schedules.length ? data.settings.schedules.map((schedule) => <div key={schedule.id} className="rounded-xl bg-muted/40 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-bold">{schedule.key}</p><StatusBadge status={schedule.enabled ? "ENABLED" : "DISABLED"} /></div><p className="mt-1 break-words text-xs text-muted-foreground">{schedule.agentType} · {schedule.cronExpression} · {schedule.zoneId}</p><p className="mt-1 text-xs text-muted-foreground">{t("admin.marketing.next_run")}: {formatDate(schedule.nextRunAt)}</p></div>) : <Empty t={t} />}</div></section></div>;
+  return <div className="grid gap-5 xl:grid-cols-2">
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+      <h2 className="font-black">{t("admin.marketing.runtime_settings")}</h2>
+      <dl className="mt-4 grid grid-cols-2 gap-3">
+        <Metric label={t("admin.marketing.poll_interval")} value={`${data.worker.pollIntervalMs} ms`} />
+        <Metric label={t("admin.marketing.batch_size")} value={data.worker.batchSize} />
+        <Metric label={t("admin.marketing.lock_ttl")} value={`${data.worker.lockTtlSeconds} s`} />
+        <Metric label={t("admin.marketing.expired_locks")} value={data.worker.expiredLocks} />
+      </dl>
+    </section>
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+      <h2 className="font-black">{t("admin.marketing.agent_settings")}</h2>
+      <div className="mt-4 space-y-3">
+        {data.settings.settings.length ? data.settings.settings.map((setting) => (
+          <article key={setting.id} className="min-w-0 rounded-xl border border-border/50 bg-muted/25 p-3">
+            <h3 className="break-words font-bold">{machineLabel(t, setting.key)}</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">{machineLabel(t, setting.agentType)}</p>
+            <div className="mt-3">
+              <StructuredData data={setting.value} t={t} formatDate={formatDate} />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">{t("admin.marketing.updated")}: {formatDate(setting.updatedAt)}</p>
+          </article>
+        )) : <Empty t={t} />}
+      </div>
+    </section>
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm xl:col-span-2">
+      <h2 className="font-black">{t("admin.marketing.schedules")}</h2>
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        {data.settings.schedules.length ? data.settings.schedules.map((schedule) => (
+          <article key={schedule.id} className="min-w-0 rounded-xl border border-border/50 bg-muted/25 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="break-words font-bold">{machineLabel(t, schedule.key)}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {schedule.intervalDays
+                    ? t("admin.marketing.schedule_every_days", { count: schedule.intervalDays })
+                    : t("admin.marketing.schedule_defined")}
+                </p>
+              </div>
+              <StatusBadge status={schedule.enabled ? "ENABLED" : "DISABLED"} t={t} />
+            </div>
+            <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+              <Metric label={t("admin.marketing.next_run")} value={formatDate(schedule.nextRunAt)} />
+              <Metric label={t("admin.marketing.last_run")} value={formatDate(schedule.lastRunAt)} />
+            </dl>
+            <details className="mt-3 rounded-lg border border-border/50 bg-background/70 p-2.5">
+              <summary className="cursor-pointer text-xs font-semibold text-muted-foreground">{t("admin.marketing.technical_details")}</summary>
+              <p dir="ltr" className="mt-2 break-all text-start text-xs text-muted-foreground">{schedule.agentType} · {schedule.taskType}</p>
+              <p dir="ltr" className="mt-1 break-all text-start text-xs text-muted-foreground">{schedule.cronExpression} · {schedule.zoneId}</p>
+            </details>
+          </article>
+        )) : <Empty t={t} />}
+      </div>
+    </section>
+  </div>;
 }
 
-function AnalyticsPanel({ data, busy, t, onSync, onSettings }: { data: PlatformData; busy: string | null; t: Translate; onSync: () => void; onSettings: (policy: Record<string, number>, thresholds: Record<string, number>) => void }) {
-  const [policy, setPolicy] = useState(data.analyticsSettings.policy);
-  const [thresholds, setThresholds] = useState(data.analyticsSettings.thresholds);
+const ANALYTICS_POLICY_KEYS = ["initialBackfillDays", "intervalDays", "noDataDays", "sourceFailureHours"] as const;
+const ANALYTICS_THRESHOLD_KEYS = ["windowDays", "emergingImpressions", "emergingPositionMin", "emergingPositionMax", "opportunityImpressions", "opportunityPositionMin", "opportunityPositionMax", "establishedPositionMax", "establishedClicks", "positionDecline", "clicksDeclinePercent", "ctrDeclinePercent", "stableWindows"] as const;
+
+function selectAnalyticsSettings(
+  source: Record<string, number>,
+  fallback: Record<string, number>,
+  keys: readonly string[],
+) {
+  return Object.fromEntries(keys.flatMap((key) => {
+    const value = Number.isFinite(source[key]) ? source[key] : fallback[key];
+    return Number.isFinite(value) ? [[key, value]] : [];
+  }));
+}
+
+function AnalyticsPanel({ data, busy, t, formatDate, onSync, onSettings }: { data: PlatformData; busy: string | null; t: Translate; formatDate: DateFormatter; onSync: () => void; onSettings: (policy: Record<string, number>, thresholds: Record<string, number>) => void }) {
+  const values = data.analyticsSettings.values as unknown as Record<string, number>;
+  const [policy, setPolicy] = useState(() => selectAnalyticsSettings(data.analyticsSettings.policy, values, ANALYTICS_POLICY_KEYS));
+  const [thresholds, setThresholds] = useState(() => selectAnalyticsSettings(data.analyticsSettings.thresholds, values, ANALYTICS_THRESHOLD_KEYS));
   const status = data.analyticsStatus;
   const numberField = (group: "policy" | "thresholds", key: string, value: number) => (
     <label key={`${group}-${key}`} className="min-w-0 space-y-1 text-xs font-semibold text-muted-foreground">
@@ -542,10 +622,18 @@ function AnalyticsPanel({ data, busy, t, onSync, onSettings }: { data: PlatformD
       <AdminMetricCard icon={<SearchCheck />} label="Search Console" value={status.searchConsoleSiteUrl} />
       <AdminMetricCard icon={<History />} label={t("admin.marketing.latest_data")} value={status.latestSearchConsoleDate ?? t("admin.marketing.never")} />
     </div>
-    {status.alerts.length ? <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-sm font-semibold text-amber-800">{status.alerts.join(" · ")}</div> : null}
+    {status.alerts.length ? <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-sm font-semibold text-amber-800">{status.alerts.map((alert) => <p key={alert}>{machineLabel(t, alert)} <code dir="ltr" className="ms-1 text-[11px] font-normal">{alert}</code></p>)}</div> : null}
     <div className="flex flex-wrap gap-2">
       <Button onClick={onSync} disabled={!status.serviceAccountConfigured || busy === "analytics-sync"}><RefreshCw className={cn("h-4 w-4", busy === "analytics-sync" && "animate-spin")} />{t("admin.marketing.analytics_sync")}</Button>
     </div>
+    <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+      <h2 className="font-black">{t("admin.marketing.analytics_sources")}</h2>
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        {status.sources.length ? status.sources.map((source, index) => (
+          <StructuredRecordCard key={`analytics-source-${index}`} data={source} titleField="source" fallbackTitle={t("admin.marketing.analytics_source")} t={t} formatDate={formatDate} />
+        )) : <Empty t={t} />}
+      </div>
+    </section>
     <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
       <h2 className="font-black">{t("admin.marketing.analytics_thresholds")}</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -556,7 +644,7 @@ function AnalyticsPanel({ data, busy, t, onSync, onSettings }: { data: PlatformD
     </section>
     <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
       <h2 className="font-black">{t("admin.marketing.analytics_reports")}</h2>
-      <div className="mt-4 space-y-3">{data.reports.length ? data.reports.map((report) => <pre key={String(report.id)} className="max-w-full overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(report, null, 2)}</pre>) : <Empty t={t} />}</div>
+      <div className="mt-4 space-y-3">{data.reports.length ? data.reports.map((report, index) => <StructuredRecordCard key={String(report.id ?? index)} data={report} titleField="snapshot_type" fallbackTitle={t("admin.marketing.analytics_report")} t={t} formatDate={formatDate} />) : <Empty t={t} />}</div>
     </section>
   </div>;
 }
@@ -583,11 +671,12 @@ function YouTubePanel({ status, busy, t, onSync }: { status: YouTubeStatus; busy
         </Button>
       </div>
       <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label={t("admin.marketing.status")} value={<StatusBadge status={status.apiKeyConfigured ? "CONFIGURED" : "NOT_CONFIGURED"} />} />
+        <Metric label={t("admin.marketing.status")} value={<StatusBadge status={status.apiKeyConfigured ? "CONFIGURED" : "NOT_CONFIGURED"} t={t} />} />
         <Metric label={t("admin.marketing.youtube_access")} value={status.readOnly ? t("admin.marketing.read_only") : "—"} />
         <Metric label={t("admin.marketing.youtube_channel_id")} value={status.channelId} />
-        <Metric label={t("admin.marketing.youtube_last_sync")} value={String(status.latestSync.status ?? t("admin.marketing.never"))} />
+        <Metric label={t("admin.marketing.youtube_last_sync")} value={status.latestSync.status ? <StatusBadge status={String(status.latestSync.status)} t={t} /> : t("admin.marketing.never")} />
       </dl>
+      <TechnicalDetails data={status.latestSync} t={t} />
     </section>
     <div className="grid gap-5 xl:grid-cols-2">
       <YouTubeVideoList title={t("admin.marketing.youtube_latest")} videos={status.latestVideos} t={t} />
@@ -605,31 +694,34 @@ function YouTubeVideoList({ title, videos, t }: { title: string; videos: Array<R
         <p className="mt-1 text-xs text-muted-foreground">
           {t("admin.marketing.youtube_views")}: {String(video.view_count ?? 0)}
         </p>
+        <TechnicalDetails data={video} t={t} />
       </article>) : <Empty t={t} />}
     </div>
   </section>;
 }
 
-function DiscoveryPanel({ data, t }: { data: AnalyticsDiscovery; t: Translate }) {
+function DiscoveryPanel({ data, t, formatDate }: { data: AnalyticsDiscovery; t: Translate; formatDate: DateFormatter }) {
   const cards = [
-    ["opportunities", data.opportunities],
-    ["content_gaps", data.contentGaps],
-    ["query_classifications", data.queryClassifications],
-    ["language_performance", data.languages],
-    ["device_performance", data.devices],
+    ["opportunities", data.opportunities, "query"],
+    ["content_gaps", data.contentGaps, "query"],
+    ["query_classifications", data.queryClassifications, "search_intent"],
+    ["language_performance", data.languages, "language"],
+    ["device_performance", data.devices, "device"],
   ] as const;
-  return <div className="grid gap-5 xl:grid-cols-2">{cards.map(([key, items]) => <section key={key} className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"><h2 className="font-black">{t(`admin.marketing.${key}`)}</h2><div className="mt-4 space-y-3">{items.length ? items.map((item, index) => <pre key={`${key}-${index}`} className="max-w-full overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(item, null, 2)}</pre>) : <Empty t={t} />}</div></section>)}</div>;
+  return <div className="grid gap-5 xl:grid-cols-2">{cards.map(([key, items, titleField]) => <section key={key} className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-black">{t(`admin.marketing.${key}`)}</h2><Badge variant="outline">{items.length}</Badge></div><div className="mt-4 space-y-3">{items.length ? items.map((item, index) => <StructuredRecordCard key={`${key}-${String(item.id ?? index)}`} data={item} titleField={titleField} fallbackTitle={t(`admin.marketing.${key}_item`)} t={t} formatDate={formatDate} />) : <Empty t={t} />}</div></section>)}</div>;
 }
 
 function SeoMigrationPanel({
   workspace,
   busy,
   t,
+  formatDate,
   onImport,
 }: {
   workspace: SeoMigrationWorkspace;
   busy: string | null;
   t: Translate;
+  formatDate: DateFormatter;
   onImport: (file: File) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
@@ -646,10 +738,10 @@ function SeoMigrationPanel({
 
   return <div className="space-y-5">
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <AdminMetricCard icon={<Import />} label={t("admin.marketing.seo_snapshot")} value={latest.status ?? t("admin.marketing.never")} />
+      <AdminMetricCard icon={<Import />} label={t("admin.marketing.seo_snapshot")} value={latest.status ? <StatusBadge status={latest.status} t={t} /> : t("admin.marketing.never")} />
       <AdminMetricCard icon={<SearchCheck />} label={t("admin.marketing.seo_queries")} value={counts["طلبات البحث"] ?? 0} />
       <AdminMetricCard icon={<BarChart3 />} label={t("admin.marketing.seo_pages")} value={counts["الصفحات"] ?? 0} />
-      <AdminMetricCard icon={<ShieldCheck />} label={t("admin.marketing.seo_canonical")} value={`${workspace.targetDomain} · ${workspace.canonicalActivation}`} />
+      <AdminMetricCard icon={<ShieldCheck />} label={t("admin.marketing.seo_canonical")} value={<span className="inline-flex flex-wrap items-center justify-center gap-2"><span dir="ltr">{workspace.targetDomain}</span><StatusBadge status={workspace.canonicalActivation} t={t} /></span>} />
     </div>
 
     <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
@@ -658,6 +750,7 @@ function SeoMigrationPanel({
           <h2 className="font-black">{t("admin.marketing.seo_import_title")}</h2>
           <p className="mt-1 break-words text-sm text-muted-foreground">{t("admin.marketing.seo_import_description")}</p>
           {latest.sourceFileName ? <p className="mt-2 break-all text-xs text-muted-foreground">{latest.sourceFileName} · {latest.periodStart} — {latest.periodEnd}</p> : null}
+          {latest.sourceFileName ? <div className="mt-3"><StructuredData data={latest} t={t} formatDate={formatDate} technicalDetails /></div> : null}
         </div>
         {workspace.localImportEnabled ? <div className="flex w-full max-w-xl flex-col gap-2 sm:flex-row">
           <input
@@ -671,7 +764,7 @@ function SeoMigrationPanel({
             <Import className={cn("h-4 w-4", busy === "seo-import" && "animate-pulse")} />
             {t("admin.marketing.seo_import")}
           </Button>
-        </div> : <StatusBadge status="IMPORT_DISABLED" />}
+        </div> : <StatusBadge status="IMPORT_DISABLED" t={t} />}
       </div>
     </section>
 
@@ -682,7 +775,7 @@ function SeoMigrationPanel({
       </div>
       <div className="mt-4 space-y-3">
         {workspace.opportunities.length ? workspace.opportunities.slice(0, 25).map((item, index) => (
-          <pre key={`seo-opportunity-${String(item.id ?? index)}`} className="max-w-full overflow-x-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(item, null, 2)}</pre>
+          <StructuredRecordCard key={`seo-opportunity-${String(item.id ?? index)}`} data={item} titleField="query" fallbackTitle={t("admin.marketing.opportunity_item")} t={t} formatDate={formatDate} />
         )) : <Empty t={t} />}
       </div>
     </section>
@@ -690,14 +783,14 @@ function SeoMigrationPanel({
     <div className="grid gap-5 xl:grid-cols-2">
       {sections.map(([key, value]) => <section key={key} className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
         <h2 className="font-black">{t(`admin.marketing.seo_${key}`)}</h2>
-        <pre className="mt-4 max-h-[32rem] max-w-full overflow-auto rounded-xl bg-muted/40 p-3 text-xs">{JSON.stringify(value, null, 2)}</pre>
+        <div className="mt-4"><StructuredData data={value} t={t} formatDate={formatDate} /></div>
       </section>)}
     </div>
 
     {workspace.ownerDecisionsRequired.length ? <section className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 text-amber-900">
       <h2 className="font-black">{t("admin.marketing.seo_owner_decisions")}</h2>
       <ul className="mt-3 list-inside list-disc space-y-2 text-sm">
-        {workspace.ownerDecisionsRequired.map((decision) => <li key={decision}>{decision}</li>)}
+        {workspace.ownerDecisionsRequired.map((decision) => <li key={decision}>{ownerDecisionText(decision, t)}</li>)}
       </ul>
     </section> : null}
   </div>;

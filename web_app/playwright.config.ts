@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3005);
 const backendPort = Number(process.env.PLAYWRIGHT_BACKEND_PORT ?? 8899);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
+const useExternalServer = process.env.PLAYWRIGHT_EXTERNAL_SERVER === "true";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -23,7 +24,7 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: [
+  webServer: useExternalServer ? undefined : [
     {
       command: "node tests/e2e/mock-backend.mjs",
       url: `http://127.0.0.1:${backendPort}/api/lessons`,

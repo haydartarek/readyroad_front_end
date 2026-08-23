@@ -5,7 +5,9 @@ import { notFound, redirect } from "next/navigation";
 import { articleParagraphs, formatArticleDate } from "@/app/blog/blog-format";
 import { localizePathname } from "@/lib/i18n-routing";
 import { createArticleMetadata } from "@/lib/article-metadata";
+import { createArticleStructuredData } from "@/lib/article-structured-data";
 import { translateMessage } from "@/lib/messages";
+import { serializeJsonLd } from "@/lib/seo";
 import { getPublicArticle } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
 
@@ -39,8 +41,19 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
     );
   }
 
+  const structuredData = createArticleStructuredData(
+    article,
+    locale,
+    translateMessage(locale, "blog.eyebrow"),
+  );
+
   return (
     <main className="min-h-screen bg-background text-foreground">
+      <script
+        id="article-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
+      />
       <article className="container mx-auto max-w-3xl px-4 py-8 sm:px-6 md:py-12">
         <Link
           href={localizePathname("/blog", locale)}

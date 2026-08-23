@@ -54,6 +54,20 @@ describe("localized public blog article", () => {
     expect(screen.getByRole("heading", { name: "Safer driving in Belgium" })).toBeInTheDocument();
     expect(screen.getByText("First paragraph.")).toBeInTheDocument();
     expect(screen.getByText("Second paragraph.")).toBeInTheDocument();
+
+    const structuredData = JSON.parse(
+      document.querySelector("#article-structured-data")?.textContent ?? "{}",
+    ) as { "@graph"?: Array<Record<string, unknown>> };
+    expect(structuredData["@graph"]?.[0]).toMatchObject({
+      "@type": "BlogPosting",
+      headline: "Safer driving in Belgium",
+      datePublished: "2026-08-22T10:00:00Z",
+      inLanguage: "en",
+      url: "https://rijvia.be/blog/safe-driving",
+    });
+    expect(structuredData["@graph"]?.[1]).toMatchObject({
+      "@type": "BreadcrumbList",
+    });
   });
 
   it("uses immutable localized metadata and language-specific publication slugs", async () => {

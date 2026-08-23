@@ -7,24 +7,28 @@ const localizedArticles = [
     indexPath: "/blog",
     slug: "safe-driving-belgium",
     title: "Safer driving in Belgium",
+    language: "en",
   },
   {
     locale: "nl",
     indexPath: "/nl/blog",
     slug: "veilig-rijden-belgie",
     title: "Veiliger rijden in België",
+    language: "nl-BE",
   },
   {
     locale: "fr",
     indexPath: "/fr/blog",
     slug: "conduite-sure-belgique",
     title: "Conduire plus sûrement en Belgique",
+    language: "fr-BE",
   },
   {
     locale: "ar",
     indexPath: "/ar/blog",
     slug: "al-qiyada-al-amina",
     title: "القيادة الآمنة في بلجيكا",
+    language: "ar",
   },
 ] as const;
 
@@ -72,7 +76,23 @@ test.describe("localized public blog routes", () => {
         "https://rijvia.be/blog/safe-driving-belgium",
       );
       await expect(page.getByRole("heading", { name: article.title })).toBeVisible();
-      await expect(page.getByText(/immutable published body/i)).toBeVisible();
+      await expect(
+        page.getByRole("article").getByText(/immutable published body/i),
+      ).toBeVisible();
+      const structuredDataScript = page.locator("#article-structured-data");
+      await expect(structuredDataScript).toHaveCount(1);
+      const structuredData = JSON.parse(
+        (await structuredDataScript.textContent()) ?? "{}",
+      ) as { "@graph"?: Array<Record<string, unknown>> };
+      expect(structuredData["@graph"]?.[0], article.indexPath).toMatchObject({
+        "@type": "BlogPosting",
+        headline: article.title,
+        inLanguage: article.language,
+        url: canonicalUrl,
+      });
+      expect(structuredData["@graph"]?.[1], article.indexPath).toMatchObject({
+        "@type": "BreadcrumbList",
+      });
       const dimensions = await page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,
         innerWidth: window.innerWidth,

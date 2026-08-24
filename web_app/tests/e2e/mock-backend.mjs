@@ -111,6 +111,7 @@ function publishedArticle(language) {
     body: "Immutable published body.\n\nSecond reviewed paragraph.",
     publishedAt: "2026-08-22T10:00:00Z",
     alternateSlugs: articleSlugs,
+    internalLinks: [],
   };
 }
 
@@ -160,6 +161,7 @@ const server = http.createServer((request, response) => {
       title: article.title,
       summary: article.summary,
       publishedAt: article.publishedAt,
+      alternateSlugs: article.alternateSlugs,
     }] : []));
     return;
   }

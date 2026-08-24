@@ -70,6 +70,7 @@ export type TheoryCoverageCategory = {
   categoryName: string;
   eligibleQuestions: number;
   uniqueQuestionsSeen: number;
+  uniqueQuestionsAnswered: number;
   unseenQuestions: number;
   coveragePercentage: number | null;
   timesPresented: number;
@@ -77,12 +78,14 @@ export type TheoryCoverageCategory = {
   timesCorrect: number;
   timesIncorrect: number;
   accuracyPercentage: number | null;
+  confidenceState: "LOW" | "MEDIUM" | "HIGH";
 };
 
 export type TheoryCoverage = {
   languageCode: string;
   eligibleQuestions: number;
   uniqueQuestionsSeen: number;
+  uniqueQuestionsAnswered: number;
   unseenQuestions: number;
   coveragePercentage: number | null;
   timesPresented: number;
@@ -90,6 +93,7 @@ export type TheoryCoverage = {
   timesCorrect: number;
   timesIncorrect: number;
   accuracyPercentage: number | null;
+  confidenceState: "LOW" | "MEDIUM" | "HIGH";
   categories: TheoryCoverageCategory[];
 };
 

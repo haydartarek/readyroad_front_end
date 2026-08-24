@@ -7,6 +7,7 @@ import {
   getStudentIntelligence,
   getProgressByCategory,
   getRecentActivity,
+  getTheoryQuestionCoverage,
 } from "./progressService";
 
 const client = apiClient.getInstance();
@@ -45,6 +46,7 @@ describe("analytics services preserve API failure state", () => {
     ["student intelligence", () => getStudentIntelligence()],
     ["category progress", () => getProgressByCategory()],
     ["recent activity", () => getRecentActivity()],
+    ["theory coverage", () => getTheoryQuestionCoverage()],
     ["weak areas", () => getWeakAreas()],
   ])("does not convert %s failures into zero or empty data", async (_, load) => {
     await expect(load()).rejects.toBeInstanceOf(AxiosError);

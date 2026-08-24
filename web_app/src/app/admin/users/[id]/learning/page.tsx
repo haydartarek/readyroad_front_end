@@ -164,10 +164,11 @@ function CategoryHighlights({ title, categories, language, emptyLabel }: { title
 
 function SectionOverview({ section, payload, t }: { section: Section; payload: SectionPayload; t: (key: string) => string }) {
   if (section === "coverage" && payload && "eligibleQuestions" in payload) {
-    return <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+    return <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
       <OverviewMetric label={t("admin.learning.coverage")} value={percentage(payload.coveragePercentage)} />
       <OverviewMetric label={t("admin.learning.accuracy")} value={percentage(payload.accuracyPercentage)} />
       <OverviewMetric label={t("admin.learning.questions_seen")} value={`${payload.uniqueQuestionsSeen}/${payload.eligibleQuestions}`} />
+      <OverviewMetric label={t("dashboard.theory_coverage.confidence")} value={t(`dashboard.theory_coverage.confidence_${payload.confidenceState.toLowerCase()}`)} />
       <OverviewMetric label={t("admin.learning.presented_answered")} value={`${payload.timesPresented}/${payload.timesAnswered}`} />
     </div>;
   }
@@ -202,7 +203,7 @@ function LearningRow({ row, section, userId, language, t }: { row: GenericRow; s
   }
   if (section === "coverage") {
     const coverage = row as unknown as TheoryCoverageCategory;
-    return <div className="grid gap-2 rounded-xl border border-border/50 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"><div><p className="font-bold">{coverage.categoryCode} · {coverage.categoryName}</p><p className="text-xs text-muted-foreground">{coverage.uniqueQuestionsSeen}/{coverage.eligibleQuestions} · {t("admin.learning.questions_seen")}</p></div><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{t("admin.learning.coverage")} {percentage(coverage.coveragePercentage)}</Badge><Badge variant="outline">{t("admin.learning.accuracy")} {percentage(coverage.accuracyPercentage)}</Badge></div></div>;
+    return <div className="grid gap-2 rounded-xl border border-border/50 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"><div><p className="font-bold">{coverage.categoryCode} · {coverage.categoryName}</p><p className="text-xs text-muted-foreground">{coverage.uniqueQuestionsSeen}/{coverage.eligibleQuestions} · {t("admin.learning.questions_seen")}</p></div><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{t("admin.learning.coverage")} {percentage(coverage.coveragePercentage)}</Badge><Badge variant="outline">{t("admin.learning.accuracy")} {percentage(coverage.accuracyPercentage)}</Badge><Badge variant="outline">{t(`dashboard.theory_coverage.confidence_${coverage.confidenceState.toLowerCase()}`)}</Badge></div></div>;
   }
   if (section === "difficulty") {
     const difficulty = row as unknown as DifficultyPerformance;

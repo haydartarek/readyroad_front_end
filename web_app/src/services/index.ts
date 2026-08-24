@@ -13,6 +13,7 @@ export {
   getStudentIntelligence,
   getProgressByCategory,
   getRecentActivity,
+  getTheoryQuestionCoverage,
   getTheoryTimeoutAnalysis,
 } from "./progressService";
 

@@ -53,12 +53,12 @@ describe("Admin learner profile", () => {
     get.mockImplementation((url: string, params?: { page?: number }) => {
       if (url === "/admin/learning/users/42") return Promise.resolve({ data: summary });
       if (url.endsWith("/coverage")) return Promise.resolve({ data: {
-        languageCode: "en", eligibleQuestions: 100, uniqueQuestionsSeen: 50, unseenQuestions: 50,
+        languageCode: "en", eligibleQuestions: 100, uniqueQuestionsSeen: 50, uniqueQuestionsAnswered: 40, unseenQuestions: 50,
         coveragePercentage: 50, timesPresented: 60, timesAnswered: 50, timesCorrect: 40,
-        timesIncorrect: 10, accuracyPercentage: 80,
+        timesIncorrect: 10, accuracyPercentage: 80, confidenceState: "MEDIUM",
         categories: [{ categoryId: 1, categoryCode: "A", categoryName: "Priority", eligibleQuestions: 20,
-          uniqueQuestionsSeen: 10, unseenQuestions: 10, coveragePercentage: 50, timesPresented: 12,
-          timesAnswered: 10, timesCorrect: 8, timesIncorrect: 2, accuracyPercentage: 80 }],
+          uniqueQuestionsSeen: 10, uniqueQuestionsAnswered: 10, unseenQuestions: 10, coveragePercentage: 50, timesPresented: 12,
+          timesAnswered: 10, timesCorrect: 8, timesIncorrect: 2, accuracyPercentage: 80, confidenceState: "MEDIUM" }],
       } });
       if (url.endsWith("/difficulty")) return Promise.resolve({ data: {
         items: [{ difficulty: "EASY", answeredQuestions: 10, correctAnswers: 8, accuracy: 80 }],
@@ -77,6 +77,7 @@ describe("Admin learner profile", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "admin.learning.section.coverage" }));
     await screen.findByText("50/100");
+    expect(screen.getAllByText("dashboard.theory_coverage.confidence_medium")).toHaveLength(2);
     expect(screen.getAllByText("A · Priority")).toHaveLength(2);
     expect(get).toHaveBeenCalledWith("/admin/learning/users/42/coverage");
 

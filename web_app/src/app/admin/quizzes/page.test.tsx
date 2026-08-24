@@ -53,7 +53,7 @@ jest.mock("@/components/admin/AdminPageHeader", () => ({
 }));
 
 jest.mock("@/lib/api", () => ({
-  apiClient: { get: jest.fn(), post: jest.fn(), delete: jest.fn() },
+  apiClient: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn() },
   isServiceUnavailable: () => false,
   logApiError: jest.fn(),
 }));
@@ -86,6 +86,29 @@ describe("Admin quiz quality controls", () => {
   beforeEach(() => {
     mockedGet.mockReset();
     mockedGet.mockImplementation((url: string) => {
+      if (url === "/admin/quiz/bank-health")
+        return Promise.resolve({
+          data: {
+            generatedAt: "2026-08-24T00:00:00Z",
+            summary: {
+              totalQuestions: 1,
+              activeQuestions: 1,
+              inactiveQuestions: 0,
+              publishedQuestions: 1,
+              eligibleAllLocales: 1,
+              translationGapQuestions: 0,
+              explanationGapQuestions: 0,
+              invalidQuestions: 0,
+              underrepresentedCategories: 1,
+              overrepresentedCategories: 0,
+            },
+            locales: [],
+            categories: [],
+            questionsNeedingReview: [],
+            rarelyExposedQuestions: [],
+            heavilyExposedQuestions: [],
+          },
+        });
       if (url === "/admin/quiz/categories")
         return Promise.resolve({
           data: [

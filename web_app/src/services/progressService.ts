@@ -231,6 +231,39 @@ export interface TheoryTimeoutAnalysis {
   }>;
 }
 
+export interface TheoryQuestionCoverageCategory {
+  categoryId: number;
+  categoryCode: string;
+  categoryName: string;
+  eligibleQuestions: number;
+  uniqueQuestionsSeen: number;
+  uniqueQuestionsAnswered: number;
+  unseenQuestions: number;
+  coveragePercentage: number | null;
+  timesPresented: number;
+  timesAnswered: number;
+  timesCorrect: number;
+  timesIncorrect: number;
+  accuracyPercentage: number | null;
+  confidenceState: "LOW" | "MEDIUM" | "HIGH";
+}
+
+export interface TheoryQuestionCoverage {
+  languageCode: "ar" | "nl" | "en" | "fr";
+  eligibleQuestions: number;
+  uniqueQuestionsSeen: number;
+  uniqueQuestionsAnswered: number;
+  unseenQuestions: number;
+  coveragePercentage: number | null;
+  timesPresented: number;
+  timesAnswered: number;
+  timesCorrect: number;
+  timesIncorrect: number;
+  accuracyPercentage: number | null;
+  confidenceState: "LOW" | "MEDIUM" | "HIGH";
+  categories: TheoryQuestionCoverageCategory[];
+}
+
 // ─── Constants ───────────────────────────────────────────
 
 const ENDPOINTS = {
@@ -238,6 +271,7 @@ const ENDPOINTS = {
   INTELLIGENCE: "/users/me/progress/intelligence",
   BY_CATEGORY: "/users/me/progress/categories",
   EXAM_HISTORY: "/exams/simulations/history",
+  THEORY_COVERAGE: "/users/me/progress/theory-coverage",
   THEORY_TIMEOUTS: "/users/me/progress/theory-timeouts",
 } as const;
 
@@ -467,6 +501,25 @@ export async function getTheoryTimeoutAnalysis(
     throw new Error("Theory timeout analysis response is invalid");
   }
   return response.data;
+}
+
+export async function getTheoryQuestionCoverage(): Promise<TheoryQuestionCoverage> {
+  const response = await apiClient.get<TheoryQuestionCoverage>(
+    ENDPOINTS.THEORY_COVERAGE,
+  );
+  const data = response.data;
+  if (
+    !data ||
+    typeof data !== "object" ||
+    typeof data.languageCode !== "string" ||
+    !Number.isFinite(data.eligibleQuestions) ||
+    !Number.isFinite(data.uniqueQuestionsSeen) ||
+    !Number.isFinite(data.uniqueQuestionsAnswered) ||
+    !Array.isArray(data.categories)
+  ) {
+    throw new Error("Theory question coverage response is invalid");
+  }
+  return data;
 }
 
 function requireFiniteMetric(value: unknown, field: string): number {

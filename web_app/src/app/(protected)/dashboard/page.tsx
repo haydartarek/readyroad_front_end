@@ -11,6 +11,7 @@ import {
   getStudentIntelligence,
   getProgressByCategory,
   getRecentActivity,
+  getTheoryQuestionCoverage,
   getTheoryTimeoutAnalysis,
   getWeakAreas,
 } from "@/services";
@@ -48,6 +49,7 @@ import type {
   CategoryProgressSummary,
   SignWeaknessSummary,
   StudentIntelligence,
+  TheoryQuestionCoverage,
   TheoryTimeoutAnalysis,
 } from "@/services/progressService";
 import { QuickActionsSection } from "@/components/dashboard/quick-actions-section";
@@ -58,6 +60,7 @@ import { ExamResultsPageContent } from "@/app/(protected)/exam/results/page";
 import { ProfilePageContent } from "@/app/(protected)/profile/page";
 import { StudentIntelligencePanel } from "@/components/dashboard/student-intelligence-panel";
 import { localizedCategoryName } from "@/lib/student-intelligence-presentation";
+import { TheoryCoverageWidget } from "@/components/dashboard/theory-coverage-widget";
 
 // ─── Progress Tracker types (inline, no extra file) ──────────────────────────
 
@@ -682,6 +685,8 @@ function DashboardHome() {
     useState<StudentIntelligence | null>(null);
   const [theoryTimeouts, setTheoryTimeouts] =
     useState<TheoryTimeoutAnalysis | null>(null);
+  const [theoryCoverage, setTheoryCoverage] =
+    useState<TheoryQuestionCoverage | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
 
   // Reset all dashboard state when the user changes (login / logout).
@@ -699,6 +704,7 @@ function DashboardHome() {
     setLoadError(false);
     setStudentIntelligence(null);
     setTheoryTimeouts(null);
+    setTheoryCoverage(null);
   }, [currentUserId]);
 
   useEffect(() => {
@@ -718,6 +724,7 @@ function DashboardHome() {
           weakAreasData,
           recentActivityData,
           categoryProgressResponse,
+          coverage,
           timeoutAnalysis,
         ] = await Promise.all([
           getOverallProgress(),
@@ -725,10 +732,12 @@ function DashboardHome() {
           getWeakAreas(language),
           getRecentActivity(5),
           getProgressByCategory(),
+          getTheoryQuestionCoverage(),
           getTheoryTimeoutAnalysis(5),
         ]);
 
         setStudentIntelligence(intelligence);
+        setTheoryCoverage(coverage);
         setTheoryTimeouts(timeoutAnalysis);
 
         setProgressData({
@@ -976,6 +985,10 @@ function DashboardHome() {
           />
         ))}
       </div>
+
+      {theoryCoverage ? (
+        <TheoryCoverageWidget coverage={theoryCoverage} t={t} />
+      ) : null}
 
       {/* Recent Activity */}
       <RecentActivityList activities={recentActivities} />

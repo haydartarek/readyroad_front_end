@@ -166,7 +166,7 @@ export function Footer() {
 
               <div className="flex items-center gap-2 pt-0.5">
                 <a
-                  href="https://www.facebook.com/people/Rij-Bewijs/61559077906506/"
+                  href="https://www.facebook.com/profile.php?id=61559077906506"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={t("home.footer.social_facebook")}
@@ -184,7 +184,7 @@ export function Footer() {
                   <Instagram className="h-4 w-4" />
                 </a>
                 <a
-                  href="https://www.youtube.com/@RijBewijsBe"
+                  href="https://www.youtube.com/channel/UCs_IDQXCz6zADuHIdfS2C2w"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={t("home.footer.social_youtube")}

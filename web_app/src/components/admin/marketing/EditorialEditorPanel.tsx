@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import EditorialArticleImagePanel from "@/components/admin/marketing/EditorialArticleImagePanel";
+import EditorialAuthoringPanel from "@/components/admin/marketing/EditorialAuthoringPanel";
 import type {
   EditorialApprovalRequest,
   EditorialInternalLinkInput,
@@ -38,6 +39,7 @@ import type {
   EditorialTopic,
   EditorialVersion,
   EditorialWorkspace,
+  MarketingStrategySnapshot,
 } from "@/lib/marketing-admin";
 
 type Translate = (key: string, variables?: Record<string, string | number>) => string;
@@ -45,6 +47,7 @@ type DateFormatter = (value: string | null) => string;
 
 interface EditorialEditorPanelProps {
   workspace: EditorialWorkspace;
+  strategy: MarketingStrategySnapshot;
   busy: string | null;
   t: Translate;
   formatDate: DateFormatter;
@@ -58,6 +61,7 @@ interface EditorialEditorPanelProps {
     request: EditorialApprovalRequest,
   ) => Promise<void>;
   onUploadImage: (articleId: number, formData: FormData) => Promise<void>;
+  onRefresh: () => Promise<void>;
 }
 
 interface FormState {
@@ -84,12 +88,14 @@ const EMPTY_FORM: FormState = {
 
 export default function EditorialEditorPanel({
   workspace,
+  strategy,
   busy,
   t,
   formatDate,
   onSave,
   onRequestApproval,
   onUploadImage,
+  onRefresh,
 }: EditorialEditorPanelProps) {
   const [search, setSearch] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(
@@ -408,6 +414,14 @@ export default function EditorialEditorPanel({
               ))}
             </div>
           </header>
+
+          <EditorialAuthoringPanel
+            topic={selectedTopic}
+            language={language}
+            strategy={strategy}
+            t={t}
+            onChanged={onRefresh}
+          />
 
           {["PUBLISHED", "UPDATE_RECOMMENDED"].includes(lifecycleState ?? "") ? (
             <section

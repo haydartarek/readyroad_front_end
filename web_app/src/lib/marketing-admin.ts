@@ -201,11 +201,72 @@ export interface EditorialTopic {
   primaryLanguage: EditorialLanguage | null;
   priority: string | null;
   strategyContextResolved: boolean;
+  uspId: number | null;
+  icpId: string | null;
+  contentPillarId: number | null;
+  funnelStageId: number | null;
+  conversionGoalId: number | null;
   articleId: number | null;
   lifecycleState: string | null;
   canonicalLanguage: EditorialLanguage | null;
   image: EditorialArticleImageAsset | null;
   currentVersions: EditorialCurrentVersion[];
+}
+
+export interface EditorialAuthoringStatus {
+  topicId: number;
+  topicStatus: string;
+  articleId: number | null;
+  lifecycleState: string | null;
+  briefId: number | null;
+  briefStatus: string | null;
+  briefLanguage: EditorialLanguage | null;
+  briefReference: string | null;
+  claimsTotal: number;
+  claimsSupported: number;
+  claimsRequiringReview: number;
+  claimsMissing: number;
+  latestBriefTaskStatus: string | null;
+  latestSourceTaskStatus: string | null;
+  latestDraftTaskStatus: string | null;
+  canCreateBrief: boolean;
+  canCollectSources: boolean;
+  canCreateDraft: boolean;
+}
+
+export interface MarketingStrategySnapshot {
+  usps: Array<{
+    id: number;
+    title: string;
+    description: string;
+    active: boolean;
+  }>;
+  icps: Array<{
+    id: string;
+    name: string;
+    language: string;
+    active: boolean;
+  }>;
+  contentPillars: Array<{
+    id: number;
+    pillarKey: string;
+    name: string;
+    active: boolean;
+  }>;
+  funnelStages: Array<{
+    id: number;
+    stageKey: string;
+    sequenceNumber: number;
+    active: boolean;
+  }>;
+  conversionGoals: Array<{
+    id: number;
+    goalKey: string;
+    name: string;
+    primaryCta: string;
+    funnelStageId: number;
+    active: boolean;
+  }>;
 }
 
 export interface EditorialArticleImageVariant {
@@ -403,7 +464,7 @@ export function taskCount(counts: TaskCounts | undefined, status: string) {
 }
 
 export function statusTone(status: string) {
-  if (["COMPLETED", "HEALTHY", "APPROVED"].includes(status)) return "success";
+  if (["COMPLETED", "HEALTHY", "APPROVED", "RELEASED"].includes(status)) return "success";
   if (["FAILED", "REJECTED", "DEGRADED"].includes(status)) return "danger";
   if (["WAITING_APPROVAL", "RETRY_SCHEDULED", "SCHEDULED"].includes(status)) return "warning";
   return "default";

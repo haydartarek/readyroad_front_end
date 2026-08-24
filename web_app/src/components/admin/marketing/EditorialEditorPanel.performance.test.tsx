@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import EditorialEditorPanel from "@/components/admin/marketing/EditorialEditorPanel";
 import { apiClient } from "@/lib/api";
-import type { EditorialWorkspace } from "@/lib/marketing-admin";
+import type { EditorialWorkspace, MarketingStrategySnapshot } from "@/lib/marketing-admin";
 
 jest.mock("@/lib/api", () => ({
   apiClient: { get: jest.fn() },
@@ -41,6 +41,11 @@ const workspace: EditorialWorkspace = {
     primaryLanguage: "EN",
     priority: "P0",
     strategyContextResolved: true,
+    uspId: 1,
+    icpId: "ICP-EN-BEGINNER",
+    contentPillarId: 1,
+    funnelStageId: 1,
+    conversionGoalId: 1,
     articleId: 17,
     lifecycleState: "PUBLISHED",
     canonicalLanguage: "EN",
@@ -55,6 +60,14 @@ const workspace: EditorialWorkspace = {
       createdBy: "owner",
     }],
   }],
+};
+
+const strategy: MarketingStrategySnapshot = {
+  usps: [],
+  icps: [],
+  contentPillars: [],
+  funnelStages: [],
+  conversionGoals: [],
 };
 
 describe("EditorialEditorPanel performance monitoring", () => {
@@ -92,6 +105,30 @@ describe("EditorialEditorPanel performance monitoring", () => {
           },
         });
       }
+      if (url.endsWith("/authoring-status")) {
+        return Promise.resolve({
+          data: {
+            topicId: 1,
+            topicStatus: "PUBLISHED",
+            articleId: 17,
+            lifecycleState: "PUBLISHED",
+            briefId: 1,
+            briefStatus: "APPROVED",
+            briefLanguage: "EN",
+            briefReference: "ARTICLE_BRIEF:1",
+            claimsTotal: 1,
+            claimsSupported: 1,
+            claimsRequiringReview: 0,
+            claimsMissing: 0,
+            latestBriefTaskStatus: "COMPLETED",
+            latestSourceTaskStatus: "COMPLETED",
+            latestDraftTaskStatus: "COMPLETED",
+            canCreateBrief: false,
+            canCollectSources: false,
+            canCreateDraft: false,
+          },
+        });
+      }
       return Promise.reject(new Error(`Unexpected request: ${url}`));
     });
   });
@@ -100,12 +137,14 @@ describe("EditorialEditorPanel performance monitoring", () => {
     render(
       <EditorialEditorPanel
         workspace={workspace}
+        strategy={strategy}
         busy={null}
         t={t}
         formatDate={(value) => value ?? "—"}
         onSave={jest.fn()}
         onRequestApproval={jest.fn()}
         onUploadImage={jest.fn()}
+        onRefresh={jest.fn().mockResolvedValue(undefined)}
       />,
     );
 

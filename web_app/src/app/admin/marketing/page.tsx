@@ -55,6 +55,7 @@ import {
   type EditorialSaveRequest,
   type EditorialSaveResult,
   type EditorialWorkspace,
+  type MarketingStrategySnapshot,
   taskCount,
 } from "@/lib/marketing-admin";
 
@@ -75,6 +76,7 @@ interface PlatformData {
   youtubeStatus: YouTubeStatus;
   seoMigration: SeoMigrationWorkspace;
   editorial: EditorialWorkspace;
+  strategy: MarketingStrategySnapshot;
 }
 
 const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
@@ -108,7 +110,7 @@ export default function MarketingAdminPage() {
     setLoading(true);
     setError(false);
     try {
-      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports, youtubeStatus, seoMigration, editorial] = await Promise.all([
+      const [overview, agents, tasks, errors, audit, settings, worker, analyticsStatus, analyticsSettings, discovery, reports, youtubeStatus, seoMigration, editorial, strategy] = await Promise.all([
         apiClient.get<MarketingOverview>("/admin/marketing/overview"),
         apiClient.get<MarketingAgent[]>("/admin/marketing/agents"),
         apiClient.get<MarketingTaskPage>("/admin/marketing/tasks", { limit: 100 }),
@@ -123,6 +125,7 @@ export default function MarketingAdminPage() {
         apiClient.get<YouTubeStatus>("/admin/marketing/youtube/status"),
         apiClient.get<SeoMigrationWorkspace>("/admin/marketing/seo-migration/workspace"),
         apiClient.get<EditorialWorkspace>("/admin/marketing/editorial/editor"),
+        apiClient.get<MarketingStrategySnapshot>("/admin/marketing/strategy"),
       ]);
       setData({
         overview: overview.data,
@@ -139,6 +142,7 @@ export default function MarketingAdminPage() {
         youtubeStatus: youtubeStatus.data,
         seoMigration: seoMigration.data,
         editorial: editorial.data,
+        strategy: strategy.data,
       });
     } catch (requestError) {
       logApiError("Failed to load marketing admin platform", requestError);
@@ -333,12 +337,14 @@ export default function MarketingAdminPage() {
           {view === "editorial" ? (
             <EditorialEditorPanel
               workspace={data.editorial}
+              strategy={data.strategy}
               busy={busy}
               t={t}
               formatDate={formatDate}
               onSave={saveEditorial}
               onRequestApproval={requestEditorialApproval}
               onUploadImage={uploadEditorialImage}
+              onRefresh={load}
             />
           ) : null}
           {view === "seo" ? (

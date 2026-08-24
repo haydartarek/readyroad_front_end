@@ -118,8 +118,8 @@ const responses: Record<string, unknown> = {
   },
   "/admin/marketing/seo-migration/workspace": {
     localImportEnabled: true,
-    publishingEnabled: false,
-    canonicalActivation: "PENDING_RELEASE",
+    publishingEnabled: true,
+    canonicalActivation: "RELEASED",
     targetDomain: "rijvia.be",
     latestImport: {
       id: 3,
@@ -135,7 +135,7 @@ const responses: Record<string, unknown> = {
     contentBacklog: { draftBriefs: [], officialTopics: [] },
     strategy: { usps: [] },
     authority: { mode: "FREE_OR_EARNED_ONLY" },
-    social: { publishing: "DISABLED" },
+    social: { publishing: "BLOCKED_PROVIDER_API_OAUTH", officialHandlesConfigured: true },
     ownerDecisionsRequired: [],
   },
   "/admin/marketing/editorial/editor": {
@@ -161,12 +161,51 @@ const responses: Record<string, unknown> = {
         primaryLanguage: "AR",
         priority: "P0",
         strategyContextResolved: true,
+        uspId: 1,
+        icpId: "ICP-AR-BEGINNER",
+        contentPillarId: 2,
+        funnelStageId: 3,
+        conversionGoalId: 4,
         articleId: null,
         lifecycleState: null,
         canonicalLanguage: null,
         currentVersions: [],
       },
     ],
+  },
+  "/admin/marketing/strategy": {
+    usps: [{ id: 1, title: "RijVia learning platform", description: "Verified platform", active: true }],
+    icps: [{ id: "ICP-AR-BEGINNER", name: "Arabic beginner", language: "AR", active: true }],
+    contentPillars: [{ id: 2, pillarKey: "THEORY_EXAM", name: "Theory exam", active: true }],
+    funnelStages: [{ id: 3, stageKey: "EDUCATION", sequenceNumber: 3, active: true }],
+    conversionGoals: [{
+      id: 4,
+      goalKey: "CONTINUE_TOPIC_LEARNING",
+      name: "Continue learning",
+      primaryCta: "Study the lesson",
+      funnelStageId: 3,
+      active: true,
+    }],
+  },
+  "/admin/marketing/editorial/editor/topics/1/authoring-status": {
+    topicId: 1,
+    topicStatus: "PLANNED",
+    articleId: null,
+    lifecycleState: null,
+    briefId: null,
+    briefStatus: null,
+    briefLanguage: null,
+    briefReference: null,
+    claimsTotal: 0,
+    claimsSupported: 0,
+    claimsRequiringReview: 0,
+    claimsMissing: 0,
+    latestBriefTaskStatus: null,
+    latestSourceTaskStatus: null,
+    latestDraftTaskStatus: null,
+    canCreateBrief: true,
+    canCollectSources: false,
+    canCreateDraft: false,
   },
 };
 
@@ -226,6 +265,7 @@ describe("MarketingAdminPage", () => {
     await screen.findByText("admin.marketing.tasks_today");
 
     fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    await screen.findByText("admin.marketing.editorial_authoring_generate_draft");
     expect(screen.getAllByText("Belgian theory exam guide")).toHaveLength(2);
     fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_slug/), {
       target: { value: "theory-guide" },
@@ -258,11 +298,50 @@ describe("MarketingAdminPage", () => {
     });
   });
 
+  it("queues a strategy-bound article brief from the editorial workflow", async () => {
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    fireEvent.change(await screen.findByLabelText("admin.marketing.editorial_authoring_purpose"), {
+      target: { value: "Explain the verified learning topic." },
+    });
+    fireEvent.change(screen.getByLabelText("admin.marketing.editorial_authoring_queries"), {
+      target: { value: "Belgian theory exam" },
+    });
+    fireEvent.change(screen.getByLabelText("admin.marketing.editorial_authoring_requirements"), {
+      target: { value: "RijVia core lesson" },
+    });
+    fireEvent.click(screen.getByRole("button", {
+      name: "admin.marketing.editorial_authoring_create_brief",
+    }));
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith(
+      "/admin/marketing/editorial/topics/1/briefs",
+      expect.objectContaining({
+        targetLanguage: "AR",
+        searchIntent: "INFORMATIONAL",
+        workingTitle: "Belgian theory exam guide",
+        purpose: "Explain the verified learning topic.",
+        strategyContext: {
+          uspId: 1,
+          icpId: "ICP-AR-BEGINNER",
+          contentPillarId: 2,
+          funnelStageId: 3,
+          conversionGoalId: 4,
+        },
+        targetQueries: ["Belgian theory exam"],
+        sourceRequirements: ["RijVia core lesson"],
+      }),
+    ));
+  });
+
   it("previews the current editorial form without saving it", async () => {
     render(<MarketingAdminPage />);
     await screen.findByText("admin.marketing.tasks_today");
 
     fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    await screen.findByText("admin.marketing.editorial_authoring_generate_draft");
     fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_summary/), {
       target: { value: "Preview summary" },
     });
@@ -333,6 +412,7 @@ describe("MarketingAdminPage", () => {
     render(<MarketingAdminPage />);
     await screen.findByText("admin.marketing.tasks_today");
     fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    await screen.findByText("admin.marketing.editorial_authoring_generate_draft");
     await screen.findByTestId("editorial-approval-request");
 
     const requestButton = screen.getByRole("button", { name: "admin.marketing.editorial_request_approval" });

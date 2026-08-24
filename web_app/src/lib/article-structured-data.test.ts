@@ -11,6 +11,8 @@ const article: PublicArticle = {
   metaTitle: "Safer driving in Belgium | RijVia",
   metaDescription: "Approved metadata description.",
   publishedAt: "2026-08-22T10:00:00Z",
+  image: null,
+  internalLinks: [],
   alternateSlugs: { EN: "safe-driving" },
 };
 

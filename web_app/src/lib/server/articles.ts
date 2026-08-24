@@ -18,6 +18,31 @@ export type PublicArticleSummary = Readonly<{
   title: string;
   summary: string;
   publishedAt: string;
+  image: PublicArticleImage | null;
+  alternateSlugs: Readonly<Record<string, string>>;
+}>;
+
+export type PublicArticleImage = Readonly<{
+  assetId: number;
+  heroUrl: string;
+  cardUrl: string;
+  mobileUrl: string;
+  thumbnailUrl: string;
+  ogUrl: string;
+  altText: string;
+  caption: string | null;
+  sourcePlatform: string;
+  sourceUrl: string;
+  photographerName: string;
+  photographerUrl: string;
+  licenseName: string;
+  licenseUrl: string;
+}>;
+
+export type PublicArticleInternalLink = Readonly<{
+  type: "ARTICLE" | "LESSON" | "TRAFFIC_SIGN" | "PRACTICE" | "EXAM" | "VIDEO";
+  targetPath: string;
+  anchorText: string;
 }>;
 
 export type PublicArticle = PublicArticleSummary &
@@ -25,6 +50,7 @@ export type PublicArticle = PublicArticleSummary &
     body: string;
     metaTitle: string;
     metaDescription: string;
+    internalLinks: ReadonlyArray<PublicArticleInternalLink>;
     alternateSlugs: Readonly<Record<string, string>>;
   }>;
 
@@ -62,4 +88,20 @@ export async function getPublicArticle(
   return fetchArticleApi<PublicArticle>(
     `/articles/${encodeURIComponent(slug)}?language=${API_LANGUAGE[locale]}`,
   );
+}
+
+export async function getRelatedPublicArticles(
+  locale: SiteLocale,
+  targetPath: string,
+): Promise<PublicArticleSummary[]> {
+  const query = new URLSearchParams({
+    language: API_LANGUAGE[locale],
+    targetPath,
+    limit: "3",
+  });
+  const articles = await fetchArticleApi<PublicArticleSummary[]>(
+    `/articles/related?${query.toString()}`,
+  );
+
+  return Array.isArray(articles) ? articles : [];
 }

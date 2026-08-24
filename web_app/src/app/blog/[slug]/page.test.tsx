@@ -37,6 +37,11 @@ describe("localized public blog article", () => {
       metaDescription: "Learn the approved Belgian safe-driving principles with RijVia.",
       body: "First paragraph.\n\nSecond paragraph.",
       publishedAt: "2026-08-22T10:00:00Z",
+      internalLinks: [{
+        type: "LESSON",
+        targetPath: "/lessons/les-19/2",
+        anchorText: "Study the priority lesson",
+      }],
       alternateSlugs: {
         EN: "safe-driving",
         NL: "veilig-rijden",
@@ -54,6 +59,10 @@ describe("localized public blog article", () => {
     expect(screen.getByRole("heading", { name: "Safer driving in Belgium" })).toBeInTheDocument();
     expect(screen.getByText("First paragraph.")).toBeInTheDocument();
     expect(screen.getByText("Second paragraph.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Study the priority lesson/ })).toHaveAttribute(
+      "href",
+      "/lessons/les-19/2",
+    );
 
     const structuredData = JSON.parse(
       document.querySelector("#article-structured-data")?.textContent ?? "{}",
@@ -81,6 +90,7 @@ describe("localized public blog article", () => {
       metaDescription: "Leer de goedgekeurde principes voor veiliger rijden in België.",
       body: "Gepubliceerde inhoud",
       publishedAt: "2026-08-22T10:00:00Z",
+      internalLinks: [],
       alternateSlugs: {
         EN: "safe-driving",
         NL: "veilig-rijden",
@@ -120,6 +130,7 @@ describe("localized public blog article", () => {
       metaDescription: "تعرف على مبادئ القيادة الآمنة المعتمدة في بلجيكا.",
       body: "محتوى منشور",
       publishedAt: "2026-08-22T10:00:00Z",
+      internalLinks: [],
       alternateSlugs: { EN: "safe-driving", AR: "safe-driving-ar" },
     });
 
@@ -134,8 +145,11 @@ describe("localized public blog article", () => {
     getArticle.mockResolvedValue(null);
 
     await expect(
+      generateMetadata({ params: Promise.resolve({ slug: "unpublished" }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(
       BlogArticlePage({ params: Promise.resolve({ slug: "unpublished" }) }),
     ).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(notFound).toHaveBeenCalledTimes(1);
+    expect(notFound).toHaveBeenCalledTimes(2);
   });
 });

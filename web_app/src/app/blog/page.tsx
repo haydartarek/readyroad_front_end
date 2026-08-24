@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { ArrowRight, BookOpenText, CalendarDays } from "lucide-react";
 import { formatArticleDate } from "@/app/blog/blog-format";
@@ -91,8 +92,20 @@ export default async function BlogPage() {
               return (
                 <article
                   key={`${article.language}:${article.slug}`}
-                  className="flex min-w-0 flex-col rounded-2xl border border-border/60 bg-card p-5 shadow-sm transition-colors hover:border-primary/25 sm:p-6"
+                  className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-colors hover:border-primary/25"
                 >
+                  {article.image ? (
+                    <Link href={href} className="relative block aspect-video bg-muted">
+                      <Image
+                        src={article.image.cardUrl}
+                        alt={article.image.altText}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover transition-transform duration-300 hover:scale-[1.02]"
+                      />
+                    </Link>
+                  ) : null}
+                  <div className="flex flex-1 flex-col p-5 sm:p-6">
                   <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
                     <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <time dateTime={article.publishedAt}>
@@ -114,6 +127,7 @@ export default async function BlogPage() {
                     {translateMessage(locale, "blog.read_article")}
                     <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
                   </Link>
+                  </div>
                 </article>
               );
             })}

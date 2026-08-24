@@ -142,6 +142,15 @@ const responses: Record<string, unknown> = {
   "/admin/marketing/editorial/editor": {
     languages: ["AR", "NL", "FR", "EN"],
     qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+    contentGraph: {
+      articleNodeCount: 0,
+      assetNodeCount: 0,
+      edgeCount: 0,
+      orphanArticleCount: 0,
+      nodes: [],
+      edges: [],
+      orphanArticles: [],
+    },
     topics: [
       {
         topicId: 1,
@@ -219,6 +228,7 @@ async function mockAdmin(
               body: "Targeted editorial draft",
               metaTitle: "Belgian theory exam guide | RijVia",
               metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
+              internalLinks: [],
               status: "DRAFT",
               current: true,
               createdAt: now,
@@ -312,11 +322,15 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
     "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
   );
   await page.getByLabel("Article body *").fill("Targeted editorial draft");
+  await page.getByRole("button", { name: "Add link" }).click();
+  await page.getByLabel("Destination path *").fill("/exam");
+  await page.getByLabel("Descriptive link text *").fill("Start the theory exam");
   await page.getByRole("button", { name: "Preview" }).click();
   const preview = page.getByRole("dialog", { name: "Article preview" });
   await expect(preview).toBeVisible();
   await expect(preview.getByText("Targeted preview summary")).toBeVisible();
   await expect(preview.getByText("Targeted editorial draft")).toBeVisible();
+  await expect(preview.getByText("Start the theory exam")).toBeVisible();
   await expect(preview.getByTestId("editorial-preview")).toHaveAttribute("dir", "ltr");
   expect(mutations).toHaveLength(0);
   await page.keyboard.press("Escape");
@@ -334,6 +348,7 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
     body: "Targeted editorial draft",
     metaTitle: "Belgian theory exam guide | RijVia",
     metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
+    internalLinks: [{ targetPath: "/exam", anchorText: "Start the theory exam" }],
     expectedCurrentVersion: null,
   });
   await expectNoOverflow(page);
@@ -368,6 +383,7 @@ test("Admin requests and decides exact-version article approval", async ({ page 
     body: `${language} body`,
     metaTitle: `${language} article | RijVia`,
     metaDescription: `${language} article metadata description`,
+    internalLinks: [],
     status: "DRAFT",
     current: true,
     createdAt: now,
@@ -378,6 +394,15 @@ test("Admin requests and decides exact-version article approval", async ({ page 
     "/admin/marketing/editorial/editor": {
       languages: ["AR", "NL", "FR", "EN"],
       qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+      contentGraph: {
+        articleNodeCount: 4,
+        assetNodeCount: 0,
+        edgeCount: 0,
+        orphanArticleCount: 4,
+        nodes: [],
+        edges: [],
+        orphanArticles: [],
+      },
       topics: [{
         topicId: 1,
         topicKey: "OFFICIAL-001",
@@ -391,6 +416,7 @@ test("Admin requests and decides exact-version article approval", async ({ page 
         articleId: 11,
         lifecycleState: "IMAGE_REQUIRED",
         canonicalLanguage: "EN",
+        image: null,
         currentVersions,
       }],
     },

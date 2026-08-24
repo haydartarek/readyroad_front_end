@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
-import { ArrowLeft, CalendarDays } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { articleParagraphs, formatArticleDate } from "@/app/blog/blog-format";
 import { localizePathname } from "@/lib/i18n-routing";
@@ -19,9 +20,11 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
   const [{ slug }, locale] = await Promise.all([params, getRequestLocale()]);
   const article = await getPublicArticle(locale, slug);
 
-  return article
-    ? createArticleMetadata(article, locale)
-    : { robots: { index: false, follow: false } };
+  if (!article) {
+    notFound();
+  }
+
+  return createArticleMetadata(article, locale);
 }
 
 export default async function BlogArticlePage({ params }: BlogArticlePageProps) {
@@ -79,6 +82,34 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
           </div>
         </header>
 
+        {article.image ? (
+          <figure className="mx-auto mt-8 max-w-4xl md:mt-10">
+            <Image
+              src={article.image.heroUrl}
+              alt={article.image.altText}
+              width={1600}
+              height={900}
+              priority
+              sizes="(max-width: 768px) 100vw, 896px"
+              className="h-auto w-full rounded-2xl border border-border/60 object-cover shadow-sm"
+            />
+            <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">
+              {article.image.caption ? <span className="me-2">{article.image.caption}</span> : null}
+              <a
+                href={article.image.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-primary hover:underline"
+              >
+                {translateMessage(locale, "blog.photo_credit", {
+                  photographer: article.image.photographerName,
+                  source: article.image.sourcePlatform,
+                })}
+              </a>
+            </figcaption>
+          </figure>
+        ) : null}
+
         <div className="mx-auto mt-8 max-w-[70ch] space-y-6 text-start text-base leading-8 md:mt-10 md:text-lg md:leading-9">
           {articleParagraphs(article.body).map((paragraph, index) => (
             <p key={`${index}:${paragraph.slice(0, 32)}`} className="whitespace-pre-line break-words">
@@ -86,6 +117,27 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
             </p>
           ))}
         </div>
+
+        {article.internalLinks.length ? (
+          <section className="mx-auto mt-10 max-w-[70ch] border-t border-border/60 pt-7">
+            <h2 className="text-xl font-black">
+              {translateMessage(locale, "blog.continue_learning")}
+            </h2>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {article.internalLinks.map((internalLink) => (
+                <li key={internalLink.targetPath} className="min-w-0">
+                  <Link
+                    href={internalLink.targetPath}
+                    className="flex min-h-12 min-w-0 items-center justify-between gap-3 rounded-xl border border-border/60 bg-card px-4 py-3 text-sm font-bold transition-colors hover:border-primary/25 hover:bg-primary/[0.05] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
+                  >
+                    <span className="min-w-0 break-words">{internalLink.anchorText}</span>
+                    <ArrowRight className="h-4 w-4 shrink-0 rtl:rotate-180" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </article>
     </main>
   );

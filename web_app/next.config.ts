@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
@@ -57,6 +58,10 @@ const nextConfig: NextConfig = {
       {
         source: "/images/signs/:path*",
         destination: `${backendBase}/images/signs/:path*`,
+      },
+      {
+        source: "/images/articles/:path*",
+        destination: `${backendBase}/images/articles/:path*`,
       },
     ];
   },

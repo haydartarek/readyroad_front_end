@@ -141,6 +141,15 @@ const responses: Record<string, unknown> = {
   "/admin/marketing/editorial/editor": {
     languages: ["AR", "NL", "FR", "EN"],
     qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+    contentGraph: {
+      articleNodeCount: 0,
+      assetNodeCount: 0,
+      edgeCount: 0,
+      orphanArticleCount: 0,
+      nodes: [],
+      edges: [],
+      orphanArticles: [],
+    },
     topics: [
       {
         topicId: 1,
@@ -242,6 +251,7 @@ describe("MarketingAdminPage", () => {
           body: "Draft body",
           metaTitle: "Belgian theory exam guide | RijVia",
           metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
+          internalLinks: [],
           expectedCurrentVersion: null,
         },
       );
@@ -285,6 +295,7 @@ describe("MarketingAdminPage", () => {
       metaTitle: `${language} article | RijVia`,
       metaDescription: `${language} article metadata description`,
       body: `${language} body`,
+      internalLinks: [],
       current: true,
     }));
     get.mockImplementation((url: string) => {
@@ -293,11 +304,21 @@ describe("MarketingAdminPage", () => {
           data: {
             languages: ["AR", "NL", "FR", "EN"],
             qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+            contentGraph: {
+              articleNodeCount: 4,
+              assetNodeCount: 0,
+              edgeCount: 0,
+              orphanArticleCount: 4,
+              nodes: [],
+              edges: [],
+              orphanArticles: [],
+            },
             topics: [{
               ...((responses["/admin/marketing/editorial/editor"] as { topics: Record<string, unknown>[] }).topics[0]),
               articleId: 11,
               lifecycleState: "IMAGE_REQUIRED",
               canonicalLanguage: "AR",
+              image: null,
               currentVersions,
             }],
           },

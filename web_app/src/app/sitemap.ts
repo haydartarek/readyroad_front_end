@@ -3,6 +3,8 @@ import {
   getPublicLessons,
   getPublicTrafficSigns,
 } from "@/lib/server/public-catalog";
+import { createArticleLanguageAlternates } from "@/lib/article-metadata";
+import { getPublicArticles } from "@/lib/server/articles";
 import { DEFAULT_APP_URL } from "@/lib/site-copy";
 import {
   buildLanguageAlternates,
@@ -34,6 +36,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       pathname: "/videos",
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      pathname: "/blog",
       changeFrequency: "weekly",
       priority: 0.8,
     },
@@ -74,9 +81,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ] as const;
 
-  const [signs, lessons] = await Promise.all([
+  const [signs, lessons, localizedArticles] = await Promise.all([
     getPublicTrafficSigns(),
     getPublicLessons(),
+    Promise.all(SITE_LOCALES.map((locale) => getPublicArticles(locale))),
   ]);
   const uniqueSignCodes = [
     ...new Set(
@@ -102,15 +110,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   });
   const routes = [...publicPages, ...signPages, ...lessonPages];
-
-  return routes.flatMap((route) =>
-    SITE_LOCALES.map((locale) => ({
-      url: buildLocalizedUrl(route.pathname, locale, APP_URL),
-      changeFrequency: route.changeFrequency,
-      priority: route.priority,
+  const articlePages = localizedArticles.flatMap((articles, localeIndex) => {
+    const locale = SITE_LOCALES[localeIndex];
+    return articles.map((article) => ({
+      url: buildLocalizedUrl(
+        `/blog/${encodeURIComponent(article.slug)}`,
+        locale,
+        APP_URL,
+      ),
+      lastModified: new Date(article.publishedAt),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
       alternates: {
-        languages: buildLanguageAlternates(route.pathname, APP_URL),
+        languages: createArticleLanguageAlternates(
+          article.alternateSlugs,
+          APP_URL,
+        ),
       },
-    })),
-  );
+    }));
+  });
+
+  return [
+    ...routes.flatMap((route) =>
+      SITE_LOCALES.map((locale) => ({
+        url: buildLocalizedUrl(route.pathname, locale, APP_URL),
+        changeFrequency: route.changeFrequency,
+        priority: route.priority,
+        alternates: {
+          languages: buildLanguageAlternates(route.pathname, APP_URL),
+        },
+      })),
+    ),
+    ...articlePages,
+  ];
 }

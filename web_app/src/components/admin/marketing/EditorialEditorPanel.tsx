@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Eye, FileClock, FilePenLine, Loader2, Save, Search, ShieldCheck } from "lucide-react";
+import {
+  Activity,
+  Eye,
+  FileClock,
+  FilePenLine,
+  Link2,
+  Loader2,
+  Network,
+  Plus,
+  Save,
+  Search,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { apiClient, logApiError } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,9 +27,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import EditorialArticleImagePanel from "@/components/admin/marketing/EditorialArticleImagePanel";
 import type {
   EditorialApprovalRequest,
+  EditorialInternalLinkInput,
   EditorialLanguage,
+  EditorialPerformanceOverview,
   EditorialSaveRequest,
   EditorialSaveResult,
   EditorialTopic,
@@ -41,6 +57,7 @@ interface EditorialEditorPanelProps {
     articleId: number,
     request: EditorialApprovalRequest,
   ) => Promise<void>;
+  onUploadImage: (articleId: number, formData: FormData) => Promise<void>;
 }
 
 interface FormState {
@@ -50,6 +67,7 @@ interface FormState {
   body: string;
   metaTitle: string;
   metaDescription: string;
+  internalLinks: EditorialInternalLinkInput[];
   expectedCurrentVersion: number | null;
 }
 
@@ -60,6 +78,7 @@ const EMPTY_FORM: FormState = {
   body: "",
   metaTitle: "",
   metaDescription: "",
+  internalLinks: [],
   expectedCurrentVersion: null,
 };
 
@@ -70,6 +89,7 @@ export default function EditorialEditorPanel({
   formatDate,
   onSave,
   onRequestApproval,
+  onUploadImage,
 }: EditorialEditorPanelProps) {
   const [search, setSearch] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(
@@ -85,6 +105,8 @@ export default function EditorialEditorPanel({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [performance, setPerformance] = useState<EditorialPerformanceOverview | null>(null);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [approvalReason, setApprovalReason] = useState("");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -117,6 +139,9 @@ export default function EditorialEditorPanel({
     "REJECTED",
     "ARCHIVED",
   ].includes(lifecycleState ?? "");
+  const internalLinksComplete = form.internalLinks.every(
+    (link) => link.targetPath.trim() && link.anchorText.trim(),
+  );
   const hasEveryLanguage = workspace.languages.every((item) =>
     selectedTopic?.currentVersions.some((version) => version.language === item),
   );
@@ -141,6 +166,7 @@ export default function EditorialEditorPanel({
       if (!selectedTopic?.articleId || !currentVersionNumber) {
         const initial = {
           ...EMPTY_FORM,
+          internalLinks: [],
           title: selectedTopic?.titleLanguage === language ? selectedTopic.title : "",
         };
         setHistory([]);
@@ -165,6 +191,10 @@ export default function EditorialEditorPanel({
               body: current.body,
               metaTitle: current.metaTitle ?? "",
               metaDescription: current.metaDescription ?? "",
+              internalLinks: current.internalLinks.map(({ targetPath, anchorText }) => ({
+                targetPath,
+                anchorText,
+              })),
               expectedCurrentVersion: current.versionNumber,
             }
           : EMPTY_FORM;
@@ -184,6 +214,33 @@ export default function EditorialEditorPanel({
       active = false;
     };
   }, [currentVersionNumber, language, selectedTopic?.articleId, selectedTopic?.title, selectedTopic?.titleLanguage]);
+
+  useEffect(() => {
+    let active = true;
+    const articleId = selectedTopic?.articleId;
+    if (!articleId || !["PUBLISHED", "UPDATE_RECOMMENDED"].includes(lifecycleState ?? "")) {
+      setPerformance(null);
+      return () => {
+        active = false;
+      };
+    }
+    setPerformanceLoading(true);
+    apiClient.get<EditorialPerformanceOverview>(
+      `/admin/marketing/editorial/editor/articles/${articleId}/performance`,
+    ).then((response) => {
+      if (active) setPerformance(response.data);
+    }).catch((error) => {
+      if (active) {
+        logApiError("Failed to load editorial article performance", error);
+        setPerformance(null);
+      }
+    }).finally(() => {
+      if (active) setPerformanceLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [lifecycleState, selectedTopic?.articleId]);
 
   const canLeave = () => !dirty || window.confirm(t("admin.marketing.editorial_discard_changes"));
 
@@ -213,6 +270,10 @@ export default function EditorialEditorPanel({
       body: form.body,
       metaTitle: form.metaTitle.trim(),
       metaDescription: form.metaDescription.trim(),
+      internalLinks: form.internalLinks.map((link) => ({
+        targetPath: link.targetPath.trim(),
+        anchorText: link.anchorText.trim(),
+      })),
       expectedCurrentVersion: form.expectedCurrentVersion,
     });
     const next = {
@@ -238,6 +299,42 @@ export default function EditorialEditorPanel({
   return (
     <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(16rem,0.34fr)_minmax(0,1fr)]">
       <aside className="min-w-0 rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+        <section className="mb-4 border-b border-border/50 pb-4" data-testid="editorial-content-graph">
+          <h2 className="flex items-center gap-2 text-sm font-black">
+            <Network className="h-4 w-4 text-primary" aria-hidden="true" />
+            {t("admin.marketing.editorial_content_graph")}
+          </h2>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs">
+            <div className="rounded-lg bg-muted/50 p-2">
+              <strong className="block text-base text-foreground">{workspace.contentGraph.articleNodeCount}</strong>
+              <span className="text-muted-foreground">{t("admin.marketing.editorial_graph_articles")}</span>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-2">
+              <strong className="block text-base text-foreground">{workspace.contentGraph.edgeCount}</strong>
+              <span className="text-muted-foreground">{t("admin.marketing.editorial_graph_links")}</span>
+            </div>
+          </div>
+          {workspace.contentGraph.orphanArticleCount ? (
+            <div className="mt-3">
+              <p className="text-xs font-bold text-amber-700">
+                {t("admin.marketing.editorial_graph_orphans", {
+                  count: workspace.contentGraph.orphanArticleCount,
+                })}
+              </p>
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                {workspace.contentGraph.orphanArticles.slice(0, 3).map((article) => (
+                  <li key={`${article.articleId}:${article.language}`} className="break-words">
+                    {article.language} · {article.title}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs font-semibold text-emerald-700">
+              {t("admin.marketing.editorial_graph_connected")}
+            </p>
+          )}
+        </section>
         <div className="relative">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -312,6 +409,88 @@ export default function EditorialEditorPanel({
             </div>
           </header>
 
+          {["PUBLISHED", "UPDATE_RECOMMENDED"].includes(lifecycleState ?? "") ? (
+            <section
+              className="space-y-3 rounded-xl border border-border/60 bg-background/60 p-4"
+              data-testid="editorial-performance"
+            >
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <h3 className="flex items-center gap-2 font-bold">
+                    <Activity className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    {t("admin.marketing.editorial_performance")}
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    {t("admin.marketing.editorial_performance_description")}
+                  </p>
+                </div>
+                {performance?.latestRecommendation ? (
+                  <Badge variant="outline" className={cn(
+                    "shrink-0",
+                    performance.latestRecommendation.recommended
+                      ? "border-amber-300 text-amber-700"
+                      : "border-emerald-300 text-emerald-700",
+                  )}>
+                    {performance.latestRecommendation.recommended
+                      ? t("admin.marketing.editorial_performance_recommended")
+                      : t("admin.marketing.editorial_performance_stable")}
+                  </Badge>
+                ) : null}
+              </div>
+              {performanceLoading ? (
+                <div className="h-20 animate-pulse rounded-lg bg-muted/50" />
+              ) : performance?.latestSnapshots.length ? (
+                <div className="grid min-w-0 gap-2 md:grid-cols-2">
+                  {performance.latestSnapshots.map((snapshot) => (
+                    <article key={snapshot.id} className="min-w-0 rounded-lg border border-border/50 p-3">
+                      <div className="flex min-w-0 items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <strong className="text-sm">{snapshot.language}</strong>
+                          <p dir="ltr" className="mt-0.5 break-all text-start text-[11px] text-muted-foreground">
+                            {snapshot.publishedPath}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="shrink-0">
+                          {snapshot.evidenceState === "PRESENT"
+                            ? snapshot.indexingState
+                            : t("admin.marketing.editorial_performance_no_data")}
+                        </Badge>
+                      </div>
+                      <dl className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+                        <PerformanceMetric
+                          label={t("admin.marketing.editorial_performance_clicks")}
+                          value={formatMetric(snapshot.current.clicks)}
+                        />
+                        <PerformanceMetric
+                          label={t("admin.marketing.editorial_performance_impressions")}
+                          value={formatMetric(snapshot.current.impressions)}
+                        />
+                        <PerformanceMetric
+                          label={t("admin.marketing.editorial_performance_ctr")}
+                          value={`${formatMetric(snapshot.current.ctr * 100)}%`}
+                        />
+                        <PerformanceMetric
+                          label={t("admin.marketing.editorial_performance_position")}
+                          value={formatMetric(snapshot.current.averagePosition)}
+                        />
+                      </dl>
+                      <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                        {t("admin.marketing.editorial_performance_period", {
+                          start: snapshot.periodStart,
+                          end: snapshot.periodEnd,
+                        })}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {t("admin.marketing.editorial_performance_empty")}
+                </p>
+              )}
+            </section>
+          ) : null}
+
           <div className="grid min-w-0 gap-4 sm:grid-cols-2">
             <Field label={t("admin.marketing.editorial_title")} required>
               <Input
@@ -378,6 +557,89 @@ export default function EditorialEditorPanel({
             />
           </Field>
 
+          <section className="space-y-3 border-t border-border/50 pt-5" data-testid="editorial-internal-links">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h3 className="flex items-center gap-2 font-bold">
+                  <Link2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {t("admin.marketing.editorial_internal_links")}
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  {t("admin.marketing.editorial_internal_links_description")}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setForm((current) => ({
+                  ...current,
+                  internalLinks: [...current.internalLinks, { targetPath: "", anchorText: "" }],
+                }))}
+                disabled={editorLocked}
+                className="w-full shrink-0 sm:w-auto"
+              >
+                <Plus />
+                {t("admin.marketing.editorial_internal_link_add")}
+              </Button>
+            </div>
+
+            {form.internalLinks.length ? (
+              <div className="space-y-3">
+                {form.internalLinks.map((link, index) => (
+                  <div
+                    key={index}
+                    className="grid min-w-0 gap-3 rounded-xl border border-border/60 bg-background/60 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
+                  >
+                    <Field label={t("admin.marketing.editorial_internal_link_target")} required>
+                      <Input
+                        dir="ltr"
+                        value={link.targetPath}
+                        disabled={editorLocked}
+                        maxLength={500}
+                        placeholder={language === "EN" ? "/lessons/les-19/2" : `/${language.toLowerCase()}/lessons/les-19/2`}
+                        onChange={(event) => setForm((current) => ({
+                          ...current,
+                          internalLinks: current.internalLinks.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, targetPath: event.target.value } : item),
+                        }))}
+                      />
+                    </Field>
+                    <Field label={t("admin.marketing.editorial_internal_link_anchor")} required>
+                      <Input
+                        value={link.anchorText}
+                        disabled={editorLocked}
+                        maxLength={500}
+                        onChange={(event) => setForm((current) => ({
+                          ...current,
+                          internalLinks: current.internalLinks.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, anchorText: event.target.value } : item),
+                        }))}
+                      />
+                    </Field>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setForm((current) => ({
+                        ...current,
+                        internalLinks: current.internalLinks.filter((_, itemIndex) => itemIndex !== index),
+                      }))}
+                      disabled={editorLocked}
+                      className="h-10 w-full shrink-0 p-0 text-destructive hover:text-destructive sm:w-10"
+                      aria-label={t("admin.marketing.editorial_internal_link_remove")}
+                      title={t("admin.marketing.editorial_internal_link_remove")}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {t("admin.marketing.editorial_internal_links_empty")}
+              </p>
+            )}
+          </section>
+
           <div className="flex flex-col gap-3 border-t border-border/50 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">
               {currentSummary
@@ -405,6 +667,7 @@ export default function EditorialEditorPanel({
                   || !form.body.trim()
                   || !form.metaTitle.trim()
                   || !form.metaDescription.trim()
+                  || !internalLinksComplete
                 }
                 className="w-full sm:w-auto"
               >
@@ -413,6 +676,17 @@ export default function EditorialEditorPanel({
               </Button>
             </div>
           </div>
+
+          {selectedTopic.articleId && lifecycleState === "IMAGE_REQUIRED" ? (
+            <EditorialArticleImagePanel
+              key={selectedTopic.articleId}
+              articleId={selectedTopic.articleId}
+              image={selectedTopic.image ?? null}
+              busy={busy === "editorial-image"}
+              t={t}
+              onUpload={onUploadImage}
+            />
+          ) : null}
 
           {lifecycleState === "IMAGE_REQUIRED" ? (
             <section className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-4" data-testid="editorial-approval-request">
@@ -529,6 +803,21 @@ export default function EditorialEditorPanel({
                 <div className="mt-6 whitespace-pre-wrap break-words text-base leading-8 text-foreground">
                   {form.body}
                 </div>
+                {form.internalLinks.length ? (
+                  <section className="mt-8 border-t border-border/60 pt-5">
+                    <h2 className="flex items-center gap-2 text-base font-black">
+                      <Link2 className="h-4 w-4" aria-hidden="true" />
+                      {t("admin.marketing.editorial_internal_links")}
+                    </h2>
+                    <ul className="mt-3 space-y-2">
+                      {form.internalLinks.map((link, index) => (
+                        <li key={`${index}:${link.targetPath}`} className="break-words text-sm font-semibold text-primary">
+                          {link.anchorText || link.targetPath}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
               </article>
             </DialogContent>
           </Dialog>
@@ -536,6 +825,19 @@ export default function EditorialEditorPanel({
       ) : null}
     </div>
   );
+}
+
+function PerformanceMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-md bg-muted/45 p-2">
+      <dt className="break-words text-muted-foreground">{label}</dt>
+      <dd className="mt-1 break-words font-bold text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+function formatMetric(value: number) {
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
 }
 
 function Field({

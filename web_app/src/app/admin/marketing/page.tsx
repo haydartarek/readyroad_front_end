@@ -217,6 +217,25 @@ export default function MarketingAdminPage() {
     }
   };
 
+  const uploadEditorialImage = async (articleId: number, formData: FormData) => {
+    setBusy("editorial-image");
+    try {
+      await apiClient.post(
+        "/admin/marketing/editorial/editor/articles/" + articleId + "/image",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      toast.success(t("admin.marketing.editorial_image_saved"));
+      await load();
+    } catch (requestError) {
+      logApiError("Editorial image upload failed", requestError);
+      toast.error(t("admin.marketing.action_failed"));
+      throw requestError;
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const formatDate = (value: string | null) =>
     value
       ? new Intl.DateTimeFormat(`${language}-BE`, {
@@ -319,6 +338,7 @@ export default function MarketingAdminPage() {
               formatDate={formatDate}
               onSave={saveEditorial}
               onRequestApproval={requestEditorialApproval}
+              onUploadImage={uploadEditorialImage}
             />
           ) : null}
           {view === "seo" ? (

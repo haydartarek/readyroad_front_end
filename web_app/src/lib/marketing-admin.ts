@@ -204,19 +204,151 @@ export interface EditorialTopic {
   articleId: number | null;
   lifecycleState: string | null;
   canonicalLanguage: EditorialLanguage | null;
+  image: EditorialArticleImageAsset | null;
   currentVersions: EditorialCurrentVersion[];
+}
+
+export interface EditorialArticleImageVariant {
+  type: "HERO" | "CARD" | "MOBILE" | "OG";
+  format: "JPEG";
+  publicPath: string;
+  width: number;
+  height: number;
+  byteSize: number;
+}
+
+export interface EditorialArticleImageLocalization {
+  language: EditorialLanguage;
+  altText: string;
+  caption: string | null;
+}
+
+export interface EditorialArticleImageLicense {
+  id: number;
+  sourcePlatform: "UNSPLASH" | "PIXABAY" | "PEXELS";
+  sourceAssetId: string;
+  sourceUrl: string;
+  photographerName: string;
+  photographerUrl: string;
+  licenseName: string;
+  licenseUrl: string;
+  licenseVerifiedAt: string;
+  downloadedAt: string;
+  originalFileName: string;
+  approvedBy: string;
+  approvedAt: string;
+  approvalReason: string;
+}
+
+export interface EditorialArticleImageAsset {
+  id: number;
+  articleId: number;
+  status: "APPROVED" | "PENDING_LICENSE" | "SUPERSEDED";
+  originalFileName: string;
+  originalWidth: number;
+  originalHeight: number;
+  focalPointX: number;
+  focalPointY: number;
+  variants: EditorialArticleImageVariant[];
+  localizations: EditorialArticleImageLocalization[];
+  license: EditorialArticleImageLicense | null;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface EditorialContentGraphNode {
+  id: string;
+  type: string;
+  label: string;
+  language: EditorialLanguage;
+  path: string | null;
+  published: boolean;
+}
+
+export interface EditorialContentGraphEdge {
+  sourceId: string;
+  targetId: string;
+  type: string;
+  targetPath: string;
+  anchorText: string;
+}
+
+export interface EditorialContentGraphOrphan {
+  articleId: number;
+  language: EditorialLanguage;
+  title: string;
+  lifecycleState: string;
+  reason: string;
+}
+
+export interface EditorialContentGraph {
+  articleNodeCount: number;
+  assetNodeCount: number;
+  edgeCount: number;
+  orphanArticleCount: number;
+  nodes: EditorialContentGraphNode[];
+  edges: EditorialContentGraphEdge[];
+  orphanArticles: EditorialContentGraphOrphan[];
 }
 
 export interface EditorialWorkspace {
   languages: EditorialLanguage[];
   qualityGates: string[];
+  contentGraph: EditorialContentGraph;
   topics: EditorialTopic[];
+}
+
+export interface EditorialPerformanceMetrics {
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  averagePosition: number;
+}
+
+export interface EditorialPerformanceSnapshot {
+  id: number;
+  articleId: number;
+  publicationId: number;
+  language: EditorialLanguage;
+  publishedPath: string;
+  periodStart: string;
+  periodEnd: string;
+  current: EditorialPerformanceMetrics;
+  previous: EditorialPerformanceMetrics;
+  evidenceState: "PRESENT" | "MISSING";
+  indexingState: "DISCOVERED" | "NO_DATA";
+  createdAt: string;
+}
+
+export interface EditorialRefreshRecommendation {
+  id: number;
+  recommended: boolean;
+  reasonCodes: string[];
+  evidence: Record<string, unknown>;
+  periodEnd: string;
+  createdAt: string;
+}
+
+export interface EditorialPerformanceOverview {
+  latestSnapshots: EditorialPerformanceSnapshot[];
+  latestRecommendation: EditorialRefreshRecommendation | null;
 }
 
 export interface EditorialApprovalRequest {
   passedQualityGates: string[];
   reason: string;
 }
+
+export interface EditorialInternalLink {
+  type: "ARTICLE" | "LESSON" | "TRAFFIC_SIGN" | "PRACTICE" | "EXAM" | "VIDEO";
+  targetPath: string;
+  anchorText: string;
+}
+
+export type EditorialInternalLinkInput = Pick<
+  EditorialInternalLink,
+  "targetPath" | "anchorText"
+>;
 
 export interface EditorialVersion extends EditorialCurrentVersion {
   id: number;
@@ -225,6 +357,7 @@ export interface EditorialVersion extends EditorialCurrentVersion {
   body: string;
   metaTitle: string | null;
   metaDescription: string | null;
+  internalLinks: EditorialInternalLink[];
   current: boolean;
 }
 
@@ -235,6 +368,7 @@ export interface EditorialSaveRequest {
   body: string;
   metaTitle: string;
   metaDescription: string;
+  internalLinks: EditorialInternalLinkInput[];
   expectedCurrentVersion: number | null;
 }
 

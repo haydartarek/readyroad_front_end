@@ -28,7 +28,9 @@ export function createArticleStructuredData(
   const canonical = buildLocalizedUrl(articlePath(article.slug), locale, APP_URL);
   const organizationId = `${APP_URL.replace(/\/+$/, "")}/#organization`;
   const websiteId = `${APP_URL.replace(/\/+$/, "")}/#website`;
-  const image = getSharedOgImage(locale);
+  const image = article.image
+    ? { url: article.image.ogUrl, width: 1200, height: 630 }
+    : getSharedOgImage(locale);
 
   return {
     "@context": "https://schema.org",

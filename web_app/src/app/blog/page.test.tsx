@@ -20,6 +20,12 @@ describe("localized public blog index", () => {
         title: "Safer driving in Belgium",
         summary: "A concise published summary.",
         publishedAt: "2026-08-22T10:00:00Z",
+        alternateSlugs: {
+          EN: "safe-driving",
+          NL: "veilig-rijden",
+          FR: "conduite-sure",
+          AR: "al-qiyada-al-amina",
+        },
       },
     ]);
   });

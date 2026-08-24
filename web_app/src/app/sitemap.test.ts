@@ -2,6 +2,7 @@ import {
   getPublicLessons,
   getPublicTrafficSigns,
 } from "@/lib/server/public-catalog";
+import { getPublicArticles } from "@/lib/server/articles";
 import sitemap, { dynamic } from "@/app/sitemap";
 import { DEFAULT_APP_URL } from "@/lib/site-copy";
 
@@ -9,11 +10,15 @@ jest.mock("@/lib/server/public-catalog", () => ({
   getPublicLessons: jest.fn(),
   getPublicTrafficSigns: jest.fn(),
 }));
+jest.mock("@/lib/server/articles", () => ({
+  getPublicArticles: jest.fn(),
+}));
 
 const mockedGetPublicLessons = jest.mocked(getPublicLessons);
 const mockedGetPublicTrafficSigns = jest.mocked(getPublicTrafficSigns);
+const mockedGetPublicArticles = jest.mocked(getPublicArticles);
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
-const STATIC_PUBLIC_PAGE_COUNT = 11;
+const STATIC_PUBLIC_PAGE_COUNT = 12;
 const LOCALE_COUNT = 4;
 
 describe("public sitemap", () => {
@@ -30,12 +35,27 @@ describe("public sitemap", () => {
     mockedGetPublicLessons.mockResolvedValue([
       { lessonCode: "les-0", totalPages: 3 },
     ] as Awaited<ReturnType<typeof getPublicLessons>>);
+    const articleSlugs = {
+      EN: "safe-driving",
+      NL: "veilig-rijden",
+      FR: "conduite-sure",
+      AR: "al-qiyada-al-amina",
+    };
+    mockedGetPublicArticles.mockImplementation(async (locale) => [{
+      language: locale.toUpperCase(),
+      slug: articleSlugs[locale.toUpperCase() as keyof typeof articleSlugs],
+      title: "Localized article",
+      summary: "Published summary",
+      publishedAt: "2026-08-22T10:00:00Z",
+      image: null,
+      alternateSlugs: articleSlugs,
+    }]);
 
     const entries = await sitemap();
     const urls = entries.map((entry) => entry.url);
 
     expect(urls).toHaveLength(
-      (STATIC_PUBLIC_PAGE_COUNT + 2 + 3) * LOCALE_COUNT,
+      (STATIC_PUBLIC_PAGE_COUNT + 2 + 3) * LOCALE_COUNT + LOCALE_COUNT,
     );
     expect(new Set(urls).size).toBe(urls.length);
     expect(urls.every((url) => new URL(url).origin === appUrl)).toBe(true);
@@ -44,6 +64,7 @@ describe("public sitemap", () => {
     expect(urls).toContain(`${appUrl}/cookie-policy`);
     expect(urls).toContain(`${appUrl}/disclaimer`);
     expect(urls).toContain(`${appUrl}/videos`);
+    expect(urls).toContain(`${appUrl}/blog`);
     expect(urls).toContain(`${appUrl}/nl/videos`);
     expect(urls).toContain(`${appUrl}/fr/videos`);
     expect(urls).toContain(`${appUrl}/ar/videos`);
@@ -53,6 +74,21 @@ describe("public sitemap", () => {
     expect(urls).toContain(`${appUrl}/nl/lessons/les-0/2`);
     expect(urls).toContain(`${appUrl}/fr/lessons/les-0/3`);
     expect(urls).toContain(`${appUrl}/ar/traffic-signs/B1`);
+    expect(urls).toContain(`${appUrl}/blog/safe-driving`);
+    expect(urls).toContain(`${appUrl}/nl/blog/veilig-rijden`);
+    expect(urls).toContain(`${appUrl}/fr/blog/conduite-sure`);
+    expect(urls).toContain(`${appUrl}/ar/blog/al-qiyada-al-amina`);
+    const dutchArticle = entries.find(
+      (entry) => entry.url === `${appUrl}/nl/blog/veilig-rijden`,
+    );
+    expect(dutchArticle?.lastModified).toEqual(new Date("2026-08-22T10:00:00Z"));
+    expect(dutchArticle?.alternates?.languages).toEqual({
+      en: `${appUrl}/blog/safe-driving`,
+      "nl-BE": `${appUrl}/nl/blog/veilig-rijden`,
+      "fr-BE": `${appUrl}/fr/blog/conduite-sure`,
+      ar: `${appUrl}/ar/blog/al-qiyada-al-amina`,
+      "x-default": `${appUrl}/blog/safe-driving`,
+    });
     expect(
       entries.every(
         (entry) =>
@@ -68,6 +104,10 @@ describe("public sitemap", () => {
     expect(
       urls.some((url) => /\/(?:admin|api|dashboard|profile|practice|exam)(?:\/|$)/.test(url)),
     ).toBe(false);
-    expect(entries.some((entry) => "lastModified" in entry)).toBe(false);
+    expect(
+      entries
+        .filter((entry) => !entry.url.includes("/blog/"))
+        .some((entry) => "lastModified" in entry),
+    ).toBe(false);
   });
 });

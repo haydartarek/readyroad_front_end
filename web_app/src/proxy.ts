@@ -5,6 +5,7 @@ import {
   localizePathname,
   resolveRouteLocale,
 } from "@/lib/i18n-routing";
+import { isMissingPublishedArticle } from "@/lib/server/article-route-status";
 import { STORAGE_KEYS } from "@/lib/constants";
 
 const PROTECTED_ROUTES = [
@@ -23,7 +24,6 @@ const AUTH_ROUTES = [
   "/forgot-password",
   "/reset-password",
 ];
-
 function isValidTokenFormat(token: string | undefined): token is string {
   if (!token || token.length < 10) return false;
   const parts = token.split(".");
@@ -125,6 +125,7 @@ function withRouteLocale(
   locale: "en" | "nl" | "fr" | "ar",
   pathname: string,
   rewrite: boolean,
+  status?: number,
 ): NextResponse {
   const requestHeaders = new Headers(request.headers);
   const cookieHeader = requestHeaders.get("cookie") ?? "";
@@ -148,6 +149,7 @@ function withRouteLocale(
   const response = rewrite
     ? NextResponse.rewrite(rewriteUrl, {
         request: { headers: requestHeaders },
+        status,
       })
     : NextResponse.next({ request: { headers: requestHeaders } });
   response.cookies.set(STORAGE_KEYS.LANGUAGE, locale, {
@@ -158,7 +160,7 @@ function withRouteLocale(
   return response;
 }
 
-export default function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   if (request.headers.get("x-readyroad-routed") === "1") {
     return NextResponse.next();
   }
@@ -205,6 +207,13 @@ export default function proxy(request: NextRequest) {
 
   if (pathname === "/assessment" || pathname.startsWith("/assessment/")) {
     return redirectTo("/practice/random", request, locale);
+  }
+
+  if (
+    (request.method === "GET" || request.method === "HEAD") &&
+    await isMissingPublishedArticle(pathname, locale)
+  ) {
+    return withRouteLocale(request, locale, pathname, true, 404);
   }
 
   if (rawToken && !hasValidToken) {

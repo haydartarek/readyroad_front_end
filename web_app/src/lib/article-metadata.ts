@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
+import { buildAbsoluteUrl } from "@/lib/seo";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
@@ -29,29 +30,46 @@ function articlePath(slug: string): string {
   return `/blog/${encodeURIComponent(slug)}`;
 }
 
+export function createArticleLanguageAlternates(
+  alternateSlugs: Readonly<Record<string, string>>,
+  appUrl: string = APP_URL,
+): Record<string, string> {
+  const languages = Object.fromEntries(
+    (Object.keys(ARTICLE_LANGUAGE) as SiteLocale[]).flatMap((targetLocale) => {
+      const slug = alternateSlugs[ARTICLE_LANGUAGE[targetLocale]];
+      return slug
+        ? [[HREFLANG[targetLocale], buildLocalizedUrl(articlePath(slug), targetLocale, appUrl)]]
+        : [];
+    }),
+  );
+  const englishSlug = alternateSlugs.EN;
+  if (englishSlug) {
+    languages["x-default"] = buildLocalizedUrl(articlePath(englishSlug), "en", appUrl);
+  }
+  return languages;
+}
+
 export function createArticleMetadata(
   article: PublicArticle,
   locale: SiteLocale,
 ): Metadata {
   const canonical = buildLocalizedUrl(articlePath(article.slug), locale, APP_URL);
-  const languages = Object.fromEntries(
-    (Object.keys(ARTICLE_LANGUAGE) as SiteLocale[]).flatMap((targetLocale) => {
-      const slug = article.alternateSlugs[ARTICLE_LANGUAGE[targetLocale]];
-      return slug
-        ? [[HREFLANG[targetLocale], buildLocalizedUrl(articlePath(slug), targetLocale, APP_URL)]]
-        : [];
-    }),
-  );
-  const englishSlug = article.alternateSlugs.EN;
-  if (englishSlug) {
-    languages["x-default"] = buildLocalizedUrl(articlePath(englishSlug), "en", APP_URL);
-  }
-  const image = { ...getSharedOgImage(locale), alt: article.metaTitle };
+  const image = article.image
+    ? {
+        url: buildAbsoluteUrl(article.image.ogUrl, APP_URL),
+        width: 1200,
+        height: 630,
+        alt: article.image.altText,
+      }
+    : { ...getSharedOgImage(locale), alt: article.metaTitle };
 
   return {
     title: { absolute: article.metaTitle },
     description: article.metaDescription,
-    alternates: { canonical, languages },
+    alternates: {
+      canonical,
+      languages: createArticleLanguageAlternates(article.alternateSlugs),
+    },
     openGraph: {
       type: "article",
       title: article.metaTitle,

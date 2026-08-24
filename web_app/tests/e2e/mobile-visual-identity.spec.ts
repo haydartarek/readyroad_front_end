@@ -140,6 +140,22 @@ const emptyOverallProgress = {
   weakSigns: [],
 };
 
+const emptyTheoryQuestionCoverage = {
+  languageCode: "en",
+  eligibleQuestions: 0,
+  uniqueQuestionsSeen: 0,
+  uniqueQuestionsAnswered: 0,
+  unseenQuestions: 0,
+  coveragePercentage: null,
+  timesPresented: 0,
+  timesAnswered: 0,
+  timesCorrect: 0,
+  timesIncorrect: 0,
+  accuracyPercentage: null,
+  confidenceState: "LOW",
+  categories: [],
+};
+
 const emptyStudentIntelligence = {
   dataStatus: "NO_DATA",
   studentLevel: "BEGINNER",
@@ -486,6 +502,9 @@ async function installAuthenticatedSession(
         categories: categoryProgress,
         overallAccuracy,
       });
+    }
+    if (pathname.endsWith("/users/me/progress/theory-coverage")) {
+      return fulfillJson(route, emptyTheoryQuestionCoverage);
     }
     if (pathname.endsWith("/users/me/progress/theory-timeouts")) {
       return fulfillJson(route, { totalTimeouts: 0, items: [] });

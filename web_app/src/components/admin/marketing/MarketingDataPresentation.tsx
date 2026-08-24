@@ -130,7 +130,11 @@ function presentationSafeValue(value: unknown): unknown {
   if (value === "OLD_BRAND_READYROAD") return "LEGACY_SOURCE_DOMAIN";
   if (/^(sc-domain:)?(?:www\.)?readyroad\.be$/i.test(value)) return "Legacy Search Console property";
   if (/^https?:\/\/(?:www\.)?readyroad\.be(?:\/|$)/i.test(value)) return "Legacy source URL";
-  return value.replace(/ReadyRoad/gi, "RijVia");
+  return value
+    .replaceAll("OLD_BRAND_READYROAD", "LEGACY_SOURCE_DOMAIN")
+    .replaceAll("READYROAD_CORE_DATA", "RIJVIA_CORE_DATA")
+    .replaceAll("READYROAD_FEATURE", "RIJVIA_PRODUCT_CAPABILITY")
+    .replace(/ReadyRoad/gi, "RijVia");
 }
 
 export function marketingDisplayText(value: string) {

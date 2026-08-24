@@ -12,6 +12,8 @@ describe("MarketingDataPresentation", () => {
     expect(machineLabel(t, "READYROAD_CORE_DATA")).toBe("RijVia Core Data");
     expect(marketingDisplayText("readyroad.be-Performance-on-Search.xlsx"))
       .toBe("RijVia.be-Performance-on-Search.xlsx");
+    expect(marketingDisplayText('["OLD_BRAND_READYROAD","READYROAD_CORE_DATA"]'))
+      .toBe('["LEGACY_SOURCE_DOMAIN","RIJVIA_CORE_DATA"]');
 
     const { container } = render(
       <StructuredData

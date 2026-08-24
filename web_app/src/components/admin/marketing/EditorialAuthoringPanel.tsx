@@ -293,7 +293,7 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
               <h4 className="font-bold">1. {t("admin.marketing.editorial_authoring_create_brief")}</h4>
               <div className="grid gap-3 sm:grid-cols-2">
                 <FormField label={t("admin.marketing.editorial_authoring_search_intent")}>
-                  <select className={selectClasses} value={brief.searchIntent} onChange={(event) => setBrief((current) => ({ ...current, searchIntent: event.target.value }))}>
+                  <select dir="auto" className={selectClasses} value={brief.searchIntent} onChange={(event) => setBrief((current) => ({ ...current, searchIntent: event.target.value }))}>
                     <option value="INFORMATIONAL">INFORMATIONAL</option>
                     <option value="TRANSACTIONAL">TRANSACTIONAL</option>
                     <option value="NAVIGATIONAL">NAVIGATIONAL</option>
@@ -351,7 +351,7 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
                     <textarea className={textareaClasses} rows={3} maxLength={8000} value={source.claimText} onChange={(event) => setSource((current) => ({ ...current, claimText: event.target.value }))} />
                   </FormField>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <StrategySelect label={t("admin.marketing.editorial_authoring_source_type")} value={source.sourceType} onChange={(value) => setSource((current) => ({ ...current, sourceType: value, url: "", internalReference: "" }))} options={SOURCE_TYPES.map((item) => ({ value: item, label: item }))} />
+                    <StrategySelect label={t("admin.marketing.editorial_authoring_source_type")} value={source.sourceType} onChange={(value) => setSource((current) => ({ ...current, sourceType: value, url: "", internalReference: "" }))} options={SOURCE_TYPES.map((item) => ({ value: item, label: sourceTypeLabel(item) }))} />
                     <FormField label={t("admin.marketing.editorial_authoring_source_title")}>
                       <Input value={source.title} maxLength={2000} onChange={(event) => setSource((current) => ({ ...current, title: event.target.value }))} />
                     </FormField>
@@ -418,7 +418,7 @@ function StrategySelect({ label, value, onChange, options }: {
 }) {
   return (
     <FormField label={label}>
-      <select className={selectClasses} value={value} onChange={(event) => onChange(event.target.value)}>
+      <select dir="auto" className={selectClasses} value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="">--</option>
         {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
@@ -445,5 +445,10 @@ function trustForSource(sourceType: string) {
   return "APPROVED_REFERENCE";
 }
 
-const selectClasses = "h-10 w-full rounded-xl border border-border/60 bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15";
+function sourceTypeLabel(sourceType: string) {
+  if (sourceType === "READYROAD_CORE_DATA") return "RijVia Core Data";
+  return sourceType.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+const selectClasses = "h-11 min-w-0 w-full max-w-full truncate rounded-xl border border-border/60 bg-background ps-3 pe-10 text-start text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15";
 const textareaClasses = "w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15";

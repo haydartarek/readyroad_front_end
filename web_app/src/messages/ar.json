@@ -2051,6 +2051,7 @@
   "admin.marketing.schedules": "الجداول الزمنية",
   "admin.marketing.next_run": "التشغيل التالي",
   "admin.marketing.analytics_auth": "مصادقة القراءة فقط",
+  "admin.marketing.analytics_rijvia_property": "خاصية RijVia المتصلة",
   "admin.marketing.configured": "مُعدّة",
   "admin.marketing.not_configured": "غير مُعدّة",
   "admin.marketing.latest_data": "أحدث بيانات Search Console",

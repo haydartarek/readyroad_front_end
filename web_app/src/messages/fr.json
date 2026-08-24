@@ -2051,6 +2051,7 @@
   "admin.marketing.schedules": "Planifications",
   "admin.marketing.next_run": "Prochaine exécution",
   "admin.marketing.analytics_auth": "Authentification en lecture seule",
+  "admin.marketing.analytics_rijvia_property": "Propriété RijVia connectée",
   "admin.marketing.configured": "Configurée",
   "admin.marketing.not_configured": "Non configurée",
   "admin.marketing.latest_data": "Dernières données Search Console",

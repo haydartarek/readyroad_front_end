@@ -78,7 +78,8 @@ function fallbackLabel(value: string) {
     .replace(/\s+/g, " ")
     .trim();
   return (words === words.toUpperCase() ? words.toLowerCase() : words)
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    .replace(/\bRijvia\b/g, "RijVia");
 }
 
 function translatedOrFallback(
@@ -99,11 +100,41 @@ export function fieldLabel(t: MarketingTranslate, field: string) {
 }
 
 export function machineLabel(t: MarketingTranslate, value: string) {
+  const normalized = normalizeKey(value);
+  if (normalized === "readyroad_core_data" || normalized === "rijvia_core_data") {
+    return "RijVia Core Data";
+  }
+  if (normalized === "readyroad_feature" || normalized === "rijvia_product_capability") {
+    return "RijVia Product Capability";
+  }
+  if (normalized === "old_brand_readyroad" || normalized === "legacy_source_domain") {
+    return "Legacy source domain";
+  }
   return translatedOrFallback(
     t,
     `admin.marketing.value_${normalizeKey(value)}`,
     fallbackLabel(value),
   );
+}
+
+function presentationSafeValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(presentationSafeValue);
+  if (isRecord(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, presentationSafeValue(item)]),
+    );
+  }
+  if (typeof value !== "string") return value;
+  if (value === "READYROAD_CORE_DATA") return "RIJVIA_CORE_DATA";
+  if (value === "READYROAD_FEATURE") return "RIJVIA_PRODUCT_CAPABILITY";
+  if (value === "OLD_BRAND_READYROAD") return "LEGACY_SOURCE_DOMAIN";
+  if (/^(sc-domain:)?(?:www\.)?readyroad\.be$/i.test(value)) return "Legacy Search Console property";
+  if (/^https?:\/\/(?:www\.)?readyroad\.be(?:\/|$)/i.test(value)) return "Legacy source URL";
+  return value.replace(/ReadyRoad/gi, "RijVia");
+}
+
+export function marketingDisplayText(value: string) {
+  return String(presentationSafeValue(value));
 }
 
 export function isTechnicalField(field: string) {
@@ -301,13 +332,14 @@ export function TechnicalDetails({
   data: unknown;
   t: MarketingTranslate;
 }) {
+  const displayData = presentationSafeValue(data);
   return (
     <details data-testid="marketing-technical-details" className="mt-3 rounded-xl border border-border/50 bg-muted/20 p-3">
       <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground">
         {t("admin.marketing.technical_details")}
       </summary>
       <pre dir="ltr" className="mt-3 max-h-80 max-w-full overflow-auto whitespace-pre-wrap break-all rounded-lg bg-background p-3 text-start text-[11px] leading-5">
-        {JSON.stringify(data, null, 2)}
+        {JSON.stringify(displayData, null, 2)}
       </pre>
     </details>
   );
@@ -324,9 +356,10 @@ export function StructuredData({
   formatDate?: DateFormatter;
   technicalDetails?: boolean;
 }) {
-  const primary = isRecord(data)
-    ? Object.fromEntries(Object.entries(data).filter(([field]) => !isTechnicalField(field)))
-    : data;
+  const displayData = presentationSafeValue(data);
+  const primary = isRecord(displayData)
+    ? Object.fromEntries(Object.entries(displayData).filter(([field]) => !isTechnicalField(field)))
+    : displayData;
 
   return (
     <div className="min-w-0">
@@ -335,7 +368,7 @@ export function StructuredData({
       ) : (
         <StructuredValue field="value" value={primary} t={t} formatDate={formatDate} depth={0} />
       )}
-      {technicalDetails ? <TechnicalDetails data={data} t={t} /> : null}
+      {technicalDetails ? <TechnicalDetails data={displayData} t={t} /> : null}
     </div>
   );
 }
@@ -353,10 +386,11 @@ export function StructuredRecordCard({
   t: MarketingTranslate;
   formatDate?: DateFormatter;
 }) {
-  const rawTitle = titleField && data[titleField] != null ? String(data[titleField]) : fallbackTitle;
+  const displayData = presentationSafeValue(data) as Record<string, unknown>;
+  const rawTitle = titleField && displayData[titleField] != null ? String(displayData[titleField]) : fallbackTitle;
   const title = titleField && isMachineValue(titleField, rawTitle) ? machineLabel(t, rawTitle) : rawTitle;
   const primary = Object.fromEntries(
-    Object.entries(data).filter(([field]) => field !== titleField && !isTechnicalField(field)),
+    Object.entries(displayData).filter(([field]) => field !== titleField && !isTechnicalField(field)),
   );
   return (
     <article className="min-w-0 rounded-xl border border-border/55 bg-muted/20 p-4">
@@ -364,7 +398,7 @@ export function StructuredRecordCard({
       <div className="mt-3">
         <StructuredFields data={primary} t={t} formatDate={formatDate} />
       </div>
-      <TechnicalDetails data={data} t={t} />
+      <TechnicalDetails data={displayData} t={t} />
     </article>
   );
 }

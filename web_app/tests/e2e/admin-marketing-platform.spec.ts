@@ -4,7 +4,7 @@ import { seedCookieConsent } from "./helpers/consent";
 const adminUser = {
   id: 1,
   username: "admin",
-  email: "admin@readyroad.test",
+  email: "admin@rijvia.test",
   role: "ADMIN",
 };
 
@@ -384,6 +384,45 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
     expectedCurrentVersion: null,
   });
   await expectNoOverflow(page);
+});
+
+test("Editorial authoring dropdowns preserve mixed-direction labels within mobile fields", async ({ page }) => {
+  const mutations: Request[] = [];
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  await page.setViewportSize({ width: 320, height: 844 });
+  await mockAdmin(page, mutations);
+
+  await page.goto("/ar/admin/marketing");
+  await page.getByRole("tab", { name: "المحرر", exact: true }).click();
+
+  const authoring = page.getByTestId("editorial-authoring");
+  const dropdowns = authoring.locator("select");
+  await expect(dropdowns).toHaveCount(6);
+  for (let index = 0; index < await dropdowns.count(); index += 1) {
+    const dropdown = dropdowns.nth(index);
+    await expect(dropdown).toHaveAttribute("dir", "auto");
+    await expect(dropdown).toHaveClass(/min-w-0/);
+    await expect(dropdown).toHaveClass(/max-w-full/);
+    await expect(dropdown).toHaveClass(/pe-10/);
+  }
+
+  const measurements = await dropdowns.evaluateAll((elements) => elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth };
+  }));
+  for (const measurement of measurements) {
+    expect(measurement.left).toBeGreaterThanOrEqual(0);
+    expect(measurement.right).toBeLessThanOrEqual(320);
+    expect(measurement.scrollWidth).toBeLessThanOrEqual(measurement.clientWidth);
+  }
+
+  await expect(page.getByRole("option", { name: "RijVia learning platform" })).toHaveCount(1);
+  await expect(page.locator("body")).not.toContainText(/ReadyRoad/i);
+  await expectNoOverflow(page);
+  expect(consoleErrors).toEqual([]);
 });
 
 test("Marketing operations preserve localized responsive layouts", async ({ page }) => {

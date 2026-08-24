@@ -24,6 +24,8 @@ describe("EditorialArticleImagePanel", () => {
 
     const upload = screen.getByRole("button", { name: "admin.marketing.editorial_image_upload" });
     expect(upload).toBeDisabled();
+    expect(screen.getByRole("combobox")).toHaveAttribute("dir", "auto");
+    expect(screen.getByRole("combobox")).toHaveClass("min-w-0", "max-w-full", "pe-10", "text-start");
 
     fireEvent.change(screen.getByLabelText(/editorial_image_file/), {
       target: { files: [new File(["jpeg"], "belgian-road.jpg", { type: "image/jpeg" })] },

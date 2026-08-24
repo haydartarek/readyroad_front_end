@@ -2051,6 +2051,7 @@
   "admin.marketing.schedules": "Planning",
   "admin.marketing.next_run": "Volgende uitvoering",
   "admin.marketing.analytics_auth": "Alleen-lezen verificatie",
+  "admin.marketing.analytics_rijvia_property": "Verbonden RijVia-property",
   "admin.marketing.configured": "Geconfigureerd",
   "admin.marketing.not_configured": "Niet geconfigureerd",
   "admin.marketing.latest_data": "Nieuwste Search Console-gegevens",

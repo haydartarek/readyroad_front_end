@@ -192,9 +192,10 @@ export default function EditorialArticleImagePanel({
         </ImageField>
         <ImageField label={t("admin.marketing.editorial_image_platform")} required>
           <select
+            dir="auto"
             value={form.sourcePlatform}
             onChange={(event) => update("sourcePlatform", event.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-11 min-w-0 w-full max-w-full truncate rounded-xl border border-input bg-background ps-3 pe-10 text-start text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
           >
             <option value="UNSPLASH">Unsplash</option>
             <option value="PIXABAY">Pixabay</option>

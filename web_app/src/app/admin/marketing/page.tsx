@@ -35,6 +35,7 @@ import {
   StructuredRecordCard,
   TechnicalDetails,
   machineLabel,
+  marketingDisplayText,
 } from "@/components/admin/marketing/MarketingDataPresentation";
 import {
   type MarketingAgent,
@@ -645,7 +646,7 @@ function AnalyticsPanel({ data, busy, t, formatDate, onSync, onSettings }: { dat
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <AdminMetricCard icon={<ShieldCheck />} label={t("admin.marketing.analytics_auth")} value={status.serviceAccountConfigured ? t("admin.marketing.configured") : t("admin.marketing.not_configured")} valueClassName={status.serviceAccountConfigured ? "text-green-600" : "text-amber-600"} />
       <AdminMetricCard icon={<BarChart3 />} label="GA4" value={status.ga4PropertyResource} />
-      <AdminMetricCard icon={<SearchCheck />} label="Search Console" value={status.searchConsoleSiteUrl} />
+      <AdminMetricCard icon={<SearchCheck />} label="Search Console" value={t("admin.marketing.analytics_rijvia_property")} />
       <AdminMetricCard icon={<History />} label={t("admin.marketing.latest_data")} value={status.latestSearchConsoleDate ?? t("admin.marketing.never")} />
     </div>
     {status.alerts.length ? <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-sm font-semibold text-amber-800">{status.alerts.map((alert) => <p key={alert}>{machineLabel(t, alert)} <code dir="ltr" className="ms-1 text-[11px] font-normal">{alert}</code></p>)}</div> : null}
@@ -775,7 +776,7 @@ function SeoMigrationPanel({
         <div className="min-w-0">
           <h2 className="font-black">{t("admin.marketing.seo_import_title")}</h2>
           <p className="mt-1 break-words text-sm text-muted-foreground">{t("admin.marketing.seo_import_description")}</p>
-          {latest.sourceFileName ? <p className="mt-2 break-all text-xs text-muted-foreground">{latest.sourceFileName} · {latest.periodStart} — {latest.periodEnd}</p> : null}
+          {latest.sourceFileName ? <p className="mt-2 break-all text-xs text-muted-foreground">{marketingDisplayText(latest.sourceFileName)} · {latest.periodStart} — {latest.periodEnd}</p> : null}
           {latest.sourceFileName ? <div className="mt-3"><StructuredData data={latest} t={t} formatDate={formatDate} technicalDetails /></div> : null}
         </div>
         {workspace.localImportEnabled ? <div className="flex w-full max-w-xl flex-col gap-2 sm:flex-row">

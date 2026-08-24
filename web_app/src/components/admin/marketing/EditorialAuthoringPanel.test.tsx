@@ -93,6 +93,15 @@ describe("EditorialAuthoringPanel", () => {
     const onChanged = jest.fn().mockResolvedValue(undefined);
     render(<EditorialAuthoringPanel topic={topic} language="EN" strategy={strategy} t={t} onChanged={onChanged} />);
 
+    const dropdowns = await screen.findAllByRole("combobox");
+    expect(dropdowns).not.toHaveLength(0);
+    dropdowns.forEach((dropdown) => {
+      expect(dropdown).toHaveAttribute("dir", "auto");
+      expect(dropdown).toHaveClass("min-w-0", "max-w-full", "pe-10", "text-start");
+    });
+    expect(screen.getByRole("option", { name: "RijVia Core Data" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /ReadyRoad/i })).not.toBeInTheDocument();
+
     fireEvent.change(await screen.findByLabelText("admin.marketing.editorial_authoring_claim_key"), {
       target: { value: "priority-rule" },
     });

@@ -1,10 +1,792 @@
 "use client";
 
-import { FileText } from "lucide-react";
-import { PublicDocumentPage } from "@/components/public/public-document-page";
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
-export default function TermsPage() {
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useParams } from "next/navigation";
+import Link from "@/components/localized-link";
+import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
+import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
+import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
+import { getExamOptionLabel } from "@/components/exam/exam-option-card";
+import { SignImage } from "@/components/traffic-signs/sign-image";
+import { ResultAnswerBlock } from "@/components/results/result-review";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  PageHeroEyebrow,
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+  PageMetricCard,
+  PageSectionSurface,
+} from "@/components/ui/page-surface";
+import { TrafficSign } from "@/lib/types";
+import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
+import { apiClient, logApiError } from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/constants";
+import { useLanguage } from "@/contexts/language-context";
+import { cn } from "@/lib/utils";
+import { getTrafficSignName } from "@/lib/traffic-sign-presentation";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  Clock3,
+  XCircle,
+  Lock,
+  Shapes,
+  Flag,
+} from "lucide-react";
+import {
+  getExamQuestions,
+  submitExam,
+  type SignExamQuestions,
+  type SignQuizQuestion,
+  type SignChoice,
+  type SignExamResult,
+} from "@/services";
+
+// ─── Types ──────────────────────────────────────────────
+
+type Lang = "en" | "ar" | "nl" | "fr";
+
+// ─── Helpers ────────────────────────────────────────────
+
+function qText(q: SignQuizQuestion, lang: Lang) {
   return (
-    <PublicDocumentPage page="terms" path="/terms" icon={FileText} />
+    (q[
+      `question${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof SignQuizQuestion
+    ] as string) ||
+    q.questionEn ||
+    ""
+  );
+}
+
+function cText(c: SignChoice, lang: Lang) {
+  const key =
+    `text${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof SignChoice;
+  return (c[key] as string) || c.textEn || "";
+}
+
+const DIFF_COLORS: Record<string, string> = {
+  EASY: "bg-green-100 text-green-800 border-green-200",
+  MEDIUM: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  HARD: "bg-red-100 text-red-800 border-red-200",
+};
+
+const QUESTION_TIME = 10; // seconds per question
+
+// ─── Page ───────────────────────────────────────────────
+
+export default function ExamPage() {
+  const { signCode, examNumber } = useParams<{
+    signCode: string;
+    examNumber: string;
+  }>();
+  const router = useLocalizedRouter();
+  const examNum = Number(examNumber) as 1 | 2;
+  const { t, language, isRTL } = useLanguage();
+  const lang = language as Lang;
+  const requestedCode = signCode.trim();
+
+  const [sign, setSign] = useState<TrafficSign | null>(null);
+  const [examData, setExamData] = useState<SignExamQuestions | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
+
+  // answers: questionId → choiceId
+  const [answers, setAnswers] = useState<Map<number, number>>(new Map());
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<SignExamResult | null>(null);
+  const [showReview, setShowReview] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(QUESTION_TIME);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const reviewRef = useRef<HTMLDivElement | null>(null);
+  const submissionKeyRef = useRef(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `sign-exam-${Date.now()}`,
+  );
+  const submissionInFlightRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLocked(false);
+
+    Promise.all([
+      apiClient.get<TrafficSign>(
+        API_ENDPOINTS.TRAFFIC_SIGNS.DETAIL(requestedCode),
+      ),
+      getExamQuestions(requestedCode, examNum),
+    ])
+      .then(([signRes, exam]) => {
+        if (!cancelled) {
+          setSign(signRes.data);
+          setExamData(exam);
+        }
+      })
+      .catch((err) => {
+        logApiError("Exam load error", err);
+        if (!cancelled) {
+          if (err?.response?.status === 423) setLocked(true);
+          else setError(t("sign_quiz.error_load"));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [requestedCode, examNum, t]);
+
+  const questions = useMemo(() => examData?.questions ?? [], [examData]);
+  const total = questions.length;
+  const current = questions[currentIdx];
+  const routeCode = sign?.routeCode ?? signCode;
+  const signName = sign ? getTrafficSignName(sign, lang) : signCode;
+
+  useEffect(() => {
+    if (!sign) {
+      return;
+    }
+
+    const canonicalCode = sign.routeCode ?? sign.signCode;
+    if (!canonicalCode || signCode === canonicalCode) {
+      return;
+    }
+
+    router.replace(`/traffic-signs/${canonicalCode}/exam/${examNum}`);
+  }, [examNum, router, sign, signCode]);
+
+  const handleSelect = useCallback((questionId: number, choiceId: number) => {
+    setAnswers((prev) => {
+      const next = new Map(prev);
+      next.set(questionId, choiceId);
+      return next;
+    });
+  }, []);
+
+  const handleForceSubmit = useCallback(async () => {
+    if (!examData || submitting || submissionInFlightRef.current) return;
+    submissionInFlightRef.current = true;
+    setSubmitting(true);
+    const payload = questions
+      .map((q) => ({
+        questionId: q.id,
+        choiceId: answers.get(q.id) ?? -1,
+      }))
+      .filter((a) => a.choiceId !== -1);
+    try {
+      const res = await submitExam(
+        requestedCode,
+        examNum,
+        payload,
+        submissionKeyRef.current,
+      );
+      if (res.resultId) {
+        router.push(`/exam/results?signExamResultId=${res.resultId}`);
+      } else {
+        setResult(res);
+      }
+    } catch (err) {
+      logApiError("Submit exam error", err);
+    } finally {
+      submissionInFlightRef.current = false;
+      setSubmitting(false);
+    }
+  }, [examData, submitting, questions, answers, requestedCode, examNum, router]);
+
+  // ── Per-question countdown timer ─────────────────────────────────────────
+  useEffect(() => {
+    if (!examData || result) return;
+    setTimeLeft(QUESTION_TIME);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          timerRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [currentIdx, examData, result]);
+
+  useEffect(() => {
+    if (timeLeft !== 0) return;
+    if (currentIdx < total - 1) {
+      setCurrentIdx((i) => i + 1);
+    } else {
+      handleForceSubmit();
+    }
+  }, [timeLeft]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const questionText = current ? qText(current, lang) : "";
+  const questionImageUrl = sign ? resolveTrafficSignImage(sign) : null;
+  const questionCounter = `${currentIdx + 1} / ${total}`;
+  const questionProgressPercent =
+    total > 0 ? ((currentIdx + 1) / total) * 100 : 0;
+  const timerPillClass =
+    timeLeft >= 7
+      ? "text-green-700"
+      : timeLeft >= 4
+        ? "text-orange-600"
+        : "text-red-600 animate-pulse";
+
+  // ── Loading ──
+  if (loading) {
+    return (
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+      >
+        <div className="container mx-auto max-w-6xl px-4 py-6">
+          <PageHeroSurface>
+            <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+              <div className="mx-auto h-44 w-44 animate-pulse rounded-[1.75rem] bg-muted" />
+              <div className="space-y-4">
+                <div className="h-8 w-40 animate-pulse rounded-full bg-muted" />
+                <div className="h-14 w-2/3 animate-pulse rounded-2xl bg-muted" />
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="h-28 animate-pulse rounded-[1.5rem] bg-muted" />
+                  <div className="h-28 animate-pulse rounded-[1.5rem] bg-muted" />
+                  <div className="h-28 animate-pulse rounded-[1.5rem] bg-muted" />
+                </div>
+              </div>
+            </div>
+          </PageHeroSurface>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Locked ──
+  if (locked) {
+    return (
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+      >
+        <div className="container mx-auto max-w-5xl px-4 py-6">
+          <PageHeroSurface>
+            <div className="mx-auto max-w-3xl space-y-6 text-center">
+              <div className="flex justify-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-primary/10 text-primary ring-1 ring-primary/15">
+                  <Lock className="h-10 w-10" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <PageHeroTitle>{t("sign_quiz.locked")}</PageHeroTitle>
+                <PageHeroDescription>
+                  {t("sign_quiz.exam_locked_desc")}
+                </PageHeroDescription>
+              </div>
+              {sign && (
+                <div className="mx-auto w-fit rounded-[1.5rem] border border-border/60 bg-background/85 p-4 shadow-sm">
+                  <div className="relative h-24 w-24">
+                    <SignImage
+                      src={resolveTrafficSignImage(sign)}
+                      alt={sign.nameEn}
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                <Button variant="outline" className="rounded-xl" asChild>
+                  <Link href={`/traffic-signs/${signCode}`}>
+                    {isRTL ? (
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                    ) : (
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                    )}
+                    {t("sign_quiz.exam.back_to_sign")}
+                  </Link>
+                </Button>
+                <Button className="rounded-xl" asChild>
+                  <Link href={`/traffic-signs/${signCode}/exam/1`}>
+                    {t("sign_quiz.start_exam")}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </PageHeroSurface>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error ──
+  if (error || !sign || !examData) {
+    return (
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+      >
+        <div className="container mx-auto max-w-4xl px-4 py-6">
+          <PageHeroSurface>
+            <div className="mx-auto max-w-2xl space-y-5 text-center">
+              <div className="space-y-2">
+                <PageHeroTitle>{t("sign_quiz.error_load")}</PageHeroTitle>
+                <PageHeroDescription>
+                  {error || t("sign_quiz.error_load")}
+                </PageHeroDescription>
+              </div>
+              <div className="flex justify-center">
+                <Button variant="outline" className="rounded-xl" asChild>
+                  <Link href={`/traffic-signs/${signCode}`}>
+                    {isRTL ? (
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                    ) : (
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                    )}
+                    {t("sign_quiz.exam.back_to_sign")}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </PageHeroSurface>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Result Screen ──
+  if (result) {
+    const scorePct = Math.round(result.scorePercentage);
+    const reqPct =
+      result.totalLinked > 0
+        ? Math.round((result.passingThreshold / result.totalLinked) * 100)
+        : 80;
+
+    return (
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35"
+      >
+        <div className="container mx-auto max-w-5xl px-4 py-4 md:py-6 space-y-4">
+          <PageHeroSurface
+            className={cn(
+              result.passed ? "border-green-200/80" : "border-red-200/80",
+            )}
+          >
+            <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+              <div className="space-y-4">
+                <div className="rounded-[1.75rem] border border-border/60 bg-background/85 p-4 shadow-sm">
+                  <div className="relative mx-auto aspect-square w-full max-w-[148px]">
+                    <SignImage
+                      src={resolveTrafficSignImage(sign)}
+                      alt={sign.nameEn}
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-center lg:text-start">
+                  <Badge
+                    className={cn(
+                      "border",
+                      result.passed
+                        ? "border-green-200 bg-green-100 text-green-800"
+                        : "border-red-200 bg-red-100 text-red-700",
+                    )}
+                  >
+                    {result.passed
+                      ? t("sign_quiz.exam.passed")
+                      : t("sign_quiz.exam.failed")}
+                  </Badge>
+                  <PageHeroDescription className="text-primary">
+                    {signName}
+                  </PageHeroDescription>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    {t("sign_quiz.exam.title").replace("{n}", String(examNum))}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div className="space-y-2.5">
+                  <PageHeroEyebrow>
+                    {t("sign_quiz.exam.result_heading")}
+                  </PageHeroEyebrow>
+                  <PageHeroTitle as="h2">{signName}</PageHeroTitle>
+                  <PageHeroDescription className="text-base font-semibold text-foreground/80">
+                    {result.passed
+                      ? t("sign_quiz.exam.passed")
+                      : t("sign_quiz.exam.failed")}
+                  </PageHeroDescription>
+                  <PageHeroDescription>
+                    {t("sign_quiz.exam.result_description")}
+                  </PageHeroDescription>
+                  <PageHeroDescription className="font-semibold text-primary">
+                    {t("sign_quiz.exam.correct_of")
+                      .replace("{n}", String(result.correctAnswers))
+                      .replace("{total}", String(result.totalLinked))}
+                  </PageHeroDescription>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-3">
+                  <PageMetricCard
+                    icon={
+                      result.passed ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : (
+                        <XCircle className="h-5 w-5" />
+                      )
+                    }
+                    label={t("sign_quiz.exam.score_label")}
+                    value={`${scorePct}%`}
+                    hint={t("sign_quiz.exam.correct_of")
+                      .replace("{n}", String(result.correctAnswers))
+                      .replace("{total}", String(result.totalLinked))}
+                    tone={result.passed ? "success" : "danger"}
+                    mobileStacked
+                  />
+                  <PageMetricCard
+                    icon={<BookOpen className="h-5 w-5" />}
+                    label={t("sign_quiz.exam.correct_answers_label")}
+                    value={`${result.correctAnswers}/${result.totalLinked}`}
+                    hint={t("sign_quiz.exam.required_to_pass")}
+                    mobileStacked
+                  />
+                  <PageMetricCard
+                    icon={<Shapes className="h-5 w-5" />}
+                    label={t("sign_quiz.exam.pass_target_label")}
+                    value={`${reqPct}%`}
+                    hint={`${result.passingThreshold}/${result.totalLinked}`}
+                    tone={result.passed ? "primary" : "warning"}
+                    mobileStacked
+                  />
+                </div>
+
+                <div className="grid gap-2.5 sm:grid-cols-3">
+                  <Button className="rounded-xl h-10 font-semibold" asChild>
+                    <Link href={`/traffic-signs/${signCode}/exam/${examNum}`}>
+                      {t("sign_quiz.exam.retake")}
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="rounded-xl h-10 border-primary/15 bg-background/80 font-medium text-foreground hover:border-primary/25 hover:bg-primary/5 hover:text-primary"
+                    onClick={() => {
+                      setShowReview((r) => !r);
+                      setTimeout(
+                        () =>
+                          reviewRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          }),
+                        50,
+                      );
+                    }}
+                  >
+                    {t("sign_quiz.exam.review_answers")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="rounded-xl h-10 font-medium"
+                    asChild
+                  >
+                    <Link href={`/traffic-signs/${signCode}`}>
+                      {isRTL ? (
+                        <ArrowRight className="mr-2 h-4 w-4" />
+                      ) : (
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                      )}
+                      {t("sign_quiz.exam.back_to_sign")}
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </PageHeroSurface>
+
+          {showReview && (
+            <div ref={reviewRef}>
+              <PageSectionSurface
+                title={t("sign_quiz.exam.review_answers")}
+                description={t("sign_quiz.exam.correct_of")
+                  .replace("{n}", String(result.correctAnswers))
+                  .replace("{total}", String(result.totalLinked))}
+                className="pb-6"
+              >
+                <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+                  {result.questionResults.map((qRes, idx) => {
+                    const q = questions.find((q) => q.id === qRes.questionId);
+                    const correctText =
+                      (qRes[
+                        `correctText${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes
+                      ] as string) ||
+                      qRes.correctTextEn ||
+                      "";
+                    const expl =
+                      (qRes[
+                        `explanation${lang.charAt(0).toUpperCase() + lang.slice(1)}` as keyof typeof qRes
+                      ] as string) ||
+                      qRes.explanationEn ||
+                      "";
+                    const selectedChoice = q?.choices.find(
+                      (choice) => choice.id === qRes.selectedChoiceId,
+                    );
+                    const selectedText = selectedChoice
+                      ? cText(selectedChoice, lang)
+                      : "";
+                    const selectedIndex = q?.choices.findIndex(
+                      (choice) => choice.id === qRes.selectedChoiceId,
+                    );
+                    const correctIndex = q?.choices.findIndex(
+                      (choice) => choice.id === qRes.correctChoiceId,
+                    );
+
+                    return (
+                      <Card
+                        key={qRes.questionId}
+                        className={cn(
+                          "rounded-[1.35rem] border shadow-sm",
+                          !qRes.answered
+                            ? "border-muted"
+                            : qRes.isCorrect
+                              ? "border-green-300"
+                              : "border-red-300",
+                        )}
+                      >
+                        <CardContent className="space-y-3 px-5 py-5">
+                          <div className="space-y-4">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <span className="text-xs text-muted-foreground font-semibold">
+                                  {t("sign_quiz.exam.question_x").replace(
+                                    "{n}",
+                                    String(idx + 1),
+                                  )}
+                                </span>
+                                {q && (
+                                  <Badge
+                                    className={cn(
+                                      "border text-xs",
+                                      DIFF_COLORS[q.difficulty] ||
+                                        "bg-muted text-foreground border-border",
+                                    )}
+                                  >
+                                    {t(
+                                      `sign_quiz.${q.difficulty.toLowerCase()}`,
+                                    )}
+                                  </Badge>
+                                )}
+                                {!qRes.answered ? (
+                                  <Badge variant="outline" className="text-xs">
+                                    {t("sign_quiz.exam.not_answered")}
+                                  </Badge>
+                                ) : qRes.isCorrect ? (
+                                  <Badge className="bg-green-100 text-green-800 border-green-200 border text-xs">
+                                    {t("sign_quiz.exam.correct_label")}
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs">
+                                    {t("sign_quiz.exam.wrong_label")}
+                                  </Badge>
+                                )}
+                            </div>
+
+                            <ExamQuestionImageFrame variant="review">
+                              <SignImage
+                                src={resolveTrafficSignImage(sign)}
+                                alt={sign.nameEn}
+                                className="object-contain"
+                              />
+                            </ExamQuestionImageFrame>
+
+                            <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
+                              {q ? qText(q, lang) : `Question ${idx + 1}`}
+                            </p>
+                          </div>
+
+                          <div className="grid min-w-0 grid-cols-1 gap-2.5">
+                            <ResultAnswerBlock
+                              label={t("sign_quiz.practice.your_answer")}
+                              tone={
+                                !qRes.answered
+                                  ? "neutral"
+                                  : qRes.isCorrect
+                                    ? "correct"
+                                    : "incorrect"
+                              }
+                              marker={
+                                selectedIndex !== undefined &&
+                                selectedIndex >= 0
+                                  ? getExamOptionLabel(selectedIndex)
+                                  : undefined
+                              }
+                            >
+                              {selectedText || "—"}
+                            </ResultAnswerBlock>
+
+                            {!qRes.isCorrect && correctText && (
+                              <ResultAnswerBlock
+                                label={t("sign_quiz.exam.correct_answer")}
+                                tone="correct"
+                                marker={
+                                  correctIndex !== undefined &&
+                                  correctIndex >= 0
+                                    ? getExamOptionLabel(correctIndex)
+                                    : undefined
+                                }
+                              >
+                                {correctText}
+                              </ResultAnswerBlock>
+                            )}
+
+                            {expl && (
+                              <ResultAnswerBlock
+                                label={t("practice_exam.review_explanation")}
+                                tone="neutral"
+                              >
+                                {expl}
+                              </ResultAnswerBlock>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </PageSectionSurface>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Exam Screen ──
+  return (
+    <FocusedExamShell
+      dir={isRTL ? "rtl" : "ltr"}
+      counter={questionCounter}
+      difficultyLabel={t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
+      difficultyClassName={DIFF_COLORS[current.difficulty]}
+      timerPill={
+        <div
+          className={cn(
+            "inline-flex items-center gap-1.5 text-[13px] font-bold tabular-nums transition-colors sm:text-sm",
+            timerPillClass,
+          )}
+        >
+          <Clock3 className="h-3.5 w-3.5" />
+          {timeLeft}s
+        </div>
+      }
+      progressPercent={questionProgressPercent}
+      compactInformationBar
+      afterCard={
+        <div
+          data-testid="exam-actions"
+          className="grid grid-cols-1 gap-2 pb-3 pt-1 sm:grid-cols-3"
+        >
+          <Button
+            variant="outline"
+            size="lg"
+            className="order-3 w-full border-destructive/25 text-destructive hover:bg-destructive/5 hover:text-destructive sm:order-1"
+            asChild
+          >
+            <Link href={`/traffic-signs/${routeCode}`}>
+              {isRTL ? (
+                <ArrowRight className="h-4 w-4" />
+              ) : (
+                <ArrowLeft className="h-4 w-4" />
+              )}
+              {t("sign_quiz.exam.back_to_sign")}
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="order-2 w-full"
+            asChild
+          >
+            <Link href="/contact">
+              <Flag className="h-4 w-4" />
+              {t("practice_exam.report_question")}
+            </Link>
+          </Button>
+          <Button
+            size="lg"
+            onClick={
+              currentIdx < total - 1
+                ? () => setCurrentIdx((i) => i + 1)
+                : handleForceSubmit
+            }
+            disabled={submitting || !answers.has(current.id)}
+            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
+          >
+            {currentIdx + 1 === total
+              ? submitting
+                ? t("sign_quiz.exam.submitting")
+                : t("sign_quiz.exam.submit_exam")
+              : t("sign_quiz.practice.next_question")}
+            {currentIdx + 1 === total ? null : isRTL ? (
+              <ArrowLeft className="h-4 w-4" />
+            ) : (
+              <ArrowRight className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <FocusedQuestionCard
+        compactOptionGap
+        headerBadges={
+          <>
+            <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+              {sign.signCode}
+            </span>
+            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+              {t("sign_quiz.exam.title").replace("{n}", String(examNum))}
+            </span>
+          </>
+        }
+        difficultyBadge={
+          <span
+            className={cn(
+              "inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-bold",
+              DIFF_COLORS[current.difficulty],
+            )}
+          >
+            {t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
+          </span>
+        }
+        media={
+          questionImageUrl ? (
+            <ExamQuestionImageFrame>
+              <SignImage
+                src={questionImageUrl}
+                alt={sign.nameEn}
+                className="object-contain"
+              />
+            </ExamQuestionImageFrame>
+          ) : null
+        }
+        title={questionText}
+        options={current.choices.map((choice) => ({
+          key: choice.id,
+          text: cText(choice, lang),
+          selected: answers.get(current.id) === choice.id,
+          onSelect: () => handleSelect(current.id, choice.id),
+        }))}
+      />
+    </FocusedExamShell>
   );
 }

@@ -1,736 +1,113 @@
 "use client";
 
-import { useLocalizedRouter } from "@/hooks/use-localized-router";
-
-import React, { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
-import { useSearchParams, usePathname } from "next/navigation";
-import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
-import { API_ENDPOINTS } from "@/lib/constants";
-import { useLanguage } from "@/contexts/language-context";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
-import { convertToPublicImageUrl, FALLBACK_IMAGE } from "@/lib/image-utils";
-import { NATIVE_SELECT_COMPACT_CLASS } from "@/lib/native-select-styles";
-import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
-import { Button } from "@/components/ui/button";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import {
-  Search,
-  ChevronDown,
-  ChevronUp,
-  AlertTriangle,
-  TrafficCone,
-  ChevronsLeft,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsRight,
-} from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
+import apiClient, { logApiError } from "@/lib/api";
+import { type AdminExamDetailResponse, type AdminExamSummary, examTypeKey } from "@/lib/admin-learning";
+import { ClipboardCheck } from "lucide-react";
 
-// ─── Types ─────────────────────────────────────────────
+type QuestionRow = Record<string, unknown>;
 
-interface TrafficSign {
-  id: number;
-  signCode: string;
-  categoryCode: string;
-  nameAr: string;
-  nameEn: string;
-  nameNl: string;
-  nameFr: string;
-  descriptionAr: string;
-  descriptionEn: string;
-  descriptionNl: string;
-  descriptionFr: string;
-  imageUrl: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-interface PageResponse {
-  items: TrafficSign[];
-  page: number;
-  size: number;
-  totalItems: number;
-  totalPages: number;
-}
-interface CategoryOption {
-  code: string;
-  nameEn: string;
-  nameAr: string;
-  nameNl: string;
-  nameFr: string;
-}
-
-// ─── Constants ─────────────────────────────────────────
-
-const PAGE_SIZE_OPTIONS = [10, 20, 50];
-
-const CATEGORY_LABELS: Record<string, Record<string, string>> = {
-  A: {
-    en: "Danger Signs",
-    ar: "علامات الخطر",
-    nl: "Gevaarsborden",
-    fr: "Panneaux de danger",
-  },
-  B: {
-    en: "Priority Signs",
-    ar: "علامات الأولوية",
-    nl: "Voorrangsborden",
-    fr: "Panneaux de priorité",
-  },
-  C: {
-    en: "Prohibition Signs",
-    ar: "علامات المنع",
-    nl: "Verbodsborden",
-    fr: "Panneaux d'interdiction",
-  },
-  D: {
-    en: "Mandatory Signs",
-    ar: "علامات الإلزام",
-    nl: "Gebodsborden",
-    fr: "Panneaux d'obligation",
-  },
-  E: {
-    en: "Parking Signs",
-    ar: "الوقوف والركن",
-    nl: "Parkeren / Stilstaan",
-    fr: "Stationnement",
-  },
-  F: {
-    en: "Information Signs",
-    ar: "إرشادات",
-    nl: "Aanwijzingsborden",
-    fr: "Panneaux d'indication",
-  },
-  G: {
-    en: "Supplementary Panels",
-    ar: "لوحات إضافية",
-    nl: "Onderborden",
-    fr: "Panneaux additionnels",
-  },
-  M: {
-    en: "Cycle / Moped Panels",
-    ar: "لوحات الدراجات والدراجات البخارية",
-    nl: "Fiets / Bromfiets onderborden",
-    fr: "Panneaux vélos / cyclomoteurs",
-  },
-  T: {
-    en: "Delineation Signs",
-    ar: "علامات الإرشاد الطرقي",
-    nl: "Afbakeningsborden",
-    fr: "Panneaux de balisage",
-  },
-  Z: {
-    en: "Zone Signs",
-    ar: "علامات المناطق",
-    nl: "Zoneborden",
-    fr: "Panneaux de zone",
-  },
-};
-
-const CATEGORY_BADGE_CLASSES: Record<string, string> = {
-  A: "bg-red-500/10 text-red-600 border-red-200",
-  B: "bg-amber-500/10 text-amber-600 border-amber-200",
-  C: "bg-orange-500/10 text-orange-600 border-orange-200",
-  D: "bg-blue-500/10 text-blue-600 border-blue-200",
-  E: "bg-slate-500/10 text-slate-600 border-slate-200",
-  F: "bg-green-500/10 text-green-600 border-green-200",
-  G: "bg-orange-500/10 text-orange-600 border-orange-200",
-  M: "bg-teal-500/10 text-teal-600 border-teal-200",
-  T: "bg-slate-500/10 text-slate-600 border-slate-200",
-  Z: "bg-indigo-500/10 text-indigo-600 border-indigo-200",
-};
-
-type SortField =
-  | "signCode"
-  | "nameEn"
-  | "nameAr"
-  | "nameNl"
-  | "nameFr"
-  | "categoryCode";
-type SortDir = "asc" | "desc";
-
-const NAME_SORT_FIELD: Record<string, SortField> = {
-  en: "nameEn",
-  ar: "nameAr",
-  nl: "nameNl",
-  fr: "nameFr",
-};
-
-// ─── Helpers ────────────────────────────────────────────
-
-function generatePageNumbers(current: number, total: number): number[] {
-  const pages: number[] = [];
-  for (let i = 0; i < total; i++) {
-    if (i === 0 || i === total - 1 || Math.abs(i - current) <= 2) pages.push(i);
-  }
-  return pages;
-}
-
-function DetailLang({
-  label,
-  name,
-  desc,
-  dir,
-}: {
-  label: string;
-  name: string;
-  desc: string;
-  dir?: string;
-}) {
-  return (
-    <div
-      className="rounded-xl border border-border/50 bg-muted/30 p-3"
-      dir={dir}
-    >
-      <p className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-1">
-        {label}
-      </p>
-      <p className="text-sm font-semibold text-foreground">{name || "—"}</p>
-      {desc && (
-        <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
-          {desc}
-        </p>
-      )}
-    </div>
-  );
-}
-
-// ─── Page ───────────────────────────────────────────────
-
-export default function AdminSignsPage() {
+export default function AdminLearningExamDetailPage() {
+  const params = useParams<{ id: string; examType: string; examId: string }>();
   const { t, language } = useLanguage();
-  const router = useLocalizedRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const [signs, setSigns] = useState<TrafficSign[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [detail, setDetail] = useState<AdminExamDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
-
-  const [page, setPage] = useState(Number(searchParams.get("page")) || 0);
-  const [size, setSize] = useState(Number(searchParams.get("size")) || 20);
-  const [sortField, setSortField] = useState<SortField>(
-    (searchParams.get("sortField") as SortField) || "signCode",
-  );
-  const [sortDir, setSortDir] = useState<SortDir>(
-    (searchParams.get("sortDir") as SortDir) || "asc",
-  );
-  const [categoryFilter, setCategoryFilter] = useState(
-    searchParams.get("categoryCode") || "",
-  );
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
-  const [searchInput, setSearchInput] = useState(searchParams.get("q") || "");
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   useEffect(() => {
-    apiClient
-      .get<CategoryOption[]>("/categories")
-      .then((res) => setCategories(res.data))
-      .catch(() => {});
-  }, []);
+    apiClient.get<AdminExamDetailResponse>(`/admin/learning/users/${params.id}/exams/${params.examType}/${params.examId}`)
+      .then((response) => setDetail(response.data))
+      .catch((reason) => { logApiError("Failed to load admin exam detail", reason); setError(t("admin.learning.load_error")); });
+  }, [params.examId, params.examType, params.id, t]);
 
-  const updateUrl = useCallback(
-    (params: Record<string, string | number>) => {
-      const sp = new URLSearchParams();
-      const merged = {
-        page,
-        size,
-        sortField,
-        sortDir,
-        categoryCode: categoryFilter,
-        q: searchQuery,
-        ...params,
-      };
-      Object.entries(merged).forEach(([k, v]) => {
-        const val = String(v);
-        if (k === "page") sp.set(k, val);
-        else if (
-          val !== "" &&
-          val !== "0" &&
-          val !== "undefined" &&
-          val !== "null"
-        )
-          sp.set(k, val);
-      });
-      if (!sp.has("page")) sp.set("page", "0");
-      router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
-    },
-    [
-      page,
-      size,
-      sortField,
-      sortDir,
-      categoryFilter,
-      searchQuery,
-      pathname,
-      router,
-    ],
-  );
+  const questions = useMemo(() => {
+    const result = detail?.result;
+    if (!result) return [];
+    return ((result.allAnswers ?? result.questionResults ?? result.questions ?? []) as QuestionRow[]);
+  }, [detail]);
 
-  const fetchSigns = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const params: Record<string, string | number> = {
-        page,
-        size,
-        sort: `${sortField},${sortDir}`,
-      };
-      if (categoryFilter) params.categoryCode = categoryFilter;
-      if (searchQuery) params.q = searchQuery;
-      const res = await apiClient.get<PageResponse>(
-        API_ENDPOINTS.ADMIN.SIGNS.LIST,
-        params,
-      );
-      setSigns(res.data.items);
-      setTotalItems(res.data.totalItems);
-      setTotalPages(res.data.totalPages);
-    } catch (err) {
-      logApiError("Failed to fetch admin signs", err);
-      if (isServiceUnavailable(err)) setServiceUnavailable(true);
-      else setError(t("admin.signs.fetch_error"));
-    } finally {
-      setLoading(false);
-    }
-  }, [page, size, sortField, sortDir, categoryFilter, searchQuery, t]);
+  return <div className="space-y-5">
+    <AdminPageHeader icon={<ClipboardCheck className="h-6 w-6" />} title={t("admin.learning.exam_detail")} description={detail ? `${t(examTypeKey(detail.examType))} #${detail.examId}` : t("common.loading")} />
+    {error ? <p role="alert" className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">{error}</p> : null}
+    {detail ? <ExamSummary summary={detail.summary} language={language} t={t} /> : null}
+    {detail?.historicalContentStatus === "LEGACY_NO_SNAPSHOT" ? <p role="status" className="rounded-xl border border-amber-300/70 bg-amber-50 p-4 text-sm text-amber-900">{t("admin.learning.legacy_snapshot_notice")}</p> : null}
+    {detail?.historicalContentStatus === "SNAPSHOT_PARTIAL" ? <p role="status" className="rounded-xl border border-amber-300/70 bg-amber-50 p-4 text-sm text-amber-900">{t("admin.learning.partial_snapshot_notice")}</p> : null}
+    <AdminSectionCard title={t("admin.learning.answer_review")}>
+      {!detail ? <p className="py-12 text-center text-sm text-muted-foreground">{t("common.loading")}</p> : questions.length === 0 ? <p className="py-12 text-center text-sm text-muted-foreground">{t("admin.learning.no_historical_answers")}</p> : <div className="space-y-3">
+        {questions.map((question, index) => <QuestionReview key={String(question.questionId ?? index)} question={question} index={index} language={language} subjectCode={String(detail.result.signCode ?? "")} resultImage={String(detail.result.signImagePath ?? "")} t={t} />)}
+      </div>}
+    </AdminSectionCard>
+  </div>;
+}
 
-  useEffect(() => {
-    fetchSigns();
-  }, [fetchSigns]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchInput !== searchQuery) {
-        setSearchQuery(searchInput);
-        setPage(0);
-        updateUrl({ q: searchInput, page: 0 });
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]); // eslint-disable-line
-
-  const handlePageChange = (p: number) => {
-    setPage(p);
-    updateUrl({ page: p });
-  };
-  const handleSizeChange = (s: number) => {
-    setSize(s);
-    setPage(0);
-    updateUrl({ size: s, page: 0 });
-  };
-  const handleCategoryChange = (c: string) => {
-    setCategoryFilter(c);
-    setPage(0);
-    updateUrl({ categoryCode: c, page: 0 });
-  };
-
-  const isNameSortField = (f: SortField) =>
-    ["nameEn", "nameAr", "nameNl", "nameFr"].includes(f);
-
-  const handleSort = (field: SortField) => {
-    const isSame =
-      sortField === field ||
-      (isNameSortField(field) && isNameSortField(sortField));
-    const newDir: SortDir = isSame && sortDir === "asc" ? "desc" : "asc";
-    setSortField(field);
-    setSortDir(newDir);
-    setPage(0);
-    updateUrl({ sortField: field, sortDir: newDir, page: 0 });
-  };
-
-  const getSignName = (sign: TrafficSign) =>
-    ({ en: sign.nameEn, ar: sign.nameAr, nl: sign.nameNl, fr: sign.nameFr })[
-      language
-    ] ||
-    sign.nameEn ||
-    sign.signCode;
-  const getCategoryLabel = (code: string) => {
-    const cat = categories.find((c) => c.code === code);
-    if (cat)
-      return (
-        { en: cat.nameEn, ar: cat.nameAr, nl: cat.nameNl, fr: cat.nameFr }[
-          language
-        ] || cat.nameEn
-      );
-    return (
-      CATEGORY_LABELS[code]?.[language] || CATEGORY_LABELS[code]?.en || code
-    );
-  };
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    const active =
-      sortField === field ||
-      (isNameSortField(field) && isNameSortField(sortField));
-    return active ? (
-      <span className="text-primary ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>
-    ) : (
-      <span className="text-muted-foreground/40 ml-1">↕</span>
-    );
-  };
-
-  const startIdx = totalItems > 0 ? page * size + 1 : 0;
-  const endIdx = Math.min((page + 1) * size, totalItems);
-
-  // ── Loading skeleton ──
-  if (loading && signs.length === 0) {
-    return (
-      <div className="space-y-5 animate-pulse">
-        <div className="h-8 bg-muted rounded-xl w-64" />
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="bg-card rounded-2xl border border-border/50 h-16"
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ── Full error state ──
-  if (error && signs.length === 0) {
-    return (
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center space-y-4">
-        <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
-        <p className="text-destructive font-semibold">{error}</p>
-        <Button variant="outline" onClick={fetchSigns}>
-          {t("admin.signs.retry")}
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-5">
-      {serviceUnavailable && <ServiceUnavailableBanner onRetry={fetchSigns} />}
-
-      <AdminPageHeader
-        icon={<TrafficCone className="h-6 w-6" />}
-        title={t("admin.signs.title")}
-        description={t("admin.signs.description")}
-        metrics={[
-          {
-            label: t("admin.signs.total_count"),
-            value: totalItems.toLocaleString(),
-            tone: "primary",
-          },
-        ]}
-      />
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            id="admin-signs-search"
-            name="signsSearch"
-            type="text"
-            autoComplete="off"
-            placeholder={t("admin.signs.search_placeholder")}
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl border border-border/50 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-          />
-        </div>
-        <select
-          id="admin-signs-category-filter"
-          name="categoryFilter"
-          value={categoryFilter}
-          onChange={(e) => handleCategoryChange(e.target.value)}
-          className={NATIVE_SELECT_COMPACT_CLASS}
-        >
-          <option value="">{t("admin.signs.all_categories")}</option>
-          {categories.map((cat) => (
-            <option key={cat.code} value={cat.code}>
-              {getCategoryLabel(cat.code)} ({cat.code})
-            </option>
-          ))}
-        </select>
-        <select
-          id="admin-signs-page-size"
-          name="pageSize"
-          value={size}
-          onChange={(e) => handleSizeChange(Number(e.target.value))}
-          className={NATIVE_SELECT_COMPACT_CLASS}
-        >
-          {PAGE_SIZE_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s} {t("admin.signs.per_page")}
-            </option>
-          ))}
-        </select>
-        {loading && (
-          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        )}
-      </div>
-
-      {totalItems > 0 && (
-        <p className="text-sm text-muted-foreground">
-          {t("admin.signs.showing")}{" "}
-          <span className="font-semibold text-foreground">
-            {startIdx}–{endIdx}
-          </span>{" "}
-          {t("admin.signs.of")}{" "}
-          <span className="font-semibold text-foreground">{totalItems}</span>
-        </p>
-      )}
-
-      {/* Table */}
-      <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 border-b border-border/40">
-              <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3 text-left font-semibold w-16">
-                  {t("admin.signs.col_image")}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
-                  onClick={() => handleSort("signCode")}
-                >
-                  {t("admin.signs.col_code")}
-                  <SortIcon field="signCode" />
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
-                  onClick={() =>
-                    handleSort(NAME_SORT_FIELD[language] || "nameEn")
-                  }
-                >
-                  {t("admin.signs.col_name")}
-                  <SortIcon field={NAME_SORT_FIELD[language] || "nameEn"} />
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
-                  onClick={() => handleSort("categoryCode")}
-                >
-                  {t("admin.signs.col_category")}
-                  <SortIcon field="categoryCode" />
-                </th>
-                <th className="px-4 py-3 text-right font-semibold">
-                  {t("admin.signs.col_actions")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/30">
-              {signs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-16 text-center">
-                    <div className="space-y-2">
-                      <div className="text-4xl">🚦</div>
-                      <p className="text-muted-foreground">
-                        {t("admin.signs.no_results")}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                signs.map((sign) => (
-                  <React.Fragment key={sign.id}>
-                    <tr className="hover:bg-muted/30 transition-colors">
-                      {/* Image */}
-                      <td className="px-4 py-3">
-                        <div className="w-11 h-11 relative rounded-xl overflow-hidden bg-muted flex-shrink-0">
-                          <Image
-                            src={
-                              convertToPublicImageUrl(sign.imageUrl) ||
-                              FALLBACK_IMAGE
-                            }
-                            alt={sign.signCode}
-                            fill
-                            unoptimized
-                            className="object-contain p-1"
-                            sizes="44px"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                FALLBACK_IMAGE;
-                            }}
-                          />
-                        </div>
-                      </td>
-                      {/* Code */}
-                      <td className="px-4 py-3">
-                        <span className="font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg text-xs">
-                          {sign.signCode}
-                        </span>
-                      </td>
-                      {/* Name */}
-                      <td className="px-4 py-3">
-                        <span className="text-foreground text-sm">
-                          {getSignName(sign)}
-                        </span>
-                      </td>
-                      {/* Category */}
-                      <td className="px-4 py-3">
-                        <Badge
-                          className={cn(
-                            "text-xs font-semibold border",
-                            CATEGORY_BADGE_CLASSES[
-                              sign.categoryCode?.charAt(0)?.toUpperCase()
-                            ] || "bg-muted text-muted-foreground border-border",
-                          )}
-                        >
-                          {getCategoryLabel(sign.categoryCode)}
-                        </Badge>
-                      </td>
-                      {/* Actions */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() =>
-                              setExpandedId(
-                                expandedId === sign.id ? null : sign.id,
-                              )
-                            }
-                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
-                          >
-                            {expandedId === sign.id ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* Expanded Row */}
-                    {expandedId === sign.id && (
-                      <tr className="bg-primary/5">
-                        <td colSpan={5} className="px-6 py-4 space-y-3">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                            <DetailLang
-                              label={t("admin.settings_page.language_en")}
-                              name={sign.nameEn}
-                              desc={sign.descriptionEn}
-                            />
-                            <DetailLang
-                              label={t("admin.settings_page.language_ar")}
-                              name={sign.nameAr}
-                              desc={sign.descriptionAr}
-                              dir="rtl"
-                            />
-                            <DetailLang
-                              label={t("admin.settings_page.language_nl")}
-                              name={sign.nameNl}
-                              desc={sign.descriptionNl}
-                            />
-                            <DetailLang
-                              label={t("admin.settings_page.language_fr")}
-                              name={sign.nameFr}
-                              desc={sign.descriptionFr}
-                            />
-                          </div>
-                          {sign.imageUrl && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground font-semibold">
-                                {t("admin.signs.meta_url")}:
-                              </span>
-                              <code className="text-xs bg-muted px-2 py-0.5 rounded-lg text-muted-foreground break-all">
-                                {sign.imageUrl}
-                              </code>
-                            </div>
-                          )}
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/40">
-                            <span>
-                              {t("admin.signs.meta_status")}:{" "}
-                              <strong>
-                                {sign.isActive
-                                  ? t("admin.signs.active")
-                                  : t("admin.signs.inactive")}
-                              </strong>
-                            </span>
-                            {sign.createdAt && (
-                              <span>
-                                {t("admin.signs.meta_created")}:{" "}
-                                {new Date(sign.createdAt).toLocaleDateString()}
-                              </span>
-                            )}
-                            {sign.updatedAt && (
-                              <span>
-                                {t("admin.signs.meta_updated")}:{" "}
-                                {new Date(sign.updatedAt).toLocaleDateString()}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-muted/30">
-            <p className="text-xs text-muted-foreground font-medium">
-              {t("admin.signs.page_info")
-                .replace("{current}", String(page + 1))
-                .replace("{total}", String(totalPages))}
-            </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => handlePageChange(0)}
-                disabled={page <= 0}
-                className="w-7 h-7 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronsLeft className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page <= 0}
-                className="w-7 h-7 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              {generatePageNumbers(page, totalPages).map((p, idx, arr) => (
-                <span key={`${p}-${idx}`} className="flex items-center">
-                  {idx > 0 && arr[idx - 1] !== p - 1 && (
-                    <span className="px-1 text-muted-foreground text-xs">
-                      …
-                    </span>
-                  )}
-                  <button
-                    onClick={() => handlePageChange(p)}
-                    className={cn(
-                      "w-7 h-7 rounded-lg text-xs font-semibold transition-all",
-                      p === page
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "border border-border/50 text-foreground hover:bg-muted",
-                    )}
-                  >
-                    {p + 1}
-                  </button>
-                </span>
-              ))}
-              <button
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page >= totalPages - 1}
-                className="w-7 h-7 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => handlePageChange(totalPages - 1)}
-                disabled={page >= totalPages - 1}
-                className="w-7 h-7 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronsRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+function ExamSummary({ summary, language, t }: { summary: AdminExamSummary; language: string; t: (key: string) => string }) {
+  const locale = `${language}-u-ca-gregory`;
+  const started = new Date(summary.startedAt);
+  const completed = new Date(summary.completedAt);
+  return <AdminSectionCard title={t("admin.learning.exam_summary")}>
+    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <SummaryItem label={t("admin.learning.exam_date")} value={completed.toLocaleDateString(locale)} />
+      <SummaryItem label={t("admin.learning.started_at")} value={started.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })} />
+      <SummaryItem label={t("admin.learning.completed_at")} value={completed.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })} />
+      <SummaryItem label={t("admin.learning.duration")} value={duration(summary.durationSeconds, t)} />
+      <SummaryItem label={t("admin.learning.score")} value={`${summary.correctAnswers}/${summary.totalQuestions} · ${Math.round(summary.scorePercentage)}%`} />
+      <SummaryItem label={t("admin.learning.result")} value={t(summary.passed ? "admin.learning.passed" : "admin.learning.failed")} />
+      <SummaryItem label={t("admin.learning.exam_type")} value={t(examTypeKey(summary.examType))} />
+      <SummaryItem label={t("admin.learning.language")} value={summary.languageCode?.toUpperCase() || "—"} />
     </div>
-  );
+  </AdminSectionCard>;
+}
+
+function SummaryItem({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-xl border border-border/50 bg-muted/20 p-3 text-center"><p className="text-xs font-semibold text-muted-foreground">{label}</p><p className="mt-1 font-black">{value}</p></div>;
+}
+
+function duration(seconds: number | null, t: (key: string) => string): string {
+  if (seconds == null) return "—";
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${minutes} ${t("admin.learning.minutes")} ${remainder} ${t("admin.learning.seconds")}`;
+}
+
+function localized(row: QuestionRow, base: string, language: string): string {
+  const suffix = language.charAt(0).toUpperCase() + language.slice(1);
+  return String(row[`${base}${suffix}`] ?? row[base] ?? "");
+}
+
+function firstLocalized(row: QuestionRow, language: string, ...bases: string[]): string {
+  return bases.map((base) => localized(row, base, language)).find(Boolean) ?? "";
+}
+
+function historicalId(row: QuestionRow, ...keys: string[]): string {
+  const value = keys.map((key) => row[key]).find((candidate) => candidate != null);
+  return value == null ? "" : `#${String(value)}`;
+}
+
+function QuestionReview({ question, index, language, subjectCode, resultImage, t }: { question: QuestionRow; index: number; language: string; subjectCode: string; resultImage: string; t: (key: string) => string }) {
+  const correct = Boolean(question.isCorrect);
+  const questionText = firstLocalized(question, language, "questionText", "question");
+  const selected = firstLocalized(question, language, "selectedOptionText", "selectedText", "selectedChoice")
+    || historicalId(question, "selectedOptionId", "selectedChoiceId");
+  const answer = firstLocalized(question, language, "correctOptionText", "correctText", "correctChoice")
+    || historicalId(question, "correctOptionId", "correctChoiceId");
+  const explanation = localized(question, "explanation", language);
+  const category = firstLocalized(question, language, "categoryName")
+    || String(question.categoryCode ?? question.signCode ?? subjectCode);
+  const difficulty = String(question.difficulty ?? "").toLowerCase();
+  const image = String(question.contentImageUrl ?? question.signImagePath ?? resultImage);
+  const unanswered = question.answered === false
+    || (!selected && question.selectedChoiceId == null && question.selectedOptionId == null);
+  return <article className="space-y-3 rounded-xl border border-border/50 p-4">
+    <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap items-center gap-2"><p className="font-black">{t("admin.learning.question")} {index + 1}</p>{category ? <Badge variant="outline">{category}</Badge> : null}{difficulty ? <Badge variant="outline">{t(`difficulty.${difficulty}`)}</Badge> : null}{question.snapshotAvailable === false ? <Badge variant="outline">{t("admin.learning.legacy_identity_only")}</Badge> : null}</div><Badge className={unanswered ? "bg-muted text-muted-foreground" : correct ? "bg-emerald-600" : "bg-destructive"}>{t(unanswered ? "exam.unanswered" : correct ? "admin.learning.correct" : "admin.learning.incorrect")}</Badge></div>
+    {image ? <ExamQuestionImageFrame variant="wide"><Image src={image} alt={questionText || t("practice.question_image_alt")} fill sizes="(max-width: 640px) 100vw, 520px" className="object-contain" unoptimized /></ExamQuestionImageFrame> : null}
+    <p className="font-semibold">{questionText || historicalId(question, "questionId", "questionRef") || "—"}</p>
+    <div className="grid gap-2 sm:grid-cols-2"><div className="rounded-lg bg-muted/40 p-3"><p className="text-xs text-muted-foreground">{t("admin.learning.selected_answer")}</p><p className="mt-1 font-semibold">{selected || "—"}</p></div><div className="rounded-lg bg-emerald-50 p-3"><p className="text-xs text-emerald-700">{t("admin.learning.correct_answer")}</p><p className="mt-1 font-semibold">{answer || "—"}</p></div></div>
+    {explanation ? <p className="text-sm leading-6 text-muted-foreground">{explanation}</p> : null}
+  </article>;
 }

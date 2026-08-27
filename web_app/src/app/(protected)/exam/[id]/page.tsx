@@ -1,1689 +1,760 @@
 "use client";
 
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
-
-import { useEffect, useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
+import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
+import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
+import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
+import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
 import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
-import { SignImage } from "@/components/traffic-signs/sign-image";
-import { ResultAnswerBlock } from "@/components/results/result-review";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
-import { useAuth } from "@/contexts/auth-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
+import { convertToPublicImageUrl } from "@/lib/image-utils";
+import { API_ENDPOINTS, EXAM_RULES } from "@/lib/constants";
+import { useExamQuestionPresentation } from "@/hooks/use-exam-question-presentation";
 import {
-  localizeExamExplanation,
-  localizeExamText,
-} from "@/lib/exam-results-presentation";
-import { Button } from "@/components/ui/button";
-import {
-  PageHeroDescription,
-  PageHeroSurface,
-  PageHeroTitle,
-  PageSectionSurface,
-} from "@/components/ui/page-surface";
+  resolveNextTheoryQuestionIndex,
+  resolveTheoryTimedAttemptStep,
+} from "@/lib/attempt-lifecycle";
+import { StatusScreen } from "@/components/ui/status-screen";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
-  getRandomPracticeHistory,
-  getRandomPracticeResult,
-  getSignExamHistory,
-  getSignExamResultById,
-  type SignRandomPracticeHistoryResponse,
-  type SignRandomPracticeResult,
-  type SignExamHistoryResponse,
-  type SignExamHistoryItem,
-  type SignExamResult,
-} from "@/services/signQuizService";
-import {
-  Trophy,
-  XCircle,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-  ClipboardList,
   RefreshCw,
-  CheckCircle2,
-  Loader2,
-  Shuffle,
-  Shield,
+  ArrowLeft,
+  ArrowRight,
+  Clock,
+  Flag,
+  ImageOff,
   TimerOff,
 } from "lucide-react";
 
-// ─── Types ───────────────────────────────────────────────
+/** Seconds per question from the shared Theory Exam timing contract. */
+const QUESTION_TIME = EXAM_RULES.QUESTION_TIME_SECONDS;
 
-interface ExamHistoryItem {
-  examId: number;
-  startedAt: string;
-  completedAt: string | null;
-  status: "COMPLETED" | "IN_PROGRESS" | "ABANDONED" | "EXPIRED";
-  scorePercentage: number;
-  totalQuestions: number;
-  correctAnswers: number;
-  passed: boolean;
-}
-
-interface ExamHistoryResponse {
-  totalExams: number;
-  exams: ExamHistoryItem[];
-}
-
-interface AllAnsweredQuestion {
-  questionId: number;
+interface Question {
+  id: number;
   questionTextEn: string;
   questionTextAr: string;
   questionTextNl: string;
   questionTextFr: string;
-  selectedOptionText: string | null;
-  selectedOptionTextEn?: string | null;
-  selectedOptionTextAr?: string | null;
-  selectedOptionTextNl?: string | null;
-  selectedOptionTextFr?: string | null;
-  correctOptionText: string | null;
-  correctOptionTextEn?: string | null;
-  correctOptionTextAr?: string | null;
-  correctOptionTextNl?: string | null;
-  correctOptionTextFr?: string | null;
-  explanationEn?: string | null;
-  explanationAr?: string | null;
-  explanationNl?: string | null;
-  explanationFr?: string | null;
-  categoryName: string;
-  categoryNameEn?: string | null;
-  categoryNameAr?: string | null;
-  categoryNameNl?: string | null;
-  categoryNameFr?: string | null;
-  categoryCode: string;
-  contentImageUrl?: string;
-  isCorrect: boolean;
-  wasTimeout?: boolean;
-  difficulty?: "EASY" | "MEDIUM" | "HARD" | null;
+  imageUrl?: string;
+  difficultyLevel?: "EASY" | "MEDIUM" | "HARD";
+  options: Array<{
+    id: number;
+    number: 1 | 2 | 3;
+    textEn: string;
+    textAr: string;
+    textNl: string;
+    textFr: string;
+  }>;
 }
 
-interface CategoryBreakdown {
-  categoryCode: string;
-  categoryNameEn: string;
-  totalQuestions: number;
-  correctAnswers: number;
-  accuracyPercentage: number;
+interface ExamData {
+  id: number;
+  createdAt: string;
+  expiresAt: string;
+  questions: Question[];
 }
 
-interface ExamDetail {
-  allAnswers: AllAnsweredQuestion[];
-  categoryBreakdown: CategoryBreakdown[];
+interface BackendQuestion {
+  questionId: number;
+  questionOrder?: number;
+  questionTextEn: string;
+  questionTextAr: string;
+  questionTextNl: string;
+  questionTextFr: string;
+  imageUrl?: string;
+  difficultyLevel?: "EASY" | "MEDIUM" | "HARD";
+  options: Array<{
+    optionId: number;
+    optionTextEn: string;
+    optionTextAr: string;
+    optionTextNl: string;
+    optionTextFr: string;
+  }>;
 }
 
-type StoredSignExamResult = SignExamResult;
+interface BackendExamData {
+  examId: number;
+  startedAt?: string;
+  startTime?: string;
+  expiresAt: string;
+  questions: BackendQuestion[];
+}
 
-// ─── Component ───────────────────────────────────────────
+export function normalizeExamData(backendData: BackendExamData): ExamData {
+  return {
+    id: backendData.examId,
+    createdAt:
+      backendData.startedAt ||
+      backendData.startTime ||
+      new Date().toISOString(),
+    expiresAt: backendData.expiresAt,
+    questions: (backendData.questions ?? []).map((q) => ({
+      id: q.questionId,
+      questionTextEn: q.questionTextEn,
+      questionTextAr: q.questionTextAr,
+      questionTextNl: q.questionTextNl,
+      questionTextFr: q.questionTextFr,
+      imageUrl: q.imageUrl,
+      difficultyLevel: q.difficultyLevel,
+      options: (q.options ?? []).slice(0, 3).map((opt, optIndex) => ({
+        id: opt.optionId,
+        number: (optIndex + 1) as 1 | 2 | 3,
+        textEn: opt.optionTextEn,
+        textAr: opt.optionTextAr,
+        textNl: opt.optionTextNl,
+        textFr: opt.optionTextFr,
+      })),
+    })),
+  };
+}
 
-export function ExamResultsPageContent() {
+function localizeText(
+  language: string,
+  en?: string,
+  ar?: string,
+  nl?: string,
+  fr?: string,
+): string {
+  switch (language) {
+    case "ar":
+      return ar || en || "";
+    case "nl":
+      return nl || en || "";
+    case "fr":
+      return fr || en || "";
+    default:
+      return en || "";
+  }
+}
+
+function LoadingSpinner({ message }: { message: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="text-center space-y-4">
+        <div className="relative mx-auto w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center text-2xl">
+            📝
+          </div>
+        </div>
+        <p className="text-base text-muted-foreground font-medium">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+export default function ExamQuestionsPage() {
+  const router = useLocalizedRouter();
+  const params = useParams();
   const { t, language } = useLanguage();
-  const { user } = useAuth();
-  const searchParams = useSearchParams();
-  const highlightedRandomSessionId = Number.parseInt(
-    searchParams.get("randomSignExamId") ?? "",
-    10,
-  );
-  const highlightedSignResultId = Number.parseInt(
-    searchParams.get("signExamResultId") ?? "",
-    10,
-  );
+  const isRTL = language === "ar";
 
-  const [data, setData] = useState<ExamHistoryResponse | null>(null);
-  const [randomHistory, setRandomHistory] =
-    useState<SignRandomPracticeHistoryResponse | null>(null);
-  const [signExamHistory, setSignExamHistory] =
-    useState<SignExamHistoryResponse | null>(null);
+  const paramIdRaw = (params as Record<string, string | string[] | undefined>)
+    ?.id;
+  const paramId = Array.isArray(paramIdRaw) ? paramIdRaw[0] : paramIdRaw;
+  const examId = paramId ? parseInt(paramId, 10) : NaN;
+
+  const [examData, setExamData] = useState<ExamData | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [serviceDown, setServiceDown] = useState(false);
-
-  // Accordion state
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [detailsCache, setDetailsCache] = useState<Record<number, ExamDetail>>(
-    {},
-  );
-  const [loadingDetailId, setLoadingDetailId] = useState<number | null>(null);
-  const [expandedRandomId, setExpandedRandomId] = useState<number | null>(null);
-  const [randomDetailsCache, setRandomDetailsCache] = useState<
-    Record<number, SignRandomPracticeResult>
-  >({});
-  const [loadingRandomDetailId, setLoadingRandomDetailId] = useState<
-    number | null
-  >(null);
-  const [expandedSignResultId, setExpandedSignResultId] = useState<
-    number | null
-  >(null);
-  const [signDetailsCache, setSignDetailsCache] = useState<
-    Record<number, StoredSignExamResult>
-  >({});
-  const [loadingSignDetailId, setLoadingSignDetailId] = useState<number | null>(
-    null,
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [finalizedQuestionIds, setFinalizedQuestionIds] = useState<Set<number>>(
+    () => new Set(),
   );
 
-  const fetchHistory = useCallback(async () => {
-    if (!user) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const [theoryHistory, mixedSignHistory, signHistory] = await Promise.all([
-        apiClient.get<ExamHistoryResponse>("/exams/simulations/history"),
-        getRandomPracticeHistory(),
-        getSignExamHistory(),
-      ]);
-      setData(theoryHistory.data);
-      setRandomHistory(mixedSignHistory);
-      setSignExamHistory(signHistory);
-    } catch (err) {
-      if (isServiceUnavailable(err)) {
-        setServiceDown(true);
-        return;
-      }
-      logApiError("ExamResultsPage", err);
-      setError(t("common.load_error"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, t]);
+  // ── Per-question countdown ──────────────────────────────
+  const [questionTimeLeft, setQuestionTimeLeft] = useState<number>(QUESTION_TIME);
+  const [timerRestartKey, setTimerRestartKey] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const questionStartedAtRef = useRef(Date.now());
 
+  const isExamActive = useRef(true);
+  const pendingNavigation = useRef<string | null>(null);
+  const continuousInactivitySecondsRef = useRef(0);
+  const finalizedQuestionIdsRef = useRef<Set<number>>(new Set());
+  const transitionInFlightRef = useRef(false);
+  const lastAdvancedQuestionIdRef = useRef<number | null>(null);
+  // Ref for submit so timer callback always sees the latest version
+  const submitExamRef = useRef<(() => Promise<void>) | undefined>(undefined);
+
+  // ── Block browser back ──────────────────────────────────
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isExamActive.current) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+    const handlePopState = (e: PopStateEvent) => {
+      if (isExamActive.current) {
+        e.preventDefault();
+        window.history.pushState(null, "", window.location.href);
+        setShowExitDialog(true);
+      }
+    };
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
-  // ── Toggle accordion for an exam card ──
-  const toggleExpand = useCallback(
-    async (examId: number) => {
-      if (expandedId === examId) {
-        setExpandedId(null);
+  // ── Load exam ───────────────────────────────────────────
+  useEffect(() => {
+    const fetchExamData = async () => {
+      try {
+        setIsLoading(true);
+        if (!Number.isFinite(examId) || examId <= 0) {
+          setIsLoading(false);
+          setError(t("exam.results_invalid"));
+          toast.error(t("exam.results_invalid"));
+          return;
+        }
+        const storedExam = localStorage.getItem("current_exam");
+        if (storedExam) {
+          let parsedExam: BackendExamData | null = null;
+          try {
+            parsedExam = JSON.parse(storedExam) as BackendExamData;
+          } catch {
+            localStorage.removeItem("current_exam");
+          }
+          if (parsedExam && parsedExam.examId === examId) {
+            setExamData(normalizeExamData(parsedExam));
+            setError(null);
+            setIsLoading(false);
+            return;
+          }
+        }
+        const response = await apiClient.get<{
+          hasActiveExam: boolean;
+          activeExam: BackendExamData;
+        }>(`/exams/simulations/active`);
+
+        if (response.data.hasActiveExam && response.data.activeExam) {
+          const normalized = normalizeExamData(response.data.activeExam);
+          if (normalized.id !== examId)
+            router.replace(`/exam/${normalized.id}`);
+          setExamData(normalized);
+          setError(null);
+        } else {
+          toast.info(t("exam.no_active_exam"));
+          router.replace("/exam");
+        }
+      } catch (err) {
+        logApiError("Failed to fetch exam data", err);
+        if (isServiceUnavailable(err)) setServiceUnavailable(true);
+        else {
+          setError(t("exam.load_failed"));
+          toast.error(t("exam.load_failed"));
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchExamData();
+  }, [examId, fetchKey, router, t]);
+
+  const presentedQuestionId =
+    examData?.questions[currentQuestionIndex]?.id;
+  useExamQuestionPresentation(
+    examId,
+    presentedQuestionId,
+    Boolean(examData) && !isSubmitting && !sessionEnded,
+  );
+
+  // ── Save answer ─────────────────────────────────────────
+  const handleAnswerSelect = useCallback(
+    async (optionNumber: number) => {
+      if (!examData) return;
+      const currentQuestion = examData.questions[currentQuestionIndex];
+      if (!currentQuestion) return;
+
+      const questionId = currentQuestion.id;
+      if (!Number.isFinite(questionId)) {
+        toast.error(t("common.load_error"));
         return;
       }
-      setExpandedId(examId);
-      if (detailsCache[examId]) return; // already fetched
 
-      setLoadingDetailId(examId);
+      const safeExamId = Number(examId);
+      if (!Number.isFinite(safeExamId)) {
+        toast.error(t("exam.results_invalid"));
+        return;
+      }
+
+      const selectedOption = currentQuestion.options.find(
+        (opt) => opt.number === optionNumber,
+      );
+      if (!selectedOption) {
+        toast.error(t("common.load_error"));
+        return;
+      }
+
+      const selectedOptionId = selectedOption.id;
+      if (!selectedOptionId) {
+        toast.error(t("common.load_error"));
+        return;
+      }
+
+      const previousAnswer = answers[questionId];
+      // Optimistic local update — user can still change during the 15s window.
+      setAnswers((prev) => ({ ...prev, [questionId]: optionNumber }));
+      const timeTakenSeconds = Math.min(
+        QUESTION_TIME,
+        Math.max(
+          0,
+          Math.round((Date.now() - questionStartedAtRef.current) / 1000),
+        ),
+      );
+
       try {
-        const res = await apiClient.get<ExamDetail>(
-          `/exams/simulations/${examId}/results`,
+        await apiClient.post(
+          `/exams/simulations/${safeExamId}/questions/${questionId}/answer`,
+          {
+            selectedOptionId,
+            timeTakenSeconds,
+          },
         );
-        setDetailsCache((prev) => ({ ...prev, [examId]: res.data }));
+        continuousInactivitySecondsRef.current = 0;
+        finalizedQuestionIdsRef.current.add(questionId);
+        setFinalizedQuestionIds(new Set(finalizedQuestionIdsRef.current));
       } catch (err) {
-        logApiError("ExamDetail", err);
-      } finally {
-        setLoadingDetailId(null);
+        setAnswers((prev) => {
+          const next = { ...prev };
+          if (previousAnswer === undefined) delete next[questionId];
+          else next[questionId] = previousAnswer;
+          return next;
+        });
+        logApiError("Failed to save answer", err);
+        if (!isServiceUnavailable(err)) {
+          toast.error(t("exam.answer_save_failed"));
+        }
       }
     },
-    [expandedId, detailsCache],
+    [answers, currentQuestionIndex, examData, examId, t],
   );
 
-  const toggleExpandRandom = useCallback(
-    async (sessionId: number) => {
-      if (expandedRandomId === sessionId) {
-        setExpandedRandomId(null);
-        return;
+  // ── Submit exam ─────────────────────────────────────────
+  const submitExam = useCallback(async () => {
+    if (!examData) return;
+    if (
+      finalizedQuestionIdsRef.current.size !== examData.questions.length
+    )
+      return;
+    try {
+      setIsSubmitting(true);
+      isExamActive.current = false;
+      if (timerRef.current) clearInterval(timerRef.current);
+
+      await apiClient.post(`/exams/simulations/${examId}/submit`);
+
+      localStorage.removeItem("current_exam");
+      toast.success(t("exam.submit_success"));
+      router.push(`/exam/results/${examId}`);
+    } catch (err) {
+      logApiError("Failed to submit exam", err);
+      isExamActive.current = true;
+      if (!isServiceUnavailable(err)) {
+        toast.error(t("exam.submit_failed"));
       }
+      setIsSubmitting(false);
+    }
+  }, [examData, examId, router, t]);
 
-      setExpandedRandomId(sessionId);
-      if (randomDetailsCache[sessionId]) return;
-
-      setLoadingRandomDetailId(sessionId);
+  const abandonExam = useCallback(
+    async (target: string | null) => {
+      if (!examData) return;
       try {
-        const result = await getRandomPracticeResult(sessionId);
-        setRandomDetailsCache((prev) => ({ ...prev, [sessionId]: result }));
+        setIsSubmitting(true);
+        if (timerRef.current) clearInterval(timerRef.current);
+        await apiClient.post(API_ENDPOINTS.EXAMS.ABANDON(examId));
+        isExamActive.current = false;
+        localStorage.removeItem("current_exam");
+        if (target) {
+          router.push(target);
+        } else {
+          router.back();
+        }
       } catch (err) {
-        logApiError("RandomSignExamDetail", err);
-      } finally {
-        setLoadingRandomDetailId(null);
+        logApiError("Failed to abandon exam", err);
+        isExamActive.current = true;
+        setIsSubmitting(false);
+        setQuestionTimeLeft(QUESTION_TIME);
+        if (!isServiceUnavailable(err)) {
+          toast.error(t("common.error"));
+        }
       }
     },
-    [expandedRandomId, randomDetailsCache],
+    [examData, examId, router, t],
   );
 
-  const toggleExpandSign = useCallback(
-    async (resultId: number) => {
-      if (expandedSignResultId === resultId) {
-        setExpandedSignResultId(null);
-        return;
-      }
+  const terminateForInactivity = useCallback(async () => {
+    if (!examData) return;
+    try {
+      setIsSubmitting(true);
+      if (timerRef.current) clearInterval(timerRef.current);
+      await apiClient.post(API_ENDPOINTS.EXAMS.ABANDON(examId));
+      isExamActive.current = false;
+      localStorage.removeItem("current_exam");
+      setSessionEnded(true);
+      setIsSubmitting(false);
+    } catch (err) {
+      logApiError("Failed to terminate inactive exam", err);
+      isExamActive.current = true;
+      setIsSubmitting(false);
+      setQuestionTimeLeft(QUESTION_TIME);
+      if (!isServiceUnavailable(err)) toast.error(t("common.error"));
+    }
+  }, [examData, examId, t]);
 
-      setExpandedSignResultId(resultId);
-      if (signDetailsCache[resultId]) return;
+  // Keep ref in sync so timer callbacks always fire the latest version
+  useEffect(() => {
+    submitExamRef.current = submitExam;
+  }, [submitExam]);
 
-      setLoadingSignDetailId(resultId);
+  // ── Advance to next question (or submit on last) ────────
+  const handleNextOrSubmit = useCallback(
+    async (reason: "answered" | "timeout") => {
+      if (!examData || transitionInFlightRef.current) return;
+      const currentQuestion = examData.questions[currentQuestionIndex];
+      if (!currentQuestion) return;
+      if (lastAdvancedQuestionIdRef.current === currentQuestion.id) return;
+
+      transitionInFlightRef.current = true;
       try {
-        const result = await getSignExamResultById(resultId);
-        setSignDetailsCache((prev) => ({ ...prev, [resultId]: result }));
+        let resolvedReason = reason;
+        if (reason === "timeout") {
+          if (finalizedQuestionIdsRef.current.has(currentQuestion.id)) {
+            resolvedReason = "answered";
+          } else {
+            await apiClient.post(
+              `/exams/simulations/${examId}/questions/${currentQuestion.id}/timeout`,
+            );
+            finalizedQuestionIdsRef.current.add(currentQuestion.id);
+            setFinalizedQuestionIds(
+              new Set(finalizedQuestionIdsRef.current),
+            );
+          }
+        } else if (!finalizedQuestionIdsRef.current.has(currentQuestion.id)) {
+          return;
+        }
+
+        const decision = resolveTheoryTimedAttemptStep({
+          reason: resolvedReason,
+          isLastQuestion:
+            currentQuestionIndex === examData.questions.length - 1,
+          finalizedCount: finalizedQuestionIdsRef.current.size,
+          totalQuestions: examData.questions.length,
+          continuousInactivitySeconds:
+            continuousInactivitySecondsRef.current,
+        });
+        continuousInactivitySecondsRef.current =
+          decision.continuousInactivitySeconds;
+
+        if (decision.action === "submit") {
+          await submitExamRef.current?.();
+        } else if (decision.action === "abandon") {
+          await terminateForInactivity();
+        } else {
+          lastAdvancedQuestionIdRef.current = currentQuestion.id;
+          setCurrentQuestionIndex((previousIndex) =>
+            resolveNextTheoryQuestionIndex({
+              currentIndex: previousIndex,
+              transitionFromIndex: currentQuestionIndex,
+              totalQuestions: examData.questions.length,
+            }),
+          );
+          setQuestionTimeLeft(QUESTION_TIME);
+        }
       } catch (err) {
-        logApiError("SignExamDetail", err);
+        logApiError("Failed to finalize timed exam question", err);
+        setQuestionTimeLeft(QUESTION_TIME);
+        setTimerRestartKey((current) => current + 1);
+        if (!isServiceUnavailable(err)) {
+          toast.error(t("exam.answer_save_failed"));
+        }
       } finally {
-        setLoadingSignDetailId(null);
+        transitionInFlightRef.current = false;
       }
     },
-    [expandedSignResultId, signDetailsCache],
+    [currentQuestionIndex, examData, examId, t, terminateForInactivity],
   );
 
-  // ── Resolve question text for active language ──
-  function getQuestionText(q: AllAnsweredQuestion): string {
-    return localizeExamText(language, {
-      en: q.questionTextEn,
-      ar: q.questionTextAr,
-      nl: q.questionTextNl,
-      fr: q.questionTextFr,
-    });
-  }
+  // Ref so the timer interval closure always sees the latest handler
+  const handleNextOrSubmitRef = useRef(handleNextOrSubmit);
+  useEffect(() => {
+    handleNextOrSubmitRef.current = handleNextOrSubmit;
+  }, [handleNextOrSubmit]);
 
-  function getStoredSignQuestionText(
-    q: StoredSignExamResult["questionResults"][number],
-  ): string {
-    if (language === "ar" && q.questionAr) return q.questionAr;
-    if (language === "nl" && q.questionNl) return q.questionNl;
-    if (language === "fr" && q.questionFr) return q.questionFr;
-    return q.questionEn ?? "";
-  }
+  // ── Per-question 15-second countdown ───────────────────
+  useEffect(() => {
+    if (isSubmitting || sessionEnded) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+    // Reset timer whenever the question changes
+    setQuestionTimeLeft(QUESTION_TIME);
+    questionStartedAtRef.current = Date.now();
+    if (timerRef.current) clearInterval(timerRef.current);
 
-  function getStoredSignName(
-    item: Pick<
-      SignExamHistoryItem,
-      "nameAr" | "nameNl" | "nameFr" | "nameEn" | "signCode"
-    >,
-  ): string {
-    if (language === "ar" && item.nameAr) return item.nameAr;
-    if (language === "nl" && item.nameNl) return item.nameNl;
-    if (language === "fr" && item.nameFr) return item.nameFr;
-    return item.nameEn ?? item.signCode;
-  }
+    timerRef.current = setInterval(() => {
+      setQuestionTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Time's up — auto-advance
+          clearInterval(timerRef.current!);
+          void handleNextOrSubmitRef.current("timeout");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-  // ── Format date by active language ──
-  function formatDate(iso: string | null): string {
-    if (!iso) return "—";
-    return new Date(iso).toLocaleDateString(
-      language === "ar"
-        ? "ar-SA-u-ca-gregory-nu-latn"
-        : language === "nl"
-          ? "nl-BE"
-          : language === "fr"
-            ? "fr-BE"
-            : "en-GB",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        calendar: "gregory",
-        numberingSystem: "latn",
-      },
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [currentQuestionIndex, isSubmitting, sessionEnded, timerRestartKey]);
+
+  const handleExitStay = useCallback(() => {
+    pendingNavigation.current = null;
+  }, []);
+  const handleExitLeave = useCallback(() => {
+    const target = pendingNavigation.current;
+    pendingNavigation.current = null;
+    void abandonExam(target);
+  }, [abandonExam]);
+
+  if (isLoading) return <LoadingSpinner message={t("exam.loading_active")} />;
+
+  if (serviceUnavailable) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+        <ServiceUnavailableBanner
+          onRetry={() => {
+            setServiceUnavailable(false);
+            setFetchKey((k) => k + 1);
+          }}
+          className="max-w-md"
+        />
+      </div>
     );
   }
 
-  useEffect(() => {
-    if (
-      !Number.isFinite(highlightedRandomSessionId) ||
-      highlightedRandomSessionId <= 0
-    ) {
-      return;
-    }
-    if (
-      !randomHistory?.sessions.some(
-        (session) => session.sessionId === highlightedRandomSessionId,
-      )
-    ) {
-      return;
-    }
-    if (expandedRandomId === highlightedRandomSessionId) {
-      return;
-    }
-    void toggleExpandRandom(highlightedRandomSessionId);
-  }, [
-    expandedRandomId,
-    highlightedRandomSessionId,
-    randomHistory,
-    toggleExpandRandom,
-  ]);
+  if (sessionEnded) {
+    return (
+      <StatusScreen
+        dir={isRTL ? "rtl" : "ltr"}
+        badge={t("exam.session_ended_badge")}
+        title={t("exam.session_ended_title")}
+        description={t("exam.session_ended_description")}
+        icon={<TimerOff className="h-10 w-10" />}
+        primaryAction={{
+          label: t("exam.session_ended_action"),
+          href: "/exam",
+        }}
+        brandCaption="RijVia"
+      />
+    );
+  }
 
-  useEffect(() => {
-    if (
-      !Number.isFinite(highlightedSignResultId) ||
-      highlightedSignResultId <= 0
-    ) {
-      return;
-    }
-    if (
-      !signExamHistory?.results.some(
-        (result) => result.resultId === highlightedSignResultId,
-      )
-    ) {
-      return;
-    }
-    if (expandedSignResultId === highlightedSignResultId) {
-      return;
-    }
-    void toggleExpandSign(highlightedSignResultId);
-  }, [
-    expandedSignResultId,
-    highlightedSignResultId,
-    signExamHistory,
-    toggleExpandSign,
-  ]);
-
-  return (
-    <div className="space-y-6">
-      {serviceDown && <ServiceUnavailableBanner />}
-
-      {/* ── Header ── */}
-      <PageHeroSurface>
-        <div className="flex min-w-0 items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
-            <ClipboardList className="h-6 w-6" />
-          </div>
-          <div className="min-w-0 space-y-1">
-            <PageHeroTitle>
-              {t("user_sidebar.exam_history_title")}
-            </PageHeroTitle>
-            <PageHeroDescription>
-              {t("user_sidebar.exam_history_subtitle")}
-            </PageHeroDescription>
-          </div>
-        </div>
-      </PageHeroSurface>
-
-      {/* ── Loading ── */}
-      {isLoading && (
-        <div className="flex flex-col gap-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-24 rounded-2xl bg-muted/60 animate-pulse"
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ── Error ── */}
-      {!isLoading && error && (
-        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center space-y-3">
-          <p className="text-sm text-destructive font-medium">{error}</p>
+  if (error || !examData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="w-full max-w-md space-y-4 text-center">
+          <div className="text-6xl">⚠️</div>
+          <Alert variant="destructive">
+            <AlertDescription>
+              {error || t("exam.results_not_found")}
+            </AlertDescription>
+          </Alert>
           <Button
             variant="outline"
-            size="sm"
-            onClick={fetchHistory}
+            onClick={() => {
+              setError(null);
+              setFetchKey((k) => k + 1);
+            }}
             className="gap-2"
           >
             <RefreshCw className="w-4 h-4" />
             {t("common.retry")}
           </Button>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* ── Empty state ── */}
-      {!isLoading &&
-        !error &&
-        data &&
-        randomHistory &&
-        signExamHistory &&
-        data.exams.length === 0 &&
-        randomHistory.sessions.length === 0 &&
-        signExamHistory.results.length === 0 && (
-          <div className="rounded-2xl border border-border bg-muted/30 p-10 text-center space-y-3">
-            <ClipboardList className="w-10 h-10 text-muted-foreground mx-auto" />
-            <p className="font-semibold text-foreground">
-              {t("user_sidebar.exam_no_results")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {t("user_sidebar.exam_no_results_hint")}
-            </p>
-            <Button
-              asChild
-              className="mt-2 h-auto min-h-9 max-w-full whitespace-normal rounded-xl py-2 text-center"
-            >
-              <Link href="/exam">{t("user_sidebar.take_first_exam")}</Link>
-            </Button>
-          </div>
-        )}
-
-      {/* ── Results list ── */}
-      {!isLoading && !error && data && data.exams.length > 0 && (
-        <div className="space-y-6">
-          {/* Summary stats */}
-          {(() => {
-            const passedCount = data.exams.filter((e) => e.passed).length;
-            const passRate =
-              data.totalExams > 0
-                ? Math.round((passedCount / data.totalExams) * 100)
-                : 0;
-            return (
-              <div className="grid min-w-0 grid-cols-3 gap-3">
-                <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                  <p className="text-2xl font-black text-foreground">
-                    {data.totalExams}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
-                    {t("user_sidebar.exam_total_taken")}
-                  </p>
-                </div>
-                <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
-                  <p className="text-2xl font-black text-green-600">
-                    {passedCount}
-                  </p>
-                  <p className="text-xs text-green-600/80 font-medium [overflow-wrap:anywhere]">
-                    {t("dashboard.result_passed")}
-                  </p>
-                </div>
-                <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                  <p className="text-2xl font-black text-foreground">
-                    {passRate}%
-                  </p>
-                  <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
-                    {t("progress.pass_rate")}
-                  </p>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Exam list */}
-          <div className="space-y-3">
-            {data.exams.map((exam, index) => {
-              const isCompleted = exam.status === "COMPLETED";
-              const pct = Math.round(exam.scorePercentage ?? 0);
-              const isPassed = isCompleted && exam.passed;
-              const isFailed = isCompleted && !exam.passed;
-              const isExpanded = expandedId === exam.examId;
-              const detail = detailsCache[exam.examId];
-              const isLoadingThis = loadingDetailId === exam.examId;
-
-              return (
-                <div
-                  key={exam.examId}
-                  data-testid="official-exam-result-card"
-                  data-exam-result-kind="official"
-                  className={cn(
-                    "rounded-2xl border bg-card shadow-sm overflow-hidden transition-all duration-200",
-                    isPassed ? "border-green-200" : "",
-                    isFailed ? "border-red-200" : "",
-                    !isCompleted ? "border-border opacity-60" : "",
-                    isExpanded ? "shadow-md" : "",
-                  )}
-                >
-                  {/* Accent top strip */}
-                  <div
-                    className={cn(
-                      "h-1 w-full",
-                      isPassed
-                        ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                        : "",
-                      isFailed
-                        ? "bg-gradient-to-r from-red-400 to-rose-500"
-                        : "",
-                      !isCompleted ? "bg-muted" : "",
-                    )}
-                  />
-
-                  {/* Card header — clickable to expand */}
-                  <div
-                    data-testid="official-exam-result-header"
-                    className={cn(
-                      "flex min-w-0 flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start",
-                      isCompleted ? "cursor-pointer select-none" : "",
-                    )}
-                    onClick={() => isCompleted && toggleExpand(exam.examId)}
-                  >
-                    {/* Icon bubble */}
-                    <div
-                      data-testid="official-exam-result-icon"
-                      data-result-part="icon"
-                      className={cn(
-                        "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
-                        isPassed ? "bg-green-100 text-green-600" : "",
-                        isFailed ? "bg-red-100 text-red-600" : "",
-                        !isCompleted ? "bg-muted text-muted-foreground" : "",
-                      )}
-                    >
-                      {isCompleted ? (
-                        exam.passed ? (
-                          <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
-                        ) : (
-                          <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-                        )
-                      ) : (
-                        <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
-                      {/* Title row */}
-                      <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
-                        <span
-                          data-testid="official-exam-result-name"
-                          data-result-part="name"
-                          className="line-clamp-2 break-words text-sm font-bold text-foreground sm:line-clamp-1"
-                        >
-                          {t("user_sidebar.exam_number")} #
-                          {data.totalExams - index}
-                        </span>
-                        {isCompleted ? (
-                          <span
-                            data-testid="official-exam-result-status"
-                            data-result-part="status"
-                            className={cn(
-                              "inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full",
-                              isPassed
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700",
-                            )}
-                          >
-                            {isPassed ? t("exam.passed") : t("exam.failed")}
-                          </span>
-                        ) : (
-                          <span
-                            data-testid="official-exam-result-status"
-                            data-result-part="status"
-                            className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
-                          >
-                            {exam.status === "ABANDONED"
-                              ? t("dashboard.activity_status_abandoned")
-                              : exam.status === "EXPIRED"
-                                ? t("dashboard.activity_status_expired")
-                                : exam.status === "IN_PROGRESS"
-                                  ? t("dashboard.activity_status_in_progress")
-                                  : exam.status}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Date */}
-                      <p
-                        data-testid="official-exam-result-date"
-                        data-result-part="date"
-                        data-calendar="gregory"
-                        className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
-                      >
-                        <Clock className="h-3 w-3 shrink-0 opacity-60" />
-                        <span className="min-w-0 break-words">
-                          {formatDate(exam.completedAt ?? exam.startedAt)}
-                        </span>
-                      </p>
-
-                      {/* Score bar */}
-                      {isCompleted && (
-                        <div
-                          data-testid="official-exam-result-progress"
-                          data-result-part="progress"
-                          className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
-                        >
-                          <div className="flex items-center justify-center text-xs sm:justify-between">
-                            <span className="text-muted-foreground">
-                              {exam.correctAnswers}/{exam.totalQuestions}{" "}
-                              {t("exam.correct_answers")}
-                            </span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div
-                              className={cn(
-                                "h-full rounded-full transition-all duration-500",
-                                isPassed
-                                  ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                  : "bg-gradient-to-r from-red-400 to-rose-500",
-                              )}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Score badge */}
-                    {isCompleted && (
-                      <div
-                        data-testid="official-exam-result-score"
-                        data-result-part="score"
-                        className={cn(
-                          "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
-                          isPassed
-                            ? "bg-green-50 border-green-200 text-green-700"
-                            : "bg-red-50 border-red-200 text-red-600",
-                        )}
-                      >
-                        <span>{pct}</span>
-                        <span className="text-xs font-semibold mt-0.5">%</span>
-                      </div>
-                    )}
-
-                    {/* Expand/collapse chevron */}
-                    {isCompleted &&
-                      (isLoadingThis ? (
-                        <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
-                      ) : isExpanded ? (
-                        <ChevronUp
-                          data-testid="official-exam-result-chevron"
-                          data-result-part="chevron"
-                          className={cn(
-                            "order-6 h-5 w-5 shrink-0 sm:order-none",
-                            isPassed ? "text-green-500" : "text-red-400",
-                          )}
-                        />
-                      ) : (
-                        <ChevronDown
-                          data-testid="official-exam-result-chevron"
-                          data-result-part="chevron"
-                          className={cn(
-                            "order-6 h-5 w-5 shrink-0 sm:order-none",
-                            isPassed ? "text-green-500" : "text-red-400",
-                          )}
-                        />
-                      ))}
-                  </div>
-
-                  {/* ── Expandable question review ── */}
-                  {isExpanded && (
-                    <div
-                      className={cn(
-                        "border-t",
-                        isPassed ? "border-green-100" : "border-red-100",
-                      )}
-                    >
-                      {isLoadingThis || !detail ? (
-                        <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground text-sm">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          {t("practice.loading")}
-                        </div>
-                      ) : (
-                        <div className="p-5 space-y-4">
-                          {/* Category breakdown pills */}
-                          {detail.categoryBreakdown &&
-                            detail.categoryBreakdown.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {detail.categoryBreakdown.map((cat) => (
-                                  <span
-                                    key={cat.categoryCode}
-                                    className={cn(
-                                      "inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border",
-                                      cat.accuracyPercentage >= 80
-                                        ? "bg-green-50 border-green-200 text-green-700"
-                                        : cat.accuracyPercentage >= 60
-                                          ? "bg-amber-50 border-amber-200 text-amber-700"
-                                          : "bg-red-50 border-red-200 text-red-700",
-                                    )}
-                                  >
-                                    {cat.categoryNameEn}: {cat.correctAnswers}/
-                                    {cat.totalQuestions}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                          {/* Question list */}
-                          {detail.allAnswers && detail.allAnswers.length > 0 ? (
-                            <div className="space-y-3">
-                              {detail.allAnswers.map((q, qi) => {
-                                const selectedOptionText = localizeExamText(
-                                  language,
-                                  {
-                                    en:
-                                      q.selectedOptionTextEn ??
-                                      q.selectedOptionText,
-                                    ar: q.selectedOptionTextAr,
-                                    nl: q.selectedOptionTextNl,
-                                    fr: q.selectedOptionTextFr,
-                                  },
-                                );
-                                const correctOptionText = localizeExamText(
-                                  language,
-                                  {
-                                    en:
-                                      q.correctOptionTextEn ??
-                                      q.correctOptionText,
-                                    ar: q.correctOptionTextAr,
-                                    nl: q.correctOptionTextNl,
-                                    fr: q.correctOptionTextFr,
-                                  },
-                                );
-                                const explanation = localizeExamExplanation(
-                                  language,
-                                  {
-                                    en: q.explanationEn,
-                                    ar: q.explanationAr,
-                                    nl: q.explanationNl,
-                                    fr: q.explanationFr,
-                                  },
-                                  t(
-                                    "practice_exam.review_explanation_unavailable",
-                                  ),
-                                );
-                                const categoryName = localizeExamText(
-                                  language,
-                                  {
-                                    en: q.categoryNameEn ?? q.categoryName,
-                                    ar: q.categoryNameAr,
-                                    nl: q.categoryNameNl,
-                                    fr: q.categoryNameFr,
-                                  },
-                                );
-
-                                return (
-                                <div
-                                  key={q.questionId}
-                                    className={cn(
-                                      "rounded-xl border p-4 space-y-2.5",
-                                      q.wasTimeout
-                                        ? "border-amber-200 bg-amber-50/40"
-                                        : q.isCorrect
-                                        ? "border-green-200 bg-green-50/40"
-                                        : "border-red-200 bg-red-50/40",
-                                  )}
-                                >
-                                  {/* Header row */}
-                                  <div className="flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-card border border-border/50 text-xs font-black text-foreground">
-                                        {qi + 1}
-                                      </span>
-                                      <span className="text-xs font-medium text-muted-foreground">
-                                        {categoryName}
-                                      </span>
-                                      {q.difficulty ? (
-                                        <span className="text-xs font-medium text-muted-foreground">
-                                          {t(
-                                            `practice_exam.difficulty_${q.difficulty.toLowerCase()}`,
-                                          )}
-                                        </span>
-                                      ) : null}
-                                    </div>
-                                    {q.wasTimeout ? (
-                                      <TimerOff className="h-4 w-4 shrink-0 text-amber-600" />
-                                    ) : q.isCorrect ? (
-                                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                                    ) : (
-                                      <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                                    )}
-                                  </div>
-
-                                  {q.contentImageUrl ? (
-                                    <ExamQuestionImageFrame variant="wide">
-                                      <SignImage
-                                        src={q.contentImageUrl}
-                                        alt={getQuestionText(q)}
-                                        className="object-contain"
-                                      />
-                                    </ExamQuestionImageFrame>
-                                  ) : null}
-
-                                  <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
-                                    {getQuestionText(q)}
-                                  </p>
-
-                                  <div className="grid min-w-0 grid-cols-1 gap-2.5">
-                                    <ResultAnswerBlock
-                                      label={t("exam.your_answer")}
-                                      tone={
-                                        q.wasTimeout
-                                          ? "neutral"
-                                          : q.isCorrect
-                                            ? "correct"
-                                            : "incorrect"
-                                      }
-                                    >
-                                      {q.wasTimeout
-                                        ? t("practice_exam.score_timeout")
-                                        : selectedOptionText || "—"}
-                                    </ResultAnswerBlock>
-                                    {!q.isCorrect && (
-                                      <ResultAnswerBlock
-                                        label={t("exam.correct_answer")}
-                                        tone="correct"
-                                      >
-                                        {correctOptionText || "—"}
-                                      </ResultAnswerBlock>
-                                    )}
-                                    <ResultAnswerBlock
-                                      label={t(
-                                        "practice_exam.review_explanation",
-                                      )}
-                                      tone="neutral"
-                                    >
-                                      {explanation}
-                                    </ResultAnswerBlock>
-                                  </div>
-                                </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              {t("exam.results_no_answers")}
-                            </p>
-                          )}
-
-                          {/* Link to full detail page */}
-                          <div className="pt-1">
-                            <Link
-                              href={`/exam/results/${exam.examId}`}
-                              className={cn(
-                                "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors",
-                                isPassed
-                                  ? "border-green-200 text-green-700 hover:bg-green-50"
-                                  : "border-red-200 text-red-700 hover:bg-red-50",
-                              )}
-                            >
-                              {t("exam.view_full_results") ??
-                                "View full results"}
-                            </Link>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {!isLoading &&
-        !error &&
-        randomHistory &&
-        randomHistory.sessions.length > 0 && (
-          <div className="space-y-6">
-            {(() => {
-              const passedCount = randomHistory.sessions.filter(
-                (session) => session.passed,
-              ).length;
-              const passRate =
-                randomHistory.totalSessions > 0
-                  ? Math.round(
-                      (passedCount / randomHistory.totalSessions) * 100,
-                    )
-                  : 0;
-
-              return (
-                <>
-                  <PageSectionSurface className="border-primary/15">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <Shuffle className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 space-y-0.5">
-                        <h2 className="break-words text-xl font-black tracking-normal text-foreground">
-                          {t("sign_practice.history_title")}
-                        </h2>
-                      </div>
-                    </div>
-                  </PageSectionSurface>
-
-                  <div className="grid min-w-0 grid-cols-3 gap-3">
-                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-foreground">
-                        {randomHistory.totalSessions}
-                      </p>
-                      <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
-                        {t("sign_practice.history_total")}
-                      </p>
-                    </div>
-                    <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-green-600">
-                        {passedCount}
-                      </p>
-                      <p className="text-xs text-green-600/80 font-medium [overflow-wrap:anywhere]">
-                        {t("dashboard.result_passed")}
-                      </p>
-                    </div>
-                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-foreground">
-                        {passRate}%
-                      </p>
-                      <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
-                        {t("progress.pass_rate")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {randomHistory.sessions.map((session, index) => {
-                      const pct = Math.round(session.scorePercentage ?? 0);
-                      const isPassed = session.passed;
-                      const isExpanded = expandedRandomId === session.sessionId;
-                      const detail = randomDetailsCache[session.sessionId];
-                      const isLoadingThis =
-                        loadingRandomDetailId === session.sessionId;
-                      const isHighlighted =
-                        highlightedRandomSessionId === session.sessionId;
-
-                      return (
-                        <div
-                          key={session.sessionId}
-                          data-testid="mixed-sign-exam-result-card"
-                          data-exam-result-kind="mixed-sign"
-                          className={cn(
-                            "overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200",
-                            isPassed ? "border-green-200" : "border-red-200",
-                            isExpanded ? "shadow-md" : "",
-                            isHighlighted ? "ring-2 ring-primary/25" : "",
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "h-1 w-full",
-                              isPassed
-                                ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                : "bg-gradient-to-r from-red-400 to-rose-500",
-                            )}
-                          />
-
-                          <div
-                            className="flex min-w-0 cursor-pointer select-none flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start"
-                            onClick={() =>
-                              void toggleExpandRandom(session.sessionId)
-                            }
-                          >
-                            <div
-                              data-result-part="icon"
-                              className={cn(
-                                "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
-                                isPassed
-                                  ? "bg-green-100 text-green-600"
-                                  : "bg-red-100 text-red-600",
-                              )}
-                            >
-                              {isPassed ? (
-                                <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
-                              ) : (
-                                <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-                              )}
-                            </div>
-
-                            <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
-                              <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
-                                <span
-                                  data-result-part="name"
-                                  className="line-clamp-2 break-words text-sm font-bold text-foreground sm:line-clamp-1"
-                                >
-                                  {t("sign_practice.history_session")} #
-                                  {randomHistory.totalSessions - index}
-                                </span>
-                                <span
-                                  data-result-part="status"
-                                  className={cn(
-                                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
-                                    isPassed
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-red-100 text-red-700",
-                                  )}
-                                >
-                                  {isPassed
-                                    ? t("exam.passed")
-                                    : t("exam.failed")}
-                                </span>
-                                {isHighlighted && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                                    {t("sign_practice.history_latest")}
-                                  </span>
-                                )}
-                              </div>
-
-                              <p
-                                data-result-part="date"
-                                data-calendar="gregory"
-                                className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
-                              >
-                                <Clock className="h-3 w-3 shrink-0 opacity-60" />
-                                <span className="min-w-0 break-words">
-                                  {formatDate(
-                                    session.completedAt ?? session.startedAt,
-                                  )}
-                                </span>
-                              </p>
-
-                              <div
-                                data-result-part="progress"
-                                className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
-                              >
-                                <div className="flex items-center justify-center text-xs sm:justify-between">
-                                  <span className="text-muted-foreground">
-                                    {session.correctAnswers}/
-                                    {session.totalQuestions}{" "}
-                                    {t("exam.correct_answers")}
-                                  </span>
-                                </div>
-                                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                                  <div
-                                    className={cn(
-                                      "h-full rounded-full transition-all duration-500",
-                                      isPassed
-                                        ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                        : "bg-gradient-to-r from-red-400 to-rose-500",
-                                    )}
-                                    style={{ width: `${pct}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            <div
-                              data-result-part="score"
-                              className={cn(
-                                "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
-                                isPassed
-                                  ? "bg-green-50 border-green-200 text-green-700"
-                                  : "bg-red-50 border-red-200 text-red-600",
-                              )}
-                            >
-                              <span>{pct}</span>
-                              <span className="mt-0.5 text-xs font-semibold">
-                                %
-                              </span>
-                            </div>
-
-                            {isLoadingThis ? (
-                              <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
-                            ) : isExpanded ? (
-                              <ChevronUp
-                                data-result-part="chevron"
-                                className={cn(
-                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
-                                  isPassed ? "text-green-500" : "text-red-400",
-                                )}
-                              />
-                            ) : (
-                              <ChevronDown
-                                data-result-part="chevron"
-                                className={cn(
-                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
-                                  isPassed ? "text-green-500" : "text-red-400",
-                                )}
-                              />
-                            )}
-                          </div>
-
-                          {isExpanded && (
-                            <div
-                              className={cn(
-                                "border-t p-5",
-                                isPassed
-                                  ? "border-green-100"
-                                  : "border-red-100",
-                              )}
-                            >
-                              {isLoadingThis || !detail ? (
-                                <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                  {t("common.loading")}
-                                </div>
-                              ) : (
-                                <div className="space-y-4">
-                                  <div className="grid gap-3 sm:grid-cols-3">
-                                    <div className="rounded-xl border border-border/50 bg-background/60 px-4 py-3">
-                                      <p className="text-xs font-medium text-muted-foreground">
-                                        {t("practice_exam.score_correct")}
-                                      </p>
-                                      <p className="text-lg font-black text-green-600">
-                                        {detail.correctAnswers}
-                                      </p>
-                                    </div>
-                                    <div className="rounded-xl border border-border/50 bg-background/60 px-4 py-3">
-                                      <p className="text-xs font-medium text-muted-foreground">
-                                        {t("practice_exam.score_wrong")}
-                                      </p>
-                                      <p className="text-lg font-black text-red-600">
-                                        {detail.wrongAnswers}
-                                      </p>
-                                    </div>
-                                    <div className="rounded-xl border border-border/50 bg-background/60 px-4 py-3">
-                                      <p className="text-xs font-medium text-muted-foreground">
-                                        {t("practice_exam.score_timeout")}
-                                      </p>
-                                      <p className="text-lg font-black text-amber-600">
-                                        {detail.unanswered}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-3">
-                                    {detail.questions.map(
-                                      (question, questionIndex) => {
-                                        const questionText =
-                                          language === "ar"
-                                            ? question.questionAr
-                                            : language === "nl"
-                                              ? question.questionNl
-                                              : language === "fr"
-                                                ? question.questionFr
-                                                : question.questionEn;
-                                        const correctText =
-                                          language === "ar"
-                                            ? question.correctChoiceAr
-                                            : language === "nl"
-                                              ? question.correctChoiceNl
-                                              : language === "fr"
-                                                ? question.correctChoiceFr
-                                                : question.correctChoiceEn;
-                                        const selectedText =
-                                          language === "ar"
-                                            ? question.selectedChoiceAr
-                                            : language === "nl"
-                                              ? question.selectedChoiceNl
-                                              : language === "fr"
-                                                ? question.selectedChoiceFr
-                                                : question.selectedChoiceEn;
-                                        const explanationText =
-                                          localizeExamExplanation(
-                                            language,
-                                            {
-                                              en: question.explanationEn,
-                                              ar: question.explanationAr,
-                                              nl: question.explanationNl,
-                                              fr: question.explanationFr,
-                                            },
-                                            t(
-                                              "practice_exam.review_explanation_unavailable",
-                                            ),
-                                          );
-
-                                        return (
-                                          <div
-                                            key={question.questionId}
-                                            className={cn(
-                                              "rounded-xl border p-4 space-y-2.5",
-                                              question.isCorrect
-                                                ? "border-green-200 bg-green-50/40"
-                                                : "border-red-200 bg-red-50/40",
-                                            )}
-                                          >
-                                            <div className="flex items-center justify-between gap-3">
-                                              <div className="flex items-center gap-2">
-                                                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-card border border-border/50 text-xs font-black text-foreground">
-                                                  {questionIndex + 1}
-                                                </span>
-                                                {question.signCode ? (
-                                                  <span className="text-xs font-medium text-muted-foreground">
-                                                    {question.signCode}
-                                                  </span>
-                                                ) : null}
-                                              </div>
-                                              {question.isCorrect ? (
-                                                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                                              ) : (
-                                                <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                                              )}
-                                            </div>
-
-                                            {question.signImagePath ? (
-                                              <ExamQuestionImageFrame variant="review">
-                                                <SignImage
-                                                  src={question.signImagePath}
-                                                  alt={
-                                                    question.signCode ??
-                                                    questionText
-                                                  }
-                                                  className="object-contain"
-                                                />
-                                              </ExamQuestionImageFrame>
-                                            ) : null}
-
-                                            <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
-                                              {questionText}
-                                            </p>
-
-                                            <div className="grid min-w-0 grid-cols-1 gap-2.5">
-                                              <ResultAnswerBlock
-                                                label={t("exam.your_answer")}
-                                                tone={
-                                                  question.wasTimeout
-                                                    ? "neutral"
-                                                    : question.isCorrect
-                                                      ? "correct"
-                                                      : "incorrect"
-                                                }
-                                              >
-                                                {selectedText || "—"}
-                                              </ResultAnswerBlock>
-
-                                              {!question.isCorrect &&
-                                              correctText ? (
-                                                <ResultAnswerBlock
-                                                  label={t(
-                                                    "practice_exam.review_correct_answer",
-                                                  )}
-                                                  tone="correct"
-                                                >
-                                                  {correctText}
-                                                </ResultAnswerBlock>
-                                              ) : null}
-
-                                              <ResultAnswerBlock
-                                                label={t(
-                                                  "practice_exam.review_explanation",
-                                                )}
-                                                tone="neutral"
-                                              >
-                                                {explanationText}
-                                              </ResultAnswerBlock>
-                                            </div>
-                                          </div>
-                                        );
-                                      },
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        )}
-
-      {!isLoading &&
-        !error &&
-        signExamHistory &&
-        signExamHistory.results.length > 0 && (
-          <div className="space-y-6">
-            {(() => {
-              const passedCount = signExamHistory.results.filter(
-                (result) => result.passed,
-              ).length;
-              const passRate =
-                signExamHistory.totalResults > 0
-                  ? Math.round(
-                      (passedCount / signExamHistory.totalResults) * 100,
-                    )
-                  : 0;
-
-              return (
-                <>
-                  <PageSectionSurface className="border-primary/15">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <Shield className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 space-y-0.5">
-                        <p className="text-sm font-semibold text-primary">
-                          {t("sign_quiz.history_badge")}
-                        </p>
-                        <h2 className="break-words text-xl font-black tracking-normal text-foreground">
-                          {t("sign_quiz.history_title")}
-                        </h2>
-                      </div>
-                    </div>
-                  </PageSectionSurface>
-
-                  <div className="grid min-w-0 grid-cols-3 gap-3">
-                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-foreground">
-                        {signExamHistory.totalResults}
-                      </p>
-                      <p className="text-xs font-medium text-muted-foreground [overflow-wrap:anywhere]">
-                        {t("sign_quiz.history_total")}
-                      </p>
-                    </div>
-                    <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-green-600">
-                        {passedCount}
-                      </p>
-                      <p className="text-xs font-medium text-green-600/80 [overflow-wrap:anywhere]">
-                        {t("dashboard.result_passed")}
-                      </p>
-                    </div>
-                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-foreground">
-                        {passRate}%
-                      </p>
-                      <p className="text-xs font-medium text-muted-foreground [overflow-wrap:anywhere]">
-                        {t("progress.pass_rate")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {signExamHistory.results.map((result) => {
-                      const pct = Math.round(result.scorePercentage ?? 0);
-                      const isPassed = result.passed;
-                      const isExpanded =
-                        expandedSignResultId === result.resultId;
-                      const detail = signDetailsCache[result.resultId];
-                      const isLoadingThis =
-                        loadingSignDetailId === result.resultId;
-                      const isHighlighted =
-                        highlightedSignResultId === result.resultId;
-                      const signName = getStoredSignName(result);
-
-                      return (
-                        <div
-                          key={result.resultId}
-                          data-testid="sign-exam-result-card"
-                          data-exam-result-kind="sign-specific"
-                          className={cn(
-                            "overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200",
-                            isPassed ? "border-green-200" : "border-red-200",
-                            isExpanded ? "shadow-md" : "",
-                            isHighlighted ? "ring-2 ring-primary/25" : "",
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "h-1 w-full",
-                              isPassed
-                                ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                : "bg-gradient-to-r from-red-400 to-rose-500",
-                            )}
-                          />
-
-                          <div
-                            className="flex min-w-0 cursor-pointer select-none flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start"
-                            onClick={() =>
-                              void toggleExpandSign(result.resultId)
-                            }
-                          >
-                            <div
-                              data-result-part="icon"
-                              className={cn(
-                                "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
-                                isPassed
-                                  ? "bg-green-100 text-green-600"
-                                  : "bg-red-100 text-red-600",
-                              )}
-                            >
-                              {isPassed ? (
-                                <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
-                              ) : (
-                                <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-                              )}
-                            </div>
-
-                            <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
-                              <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
-                                <span
-                                  data-result-part="name"
-                                  className="line-clamp-2 min-w-0 max-w-full break-words text-sm font-bold text-foreground sm:truncate"
-                                >
-                                  {signName}
-                                </span>
-                                <span
-                                  data-result-part="status"
-                                  className={cn(
-                                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
-                                    isPassed
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-red-100 text-red-700",
-                                  )}
-                                >
-                                  {isPassed
-                                    ? t("exam.passed")
-                                    : t("exam.failed")}
-                                </span>
-                                {result.routeCode ? (
-                                  <span className="inline-flex items-center rounded-full border border-border/60 bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                                    {result.routeCode}
-                                  </span>
-                                ) : null}
-                                {isHighlighted && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                                    {t("sign_quiz.history_latest")}
-                                  </span>
-                                )}
-                              </div>
-
-                              <p
-                                data-result-part="date"
-                                data-calendar="gregory"
-                                className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
-                              >
-                                <Clock className="h-3 w-3 shrink-0 opacity-60" />
-                                <span className="min-w-0 break-words">
-                                  {formatDate(result.completedAt ?? null)}
-                                </span>
-                              </p>
-
-                              <div
-                                data-result-part="progress"
-                                className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
-                              >
-                                <div className="flex items-center justify-center text-xs sm:justify-between">
-                                  <span className="text-muted-foreground">
-                                    {result.correctAnswers}/
-                                    {result.totalQuestions}{" "}
-                                    {t("exam.correct_answers")}
-                                  </span>
-                                </div>
-                                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                                  <div
-                                    className={cn(
-                                      "h-full rounded-full transition-all duration-500",
-                                      isPassed
-                                        ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                        : "bg-gradient-to-r from-red-400 to-rose-500",
-                                    )}
-                                    style={{ width: `${pct}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            <div
-                              data-result-part="score"
-                              className={cn(
-                                "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
-                                isPassed
-                                  ? "bg-green-50 border-green-200 text-green-700"
-                                  : "bg-red-50 border-red-200 text-red-600",
-                              )}
-                            >
-                              <span>{pct}</span>
-                              <span className="mt-0.5 text-xs font-semibold">
-                                %
-                              </span>
-                            </div>
-
-                            {isLoadingThis ? (
-                              <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
-                            ) : isExpanded ? (
-                              <ChevronUp
-                                data-result-part="chevron"
-                                className={cn(
-                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
-                                  isPassed ? "text-green-500" : "text-red-400",
-                                )}
-                              />
-                            ) : (
-                              <ChevronDown
-                                data-result-part="chevron"
-                                className={cn(
-                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
-                                  isPassed ? "text-green-500" : "text-red-400",
-                                )}
-                              />
-                            )}
-                          </div>
-
-                          {isExpanded && (
-                            <div
-                              className={cn(
-                                "border-t p-5",
-                                isPassed
-                                  ? "border-green-100"
-                                  : "border-red-100",
-                              )}
-                            >
-                              {isLoadingThis || !detail ? (
-                                <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                  {t("common.loading")}
-                                </div>
-                              ) : (
-                                <div className="space-y-4">
-                                  <div className="grid gap-3 sm:grid-cols-3">
-                                    <div className="rounded-xl border border-border/50 bg-background/60 px-4 py-3">
-                                      <p className="text-xs font-medium text-muted-foreground">
-                                        {t("practice_exam.score_correct")}
-                                      </p>
-                                      <p className="text-lg font-black text-green-600">
-                                        {detail.correctAnswers}
-                                      </p>
-                                    </div>
-                                    <div className="rounded-xl border border-border/50 bg-background/60 px-4 py-3">
-                                      <p className="text-xs font-medium text-muted-foreground">
-                                        {t("practice_exam.score_wrong")}
-                                      </p>
-                                      <p className="text-lg font-black text-red-600">
-                                        {detail.wrongAnswers}
-                                      </p>
-                                    </div>
-                                    <div className="rounded-xl border border-border/50 bg-background/60 px-4 py-3">
-                                      <p className="text-xs font-medium text-muted-foreground">
-                                        {t("practice_exam.score_timeout")}
-                                      </p>
-                                      <p className="text-lg font-black text-amber-600">
-                                        {detail.unansweredCount}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {detail.questionResults.length > 0 ? (
-                                    <div className="space-y-3">
-                                      {detail.questionResults.map(
-                                        (question, questionIndex) => {
-                                          const correctText =
-                                            language === "ar"
-                                              ? question.correctTextAr
-                                              : language === "nl"
-                                                ? question.correctTextNl
-                                                : language === "fr"
-                                                  ? question.correctTextFr
-                                                  : question.correctTextEn;
-                                          const explanationText =
-                                            localizeExamExplanation(
-                                              language,
-                                              {
-                                                en: question.explanationEn,
-                                                ar: question.explanationAr,
-                                                nl: question.explanationNl,
-                                                fr: question.explanationFr,
-                                              },
-                                              t(
-                                                "practice_exam.review_explanation_unavailable",
-                                              ),
-                                            );
-
-                                          return (
-                                            <div
-                                              key={question.questionId}
-                                              className={cn(
-                                                "rounded-xl border p-4 space-y-2.5",
-                                                question.isCorrect
-                                                  ? "border-green-200 bg-green-50/40"
-                                                  : "border-red-200 bg-red-50/40",
-                                              )}
-                                            >
-                                              <div className="flex items-center justify-between gap-3">
-                                                <div className="flex items-center gap-2">
-                                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-card border border-border/50 text-xs font-black text-foreground">
-                                                    {questionIndex + 1}
-                                                  </span>
-                                                  <span className="text-xs font-medium text-muted-foreground">
-                                                    {question.difficulty}
-                                                  </span>
-                                                </div>
-                                                {question.isCorrect ? (
-                                                  <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                                                ) : (
-                                                  <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                                                )}
-                                              </div>
-
-                                              {detail.signImagePath ? (
-                                                <ExamQuestionImageFrame variant="review">
-                                                  <SignImage
-                                                    src={detail.signImagePath}
-                                                    alt={getStoredSignName(
-                                                      detail,
-                                                    )}
-                                                    className="object-contain"
-                                                  />
-                                                </ExamQuestionImageFrame>
-                                              ) : null}
-
-                                              <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
-                                                {getStoredSignQuestionText(
-                                                  question,
-                                                )}
-                                              </p>
-
-                                              <div className="grid min-w-0 grid-cols-1 gap-2.5">
-                                                <ResultAnswerBlock
-                                                  label={t("exam.your_answer")}
-                                                  tone={
-                                                    !question.answered
-                                                      ? "neutral"
-                                                      : question.isCorrect
-                                                        ? "correct"
-                                                        : "incorrect"
-                                                  }
-                                                >
-                                                  {question.isCorrect
-                                                    ? correctText || "—"
-                                                    : "—"}
-                                                </ResultAnswerBlock>
-
-                                                {!question.isCorrect &&
-                                                correctText ? (
-                                                  <ResultAnswerBlock
-                                                    label={t(
-                                                      "practice_exam.review_correct_answer",
-                                                    )}
-                                                    tone="correct"
-                                                  >
-                                                    {correctText}
-                                                  </ResultAnswerBlock>
-                                                ) : null}
-
-                                                <ResultAnswerBlock
-                                                  label={t(
-                                                    "practice_exam.review_explanation",
-                                                  )}
-                                                  tone="neutral"
-                                                >
-                                                  {explanationText}
-                                                </ResultAnswerBlock>
-                                              </div>
-                                            </div>
-                                          );
-                                        },
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <div className="rounded-xl border border-border/50 bg-background/60 px-4 py-3 text-sm text-muted-foreground">
-                                      {t("sign_quiz.history_no_review")}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        )}
-    </div>
+  const currentQuestion = examData.questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === examData.questions.length - 1;
+  const progressPercent = Math.round(
+    ((currentQuestionIndex + 1) / examData.questions.length) * 100,
   );
-}
+  const questionCounter = `${currentQuestionIndex + 1} / ${examData.questions.length}`;
+  const timerToneClass =
+    questionTimeLeft >= 10
+      ? "text-green-700"
+      : questionTimeLeft >= 5
+        ? "text-orange-600"
+        : "text-red-600 animate-pulse";
+  const questionText = localizeText(
+    language,
+    currentQuestion.questionTextEn,
+    currentQuestion.questionTextAr,
+    currentQuestion.questionTextNl,
+    currentQuestion.questionTextFr,
+  );
+  const questionImageUrl = currentQuestion.imageUrl
+    ? (convertToPublicImageUrl(currentQuestion.imageUrl) ?? null)
+    : null;
+  const difficultyLabel = currentQuestion.difficultyLevel
+    ? t(`practice_exam.difficulty_${currentQuestion.difficultyLevel.toLowerCase()}`)
+    : null;
 
-export default function ExamResultsPage() {
-  const router = useLocalizedRouter();
-
-  useEffect(() => {
-    router.replace("/dashboard?section=exam-results");
-  }, [router]);
-
-  return null;
+  return (
+    <FocusedExamShell
+      dir={isRTL ? "rtl" : "ltr"}
+      counter={questionCounter}
+      difficultyLabel={difficultyLabel ?? undefined}
+      difficultyClassName="bg-primary/10 text-primary"
+      timerPill={
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 text-[13px] font-black tabular-nums sm:text-sm",
+            timerToneClass,
+          )}
+        >
+          <Clock className="h-4 w-4" />
+          {questionTimeLeft}s
+        </span>
+      }
+      progressPercent={progressPercent}
+      compactInformationBar
+      afterCard={
+        <>
+          <div
+            data-testid="exam-actions"
+            className="grid grid-cols-1 gap-2 pb-3 pt-1 sm:grid-cols-3"
+          >
+          <Button
+            variant="destructive"
+            size="lg"
+            className="order-3 w-full sm:order-1"
+            onClick={() => {
+              pendingNavigation.current = "/exam";
+              setShowExitDialog(true);
+            }}
+          >
+            {t("practice_exam.end_exam")}
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="order-2 w-full"
+            asChild
+          >
+            <Link href="/contact">
+              <Flag className="h-4 w-4" />
+              {t("practice_exam.report_question")}
+            </Link>
+          </Button>
+          <Button
+            size="lg"
+            onClick={() => void handleNextOrSubmit("answered")}
+            disabled={
+              isSubmitting || !finalizedQuestionIds.has(currentQuestion.id)
+            }
+            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
+          >
+            {isLastQuestion
+              ? t("practice_exam.submit_btn")
+              : t("practice_exam.next_btn")}
+            {!isLastQuestion &&
+              (isRTL ? (
+                <ArrowLeft className="h-4 w-4" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              ))}
+          </Button>
+          </div>
+          <ExitConfirmDialog
+            open={showExitDialog}
+            onOpenChange={setShowExitDialog}
+            onStay={handleExitStay}
+            onLeave={handleExitLeave}
+          />
+        </>
+      }
+    >
+      <FocusedQuestionCard
+        compactOptionGap
+        difficultyBadge={
+          difficultyLabel ? (
+            <span className="inline-flex min-h-8 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-black text-primary">
+              {difficultyLabel}
+            </span>
+          ) : null
+        }
+        media={
+          questionImageUrl ? (
+            <ExamQuestionImageFrame variant="theory">
+              {failedImageUrl === questionImageUrl ? (
+                <div
+                  role="status"
+                  className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[8px] bg-muted/40 p-4 text-center text-sm text-muted-foreground"
+                >
+                  <ImageOff className="h-6 w-6" />
+                  <span>{t("practice.question_image_error")}</span>
+                </div>
+              ) : (
+                <Image
+                  src={questionImageUrl}
+                  alt={t("practice.question_image_alt")}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 640px"
+                  className="object-contain"
+                  priority
+                  onError={() => {
+                    console.error(
+                      "Failed to load theoretical question image",
+                      questionImageUrl,
+                    );
+                    setFailedImageUrl(questionImageUrl);
+                  }}
+                />
+              )}
+            </ExamQuestionImageFrame>
+          ) : null
+        }
+        title={questionText}
+        options={currentQuestion.options.map((option) => ({
+          key: option.id,
+          text: localizeText(
+            language,
+            option.textEn,
+            option.textAr,
+            option.textNl,
+            option.textFr,
+          ),
+          selected: answers[currentQuestion.id] === option.number,
+          onSelect: () => handleAnswerSelect(option.number),
+        }))}
+      />
+    </FocusedExamShell>
+  );
 }

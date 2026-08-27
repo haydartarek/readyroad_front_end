@@ -1,10 +1,17 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { FileText } from "lucide-react";
-import { PublicDocumentPage } from "@/components/public/public-document-page";
+import ExamIndexPage from "./page";
 
-export default function TermsPage() {
-  return (
-    <PublicDocumentPage page="terms" path="/terms" icon={FileText} />
-  );
-}
+jest.mock("next/navigation", () => ({
+  redirect: jest.fn(),
+}));
+
+describe("ExamIndexPage", () => {
+  it("redirects the legacy exam route to the default sign exam", async () => {
+    await ExamIndexPage({
+      params: Promise.resolve({ signCode: "A11" }),
+    });
+
+    expect(redirect).toHaveBeenCalledWith("/traffic-signs/A11/exam/1");
+  });
+});

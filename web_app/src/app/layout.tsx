@@ -60,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
   ]);
   const copy = getLayoutMetadataCopy(locale);
   const ogImage = getSharedOgImage(locale);
-  const pathname = headerStore.get("x-readyroad-pathname") || "/";
+  const pathname = headerStore.get("x-rijvia-pathname") || "/";
   const canonical = buildLocalizedUrl(pathname, locale, APP_URL);
 
   return {
@@ -133,7 +133,7 @@ export default async function RootLayout({
     <html lang={locale} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
         <Script
-          id="readyroad-consent-defaults"
+          id="rijvia-consent-defaults"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: COOKIE_CONSENT_BOOTSTRAP_SCRIPT }}
         />

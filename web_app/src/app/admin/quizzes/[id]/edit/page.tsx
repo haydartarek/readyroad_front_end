@@ -3,7 +3,6 @@
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "@/components/localized-link";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
@@ -22,7 +21,6 @@ import {
   isValidQuizOptionCount,
   optionDisplayLabel,
   QUIZ_DIFFICULTIES,
-  resolveAdminQuizReturnTo,
 } from "@/lib/admin-quiz-form";
 import {
   ArrowLeft,
@@ -50,7 +48,6 @@ interface OptionForm {
   displayOrder: number;
 }
 interface QuestionForm {
-  version: number;
   categoryCode: string;
   difficultyLevel: string;
   questionEn: string;
@@ -72,39 +69,6 @@ interface CategoryOption {
   nameNl: string;
   nameFr: string;
 }
-interface AdminQuizQuestionResponse {
-  id: number;
-  version: number;
-  categoryCode: string;
-  categoryNameEn: string;
-  difficultyLevel: string;
-  questionType: string;
-  questionEn: string;
-  questionAr: string;
-  questionNl: string;
-  questionFr: string;
-  explanationEn: string | null;
-  explanationAr: string | null;
-  explanationNl: string | null;
-  explanationFr: string | null;
-  contentImageUrl: string | null;
-  isActive: boolean;
-  optionsCount: number;
-  options: {
-    id: number;
-    textEn: string;
-    textAr: string;
-    textNl: string;
-    textFr: string;
-    isCorrect: boolean;
-    displayOrder: number;
-  }[];
-  isReferenced: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-type AdminQuizQuestionWireResponse = AdminQuizQuestionResponse;
 
 const BLANK_OPTION: OptionForm = {
   textEn: "",
@@ -114,6 +78,26 @@ const BLANK_OPTION: OptionForm = {
   isCorrect: false,
   displayOrder: 0,
 };
+
+const INITIAL_FORM: QuestionForm = {
+  categoryCode: "",
+  difficultyLevel: "EASY",
+  questionEn: "",
+  questionAr: "",
+  questionNl: "",
+  questionFr: "",
+  explanationEn: "",
+  explanationAr: "",
+  explanationNl: "",
+  explanationFr: "",
+  contentImageUrl: "",
+  isActive: true,
+  options: [
+    { ...BLANK_OPTION, displayOrder: 1 },
+    { ...BLANK_OPTION, displayOrder: 2 },
+  ],
+};
+
 const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_FILE_SIZE_MB = 5;
 
@@ -221,103 +205,33 @@ function FormTextarea({
 
 // ─── Page ──────────────────────────────────────────────
 
-export default function AdminEditQuizQuestionPage() {
+export default function AdminAddQuizQuestionPage() {
   const router = useLocalizedRouter();
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const questionId = params.id as string;
   const { t, language } = useLanguage();
-  const returnTo = useMemo(
-    () => resolveAdminQuizReturnTo(searchParams.get("returnTo")),
-    [searchParams],
-  );
 
-  const [form, setForm] = useState<QuestionForm>({
-    version: 0,
-    categoryCode: "",
-    difficultyLevel: "EASY",
-    questionEn: "",
-    questionAr: "",
-    questionNl: "",
-    questionFr: "",
-    explanationEn: "",
-    explanationAr: "",
-    explanationNl: "",
-    explanationFr: "",
-    contentImageUrl: "",
-    isActive: true,
-    options: [],
-  });
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  // ─── Quiz question state ────────────────────────────────────────
+  const [form, setForm] = useState<QuestionForm>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // ─── Shared state ────────────────────────────────────────────────
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageFilename, setImageFilename] = useState("");
-  const [imagePreviewFailed, setImagePreviewFailed] = useState(false);
-  const [isReferenced, setIsReferenced] = useState(false);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    Promise.all([
-      apiClient
-        .get<CategoryOption[]>(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CATEGORIES)
-        .catch(() => ({ data: [] as CategoryOption[] })),
-      apiClient.get<AdminQuizQuestionWireResponse>(
-        API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.DETAIL(questionId),
-      ),
-    ])
-      .then(([catRes, qRes]) => {
-        setCategories(catRes.data);
-        const q = qRes.data;
-        const options = Array.isArray(q.options) ? q.options : [];
-        setIsReferenced(Boolean(q.isReferenced));
-        setForm({
-          version: q.version,
-          categoryCode: q.categoryCode || "",
-          difficultyLevel: q.difficultyLevel || "EASY",
-          questionEn: q.questionEn || "",
-          questionAr: q.questionAr || "",
-          questionNl: q.questionNl || "",
-          questionFr: q.questionFr || "",
-          explanationEn: q.explanationEn || "",
-          explanationAr: q.explanationAr || "",
-          explanationNl: q.explanationNl || "",
-          explanationFr: q.explanationFr || "",
-          contentImageUrl: q.contentImageUrl || "",
-          isActive: q.isActive ?? true,
-          options: options.map((o) => ({
-            id: o.id,
-            textEn: o.textEn || "",
-            textAr: o.textAr || "",
-            textNl: o.textNl || "",
-            textFr: o.textFr || "",
-            isCorrect: o.isCorrect,
-            displayOrder: o.displayOrder,
-          })),
-        });
-      })
-      .catch((err) => {
-        logApiError("Failed to load quiz question", err);
-        if (isServiceUnavailable(err)) setServiceUnavailable(true);
-        else {
-          const status = (err as { response?: { status?: number } })?.response
-            ?.status;
-          setErrorMsg(
-            status === 404
-              ? t("admin.quizzes.edit_not_found") || "Question not found"
-              : t("admin.quizzes.fetch_error") || "Failed to load question",
-          );
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [questionId, t]);
+    apiClient
+      .get<CategoryOption[]>(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CATEGORIES)
+      .then((res) => setCategories(res.data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (toast) {
@@ -325,10 +239,6 @@ export default function AdminEditQuizQuestionPage() {
       return () => clearTimeout(id);
     }
   }, [toast]);
-
-  useEffect(() => {
-    setImagePreviewFailed(false);
-  }, [form.contentImageUrl]);
 
   const isValid = useMemo(
     () =>
@@ -458,25 +368,16 @@ export default function AdminEditQuizQuestionPage() {
       errors.correct =
         t("admin.quizzes.form.error_only_one_correct") ||
         "Only one option can be marked as correct";
-    const languageFields = ["textEn", "textAr", "textNl", "textFr"] as const;
     form.options.forEach((o, i) => {
-      languageFields.forEach((field) => {
-        if (!o[field].trim()) {
-          errors[`option_${i}_${field}`] =
-            t("admin.quizzes.form.error_option_all_languages") ||
-            "Every option is required in all four languages";
-        }
-      });
-    });
-    languageFields.forEach((field) => {
-      const values = form.options.map((option) =>
-        option[field].trim().replace(/\s+/g, " ").toLocaleLowerCase(),
-      );
-      if (values.some((value, index) => value && values.indexOf(value) !== index)) {
-        errors.options =
-          t("admin.quizzes.form.error_duplicate_options") ||
-          "Answer options must be unique in every language";
-      }
+      if (
+        !o.textEn.trim() ||
+        !o.textAr.trim() ||
+        !o.textNl.trim() ||
+        !o.textFr.trim()
+      )
+        errors[`option_${i}`] =
+          t("admin.quizzes.form.error_option_all_languages") ||
+          "Option text is required in all four languages";
     });
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -518,6 +419,7 @@ export default function AdminEditQuizQuestionPage() {
       if (imageFilename.trim()) {
         formData.append("filename", imageFilename.trim());
       }
+      // Use native fetch so the browser sets the correct multipart boundary automatically.
       const headers: Record<string, string> = {};
       const csrf = getCsrfToken();
       if (csrf) headers["x-csrf-token"] = csrf;
@@ -540,7 +442,7 @@ export default function AdminEditQuizQuestionPage() {
         type: "success",
       });
     } catch (err: unknown) {
-      logApiError("Failed to upload quiz image", err);
+      logApiError("Failed to upload image", err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
       else {
         const msg =
@@ -566,86 +468,66 @@ export default function AdminEditQuizQuestionPage() {
     if (!validate()) return;
     try {
       setSubmitting(true);
-      await apiClient.put(
-        API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.UPDATE(questionId),
-        {
-          version: form.version,
-          categoryCode: form.categoryCode.trim(),
-          difficultyLevel: form.difficultyLevel,
-          questionEn: form.questionEn.trim(),
-          questionAr: form.questionAr.trim() || "",
-          questionNl: form.questionNl.trim() || "",
-          questionFr: form.questionFr.trim() || "",
-          explanationEn: form.explanationEn.trim() || "",
-          explanationAr: form.explanationAr.trim() || "",
-          explanationNl: form.explanationNl.trim() || "",
-          explanationFr: form.explanationFr.trim() || "",
-          contentImageUrl: form.contentImageUrl.trim() || null,
-          isActive: form.isActive,
-          options: form.options.map((o) => ({
-            id: o.id || null,
-            textEn: o.textEn.trim(),
-            textAr: o.textAr.trim() || "",
-            textNl: o.textNl.trim() || "",
-            textFr: o.textFr.trim() || "",
-            isCorrect: o.isCorrect,
-            displayOrder: o.displayOrder,
-          })),
-        },
-      );
+      await apiClient.post(API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CREATE, {
+        categoryCode: form.categoryCode.trim(),
+        difficultyLevel: form.difficultyLevel,
+        questionEn: form.questionEn.trim(),
+        questionAr: form.questionAr.trim() || "",
+        questionNl: form.questionNl.trim() || "",
+        questionFr: form.questionFr.trim() || "",
+        explanationEn: form.explanationEn.trim() || "",
+        explanationAr: form.explanationAr.trim() || "",
+        explanationNl: form.explanationNl.trim() || "",
+        explanationFr: form.explanationFr.trim() || "",
+        contentImageUrl: form.contentImageUrl.trim() || null,
+        isActive: form.isActive,
+        options: form.options.map((o) => ({
+          textEn: o.textEn.trim(),
+          textAr: o.textAr.trim() || "",
+          textNl: o.textNl.trim() || "",
+          textFr: o.textFr.trim() || "",
+          isCorrect: o.isCorrect,
+          displayOrder: o.displayOrder,
+        })),
+      });
       setToast({
         message:
-          t("admin.quizzes.form.update_success") ||
-          "Question updated successfully",
+          t("admin.quizzes.form.create_success") ||
+          "Question created successfully",
         type: "success",
       });
-      setTimeout(() => router.push(returnTo), 600);
+      setTimeout(() => router.push("/admin/quizzes"), 600);
     } catch (err: unknown) {
-      logApiError("Failed to update quiz question", err);
+      logApiError("Failed to create quiz question", err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
       else {
         const axiosErr = err as {
-          response?: {
-            status?: number;
-            data?: { error?: string; message?: string };
-          };
+          response?: { data?: { error?: string; message?: string } };
           message?: string;
         };
         const msg =
           axiosErr?.response?.data?.error ||
           axiosErr?.response?.data?.message ||
           axiosErr?.message;
-        setErrorMsg(String(
-          axiosErr?.response?.status === 409
-            ? t("admin.quizzes.form.edit_conflict") ||
-                "This question changed in another session. Reload it before saving."
-            : msg ||
-                t("admin.quizzes.form.update_error") ||
-                "Failed to update question",
-        ));
+        setErrorMsg(
+          String(
+            msg ||
+              t("admin.quizzes.form.error_generic") ||
+              "Failed to create question",
+          ),
+        );
       }
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-5 animate-pulse">
-        <div className="h-8 bg-muted rounded-xl w-64" />
-        <div className="bg-card rounded-2xl border border-border/50 p-5 space-y-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-10 bg-muted rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
       {serviceUnavailable && (
-        <ServiceUnavailableBanner onRetry={() => window.location.reload()} />
+        <ServiceUnavailableBanner
+          onRetry={() => setServiceUnavailable(false)}
+        />
       )}
 
       {/* Toast */}
@@ -669,14 +551,14 @@ export default function AdminEditQuizQuestionPage() {
 
       <AdminPageHeader
         icon={<ClipboardList className="h-6 w-6" />}
-        title={t("admin.quizzes.edit_title") || "Edit Question"}
+        title={t("admin.quizzes.add_new") || "Add Question"}
         description={
-          t("admin.quizzes.edit_desc") ||
-          "Update an existing theory-bank question."
+          t("admin.quizzes.add_new_desc") ||
+          "Create a new theory-bank question with 2 or 3 answer options."
         }
         actions={
           <Button variant="outline" asChild className="gap-2">
-            <Link href={returnTo}>
+            <Link href="/admin/quizzes">
               <ArrowLeft className="w-4 h-4" />
               {t("common.back") || "Back"}
             </Link>
@@ -684,22 +566,18 @@ export default function AdminEditQuizQuestionPage() {
         }
       />
 
+      <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+        {t("admin.quizzes.bank_theory_desc") ||
+          "This category classifies the question and supports learner performance analysis."}
+      </div>
+
+      {/* Quiz Form */}
       <form onSubmit={onSubmit} className="space-y-5">
         {/* Error Banner */}
         {errorMsg && (
           <div className="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
             <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {isReferenced && (
-          <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
-            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <span>
-              {t("admin.quizzes.edit_referenced_detail") ||
-                "This question is referenced by learner history. Existing answer records remain preserved while its current content is edited."}
-            </span>
           </div>
         )}
 
@@ -711,13 +589,13 @@ export default function AdminEditQuizQuestionPage() {
             {/* Category */}
             <div className="space-y-1">
               <label
-                htmlFor="admin-quiz-edit-category"
+                htmlFor="admin-quiz-new-category"
                 className="block text-xs font-semibold text-foreground"
               >
                 {t("admin.quizzes.form.category") || "Category"} *
               </label>
               <select
-                id="admin-quiz-edit-category"
+                id="admin-quiz-new-category"
                 name="categoryCode"
                 value={form.categoryCode}
                 onChange={(e) => setField("categoryCode", e.target.value)}
@@ -749,13 +627,13 @@ export default function AdminEditQuizQuestionPage() {
             {/* Difficulty */}
             <div className="space-y-1">
               <label
-                htmlFor="admin-quiz-edit-difficulty"
+                htmlFor="admin-quiz-new-difficulty"
                 className="block text-xs font-semibold text-foreground"
               >
                 {t("admin.quizzes.form.difficulty") || "Difficulty"}
               </label>
               <select
-                id="admin-quiz-edit-difficulty"
+                id="admin-quiz-new-difficulty"
                 name="difficultyLevel"
                 value={form.difficultyLevel}
                 onChange={(e) => setField("difficultyLevel", e.target.value)}
@@ -810,29 +688,17 @@ export default function AdminEditQuizQuestionPage() {
         >
           {form.contentImageUrl && (
             <div className="relative inline-block">
-              {imagePreviewFailed ? (
-                <div
-                  role="status"
-                  className="flex aspect-video w-80 max-w-full flex-col items-center justify-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50/60 p-4 text-center text-sm text-amber-900"
-                >
-                  <AlertTriangle className="h-5 w-5" />
-                  <span>{t("admin.quizzes.form.image_preview_error")}</span>
-                </div>
-              ) : (
-                <Image
-                  src={resolveImageUrl(form.contentImageUrl)}
-                  alt={t("practice.question_image_alt")}
-                  width={320}
-                  height={180}
-                  unoptimized
-                  className="aspect-video max-w-full rounded-xl border border-border/50 bg-muted object-contain"
-                  onError={() => {
-                    const failedUrl = resolveImageUrl(form.contentImageUrl);
-                    console.error("Failed to load quiz question image", failedUrl);
-                    setImagePreviewFailed(true);
-                  }}
-                />
-              )}
+              <Image
+                src={resolveImageUrl(form.contentImageUrl)}
+                alt={t("practice.question_image_alt")}
+                width={320}
+                height={192}
+                unoptimized
+                className="max-h-48 rounded-xl border border-border/50 object-contain bg-muted"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
               <button
                 type="button"
                 aria-label={t("admin.quizzes.upload.remove")}
@@ -849,13 +715,13 @@ export default function AdminEditQuizQuestionPage() {
 
           <div className="space-y-1">
             <label
-              htmlFor="admin-quiz-edit-image-filename"
+              htmlFor="admin-quiz-new-image-filename"
               className="block text-xs font-semibold text-foreground"
             >
               {t("admin.quizzes.upload.filename")}
             </label>
             <input
-              id="admin-quiz-edit-image-filename"
+              id="admin-quiz-new-image-filename"
               name="contentImageFilename"
               value={imageFilename}
               maxLength={100}
@@ -871,13 +737,13 @@ export default function AdminEditQuizQuestionPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 space-y-1">
               <label
-                htmlFor="admin-quiz-edit-image-url"
+                htmlFor="admin-quiz-new-image-url"
                 className="block text-xs font-semibold text-foreground"
               >
                 {t("admin.quizzes.form.image_url")}
               </label>
               <input
-                id="admin-quiz-edit-image-url"
+                id="admin-quiz-new-image-url"
                 name="contentImageUrl"
                 value={form.contentImageUrl}
                 autoComplete="url"
@@ -898,7 +764,7 @@ export default function AdminEditQuizQuestionPage() {
             </div>
             <div className="flex items-end">
               <input
-                id="admin-quiz-edit-image-file"
+                id="admin-quiz-new-image-file"
                 name="contentImageFile"
                 ref={fileInputRef}
                 type="file"
@@ -941,32 +807,25 @@ export default function AdminEditQuizQuestionPage() {
               value={form.questionEn}
               error={fieldErrors.questionEn}
               onChange={(v) => setField("questionEn", v)}
-              disabled={false}
             />
             <FormTextarea
               label={`${t("admin.quizzes.form.question_ar")} *`}
               placeholder={t("admin.quizzes.form.question_ar_placeholder")}
               value={form.questionAr}
-              error={fieldErrors.questionAr}
               onChange={(v) => setField("questionAr", v)}
               dir="rtl"
-              disabled={false}
             />
             <FormTextarea
               label={`${t("admin.quizzes.form.question_nl")} *`}
               placeholder={t("admin.quizzes.form.question_nl_placeholder")}
               value={form.questionNl}
-              error={fieldErrors.questionNl}
               onChange={(v) => setField("questionNl", v)}
-              disabled={false}
             />
             <FormTextarea
               label={`${t("admin.quizzes.form.question_fr")} *`}
               placeholder={t("admin.quizzes.form.question_fr_placeholder")}
               value={form.questionFr}
-              error={fieldErrors.questionFr}
               onChange={(v) => setField("questionFr", v)}
-              disabled={false}
             />
           </div>
         </AdminSectionCard>
@@ -977,33 +836,49 @@ export default function AdminEditQuizQuestionPage() {
               label={t("admin.quizzes.form.explanation_en")}
               value={form.explanationEn}
               onChange={(value) => setField("explanationEn", value)}
-              warning={!form.explanationEn.trim() ? t("admin.quizzes.missing_translation") : undefined}
+              warning={
+                !form.explanationEn.trim()
+                  ? t("admin.quizzes.missing_translation")
+                  : undefined
+              }
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_ar")}
               value={form.explanationAr}
               onChange={(value) => setField("explanationAr", value)}
               dir="rtl"
-              warning={!form.explanationAr.trim() ? t("admin.quizzes.missing_translation") : undefined}
+              warning={
+                !form.explanationAr.trim()
+                  ? t("admin.quizzes.missing_translation")
+                  : undefined
+              }
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_nl")}
               value={form.explanationNl}
               onChange={(value) => setField("explanationNl", value)}
-              warning={!form.explanationNl.trim() ? t("admin.quizzes.missing_translation") : undefined}
+              warning={
+                !form.explanationNl.trim()
+                  ? t("admin.quizzes.missing_translation")
+                  : undefined
+              }
             />
             <FormTextarea
               label={t("admin.quizzes.form.explanation_fr")}
               value={form.explanationFr}
               onChange={(value) => setField("explanationFr", value)}
-              warning={!form.explanationFr.trim() ? t("admin.quizzes.missing_translation") : undefined}
+              warning={
+                !form.explanationFr.trim()
+                  ? t("admin.quizzes.missing_translation")
+                  : undefined
+              }
             />
           </div>
         </AdminSectionCard>
 
         {/* Answer Options */}
         <AdminSectionCard title={`${t("admin.quizzes.form.options_title")} *`}>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               {t("admin.quizzes.form.rule_note")}
             </p>
@@ -1034,7 +909,7 @@ export default function AdminEditQuizQuestionPage() {
           <div className="space-y-4">
             {form.options.map((opt, idx) => (
               <div
-                key={opt.id ?? `new-${idx}`}
+                key={idx}
                 className={cn(
                   "rounded-2xl border p-4 space-y-3 transition-colors",
                   opt.isCorrect
@@ -1043,8 +918,8 @@ export default function AdminEditQuizQuestionPage() {
                 )}
               >
                 {/* Option Header */}
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <div
                       className={cn(
                         "w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black",
@@ -1067,7 +942,7 @@ export default function AdminEditQuizQuestionPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
@@ -1120,35 +995,32 @@ export default function AdminEditQuizQuestionPage() {
                       "admin.quizzes.form.option_text_en_placeholder",
                     )}
                     value={opt.textEn}
-                    error={fieldErrors[`option_${idx}_textEn`]}
+                    error={fieldErrors[`option_${idx}`]}
                     onChange={(v) => setOptionField(idx, "textEn", v)}
                   />
                   <FormField
-                    label={`${t("admin.quizzes.form.option_text_ar")} *`}
+                    label={t("admin.quizzes.form.option_text_ar")}
                     placeholder={t(
                       "admin.quizzes.form.option_text_ar_placeholder",
                     )}
                     value={opt.textAr}
-                    error={fieldErrors[`option_${idx}_textAr`]}
                     onChange={(v) => setOptionField(idx, "textAr", v)}
                     dir="rtl"
                   />
                   <FormField
-                    label={`${t("admin.quizzes.form.option_text_nl")} *`}
+                    label={t("admin.quizzes.form.option_text_nl")}
                     placeholder={t(
                       "admin.quizzes.form.option_text_nl_placeholder",
                     )}
                     value={opt.textNl}
-                    error={fieldErrors[`option_${idx}_textNl`]}
                     onChange={(v) => setOptionField(idx, "textNl", v)}
                   />
                   <FormField
-                    label={`${t("admin.quizzes.form.option_text_fr")} *`}
+                    label={t("admin.quizzes.form.option_text_fr")}
                     placeholder={t(
                       "admin.quizzes.form.option_text_fr_placeholder",
                     )}
                     value={opt.textFr}
-                    error={fieldErrors[`option_${idx}_textFr`]}
                     onChange={(v) => setOptionField(idx, "textFr", v)}
                   />
                 </div>
@@ -1164,7 +1036,7 @@ export default function AdminEditQuizQuestionPage() {
           </p>
           <div className="flex items-center gap-3">
             <Button variant="outline" asChild>
-              <Link href={returnTo}>
+              <Link href="/admin/quizzes">
                 {t("admin.quizzes.cancel") || "Cancel"}
               </Link>
             </Button>
@@ -1176,11 +1048,11 @@ export default function AdminEditQuizQuestionPage() {
               {submitting ? (
                 <>
                   <span className="animate-spin">⏳</span>{" "}
-                  {t("admin.quizzes.form.updating")}
+                  {t("admin.quizzes.form.saving")}
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" /> {t("admin.quizzes.form.update")}
+                  <Save className="w-4 h-4" /> {t("admin.quizzes.form.save")}
                 </>
               )}
             </Button>

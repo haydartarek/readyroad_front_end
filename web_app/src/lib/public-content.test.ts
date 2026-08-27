@@ -117,8 +117,8 @@ describe("public content governance", () => {
       const serialized = JSON.stringify(content[language].documents.cookies);
       expect(serialized).toContain("token");
       expect(serialized).toContain("csrf_token");
-      expect(serialized).toContain("readyroad_locale");
-      expect(serialized).toContain("readyroad_theme");
+      expect(serialized).toContain("rijvia_locale");
+      expect(serialized).toContain("rijvia_theme");
       expect(serialized).toContain("google_oauth_state");
     }
   });

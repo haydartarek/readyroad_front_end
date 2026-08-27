@@ -1,60 +1,36 @@
 /**
- * BFF API Proxy — Catch-all Route Handler
- *
- * Proxies all authenticated API requests through Next.js:
- *   Client → /api/proxy/{path} → Backend http://localhost:8890/api/{path}
- *
- * Security model:
- * - Reads the HttpOnly JWT cookie (invisible to client JS)
- * - Attaches it as Authorization: Bearer header to the backend request
- * - Validates CSRF double-submit token on mutation requests (POST/PUT/PATCH/DELETE)
- * - The raw JWT token NEVER reaches client-side JavaScript
+ * Authenticated BFF API proxy.
+ * Client requests stay on localhost:3000 while credentials remain server-side.
  */
-
 import { NextRequest, NextResponse } from "next/server";
 import {
   AUTH_COOKIE_NAME,
-  getBackendUrl,
-  getAuthTokenFromCookie,
   CSRF_COOKIE_NAME,
   CSRF_HEADER_NAME,
+  getAuthTokenFromCookie,
+  getBackendUrl,
 } from "@/lib/server/auth";
 
-// HTTP methods that mutate state — require CSRF validation
 const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-
 const NOTIFICATION_UNREAD_COUNT_PATH = "users/me/notifications/unread-count";
 
-/**
- * Validate CSRF double-submit token for mutation requests.
- * The client must send the csrf_token cookie value as the x-csrf-token header.
- */
 function validateCsrf(request: NextRequest): boolean {
   if (!MUTATION_METHODS.has(request.method)) return true;
-
-  const hasAuthCookie = !!request.cookies.get(AUTH_COOKIE_NAME)?.value;
-  if (!hasAuthCookie) return true;
+  if (!request.cookies.get(AUTH_COOKIE_NAME)?.value) return true;
 
   const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
-
-  if (!cookieToken || !headerToken) return false;
-
-  return cookieToken === headerToken;
+  return Boolean(cookieToken && headerToken && cookieToken === headerToken);
 }
 
-function isUnreadNotificationsCountPath(targetPath: string): boolean {
-  return targetPath === NOTIFICATION_UNREAD_COUNT_PATH;
-}
-
-function buildUnreadNotificationsFallbackResponse() {
+function unreadCountFallback() {
   return NextResponse.json(
     { unreadCount: 0, degraded: true },
     {
       status: 200,
       headers: {
         "cache-control": "no-store",
-        "x-readyroad-fallback": "notifications-unread-count",
+        "x-rijvia-fallback": "notifications-unread-count",
       },
     },
   );
@@ -64,111 +40,66 @@ async function proxyRequest(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ) {
-  // Validate CSRF on mutation requests
   if (!validateCsrf(request)) {
-    return NextResponse.json(
-      { message: "CSRF token mismatch" },
-      { status: 403 },
-    );
+    return NextResponse.json({ message: "CSRF token mismatch" }, { status: 403 });
   }
 
   const { path } = await context.params;
-  const backendUrl = getBackendUrl();
   const targetPath = path.join("/");
-  const searchParams = request.nextUrl.searchParams.toString();
-  const url = `${backendUrl}/${targetPath}${searchParams ? `?${searchParams}` : ""}`;
-
-  // Read HttpOnly auth cookie
+  const query = request.nextUrl.searchParams.toString();
+  const url = `${getBackendUrl()}/${targetPath}${query ? `?${query}` : ""}`;
   const token = await getAuthTokenFromCookie();
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
 
-  // Build headers for backend request
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-  };
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  // Forward content-type for requests with bodies
   const contentType = request.headers.get("content-type");
-  if (contentType) {
-    headers["Content-Type"] = contentType;
-  }
+  if (contentType) headers["Content-Type"] = contentType;
 
-  const fetchOptions: RequestInit = {
+  const options: RequestInit = {
     method: request.method,
     headers,
     cache: "no-store",
   };
-
-  // Forward request body for mutation methods
   if (MUTATION_METHODS.has(request.method)) {
-    if (contentType?.includes("multipart/form-data")) {
-      // Keep the original Content-Type including the boundary so the backend
-      // can parse the multipart body correctly.
-      headers["Content-Type"] = contentType;
-      fetchOptions.body = await request.arrayBuffer();
-    } else {
-      try {
-        fetchOptions.body = await request.text();
-      } catch {
-        // No body — fine for DELETE requests
-      }
+    try {
+      options.body = contentType?.includes("multipart/form-data")
+        ? await request.arrayBuffer()
+        : await request.text();
+    } catch {
+      // DELETE requests may not contain a body.
     }
   }
 
   try {
-    const backendResponse = await fetch(url, fetchOptions);
-
+    const backendResponse = await fetch(url, options);
     if (
-      isUnreadNotificationsCountPath(targetPath) &&
-      backendResponse.status >= 500
+      targetPath === NOTIFICATION_UNREAD_COUNT_PATH
+      && backendResponse.status >= 500
     ) {
-      console.warn(
-        `[Proxy] Falling back to unread count 0 because backend returned ${backendResponse.status}`,
-      );
-      return buildUnreadNotificationsFallbackResponse();
+      return unreadCountFallback();
     }
 
     const responseBody = [204, 205, 304].includes(backendResponse.status)
       ? null
       : await backendResponse.arrayBuffer();
-
-    // Build forwarded response headers
     const responseHeaders = new Headers();
-
     const responseContentType = backendResponse.headers.get("content-type");
-    if (responseContentType) {
-      responseHeaders.set("content-type", responseContentType);
+    if (responseContentType) responseHeaders.set("content-type", responseContentType);
+    for (const name of ["x-total-count", "x-page-size", "x-current-page"]) {
+      const value = backendResponse.headers.get(name);
+      if (value) responseHeaders.set(name, value);
     }
-
-    // Forward common backend headers
-    const headersToForward = ["x-total-count", "x-page-size", "x-current-page"];
-    for (const header of headersToForward) {
-      const value = backendResponse.headers.get(header);
-      if (value) responseHeaders.set(header, value);
-    }
-
     return new NextResponse(responseBody, {
       status: backendResponse.status,
       headers: responseHeaders,
     });
   } catch (error) {
-    const isConnectionError =
-      error instanceof TypeError &&
-      (error.message.includes("fetch failed") ||
-        error.message.includes("ECONNREFUSED"));
-
-    if (isConnectionError) {
-      console.warn(
-        `[Proxy] Backend unreachable for ${request.method} /${targetPath}`,
-      );
-
-      if (isUnreadNotificationsCountPath(targetPath)) {
-        return buildUnreadNotificationsFallbackResponse();
+    const connectionError = error instanceof TypeError
+      && (error.message.includes("fetch failed") || error.message.includes("ECONNREFUSED"));
+    if (connectionError) {
+      if (targetPath === NOTIFICATION_UNREAD_COUNT_PATH) {
+        return unreadCountFallback();
       }
-
       return NextResponse.json(
         { message: "Backend service unavailable" },
         { status: 503 },
@@ -183,7 +114,6 @@ async function proxyRequest(
   }
 }
 
-// Export all HTTP method handlers
 export const GET = proxyRequest;
 export const POST = proxyRequest;
 export const PUT = proxyRequest;

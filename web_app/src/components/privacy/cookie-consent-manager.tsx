@@ -89,7 +89,7 @@ export function CookieConsentManager() {
           role="region"
           aria-label={t("consent.banner.label")}
           dir={isRTL ? "rtl" : "ltr"}
-          className="readyroad-cookie-consent-banner fixed inset-x-3 bottom-3 z-40 mx-auto max-w-5xl rounded-lg border border-border bg-background p-4 shadow-2xl sm:inset-x-6 sm:p-5"
+          className="rijvia-cookie-consent-banner fixed inset-x-3 bottom-3 z-40 mx-auto max-w-5xl rounded-lg border border-border bg-background p-4 shadow-2xl sm:inset-x-6 sm:p-5"
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">

@@ -8,6 +8,8 @@ jest.mock("@/contexts/language-context", () => ({
 }));
 jest.mock("@/lib/api", () => ({
   apiClient: { get: jest.fn(), put: jest.fn(), post: jest.fn() },
+  getApiErrorMessage: (error: unknown, fallback: string) =>
+    error instanceof Error && error.message ? error.message : fallback,
   logApiError: jest.fn(),
 }));
 
@@ -85,7 +87,7 @@ const responses: Record<string, unknown> = {
     authenticationMode: "DEDICATED_READ_ONLY_SERVICE_ACCOUNT",
     ga4AccountId: "403159538",
     ga4PropertyResource: "properties/548176182",
-    searchConsoleSiteUrl: "sc-domain:readyroad.be",
+    searchConsoleSiteUrl: "sc-domain:rijvia.be",
     latestSearchConsoleDate: null,
     sources: [],
     alerts: ["GOOGLE_SERVICE_ACCOUNT_NOT_CONFIGURED"],
@@ -260,6 +262,17 @@ describe("MarketingAdminPage", () => {
     expect(get).toHaveBeenCalledWith("/admin/marketing/analytics/organic-discovery", { limit: 100 });
   });
 
+  it("shows the exact backend reason when the platform load fails", async () => {
+    get.mockRejectedValueOnce(new Error("Strategy context is unavailable"));
+
+    render(<MarketingAdminPage />);
+
+    expect(await screen.findByText("Strategy context is unavailable"))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "common.retry" }))
+      .toBeEnabled();
+  });
+
   it("edits a localized article draft through the versioned editorial contract", async () => {
     render(<MarketingAdminPage />);
     await screen.findByText("admin.marketing.tasks_today");
@@ -292,6 +305,14 @@ describe("MarketingAdminPage", () => {
           metaTitle: "Belgian theory exam guide | RijVia",
           metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
           internalLinks: [],
+          typography: {
+            h1Size: "DEFAULT",
+            h2Size: "DEFAULT",
+            h3Size: "DEFAULT",
+            h4Size: "DEFAULT",
+            paragraphSize: "DEFAULT",
+            textColor: "DEFAULT",
+          },
           expectedCurrentVersion: null,
         },
       );
@@ -359,6 +380,145 @@ describe("MarketingAdminPage", () => {
     expect(put).not.toHaveBeenCalled();
   });
 
+  it("requests the missing editorial translations from the canonical version", async () => {
+    const canonicalVersion = {
+      language: "AR",
+      versionNumber: 3,
+      title: "Canonical AR article",
+      slug: "canonical-ar-article",
+      status: "DRAFT",
+      createdAt: "2026-08-26T10:00:00Z",
+      createdBy: "admin",
+      id: 31,
+      articleId: 11,
+      summary: "Canonical summary",
+      metaTitle: "Canonical AR article | RijVia",
+      metaDescription: "Canonical article metadata description",
+      body: "Canonical body",
+      internalLinks: [],
+      typography: {
+        h1Size: "DEFAULT",
+        h2Size: "DEFAULT",
+        h3Size: "DEFAULT",
+        h4Size: "DEFAULT",
+        paragraphSize: "DEFAULT",
+        textColor: "DEFAULT",
+      },
+      current: true,
+    };
+
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({
+          data: {
+            languages: ["AR", "NL", "FR", "EN"],
+            qualityGates: ["SOURCE_VERIFICATION", "TRANSLATION_QUALITY"],
+            contentGraph: {
+              articleNodeCount: 1,
+              assetNodeCount: 0,
+              edgeCount: 0,
+              orphanArticleCount: 1,
+              nodes: [],
+              edges: [],
+              orphanArticles: [],
+            },
+            topics: [{
+              ...((responses["/admin/marketing/editorial/editor"] as {
+                topics: Record<string, unknown>[];
+              }).topics[0]),
+              articleId: 11,
+              lifecycleState: "TRANSLATION_REQUIRED",
+              canonicalLanguage: "AR",
+              image: null,
+              currentVersions: [{
+                language: "AR",
+                versionNumber: 3,
+                title: "Canonical AR article",
+                slug: "canonical-ar-article",
+                status: "DRAFT",
+                createdAt: "2026-08-26T10:00:00Z",
+                createdBy: "admin",
+              }],
+            }],
+          },
+        });
+      }
+
+      if (
+        url ===
+        "/admin/marketing/editorial/editor/articles/11/versions"
+      ) {
+        return Promise.resolve({
+          data: [canonicalVersion],
+        });
+      }
+
+      return Promise.resolve({
+        data: responses[url],
+      });
+    });
+
+    render(<MarketingAdminPage />);
+
+    await screen.findByText("admin.marketing.tasks_today");
+
+    fireEvent.click(
+      screen.getByRole("tab", {
+        name: "admin.marketing.tab_editorial",
+      }),
+    );
+
+    await screen.findByTestId("editorial-translation-request");
+
+    const translationButton = screen.getByRole("button", {
+      name: "admin.marketing.editorial_translation_action",
+    });
+
+    await waitFor(() => {
+      expect(translationButton).toBeEnabled();
+    });
+
+    fireEvent.change(
+      screen.getByLabelText(/admin.marketing.editorial_title/),
+      {
+        target: {
+          value: "Unsaved canonical title",
+        },
+      },
+    );
+
+    expect(translationButton).toBeDisabled();
+
+    expect(
+      screen.getByText(
+        "admin.marketing.editorial_translation_save_first",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.change(
+      screen.getByLabelText(/admin.marketing.editorial_title/),
+      {
+        target: {
+          value: "Canonical AR article",
+        },
+      },
+    );
+
+    await waitFor(() => {
+      expect(translationButton).toBeEnabled();
+    });
+
+    fireEvent.click(translationButton);
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/admin/marketing/editorial/editor/articles/11/translation-requests",
+        {
+          idempotencyKey: "admin-translation-11-AR-v3",
+        },
+      );
+    });
+  });
   it("submits the exact saved article versions for human approval", async () => {
     const currentVersions = ["AR", "NL", "FR", "EN"].map((language, index) => ({
       language,

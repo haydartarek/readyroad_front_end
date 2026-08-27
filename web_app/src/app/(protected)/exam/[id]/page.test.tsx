@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   PageHeroDescription,
+  PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
   PageSectionSurface,
@@ -377,6 +378,9 @@ export function ExamResultsPageContent() {
             <ClipboardList className="h-6 w-6" />
           </div>
           <div className="min-w-0 space-y-1">
+            <PageHeroEyebrow>
+              {t("user_sidebar.exam_results")}
+            </PageHeroEyebrow>
             <PageHeroTitle>
               {t("user_sidebar.exam_history_title")}
             </PageHeroTitle>
@@ -905,6 +909,9 @@ export function ExamResultsPageContent() {
                         <Shuffle className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 space-y-0.5">
+                        <p className="text-sm font-semibold text-primary">
+                          {t("sign_practice.badge")}
+                        </p>
                         <h2 className="break-words text-xl font-black tracking-normal text-foreground">
                           {t("sign_practice.history_title")}
                         </h2>

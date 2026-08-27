@@ -6,7 +6,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   PageHeroDescription,
-  PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
   PageMetricCard,
@@ -158,13 +157,6 @@ export default function TheoryExamPage() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
           <PageHeroSurface>
             <div className="max-w-3xl space-y-6">
-              <PageHeroEyebrow className="flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="min-w-0 break-words">
-                  {t("practice_exam.badge")}
-                </span>
-              </PageHeroEyebrow>
-
               <div className="space-y-3">
                 <PageHeroTitle>
                   {t("practice_exam.intro_title")}

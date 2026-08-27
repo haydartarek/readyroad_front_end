@@ -310,7 +310,7 @@ test("a persisted locale survives browser navigation into authentication", async
 }) => {
   await context.addCookies([
     {
-      name: "readyroad_locale",
+      name: "rijvia_locale",
       value: "ar",
       domain: "127.0.0.1",
       path: "/",

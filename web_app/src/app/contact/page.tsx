@@ -18,8 +18,6 @@ import {
   Loader2,
   Mail,
   Clock3,
-  Github,
-  Linkedin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_APP_URL } from "@/lib/site-copy";
@@ -219,26 +217,6 @@ export default function ContactPage() {
                 </span>
               </span>
             </div>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-3 px-2">
-            <a
-              href={PUBLIC_CONTACT.github}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Github className="h-4 w-4" />
-              GitHub
-            </a>
-            <a
-              href={PUBLIC_CONTACT.linkedin}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Linkedin className="h-4 w-4" />
-              LinkedIn
-            </a>
           </div>
         </section>
 

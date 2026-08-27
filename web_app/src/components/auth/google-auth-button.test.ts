@@ -1,7 +1,7 @@
 import { buildGoogleAuthHref } from "@/components/auth/google-auth-button";
 
 function parseGoogleAuthHref(href: string): URL {
-  return new URL(href, "https://readyroad.be");
+  return new URL(href, "https://rijvia.be");
 }
 
 describe("Google authentication locale persistence", () => {

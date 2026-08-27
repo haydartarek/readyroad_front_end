@@ -4,7 +4,7 @@ import { seedCookieConsent } from "./helpers/consent";
 const channel = {
   id: "UC-readyroad",
   handle: "@RijBewijsBe",
-  title: "ReadyRoad",
+  title: "RijVia",
   description: "Belgian driving theory videos",
   thumbnail: null,
   uploadsPlaylistId: "UU-readyroad",
@@ -18,7 +18,7 @@ function video(videoId: string, title: string, publishedAt: string) {
     description: `${title} explains a Belgian traffic rule with a practical example.`,
     publishedAt,
     thumbnail: { url: "/images/logo.png", width: 512, height: 512 },
-    channelTitle: "ReadyRoad",
+    channelTitle: "RijVia",
     position: 0,
     watchUrl: `https://www.youtube.com/watch?v=${videoId}`,
     embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}`,

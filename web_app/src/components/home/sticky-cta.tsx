@@ -20,7 +20,7 @@ export function StickyCTA() {
   const [dismissed, setDismissed] = useState(
     () =>
       typeof window !== "undefined" &&
-      sessionStorage.getItem("readyroad_sticky_cta_dismissed") === "1",
+      sessionStorage.getItem("rijvia_sticky_cta_dismissed") === "1",
   );
   const [shouldHide, setShouldHide] = useState(false);
 
@@ -59,7 +59,7 @@ export function StickyCTA() {
 
   const handleDismiss = () => {
     setDismissed(true);
-    sessionStorage.setItem("readyroad_sticky_cta_dismissed", "1");
+    sessionStorage.setItem("rijvia_sticky_cta_dismissed", "1");
   };
 
   if (dismissed || isLoading || !visible || shouldHide || isAuthenticated) {

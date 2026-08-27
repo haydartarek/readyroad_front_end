@@ -32,11 +32,11 @@ export type PublicArticleImage = Readonly<{
   altText: string;
   caption: string | null;
   sourcePlatform: string;
-  sourceUrl: string;
+  sourceUrl: string | null;
   photographerName: string;
-  photographerUrl: string;
+  photographerUrl: string | null;
   licenseName: string;
-  licenseUrl: string;
+  licenseUrl: string | null;
 }>;
 
 export type PublicArticleInternalLink = Readonly<{
@@ -45,12 +45,22 @@ export type PublicArticleInternalLink = Readonly<{
   anchorText: string;
 }>;
 
+export type PublicArticleTypography = Readonly<{
+  h1Size: "COMPACT" | "DEFAULT" | "LARGE";
+  h2Size: "COMPACT" | "DEFAULT" | "LARGE";
+  h3Size: "COMPACT" | "DEFAULT" | "LARGE";
+  h4Size: "COMPACT" | "DEFAULT" | "LARGE";
+  paragraphSize: "COMPACT" | "DEFAULT" | "LARGE";
+  textColor: "DEFAULT" | "MUTED" | "PRIMARY" | "SECONDARY";
+}>;
+
 export type PublicArticle = PublicArticleSummary &
   Readonly<{
     body: string;
     metaTitle: string;
     metaDescription: string;
     internalLinks: ReadonlyArray<PublicArticleInternalLink>;
+    typography: PublicArticleTypography;
     alternateSlugs: Readonly<Record<string, string>>;
   }>;
 

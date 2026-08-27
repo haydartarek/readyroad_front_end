@@ -7,7 +7,7 @@ import { resolveSiteLocale, type SiteLocale } from "@/lib/site-copy";
 export async function getRequestLocale(): Promise<SiteLocale> {
   if (typeof headers === "function") {
     const headerStore = await headers();
-    const routedLocale = headerStore.get("x-readyroad-locale");
+    const routedLocale = headerStore.get("x-rijvia-locale");
     if (routedLocale) {
       return resolveSiteLocale(routedLocale);
     }

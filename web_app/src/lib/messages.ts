@@ -18,8 +18,6 @@ export const ALL_MESSAGES: Record<Language, MessageDictionary> = {
   nl: nlMessages as unknown as MessageDictionary,
 };
 
-const LEGACY_LANGUAGE_STORAGE_KEY = "readyroad_language";
-
 export function isValidLanguage(
   language: string | null | undefined,
 ): language is Language {
@@ -57,9 +55,7 @@ export function getInitialClientLanguage(): Language {
   }
 
   try {
-    const stored =
-      window.localStorage.getItem(STORAGE_KEYS.LANGUAGE) ??
-      window.localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY);
+    const stored = window.localStorage.getItem(STORAGE_KEYS.LANGUAGE);
 
     if (isValidLanguage(stored)) {
       return stored;

@@ -30,8 +30,8 @@ async function fulfillJson(route: Route, status: number, body: unknown) {
 async function useAnonymousLanguage(page: Page, language: "en" | "ar") {
   await seedCookieConsent(page);
   await page.addInitScript((locale) => {
-    window.localStorage.setItem("readyroad_locale", locale);
-    document.cookie = `readyroad_locale=${locale}; path=/; samesite=lax`;
+    window.localStorage.setItem("rijvia_locale", locale);
+    document.cookie = `rijvia_locale=${locale}; path=/; samesite=lax`;
   }, language);
   await page.route("**/api/auth/me", (route) =>
     fulfillJson(route, 200, { authenticated: false, user: null }),
@@ -120,7 +120,7 @@ test.describe("Milestone 4 UX and accessibility", () => {
     }
   });
 
-  test("legacy assessment routes resolve to the ReadyRoad random practice flow", async ({
+  test("legacy assessment routes resolve to the RijVia random practice flow", async ({
     page,
   }) => {
     await useAnonymousLanguage(page, "en");

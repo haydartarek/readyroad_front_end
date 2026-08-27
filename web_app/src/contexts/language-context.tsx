@@ -39,9 +39,8 @@ interface LanguageContextType {
 // ─── Constants ───────────────────────────────────────────
 
 const STORAGE_KEY = STORAGE_KEYS.LANGUAGE;
-const LEGACY_STORAGE_KEY = "readyroad_language";
-const STORAGE_EVENT = "readyroad-language-change";
-const SESSION_EXPLICIT_LANGUAGE_KEY = "readyroad_explicit_session_language";
+const STORAGE_EVENT = "rijvia-language-change";
+const SESSION_EXPLICIT_LANGUAGE_KEY = "rijvia_explicit_session_language";
 const RTL_LANGS = new Set<Language>(["ar"]);
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -76,9 +75,7 @@ function readStoredLanguage(): Language | null {
       ) as Language;
     }
 
-    const stored =
-      localStorage.getItem(STORAGE_KEY) ??
-      localStorage.getItem(LEGACY_STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && isValidLanguage(stored)) {
       return resolveRouteLocale(window.location.pathname, stored) as Language;
     }
@@ -111,7 +108,6 @@ function getLanguageSnapshot(): Language {
 function persistLanguageLocally(lang: Language, explicit: boolean): void {
   try {
     localStorage.setItem(STORAGE_KEY, lang);
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
     document.cookie = `${STORAGE_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
     if (explicit) {
       sessionStorage.setItem(SESSION_EXPLICIT_LANGUAGE_KEY, lang);

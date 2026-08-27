@@ -72,7 +72,7 @@ const protectedRoutes = [
 const qaUser = {
   userId: 42,
   username: "readyroad_mobile_quality_assurance_account",
-  fullName: "ReadyRoad Mobile Quality Assurance",
+  fullName: "RijVia Mobile Quality Assurance",
   email: "readyroad.mobile.quality.assurance.with.a.long.address@example.test",
   role: "USER",
   preferredLanguage: null,
@@ -477,7 +477,7 @@ async function installAuthenticatedSession(
         {
           id: 7,
           type: "SYSTEM",
-          title: "ReadyRoad",
+          title: "RijVia",
           message: "Mobile notification quality check",
           isRead: false,
           createdAt: "2026-07-29T08:00:00Z",
@@ -920,7 +920,7 @@ async function expectViewportLayout(
   return metrics!;
 }
 
-test.describe("ReadyRoad mobile visual identity", () => {
+test.describe("RijVia mobile visual identity", () => {
   test("dashboard category progress cards stay readable in every language and viewport", async ({
     context,
     page,

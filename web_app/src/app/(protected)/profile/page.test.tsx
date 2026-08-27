@@ -39,7 +39,7 @@ jest.mock("@/components/ui/delete-account-modal", () => ({
 const baseUser = {
   userId: 1,
   username: "owner",
-  email: "owner@readyroad.be",
+  email: "owner@rijvia.be",
   fullName: "Ready Road",
   isActive: true,
   emailVerified: true,

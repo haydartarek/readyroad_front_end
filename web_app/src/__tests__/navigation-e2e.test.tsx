@@ -8,7 +8,7 @@ import { LANGUAGES, DEFAULT_LANGUAGE } from "@/lib/constants";
 
 // ✅ Contract-compliant storage keys
 const AUTH_TOKEN_KEY = "readyroad_auth_token";
-const LOCALE_KEY = "readyroad_locale";
+const LOCALE_KEY = "rijvia_locale";
 
 describe("Epic 8: E2E Navigation & Contract Smoke Tests", () => {
   let localStorageMock: { [key: string]: string };
@@ -371,7 +371,7 @@ describe("Epic 8: E2E Navigation & Contract Smoke Tests", () => {
     });
 
     test("locale uses correct storage key", () => {
-      expect(LOCALE_KEY).toBe("readyroad_locale");
+      expect(LOCALE_KEY).toBe("rijvia_locale");
     });
 
     test("middleware checks for correct cookie name", () => {

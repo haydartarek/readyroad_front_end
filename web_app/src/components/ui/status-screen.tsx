@@ -17,7 +17,6 @@ type StatusAction =
     };
 
 export function StatusScreen({
-  badge,
   title,
   description,
   icon,
@@ -120,12 +119,6 @@ export function StatusScreen({
               </div>
 
               <div className="mx-auto max-w-xl text-center">
-                {badge ? (
-                  <div className="mb-5 inline-flex items-center rounded-full border border-primary/20 bg-primary/8 px-4 py-1.5 text-xs font-bold tracking-[0.16em] text-primary">
-                    {badge}
-                  </div>
-                ) : null}
-
                 <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-primary/10 text-primary shadow-sm ring-1 ring-primary/10">
                   {icon}
                 </div>

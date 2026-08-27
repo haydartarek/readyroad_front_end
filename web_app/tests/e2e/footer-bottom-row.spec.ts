@@ -34,8 +34,8 @@ async function useAnonymousLocale(
 ) {
   await seedCookieConsent(page);
   await page.addInitScript((activeLocale) => {
-    window.localStorage.setItem("readyroad_locale", activeLocale);
-    document.cookie = `readyroad_locale=${activeLocale}; path=/; samesite=lax`;
+    window.localStorage.setItem("rijvia_locale", activeLocale);
+    document.cookie = `rijvia_locale=${activeLocale}; path=/; samesite=lax`;
   }, locale);
   await page.route("**/api/auth/me", (route) =>
     fulfillJson(route, 200, { authenticated: false, user: null }),
@@ -217,7 +217,7 @@ test.describe("Footer bottom row", () => {
     await expect(page).toHaveURL("/ar/about");
     await expect
       .poll(() =>
-        page.evaluate(() => localStorage.getItem("readyroad_locale")),
+        page.evaluate(() => localStorage.getItem("rijvia_locale")),
       )
       .toBe("ar");
   });

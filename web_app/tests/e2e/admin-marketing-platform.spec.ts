@@ -71,7 +71,7 @@ const responses: Record<string, unknown> = {
     authenticationMode: "DEDICATED_READ_ONLY_SERVICE_ACCOUNT",
     ga4AccountId: "403159538",
     ga4PropertyResource: "properties/548176182",
-    searchConsoleSiteUrl: "sc-domain:readyroad.be",
+    searchConsoleSiteUrl: "sc-domain:rijvia.be",
     latestSearchConsoleDate: "2026-08-10",
     sources: [{ source: "GA4", status: "HEALTHY", read_only: true, last_success_at: now }],
     alerts: [],
@@ -353,8 +353,14 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   await page.getByLabel("Meta description").fill(
     "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
   );
-  await page.getByLabel("Article body *").fill("Targeted editorial draft");
-  await page.getByRole("button", { name: "Add link" }).click();
+  await page
+    .getByTestId("editorial-markdown-editor")
+    .getByRole("textbox")
+    .fill("Targeted editorial draft");
+  await page
+    .getByTestId("editorial-internal-links")
+    .getByRole("button", { name: "Add link" })
+    .click();
   await page.getByLabel("Destination path *").fill("/exam");
   await page.getByLabel("Descriptive link text *").fill("Start the theory exam");
   await page.getByRole("button", { name: "Preview" }).click();
@@ -386,6 +392,148 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   await expectNoOverflow(page);
 });
 
+test("All Marketing tabs remain usable without responsive overflow or browser errors", async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => consoleErrors.push(error.message));
+  await mockAdmin(page, []);
+
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: width < 600 ? 844 : 900 });
+    await page.goto("/admin/marketing");
+
+    const tabs = page.getByRole("tab");
+    await expect(tabs).toHaveCount(12);
+    for (let index = 0; index < 12; index += 1) {
+      const tab = tabs.nth(index);
+      await tab.click();
+      await expect(tab).toHaveAttribute("aria-selected", "true");
+      await expect(page.getByRole("tabpanel")).toBeVisible();
+      await expectNoOverflow(page);
+    }
+  }
+
+  expect(consoleErrors).toEqual([]);
+});
+
+test("Editorial rich controls validate and submit one local article image", async ({ page }) => {
+  const mutations: Request[] = [];
+  const currentVersion = {
+    id: 21,
+    articleId: 11,
+    versionNumber: 1,
+    language: "EN",
+    title: "Belgian theory exam guide",
+    slug: "belgian-theory-guide",
+    summary: "A reviewed RijVia guide.",
+    body: "Targeted editorial draft",
+    metaTitle: "Belgian theory exam guide | RijVia",
+    metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
+    internalLinks: [],
+    status: "DRAFT",
+    current: true,
+    createdAt: now,
+    createdBy: "admin",
+  };
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockAdmin(page, mutations, {
+    "/admin/marketing/editorial/editor": {
+      languages: ["AR", "NL", "FR", "EN"],
+      qualityGates: ["SOURCE_VERIFICATION", "LEGAL_CONSISTENCY"],
+      contentGraph: {
+        articleNodeCount: 1,
+        assetNodeCount: 0,
+        edgeCount: 0,
+        orphanArticleCount: 1,
+        nodes: [],
+        edges: [],
+        orphanArticles: [],
+      },
+      topics: [{
+        topicId: 1,
+        topicKey: "OFFICIAL-001",
+        order: 1,
+        sourceType: "OFFICIAL_STRATEGIC_BACKLOG",
+        title: "Belgian theory exam guide",
+        titleLanguage: "EN",
+        primaryLanguage: "EN",
+        priority: "P0",
+        strategyContextResolved: true,
+        articleId: 11,
+        lifecycleState: "DRAFT_READY",
+        canonicalLanguage: "EN",
+        image: null,
+        currentVersions: [currentVersion],
+      }],
+    },
+    "/admin/marketing/editorial/editor/articles/11/versions": [currentVersion],
+  });
+
+  await page.goto("/admin/marketing");
+  await page.getByRole("tab", { name: "Editorial" }).click();
+
+  const editor = page.getByTestId("editorial-markdown-editor");
+  for (const control of [
+    "Heading 1",
+    "Heading 2",
+    "Heading 3",
+    "Heading 4",
+    "Paragraph",
+    "Bold",
+    "Italic",
+    "Bulleted list",
+    "Numbered list",
+    "Add link",
+    "Clear formatting",
+  ]) {
+    await expect(editor.getByRole("button", { name: control })).toBeVisible();
+  }
+  await expect(editor.getByText("Text color", { exact: true })).toBeVisible();
+
+  const imagePanel = page.getByTestId("editorial-article-image");
+  const fileInput = imagePanel.getByLabel(/Image from device/);
+  await fileInput.setInputFiles({
+    name: "animated.gif",
+    mimeType: "image/gif",
+    buffer: Buffer.from("GIF89a"),
+  });
+  await expect(imagePanel.getByText("Only JPEG or PNG files are supported.")).toBeVisible();
+
+  await fileInput.setInputFiles({
+    name: "belgian-road.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nWQAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
+  await expect(imagePanel.getByText("Only JPEG or PNG files are supported.")).toHaveCount(0);
+  await imagePanel.getByLabel(/Image owner or file source/).fill("RijVia owner upload");
+  await imagePanel.getByLabel(/License name/).fill("Owned media");
+  await imagePanel.getByLabel(/Alt text AR/).fill("طريق بلجيكي آمن");
+  await imagePanel.getByLabel(/Alt text NL/).fill("Een veilige Belgische weg");
+  await imagePanel.getByLabel(/Alt text FR/).fill("Une route belge sûre");
+  await imagePanel.getByLabel(/Alt text EN/).fill("A safe Belgian road");
+  await imagePanel.getByLabel(/Image approval reason/).fill("Ownership and publication rights verified");
+  await imagePanel.getByRole("checkbox").check();
+
+  const upload = imagePanel.getByRole("button", { name: "Upload and process image" });
+  await expect(upload).toBeEnabled();
+  await upload.click();
+
+  await expect.poll(() => mutations.filter((request) =>
+    new URL(request.url()).pathname.endsWith("/editorial/editor/articles/11/image"),
+  ).length).toBe(1);
+  const imageRequest = mutations.find((request) =>
+    new URL(request.url()).pathname.endsWith("/editorial/editor/articles/11/image"),
+  );
+  expect(imageRequest?.method()).toBe("POST");
+  expect(imageRequest?.headers()["content-type"]).toContain("multipart/form-data; boundary=");
+  await expectNoOverflow(page);
+});
+
 test("Editorial authoring dropdowns preserve mixed-direction labels within mobile fields", async ({ page }) => {
   const mutations: Request[] = [];
   const consoleErrors: string[] = [];
@@ -399,14 +547,13 @@ test("Editorial authoring dropdowns preserve mixed-direction labels within mobil
   await page.getByRole("tab", { name: "المحرر", exact: true }).click();
 
   const authoring = page.getByTestId("editorial-authoring");
-  const dropdowns = authoring.locator("select");
+  const dropdowns = authoring.getByRole("combobox");
   await expect(dropdowns).toHaveCount(6);
   for (let index = 0; index < await dropdowns.count(); index += 1) {
     const dropdown = dropdowns.nth(index);
     await expect(dropdown).toHaveAttribute("dir", "auto");
     await expect(dropdown).toHaveClass(/min-w-0/);
     await expect(dropdown).toHaveClass(/max-w-full/);
-    await expect(dropdown).toHaveClass(/pe-10/);
   }
 
   const measurements = await dropdowns.evaluateAll((elements) => elements.map((element) => {
@@ -419,7 +566,20 @@ test("Editorial authoring dropdowns preserve mixed-direction labels within mobil
     expect(measurement.scrollWidth).toBeLessThanOrEqual(measurement.clientWidth);
   }
 
-  await expect(page.getByRole("option", { name: "RijVia learning platform" })).toHaveCount(1);
+  await dropdowns.first().click();
+  const popup = page.locator('[data-slot="select-content"]');
+  await expect(popup).toBeVisible();
+  const popupBounds = await popup.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right };
+  });
+  expect(popupBounds.left).toBeGreaterThanOrEqual(0);
+  expect(popupBounds.right).toBeLessThanOrEqual(320);
+  await page.keyboard.press("Escape");
+
+  await expect(
+    authoring.getByRole("combobox", { name: "USP" }),
+  ).toContainText("RijVia learning platform");
   await expect(page.locator("body")).not.toContainText(/ReadyRoad/i);
   await expectNoOverflow(page);
   expect(consoleErrors).toEqual([]);
@@ -549,4 +709,68 @@ test("Marketing operations keep the existing desktop admin layout", async ({ pag
   await expect(page.getByRole("heading", { name: "Marketing Operations" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Marketing" })).toBeVisible();
   await expectNoOverflow(page);
+});
+
+test("Live local Marketing data remains readable through the real Backend", async ({ page }) => {
+  test.skip(
+    process.env.PLAYWRIGHT_LIVE_ADMIN !== "true" ||
+      !process.env.PLAYWRIGHT_ADMIN_PASSWORD,
+    "Requires the explicitly configured local Admin account.",
+  );
+
+  const browserErrors: string[] = [];
+  const failedApiResponses: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") browserErrors.push(message.text());
+  });
+  page.on("pageerror", (error) => browserErrors.push(error.message));
+  page.on("response", (response) => {
+    if (
+      response.url().includes("/api/") &&
+      response.status() >= 400
+    ) {
+      failedApiResponses.push(`${response.status()} ${new URL(response.url()).pathname}`);
+    }
+  });
+  await seedCookieConsent(page);
+
+  const login = await page.request.post("/api/auth/login", {
+    data: {
+      username: "admin",
+      password: process.env.PLAYWRIGHT_ADMIN_PASSWORD,
+    },
+  });
+  expect(login.status()).toBe(200);
+
+  const localePaths = [
+    "/admin/marketing",
+    "/ar/admin/marketing",
+    "/nl/admin/marketing",
+    "/fr/admin/marketing",
+  ];
+
+  for (const localePath of localePaths) {
+    const widths = localePath === "/ar/admin/marketing" ? [390, 1440] : [390];
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: width < 600 ? 844 : 900 });
+      const response = await page.goto(localePath);
+      expect(response?.status()).toBe(200);
+
+      const tabs = page.getByRole("tab");
+      await expect(tabs).toHaveCount(12);
+      for (let index = 0; index < 12; index += 1) {
+        await tabs.nth(index).click();
+        await expectNoOverflow(page);
+      }
+
+      await expect(page.locator("body")).not.toContainText(/ReadyRoad/i);
+      await expect(page.locator("body")).not.toContainText(/[ÃÂØÙ]/);
+      await expect(page.locator("body")).not.toContainText(
+        /Node Type|Container Node|Value Node|Big Decimal/i,
+      );
+    }
+  }
+
+  expect(failedApiResponses).toEqual([]);
+  expect(browserErrors).toEqual([]);
 });

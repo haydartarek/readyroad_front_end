@@ -308,15 +308,15 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             items: [
               "token — RijVia domain, path /, authentication session, HttpOnly, up to 7 days or earlier token expiry/logout.",
               "csrf_token — RijVia domain, path /, protects state-changing requests, up to 7 days or logout.",
-              "readyroad_locale — RijVia domain, path /, remembers the selected language, up to 1 year.",
+              "rijvia_locale — RijVia domain, path /, remembers the selected language, up to 1 year.",
               "google_oauth_state, google_oauth_code_verifier, google_oauth_mode, and google_oauth_return_to — RijVia domain, path /, secure an optional Google sign-in attempt and are deleted after the callback or expire after about 10 minutes.",
             ],
           },
           {
             title: "3. Browser storage",
             paragraphs: [
-              "readyroad_locale keeps the selected language available on the client. readyroad_cookie_consent stores version 2, a timestamp, and the four category choices without personal data. session_expired is a one-time tab-session flag. current_exam is transient exam compatibility state and is removed when invalid or complete.",
-              "readyroad_theme stores the light or dark appearance only after Preferences consent and is removed when that consent is withdrawn. These browser values do not contain the JWT or your password.",
+              "rijvia_locale keeps the selected language available on the client. rijvia_cookie_consent stores version 2, a timestamp, and the four category choices without personal data. session_expired is a one-time tab-session flag. current_exam is transient exam compatibility state and is removed when invalid or complete.",
+              "rijvia_theme stores the light or dark appearance only after Preferences consent and is removed when that consent is withdrawn. These browser values do not contain the JWT or your password.",
             ],
           },
           {
@@ -754,15 +754,15 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             items: [
               "token — RijVia-domein, pad /, authenticatiesessie, HttpOnly, maximaal 7 dagen of tot eerdere tokenvervaldatum/uitloggen.",
               "csrf_token — RijVia-domein, pad /, beschermt wijzigende verzoeken, maximaal 7 dagen of tot uitloggen.",
-              "readyroad_locale — RijVia-domein, pad /, onthoudt de gekozen taal, maximaal 1 jaar.",
+              "rijvia_locale — RijVia-domein, pad /, onthoudt de gekozen taal, maximaal 1 jaar.",
               "google_oauth_state, google_oauth_code_verifier, google_oauth_mode en google_oauth_return_to — RijVia-domein, pad /, beveiligen optionele Google-login en worden na de callback gewist of verlopen na ongeveer 10 minuten.",
             ],
           },
           {
             title: "3. Browseropslag",
             paragraphs: [
-              "readyroad_locale houdt de gekozen taal op de client beschikbaar. readyroad_cookie_consent bewaart versie 2, een tijdstip en de vier categorie-keuzes zonder persoonsgegevens. session_expired is een eenmalige vlag voor de tabsessie. current_exam is tijdelijke compatibiliteitsstatus en wordt verwijderd wanneer die ongeldig of voltooid is.",
-              "readyroad_theme bewaart de lichte of donkere weergave alleen na toestemming voor Voorkeuren en wordt verwijderd wanneer die toestemming wordt ingetrokken. Deze waarden bevatten geen JWT of wachtwoord.",
+              "rijvia_locale houdt de gekozen taal op de client beschikbaar. rijvia_cookie_consent bewaart versie 2, een tijdstip en de vier categorie-keuzes zonder persoonsgegevens. session_expired is een eenmalige vlag voor de tabsessie. current_exam is tijdelijke compatibiliteitsstatus en wordt verwijderd wanneer die ongeldig of voltooid is.",
+              "rijvia_theme bewaart de lichte of donkere weergave alleen na toestemming voor Voorkeuren en wordt verwijderd wanneer die toestemming wordt ingetrokken. Deze waarden bevatten geen JWT of wachtwoord.",
             ],
           },
           {
@@ -1200,15 +1200,15 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             items: [
               "token — domaine RijVia, chemin /, session d'authentification, HttpOnly, jusqu'à 7 jours ou expiration/déconnexion antérieure.",
               "csrf_token — domaine RijVia, chemin /, protège les requêtes de modification, jusqu'à 7 jours ou déconnexion.",
-              "readyroad_locale — domaine RijVia, chemin /, mémorise la langue, jusqu'à 1 an.",
+              "rijvia_locale — domaine RijVia, chemin /, mémorise la langue, jusqu'à 1 an.",
               "google_oauth_state, google_oauth_code_verifier, google_oauth_mode et google_oauth_return_to — domaine RijVia, chemin /, sécurisent la connexion Google facultative et sont effacés après le retour ou expirent après environ 10 minutes.",
             ],
           },
           {
             title: "3. Stockage du navigateur",
             paragraphs: [
-              "readyroad_locale conserve la langue côté client. readyroad_cookie_consent enregistre la version 2, un horodatage et les quatre choix de catégorie sans donnée personnelle. session_expired est un indicateur ponctuel limité à l'onglet. current_exam est un état transitoire de compatibilité supprimé lorsqu'il est invalide ou terminé.",
-              "readyroad_theme conserve l'affichage clair ou sombre uniquement après consentement aux Préférences et est supprimé au retrait. Ces valeurs ne contiennent ni JWT ni mot de passe.",
+              "rijvia_locale conserve la langue côté client. rijvia_cookie_consent enregistre la version 2, un horodatage et les quatre choix de catégorie sans donnée personnelle. session_expired est un indicateur ponctuel limité à l'onglet. current_exam est un état transitoire de compatibilité supprimé lorsqu'il est invalide ou terminé.",
+              "rijvia_theme conserve l'affichage clair ou sombre uniquement après consentement aux Préférences et est supprimé au retrait. Ces valeurs ne contiennent ni JWT ni mot de passe.",
             ],
           },
           {
@@ -1646,15 +1646,15 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
             items: [
               "token — نطاق RijVia، المسار /، جلسة المصادقة، HttpOnly، حتى 7 أيام أو انتهاء الرمز/تسجيل الخروج قبل ذلك.",
               "csrf_token — نطاق RijVia، المسار /، يحمي الطلبات التي تغيّر البيانات، حتى 7 أيام أو تسجيل الخروج.",
-              "readyroad_locale — نطاق RijVia، المسار /، يتذكر اللغة المختارة، حتى سنة واحدة.",
+              "rijvia_locale — نطاق RijVia، المسار /، يتذكر اللغة المختارة، حتى سنة واحدة.",
               "google_oauth_state وgoogle_oauth_code_verifier وgoogle_oauth_mode وgoogle_oauth_return_to — نطاق RijVia، المسار /، تؤمّن محاولة Google الاختيارية وتُحذف بعد العودة أو تنتهي بعد نحو 10 دقائق.",
             ],
           },
           {
             title: "3. التخزين المحلي",
             paragraphs: [
-              "يحفظ readyroad_locale اللغة في جهة العميل. ويحفظ readyroad_cookie_consent الإصدار 2 ووقت القرار وخيارات الفئات الأربع من دون بيانات شخصية. أما session_expired فهو مؤشر لمرة واحدة داخل جلسة علامة التبويب، وcurrent_exam حالة توافق مؤقتة تُحذف عند بطلانها أو اكتمالها.",
-              "لا يحفظ readyroad_theme المظهر الفاتح أو الداكن إلا بعد الموافقة على التفضيلات، ويُحذف عند سحبها. لا تحتوي هذه القيم على JWT أو كلمة المرور.",
+              "يحفظ rijvia_locale اللغة في جهة العميل. ويحفظ rijvia_cookie_consent الإصدار 2 ووقت القرار وخيارات الفئات الأربع من دون بيانات شخصية. أما session_expired فهو مؤشر لمرة واحدة داخل جلسة علامة التبويب، وcurrent_exam حالة توافق مؤقتة تُحذف عند بطلانها أو اكتمالها.",
+              "لا يحفظ rijvia_theme المظهر الفاتح أو الداكن إلا بعد الموافقة على التفضيلات، ويُحذف عند سحبها. لا تحتوي هذه القيم على JWT أو كلمة المرور.",
             ],
           },
           {

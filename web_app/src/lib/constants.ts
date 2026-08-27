@@ -77,9 +77,9 @@ export const ROUTES = {
 
 export const STORAGE_KEYS = {
   AUTH_COOKIE_NAME: "token",
-  LANGUAGE: "readyroad_locale",
-  THEME: "readyroad_theme",
-  EXAM_STATE: "readyroad_exam_state",
+  LANGUAGE: "rijvia_locale",
+  THEME: "rijvia_theme",
+  EXAM_STATE: "rijvia_exam_state",
 } as const;
 
 // ─── API Endpoints ───────────────────────────────────────

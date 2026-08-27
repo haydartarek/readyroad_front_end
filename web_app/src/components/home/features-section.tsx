@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "@/components/localized-link";
 import {

@@ -93,31 +93,31 @@ describe("cookie consent model", () => {
   });
 
   test("removes preference storage after rejection or withdrawal", () => {
-    window.localStorage.setItem("readyroad_theme", "dark");
+    window.localStorage.setItem("rijvia_theme", "dark");
     clearDisallowedOptionalStorage(
       createConsentRecord({ preferences: false }),
       window.localStorage,
     );
-    expect(window.localStorage.getItem("readyroad_theme")).toBeNull();
+    expect(window.localStorage.getItem("rijvia_theme")).toBeNull();
 
-    window.localStorage.setItem("readyroad_theme", "dark");
+    window.localStorage.setItem("rijvia_theme", "dark");
     clearDisallowedOptionalStorage(
       createConsentRecord({ preferences: true }),
       window.localStorage,
     );
-    expect(window.localStorage.getItem("readyroad_theme")).toBe("dark");
+    expect(window.localStorage.getItem("rijvia_theme")).toBe("dark");
   });
 
   test("removes Google Analytics cookies after rejection or withdrawal", () => {
     document.cookie = "_ga=client-id; path=/";
     document.cookie = "_ga_1P4EJH6D2T=session-state; path=/";
-    document.cookie = "readyroad_locale=en; path=/";
+    document.cookie = "rijvia_locale=en; path=/";
 
     clearDisallowedAnalyticsCookies(
       createConsentRecord({ analytics: false }),
     );
 
     expect(document.cookie).not.toMatch(/(?:^|;\s*)_ga(?:_|=)/);
-    expect(document.cookie).toContain("readyroad_locale=en");
+    expect(document.cookie).toContain("rijvia_locale=en");
   });
 });

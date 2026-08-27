@@ -30,20 +30,20 @@ export const COOKIE_CONSENT_BOOTSTRAP_SCRIPT = `
       !Number.isNaN(Date.parse(consent.timestamp));
 
     if (valid) {
-      document.documentElement.dataset.readyroadConsent = "stored";
+      document.documentElement.dataset.rijviaConsent = "stored";
       state.analytics_storage = consent.analytics ? "granted" : "denied";
       state.ad_storage = "denied";
       state.ad_user_data = "denied";
       state.ad_personalization = "denied";
-      if (!consent.preferences) window.localStorage.removeItem("readyroad_theme");
+      if (!consent.preferences) window.localStorage.removeItem("rijvia_theme");
     } else {
-      document.documentElement.dataset.readyroadConsent = "missing";
+      document.documentElement.dataset.rijviaConsent = "missing";
       if (raw) window.localStorage.removeItem(${JSON.stringify(COOKIE_CONSENT_STORAGE_KEY)});
-      window.localStorage.removeItem("readyroad_theme");
+      window.localStorage.removeItem("rijvia_theme");
     }
   } catch (_) {
-    document.documentElement.dataset.readyroadConsent = "missing";
-    try { window.localStorage.removeItem("readyroad_theme"); } catch (_) {}
+    document.documentElement.dataset.rijviaConsent = "missing";
+    try { window.localStorage.removeItem("rijvia_theme"); } catch (_) {}
   }
 
   window.gtag("consent", "default", state);

@@ -13,6 +13,14 @@ const article: PublicArticle = {
   publishedAt: "2026-08-22T10:00:00Z",
   image: null,
   internalLinks: [],
+  typography: {
+    h1Size: "DEFAULT",
+    h2Size: "DEFAULT",
+    h3Size: "DEFAULT",
+    h4Size: "DEFAULT",
+    paragraphSize: "DEFAULT",
+    textColor: "DEFAULT",
+  },
   alternateSlugs: { EN: "safe-driving" },
 };
 

@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
-const CONSENT_KEY = "readyroad_cookie_consent";
+const CONSENT_KEY = "rijvia_cookie_consent";
 
 async function fulfillJson(route: Route, status: number, body: unknown) {
   await route.fulfill({
@@ -13,7 +13,7 @@ async function fulfillJson(route: Route, status: number, body: unknown) {
 async function useAnonymousSession(page: Page, language: "en" | "ar" = "en") {
   await page.context().addCookies([
     {
-      name: "readyroad_locale",
+      name: "rijvia_locale",
       value: language,
       domain: "127.0.0.1",
       path: "/",
@@ -21,8 +21,8 @@ async function useAnonymousSession(page: Page, language: "en" | "ar" = "en") {
     },
   ]);
   await page.addInitScript((locale) => {
-    window.localStorage.setItem("readyroad_locale", locale);
-    document.cookie = `readyroad_locale=${locale}; path=/; samesite=lax`;
+    window.localStorage.setItem("rijvia_locale", locale);
+    document.cookie = `rijvia_locale=${locale}; path=/; samesite=lax`;
   }, language);
   await page.route("**/api/auth/me", (route) =>
     fulfillJson(route, 401, { error: "Unauthorized" }),
@@ -144,7 +144,7 @@ test.describe("Milestone 5 cookie consent management", () => {
       },
     ]);
     await expect(
-      page.locator("#readyroad-google-analytics"),
+      page.locator("#rijvia-google-analytics"),
     ).toHaveCount(1);
     expect((await analyticsRequest).url()).toContain("G-1P4EJH6D2T");
   });
@@ -154,7 +154,7 @@ test.describe("Milestone 5 cookie consent management", () => {
   }) => {
     await page.addInitScript(() => {
       window.localStorage.setItem(
-        "readyroad_cookie_consent",
+        "rijvia_cookie_consent",
         JSON.stringify({
           version: 2,
           timestamp: "2026-08-03T12:00:00.000Z",
@@ -169,7 +169,7 @@ test.describe("Milestone 5 cookie consent management", () => {
 
     for (const pathname of ["/", "/ar", "/nl", "/fr"]) {
       await page.goto(pathname);
-      await expect(page.locator("#readyroad-google-analytics")).toHaveCount(1);
+      await expect(page.locator("#rijvia-google-analytics")).toHaveCount(1);
       await expect(
         page.getByRole("region", { name: /cookie|الموافقة/i }),
       ).toHaveCount(0);
@@ -219,13 +219,13 @@ test.describe("Milestone 5 cookie consent management", () => {
       preferences: false,
       analytics: false,
     });
-    expect(await page.evaluate(() => localStorage.getItem("readyroad_theme"))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem("rijvia_theme"))).toBeNull();
   });
 
   test("an obsolete consent version requests a new decision", async ({ page }) => {
     await page.addInitScript(() => {
       window.localStorage.setItem(
-        "readyroad_cookie_consent",
+        "rijvia_cookie_consent",
         JSON.stringify({
           version: 1,
           timestamp: "2026-07-21T12:00:00.000Z",

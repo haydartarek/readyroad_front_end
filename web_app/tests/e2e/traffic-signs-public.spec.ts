@@ -44,7 +44,7 @@ async function installPublicTrafficSignMocks(page: Page) {
 
   await seedCookieConsent(page);
   await page.addInitScript(() => {
-    window.localStorage.setItem("readyroad_locale", "en");
+    window.localStorage.setItem("rijvia_locale", "en");
   });
 
   await page.route("**/api/auth/logout", async (route) => {
@@ -93,7 +93,7 @@ test.describe("Public traffic sign detail page", () => {
   }) => {
     await seedCookieConsent(page);
     await page.addInitScript(() => {
-      window.localStorage.setItem("readyroad_locale", "en");
+      window.localStorage.setItem("rijvia_locale", "en");
     });
     await page.route("**/api/auth/me", (route) =>
       fulfillJson(route, 401, { error: "Unauthorized" }),

@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+﻿// eslint-disable-next-line @typescript-eslint/no-require-imports
 const nextJest = require("next/jest");
 
 const createJestConfig = nextJest({ dir: "./" });
@@ -13,7 +13,7 @@ const customJestConfig = {
   },
 
   testRegex: ["[/\\\\]src[/\\\\].*(?:\\.test|\\.spec)\\.[jt]sx?$"],
-  testPathIgnorePatterns: ["/node_modules/", "/tests/e2e/"],
+  testPathIgnorePatterns: ["/tests/e2e/"],
   modulePathIgnorePatterns: ["<rootDir>/.next/"],
 
   collectCoverageFrom: [
@@ -23,4 +23,11 @@ const customJestConfig = {
   ],
 };
 
-module.exports = createJestConfig(customJestConfig);
+module.exports = async () => {
+  const nextConfig = await createJestConfig(customJestConfig)();
+
+  return {
+    ...nextConfig,
+    transformIgnorePatterns: [],
+  };
+};

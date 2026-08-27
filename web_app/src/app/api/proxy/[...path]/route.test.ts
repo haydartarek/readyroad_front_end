@@ -1,55 +1,82 @@
 /** @jest-environment node */
 
-import type { NextRequest } from "next/server";
-import { POST } from "@/app/api/proxy/[...path]/route";
+import { NextRequest } from "next/server";
+import { GET, POST } from "@/app/api/proxy/[...path]/route";
+import { getAuthTokenFromCookie } from "@/lib/server/auth";
 
 jest.mock("@/lib/server/auth", () => ({
-  AUTH_COOKIE_NAME: "token",
+  AUTH_COOKIE_NAME: "access_token",
   CSRF_COOKIE_NAME: "csrf_token",
   CSRF_HEADER_NAME: "x-csrf-token",
-  getBackendUrl: () => "http://localhost:8890/api",
-  getAuthTokenFromCookie: async () => "test-jwt",
+  getAuthTokenFromCookie: jest.fn(),
+  getBackendUrl: () => "http://backend:8890/api",
 }));
 
-const mockFetch = jest.fn();
+const authToken = getAuthTokenFromCookie as jest.Mock;
+const context = (path: string[]) => ({ params: Promise.resolve({ path }) });
 
-function mutationRequest(): NextRequest {
-  return {
-    method: "POST",
-    cookies: {
-      get: (name: string) =>
-        name === "token" || name === "csrf_token"
-          ? { name, value: name === "token" ? "test-jwt" : "csrf-value" }
-          : undefined,
-    },
-    headers: new Headers({ "x-csrf-token": "csrf-value" }),
-    nextUrl: new URL(
-      "http://localhost:3000/api/proxy/sign-quiz/random-practice/16/abandon",
-    ),
-    text: async () => "",
-  } as unknown as NextRequest;
-}
-
-describe("BFF API proxy no-content responses", () => {
+describe("authenticated BFF proxy", () => {
   beforeEach(() => {
-    mockFetch.mockReset();
-    global.fetch = mockFetch;
+    jest.clearAllMocks();
+    authToken.mockResolvedValue("signed-jwt");
+    global.fetch = jest.fn().mockResolvedValue(new Response(
+      JSON.stringify({ ok: true }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    ));
   });
 
-  test("forwards a Backend 204 without constructing a response body", async () => {
-    mockFetch.mockResolvedValue(new Response(null, { status: 204 }));
-
-    const response = await POST(mutationRequest(), {
-      params: Promise.resolve({
-        path: ["sign-quiz", "random-practice", "16", "abandon"],
-      }),
-    });
-
-    expect(response.status).toBe(204);
-    expect((await response.arrayBuffer()).byteLength).toBe(0);
-    expect(mockFetch).toHaveBeenCalledWith(
-      "http://localhost:8890/api/sign-quiz/random-practice/16/abandon",
-      expect.objectContaining({ method: "POST" }),
+  it("forwards authenticated GET requests to the local backend", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/proxy/admin/marketing/editorial/editor"),
+      context(["admin", "marketing", "editorial", "editor"]),
     );
+
+    expect(response.status).toBe(200);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://backend:8890/api/admin/marketing/editorial/editor",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({ Authorization: "Bearer signed-jwt" }),
+      }),
+    );
+  });
+
+  it("rejects an authenticated mutation with a mismatched CSRF token", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/proxy/admin/marketing/editorial/editor", {
+        method: "POST",
+        headers: {
+          cookie: "access_token=signed; csrf_token=expected",
+          "x-csrf-token": "different",
+        },
+      }),
+      context(["admin", "marketing", "editorial", "editor"]),
+    );
+
+    expect(response.status).toBe(403);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("forwards a local image multipart body with its original boundary", async () => {
+    const boundary = "----rijvia-image-boundary";
+    const rawBody = `--${boundary}\r\ncontent\r\n--${boundary}--`;
+    await POST(
+      new NextRequest("http://localhost:3000/api/proxy/admin/marketing/editorial/editor/articles/17/image", {
+        method: "POST",
+        headers: {
+          cookie: "access_token=signed; csrf_token=csrf",
+          "x-csrf-token": "csrf",
+          "content-type": `multipart/form-data; boundary=${boundary}`,
+        },
+        body: rawBody,
+      }),
+      context(["admin", "marketing", "editorial", "editor", "articles", "17", "image"]),
+    );
+
+    const options = (global.fetch as jest.Mock).mock.calls[0][1] as RequestInit;
+    expect(options.headers).toEqual(expect.objectContaining({
+      "Content-Type": `multipart/form-data; boundary=${boundary}`,
+    }));
+    expect(new TextDecoder().decode(options.body as ArrayBuffer)).toBe(rawBody);
   });
 });

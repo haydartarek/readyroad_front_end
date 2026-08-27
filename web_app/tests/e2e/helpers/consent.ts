@@ -11,7 +11,7 @@ export async function seedCookieConsent(
 ) {
   await page.addInitScript((selection) => {
     window.localStorage.setItem(
-      "readyroad_cookie_consent",
+      "rijvia_cookie_consent",
       JSON.stringify({
         version: 2,
         timestamp: "2026-07-21T12:00:00.000Z",

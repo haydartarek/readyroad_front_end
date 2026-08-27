@@ -47,18 +47,18 @@ describe("multilingual routing", () => {
   it("builds reciprocal hreflang URLs with English as x-default", () => {
     const alternatives = buildLanguageAlternates(
       "/lessons/les-19/2",
-      "https://readyroad.be",
+      "https://rijvia.be",
     );
 
     expect(alternatives).toEqual({
-      en: "https://readyroad.be/lessons/les-19/2",
-      "nl-BE": "https://readyroad.be/nl/lessons/les-19/2",
-      "fr-BE": "https://readyroad.be/fr/lessons/les-19/2",
-      ar: "https://readyroad.be/ar/lessons/les-19/2",
-      "x-default": "https://readyroad.be/lessons/les-19/2",
+      en: "https://rijvia.be/lessons/les-19/2",
+      "nl-BE": "https://rijvia.be/nl/lessons/les-19/2",
+      "fr-BE": "https://rijvia.be/fr/lessons/les-19/2",
+      ar: "https://rijvia.be/ar/lessons/les-19/2",
+      "x-default": "https://rijvia.be/lessons/les-19/2",
     });
     expect(
-      buildLocalizedUrl("/traffic-signs/B1", "ar", "https://readyroad.be/"),
-    ).toBe("https://readyroad.be/ar/traffic-signs/B1");
+      buildLocalizedUrl("/traffic-signs/B1", "ar", "https://rijvia.be/"),
+    ).toBe("https://rijvia.be/ar/traffic-signs/B1");
   });
 });

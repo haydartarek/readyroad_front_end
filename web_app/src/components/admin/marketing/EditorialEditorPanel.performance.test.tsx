@@ -142,8 +142,10 @@ describe("EditorialEditorPanel performance monitoring", () => {
         t={t}
         formatDate={(value) => value ?? "—"}
         onSave={jest.fn()}
+        onRequestTranslations={jest.fn()}
         onRequestApproval={jest.fn()}
         onUploadImage={jest.fn()}
+        onRemoveImage={jest.fn()}
         onRefresh={jest.fn().mockResolvedValue(undefined)}
       />,
     );

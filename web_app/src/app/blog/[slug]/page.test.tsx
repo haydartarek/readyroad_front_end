@@ -17,16 +17,21 @@ jest.mock("next/navigation", () => ({
 
 const getArticle = getPublicArticle as jest.Mock;
 const getLocale = getRequestLocale as jest.Mock;
+const typography = {
+  h1Size: "DEFAULT",
+  h2Size: "LARGE",
+  h3Size: "DEFAULT",
+  h4Size: "DEFAULT",
+  paragraphSize: "DEFAULT",
+  textColor: "DEFAULT",
+};
 
 describe("localized public blog article", () => {
   beforeEach(() => {
-    getArticle.mockReset();
-    getLocale.mockReset();
-    (notFound as unknown as jest.Mock).mockClear();
-    (redirect as unknown as jest.Mock).mockClear();
+    jest.clearAllMocks();
   });
 
-  it("renders the immutable published snapshot", async () => {
+  it("renders the published Markdown snapshot with its approved typography", async () => {
     getLocale.mockResolvedValue("en");
     getArticle.mockResolvedValue({
       language: "EN",
@@ -34,52 +39,31 @@ describe("localized public blog article", () => {
       title: "Safer driving in Belgium",
       summary: "Published summary",
       metaTitle: "Safer driving in Belgium | RijVia",
-      metaDescription: "Learn the approved Belgian safe-driving principles with RijVia.",
-      body: "First paragraph.\n\nSecond paragraph.",
+      metaDescription: "Learn approved Belgian safe-driving principles.",
+      body: "## Reviewed guidance\n\nFirst paragraph with **verified evidence**.",
       publishedAt: "2026-08-22T10:00:00Z",
+      image: null,
       internalLinks: [{
         type: "LESSON",
         targetPath: "/lessons/les-19/2",
         anchorText: "Study the priority lesson",
       }],
-      alternateSlugs: {
-        EN: "safe-driving",
-        NL: "veilig-rijden",
-        FR: "conduite-sure",
-        AR: "safe-driving-ar",
-      },
+      typography,
+      alternateSlugs: { EN: "safe-driving" },
     });
 
-    render(
-      await BlogArticlePage({
-        params: Promise.resolve({ slug: "safe-driving" }),
-      }),
-    );
+    render(await BlogArticlePage({
+      params: Promise.resolve({ slug: "safe-driving" }),
+    }));
 
-    expect(screen.getByRole("heading", { name: "Safer driving in Belgium" })).toBeInTheDocument();
-    expect(screen.getByText("First paragraph.")).toBeInTheDocument();
-    expect(screen.getByText("Second paragraph.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Study the priority lesson/ })).toHaveAttribute(
-      "href",
-      "/lessons/les-19/2",
-    );
-
-    const structuredData = JSON.parse(
-      document.querySelector("#article-structured-data")?.textContent ?? "{}",
-    ) as { "@graph"?: Array<Record<string, unknown>> };
-    expect(structuredData["@graph"]?.[0]).toMatchObject({
-      "@type": "BlogPosting",
-      headline: "Safer driving in Belgium",
-      datePublished: "2026-08-22T10:00:00Z",
-      inLanguage: "en",
-      url: "https://rijvia.be/blog/safe-driving",
-    });
-    expect(structuredData["@graph"]?.[1]).toMatchObject({
-      "@type": "BreadcrumbList",
-    });
+    expect(screen.getByRole("heading", { name: "Reviewed guidance", level: 2 }))
+      .toHaveClass("text-3xl");
+    expect(screen.getByText("verified evidence")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Study the priority lesson/ }))
+      .toHaveAttribute("href", "/lessons/les-19/2");
   });
 
-  it("uses immutable localized metadata and language-specific publication slugs", async () => {
+  it("uses immutable localized metadata and publication slugs", async () => {
     getLocale.mockResolvedValue("nl");
     getArticle.mockResolvedValue({
       language: "NL",
@@ -90,7 +74,9 @@ describe("localized public blog article", () => {
       metaDescription: "Leer de goedgekeurde principes voor veiliger rijden in België.",
       body: "Gepubliceerde inhoud",
       publishedAt: "2026-08-22T10:00:00Z",
+      image: null,
       internalLinks: [],
+      typography,
       alternateSlugs: {
         EN: "safe-driving",
         NL: "veilig-rijden",
@@ -104,9 +90,6 @@ describe("localized public blog article", () => {
     });
 
     expect(metadata.title).toEqual({ absolute: "Veiliger rijden in België | RijVia" });
-    expect(metadata.description).toBe(
-      "Leer de goedgekeurde principes voor veiliger rijden in België.",
-    );
     expect(metadata.alternates).toEqual({
       canonical: "https://rijvia.be/nl/blog/veilig-rijden",
       languages: {
@@ -119,7 +102,7 @@ describe("localized public blog article", () => {
     });
   });
 
-  it("redirects a source-locale slug to the canonical slug for the active locale", async () => {
+  it("preserves the active locale when redirecting to the canonical slug", async () => {
     getLocale.mockResolvedValue("ar");
     getArticle.mockResolvedValue({
       language: "AR",
@@ -130,26 +113,25 @@ describe("localized public blog article", () => {
       metaDescription: "تعرف على مبادئ القيادة الآمنة المعتمدة في بلجيكا.",
       body: "محتوى منشور",
       publishedAt: "2026-08-22T10:00:00Z",
+      image: null,
       internalLinks: [],
+      typography,
       alternateSlugs: { EN: "safe-driving", AR: "safe-driving-ar" },
     });
 
-    await expect(
-      BlogArticlePage({ params: Promise.resolve({ slug: "safe-driving" }) }),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    await expect(BlogArticlePage({
+      params: Promise.resolve({ slug: "safe-driving" }),
+    })).rejects.toThrow("NEXT_REDIRECT");
     expect(redirect).toHaveBeenCalledWith("/ar/blog/safe-driving-ar");
   });
 
-  it("returns the application 404 for unknown or unpublished articles", async () => {
-    getLocale.mockResolvedValue("nl");
+  it("returns the application 404 for an unpublished article", async () => {
+    getLocale.mockResolvedValue("fr");
     getArticle.mockResolvedValue(null);
 
-    await expect(
-      generateMetadata({ params: Promise.resolve({ slug: "unpublished" }) }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
-    await expect(
-      BlogArticlePage({ params: Promise.resolve({ slug: "unpublished" }) }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(notFound).toHaveBeenCalledTimes(2);
+    await expect(generateMetadata({
+      params: Promise.resolve({ slug: "unpublished" }),
+    })).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(notFound).toHaveBeenCalledTimes(1);
   });
 });

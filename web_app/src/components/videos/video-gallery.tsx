@@ -27,7 +27,6 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   PageHeroDescription,
-  PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
 } from "@/components/ui/page-surface";
@@ -143,7 +142,6 @@ export function VideoGallery({
         <PageHeroSurface className="mb-8">
           <div className="flex min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 max-w-3xl space-y-3">
-              <PageHeroEyebrow>{t("videos.page_name")}</PageHeroEyebrow>
               <PageHeroTitle>{t("videos.hero_title")}</PageHeroTitle>
               <PageHeroDescription className="max-w-2xl text-base leading-7">
                 {t("videos.hero_description")}

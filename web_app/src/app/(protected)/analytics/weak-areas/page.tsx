@@ -13,7 +13,6 @@ import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
   PageHeroDescription,
-  PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
 } from "@/components/ui/page-surface";
@@ -117,7 +116,6 @@ export function WeakAreasPageContent() {
   const pageHeader = (
     <PageHeroSurface>
       <div className="space-y-1">
-        <PageHeroEyebrow>{t("weak_areas.badge")}</PageHeroEyebrow>
         <PageHeroTitle>{t("weak_areas.title")}</PageHeroTitle>
         <PageHeroDescription className="max-w-xl">
           {t("weak_areas.subtitle")}

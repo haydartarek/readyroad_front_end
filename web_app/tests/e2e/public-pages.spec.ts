@@ -22,7 +22,7 @@ async function fulfillJson(route: Route, status: number, body: unknown) {
 async function useAnonymousEnglish(page: Page) {
   await seedCookieConsent(page);
   await page.addInitScript(() => {
-    window.localStorage.setItem("readyroad_locale", "en");
+    window.localStorage.setItem("rijvia_locale", "en");
   });
   await page.route("**/api/auth/me", (route) =>
     fulfillJson(route, 401, { error: "Unauthorized" }),

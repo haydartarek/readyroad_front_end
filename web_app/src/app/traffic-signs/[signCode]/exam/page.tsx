@@ -1,10 +1,10 @@
-import { redirect } from "next/navigation";
+"use client";
 
-export default async function ExamIndexPage({
-  params,
-}: {
-  params: Promise<{ signCode: string }>;
-}) {
-  const { signCode } = await params;
-  redirect(`/traffic-signs/${signCode}/exam/1`);
+import { FileText } from "lucide-react";
+import { PublicDocumentPage } from "@/components/public/public-document-page";
+
+export default function TermsPage() {
+  return (
+    <PublicDocumentPage page="terms" path="/terms" icon={FileText} />
+  );
 }

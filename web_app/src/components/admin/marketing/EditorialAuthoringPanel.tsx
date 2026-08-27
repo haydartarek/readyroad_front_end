@@ -3,10 +3,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BookOpenCheck, DatabaseZap, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { apiClient, logApiError } from "@/lib/api";
+import { apiClient, getApiErrorMessage, logApiError } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type {
   EditorialAuthoringStatus,
   EditorialLanguage,
@@ -53,7 +61,7 @@ interface SourceForm {
 }
 
 const SOURCE_TYPES = [
-  "READYROAD_CORE_DATA",
+  "RIJVIA_CORE_DATA",
   "APPROVED_INTERNAL_SOURCE",
   "OFFICIAL_LEGAL_SOURCE",
   "OFFICIAL_GOVERNMENT_SOURCE",
@@ -90,7 +98,7 @@ const EMPTY_SOURCE: SourceForm = {
   claimKey: "",
   claimText: "",
   claimType: "FACTUAL",
-  sourceType: "READYROAD_CORE_DATA",
+  sourceType: "RIJVIA_CORE_DATA",
   title: "",
   publisher: "RijVia",
   url: "",
@@ -106,6 +114,7 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
   const [busy, setBusy] = useState<"brief" | "source" | "draft" | null>(null);
   const [brief, setBrief] = useState<BriefForm>(() => initialBrief(topic));
   const [source, setSource] = useState<SourceForm>(EMPTY_SOURCE);
+  const selectDirection = language === "AR" ? "rtl" : "ltr";
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
@@ -116,7 +125,7 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
       setStatus(response.data);
     } catch (error) {
       logApiError("Failed to load editorial authoring readiness", error);
-      toast.error(t("admin.marketing.action_failed"));
+      toast.error(getApiErrorMessage(error, t("admin.marketing.action_failed")));
     } finally {
       setLoading(false);
     }
@@ -171,7 +180,7 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
       await loadStatus();
     } catch (error) {
       logApiError("Editorial authoring action failed", error);
-      toast.error(t("admin.marketing.action_failed"));
+      toast.error(getApiErrorMessage(error, t("admin.marketing.action_failed")));
     }
   };
 
@@ -262,7 +271,7 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
   };
 
   return (
-    <section className="space-y-4 rounded-2xl border border-primary/20 bg-primary/[0.035] p-4" data-testid="editorial-authoring">
+    <section className="min-w-0 space-y-4 rounded-2xl border border-primary/20 bg-primary/[0.035] p-4 sm:p-5" data-testid="editorial-authoring">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 font-black">
@@ -273,7 +282,14 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
             {t("admin.marketing.editorial_authoring_description")}
           </p>
         </div>
-        <Button type="button" variant="outline" onClick={() => void loadStatus()} disabled={loading}>
+        <Button
+          type="button"
+          className="w-full sm:w-auto sm:shrink-0"
+          variant="outline"
+          onClick={() => void loadStatus()}
+          disabled={loading || busy !== null}
+          aria-busy={loading}
+        >
           <RefreshCw className={loading ? "animate-spin" : ""} />
           {t("admin.marketing.refresh")}
         </Button>
@@ -282,31 +298,35 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
       {loading && !status ? <div className="h-24 animate-pulse rounded-xl bg-muted/50" /> : null}
       {status ? (
         <>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-3">
             <StatusCard label={t("admin.marketing.editorial_authoring_brief")} value={status.briefStatus ?? status.latestBriefTaskStatus ?? "NOT_STARTED"} />
             <StatusCard label={t("admin.marketing.editorial_authoring_evidence")} value={`${status.claimsSupported}/${status.claimsTotal}`} />
             <StatusCard label={t("admin.marketing.editorial_authoring_draft")} value={status.latestDraftTaskStatus ?? status.lifecycleState ?? "NOT_STARTED"} />
           </div>
 
           {status.canCreateBrief ? (
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/75 p-4">
+            <div className="min-w-0 space-y-4 rounded-xl border border-border/60 bg-background/75 p-4">
               <h4 className="font-bold">1. {t("admin.marketing.editorial_authoring_create_brief")}</h4>
               <div className="grid gap-3 sm:grid-cols-2">
-                <FormField label={t("admin.marketing.editorial_authoring_search_intent")}>
-                  <select dir="auto" className={selectClasses} value={brief.searchIntent} onChange={(event) => setBrief((current) => ({ ...current, searchIntent: event.target.value }))}>
-                    <option value="INFORMATIONAL">INFORMATIONAL</option>
-                    <option value="TRANSACTIONAL">TRANSACTIONAL</option>
-                    <option value="NAVIGATIONAL">NAVIGATIONAL</option>
-                  </select>
-                </FormField>
+                <StrategySelect
+                  direction={selectDirection}
+                  label={t("admin.marketing.editorial_authoring_search_intent")}
+                  value={brief.searchIntent}
+                  onChange={(value) => setBrief((current) => ({ ...current, searchIntent: value }))}
+                  options={[
+                    { value: "INFORMATIONAL", label: "INFORMATIONAL" },
+                    { value: "TRANSACTIONAL", label: "TRANSACTIONAL" },
+                    { value: "NAVIGATIONAL", label: "NAVIGATIONAL" },
+                  ]}
+                />
                 <FormField label={t("admin.marketing.editorial_authoring_working_title")}>
                   <Input value={brief.workingTitle} maxLength={500} onChange={(event) => setBrief((current) => ({ ...current, workingTitle: event.target.value }))} />
                 </FormField>
-                <StrategySelect label="USP" value={brief.uspId} onChange={(value) => setBrief((current) => ({ ...current, uspId: value }))} options={activeUsps.map((item) => ({ value: item.id.toString(), label: item.title }))} />
-                <StrategySelect label="ICP" value={brief.icpId} onChange={(value) => setBrief((current) => ({ ...current, icpId: value }))} options={activeIcps.map((item) => ({ value: item.id, label: `${item.name} · ${item.language}` }))} />
-                <StrategySelect label={t("admin.marketing.editorial_authoring_pillar")} value={brief.contentPillarId} onChange={(value) => setBrief((current) => ({ ...current, contentPillarId: value }))} options={activePillars.map((item) => ({ value: item.id.toString(), label: item.name }))} />
-                <StrategySelect label={t("admin.marketing.editorial_authoring_funnel")} value={brief.funnelStageId} onChange={(value) => setBrief((current) => ({ ...current, funnelStageId: value, conversionGoalId: "" }))} options={activeFunnels.map((item) => ({ value: item.id.toString(), label: item.stageKey }))} />
-                <StrategySelect label={t("admin.marketing.editorial_authoring_goal")} value={brief.conversionGoalId} onChange={(value) => setBrief((current) => ({ ...current, conversionGoalId: value }))} options={activeGoals.map((item) => ({ value: item.id.toString(), label: `${item.name} · ${item.primaryCta}` }))} />
+                <StrategySelect direction={selectDirection} label="USP" value={brief.uspId} onChange={(value) => setBrief((current) => ({ ...current, uspId: value }))} options={activeUsps.map((item) => ({ value: item.id.toString(), label: item.title }))} />
+                <StrategySelect direction={selectDirection} label="ICP" value={brief.icpId} onChange={(value) => setBrief((current) => ({ ...current, icpId: value }))} options={activeIcps.map((item) => ({ value: item.id, label: item.name }))} />
+                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_pillar")} value={brief.contentPillarId} onChange={(value) => setBrief((current) => ({ ...current, contentPillarId: value }))} options={activePillars.map((item) => ({ value: item.id.toString(), label: item.name }))} />
+                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_funnel")} value={brief.funnelStageId} onChange={(value) => setBrief((current) => ({ ...current, funnelStageId: value, conversionGoalId: "" }))} options={activeFunnels.map((item) => ({ value: item.id.toString(), label: item.stageKey }))} />
+                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_goal")} disabled={!brief.funnelStageId} value={brief.conversionGoalId} onChange={(value) => setBrief((current) => ({ ...current, conversionGoalId: value }))} options={activeGoals.map((item) => ({ value: item.id.toString(), label: item.name }))} />
               </div>
               <FormField label={t("admin.marketing.editorial_authoring_purpose")}>
                 <textarea className={textareaClasses} rows={3} maxLength={4000} value={brief.purpose} onChange={(event) => setBrief((current) => ({ ...current, purpose: event.target.value }))} />
@@ -323,7 +343,13 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
                 <input type="checkbox" checked={brief.legalReviewRequired} onChange={(event) => setBrief((current) => ({ ...current, legalReviewRequired: event.target.checked }))} className="mt-0.5 h-4 w-4 accent-primary" />
                 {t("admin.marketing.editorial_authoring_legal_review")}
               </label>
-              <Button type="button" disabled={!briefComplete || busy !== null} onClick={() => void createBrief()}>
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                disabled={!briefComplete || busy !== null}
+                aria-busy={busy === "brief"}
+                onClick={() => void createBrief()}
+              >
                 {busy === "brief" ? <Loader2 className="animate-spin" /> : <BookOpenCheck />}
                 {t("admin.marketing.editorial_authoring_create_brief")}
               </Button>
@@ -331,7 +357,7 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
           ) : null}
 
           {status.briefId ? (
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/75 p-4">
+            <div className="min-w-0 space-y-4 rounded-xl border border-border/60 bg-background/75 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h4 className="font-bold">2. {t("admin.marketing.editorial_authoring_collect_source")}</h4>
                 <Badge variant="outline">{status.briefReference}</Badge>
@@ -345,13 +371,13 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
                     <FormField label={t("admin.marketing.editorial_authoring_claim_key")}>
                       <Input dir="ltr" value={source.claimKey} maxLength={128} onChange={(event) => setSource((current) => ({ ...current, claimKey: event.target.value }))} />
                     </FormField>
-                    <StrategySelect label={t("admin.marketing.editorial_authoring_claim_type")} value={source.claimType} onChange={(value) => setSource((current) => ({ ...current, claimType: value }))} options={CLAIM_TYPES.map((item) => ({ value: item, label: item }))} />
+                    <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_claim_type")} value={source.claimType} onChange={(value) => setSource((current) => ({ ...current, claimType: value }))} options={CLAIM_TYPES.map((item) => ({ value: item, label: item }))} />
                   </div>
                   <FormField label={t("admin.marketing.editorial_authoring_claim_text")}>
                     <textarea className={textareaClasses} rows={3} maxLength={8000} value={source.claimText} onChange={(event) => setSource((current) => ({ ...current, claimText: event.target.value }))} />
                   </FormField>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <StrategySelect label={t("admin.marketing.editorial_authoring_source_type")} value={source.sourceType} onChange={(value) => setSource((current) => ({ ...current, sourceType: value, url: "", internalReference: "" }))} options={SOURCE_TYPES.map((item) => ({ value: item, label: sourceTypeLabel(item) }))} />
+                    <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_source_type")} value={source.sourceType} onChange={(value) => setSource((current) => ({ ...current, sourceType: value, url: "", internalReference: "" }))} options={SOURCE_TYPES.map((item) => ({ value: item, label: sourceTypeLabel(item) }))} />
                     <FormField label={t("admin.marketing.editorial_authoring_source_title")}>
                       <Input value={source.title} maxLength={2000} onChange={(event) => setSource((current) => ({ ...current, title: event.target.value }))} />
                     </FormField>
@@ -368,13 +394,20 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
                       <Input dir="ltr" value={source.fingerprint} maxLength={128} onChange={(event) => setSource((current) => ({ ...current, fingerprint: event.target.value }))} />
                     </FormField>
                     {legalClaim ? (
-                      <StrategySelect label={t("admin.marketing.editorial_authoring_legal_status")} value={source.legalReviewStatus} onChange={(value) => setSource((current) => ({ ...current, legalReviewStatus: value }))} options={[{ value: "REQUIRES_REVIEW", label: "REQUIRES_REVIEW" }, { value: "VERIFIED", label: "VERIFIED" }]} />
+                      <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_legal_status")} value={source.legalReviewStatus} onChange={(value) => setSource((current) => ({ ...current, legalReviewStatus: value }))} options={[{ value: "REQUIRES_REVIEW", label: "REQUIRES_REVIEW" }, { value: "VERIFIED", label: "VERIFIED" }]} />
                     ) : null}
                   </div>
                   <p className="text-xs leading-5 text-muted-foreground">
                     {t("admin.marketing.editorial_authoring_source_policy", { location: sourceLocation, trust: sourceTrust })}
                   </p>
-                  <Button type="button" variant="outline" disabled={!sourceComplete || busy !== null} onClick={() => void collectSource()}>
+                  <Button
+                    type="button"
+                    className="w-full sm:w-auto"
+                    variant="outline"
+                    disabled={!sourceComplete || busy !== null}
+                    aria-busy={busy === "source"}
+                    onClick={() => void collectSource()}
+                  >
                     {busy === "source" ? <Loader2 className="animate-spin" /> : <DatabaseZap />}
                     {t("admin.marketing.editorial_authoring_collect_source")}
                   </Button>
@@ -383,14 +416,20 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
             </div>
           ) : null}
 
-          <div className="space-y-3 rounded-xl border border-border/60 bg-background/75 p-4">
+          <div className="min-w-0 space-y-3 rounded-xl border border-border/60 bg-background/75 p-4">
             <h4 className="font-bold">3. {t("admin.marketing.editorial_authoring_generate_draft")}</h4>
             <p className="text-sm leading-6 text-muted-foreground">
               {status.canCreateDraft
                 ? t("admin.marketing.editorial_authoring_draft_ready")
                 : t("admin.marketing.editorial_authoring_draft_blocked")}
             </p>
-            <Button type="button" disabled={!status.canCreateDraft || busy !== null} onClick={() => void createDraft()}>
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              disabled={!status.canCreateDraft || busy !== null}
+              aria-busy={busy === "draft"}
+              onClick={() => void createDraft()}
+            >
               {busy === "draft" ? <Loader2 className="animate-spin" /> : <Sparkles />}
               {t("admin.marketing.editorial_authoring_generate_draft")}
             </Button>
@@ -410,19 +449,58 @@ function StatusCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StrategySelect({ label, value, onChange, options }: {
+function StrategySelect({
+  direction,
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+}: {
+  direction: "ltr" | "rtl";
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: Array<{ value: string; label: string }>;
+  disabled?: boolean;
 }) {
+  const validOptions = options.filter(
+    (option) =>
+      Boolean(option.value?.trim()) &&
+      Boolean(option.label?.trim()) &&
+      option.label.trim().toLowerCase() !== "null" &&
+      option.label.trim().toLowerCase() !== "undefined",
+  );
+
   return (
-    <FormField label={label}>
-      <select dir="auto" className={selectClasses} value={value} onChange={(event) => onChange(event.target.value)}>
-        <option value="">--</option>
-        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-      </select>
-    </FormField>
+    <div className="min-w-0 space-y-1.5 text-sm font-semibold">
+      <span className="block text-muted-foreground">{label}</span>
+      <Select
+        dir={direction}
+        value={value || undefined}
+        onValueChange={onChange}
+        disabled={disabled}
+      >
+        <SelectTrigger
+          dir="auto"
+          aria-label={label}
+          className="min-w-0 max-w-full text-start"
+        >
+          <SelectValue placeholder={label} />
+        </SelectTrigger>
+        <SelectContent align="start" sideOffset={6}>
+          <SelectGroup>
+            {validOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value} dir="auto">
+                <span className="block break-words text-start">
+                  {option.label.trim()}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
@@ -436,19 +514,18 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 }
 
 function isInternalSource(sourceType: string) {
-  return sourceType === "READYROAD_CORE_DATA" || sourceType === "APPROVED_INTERNAL_SOURCE";
+  return sourceType === "RIJVIA_CORE_DATA" || sourceType === "APPROVED_INTERNAL_SOURCE";
 }
 
 function trustForSource(sourceType: string) {
-  if (sourceType === "READYROAD_CORE_DATA") return "CORE_TRUSTED";
+  if (sourceType === "RIJVIA_CORE_DATA") return "CORE_TRUSTED";
   if (sourceType.startsWith("OFFICIAL_")) return "OFFICIAL";
   return "APPROVED_REFERENCE";
 }
 
 function sourceTypeLabel(sourceType: string) {
-  if (sourceType === "READYROAD_CORE_DATA") return "RijVia Core Data";
+  if (sourceType === "RIJVIA_CORE_DATA") return "RijVia Core Data";
   return sourceType.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-const selectClasses = "h-11 min-w-0 w-full max-w-full truncate rounded-xl border border-border/60 bg-background ps-3 pe-10 text-start text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15";
 const textareaClasses = "w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15";

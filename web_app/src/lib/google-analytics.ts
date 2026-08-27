@@ -1,7 +1,7 @@
 import type { CookieConsentRecord } from "@/lib/cookie-consent";
 
 export const GOOGLE_ANALYTICS_ID = "G-1P4EJH6D2T";
-export const GOOGLE_ANALYTICS_SCRIPT_ID = "readyroad-google-analytics";
+export const GOOGLE_ANALYTICS_SCRIPT_ID = "rijvia-google-analytics";
 
 type AnalyticsWindow = Window & {
   dataLayer?: unknown[];

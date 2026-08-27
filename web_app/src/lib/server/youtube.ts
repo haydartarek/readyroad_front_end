@@ -13,7 +13,7 @@ import {
 import { getPublicBackendApiUrl } from "@/lib/server/public-catalog";
 
 const YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3";
-const YOUTUBE_CACHE_TAG = "readyroad-youtube-videos";
+const YOUTUBE_CACHE_TAG = "rijvia-youtube-videos";
 
 let lastSuccessfulChannel: YouTubeChannel | null = null;
 const lastSuccessfulPages = new Map<string, YouTubeVideoPage>();
@@ -118,7 +118,7 @@ async function fetchPersistedVideoPage(
 
 const getCachedYouTubeChannel = unstable_cache(
   fetchChannel,
-  ["readyroad", "youtube", "channel", YOUTUBE_CHANNEL_HANDLE],
+  ["rijvia", "youtube", "channel", YOUTUBE_CHANNEL_HANDLE],
   {
     revalidate: YOUTUBE_REVALIDATE_SECONDS,
     tags: [YOUTUBE_CACHE_TAG],
@@ -127,7 +127,7 @@ const getCachedYouTubeChannel = unstable_cache(
 
 const getCachedYouTubeVideoPage = unstable_cache(
   fetchVideoPage,
-  ["readyroad", "youtube", "uploads", String(YOUTUBE_PAGE_SIZE)],
+  ["rijvia", "youtube", "uploads", String(YOUTUBE_PAGE_SIZE)],
   {
     revalidate: YOUTUBE_REVALIDATE_SECONDS,
     tags: [YOUTUBE_CACHE_TAG],

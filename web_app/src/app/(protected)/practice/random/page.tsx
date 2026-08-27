@@ -6,7 +6,6 @@ import Link from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  PageHeroEyebrow,
   PageHeroDescription,
   PageHeroSurface,
   PageHeroTitle,
@@ -375,13 +374,6 @@ export default function RandomPracticePage() {
               <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
               <div className="relative space-y-4 px-6 py-7">
                 <div className="space-y-3">
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-primary shadow-sm">
-                    <Shuffle className="h-3.5 w-3.5" />
-                    <span className="text-xs font-semibold">
-                      {t("sign_practice.badge")}
-                    </span>
-                  </div>
-
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
                     <div className="flex h-16 w-16 items-center justify-center rounded-[1.3rem] bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
                       <Shuffle className="h-8 w-8 text-primary-foreground" />
@@ -792,15 +784,9 @@ export default function RandomPracticePage() {
                       ? t("practice_exam.score_passed")
                       : t("practice_exam.score_failed")}
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
-                    {t("sign_practice.badge")}
-                  </span>
                 </div>
 
                 <div className="space-y-2.5">
-                  <PageHeroEyebrow>
-                    {t("sign_practice.result_heading")}
-                  </PageHeroEyebrow>
                   <PageHeroTitle>
                     {t("sign_quiz.practice.session_complete")}
                   </PageHeroTitle>

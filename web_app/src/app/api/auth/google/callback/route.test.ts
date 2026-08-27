@@ -11,7 +11,7 @@ function createCallbackRequest(language: string): NextRequest {
     google_oauth_code_verifier: "test-verifier",
     google_oauth_mode: "login",
     google_oauth_return_to: "/dashboard",
-    readyroad_locale: language,
+    rijvia_locale: language,
   };
 
   return {

@@ -80,10 +80,6 @@ export function ExamCta() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-secondary-foreground/10 via-transparent to-transparent" />
 
             <div className="relative">
-              <span className="mb-5 inline-flex items-center rounded-full border border-secondary-foreground/15 bg-secondary-foreground/5 px-4 py-1.5 text-xs font-bold tracking-wide text-secondary-foreground/80">
-                RijVia
-              </span>
-
               <h2 className="mx-auto max-w-2xl text-balance text-3xl font-extrabold tracking-tight text-secondary-foreground md:text-4xl lg:text-5xl">
                 {t("home.quiz_cta.title")}
               </h2>

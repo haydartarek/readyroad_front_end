@@ -113,10 +113,6 @@ export function HowItWorksSection() {
 
       <div className="container relative mx-auto px-4">
         <div className="mb-10 text-center lg:mb-14">
-          <span className="mb-4 inline-flex items-center rounded-full border border-primary/15 bg-primary/5 px-4 py-1.5 text-xs font-bold tracking-wide text-primary">
-            3
-          </span>
-
           <h2
             id={HEADING_ID}
             className="mb-3 text-balance text-2xl font-extrabold tracking-tight text-secondary md:text-3xl lg:text-4xl"

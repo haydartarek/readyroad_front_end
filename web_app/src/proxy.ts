@@ -140,9 +140,9 @@ function withRouteLocale(
     );
   updatedCookieHeader.push(localeCookie);
   requestHeaders.set("cookie", updatedCookieHeader.join("; "));
-  requestHeaders.set("x-readyroad-locale", locale);
-  requestHeaders.set("x-readyroad-pathname", pathname);
-  requestHeaders.set("x-readyroad-routed", "1");
+  requestHeaders.set("x-rijvia-locale", locale);
+  requestHeaders.set("x-rijvia-pathname", pathname);
+  requestHeaders.set("x-rijvia-routed", "1");
 
   const rewriteUrl = request.nextUrl.clone();
   rewriteUrl.pathname = pathname;
@@ -161,7 +161,7 @@ function withRouteLocale(
 }
 
 export default async function proxy(request: NextRequest) {
-  if (request.headers.get("x-readyroad-routed") === "1") {
+  if (request.headers.get("x-rijvia-routed") === "1") {
     return NextResponse.next();
   }
 

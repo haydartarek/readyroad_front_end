@@ -66,8 +66,8 @@ async function useAnonymousLocale(
 ) {
   await seedCookieConsent(page);
   await page.addInitScript((activeLocale) => {
-    window.localStorage.setItem("readyroad_locale", activeLocale);
-    document.cookie = `readyroad_locale=${activeLocale}; path=/; samesite=lax`;
+    window.localStorage.setItem("rijvia_locale", activeLocale);
+    document.cookie = `rijvia_locale=${activeLocale}; path=/; samesite=lax`;
   }, locale);
   await page.route("**/api/auth/me", (route) =>
     fulfillJson(route, 200, { authenticated: false, user: null }),

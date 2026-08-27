@@ -21,7 +21,6 @@ import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
   PageHeroDescription,
-  PageHeroEyebrow,
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { toast } from "sonner";
@@ -327,7 +326,6 @@ export function ErrorPatternsContent() {
               <AlertCircle className="w-6 h-6 text-primary" />
             </div>
             <div className="space-y-0.5">
-              <PageHeroEyebrow>{t("error_patterns.badge")}</PageHeroEyebrow>
               <PageHeroTitle>{t("error_patterns.title")}</PageHeroTitle>
               <PageHeroDescription>
                 {t("error_patterns.empty_desc")}
@@ -374,7 +372,6 @@ export function ErrorPatternsContent() {
             <AlertCircle className="w-6 h-6 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <PageHeroEyebrow>{t("error_patterns.badge")}</PageHeroEyebrow>
             <PageHeroTitle>{t("error_patterns.title")}</PageHeroTitle>
             <PageHeroDescription>
               {t("error_patterns.subtitle_before")}{" "}

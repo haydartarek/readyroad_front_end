@@ -11,7 +11,6 @@ import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import {
   PageHeroDescription,
-  PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
 } from "@/components/ui/page-surface";
@@ -173,9 +172,6 @@ function AssessmentCatalog({
 
       <PageHeroSurface>
         <div className="space-y-1">
-          <PageHeroEyebrow>
-            {t("assessment.badge_levels", { count: 3 })}
-          </PageHeroEyebrow>
           <PageHeroTitle>{t("assessment.title")}</PageHeroTitle>
           <PageHeroDescription>{t("assessment.subtitle")}</PageHeroDescription>
         </div>

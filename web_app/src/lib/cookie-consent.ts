@@ -1,6 +1,6 @@
-export const COOKIE_CONSENT_STORAGE_KEY = "readyroad_cookie_consent";
+export const COOKIE_CONSENT_STORAGE_KEY = "rijvia_cookie_consent";
 export const COOKIE_CONSENT_VERSION = 2;
-export const COOKIE_CONSENT_CHANGED_EVENT = "readyroad:consent-changed";
+export const COOKIE_CONSENT_CHANGED_EVENT = "rijvia:consent-changed";
 export const MARKETING_SERVICES_AVAILABLE = false;
 
 export type ConsentSelection = {
@@ -27,7 +27,7 @@ type ConsentWindow = Window & {
   gtag?: (...args: unknown[]) => void;
 };
 
-const OPTIONAL_STORAGE_KEYS = ["readyroad_theme"] as const;
+const OPTIONAL_STORAGE_KEYS = ["rijvia_theme"] as const;
 const GOOGLE_ANALYTICS_COOKIE_PATTERN = /^_(?:ga(?:_.+)?|gid|gat(?:_.+)?)$/;
 
 export function createConsentRecord(

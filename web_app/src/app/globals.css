@@ -33,7 +33,7 @@
   contain-intrinsic-block-size: auto 420px;
 }
 
-html[data-readyroad-consent="stored"] .readyroad-cookie-consent-banner {
+html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
   display: none;
 }
 

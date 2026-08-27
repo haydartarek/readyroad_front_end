@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   PageHeroDescription,
-  PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
   PageMetricCard,
@@ -144,19 +143,8 @@ function GreetingHeader({
   name: string;
   subtitle: string;
 }) {
-  const hour = new Date().getHours();
-  const { t } = useLanguage();
-
-  const greeting =
-    hour < 12
-      ? t("dashboard.greeting_morning")
-      : hour < 17
-        ? t("dashboard.greeting_afternoon")
-        : t("dashboard.greeting_evening");
-
   return (
     <PageHeroSurface>
-      <PageHeroEyebrow>{greeting}</PageHeroEyebrow>
       <PageHeroTitle>{name}!</PageHeroTitle>
       <PageHeroDescription>{subtitle}</PageHeroDescription>
     </PageHeroSurface>

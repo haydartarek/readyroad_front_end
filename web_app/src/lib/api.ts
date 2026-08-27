@@ -185,6 +185,38 @@ export function isServiceUnavailable(error: unknown): boolean {
   return false;
 }
 
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (!axios.isAxiosError(error)) {
+    return error instanceof Error && error.message.trim()
+      ? error.message.trim()
+      : fallback;
+  }
+
+  const data = error.response?.data;
+  if (typeof data === "string" && data.trim()) {
+    return data.trim();
+  }
+  if (!data || typeof data !== "object") {
+    return fallback;
+  }
+
+  const response = data as { message?: unknown; fields?: unknown };
+  if (typeof response.message === "string" && response.message.trim()) {
+    return response.message.trim();
+  }
+  if (response.fields && typeof response.fields === "object") {
+    const messages = Object.values(response.fields as Record<string, unknown>)
+      .flatMap((value) => Array.isArray(value) ? value : [value])
+      .filter((value): value is string =>
+        typeof value === "string" && Boolean(value.trim()))
+      .map((value) => value.trim());
+    if (messages.length) {
+      return messages.join(" · ");
+    }
+  }
+  return fallback;
+}
+
 /**
  * Smart API error logger.
  * - 502/503 → `console.warn`  (backend down, expected during dev)

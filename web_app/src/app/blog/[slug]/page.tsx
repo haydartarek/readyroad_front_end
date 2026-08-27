@@ -3,7 +3,8 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
-import { articleParagraphs, formatArticleDate } from "@/app/blog/blog-format";
+import { formatArticleDate } from "@/app/blog/blog-format";
+import ArticleMarkdown from "@/components/blog/ArticleMarkdown";
 import { localizePathname } from "@/lib/i18n-routing";
 import { createArticleMetadata } from "@/lib/article-metadata";
 import { createArticleStructuredData } from "@/lib/article-structured-data";
@@ -87,36 +88,43 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
             <Image
               src={article.image.heroUrl}
               alt={article.image.altText}
-              width={1600}
-              height={900}
+              width={1920}
+              height={1080}
               priority
               sizes="(max-width: 768px) 100vw, 896px"
               className="h-auto w-full rounded-2xl border border-border/60 object-cover shadow-sm"
             />
             <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">
               {article.image.caption ? <span className="me-2">{article.image.caption}</span> : null}
-              <a
-                href={article.image.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="font-semibold text-primary hover:underline"
-              >
-                {translateMessage(locale, "blog.photo_credit", {
-                  photographer: article.image.photographerName,
-                  source: article.image.sourcePlatform,
-                })}
-              </a>
+              {article.image.sourceUrl ? (
+                <a
+                  href={article.image.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  {translateMessage(locale, "blog.photo_credit", {
+                    photographer: article.image.photographerName,
+                    source: article.image.sourcePlatform,
+                  })}
+                </a>
+              ) : (
+                <span className="font-semibold">
+                  {translateMessage(locale, "blog.photo_credit", {
+                    photographer: article.image.photographerName,
+                    source: article.image.licenseName,
+                  })}
+                </span>
+              )}
             </figcaption>
           </figure>
         ) : null}
 
-        <div className="mx-auto mt-8 max-w-[70ch] space-y-6 text-start text-base leading-8 md:mt-10 md:text-lg md:leading-9">
-          {articleParagraphs(article.body).map((paragraph, index) => (
-            <p key={`${index}:${paragraph.slice(0, 32)}`} className="whitespace-pre-line break-words">
-              {paragraph}
-            </p>
-          ))}
-        </div>
+        <ArticleMarkdown
+          body={article.body}
+          typography={article.typography}
+          className="mx-auto mt-8 max-w-[70ch] text-start leading-8 md:mt-10 md:leading-9"
+        />
 
         {article.internalLinks.length ? (
           <section className="mx-auto mt-10 max-w-[70ch] border-t border-border/60 pt-7">

@@ -3,7 +3,7 @@ import { LocalizedErrorScreen } from "@/components/ui/localized-error-screen";
 
 describe("RijVia error identity", () => {
   beforeEach(() => {
-    document.cookie = "readyroad_locale=en; path=/";
+    document.cookie = "rijvia_locale=en; path=/";
   });
 
   it("keeps the brand visible and exposes working recovery actions", () => {

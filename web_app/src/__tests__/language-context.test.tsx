@@ -7,7 +7,7 @@
 import { LANGUAGES, DEFAULT_LANGUAGE } from "@/lib/constants";
 
 // ✅ Contract-compliant storage key
-const STORAGE_KEY = "readyroad_locale";
+const STORAGE_KEY = "rijvia_locale";
 
 describe("LanguageContext Logic", () => {
   let localStorageMock: { [key: string]: string };
@@ -60,7 +60,7 @@ describe("LanguageContext Logic", () => {
   });
 
   test("language storage key is contract-compliant", () => {
-    expect(STORAGE_KEY).toBe("readyroad_locale");
+    expect(STORAGE_KEY).toBe("rijvia_locale");
   });
 
   test("default language is English", () => {

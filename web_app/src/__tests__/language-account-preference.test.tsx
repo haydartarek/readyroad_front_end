@@ -38,7 +38,7 @@ describe("account-backed language preference", () => {
     window.sessionStorage.clear();
     window.history.replaceState({}, "", "/dashboard");
     document.cookie = "csrf_token=test-csrf; path=/";
-    document.cookie = "readyroad_locale=; path=/; max-age=0";
+    document.cookie = "rijvia_locale=; path=/; max-age=0";
   });
 
   test("persists an explicit signed-in choice through the protected BFF", async () => {
@@ -58,9 +58,9 @@ describe("account-backed language preference", () => {
       ),
     );
 
-    expect(window.localStorage.getItem("readyroad_locale")).toBe("ar");
+    expect(window.localStorage.getItem("rijvia_locale")).toBe("ar");
     expect(
-      window.sessionStorage.getItem("readyroad_explicit_session_language"),
+      window.sessionStorage.getItem("rijvia_explicit_session_language"),
     ).toBe("ar");
   });
 
@@ -74,7 +74,7 @@ describe("account-backed language preference", () => {
     await waitFor(() =>
       expect(screen.getByTestId("language")).toHaveTextContent("nl"),
     );
-    expect(window.localStorage.getItem("readyroad_locale")).toBe("nl");
+    expect(window.localStorage.getItem("rijvia_locale")).toBe("nl");
   });
 
   test("an explicit URL locale remains authoritative", () => {
@@ -84,13 +84,13 @@ describe("account-backed language preference", () => {
     fireEvent.click(screen.getByText("restore-nl"));
 
     expect(screen.getByTestId("language")).toHaveTextContent("ar");
-    expect(window.localStorage.getItem("readyroad_locale")).toBe("ar");
+    expect(window.localStorage.getItem("rijvia_locale")).toBe("ar");
   });
 
   test("an explicit session choice outranks the stored account language", () => {
-    window.localStorage.setItem("readyroad_locale", "fr");
+    window.localStorage.setItem("rijvia_locale", "fr");
     window.sessionStorage.setItem(
-      "readyroad_explicit_session_language",
+      "rijvia_explicit_session_language",
       "fr",
     );
     renderProvider("fr");

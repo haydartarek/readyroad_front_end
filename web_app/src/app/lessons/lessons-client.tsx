@@ -15,14 +15,9 @@ import {
   PageHeroDescription,
   PageHeroTitle,
   PageHeroSurface,
-  PageMetricCard,
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import {
-  BookOpen,
-  FileText,
-  Languages,
-  MapPinned,
   Search,
   X,
 } from "lucide-react";
@@ -110,10 +105,6 @@ export default function LessonsClient({
     );
   }
 
-  const totalPages = lessons.reduce(
-    (sum, lesson) => sum + (lesson.totalPages ?? 0),
-    0,
-  );
   const hasSearch = searchValue.trim().length > 0;
   const updateSearchValue = (value: string) => {
     setSearchValue(value);
@@ -146,16 +137,6 @@ export default function LessonsClient({
                 </PageHeroDescription>
               </div>
 
-              <div className="flex flex-wrap gap-3 text-xs font-medium text-muted-foreground">
-                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-2">
-                  <MapPinned className="h-3.5 w-3.5 text-primary" />
-                  {t("lessons.hero_note")}
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-2">
-                  <Languages className="h-3.5 w-3.5 text-primary" />
-                  {t("lessons.languages")} 4
-                </span>
-              </div>
             </div>
 
             <div className="rounded-[28px] border border-border/50 bg-background/80 p-5 shadow-sm">
@@ -196,27 +177,6 @@ export default function LessonsClient({
             </div>
           </div>
         </PageHeroSurface>
-
-        <section className="mt-8 grid gap-4 md:grid-cols-3">
-          <PageMetricCard
-            value={lessons.length}
-            label={t("lessons.total_lessons")}
-            hint={t("lessons.total_lessons_hint")}
-            icon={<BookOpen className="h-5 w-5" />}
-          />
-          <PageMetricCard
-            value={4}
-            label={t("lessons.languages")}
-            hint={t("lessons.languages_hint")}
-            icon={<Languages className="h-5 w-5" />}
-          />
-          <PageMetricCard
-            value={totalPages}
-            label={t("lessons.total_pages")}
-            hint={t("lessons.total_pages_hint")}
-            icon={<FileText className="h-5 w-5" />}
-          />
-        </section>
 
         <PageSectionSurface
           className="mt-8 rounded-[30px] border-border/50 bg-card/80 p-6"

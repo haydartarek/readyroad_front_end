@@ -270,7 +270,7 @@ export interface MarketingStrategySnapshot {
 }
 
 export interface EditorialArticleImageVariant {
-  type: "HERO" | "CARD" | "MOBILE" | "OG";
+  type: "HERO" | "CARD" | "MEDIUM" | "MOBILE" | "OG";
   format: "JPEG";
   publicPath: string;
   width: number;
@@ -286,13 +286,13 @@ export interface EditorialArticleImageLocalization {
 
 export interface EditorialArticleImageLicense {
   id: number;
-  sourcePlatform: "UNSPLASH" | "PIXABAY" | "PEXELS";
+  sourcePlatform: "UNSPLASH" | "PIXABAY" | "PEXELS" | "LOCAL_UPLOAD";
   sourceAssetId: string;
-  sourceUrl: string;
+  sourceUrl: string | null;
   photographerName: string;
-  photographerUrl: string;
+  photographerUrl: string | null;
   licenseName: string;
-  licenseUrl: string;
+  licenseUrl: string | null;
   licenseVerifiedAt: string;
   downloadedAt: string;
   originalFileName: string;
@@ -306,6 +306,7 @@ export interface EditorialArticleImageAsset {
   articleId: number;
   status: "APPROVED" | "PENDING_LICENSE" | "SUPERSEDED";
   originalFileName: string;
+  storedFileName: string | null;
   originalWidth: number;
   originalHeight: number;
   focalPointX: number;
@@ -411,6 +412,15 @@ export type EditorialInternalLinkInput = Pick<
   "targetPath" | "anchorText"
 >;
 
+export interface EditorialTypography {
+  h1Size: "COMPACT" | "DEFAULT" | "LARGE";
+  h2Size: "COMPACT" | "DEFAULT" | "LARGE";
+  h3Size: "COMPACT" | "DEFAULT" | "LARGE";
+  h4Size: "COMPACT" | "DEFAULT" | "LARGE";
+  paragraphSize: "COMPACT" | "DEFAULT" | "LARGE";
+  textColor: "DEFAULT" | "MUTED" | "PRIMARY" | "SECONDARY";
+}
+
 export interface EditorialVersion extends EditorialCurrentVersion {
   id: number;
   articleId: number;
@@ -419,6 +429,7 @@ export interface EditorialVersion extends EditorialCurrentVersion {
   metaTitle: string | null;
   metaDescription: string | null;
   internalLinks: EditorialInternalLink[];
+  typography: EditorialTypography;
   current: boolean;
 }
 
@@ -430,6 +441,7 @@ export interface EditorialSaveRequest {
   metaTitle: string;
   metaDescription: string;
   internalLinks: EditorialInternalLinkInput[];
+  typography: EditorialTypography;
   expectedCurrentVersion: number | null;
 }
 

@@ -198,7 +198,7 @@ class _MyAppState extends State<MyApp> {
                 : TextDirection.ltr;
 
             return MaterialApp(
-              title: 'ReadyRoad',
+              title: 'RijVia',
               debugShowCheckedModeBanner: false,
               navigatorKey: _navigatorKey,
 

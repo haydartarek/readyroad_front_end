@@ -18,6 +18,9 @@ concurrency:
   group: mobile-release-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  RIJVIA_API_BASE_URL: https://api.rijvia.be
+
 jobs:
   build-android:
     name: Build Android release artifacts
@@ -59,10 +62,10 @@ jobs:
         run: flutter test
 
       - name: Build Android APK
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=API_BASE_URL="$RIJVIA_API_BASE_URL"
 
       - name: Build Android App Bundle
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --dart-define=API_BASE_URL="$RIJVIA_API_BASE_URL"
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v7
@@ -111,7 +114,7 @@ jobs:
         run: flutter test
 
       - name: Build iOS without code signing
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --dart-define=API_BASE_URL="$RIJVIA_API_BASE_URL"
 
       - name: Upload unsigned iOS application
         uses: actions/upload-artifact@v7

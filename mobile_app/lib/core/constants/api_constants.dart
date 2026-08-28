@@ -1,9 +1,11 @@
-/// API Constants for ReadyRoad Backend
+/// API Constants for RijVia Backend
 class ApiConstants {
-  // Base URL - Change this to match your backend
-  // For Android Emulator use: 10.0.2.2
-  // For real device use: your computer's IP address
-  static const String baseUrl = 'http://10.0.2.2:8890';
+  // Local development defaults to the Android emulator host.
+  // Production builds inject API_BASE_URL via --dart-define.
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8890',
+  );
 
   // API Endpoints
   static const String apiVersion = '/api';

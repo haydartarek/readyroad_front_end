@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>ReadyRoad</string>
+	<string>RijVia</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>ReadyRoad</string>
+	<string>RijVia</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -46,21 +46,17 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	
-	<!-- Deep Link: Custom Scheme (readyroad://) -->
+	<!-- Deep Link: Custom Scheme (rijvia://) -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>readyroad</string>
+				<string>rijvia</string>
 			</array>
 		</dict>
 	</array>
 	
-	<!-- Deep Link: Universal Links (https://readyroad.com) -->
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:readyroad.com</string>
-	</array>
+	<!-- Universal Links are configured through Runner.entitlements once the Apple Team ID is available. -->
 </dict>
 </plist>

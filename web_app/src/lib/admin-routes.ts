@@ -117,6 +117,11 @@ export const ADMIN_ROUTES: AdminRoute[] = [
         labelKey: "admin.sidebar.quizzes_all",
       },
       {
+        key: "quizzes_categories",
+        path: "/admin/quizzes/categories",
+        labelKey: "admin.quizzes.health.category_management_title",
+      },
+      {
         key: "quizzes_new",
         path: "/admin/quizzes/new",
         labelKey: "admin.sidebar.quizzes_add",
@@ -184,6 +189,7 @@ const SEGMENT_LABEL_KEYS: Record<string, string> = {
   dashboard: "admin.sidebar.dashboard",
   signs: "admin.sidebar.signs",
   quizzes: "admin.sidebar.quizzes",
+  categories: "admin.quizzes.health.category_management_title",
   users: "admin.sidebar.users",
   analytics: "admin.sidebar.analytics",
   marketing: "admin.sidebar.marketing",

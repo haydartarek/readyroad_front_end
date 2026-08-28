@@ -1,15 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, AlertTriangle, Plus, RefreshCw, Save, X } from "lucide-react";
+import { Activity, AlertTriangle, FolderCog, RefreshCw } from "lucide-react";
+import Link from "@/components/localized-link";
 import { apiClient, logApiError } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NATIVE_SELECT_COMPACT_CLASS } from "@/lib/native-select-styles";
 
 type LocaleCode = "ar" | "nl" | "en" | "fr";
 
@@ -97,47 +95,11 @@ interface BankHealth {
   heavilyExposedQuestions: QuestionExposure[];
 }
 
-interface CategoryDraft {
-  id: number | null;
-  code: string;
-  nameEn: string;
-  nameNl: string;
-  nameFr: string;
-  nameAr: string;
-  descriptionEn: string;
-  descriptionNl: string;
-  descriptionFr: string;
-  descriptionAr: string;
-  displayOrder: number;
-  active: boolean;
-  contentScope: "THEORETICAL_EXAM" | "BOTH";
-  examTargetWeight: string;
-}
-
-const EMPTY_DRAFT: CategoryDraft = {
-  id: null,
-  code: "",
-  nameEn: "",
-  nameNl: "",
-  nameFr: "",
-  nameAr: "",
-  descriptionEn: "",
-  descriptionNl: "",
-  descriptionFr: "",
-  descriptionAr: "",
-  displayOrder: 0,
-  active: true,
-  contentScope: "THEORETICAL_EXAM",
-  examTargetWeight: "",
-};
-
 export function AdminTheoryBankHealth() {
   const { t, language } = useLanguage();
   const [health, setHealth] = useState<BankHealth | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState<CategoryDraft | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -162,70 +124,6 @@ export function AdminTheoryBankHealth() {
     void load();
   }, [load]);
 
-  const edit = (category: CategoryHealth) => {
-    setDraft(draftFromCategory(category));
-  };
-
-  const payload = (value: CategoryDraft) => ({
-    code: value.code.trim(),
-    nameEn: value.nameEn.trim(),
-    nameNl: value.nameNl.trim(),
-    nameFr: value.nameFr.trim(),
-    nameAr: value.nameAr.trim(),
-    descriptionEn: value.descriptionEn.trim() || null,
-    descriptionNl: value.descriptionNl.trim() || null,
-    descriptionFr: value.descriptionFr.trim() || null,
-    descriptionAr: value.descriptionAr.trim() || null,
-    displayOrder: value.displayOrder,
-    active: value.active,
-    contentScope: value.contentScope,
-    examTargetWeight: value.examTargetWeight === "" ? null : Number(value.examTargetWeight),
-  });
-
-  const save = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!draft) return;
-    try {
-      setSaving(true);
-      setError(null);
-      if (draft.id == null) {
-        await apiClient.post(
-          API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CREATE_CATEGORY,
-          payload(draft),
-        );
-      } else {
-        await apiClient.put(
-          API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.UPDATE_CATEGORY(draft.id),
-          payload(draft),
-        );
-      }
-      setDraft(null);
-      await load();
-    } catch (saveError) {
-      logApiError("Failed to save theory category", saveError);
-      setError(t("admin.quizzes.health.save_error"));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const toggle = async (category: CategoryHealth) => {
-    const value = { ...category, active: !category.active };
-    try {
-      setSaving(true);
-      await apiClient.put(
-        API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.UPDATE_CATEGORY(category.id),
-        payload(draftFromCategory(value)),
-      );
-      await load();
-    } catch (toggleError) {
-      logApiError("Failed to change theory category status", toggleError);
-      setError(t("admin.quizzes.health.save_error"));
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading && !health) {
     return <div className="h-36 animate-pulse rounded-2xl border border-border/50 bg-muted/30" />;
   }
@@ -246,9 +144,11 @@ export function AdminTheoryBankHealth() {
           <Button type="button" variant="outline" size="sm" onClick={() => void load()} disabled={loading} aria-label={t("admin.quizzes.health.refresh")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button type="button" size="sm" className="gap-2" onClick={() => setDraft({ ...EMPTY_DRAFT })}>
-            <Plus className="h-4 w-4" />
-            {t("admin.quizzes.health.add_category")}
+          <Button type="button" size="sm" variant="outline" className="gap-2" asChild>
+            <Link href="/admin/quizzes/categories">
+              <FolderCog className="h-4 w-4" />
+              {t("admin.quizzes.health.category_management_title")}
+            </Link>
           </Button>
         </div>
       </div>
@@ -310,12 +210,7 @@ export function AdminTheoryBankHealth() {
                   <p className="mt-2 text-xs text-muted-foreground">
                     {t("admin.quizzes.health.eligible")}: {category.eligibleAllLocales} · {t("admin.quizzes.health.presentations")}: {category.totalPresentations}
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => edit(category)}>{t("admin.quizzes.health.edit_category")}</Button>
-                    <Button type="button" variant="outline" size="sm" disabled={saving} onClick={() => void toggle(category)}>
-                      {t(category.active ? "admin.quizzes.health.deactivate" : "admin.quizzes.health.activate")}
-                    </Button>
-                  </div>
+
                 </article>
               ))}
             </div>
@@ -358,9 +253,6 @@ export function AdminTheoryBankHealth() {
         </>
       ) : null}
 
-      {draft ? (
-        <CategoryForm draft={draft} setDraft={setDraft} onSubmit={save} saving={saving} t={t} />
-      ) : null}
     </section>
   );
 }
@@ -370,25 +262,6 @@ function categoryName(category: CategoryHealth, language: string): string {
   if (language === "nl") return category.nameNl;
   if (language === "fr") return category.nameFr;
   return category.nameEn;
-}
-
-function draftFromCategory(category: CategoryHealth): CategoryDraft {
-  return {
-    id: category.id,
-    code: category.code,
-    nameEn: category.nameEn,
-    nameNl: category.nameNl,
-    nameFr: category.nameFr,
-    nameAr: category.nameAr,
-    descriptionEn: category.descriptionEn ?? "",
-    descriptionNl: category.descriptionNl ?? "",
-    descriptionFr: category.descriptionFr ?? "",
-    descriptionAr: category.descriptionAr ?? "",
-    displayOrder: category.displayOrder,
-    active: category.active,
-    contentScope: category.contentScope,
-    examTargetWeight: category.examTargetWeight?.toString() ?? "",
-  };
 }
 
 function HealthMetric({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "danger" }) {
@@ -429,57 +302,4 @@ function formatPercent(value: number | null): string {
 
 function formatSeconds(value: number | null, t: (key: string) => string): string {
   return value == null ? "—" : `${Math.round(value)} ${t("admin.quizzes.health.seconds")}`;
-}
-
-function CategoryForm({ draft, setDraft, onSubmit, saving, t }: {
-  draft: CategoryDraft;
-  setDraft: (draft: CategoryDraft | null) => void;
-  onSubmit: (event: React.FormEvent) => void;
-  saving: boolean;
-  t: (key: string) => string;
-}) {
-  const update = <K extends keyof CategoryDraft>(key: K, value: CategoryDraft[K]) => setDraft({ ...draft, [key]: value });
-  return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="font-black text-foreground">{t(draft.id == null ? "admin.quizzes.health.add_category" : "admin.quizzes.health.edit_category")}</h3>
-        <Button type="button" size="icon" variant="ghost" onClick={() => setDraft(null)} aria-label={t("admin.quizzes.health.cancel")}><X className="h-4 w-4" /></Button>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label={t("admin.quizzes.health.code")}><Input aria-label={t("admin.quizzes.health.code")} required maxLength={10} value={draft.code} disabled={draft.id != null} onChange={(event) => update("code", event.target.value)} /></Field>
-        <Field label={t("admin.quizzes.health.order")}><Input aria-label={t("admin.quizzes.health.order")} required type="number" min={0} value={draft.displayOrder} onChange={(event) => update("displayOrder", Number(event.target.value))} /></Field>
-        {(["En", "Nl", "Fr", "Ar"] as const).map((suffix) => {
-          const key = `name${suffix}` as const;
-          return <Field key={key} label={t(`admin.quizzes.health.name_${suffix.toLowerCase()}`)}><Input aria-label={t(`admin.quizzes.health.name_${suffix.toLowerCase()}`)} required value={draft[key]} dir={suffix === "Ar" ? "rtl" : "ltr"} onChange={(event) => update(key, event.target.value)} /></Field>;
-        })}
-        <Field label={t("admin.quizzes.health.scope")}><select aria-label={t("admin.quizzes.health.scope")} className={NATIVE_SELECT_COMPACT_CLASS} value={draft.contentScope} onChange={(event) => update("contentScope", event.target.value as CategoryDraft["contentScope"])}><option value="THEORETICAL_EXAM">THEORETICAL_EXAM</option><option value="BOTH">BOTH</option></select></Field>
-        <Field label={t("admin.quizzes.health.weight")}><Input aria-label={t("admin.quizzes.health.weight")} type="number" min={1} max={100} value={draft.examTargetWeight} onChange={(event) => update("examTargetWeight", event.target.value)} /></Field>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(["En", "Nl", "Fr", "Ar"] as const).map((suffix) => {
-          const key = `description${suffix}` as const;
-          return (
-            <Field key={key} label={t(`admin.quizzes.health.description_${suffix.toLowerCase()}`)}>
-              <textarea
-                aria-label={t(`admin.quizzes.health.description_${suffix.toLowerCase()}`)}
-                className="min-h-20 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                value={draft[key]}
-                dir={suffix === "Ar" ? "rtl" : "ltr"}
-                onChange={(event) => update(key, event.target.value)}
-              />
-            </Field>
-          );
-        })}
-      </div>
-      <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={draft.active} onChange={(event) => update("active", event.target.checked)} />{t("admin.quizzes.health.active")}</label>
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={saving} className="gap-2"><Save className="h-4 w-4" />{t("admin.quizzes.health.save")}</Button>
-        <Button type="button" variant="outline" onClick={() => setDraft(null)}>{t("admin.quizzes.health.cancel")}</Button>
-      </div>
-    </form>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="min-w-0 space-y-1.5"><Label>{label}</Label>{children}</div>;
 }

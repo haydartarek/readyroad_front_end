@@ -24,6 +24,7 @@ logs/
 # IDE
 .idea/
 *.iml
+/.vscode/
 
 # Backup and temporary files
 *.bak
@@ -36,6 +37,7 @@ logs/
 *.save
 *.rej
 *~
+/diff_*.txt
 
 # OS files
 .DS_Store

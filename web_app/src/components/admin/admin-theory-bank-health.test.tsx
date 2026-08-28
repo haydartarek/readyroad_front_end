@@ -102,7 +102,7 @@ const health = {
       targetShare: 14,
       representationStatus: "BALANCED",
 
-      minimumRequired: 6,
+      minimumRequired: 5,
       questionsNeeded: 0,
       examEligible: true,
     },

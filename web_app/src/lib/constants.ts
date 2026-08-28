@@ -202,6 +202,7 @@ export const API_ENDPOINTS = {
 
     QUIZ_QUESTIONS: {
       CATEGORIES: "/admin/quiz/categories",
+      CATEGORIES_MANAGE: "/admin/quiz/categories/manage",
       BANK_HEALTH: "/admin/quiz/bank-health",
       CREATE_CATEGORY: "/admin/quiz/categories",
       UPDATE_CATEGORY: (id: number | string) => `/admin/quiz/categories/${id}`,

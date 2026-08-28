@@ -79,7 +79,7 @@ const category = {
   targetShare: 14,
   representationStatus: "BALANCED",
 
-  minimumRequired: 5,
+  minimumRequired: 6,
   questionsNeeded: 0,
   examEligible: true,
 };
@@ -114,7 +114,7 @@ describe("AdminTheoryCategories", () => {
 
     expect(
       screen.getByText(
-        /45\/5.*admin\.quizzes\.health\.exam_ready/,
+        /45\/6.*admin\.quizzes\.health\.exam_ready/,
       ),
     ).toBeInTheDocument();
 
@@ -210,8 +210,8 @@ describe("AdminTheoryCategories", () => {
             MEDIUM: 1,
             HARD: 2,
           },
-          minimumRequired: 5,
-          questionsNeeded: 2,
+          minimumRequired: 6,
+          questionsNeeded: 3,
           examEligible: false,
         },
       ],
@@ -225,7 +225,7 @@ describe("AdminTheoryCategories", () => {
 
     expect(
       screen.getByText(
-        /3\/5.*admin\.quizzes\.health\.questions_needed.*2/,
+        /3\/6.*admin\.quizzes\.health\.questions_needed.*3/,
       ),
     ).toBeInTheDocument();
   });

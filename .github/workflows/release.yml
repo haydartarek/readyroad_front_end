@@ -13,7 +13,6 @@ on:
         type: string
 
 permissions:
-  actions: write
   contents: write
 
 concurrency:
@@ -84,12 +83,3 @@ jobs:
             --verify-tag \
             --title "RijVia v$VERSION" \
             --notes-file "$RUNNER_TEMP/release-notes.md"
-
-      - name: Trigger Mobile Release workflow
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
-        run: |
-          gh workflow run mobile-release.yml \
-            --ref "v$VERSION" \
-            -f version="$VERSION"

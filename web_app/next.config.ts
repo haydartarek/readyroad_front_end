@@ -50,10 +50,12 @@ const nextConfig: NextConfig = {
   async rewrites() {
     const backendBase =
       process.env.BACKEND_URL?.replace("/api", "") ?? "http://localhost:8890";
+    const quizImageBase =
+      process.env.QUIZ_IMAGE_ORIGIN?.replace(/\/+$/, "") || backendBase;
     return [
       {
         source: "/images/quiz/:path*",
-        destination: `${backendBase}/images/quiz/:path*`,
+        destination: `${quizImageBase}/images/quiz/:path*`,
       },
       {
         source: "/images/signs/:path*",

@@ -56,7 +56,7 @@ jobs:
           RELEASE_NOTES: ${{ inputs.release_notes }}
         run: |
           {
-            printf '## ReadyRoad v%s\n\n' "$VERSION"
+            printf '## RijVia v%s\n\n' "$VERSION"
             printf '%s\n\n' "$RELEASE_NOTES"
             printf '### Components\n'
             printf '%s\n' '- Web App (Next.js 16)'
@@ -82,7 +82,7 @@ jobs:
         run: |
           gh release create "v$VERSION" \
             --verify-tag \
-            --title "ReadyRoad v$VERSION" \
+            --title "RijVia v$VERSION" \
             --notes-file "$RUNNER_TEMP/release-notes.md"
 
       - name: Trigger Mobile Release workflow

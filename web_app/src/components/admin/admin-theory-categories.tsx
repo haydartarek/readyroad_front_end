@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "@/components/localized-link";
 import {
   AlertTriangle,
+  CheckCircle2,
   FolderCog,
   Pencil,
   Plus,
@@ -19,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type LocaleCode = "ar" | "nl" | "en" | "fr";
+type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
 interface CategoryHealth {
   id: number;
@@ -28,34 +29,18 @@ interface CategoryHealth {
   nameNl: string;
   nameFr: string;
   nameAr: string;
-
   descriptionEn: string | null;
   descriptionNl: string | null;
   descriptionFr: string | null;
   descriptionAr: string | null;
-
   displayOrder: number;
   active: boolean;
   contentScope: "THEORETICAL_EXAM" | "BOTH";
   examTargetWeight: number;
-
   totalQuestions: number;
-  activeQuestions: number;
   publishedQuestions: number;
-
   eligibleAllLocales: number;
-  eligibleByLocale: Record<LocaleCode, number>;
-  eligibleByDifficulty: Record<"EASY" | "MEDIUM" | "HARD", number>;
-
-  translationGapQuestions: number;
-  explanationGapQuestions: number;
-  invalidQuestions: number;
-  totalPresentations: number;
-
-  inventoryShare: number;
-  targetShare: number;
-  representationStatus: string;
-
+  eligibleByDifficulty: Record<Difficulty, number>;
   minimumRequired: number;
   questionsNeeded: number;
   examEligible: boolean;
@@ -64,17 +49,14 @@ interface CategoryHealth {
 interface CategoryDraft {
   id: number | null;
   code: string | null;
-
   nameEn: string;
   nameNl: string;
   nameFr: string;
   nameAr: string;
-
   descriptionEn: string;
   descriptionNl: string;
   descriptionFr: string;
   descriptionAr: string;
-
   displayOrder: number;
   active: boolean;
   contentScope: "THEORETICAL_EXAM" | "BOTH";
@@ -84,17 +66,14 @@ interface CategoryDraft {
 const EMPTY_DRAFT: CategoryDraft = {
   id: null,
   code: null,
-
   nameEn: "",
   nameNl: "",
   nameFr: "",
   nameAr: "",
-
   descriptionEn: "",
   descriptionNl: "",
   descriptionFr: "",
   descriptionAr: "",
-
   displayOrder: 0,
   active: true,
   contentScope: "THEORETICAL_EXAM",
@@ -103,7 +82,6 @@ const EMPTY_DRAFT: CategoryDraft = {
 
 export function AdminTheoryCategories() {
   const { t, language } = useLanguage();
-
   const [categories, setCategories] = useState<CategoryHealth[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -142,16 +120,13 @@ export function AdminTheoryCategories() {
     nameNl: value.nameNl.trim(),
     nameFr: value.nameFr.trim(),
     nameAr: value.nameAr.trim(),
-
     descriptionEn: value.descriptionEn.trim() || null,
     descriptionNl: value.descriptionNl.trim() || null,
     descriptionFr: value.descriptionFr.trim() || null,
     descriptionAr: value.descriptionAr.trim() || null,
-
     displayOrder: value.displayOrder,
     active: value.active,
     contentScope: value.contentScope,
-
     examTargetWeight:
       value.examTargetWeight.trim() === ""
         ? 10
@@ -160,7 +135,6 @@ export function AdminTheoryCategories() {
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
-
     if (!draft) return;
 
     try {
@@ -211,68 +185,108 @@ export function AdminTheoryCategories() {
     }
   };
 
+  const summary = useMemo(() => {
+    const eligible = categories.filter((category) => category.examEligible).length;
+    const published = categories.reduce(
+      (total, category) => total + category.publishedQuestions,
+      0,
+    );
+
+    return {
+      eligible,
+      published,
+    };
+  }, [categories]);
+
   if (loading && categories.length === 0) {
     return (
       <div
-        className="h-48 animate-pulse rounded-2xl border border-border/50 bg-muted/30"
+        className="h-64 animate-pulse rounded-3xl border border-border/50 bg-muted/30"
         data-testid="theory-categories-loading"
       />
     );
   }
 
-  const eligibleCount = categories.filter(
-    (category) => category.examEligible,
-  ).length;
-
   return (
     <section
-      className="min-w-0 space-y-4"
+      className="min-w-0 space-y-5"
       data-testid="theory-category-management"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">
-            {categories.length} {t("admin.quizzes.health.categories")}
-          </Badge>
+      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-primary/[0.09] via-primary/[0.035] to-transparent" />
 
-          <Badge variant="outline">
-            {eligibleCount} {t("admin.quizzes.health.eligible")}
-          </Badge>
-        </div>
+        <div className="relative space-y-5 p-4 sm:p-5 lg:p-6">
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+            <div className="flex min-w-0 items-start gap-3.5">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary shadow-sm">
+                <FolderCog className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                  {t("admin.quizzes.health.categories")}
+                </p>
+                <h2 className="mt-1 text-lg font-black tracking-tight text-foreground sm:text-xl">
+                  {t("admin.quizzes.health.category_management_title")}
+                </h2>
+                <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground sm:text-sm">
+                  {t("admin.quizzes.health.category_management_description")}
+                </p>
+              </div>
+            </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => void load()}
-            disabled={loading}
-            aria-label={t("admin.quizzes.health.refresh")}
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void load()}
+                disabled={loading}
+                aria-label={t("admin.quizzes.health.refresh")}
+                className="h-9 w-9 rounded-xl border-border/60 bg-background/80 p-0 shadow-sm"
+              >
+                <RefreshCw
+                  className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+                />
+              </Button>
 
-          <Button
-            type="button"
-            size="sm"
-            className="gap-2"
-            onClick={() =>
-              setDraft({
-                ...EMPTY_DRAFT,
-                displayOrder: nextDisplayOrder(categories),
-              })
-            }
-          >
-            <Plus className="h-4 w-4" />
-            {t("admin.quizzes.health.add_category")}
-          </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="gap-2 rounded-xl shadow-sm"
+                onClick={() =>
+                  setDraft({
+                    ...EMPTY_DRAFT,
+                    displayOrder: nextDisplayOrder(categories),
+                  })
+                }
+              >
+                <Plus className="h-4 w-4" />
+                {t("admin.quizzes.health.add_category")}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-2.5 sm:grid-cols-3">
+            <SummaryMetric
+              label={t("admin.quizzes.health.categories")}
+              value={categories.length}
+            />
+            <SummaryMetric
+              label={t("admin.quizzes.health.eligible")}
+              value={summary.eligible}
+            />
+            <SummaryMetric
+              label={t("admin.quizzes.health.published")}
+              value={summary.published}
+            />
+          </div>
         </div>
       </div>
 
       {error ? (
-        <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+        <div className="flex items-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/[0.04] p-3 text-sm text-destructive">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          {error}
+          <span className="min-w-0 break-words">{error}</span>
         </div>
       ) : null}
 
@@ -286,127 +300,159 @@ export function AdminTheoryCategories() {
         />
       ) : null}
 
-      <div className="grid min-w-0 gap-3 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
         {categories.map((category) => (
           <article
             key={category.id}
-            className="min-w-0 rounded-2xl border border-border/50 bg-card p-4 shadow-sm"
+            className="group relative min-w-0 overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm transition hover:border-primary/25 hover:shadow-md"
           >
-            <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="break-words text-base font-black text-foreground">
-                    {categoryName(category, language)}
-                  </h2>
+            <div
+              className={
+                category.examEligible
+                  ? "absolute inset-x-0 top-0 h-1 bg-primary"
+                  : "absolute inset-x-0 top-0 h-1 bg-muted-foreground/20"
+              }
+            />
 
-                  <Badge variant="outline">
-                    {category.code}
-                  </Badge>
+            <div className="space-y-4 p-4 pt-5 sm:p-5 sm:pt-6">
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="break-words text-base font-black leading-6 text-foreground sm:text-lg">
+                    {categoryName(category, language)}
+                  </h3>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="rounded-lg border border-border/50 bg-muted/20 px-2 py-1 font-semibold">
+                      {t("admin.quizzes.health.order")}: {category.displayOrder}
+                    </span>
+                    <span className="rounded-lg border border-border/50 bg-muted/20 px-2 py-1 font-semibold">
+                      {t("admin.quizzes.health.weight")}: {category.examTargetWeight}
+                    </span>
+                  </div>
                 </div>
 
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t("admin.quizzes.health.order")}: {category.displayOrder}
-                  {"  "}
-                  {t("admin.quizzes.health.weight")}: {category.examTargetWeight}
-                </p>
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <Badge
+                    variant={category.examEligible ? "default" : "outline"}
+                    className="rounded-full"
+                  >
+                    {category.examEligible
+                      ? t("admin.quizzes.health.exam_ready")
+                      : t("admin.quizzes.health.questions_needed")}
+                  </Badge>
+                  <Badge variant="outline" className="rounded-full bg-background/80">
+                    {category.active
+                      ? t("admin.quizzes.health.active")
+                      : t("admin.quizzes.health.inactive")}
+                  </Badge>
+                </div>
               </div>
 
-              <Badge variant={category.examEligible ? "default" : "outline"}>
-                {category.eligibleAllLocales}/{category.minimumRequired}
-              </Badge>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <Metric
-                label={t("admin.quizzes.health.total")}
-                value={category.totalQuestions}
-              />
-              <Metric
-                label={t("admin.quizzes.health.published")}
-                value={category.publishedQuestions}
-              />
-              <Metric
-                label={t("admin.quizzes.health.eligible")}
-                value={category.eligibleAllLocales}
-              />
-            </div>
-
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {(["EASY", "MEDIUM", "HARD"] as const).map((difficulty) => (
+              <div className="grid grid-cols-3 gap-2.5">
                 <Metric
-                  key={difficulty}
-                  label={difficulty}
-                  value={category.eligibleByDifficulty[difficulty] ?? 0}
+                  label={t("admin.quizzes.health.total")}
+                  value={category.totalQuestions}
                 />
-              ))}
-            </div>
+                <Metric
+                  label={t("admin.quizzes.health.published")}
+                  value={category.publishedQuestions}
+                />
+                <Metric
+                  label={t("admin.quizzes.health.eligible")}
+                  value={category.eligibleAllLocales}
+                  emphasized
+                />
+              </div>
 
-            <div className="mt-3 rounded-xl border border-border/40 bg-muted/20 p-3">
-              {category.examEligible ? (
-                <p className="text-sm font-bold text-foreground">
-                  {category.eligibleAllLocales}/{category.minimumRequired}
-                  {"  "}
-                  {t("admin.quizzes.health.exam_ready")}
-                </p>
-              ) : (
-                <p className="text-sm font-bold text-foreground">
-                  {category.eligibleAllLocales}/{category.minimumRequired}
-                  {"  "}
-                  {t("admin.quizzes.health.questions_needed")}:{" "}
-                  {category.questionsNeeded}
-                </p>
-              )}
+              <div className="rounded-2xl border border-border/50 bg-background/60 p-3.5">
+                <div className="grid grid-cols-3 gap-2">
+                  {(["EASY", "MEDIUM", "HARD"] as const).map((difficulty) => (
+                    <Metric
+                      key={difficulty}
+                      label={difficulty}
+                      value={category.eligibleByDifficulty[difficulty] ?? 0}
+                      compact
+                    />
+                  ))}
+                </div>
+              </div>
 
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t("admin.quizzes.health.minimum_required")}:{" "}
-                {category.minimumRequired}
-                {"  "}
-                {category.active
-                  ? t("admin.quizzes.health.active")
-                  : t("admin.quizzes.health.inactive")}
-                {"  "}
-                {category.contentScope}
-              </p>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setDraft(draftFromCategory(category))}
+              <div
+                className={
+                  category.examEligible
+                    ? "rounded-2xl border border-primary/15 bg-primary/[0.035] p-3.5"
+                    : "rounded-2xl border border-border/50 bg-muted/20 p-3.5"
+                }
               >
-                <Pencil className="h-4 w-4" />
-                {t("admin.quizzes.health.edit_category")}
-              </Button>
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2
+                    className={
+                      category.examEligible
+                        ? "mt-0.5 h-4 w-4 shrink-0 text-primary"
+                        : "mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                    }
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-foreground">
+                      {category.eligibleAllLocales}/{category.minimumRequired}{" "}
+                      {category.examEligible
+                        ? t("admin.quizzes.health.exam_ready")
+                        : `${t("admin.quizzes.health.questions_needed")}: ${category.questionsNeeded}`}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {t("admin.quizzes.health.minimum_required")}: {category.minimumRequired}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={saving}
-                onClick={() => void toggle(category)}
-              >
-                {t(
-                  category.active
-                    ? "admin.quizzes.health.deactivate"
-                    : "admin.quizzes.health.activate",
-                )}
-              </Button>
+              <div className="flex flex-wrap gap-2 border-t border-border/40 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 rounded-xl"
+                  onClick={() => setDraft(draftFromCategory(category))}
+                >
+                  <Pencil className="h-4 w-4" />
+                  {t("admin.quizzes.health.edit_category")}
+                </Button>
 
-              <Button type="button" variant="outline" size="sm" asChild>
-                <Link href={`/admin/quizzes?categoryCode=${encodeURIComponent(category.code)}`}>
-                  {t("admin.quizzes.health.view_questions")}
-                </Link>
-              </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl"
+                  disabled={saving}
+                  onClick={() => void toggle(category)}
+                >
+                  {t(
+                    category.active
+                      ? "admin.quizzes.health.deactivate"
+                      : "admin.quizzes.health.activate",
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl"
+                  asChild
+                >
+                  <Link
+                    href={`/admin/quizzes?categoryCode=${encodeURIComponent(category.code)}`}
+                  >
+                    {t("admin.quizzes.health.view_questions")}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </article>
         ))}
       </div>
 
       {!loading && categories.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-3xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           {t("admin.quizzes.health.categories")}
         </div>
       ) : null}
@@ -437,143 +483,147 @@ function CategoryForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-4 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4"
+      className="relative overflow-hidden rounded-3xl border border-primary/20 bg-card shadow-sm"
     >
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="font-black text-foreground">
-            {t(
-              draft.id == null
-                ? "admin.quizzes.health.add_category"
-                : "admin.quizzes.health.edit_category",
-            )}
-          </h2>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary/[0.08] to-transparent" />
 
-          {draft.code ? (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {draft.code}
+      <div className="relative space-y-5 p-4 sm:p-5 lg:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+              {t("admin.quizzes.health.categories")}
             </p>
-          ) : (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t("admin.quizzes.health.auto_code_hint")}
-            </p>
-          )}
+            <h2 className="mt-1 text-lg font-black text-foreground">
+              {t(
+                draft.id == null
+                  ? "admin.quizzes.health.add_category"
+                  : "admin.quizzes.health.edit_category",
+              )}
+            </h2>
+            {draft.id == null ? (
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {t("admin.quizzes.health.auto_code_hint")}
+              </p>
+            ) : null}
+          </div>
+
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="rounded-xl"
+            onClick={() => setDraft(null)}
+            aria-label={t("admin.quizzes.health.cancel")}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          onClick={() => setDraft(null)}
-          aria-label={t("admin.quizzes.health.cancel")}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label={t("admin.quizzes.health.order")}>
+            <Input
+              aria-label={t("admin.quizzes.health.order")}
+              required
+              type="number"
+              min={0}
+              value={draft.displayOrder}
+              onChange={(event) =>
+                update("displayOrder", Number(event.target.value))
+              }
+            />
+          </Field>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label={t("admin.quizzes.health.order")}>
-          <Input
-            aria-label={t("admin.quizzes.health.order")}
-            required
-            type="number"
-            min={0}
-            value={draft.displayOrder}
-            onChange={(event) =>
-              update("displayOrder", Number(event.target.value))
-            }
-          />
-        </Field>
+          <Field label={t("admin.quizzes.health.weight")}>
+            <Input
+              aria-label={t("admin.quizzes.health.weight")}
+              required
+              type="number"
+              min={1}
+              max={100}
+              value={draft.examTargetWeight}
+              onChange={(event) =>
+                update("examTargetWeight", event.target.value)
+              }
+            />
+          </Field>
 
-        <Field label={t("admin.quizzes.health.weight")}>
-          <Input
-            aria-label={t("admin.quizzes.health.weight")}
-            required
-            type="number"
-            min={1}
-            max={100}
-            value={draft.examTargetWeight}
-            onChange={(event) =>
-              update("examTargetWeight", event.target.value)
-            }
-          />
-        </Field>
+          {(["En", "Nl", "Fr", "Ar"] as const).map((suffix) => {
+            const key = `name${suffix}` as const;
 
-        {(["En", "Nl", "Fr", "Ar"] as const).map((suffix) => {
-          const key = `name${suffix}` as const;
-
-          return (
-            <Field
-              key={key}
-              label={t(
-                `admin.quizzes.health.name_${suffix.toLowerCase()}`,
-              )}
-            >
-              <Input
-                aria-label={t(
+            return (
+              <Field
+                key={key}
+                label={t(
                   `admin.quizzes.health.name_${suffix.toLowerCase()}`,
                 )}
-                required
-                value={draft[key]}
-                dir={suffix === "Ar" ? "rtl" : "ltr"}
-                onChange={(event) => update(key, event.target.value)}
-              />
-            </Field>
-          );
-        })}
-      </div>
+              >
+                <Input
+                  aria-label={t(
+                    `admin.quizzes.health.name_${suffix.toLowerCase()}`,
+                  )}
+                  required
+                  value={draft[key]}
+                  dir={suffix === "Ar" ? "rtl" : "ltr"}
+                  onChange={(event) => update(key, event.target.value)}
+                />
+              </Field>
+            );
+          })}
+        </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(["En", "Nl", "Fr", "Ar"] as const).map((suffix) => {
-          const key = `description${suffix}` as const;
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(["En", "Nl", "Fr", "Ar"] as const).map((suffix) => {
+            const key = `description${suffix}` as const;
 
-          return (
-            <Field
-              key={key}
-              label={t(
-                `admin.quizzes.health.description_${suffix.toLowerCase()}`,
-              )}
-            >
-              <textarea
-                aria-label={t(
+            return (
+              <Field
+                key={key}
+                label={t(
                   `admin.quizzes.health.description_${suffix.toLowerCase()}`,
                 )}
-                className="min-h-20 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                value={draft[key]}
-                dir={suffix === "Ar" ? "rtl" : "ltr"}
-                onChange={(event) => update(key, event.target.value)}
-              />
-            </Field>
-          );
-        })}
-      </div>
+              >
+                <textarea
+                  aria-label={t(
+                    `admin.quizzes.health.description_${suffix.toLowerCase()}`,
+                  )}
+                  className="min-h-24 w-full min-w-0 rounded-xl border border-input bg-background/70 px-3 py-2.5 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  value={draft[key]}
+                  dir={suffix === "Ar" ? "rtl" : "ltr"}
+                  onChange={(event) => update(key, event.target.value)}
+                />
+              </Field>
+            );
+          })}
+        </div>
 
-      <label className="flex items-center gap-2 text-sm font-semibold">
-        <input
-          type="checkbox"
-          checked={draft.active}
-          onChange={(event) => update("active", event.target.checked)}
-        />
-        {t("admin.quizzes.health.active")}
-      </label>
+        <label className="flex w-fit items-center gap-2 rounded-xl border border-border/50 bg-background/70 px-3 py-2 text-sm font-semibold">
+          <input
+            type="checkbox"
+            checked={draft.active}
+            onChange={(event) => update("active", event.target.checked)}
+          />
+          {t("admin.quizzes.health.active")}
+        </label>
 
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="submit"
-          disabled={saving}
-          className="gap-2"
-        >
-          <Save className="h-4 w-4" />
-          {t("admin.quizzes.health.save")}
-        </Button>
+        <div className="flex flex-wrap gap-2 border-t border-border/40 pt-4">
+          <Button
+            type="submit"
+            disabled={saving}
+            className="gap-2 rounded-xl"
+          >
+            <Save className="h-4 w-4" />
+            {t("admin.quizzes.health.save")}
+          </Button>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setDraft(null)}
-        >
-          {t("admin.quizzes.health.cancel")}
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-xl"
+            onClick={() => setDraft(null)}
+          >
+            {t("admin.quizzes.health.cancel")}
+          </Button>
+        </div>
       </div>
     </form>
   );
@@ -594,52 +644,71 @@ function Field({
   );
 }
 
-function Metric({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
+function SummaryMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-muted/30 p-2 text-center">
-      <p className="text-xs font-semibold text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-1 text-lg font-black text-foreground">
+    <div className="rounded-2xl border border-border/45 bg-background/65 px-3.5 py-3 shadow-[0_1px_0_rgb(0_0_0/0.02)]">
+      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+      <p className="mt-1 text-xl font-black tracking-tight text-foreground">
         {value}
       </p>
     </div>
   );
 }
 
-function categoryName(
-  category: CategoryHealth,
-  language: string,
-): string {
+function Metric({
+  label,
+  value,
+  compact = false,
+  emphasized = false,
+}: {
+  label: string;
+  value: number;
+  compact?: boolean;
+  emphasized?: boolean;
+}) {
+  return (
+    <div
+      className={
+        emphasized
+          ? "rounded-xl border border-primary/15 bg-primary/[0.045] p-2.5 text-center"
+          : "rounded-xl border border-border/40 bg-muted/20 p-2.5 text-center"
+      }
+    >
+      <p className="truncate text-[11px] font-semibold text-muted-foreground sm:text-xs">
+        {label}
+      </p>
+      <p
+        className={
+          compact
+            ? "mt-1 text-base font-black text-foreground"
+            : "mt-1 text-lg font-black text-foreground"
+        }
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function categoryName(category: CategoryHealth, language: string): string {
   if (language === "ar") return category.nameAr;
   if (language === "nl") return category.nameNl;
   if (language === "fr") return category.nameFr;
   return category.nameEn;
 }
 
-function draftFromCategory(
-  category: CategoryHealth,
-): CategoryDraft {
+function draftFromCategory(category: CategoryHealth): CategoryDraft {
   return {
     id: category.id,
     code: category.code,
-
     nameEn: category.nameEn,
     nameNl: category.nameNl,
     nameFr: category.nameFr,
     nameAr: category.nameAr,
-
     descriptionEn: category.descriptionEn ?? "",
     descriptionNl: category.descriptionNl ?? "",
     descriptionFr: category.descriptionFr ?? "",
     descriptionAr: category.descriptionAr ?? "",
-
     displayOrder: category.displayOrder,
     active: category.active,
     contentScope: category.contentScope,
@@ -647,9 +716,7 @@ function draftFromCategory(
   };
 }
 
-function nextDisplayOrder(
-  categories: CategoryHealth[],
-): number {
+function nextDisplayOrder(categories: CategoryHealth[]): number {
   if (categories.length === 0) return 1;
 
   return (

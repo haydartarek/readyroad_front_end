@@ -60,13 +60,45 @@ const health = {
   ],
 };
 
+const categories = [
+  {
+    code: "TH01",
+    nameEn: "Priority and intersections",
+    nameNl: "Voorrang en kruispunten",
+    nameFr: "Priorité et carrefours",
+    nameAr: "الأولوية والتقاطعات",
+  },
+  {
+    code: "TH02",
+    nameEn: "Speed, roads and distances",
+    nameNl: "Snelheid, wegen en afstanden",
+    nameFr: "Vitesse, routes et distances",
+    nameAr: "السرعة والطرق والمسافات",
+  },
+  {
+    code: "TH07",
+    nameEn: "Vehicle and technical safety",
+    nameNl: "Voertuig en technische veiligheid",
+    nameFr: "Véhicule et sécurité technique",
+    nameAr: "المركبة والسلامة التقنية",
+  },
+];
+
 describe("AdminQuestionExposure", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (apiClient.get as jest.Mock).mockResolvedValue({ data: health });
+    (apiClient.get as jest.Mock).mockImplementation((url: string) => {
+      if (url === "/admin/quiz/bank-health") {
+        return Promise.resolve({ data: health });
+      }
+      if (url === "/admin/quiz/categories/manage") {
+        return Promise.resolve({ data: categories });
+      }
+      return Promise.reject(new Error(`Unexpected URL: ${url}`));
+    });
   });
 
-  it("loads exposure analytics and turns each question into a direct edit action", async () => {
+  it("loads exposure analytics with category names and direct edit actions", async () => {
     render(<AdminQuestionExposure />);
 
     expect(
@@ -74,6 +106,7 @@ describe("AdminQuestionExposure", () => {
     ).toBeInTheDocument();
 
     expect(apiClient.get).toHaveBeenCalledWith("/admin/quiz/bank-health");
+    expect(apiClient.get).toHaveBeenCalledWith("/admin/quiz/categories/manage");
 
     expect(screen.getByTestId("question-exposure-rare")).toHaveTextContent(
       "admin.quizzes.health.rarely_exposed",
@@ -81,6 +114,12 @@ describe("AdminQuestionExposure", () => {
     expect(screen.getByTestId("question-exposure-heavy")).toHaveTextContent(
       "admin.quizzes.health.heavily_exposed",
     );
+
+    expect(screen.getByText("Priority and intersections")).toBeInTheDocument();
+    expect(screen.getByText("Speed, roads and distances")).toBeInTheDocument();
+    expect(screen.getByText("Vehicle and technical safety")).toBeInTheDocument();
+
+    expect(screen.queryByText(/^TH\d+$/)).not.toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: /#5/ })).toHaveAttribute(
       "href",
@@ -93,7 +132,15 @@ describe("AdminQuestionExposure", () => {
   });
 
   it("keeps the panel usable when exposure analytics cannot load", async () => {
-    (apiClient.get as jest.Mock).mockRejectedValueOnce(new Error("offline"));
+    (apiClient.get as jest.Mock).mockImplementation((url: string) => {
+      if (url === "/admin/quiz/bank-health") {
+        return Promise.reject(new Error("offline"));
+      }
+      if (url === "/admin/quiz/categories/manage") {
+        return Promise.resolve({ data: categories });
+      }
+      return Promise.reject(new Error(`Unexpected URL: ${url}`));
+    });
 
     render(<AdminQuestionExposure />);
 

@@ -44,7 +44,7 @@ test.describe("Milestone 5 cookie consent management", () => {
     const optionalRequests: string[] = [];
     page.on("request", (request) => {
       if (
-        /google-analytics|googletagmanager|doubleclick|vercel-insights|\/insights\//i.test(
+        /google-analytics|googletagmanager|doubleclick/i.test(
           request.url(),
         )
       ) {

@@ -1,0 +1,169 @@
+name: Deploy Production
+
+on:
+  workflow_run:
+    workflows: ["Web CI"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rijvia-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy verified commits to VPS
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+
+    env:
+      VPS_HOST: "187.127.232.106"
+      VPS_PORT: "22"
+      VPS_USER: "readyroad-ci"
+
+    steps:
+      - name: Resolve verified Backend and Frontend commits
+        id: refs
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -Eeuo pipefail
+
+          latest_successful_sha() {
+            local repository="$1"
+            local workflow="$2"
+
+            curl --fail --silent --show-error --location \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${repository}/actions/workflows/${workflow}/runs?branch=main&event=push&status=success&per_page=1" \
+              | jq --exit-status --raw-output \
+                '.workflow_runs[0].head_sha | select(test("^[0-9a-f]{40}$"))'
+          }
+
+          backend_ref="$(latest_successful_sha \
+            haydartarek/readyroad backend-ci.yml)"
+          if [[ "$EVENT_NAME" == "workflow_run" ]]; then
+            frontend_ref="$TRIGGER_SHA"
+          else
+            frontend_ref="$(latest_successful_sha \
+              haydartarek/readyroad_front_end web-ci.yml)"
+          fi
+
+          [[ "$backend_ref" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$frontend_ref" =~ ^[0-9a-f]{40}$ ]]
+
+          printf 'backend_ref=%s\n' "$backend_ref" >>"$GITHUB_OUTPUT"
+          printf 'frontend_ref=%s\n' "$frontend_ref" >>"$GITHUB_OUTPUT"
+
+      - name: Configure pinned SSH access
+        shell: bash
+        env:
+          DEPLOY_KEY: ${{ secrets.VPS_DEPLOY_PRIVATE_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          [[ -n "$DEPLOY_KEY" ]] || {
+            echo "VPS_DEPLOY_PRIVATE_KEY is not configured" >&2
+            exit 1
+          }
+          [[ -n "$KNOWN_HOSTS" ]] || {
+            echo "VPS_KNOWN_HOSTS is not configured" >&2
+            exit 1
+          }
+
+          install -d -m 0700 "$HOME/.ssh"
+          install -m 0600 /dev/null "$HOME/.ssh/rijvia-deploy"
+          printf '%s\n' "$DEPLOY_KEY" >"$HOME/.ssh/rijvia-deploy"
+          install -m 0600 /dev/null "$HOME/.ssh/known_hosts"
+          printf '%s\n' "$KNOWN_HOSTS" >"$HOME/.ssh/known_hosts"
+
+      - name: Deploy through Gate 5D
+        id: deploy
+        shell: bash
+        env:
+          BACKEND_REF: ${{ steps.refs.outputs.backend_ref }}
+          FRONTEND_REF: ${{ steps.refs.outputs.frontend_ref }}
+        run: |
+          set -Eeuo pipefail
+
+          release_id="gha-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${BACKEND_REF:0:7}-${FRONTEND_REF:0:7}"
+          ssh_options=(
+            -i "$HOME/.ssh/rijvia-deploy"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+            -p "$VPS_PORT"
+          )
+
+          for attempt in 1 2 3 4; do
+            set +e
+            # shellcheck disable=SC2029
+            output="$(ssh "${ssh_options[@]}" \
+              "${VPS_USER}@${VPS_HOST}" \
+              "deploy ${BACKEND_REF} ${FRONTEND_REF} ${release_id}" 2>&1)"
+            status=$?
+            set -e
+            printf '%s\n' "$output"
+
+            if (( status == 0 )); then
+              printf 'release_id=%s\n' "$release_id" >>"$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if grep -Fq 'deployment_already_running' <<<"$output" &&
+              (( attempt < 4 )); then
+              sleep 90
+              continue
+            fi
+
+            exit "$status"
+          done
+
+      - name: Verify public production smoke
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl --fail --silent --show-error --location \
+            --max-time 30 https://rijvia.be/ >/dev/null
+          curl --fail --silent --show-error --location \
+            --max-time 30 https://rijvia.be/robots.txt >/dev/null
+          curl --fail --silent --show-error --location \
+            --max-time 30 https://rijvia.be/sitemap.xml >/dev/null
+          curl --fail --silent --show-error --location \
+            --max-time 30 https://api.rijvia.be/actuator/health \
+            | jq --exit-status '.status == "UP"' >/dev/null
+
+      - name: Record deployment
+        shell: bash
+        env:
+          RELEASE_ID: ${{ steps.deploy.outputs.release_id }}
+          BACKEND_REF: ${{ steps.refs.outputs.backend_ref }}
+          FRONTEND_REF: ${{ steps.refs.outputs.frontend_ref }}
+        run: |
+          {
+            echo "## RijVia production deployment"
+            echo
+            echo "- Release: \`$RELEASE_ID\`"
+            echo "- Backend: \`$BACKEND_REF\`"
+            echo "- Frontend: \`$FRONTEND_REF\`"
+            echo "- Gate 5D: passed"
+            echo "- Public smoke: passed"
+          } >>"$GITHUB_STEP_SUMMARY"
+
+      - name: Remove ephemeral SSH material
+        if: always()
+        shell: bash
+        run: rm -rf "$HOME/.ssh"

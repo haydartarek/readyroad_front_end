@@ -73,7 +73,7 @@ Coverage: **224 of 224 indexable URLs**. Dynamic page rules in `keyword-map.json
 - Brand appears once, normally at the end of a title.
 - Dynamic pages use the canonical localized name instead of generated keyword lists.
 - Descriptions describe the existing page and contain no guarantee, official affiliation, or invented exam equivalence.
-- The production canonical remains `https://readyroad-frontend-haydar.vercel.app` until a custom domain is approved.
+- The production canonical is `https://rijvia.be`.
 
 ## H2 recommendations not implemented
 

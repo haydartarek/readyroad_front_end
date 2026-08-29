@@ -7,11 +7,13 @@ on:
     paths:
       - "web_app/**"
       - ".github/workflows/web-ci.yml"
+      - ".github/workflows/deploy-production.yml"
   pull_request:
     branches: [main, develop]
     paths:
       - "web_app/**"
       - ".github/workflows/web-ci.yml"
+      - ".github/workflows/deploy-production.yml"
   workflow_dispatch:
 
 permissions:

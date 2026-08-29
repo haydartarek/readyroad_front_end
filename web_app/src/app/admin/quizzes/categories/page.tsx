@@ -10,7 +10,7 @@ export default function AdminTheoryCategoriesPage() {
   const { t } = useLanguage();
 
   return (
-    <div className="space-y-5 pb-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 pb-8">
       <AdminPageHeader
         icon={<FolderCog className="h-6 w-6" />}
         title={t("admin.quizzes.health.category_management_title")}
@@ -18,10 +18,7 @@ export default function AdminTheoryCategoriesPage() {
       />
 
       <AdminQuestionExposure />
-
-      <section className="min-w-0 rounded-3xl border border-border/50 bg-card/70 p-4 shadow-sm sm:p-5">
-        <AdminTheoryCategories />
-      </section>
+      <AdminTheoryCategories />
     </div>
   );
 }

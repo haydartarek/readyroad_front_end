@@ -28,9 +28,18 @@ interface ExposureHealth {
   heavilyExposedQuestions: QuestionExposure[];
 }
 
+interface CategoryIdentity {
+  code: string;
+  nameEn: string;
+  nameNl: string;
+  nameFr: string;
+  nameAr: string;
+}
+
 export function AdminQuestionExposure() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [health, setHealth] = useState<ExposureHealth | null>(null);
+  const [categories, setCategories] = useState<CategoryIdentity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,18 +48,25 @@ export function AdminQuestionExposure() {
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.get<ExposureHealth>(
-        API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.BANK_HEALTH,
-      );
+      const [healthResponse, categoriesResponse] = await Promise.all([
+        apiClient.get<ExposureHealth>(
+          API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.BANK_HEALTH,
+        ),
+        apiClient.get<CategoryIdentity[]>(
+          API_ENDPOINTS.ADMIN.QUIZ_QUESTIONS.CATEGORIES_MANAGE,
+        ),
+      ]);
 
       if (
-        !Array.isArray(response.data?.rarelyExposedQuestions) ||
-        !Array.isArray(response.data?.heavilyExposedQuestions)
+        !Array.isArray(healthResponse.data?.rarelyExposedQuestions) ||
+        !Array.isArray(healthResponse.data?.heavilyExposedQuestions) ||
+        !Array.isArray(categoriesResponse.data)
       ) {
         throw new Error("Theory question exposure response is invalid");
       }
 
-      setHealth(response.data);
+      setHealth(healthResponse.data);
+      setCategories(categoriesResponse.data);
     } catch (loadError) {
       logApiError("Failed to load theory question exposure", loadError);
       setError(t("admin.quizzes.health.load_error"));
@@ -70,7 +86,7 @@ export function AdminQuestionExposure() {
         data-testid="question-exposure-loading"
       >
         <div className="h-24 animate-pulse bg-primary/[0.05]" />
-        <div className="grid gap-3 p-4 lg:grid-cols-2 sm:p-5">
+        <div className="grid gap-3 p-4 sm:p-5 lg:grid-cols-2">
           <div className="h-40 animate-pulse rounded-2xl bg-muted/40" />
           <div className="h-40 animate-pulse rounded-2xl bg-muted/40" />
         </div>
@@ -83,12 +99,12 @@ export function AdminQuestionExposure() {
       className="relative min-w-0 overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm"
       data-testid="question-exposure-panel"
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary/[0.08] to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-primary/[0.09] via-primary/[0.035] to-transparent" />
 
-      <div className="relative space-y-4 p-4 sm:p-5">
-        <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary shadow-sm">
+      <div className="relative space-y-5 p-4 sm:p-5 lg:p-6">
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-3.5">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary shadow-sm">
               <BarChart3 className="h-5 w-5" />
             </span>
 
@@ -96,10 +112,10 @@ export function AdminQuestionExposure() {
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
                 {t("admin.quizzes.health.presentations")}
               </p>
-              <h2 className="mt-1 break-words text-base font-black text-foreground sm:text-lg">
+              <h2 className="mt-1 break-words text-lg font-black tracking-tight text-foreground sm:text-xl">
                 {t("admin.quizzes.health.rarely_exposed")} · {t("admin.quizzes.health.heavily_exposed")}
               </h2>
-              <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground sm:text-sm">
+              <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground sm:text-sm">
                 {t("admin.quizzes.health.description")}
               </p>
             </div>
@@ -113,7 +129,7 @@ export function AdminQuestionExposure() {
               onClick={() => void load()}
               disabled={loading}
               aria-label={t("admin.quizzes.health.refresh")}
-              className="h-9 w-9 rounded-xl p-0"
+              className="h-9 w-9 rounded-xl border-border/60 bg-background/80 p-0 shadow-sm"
             >
               <RefreshCw
                 className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"}
@@ -124,7 +140,7 @@ export function AdminQuestionExposure() {
               type="button"
               variant="outline"
               size="sm"
-              className="hidden gap-2 rounded-xl sm:inline-flex"
+              className="hidden gap-2 rounded-xl border-border/60 bg-background/80 shadow-sm sm:inline-flex"
               asChild
             >
               <Link href="/admin/quizzes">
@@ -146,7 +162,7 @@ export function AdminQuestionExposure() {
               variant="outline"
               size="sm"
               onClick={() => void load()}
-              className="shrink-0"
+              className="shrink-0 rounded-xl"
             >
               {t("admin.quizzes.health.refresh")}
             </Button>
@@ -159,12 +175,16 @@ export function AdminQuestionExposure() {
               title={t("admin.quizzes.health.rarely_exposed")}
               items={health.rarelyExposedQuestions}
               tone="rare"
+              categories={categories}
+              language={language}
               t={t}
             />
             <ExposureCard
               title={t("admin.quizzes.health.heavily_exposed")}
               items={health.heavilyExposedQuestions}
               tone="heavy"
+              categories={categories}
+              language={language}
               t={t}
             />
           </div>
@@ -178,11 +198,15 @@ function ExposureCard({
   title,
   items,
   tone,
+  categories,
+  language,
   t,
 }: {
   title: string;
   items: QuestionExposure[];
   tone: "rare" | "heavy";
+  categories: CategoryIdentity[];
+  language: string;
   t: (key: string) => string;
 }) {
   const Icon = tone === "rare" ? TrendingDown : TrendingUp;
@@ -192,7 +216,7 @@ function ExposureCard({
       className={
         tone === "rare"
           ? "min-w-0 rounded-2xl border border-primary/20 bg-primary/[0.035] p-3.5 sm:p-4"
-          : "min-w-0 rounded-2xl border border-border/60 bg-background/70 p-3.5 sm:p-4"
+          : "min-w-0 rounded-2xl border border-border/60 bg-background/65 p-3.5 sm:p-4"
       }
       data-testid={`question-exposure-${tone}`}
     >
@@ -226,38 +250,66 @@ function ExposureCard({
         </div>
       ) : (
         <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2">
-          {items.map((item) => (
-            <Link
-              key={item.questionId}
-              href={`/admin/quizzes/${item.questionId}/edit`}
-              className="group flex min-w-0 items-center justify-between gap-3 rounded-xl border border-border/50 bg-card/90 px-3 py-2.5 shadow-[0_1px_0_rgb(0_0_0/0.02)] transition hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary/[0.025] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            >
-              <div className="min-w-0">
-                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                  <span className="text-sm font-black text-foreground">
-                    #{item.questionId}
-                  </span>
-                  <Badge variant="outline" className="rounded-lg px-1.5 py-0 text-[10px]">
-                    {item.categoryCode}
-                  </Badge>
-                  <Badge variant="outline" className="rounded-lg px-1.5 py-0 text-[10px] font-semibold text-muted-foreground">
-                    {item.difficulty}
-                  </Badge>
-                </div>
-              </div>
+          {items.map((item) => {
+            const category = resolveCategoryName(
+              item.categoryCode,
+              categories,
+              language,
+            );
 
-              <div className="shrink-0 text-end">
-                <p className="text-base font-black leading-none text-foreground">
-                  {item.presentations}
-                </p>
-                <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
-                  {t("admin.quizzes.health.presentations")}
-                </p>
-              </div>
-            </Link>
-          ))}
+            return (
+              <Link
+                key={item.questionId}
+                href={`/admin/quizzes/${item.questionId}/edit`}
+                className="group flex min-w-0 items-center justify-between gap-3 rounded-xl border border-border/50 bg-card/90 px-3 py-3 shadow-[0_1px_0_rgb(0_0_0/0.02)] transition hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary/[0.025] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                <div className="min-w-0">
+                  <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                    <span className="text-sm font-black text-foreground">
+                      #{item.questionId}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="rounded-lg px-1.5 py-0 text-[10px] font-semibold text-muted-foreground"
+                    >
+                      {item.difficulty}
+                    </Badge>
+                  </div>
+
+                  {category ? (
+                    <p className="mt-1.5 line-clamp-2 text-xs font-semibold leading-4 text-muted-foreground">
+                      {category}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="shrink-0 text-end">
+                  <p className="text-base font-black leading-none text-primary">
+                    {item.presentations}
+                  </p>
+                  <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                    {t("admin.quizzes.health.presentations")}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </article>
   );
+}
+
+function resolveCategoryName(
+  code: string,
+  categories: CategoryIdentity[],
+  language: string,
+): string {
+  const category = categories.find((item) => item.code === code);
+  if (!category) return "";
+
+  if (language === "ar") return category.nameAr;
+  if (language === "nl") return category.nameNl;
+  if (language === "fr") return category.nameFr;
+  return category.nameEn;
 }

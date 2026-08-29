@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
 import { synchronizeGoogleAnalytics } from "@/lib/google-analytics";
 import {
@@ -46,6 +47,7 @@ const CookieConsentContext = createContext<CookieConsentContextValue | null>(
 
 export function CookieConsentProvider({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
+  const pathname = usePathname();
   const [consent, setConsent] = useState<CookieConsentRecord | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -95,6 +97,11 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("storage", handleStorage);
     };
   }, [synchronizeConsent]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    synchronizeGoogleAnalytics(consent, pathname);
+  }, [consent, isReady, pathname]);
 
   const persist = useCallback(
     (selection: Partial<ConsentSelection>) => {

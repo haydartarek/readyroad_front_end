@@ -125,6 +125,10 @@ test.describe("multilingual YouTube videos page", () => {
       page.locator('link[rel="alternate"][hreflang="x-default"]'),
     ).toHaveAttribute("href", /\/videos$/);
     await expect(page.getByTestId("youtube-player")).toHaveCount(0);
+    const structuredData = await page
+      .locator('script[type="application/ld+json"]')
+      .allTextContents();
+    expect(structuredData.join("\n")).not.toContain("VideoObject");
     const cards = page.getByTestId("video-card");
     const initialCardCount = await cards.count();
     expect(initialCardCount).toBeGreaterThan(0);

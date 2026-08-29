@@ -75,16 +75,6 @@ export default async function VideosPage() {
     locale,
     "videos.metadata_description",
   );
-  const videoSchemas = (initialData?.videos ?? []).slice(0, 12).map((video) => ({
-    "@type": "VideoObject",
-    "@id": `${pageUrl}#video-${video.videoId}`,
-    name: video.title,
-    description: video.description || video.title,
-    thumbnailUrl: [video.thumbnail.url],
-    uploadDate: video.publishedAt,
-    embedUrl: video.embedUrl,
-    contentUrl: video.watchUrl,
-  }));
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -96,18 +86,6 @@ export default async function VideosPage() {
         description: pageDescription,
         inLanguage: locale,
         isPartOf: { "@id": `${APP_URL.replace(/\/+$/, "")}/#website` },
-        mainEntity:
-          videoSchemas.length > 0
-            ? {
-                "@type": "ItemList",
-                numberOfItems: videoSchemas.length,
-                itemListElement: videoSchemas.map((video, index) => ({
-                  "@type": "ListItem",
-                  position: index + 1,
-                  item: { "@id": video["@id"] },
-                })),
-              }
-            : undefined,
       },
       {
         "@type": "BreadcrumbList",
@@ -126,7 +104,6 @@ export default async function VideosPage() {
           },
         ],
       },
-      ...videoSchemas,
     ],
   };
 

@@ -59,6 +59,35 @@ describe("Google Analytics consent synchronization", () => {
     ]);
   });
 
+  test.each([
+    "/admin",
+    "/admin/marketing",
+    "/ar/admin/dashboard",
+    "/nl/admin/quizzes",
+    "/fr/admin/users",
+  ])("does not collect Analytics on private Admin route %s", (pathname) => {
+    synchronizeGoogleAnalytics(
+      createConsentRecord({ analytics: true }),
+      pathname,
+    );
+
+    expect(document.getElementById(GOOGLE_ANALYTICS_SCRIPT_ID)).toBeNull();
+    expect(
+      analyticsWindow[`ga-disable-${GOOGLE_ANALYTICS_ID}`],
+    ).toBe(true);
+  });
+
+  test("resumes Analytics after leaving a private Admin route", () => {
+    const granted = createConsentRecord({ analytics: true });
+    synchronizeGoogleAnalytics(granted, "/ar/admin/marketing");
+    synchronizeGoogleAnalytics(granted, "/ar");
+
+    expect(document.getElementById(GOOGLE_ANALYTICS_SCRIPT_ID)).not.toBeNull();
+    expect(
+      analyticsWindow[`ga-disable-${GOOGLE_ANALYTICS_ID}`],
+    ).toBe(false);
+  });
+
   test("disables further collection after consent is withdrawn", () => {
     synchronizeGoogleAnalytics(createConsentRecord({ analytics: true }));
     synchronizeGoogleAnalytics(createConsentRecord({ analytics: false }));

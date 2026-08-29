@@ -37,48 +37,26 @@ jest.mock("@/lib/api", () => ({
 const category = {
   id: 1,
   code: "TH01",
-
   nameEn: "Priority and intersections",
   nameNl: "Voorrang en kruispunten",
   nameFr: "Priorité et carrefours",
   nameAr: "الأولوية والتقاطعات",
-
   descriptionEn: null,
   descriptionNl: null,
   descriptionFr: null,
   descriptionAr: null,
-
   displayOrder: 1,
   active: true,
   contentScope: "THEORETICAL_EXAM",
   examTargetWeight: 14,
-
   totalQuestions: 45,
-  activeQuestions: 45,
   publishedQuestions: 45,
-
   eligibleAllLocales: 45,
-  eligibleByLocale: {
-    ar: 45,
-    nl: 45,
-    en: 45,
-    fr: 45,
-  },
   eligibleByDifficulty: {
     EASY: 20,
     MEDIUM: 15,
     HARD: 10,
   },
-
-  translationGapQuestions: 0,
-  explanationGapQuestions: 0,
-  invalidQuestions: 0,
-  totalPresentations: 17,
-
-  inventoryShare: 22,
-  targetShare: 14,
-  representationStatus: "BALANCED",
-
   minimumRequired: 6,
   questionsNeeded: 0,
   examEligible: true,
@@ -101,7 +79,7 @@ describe("AdminTheoryCategories", () => {
     });
   });
 
-  it("loads the dedicated management endpoint and links to filtered questions", async () => {
+  it("loads category names while keeping stable codes out of the visible UI", async () => {
     render(<AdminTheoryCategories />);
 
     expect(
@@ -117,6 +95,8 @@ describe("AdminTheoryCategories", () => {
         /45\/6.*admin\.quizzes\.health\.exam_ready/,
       ),
     ).toBeInTheDocument();
+
+    expect(screen.queryByText(/^TH\d+$/)).not.toBeInTheDocument();
 
     expect(
       screen.getByRole("link", {
@@ -196,15 +176,8 @@ describe("AdminTheoryCategories", () => {
           code: "TH09",
           nameEn: "Emergency situations",
           totalQuestions: 3,
-          activeQuestions: 3,
           publishedQuestions: 3,
           eligibleAllLocales: 3,
-          eligibleByLocale: {
-            ar: 3,
-            nl: 3,
-            en: 3,
-            fr: 3,
-          },
           eligibleByDifficulty: {
             EASY: 0,
             MEDIUM: 1,
@@ -228,8 +201,11 @@ describe("AdminTheoryCategories", () => {
         /3\/6.*admin\.quizzes\.health\.questions_needed.*3/,
       ),
     ).toBeInTheDocument();
+
+    expect(screen.queryByText(/^TH\d+$/)).not.toBeInTheDocument();
   });
-  it("preserves the stable category code while toggling activation", async () => {
+
+  it("preserves the stable category code internally while toggling activation", async () => {
     render(<AdminTheoryCategories />);
 
     await screen.findByText("Priority and intersections");

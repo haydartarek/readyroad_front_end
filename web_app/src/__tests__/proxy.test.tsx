@@ -9,7 +9,7 @@
  */
 
 describe("Middleware Logic", () => {
-  test("protected routes array contains all user routes", () => {
+  test("protected routes keep execution descendants behind authentication", () => {
     const protectedRoutes = [
       "/dashboard",
       "/exam",
@@ -22,6 +22,18 @@ describe("Middleware Logic", () => {
     expect(protectedRoutes).toContain("/analytics");
     expect(protectedRoutes).toContain("/practice");
     expect(protectedRoutes).toContain("/profile");
+  });
+
+  test("only the three learning entry pages are public", () => {
+    const publicLearningRoutes = ["/exam", "/practice", "/practice/random"];
+
+    expect(publicLearningRoutes).toEqual([
+      "/exam",
+      "/practice",
+      "/practice/random",
+    ]);
+    expect(publicLearningRoutes).not.toContain("/exam/42");
+    expect(publicLearningRoutes).not.toContain("/practice/danger-signs");
   });
 
   test("admin routes are defined separately", () => {

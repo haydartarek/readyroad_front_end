@@ -30,15 +30,10 @@ import { AuthPageFrame } from "@/components/auth/auth-page-frame";
 import { AuthShowcasePanel } from "@/components/auth/auth-showcase-panel";
 import { cn } from "@/lib/utils";
 import { getSocialAuthErrorMessage } from "@/lib/social-auth-feedback";
-
-function validateReturnUrl(returnUrl: string | null): string | undefined {
-  if (!returnUrl) return undefined;
-  if (returnUrl.startsWith("/") && !returnUrl.startsWith("//")) {
-    if (returnUrl === "/login" || returnUrl === "/register") return undefined;
-    return returnUrl;
-  }
-  return undefined;
-}
+import {
+  buildAuthSwitchHref,
+  validateReturnUrl,
+} from "@/lib/auth-return-url";
 
 function LoginForm() {
   const { login } = useAuth();
@@ -332,7 +327,11 @@ function LoginForm() {
         <p className="text-center text-sm text-muted-foreground">
           {t("auth.no_account")}{" "}
           <Link
-            href={ROUTES.REGISTER}
+            href={buildAuthSwitchHref(
+              "/register",
+              validatedReturnUrl,
+              language,
+            )}
             className="font-semibold text-primary transition-colors hover:text-primary/80 hover:underline"
           >
             {t("auth.sign_up")}

@@ -17,6 +17,8 @@ const PROTECTED_ROUTES = [
   "/assessment",
 ];
 
+const PUBLIC_LEARNING_ROUTES = ["/exam", "/practice", "/practice/random"];
+
 const ADMIN_ROUTES = ["/admin"];
 const AUTH_ROUTES = [
   "/login",
@@ -79,6 +81,10 @@ function extractRole(token: string): string | null {
 
 function matchesAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
+}
+
+function isPublicLearningRoute(pathname: string): boolean {
+  return PUBLIC_LEARNING_ROUTES.includes(pathname);
 }
 
 function redirectTo(
@@ -239,7 +245,11 @@ export default async function proxy(request: NextRequest) {
     );
   }
 
-  if (matchesAny(pathname, PROTECTED_ROUTES) && !hasValidToken) {
+  if (
+    matchesAny(pathname, PROTECTED_ROUTES) &&
+    !isPublicLearningRoute(pathname) &&
+    !hasValidToken
+  ) {
     return redirectToLogin(browserPathname, request, locale);
   }
 

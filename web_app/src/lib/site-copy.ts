@@ -54,11 +54,11 @@ const SITE_COPY: Record<
   en: {
     sharedOgAlt: "RijVia | Belgian driving theory exam preparation",
     homeMetadata: {
-      title: "RijVia | Belgian Driving Theory Test Practice",
+      title: "RijVia | Belgian Driving Theory Exam Preparation",
       description:
         "Prepare for the Belgian driving theory exam with traffic signs, structured lessons, focused practice, and one clear progress dashboard.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "RijVia | Belgian Driving Theory Test Practice",
+      openGraphTitle: "RijVia | Belgian Driving Theory Exam Preparation",
       openGraphDescription:
         "Study traffic signs, review theory lessons, practise by category, and track your progress in one place.",
     },
@@ -81,11 +81,11 @@ const SITE_COPY: Record<
   ar: {
     sharedOgAlt: "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا",
     homeMetadata: {
-      title: "RijVia | امتحان السياقة النظري في بلجيكا",
+      title: "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا",
       description:
         "استعد لامتحان السياقة النظري في بلجيكا من خلال الدروس والعلامات المرورية والاختبارات التدريبية، وتابع تقدمك في مكان واحد.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "RijVia | امتحان السياقة النظري في بلجيكا",
+      openGraphTitle: "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا",
       openGraphDescription:
         "تعلّم العلامات المرورية، واقرأ الدروس النظرية، وتدرّب حسب الفئة، وتابع تقدمك في مكان واحد.",
     },
@@ -108,11 +108,11 @@ const SITE_COPY: Record<
   fr: {
     sharedOgAlt: "RijVia | préparation à l'examen théorique belge",
     homeMetadata: {
-      title: "RijVia | Examen théorique permis B Belgique",
+      title: "RijVia | Préparation à l'examen théorique permis B en Belgique",
       description:
         "Préparez l'examen théorique belge avec les panneaux, des leçons structurées, un entraînement ciblé et un tableau de bord clair.",
       keywords: SHARED_KEYWORDS,
-      openGraphTitle: "RijVia | Examen théorique permis B Belgique",
+      openGraphTitle: "RijVia | Préparation à l'examen théorique permis B en Belgique",
       openGraphDescription:
         "Étudiez les panneaux, révisez la théorie, entraînez-vous par catégorie et suivez vos progrès au même endroit.",
     },
@@ -136,12 +136,12 @@ const SITE_COPY: Record<
   nl: {
     sharedOgAlt: "RijVia | voorbereiding op het Belgische theorie-examen",
     homeMetadata: {
-      title: "RijVia | Theorie-examen rijbewijs B oefenen België",
+      title: "RijVia | Theorie Rijbewijs B België",
       description:
         "Bereid je voor op het Belgische theorie-examen met verkeersborden, gestructureerde lessen, gerichte oefening en een duidelijk voortgangsdashboard.",
       keywords: SHARED_KEYWORDS,
       openGraphTitle:
-        "RijVia | Theorie-examen rijbewijs B oefenen België",
+        "RijVia | Theorie Rijbewijs B België",
       openGraphDescription:
         "Bestudeer verkeersborden, herhaal theorielessen, oefen per categorie en volg je vooruitgang op één plek.",
     },

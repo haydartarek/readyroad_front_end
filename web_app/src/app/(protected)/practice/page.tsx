@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { getCategoryVisual } from "@/lib/category-visuals";
 import { API_ENDPOINTS } from "@/lib/constants";
+import { buildLearningLoginHref } from "@/lib/auth-return-url";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { getAllSignProgress, type SignUserProgress } from "@/services";
 import {
@@ -59,7 +60,7 @@ function LoadingSpinner({ message }: { message?: string }) {
   const { t } = useLanguage();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex min-h-60 items-center justify-center bg-background">
       <div className="text-center space-y-4">
         <div className="relative mx-auto w-16 h-16">
           <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
@@ -79,7 +80,7 @@ function LoadingSpinner({ message }: { message?: string }) {
 export default function PracticePage() {
   const router = useLocalizedRouter();
   const { language, t } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const lang = (["en", "ar", "nl", "fr"] as Lang[]).includes(language as Lang)
     ? (language as Lang)
     : "en";
@@ -176,10 +177,16 @@ export default function PracticePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, language]);
 
-  if (isLoading) return <LoadingSpinner message={t("practice.loading")} />;
-
   const isRtl = language === "ar";
   const ChevDir = isRtl ? ChevronLeft : ChevronRight;
+  const openProtectedPractice = (path: string) => {
+    if (isAuthLoading) return;
+    if (!isAuthenticated) {
+      router.push(buildLearningLoginHref(path, language));
+      return;
+    }
+    router.push(path);
+  };
 
   return (
     <div
@@ -217,12 +224,12 @@ export default function PracticePage() {
                 {[
                   {
                     icon: <BookOpen className="h-4 w-4" />,
-                    value: String(totalSigns),
+                    value: isLoading ? "…" : String(totalSigns),
                     label: t("practice.hub.metric_signs"),
                   },
                   {
                     icon: <Shapes className="h-4 w-4" />,
-                    value: String(categories.length),
+                    value: isLoading ? "…" : String(categories.length),
                     label: t("practice.hub.metric_categories"),
                   },
                   {
@@ -285,12 +292,14 @@ export default function PracticePage() {
                 {t("practice.hub.all_signs_desc")}
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  variant="secondary"
-                  className="bg-primary/10 text-primary border-0"
-                >
-                  {t("practice.signs.count", { count: totalSigns })}
-                </Badge>
+                {!isLoading ? (
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary border-0"
+                  >
+                    {t("practice.signs.count", { count: totalSigns })}
+                  </Badge>
+                ) : null}
                 <Badge
                   variant="secondary"
                   className="bg-emerald-500/10 text-emerald-700 border-0"
@@ -331,7 +340,9 @@ export default function PracticePage() {
           title={t("practice.by_category")}
           description={t("practice.subtitle")}
         >
-          {categories.length === 0 ? (
+          {isLoading ? (
+            <LoadingSpinner message={t("practice.loading")} />
+          ) : categories.length === 0 ? (
             <Card className="border border-border/50 shadow-sm bg-card/80">
               <CardContent className="py-14 text-center space-y-3">
                 <div className="text-5xl">🔍</div>
@@ -360,7 +371,9 @@ export default function PracticePage() {
                       groupMeta.style.cardBorder,
                       groupMeta.style.cardGlow,
                     )}
-                    onClick={() => router.push(`/practice/${cat.code}`)}
+                    onClick={() =>
+                      openProtectedPractice(`/practice/${cat.code}`)
+                    }
                   >
                     <CardHeader className="pb-3">
                       <div
@@ -496,9 +509,10 @@ export default function PracticePage() {
                           type="button"
                           size="lg"
                           className="h-11 min-h-11 w-full gap-2"
+                          disabled={isAuthLoading}
                           onClick={(event) => {
                             event.stopPropagation();
-                            router.push(`/practice/${cat.code}`);
+                            openProtectedPractice(`/practice/${cat.code}`);
                           }}
                         >
                           {t("practice.start_practice")}

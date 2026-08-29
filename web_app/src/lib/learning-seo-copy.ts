@@ -50,7 +50,7 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
   fr: {
     title: "Panneaux de signalisation Belgique : signification",
     description:
-      "Consultez 184 panneaux de signalisation belges avec leur signification et des conseils en français, néerlandais, anglais et arabe.",
+      "Consultez 184 panneaux routiers belges avec leur signification et des conseils en français, néerlandais, anglais et arabe.",
     keywords: [
       "panneaux de signalisation Belgique",
       "signification panneaux Belgique",
@@ -65,7 +65,7 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
   ar: {
     title: "العلامات المرورية في بلجيكا: المعاني والشرح",
     description:
-      "تعرّف على 184 علامة مرورية بلجيكية ومعانيها وإرشاداتها بالعربية والهولندية والفرنسية والإنجليزية، مرتبة حسب الفئة.",
+      "تعرّف على 184 علامة مرورية بلجيكية ومعاني إشارات المرور في بلجيكا، مع إرشادات بالعربية والهولندية والفرنسية والإنجليزية، مرتبة حسب الفئة.",
     keywords: [
       "العلامات المرورية في بلجيكا",
       "العلامات المرورية في بلجيكا بالعربية",
@@ -110,7 +110,7 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
   fr: {
     title: "Théorie permis B Belgique : 30 leçons",
     description:
-      "Étudiez 30 leçons structurées pour le permis B belge sur les panneaux, les priorités, la vitesse, le stationnement et la sécurité.",
+      "Étudiez 30 leçons structurées sur les règles de circulation belges pour le permis B : panneaux, priorités, vitesse, stationnement et sécurité.",
     keywords: [
       "théorie permis B Belgique",
       "cours théorie permis B Belgique",
@@ -124,7 +124,7 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
   ar: {
     title: "دروس امتحان السياقة النظري في بلجيكا",
     description:
-      "اقرأ 30 درسًا منظمًا لرخصة السياقة من الفئة B في بلجيكا حول العلامات المرورية والأولوية والسرعة والركن والسلامة وقواعد المرور الأساسية.",
+      "اقرأ 30 درسًا منظمًا لرخصة السياقة من الفئة B في بلجيكا وتعلّم قواعد المرور البلجيكية بالعربية، بما يشمل العلامات والأولوية والسرعة والركن والسلامة.",
     keywords: [
       "دروس السياقة النظرية في بلجيكا",
       "امتحان رخصة السياقة النظري في بلجيكا",

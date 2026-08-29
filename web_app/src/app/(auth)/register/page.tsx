@@ -30,6 +30,10 @@ import { AuthPageFrame } from "@/components/auth/auth-page-frame";
 import { AuthShowcasePanel } from "@/components/auth/auth-showcase-panel";
 import { cn } from "@/lib/utils";
 import { getSocialAuthErrorMessage } from "@/lib/social-auth-feedback";
+import {
+  buildAuthSwitchHref,
+  validateReturnUrl,
+} from "@/lib/auth-return-url";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_RE = /^[a-zA-Z\u00C0-\u024F\s'-]+$/;
@@ -116,7 +120,9 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const { t, isRTL, language } = useLanguage();
   const searchParams = useSearchParams();
-  const postAuthTarget = localizeHref(ROUTES.DASHBOARD, language);
+  const validatedReturnUrl = validateReturnUrl(searchParams.get("returnUrl"));
+  const postAuthTarget =
+    validatedReturnUrl ?? localizeHref(ROUTES.DASHBOARD, language);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
@@ -717,7 +723,11 @@ export default function RegisterPage() {
         <p className="text-center text-sm text-muted-foreground">
           {t("auth.have_account")}{" "}
           <Link
-            href={ROUTES.LOGIN}
+            href={buildAuthSwitchHref(
+              "/login",
+              validatedReturnUrl,
+              language,
+            )}
             className="font-semibold text-primary transition-colors hover:text-primary/80 hover:underline"
           >
             {t("auth.sign_in")}

@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api";
 
 const pushMock = jest.fn();
 const requestUrls: string[] = [];
+let authState = { isAuthenticated: true, isLoading: false };
 
 jest.mock("@/hooks/use-localized-router", () => ({
   useLocalizedRouter: () => ({ push: pushMock }),
@@ -19,6 +20,10 @@ jest.mock("@/contexts/language-context", () => ({
         : key,
     language: "ar",
   }),
+}));
+
+jest.mock("@/contexts/auth-context", () => ({
+  useAuth: () => authState,
 }));
 
 jest.mock("@/components/localized-link", () => {
@@ -90,6 +95,7 @@ describe("TheoryExamPage persistent exam flow", () => {
     pushMock.mockReset();
     requestUrls.length = 0;
     localStorage.clear();
+    authState = { isAuthenticated: true, isLoading: false };
   });
 
   afterAll(() => {
@@ -130,5 +136,24 @@ describe("TheoryExamPage persistent exam flow", () => {
 
     expect(pushMock).toHaveBeenCalledWith("/exam/42");
     expect(requestUrls).not.toContain("POST /exams/simulations/start");
+  });
+
+  it("keeps the intro public and sends an anonymous visitor to login", async () => {
+    authState = { isAuthenticated: false, isLoading: false };
+    client.defaults.adapter = examAdapter(false);
+
+    render(<TheoryExamPage />);
+
+    const startButton = await screen.findByRole("button", {
+      name: "practice_exam.start_btn",
+    });
+    expect(requestUrls).toHaveLength(0);
+
+    fireEvent.click(startButton);
+
+    expect(pushMock).toHaveBeenCalledWith(
+      "/ar/login?returnUrl=%2Far%2Fexam",
+    );
+    expect(requestUrls).toHaveLength(0);
   });
 });

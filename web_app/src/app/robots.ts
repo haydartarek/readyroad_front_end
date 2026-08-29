@@ -8,11 +8,11 @@ export default function robots(): MetadataRoute.Robots {
   const privatePaths = [
     "/dashboard",
     "/profile",
-    "/practice",
-    "/exam",
     "/analytics",
     "/admin",
   ];
+  const publicLearningPaths = ["/practice", "/practice/random", "/exam"];
+  const privateLearningPaths = ["/practice/", "/exam/"];
 
   return {
     rules: [
@@ -29,11 +29,18 @@ export default function robots(): MetadataRoute.Robots {
           "/privacy-policy",
           "/cookie-policy",
           "/disclaimer",
+          ...publicLearningPaths,
+          ...URL_LOCALES.flatMap((locale) =>
+            publicLearningPaths.map((path) => `/${locale}${path}`),
+          ),
         ],
         disallow: [
           ...privatePaths,
+          ...privateLearningPaths,
           ...URL_LOCALES.flatMap((locale) =>
-            privatePaths.map((path) => `/${locale}${path}`),
+            [...privatePaths, ...privateLearningPaths].map(
+              (path) => `/${locale}${path}`,
+            ),
           ),
           "/api/",
         ],

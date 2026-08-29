@@ -18,7 +18,9 @@ import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-fr
 import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
 import { getExamOptionLabel } from "@/components/exam/exam-option-card";
 import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
+import { buildLearningLoginHref } from "@/lib/auth-return-url";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { SignImage } from "@/components/traffic-signs/sign-image";
 import {
@@ -102,6 +104,7 @@ function LoadingState({ message }: { message: string }) {
 
 export default function RandomPracticePage() {
   const { t, language } = useLanguage();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useLocalizedRouter();
   const isRTL = language === "ar";
 
@@ -175,6 +178,11 @@ export default function RandomPracticePage() {
   // --- Lifecycle ---
 
   const startExam = async () => {
+    if (!isAuthenticated) {
+      router.push(buildLearningLoginHref("/practice/random", language));
+      return;
+    }
+
     setSvcError(false);
     setStartError(null);
     setPhase("loading");
@@ -459,8 +467,10 @@ export default function RandomPracticePage() {
 
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
+                    data-testid="sign-exam-start-button"
                     size="lg"
                     className="shadow-lg shadow-primary/20 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25 sm:flex-1"
+                    disabled={isAuthLoading}
                     onClick={() => void startExam()}
                   >
                     <Timer className="h-4 w-4" />

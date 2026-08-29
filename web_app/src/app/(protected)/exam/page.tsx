@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/page-surface";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { API_ENDPOINTS, EXAM_RULES } from "@/lib/constants";
+import { buildLearningLoginHref } from "@/lib/auth-return-url";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -66,6 +68,7 @@ interface ActiveExamResponse {
 export default function TheoryExamPage() {
   const router = useLocalizedRouter();
   const { t, language } = useLanguage();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const isRTL = language === "ar";
 
   const [activeExam, setActiveExam] = useState<ExamStartResponse | null>(null);
@@ -107,10 +110,21 @@ export default function TheoryExamPage() {
   }, []);
 
   useEffect(() => {
+    if (isAuthLoading) return;
+    if (!isAuthenticated) {
+      setActiveExam(null);
+      setIsChecking(false);
+      return;
+    }
     void loadActiveExam();
-  }, [loadActiveExam]);
+  }, [isAuthenticated, isAuthLoading, loadActiveExam]);
 
   const startOrResumeExam = async () => {
+    if (!isAuthenticated) {
+      router.push(buildLearningLoginHref("/exam", language));
+      return;
+    }
+
     if (activeExam) {
       persistAndOpenExam(activeExam);
       return;
@@ -208,10 +222,10 @@ export default function TheoryExamPage() {
                   data-testid="exam-start-button"
                   size="lg"
                   className="h-11 min-h-11 w-full flex-none gap-2 py-2.5 sm:w-auto sm:flex-1"
-                  disabled={isChecking || isStarting}
+                  disabled={isAuthLoading || isChecking || isStarting}
                   onClick={() => void startOrResumeExam()}
                 >
-                  {isChecking || isStarting ? (
+                  {isAuthLoading || isChecking || isStarting ? (
                     <LoaderCircle className="h-4 w-4 animate-spin" />
                   ) : activeExam ? (
                     <RotateCcw className="h-4 w-4" />
@@ -219,7 +233,7 @@ export default function TheoryExamPage() {
                     <Play className="h-4 w-4" />
                   )}
                   <span data-testid="exam-start-button-label">
-                    {isChecking || isStarting
+                    {isAuthLoading || isChecking || isStarting
                       ? t("exam.starting")
                       : activeExam
                         ? t("exam.back_to_exam_start")

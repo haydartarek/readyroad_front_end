@@ -18,7 +18,7 @@ const mockedGetPublicLessons = jest.mocked(getPublicLessons);
 const mockedGetPublicTrafficSigns = jest.mocked(getPublicTrafficSigns);
 const mockedGetPublicArticles = jest.mocked(getPublicArticles);
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
-const STATIC_PUBLIC_PAGE_COUNT = 12;
+const STATIC_PUBLIC_PAGE_COUNT = 15;
 const LOCALE_COUNT = 4;
 
 describe("public sitemap", () => {
@@ -65,6 +65,12 @@ describe("public sitemap", () => {
     expect(urls).toContain(`${appUrl}/disclaimer`);
     expect(urls).toContain(`${appUrl}/videos`);
     expect(urls).toContain(`${appUrl}/blog`);
+    expect(urls).toContain(`${appUrl}/practice`);
+    expect(urls).toContain(`${appUrl}/practice/random`);
+    expect(urls).toContain(`${appUrl}/exam`);
+    expect(urls).toContain(`${appUrl}/nl/practice`);
+    expect(urls).toContain(`${appUrl}/fr/practice/random`);
+    expect(urls).toContain(`${appUrl}/ar/exam`);
     expect(urls).toContain(`${appUrl}/nl/videos`);
     expect(urls).toContain(`${appUrl}/fr/videos`);
     expect(urls).toContain(`${appUrl}/ar/videos`);
@@ -102,7 +108,7 @@ describe("public sitemap", () => {
     expect(urls.some((url) => url.endsWith("/login"))).toBe(false);
     expect(urls.some((url) => url.endsWith("/register"))).toBe(false);
     expect(
-      urls.some((url) => /\/(?:admin|api|dashboard|profile|practice|exam)(?:\/|$)/.test(url)),
+      urls.some((url) => /\/(?:admin|api|dashboard|profile)(?:\/|$)/.test(url)),
     ).toBe(false);
     expect(
       entries

@@ -22,117 +22,133 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
   en: {
     title: "Belgian Traffic Signs: Meanings and Explanations",
     description:
-      "Explore 184 Belgian traffic signs with meanings and driver guidance in English, Dutch, French, and Arabic, organized by sign family.",
+      "Explore 184 Belgian traffic signs and road signs with meanings, explanations and driver guidance in English, Dutch, French and Arabic, organized by sign family.",
     keywords: [
       "Belgian traffic signs meanings",
       "traffic signs Belgium",
       "Belgian road signs",
+      "Belgian road signs meanings",
+      "Belgian traffic signs explained",
     ],
     openGraphTitle: "Belgian Traffic Signs and Meanings | RijVia",
     openGraphDescription:
-      "Browse 184 Belgian traffic signs by family with clear multilingual explanations.",
+      "Browse 184 Belgian traffic signs by family with clear multilingual meanings and explanations.",
     imageAlt: "Belgian traffic signs and meanings on RijVia",
   },
   nl: {
     title: "Verkeersborden België: betekenis en uitleg",
     description:
-      "Bekijk 184 Belgische verkeersborden met hun betekenis en uitleg voor bestuurders in het Nederlands, Engels, Frans en Arabisch.",
+      "Bekijk 184 Belgische verkeersborden met betekenis en uitleg voor bestuurders, geordend per categorie en beschikbaar in het Nederlands, Engels, Frans en Arabisch.",
     keywords: [
       "verkeersborden België betekenis",
       "Belgische verkeersborden",
-      "verkeersborden België oefenen",
+      "betekenis verkeersborden",
+      "verkeersborden uitleg",
+      "Belgische verkeersborden betekenis",
     ],
     openGraphTitle: "Verkeersborden België: betekenis en uitleg | RijVia",
     openGraphDescription:
-      "Bekijk 184 Belgische verkeersborden per familie met duidelijke meertalige uitleg.",
+      "Bekijk 184 Belgische verkeersborden per familie met duidelijke meertalige betekenis en uitleg.",
     imageAlt: "Belgische verkeersborden met betekenis op RijVia",
   },
   fr: {
     title: "Panneaux de signalisation Belgique : signification",
     description:
-      "Consultez 184 panneaux routiers belges avec leur signification et des conseils en français, néerlandais, anglais et arabe.",
+      "Consultez 184 panneaux de signalisation et panneaux routiers belges avec leur signification, leurs explications et des conseils pour les conducteurs.",
     keywords: [
       "panneaux de signalisation Belgique",
       "signification panneaux Belgique",
       "panneaux routiers belges",
+      "signification panneaux routiers belges",
+      "panneaux Belgique explication",
     ],
     openGraphTitle:
       "Panneaux de signalisation Belgique : signification | RijVia",
     openGraphDescription:
-      "Parcourez 184 panneaux belges par famille avec des explications multilingues claires.",
+      "Parcourez 184 panneaux belges par famille avec des significations et explications multilingues claires.",
     imageAlt: "Panneaux de signalisation belges et leur signification",
   },
   ar: {
     title: "العلامات المرورية في بلجيكا: المعاني والشرح",
     description:
-      "تعرّف على 184 علامة مرورية بلجيكية ومعاني إشارات المرور في بلجيكا، مع إرشادات بالعربية والهولندية والفرنسية والإنجليزية، مرتبة حسب الفئة.",
+      "تعرّف على 184 علامة وإشارة مرور في بلجيكا مع المعاني والشرح وإرشادات للسائق، بالعربية والهولندية والفرنسية والإنجليزية ومرتبة حسب الفئة.",
     keywords: [
       "العلامات المرورية في بلجيكا",
+      "إشارات المرور في بلجيكا",
       "العلامات المرورية في بلجيكا بالعربية",
       "معاني العلامات المرورية البلجيكية",
+      "معاني إشارات المرور في بلجيكا",
     ],
     openGraphTitle: "العلامات المرورية في بلجيكا ومعانيها | RijVia",
     openGraphDescription:
-      "تصفح 184 علامة مرورية بلجيكية مرتبة حسب الفئة، مع شرح واضح بأربع لغات.",
+      "تصفح 184 علامة مرورية بلجيكية مرتبة حسب الفئة، مع المعاني والشرح بأربع لغات.",
     imageAlt: "العلامات المرورية البلجيكية ومعانيها على RijVia",
   },
 };
 
 const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
   en: {
-    title: "Belgian Driving Theory Lessons for Category B",
+    title: "Belgian Driving Theory Lessons & Road Rules",
     description:
-      "Study 30 structured Belgian category B theory lessons covering traffic signs, priority, speed, parking, safety, and other core road rules.",
+      "Study 30 structured Belgian driving theory lessons for category B covering Belgian road rules, traffic signs, priority, speed, parking and safety.",
     keywords: [
       "Belgian driving theory lessons",
-      "category B theory Belgium",
-      "Belgian road rules explained",
+      "Belgian road rules",
+      "category B theory lessons Belgium",
+      "Belgian traffic rules explained",
+      "learn Belgian driving theory",
     ],
-    openGraphTitle: "Belgian Category B Driving Theory Lessons | RijVia",
+    openGraphTitle: "Belgian Driving Theory Lessons & Road Rules | RijVia",
     openGraphDescription:
-      "Study 30 structured lessons about Belgian road rules in English, Dutch, French, and Arabic.",
+      "Study 30 structured category B lessons about Belgian road rules in English, Dutch, French and Arabic.",
     imageAlt: "Belgian category B driving theory lessons on RijVia",
   },
   nl: {
-    title: "Theorie rijbewijs B België: 30 lessen",
+    title: "Theorie Rijbewijs B België: Lessen & Verkeersregels",
     description:
-      "Bestudeer 30 gestructureerde lessen voor het Belgische rijbewijs B over verkeersborden, voorrang, snelheid, parkeren en verkeersveiligheid.",
+      "Leer theorie rijbewijs B in België met 30 gestructureerde lessen over Belgische verkeersregels, verkeersborden, voorrang, snelheid, parkeren en veiligheid.",
     keywords: [
+      "theorie rijbewijs B leren",
       "theorie rijbewijs B België",
       "rijtheorie lessen België",
       "Belgische verkeersregels leren",
+      "Belgische rijtheorie",
     ],
-    openGraphTitle: "Theorie rijbewijs B België: 30 lessen | RijVia",
+    openGraphTitle: "Theorie Rijbewijs B België: Lessen | RijVia",
     openGraphDescription:
-      "Bestudeer Belgische verkeersregels in 30 gestructureerde lessen en vier talen.",
+      "Leer Belgische verkeersregels met 30 gestructureerde rijtheorielessen in vier talen.",
     imageAlt: "Belgische rijtheorie voor rijbewijs B op RijVia",
   },
   fr: {
-    title: "Théorie permis B Belgique : 30 leçons",
+    title: "Cours Théorie Permis B Belgique & Code de la Route",
     description:
-      "Étudiez 30 leçons structurées sur les règles de circulation belges pour le permis B : panneaux, priorités, vitesse, stationnement et sécurité.",
+      "Étudiez 30 cours de théorie permis B en Belgique sur le code de la route belge : panneaux, priorités, vitesse, stationnement et sécurité.",
     keywords: [
-      "théorie permis B Belgique",
       "cours théorie permis B Belgique",
-      "règles de circulation Belgique",
+      "théorie permis B Belgique",
+      "code de la route belge",
+      "règles de circulation belges",
+      "apprendre théorie permis B",
     ],
-    openGraphTitle: "Théorie permis B Belgique : 30 leçons | RijVia",
+    openGraphTitle: "Cours Théorie Permis B Belgique | RijVia",
     openGraphDescription:
-      "Étudiez les règles de circulation belges avec 30 leçons structurées en quatre langues.",
+      "Étudiez le code de la route belge avec 30 leçons structurées en quatre langues.",
     imageAlt: "Leçons de théorie du permis B belge sur RijVia",
   },
   ar: {
-    title: "دروس امتحان السياقة النظري في بلجيكا",
+    title: "تعليم السياقة في بلجيكا بالعربية: دروس النظري",
     description:
-      "اقرأ 30 درسًا منظمًا لرخصة السياقة من الفئة B في بلجيكا وتعلّم قواعد المرور البلجيكية بالعربية، بما يشمل العلامات والأولوية والسرعة والركن والسلامة.",
+      "تعلّم قواعد المرور البلجيكية بالعربية من خلال 30 درسًا منظمًا للنظري من الفئة B، تشمل العلامات والأولوية والسرعة والركن والسلامة.",
     keywords: [
+      "تعليم السياقة في بلجيكا بالعربية",
       "دروس السياقة النظرية في بلجيكا",
-      "امتحان رخصة السياقة النظري في بلجيكا",
       "قواعد المرور البلجيكية بالعربية",
+      "تعلم قانون السير البلجيكي",
+      "دروس امتحان السياقة النظري في بلجيكا",
     ],
-    openGraphTitle: "دروس السياقة النظرية في بلجيكا | RijVia",
+    openGraphTitle: "تعليم السياقة في بلجيكا بالعربية | RijVia",
     openGraphDescription:
-      "تعلّم قواعد المرور البلجيكية من خلال 30 درسًا منظمًا بأربع لغات.",
+      "تعلّم قواعد المرور البلجيكية من خلال 30 درسًا منظمًا للنظري بأربع لغات.",
     imageAlt: "دروس السياقة النظرية البلجيكية على RijVia",
   },
 };

@@ -45,10 +45,10 @@ describe("home metadata titles", () => {
   );
 
   it.each([
-    ["en", "RijVia | Belgian Driving Theory Test Practice"],
-    ["ar", "RijVia | امتحان السياقة النظري في بلجيكا"],
-    ["nl", "RijVia | Theorie-examen rijbewijs B oefenen België"],
-    ["fr", "RijVia | Examen théorique permis B Belgique"],
+    ["en", "RijVia | Belgian Driving Theory Exam Preparation"],
+    ["ar", "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا"],
+    ["nl", "RijVia | Theorie Rijbewijs B België"],
+    ["fr", "RijVia | Préparation à l'examen théorique permis B en Belgique"],
   ] as const)(
     "uses one pipe-separated RijVia title for %s",
     (locale, title) => {

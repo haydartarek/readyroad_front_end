@@ -30,7 +30,9 @@ describe("learning index metadata", () => {
 
     const metadata = await generateLessonsMetadata();
 
-    expect(metadata.title).toBe("Theorie rijbewijs B België: 30 lessen");
+    expect(metadata.title).toBe(
+      "Theorie Rijbewijs B België: Lessen & Verkeersregels",
+    );
     expect(metadata.openGraph?.locale).toBe("nl_BE");
     expect(metadata.alternates?.canonical).toContain("/lessons");
   });

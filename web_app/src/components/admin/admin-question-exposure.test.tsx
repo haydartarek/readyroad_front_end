@@ -104,7 +104,9 @@ describe("AdminQuestionExposure", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "admin.quizzes.health.refresh" }),
-    ).toBeInTheDocument();
+      screen.getAllByRole("button", {
+        name: "admin.quizzes.health.refresh",
+      }),
+    ).toHaveLength(2);
   });
 });

@@ -112,9 +112,28 @@ test.describe("Milestone 4 UX and accessibility", () => {
     await useAnonymousLanguage(page, "en");
     await page.setViewportSize({ width: 768, height: 1024 });
 
-    for (const route of ["/dashboard", "/practice", "/exam", "/profile", "/admin"]) {
+    for (const route of ["/dashboard", "/profile", "/admin"]) {
       await page.goto(route);
       await expect(page).toHaveURL(/\/login/);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    }
+  });
+
+  test("public learning entry pages require login only when starting", async ({
+    page,
+  }) => {
+    await useAnonymousLanguage(page, "en");
+    await page.setViewportSize({ width: 768, height: 1024 });
+
+    for (const entry of [
+      { route: "/practice/random", action: "Start Exam" },
+      { route: "/exam", action: "Start Exam" },
+    ]) {
+      await page.goto(entry.route);
+      await expect(page).toHaveURL(new RegExp(`${entry.route}$`));
+      await page.getByRole("button", { name: entry.action }).click();
+      await expect(page).toHaveURL(/\/login\?returnUrl=/);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expectNoHorizontalOverflow(page);
     }
@@ -127,15 +146,17 @@ test.describe("Milestone 4 UX and accessibility", () => {
 
     await page.goto("/assessment/software-engineering/advanced");
 
+    await expect(page).toHaveURL(/\/practice\/random$/);
+    await expect(page.getByText("software engineering knowledge")).toHaveCount(
+      0,
+    );
+    await page.getByRole("button", { name: "Start Exam" }).click();
     await expect(page).toHaveURL(
       /\/login\?returnUrl=%2Fpractice%2Frandom(?:&|$)/,
     );
     await expect(
       page.getByRole("heading", { level: 1, name: "Login" }),
     ).toBeVisible();
-    await expect(page.getByText("software engineering knowledge")).toHaveCount(
-      0,
-    );
   });
 
   test("navigation search and authentication landmarks have accessible structure", async ({

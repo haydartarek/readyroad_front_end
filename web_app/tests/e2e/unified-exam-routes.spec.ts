@@ -75,6 +75,8 @@ async function fulfillJson(route: Route, body: unknown) {
 
 async function prepare(page: Page) {
   await seedCookieConsent(page);
+  const authUrl =
+    process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";
   const token = [
     "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0",
     Buffer.from(
@@ -86,8 +88,14 @@ async function prepare(page: Page) {
     {
       name: "token",
       value: token,
-      url: "http://127.0.0.1:3005",
+      url: authUrl,
       httpOnly: true,
+      sameSite: "Lax",
+    },
+    {
+      name: "csrf_token",
+      value: "unified-exam-routes",
+      url: authUrl,
       sameSite: "Lax",
     },
   ]);

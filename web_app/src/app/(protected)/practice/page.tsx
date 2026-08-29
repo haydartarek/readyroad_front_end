@@ -317,7 +317,7 @@ export default function PracticePage() {
             <div className="flex min-w-0 flex-col gap-3 lg:w-[248px]">
               <Button
                 onClick={() => router.push("/traffic-signs")}
-                className="flex-shrink-0 gap-2 font-bold"
+                className="w-full min-w-0 flex-shrink-0 gap-2 whitespace-normal text-center font-bold"
                 size="lg"
               >
                 <BookOpen className="w-4 h-4" />
@@ -326,7 +326,7 @@ export default function PracticePage() {
               <Button
                 onClick={() => router.push("/practice/random")}
                 variant="outline"
-                className="font-semibold flex-shrink-0 gap-2 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary"
+                className="w-full min-w-0 flex-shrink-0 gap-2 whitespace-normal rounded-xl border-primary/20 bg-primary/5 text-center font-semibold text-primary hover:bg-primary/10 hover:text-primary"
                 size="lg"
               >
                 <Shuffle className="w-4 h-4" />

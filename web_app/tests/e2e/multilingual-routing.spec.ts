@@ -331,7 +331,7 @@ test("a persisted locale survives browser navigation into authentication", async
   expect(googleUrl.searchParams.get("returnTo")).toBe("/ar/dashboard");
 });
 
-test("a protected localized deep link preserves its query through login", async ({
+test("a public localized exam page preserves its locale when start requires login", async ({
   page,
 }) => {
   const hydrationErrors: string[] = [];
@@ -351,15 +351,18 @@ test("a protected localized deep link preserves its query through login", async 
 
   await page.goto("/nl/practice/random?mode=retry");
 
+  await expect(page).toHaveURL(/\/nl\/practice\/random\?mode=retry$/);
+  await page.getByRole("button", { name: "Examen starten" }).click();
+
   await expect(page).toHaveURL(
-    /\/nl\/login\?returnUrl=%2Fnl%2Fpractice%2Frandom%3Fmode%3Dretry$/,
+    /\/nl\/login\?returnUrl=%2Fnl%2Fpractice%2Frandom$/,
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
   await expect(
     page.locator('a[href^="/api/auth/google/start"]'),
   ).toHaveAttribute(
     "href",
-    /returnTo=%2Fnl%2Fpractice%2Frandom%3Fmode%3Dretry$/,
+    /returnTo=%2Fnl%2Fpractice%2Frandom$/,
   );
   expect(hydrationErrors).toEqual([]);
 });

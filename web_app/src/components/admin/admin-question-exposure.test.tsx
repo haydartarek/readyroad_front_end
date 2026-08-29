@@ -2,9 +2,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { AdminQuestionExposure } from "./admin-question-exposure";
 import { apiClient } from "@/lib/api";
 
+const translate = (key: string) => key;
+
 jest.mock("@/contexts/language-context", () => ({
   useLanguage: () => ({
-    t: (key: string) => key,
+    t: translate,
     language: "en",
   }),
 }));

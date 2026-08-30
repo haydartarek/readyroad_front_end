@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Sans_Arabic } from "next/font/google";
+import { Tajawal } from "next/font/google";
 import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
@@ -33,15 +33,10 @@ import { getRequestLocale } from "@/lib/server/request-locale";
 
 // ─── Typography ──────────────────────────────────────────
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const notoSansArabic = Noto_Sans_Arabic({
-  variable: "--font-noto-arabic",
-  subsets: ["arabic"],
+const tajawal = Tajawal({
+  weight: "500",
+  variable: "--font-tajawal",
+  subsets: ["arabic", "latin"],
   display: "swap",
 });
 
@@ -161,7 +156,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} ${notoSansArabic.variable} font-sans antialiased`}
+        className={`${tajawal.className} ${tajawal.variable} antialiased`}
         suppressHydrationWarning
       >
         <ErrorBoundary>

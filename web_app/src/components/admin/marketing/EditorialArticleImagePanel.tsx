@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+import { FileImage, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,47 +25,40 @@ interface EditorialArticleImagePanelProps {
 }
 
 interface ImageForm {
-  storedFileName: string;
-  sourceName: string;
-  sourceUrl: string;
-  licenseName: string;
-  licenseUrl: string;
-  approvalReason: string;
-  rightsConfirmed: boolean;
   altTextAr: string;
   altTextNl: string;
   altTextFr: string;
   altTextEn: string;
-  captionAr: string;
-  captionNl: string;
-  captionFr: string;
-  captionEn: string;
-  focalPointX: string;
-  focalPointY: string;
 }
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
-function emptyForm(suggestedFileName: string): ImageForm {
+function localization(
+  image: EditorialArticleImageAsset | null,
+  language: "AR" | "NL" | "FR" | "EN",
+) {
+  return image?.localizations.find((item) => item.language === language)?.altText ?? "";
+}
+
+function initialForm(image: EditorialArticleImageAsset | null): ImageForm {
   return {
-    storedFileName: suggestedFileName,
-    sourceName: "",
-    sourceUrl: "",
-    licenseName: "",
-    licenseUrl: "",
-    approvalReason: "",
-    rightsConfirmed: false,
-    altTextAr: "",
-    altTextNl: "",
-    altTextFr: "",
-    altTextEn: "",
-    captionAr: "",
-    captionNl: "",
-    captionFr: "",
-    captionEn: "",
-    focalPointX: "0.5",
-    focalPointY: "0.5",
+    altTextAr: localization(image, "AR"),
+    altTextNl: localization(image, "NL"),
+    altTextFr: localization(image, "FR"),
+    altTextEn: localization(image, "EN"),
   };
+}
+
+function seoFileName(value: string, fallback: string) {
+  const normalized = value
+    .replace(/\.[^.]+$/, "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-")
+    .slice(0, 128);
+  return normalized || fallback;
 }
 
 export default function EditorialArticleImagePanel(
@@ -73,7 +66,7 @@ export default function EditorialArticleImagePanel(
 ) {
   return (
     <EditorialArticleImagePanelContent
-      key={`${props.articleId}:${props.suggestedFileName}`}
+      key={`${props.articleId}:${props.image?.id ?? "empty"}`}
       {...props}
     />
   );
@@ -91,46 +84,30 @@ function EditorialArticleImagePanelContent({
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [form, setForm] = useState<ImageForm>(() => emptyForm(suggestedFileName));
+  const [form, setForm] = useState<ImageForm>(() => initialForm(image));
 
   useEffect(() => {
-    if (!previewUrl || typeof URL.revokeObjectURL !== "function") {
-      return;
-    }
+    if (!previewUrl || typeof URL.revokeObjectURL !== "function") return;
     return () => URL.revokeObjectURL(previewUrl);
   }, [previewUrl]);
 
   const hero = image?.variants.find((variant) => variant.type === "HERO") ?? null;
-  const altText =
-    image?.localizations.find((localization) => localization.language === "EN")
-      ?.altText ??
-    image?.localizations[0]?.altText ??
-    "";
+  const altText = localization(image, "AR") || localization(image, "EN");
+  const storedFileName = useMemo(
+    () => seoFileName(suggestedFileName || file?.name || "", `article-${articleId}`),
+    [articleId, file?.name, suggestedFileName],
+  );
+  const valid = Boolean(
+    file &&
+      file.size <= MAX_UPLOAD_BYTES &&
+      storedFileName &&
+      form.altTextAr.trim() &&
+      form.altTextNl.trim() &&
+      form.altTextFr.trim() &&
+      form.altTextEn.trim(),
+  );
 
-  const valid = useMemo(() => {
-    return Boolean(
-      file &&
-        file.size <= MAX_UPLOAD_BYTES &&
-        form.storedFileName.trim() &&
-        form.sourceName.trim() &&
-        form.licenseName.trim() &&
-        form.approvalReason.trim() &&
-        form.rightsConfirmed &&
-        form.altTextAr.trim() &&
-        form.altTextNl.trim() &&
-        form.altTextFr.trim() &&
-        form.altTextEn.trim() &&
-        Number(form.focalPointX) >= 0 &&
-        Number(form.focalPointX) <= 1 &&
-        Number(form.focalPointY) >= 0 &&
-        Number(form.focalPointY) <= 1,
-    );
-  }, [file, form]);
-
-  const update = <Field extends keyof ImageForm>(
-    field: Field,
-    value: ImageForm[Field],
-  ) => {
+  const update = (field: keyof ImageForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -154,41 +131,30 @@ function EditorialArticleImagePanelContent({
       return;
     }
 
-    const nextPreviewUrl =
-      typeof URL.createObjectURL === "function"
-        ? URL.createObjectURL(nextFile)
-        : null;
-
     setFile(nextFile);
-    setPreviewUrl(nextPreviewUrl);
+    setPreviewUrl(
+      typeof URL.createObjectURL === "function" ? URL.createObjectURL(nextFile) : null,
+    );
   };
 
   const upload = async () => {
     if (!file || !valid) return;
-    const metadata = {
-      storedFileName: form.storedFileName.trim(),
-      sourceName: form.sourceName.trim(),
-      sourceUrl: form.sourceUrl.trim() || null,
-      licenseName: form.licenseName.trim(),
-      licenseUrl: form.licenseUrl.trim() || null,
-      approvalReason: form.approvalReason.trim(),
-      rightsConfirmed: form.rightsConfirmed,
-      altTextAr: form.altTextAr.trim(),
-      altTextNl: form.altTextNl.trim(),
-      altTextFr: form.altTextFr.trim(),
-      altTextEn: form.altTextEn.trim(),
-      captionAr: form.captionAr.trim() || null,
-      captionNl: form.captionNl.trim() || null,
-      captionFr: form.captionFr.trim() || null,
-      captionEn: form.captionEn.trim() || null,
-      focalPointX: Number(form.focalPointX),
-      focalPointY: Number(form.focalPointY),
-    };
     const data = new FormData();
     data.append("file", file);
     data.append(
       "metadata",
-      new Blob([JSON.stringify(metadata)], { type: "application/json" }),
+      new Blob(
+        [
+          JSON.stringify({
+            storedFileName,
+            altTextAr: form.altTextAr.trim(),
+            altTextNl: form.altTextNl.trim(),
+            altTextFr: form.altTextFr.trim(),
+            altTextEn: form.altTextEn.trim(),
+          }),
+        ],
+        { type: "application/json" },
+      ),
     );
     await onUpload(articleId, data);
     setFile(null);
@@ -197,47 +163,65 @@ function EditorialArticleImagePanelContent({
   };
 
   const remove = async () => {
-    if (!image || !window.confirm(t("admin.marketing.editorial_image_remove_confirm"))) {
-      return;
-    }
+    if (!image || !window.confirm(t("admin.marketing.editorial_image_remove_confirm"))) return;
     await onRemove(articleId);
   };
 
   return (
-    <section className="min-w-0 space-y-5 border-t border-border/50 pt-5" data-testid="editorial-article-image" aria-busy={busy}>
-      <header>
-        <h3 className="flex items-center gap-2 font-black">
-          <ImageIcon className="h-4 w-4 text-primary" aria-hidden="true" />
-          {t("admin.marketing.editorial_image_title")}
-        </h3>
-        <p className="mt-1 text-sm leading-6 text-muted-foreground">
-          {t("admin.marketing.editorial_image_description")}
-        </p>
+    <section
+      className="min-w-0 space-y-5 border-t border-border/50 pt-5"
+      data-testid="editorial-article-image"
+      aria-busy={busy}
+    >
+      <header className="flex min-w-0 items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary">
+          <ImageIcon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-base font-black text-foreground sm:text-lg">
+            {t("admin.marketing.editorial_image_title")}
+          </h3>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
+            {t("admin.marketing.editorial_image_description")}
+          </p>
+        </div>
       </header>
 
       {image && hero ? (
-        <div className="grid min-w-0 gap-4 rounded-xl border border-emerald-200/70 bg-emerald-50/40 p-4 dark:bg-emerald-950/10 md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
-          <div className="relative aspect-video min-w-0 overflow-hidden rounded-lg bg-muted">
-            <Image src={hero.publicPath} alt={altText} fill sizes="(max-width: 768px) 100vw, 256px" className="object-cover" />
+        <div className="grid min-w-0 gap-4 rounded-2xl border border-primary/15 bg-primary/[0.025] p-4 md:grid-cols-[minmax(0,19rem)_minmax(0,1fr)]">
+          <div className="relative aspect-video min-w-0 overflow-hidden rounded-xl border border-border/50 bg-muted">
+            <Image
+              src={hero.publicPath}
+              alt={altText}
+              fill
+              sizes="(max-width: 768px) 100vw, 304px"
+              className="object-cover"
+            />
           </div>
-          <div className="min-w-0 text-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">{image.status}</Badge>
-              <Badge variant="outline">{t("admin.marketing.editorial_image_variants", { count: image.variants.length })}</Badge>
-              <Badge variant="outline">{t("admin.marketing.editorial_image_alt_count", { count: image.localizations.length })}</Badge>
-            </div>
-            <p className="mt-3 break-words font-bold">{image.originalFileName}</p>
-            {image.storedFileName ? (
-              <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
-                {image.storedFileName}
+          <div className="flex min-w-0 flex-col justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">
+                  {t("admin.marketing.editorial_image_attached")}
+                </Badge>
+                <Badge variant="outline">
+                  {t("admin.marketing.editorial_image_variants", {
+                    count: image.variants.length,
+                  })}
+                </Badge>
+              </div>
+              <p className="mt-3 break-words font-bold text-foreground">
+                {image.originalFileName}
               </p>
-            ) : null}
-            <p className="mt-1 text-muted-foreground">{image.originalWidth} × {image.originalHeight}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {image.originalWidth} × {image.originalHeight}
+              </p>
+            </div>
             <Button
               type="button"
-              variant="destructive"
+              variant="outline"
               size="sm"
-              className="mt-4 w-full sm:w-auto"
+              className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive/5 sm:w-fit"
               onClick={() => void remove()}
               disabled={busy}
               aria-busy={busy}
@@ -248,92 +232,113 @@ function EditorialArticleImagePanelContent({
           </div>
         </div>
       ) : (
-        <p className="rounded-xl border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
+        <div className="flex min-h-24 items-center justify-center rounded-2xl border border-dashed border-border/70 bg-muted/15 px-4 py-6 text-center text-sm font-semibold text-muted-foreground">
           {t("admin.marketing.editorial_image_empty")}
-        </p>
+        </div>
       )}
 
       {previewUrl ? (
-        <div className="relative aspect-video w-full max-w-xl overflow-hidden rounded-xl border border-border/60 bg-muted">
-          <Image src={previewUrl} alt={t("admin.marketing.editorial_image_preview")} fill unoptimized className="object-cover" />
+        <div className="space-y-2">
+          <p className="text-sm font-bold text-foreground">
+            {t("admin.marketing.editorial_image_preview")}
+          </p>
+          <div className="relative aspect-video w-full max-w-2xl overflow-hidden rounded-2xl border border-primary/20 bg-muted shadow-sm">
+            <Image
+              src={previewUrl}
+              alt={t("admin.marketing.editorial_image_preview")}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          </div>
         </div>
       ) : null}
 
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <ImageField label={t("admin.marketing.editorial_image_file")} required>
-          <Input aria-label={t("admin.marketing.editorial_image_file")} type="file" accept="image/jpeg,image/png" disabled={busy} onChange={(event) => selectFile(event.target.files?.[0] ?? null)} />
-          {fileError ? <p className="pt-1 text-xs font-semibold text-destructive">{fileError}</p> : null}
-        </ImageField>
-        <ImageField label={t("admin.marketing.editorial_image_stored_filename")} required>
-          <Input dir="ltr" value={form.storedFileName} maxLength={128} onChange={(event) => update("storedFileName", event.target.value)} />
-        </ImageField>
-        <ImageField label={t("admin.marketing.editorial_image_source_name")} required>
-          <Input value={form.sourceName} maxLength={255} onChange={(event) => update("sourceName", event.target.value)} />
-        </ImageField>
-        <ImageField label={t("admin.marketing.editorial_image_source_url_optional")}>
-          <Input dir="ltr" type="url" value={form.sourceUrl} maxLength={2000} onChange={(event) => update("sourceUrl", event.target.value)} />
-        </ImageField>
-        <ImageField label={t("admin.marketing.editorial_image_license")} required>
-          <Input value={form.licenseName} maxLength={255} onChange={(event) => update("licenseName", event.target.value)} />
-        </ImageField>
-        <ImageField label={t("admin.marketing.editorial_image_license_url_optional")}>
-          <Input dir="ltr" type="url" value={form.licenseUrl} maxLength={2000} onChange={(event) => update("licenseUrl", event.target.value)} />
-        </ImageField>
+      <div className="min-w-0 space-y-2">
+        <span className="block text-sm font-bold text-foreground">
+          {t("admin.marketing.editorial_image_file")}
+        </span>
+        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="relative min-w-0">
+            <FileImage className="pointer-events-none absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              aria-label={t("admin.marketing.editorial_image_file")}
+              type="file"
+              accept="image/jpeg,image/png"
+              disabled={busy}
+              className="h-12 w-full ps-10 file:me-3 file:h-9 file:font-bold"
+              onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
+            />
+          </div>
+          <Button
+            type="button"
+            className="h-12 min-w-40 gap-2 px-5"
+            onClick={() => void upload()}
+            disabled={!valid || busy}
+            aria-busy={busy}
+          >
+            {busy ? <Loader2 className="animate-spin" /> : <Upload />}
+            {t(
+              image
+                ? "admin.marketing.editorial_image_replace"
+                : "admin.marketing.editorial_image_upload",
+            )}
+          </Button>
+        </div>
+        {fileError ? (
+          <p className="text-xs font-semibold text-destructive">{fileError}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {t("admin.marketing.editorial_image_file_hint")}
+          </p>
+        )}
       </div>
 
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        {(["AR", "NL", "FR", "EN"] as const).map((locale) => {
-          const field = `altText${locale[0]}${locale.slice(1).toLowerCase()}` as keyof ImageForm;
-          return (
-            <ImageField key={locale} label={`${t("admin.marketing.editorial_image_alt")} ${locale}`} required>
-              <Input value={String(form[field])} maxLength={500} onChange={(event) => update(field, event.target.value)} />
-            </ImageField>
-          );
-        })}
+      <div className="rounded-2xl border border-border/50 bg-card/60 p-4 sm:p-5">
+        <div className="mb-4">
+          <h4 className="font-black text-foreground">
+            {t("admin.marketing.editorial_image_alt_title")}
+          </h4>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            {t("admin.marketing.editorial_image_alt_description")}
+          </p>
+        </div>
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+          {(["AR", "NL", "FR", "EN"] as const).map((locale) => {
+            const field = `altText${locale[0]}${locale.slice(1).toLowerCase()}` as keyof ImageForm;
+            return (
+              <ImageField
+                key={locale}
+                label={`${t("admin.marketing.editorial_image_alt")} ${locale}`}
+              >
+                <Input
+                  dir={locale === "AR" ? "rtl" : "ltr"}
+                  value={form[field]}
+                  maxLength={500}
+                  disabled={busy}
+                  onChange={(event) => update(field, event.target.value)}
+                />
+              </ImageField>
+            );
+          })}
+        </div>
       </div>
-
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        {(["AR", "NL", "FR", "EN"] as const).map((locale) => {
-          const field = `caption${locale[0]}${locale.slice(1).toLowerCase()}` as keyof ImageForm;
-          return (
-            <ImageField key={locale} label={`${t("admin.marketing.editorial_image_caption")} ${locale}`}>
-              <Input value={String(form[field])} maxLength={2000} onChange={(event) => update(field, event.target.value)} />
-            </ImageField>
-          );
-        })}
-      </div>
-
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <ImageField label={t("admin.marketing.editorial_image_focal_x")}>
-          <Input type="number" min="0" max="1" step="0.01" value={form.focalPointX} onChange={(event) => update("focalPointX", event.target.value)} />
-        </ImageField>
-        <ImageField label={t("admin.marketing.editorial_image_focal_y")}>
-          <Input type="number" min="0" max="1" step="0.01" value={form.focalPointY} onChange={(event) => update("focalPointY", event.target.value)} />
-        </ImageField>
-      </div>
-
-      <ImageField label={t("admin.marketing.editorial_image_approval_reason")} required>
-        <textarea value={form.approvalReason} rows={3} maxLength={1000} disabled={busy} required aria-required="true" onChange={(event) => update("approvalReason", event.target.value)} className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60" />
-      </ImageField>
-
-      <label className="flex min-w-0 items-start gap-3 rounded-xl border border-border/60 bg-muted/25 p-3 text-sm font-semibold leading-6">
-        <input type="checkbox" checked={form.rightsConfirmed} disabled={busy} onChange={(event) => update("rightsConfirmed", event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-primary disabled:cursor-not-allowed disabled:opacity-60" />
-        <span>{t("admin.marketing.editorial_image_confirm")}</span>
-      </label>
-
-      <Button type="button" className="w-full sm:w-auto" onClick={() => void upload()} disabled={!valid || busy} aria-busy={busy}>
-        {busy ? <Loader2 className="animate-spin" /> : <Upload />}
-        {t(image ? "admin.marketing.editorial_image_replace" : "admin.marketing.editorial_image_upload")}
-      </Button>
     </section>
   );
 }
 
-function ImageField({ label, required = false, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function ImageField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="min-w-0 space-y-1.5 text-sm font-semibold">
       <span className="block break-words text-muted-foreground">
-        {label}{required ? <span className="text-destructive"> *</span> : null}
+        {label}
+        <span className="text-destructive"> *</span>
       </span>
       {children}
     </label>

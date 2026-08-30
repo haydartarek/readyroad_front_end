@@ -5,7 +5,7 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "@/components/localized-link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Languages, ListFilter, Shapes } from "lucide-react";
+import { Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
 import { TrafficSignsFilters } from "@/components/traffic-signs/traffic-signs-filters";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -15,13 +15,12 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import {
   PageHeroDescription,
   PageHeroSurface,
-  PageMetricCard,
   PageSectionSurface,
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
-import { API_ENDPOINTS, LANGUAGES } from "@/lib/constants";
+import { API_ENDPOINTS } from "@/lib/constants";
 import {
   getGroupInfo,
   getTrafficSignDescription,
@@ -278,38 +277,13 @@ function TrafficSignsContent({
         <Breadcrumb />
 
         <PageHeroSurface contentClassName="space-y-3">
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <PageHeroTitle className="max-w-3xl text-balance">
-                  {t("traffic_signs.page_title")}
-                </PageHeroTitle>
-                <PageHeroDescription className="max-w-3xl text-pretty">
-                  {t("traffic_signs.page_subtitle")}
-                </PageHeroDescription>
-              </div>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-3">
-              <PageMetricCard
-                icon={<Shapes className="h-3.5 w-3.5" />}
-                label={t("traffic_signs.hero_metric_signs")}
-                value={String(allSigns.length)}
-                className="rounded-[1.05rem] p-2.5"
-              />
-              <PageMetricCard
-                icon={<ListFilter className="h-3.5 w-3.5" />}
-                label={t("traffic_signs.hero_metric_categories")}
-                value={String(categories.length - 1)}
-                className="rounded-[1.05rem] p-2.5"
-              />
-              <PageMetricCard
-                icon={<Languages className="h-3.5 w-3.5" />}
-                label={t("traffic_signs.hero_metric_languages")}
-                value={String(LANGUAGES.length)}
-                className="rounded-[1.05rem] p-2.5"
-              />
-            </div>
+          <div className="space-y-2">
+            <PageHeroTitle className="max-w-3xl text-balance">
+              {t("traffic_signs.page_title")}
+            </PageHeroTitle>
+            <PageHeroDescription className="max-w-3xl text-pretty">
+              {t("traffic_signs.page_subtitle")}
+            </PageHeroDescription>
           </div>
 
           <TrafficSignsFilters
@@ -371,34 +345,34 @@ function TrafficSignsContent({
           <div className="space-y-6">
             {groupedFilteredSigns.map(
               ({ group, signs, totalCount, info, style }) => (
-              <section key={group} className="space-y-3">
-                <div className="flex flex-col gap-2.5 border-b border-border/60 pb-3 md:flex-row md:items-end md:justify-between">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-[1rem] bg-gradient-to-br ${style.accent} text-sm font-black text-white shadow-sm`}
-                    >
-                      {info.displayKey ?? group}
+                <section key={group} className="space-y-3">
+                  <div className="flex flex-col gap-2.5 border-b border-border/60 pb-3 md:flex-row md:items-end md:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-[1rem] bg-gradient-to-br ${style.accent} text-sm font-black text-white shadow-sm`}
+                      >
+                        {info.displayKey ?? group}
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <h2 className="text-lg font-black tracking-tight text-foreground md:text-xl">
+                          {info.title[lang]}
+                        </h2>
+                        <p className="line-clamp-2 max-w-3xl text-xs leading-5 text-muted-foreground md:text-sm">
+                          {info.description[lang]}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="space-y-0.5">
-                      <h2 className="text-lg font-black tracking-tight text-foreground md:text-xl">
-                        {info.title[lang]}
-                      </h2>
-                      <p className="line-clamp-2 max-w-3xl text-xs leading-5 text-muted-foreground md:text-sm">
-                        {info.description[lang]}
-                      </p>
-                    </div>
+                    <span
+                      className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-sm font-semibold ${style.chip}`}
+                    >
+                      {t("traffic_signs.section_count", { count: totalCount })}
+                    </span>
                   </div>
 
-                  <span
-                    className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-sm font-semibold ${style.chip}`}
-                  >
-                    {t("traffic_signs.section_count", { count: totalCount })}
-                  </span>
-                </div>
-
-                <TrafficSignsGrid signs={signs} />
-              </section>
+                  <TrafficSignsGrid signs={signs} />
+                </section>
               ),
             )}
           </div>

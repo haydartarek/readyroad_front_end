@@ -3,6 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -58,6 +59,13 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
   --border: 0 0% 90%;
   --input: 0 0% 90%;
   --ring: 13 76% 53%;
+
+  /* RijVia layout system: based on the approved wireframe references. */
+  --rv-content-max: 80rem;
+  --rv-reading-max: 44rem;
+  --rv-section-y: clamp(4.5rem, 8vw, 7rem);
+  --rv-section-y-compact: clamp(3rem, 5vw, 4.5rem);
+  --rv-gutter: clamp(1rem, 3vw, 2rem);
 }
 
 .dark {
@@ -102,6 +110,15 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
     -moz-osx-font-smoothing: grayscale;
   }
 
+  [dir="rtl"] body,
+  [dir="rtl"] button,
+  [dir="rtl"] input,
+  [dir="rtl"] textarea,
+  [dir="rtl"] select {
+    font-family: var(--font-noto-arabic), var(--font-inter), ui-sans-serif,
+      system-ui, sans-serif;
+  }
+
   ::selection {
     background: hsl(var(--primary) / 0.22);
   }
@@ -124,18 +141,26 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
   h2,
   h3,
   h4 {
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4 {
+    letter-spacing: 0;
   }
 
   h1 {
     font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem);
-    line-height: 1.1;
+    line-height: 1.08;
     font-weight: 700;
   }
 
   h2 {
     font-size: clamp(1.25rem, 1rem + 1.2vw, 2rem);
-    line-height: 1.15;
+    line-height: 1.14;
     font-weight: 700;
   }
 
@@ -145,9 +170,8 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
     font-weight: 650;
   }
 
-  p,
-  p[class] {
-    @apply text-sm font-medium leading-6 text-muted-foreground;
+  p {
+    margin: 0;
   }
 
   button,
@@ -187,8 +211,41 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
 }
 
 @layer utilities {
-  .rr-container {
-    @apply mx-auto w-full max-w-6xl px-4;
+  .rr-container,
+  .rv-container {
+    width: min(100%, var(--rv-content-max));
+    margin-inline: auto;
+    padding-inline: var(--rv-gutter);
+  }
+
+  .rv-section {
+    padding-block: var(--rv-section-y);
+  }
+
+  .rv-section-compact {
+    padding-block: var(--rv-section-y-compact);
+  }
+
+  .rv-reading {
+    max-width: var(--rv-reading-max);
+  }
+
+  .rv-eyebrow {
+    @apply inline-flex items-center text-xs font-semibold uppercase text-muted-foreground;
+    letter-spacing: 0.12em;
+  }
+
+  [dir="rtl"] .rv-eyebrow {
+    letter-spacing: 0;
+  }
+
+  .rv-section-title {
+    @apply text-3xl font-bold tracking-tight text-foreground md:text-4xl;
+    line-height: 1.08;
+  }
+
+  .rv-section-copy {
+    @apply text-base font-normal leading-7 text-muted-foreground md:text-lg;
   }
 
   .rr-surface {
@@ -263,6 +320,49 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
   .rr-muted {
     color: hsl(var(--muted-foreground));
   }
+}
+
+/* Desktop primary navigation: reference style #1, text tabs + active underline. */
+[data-testid="desktop-primary-navigation"] > div {
+  gap: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid hsl(var(--border));
+  background: transparent !important;
+}
+
+[data-testid="desktop-primary-navigation"] a {
+  position: relative;
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding-inline: 1rem !important;
+  color: hsl(var(--muted-foreground)) !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+}
+
+[data-testid="desktop-primary-navigation"] a:hover {
+  background: transparent !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+[data-testid="desktop-primary-navigation"] a.bg-primary {
+  background: transparent !important;
+  color: hsl(var(--foreground)) !important;
+  font-weight: 600 !important;
+}
+
+[data-testid="desktop-primary-navigation"] a.bg-primary::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0.8rem;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 999px;
+  background: hsl(var(--foreground));
 }
 
 /* Optional: scrollbar styling (works in modern browsers) */

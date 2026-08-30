@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Noto_Sans_Arabic } from "next/font/google";
 import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
@@ -31,11 +31,17 @@ import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
 import { getRequestLocale } from "@/lib/server/request-locale";
 
-// ─── Font ────────────────────────────────────────────────
+// ─── Typography ──────────────────────────────────────────
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const notoSansArabic = Noto_Sans_Arabic({
+  variable: "--font-noto-arabic",
+  subsets: ["arabic"],
   display: "swap",
 });
 
@@ -155,7 +161,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className={`${inter.variable} ${notoSansArabic.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
         <ErrorBoundary>

@@ -101,10 +101,6 @@ const health = {
       inventoryShare: 22,
       targetShare: 14,
       representationStatus: "BALANCED",
-
-      minimumRequired: 6,
-      questionsNeeded: 0,
-      examEligible: true,
     },
   ],
 
@@ -149,24 +145,6 @@ const health = {
       flags: ["LOCALE_DIVERGENCE"],
     },
   ],
-
-  rarelyExposedQuestions: [
-    {
-      questionId: 12,
-      categoryCode: "TH01",
-      difficulty: "EASY",
-      presentations: 1,
-    },
-  ],
-
-  heavilyExposedQuestions: [
-    {
-      questionId: 13,
-      categoryCode: "TH01",
-      difficulty: "MEDIUM",
-      presentations: 99,
-    },
-  ],
 };
 
 describe("AdminTheoryBankHealth", () => {
@@ -178,7 +156,7 @@ describe("AdminTheoryBankHealth", () => {
     });
   });
 
-  it("renders theory-bank analytics without category write controls", async () => {
+  it("renders theory-bank analytics without duplicate exposure or category write controls", async () => {
     render(<AdminTheoryBankHealth />);
 
     expect(
@@ -192,12 +170,11 @@ describe("AdminTheoryBankHealth", () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.getByText("#12 · TH01 · EASY · 1"),
-    ).toBeInTheDocument();
-
+      screen.queryByText("admin.quizzes.health.rarely_exposed"),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText("#13 · TH01 · MEDIUM · 99"),
-    ).toBeInTheDocument();
+      screen.queryByText("admin.quizzes.health.heavily_exposed"),
+    ).not.toBeInTheDocument();
 
     expect(
       screen.queryByRole("button", {

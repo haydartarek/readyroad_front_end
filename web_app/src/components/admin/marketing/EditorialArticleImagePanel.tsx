@@ -306,6 +306,7 @@ function EditorialArticleImagePanelContent({
                 label={`${t("admin.marketing.editorial_image_alt")} ${locale}`}
               >
                 <Input
+                  required
                   dir={locale === "AR" ? "rtl" : "ltr"}
                   value={form[field]}
                   maxLength={500}
@@ -332,7 +333,7 @@ function ImageField({
     <label className="min-w-0 space-y-1.5 text-sm font-semibold">
       <span className="block break-words text-muted-foreground">
         {label}
-        <span className="text-destructive"> *</span>
+        <span aria-hidden="true" className="text-destructive"> *</span>
       </span>
       {children}
     </label>

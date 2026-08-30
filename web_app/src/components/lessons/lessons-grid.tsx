@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "@/components/localized-link";
+import { LessonIcon } from "@/components/lessons/lesson-icon";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -78,9 +79,7 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
                   </div>
                 </div>
 
-                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-105">
-                  <span aria-hidden>{lesson.icon}</span>
-                </div>
+                <LessonIcon icon={lesson.icon} />
               </div>
 
               <h3 className="mb-3 line-clamp-2 text-xl font-black tracking-tight text-foreground">

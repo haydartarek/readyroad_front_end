@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
+import { LessonIcon } from "@/components/lessons/lesson-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -35,7 +36,6 @@ import {
   ChevronRight,
   FileText,
   CheckCircle2,
-  Sparkles,
 } from "lucide-react";
 import type { Lesson, LessonDetail, LessonPage } from "@/lib/types";
 
@@ -393,18 +393,9 @@ export default function LessonDetailClient({
                         {getLangDescription(lesson, language)}
                       </PageHeroDescription>
                     </div>
-
-                    <div className="flex w-fit max-w-full items-start gap-2 rounded-xl border border-primary/20 bg-background/80 px-3 py-2 text-xs font-medium text-muted-foreground sm:px-4">
-                      <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                      <span className="min-w-0 break-words">
-                        {t("lessons.detail_note")}
-                      </span>
-                    </div>
                   </div>
 
-                  <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-4xl shadow-sm ring-1 ring-primary/20 sm:h-24 sm:w-24 sm:text-5xl">
-                    <span aria-hidden>{lesson.icon}</span>
-                  </div>
+                  <LessonIcon icon={lesson.icon} />
                 </div>
               </div>
             </PageHeroSurface>
@@ -665,7 +656,7 @@ export default function LessonDetailClient({
                     "w-full rounded-2xl px-4 py-3 text-sm transition-all",
                     isRtl ? "text-right" : "text-left",
                     activePage === index
-                      ? "bg-primary/10 font-semibold text-primary"
+                      ? "bg-muted/70 font-semibold text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >

@@ -3,6 +3,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import EditorialArticleImagePanel from "@/components/admin/marketing/EditorialArticleImagePanel";
 import type { EditorialArticleImageAsset } from "@/lib/marketing-admin";
 
+jest.mock("@/contexts/language-context", () => ({
+  useLanguage: () => ({ language: "ar" }),
+}));
+
 jest.mock("next/image", () => ({
   __esModule: true,
   default: (
@@ -34,7 +38,7 @@ function readBlob(blob: Blob): Promise<string> {
 }
 
 describe("EditorialArticleImagePanel", () => {
-  it("submits one local JPEG upload with the 5 MB contract and reviewed rights metadata", async () => {
+  it("shows the writer-first image UI and submits only useful image metadata", async () => {
     const onUpload = jest.fn().mockResolvedValue(undefined);
     render(
       <EditorialArticleImagePanel
@@ -48,35 +52,28 @@ describe("EditorialArticleImagePanel", () => {
       />,
     );
 
-    const upload = screen.getByRole("button", {
-      name: "admin.marketing.editorial_image_upload",
-    });
+    expect(screen.getByText("المقال لا يحتوي على صورة")).toBeInTheDocument();
+    const upload = screen.getByRole("button", { name: "رفع صورة المقال" });
     expect(upload).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText(/editorial_image_file/), {
+    expect(screen.queryByText(/ترخيص|مالك الصورة|سبب اعتماد|نقطة التركيز/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/caption|التعليق/i)).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("رفع صورة المقال"), {
       target: {
         files: [new File(["jpeg"], "belgian-road.jpg", { type: "image/jpeg" })],
       },
     });
 
-    const values: Array<[RegExp, string]> = [
-      [/editorial_image_source_name/, "RijVia owner upload"],
-      [/editorial_image_license \*/, "Owned media"],
-      [/editorial_image_alt AR/, "طريق بلجيكي آمن"],
-      [/editorial_image_alt NL/, "Een veilige Belgische weg"],
-      [/editorial_image_alt FR/, "Une route belge sûre"],
-      [/editorial_image_alt EN/, "A safe Belgian road"],
-      [/editorial_image_approval_reason/, "Ownership and publication rights verified"],
+    const values: Array<[string, string]> = [
+      ["admin.marketing.editorial_image_alt AR", "طريق بلجيكي آمن"],
+      ["admin.marketing.editorial_image_alt NL", "Een veilige Belgische weg"],
+      ["admin.marketing.editorial_image_alt FR", "Une route belge sûre"],
+      ["admin.marketing.editorial_image_alt EN", "A safe Belgian road"],
     ];
     for (const [label, value] of values) {
       fireEvent.change(screen.getByLabelText(label), { target: { value } });
     }
-    fireEvent.click(
-      screen
-        .getByText("admin.marketing.editorial_image_confirm")
-        .closest("label")!
-        .querySelector("input")!,
-    );
 
     expect(upload).toBeEnabled();
     fireEvent.click(upload);
@@ -89,16 +86,13 @@ describe("EditorialArticleImagePanel", () => {
     const metadata = JSON.parse(
       await readBlob(payload.get("metadata") as Blob),
     ) as Record<string, unknown>;
-    expect(metadata).toMatchObject({
+    expect(metadata).toEqual({
       storedFileName: "belgian-theory-ar-hero",
-      sourceName: "RijVia owner upload",
-      sourceUrl: null,
-      licenseName: "Owned media",
-      licenseUrl: null,
-      rightsConfirmed: true,
+      altTextAr: "طريق بلجيكي آمن",
+      altTextNl: "Een veilige Belgische weg",
+      altTextFr: "Une route belge sûre",
       altTextEn: "A safe Belgian road",
     });
-    expect(metadata).not.toHaveProperty("sourcePlatform");
   });
 
   it("rejects unsupported files and files larger than 5 MB before upload", () => {
@@ -114,7 +108,7 @@ describe("EditorialArticleImagePanel", () => {
       />,
     );
 
-    const input = screen.getByLabelText(/editorial_image_file/);
+    const input = screen.getByLabelText("رفع صورة المقال");
     fireEvent.change(input, {
       target: {
         files: [new File(["gif"], "animated.gif", { type: "image/gif" })],
@@ -138,7 +132,7 @@ describe("EditorialArticleImagePanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("removes the current local image only after confirmation", async () => {
+  it("shows change action for an attached image and removes only after confirmation", async () => {
     const onRemove = jest.fn().mockResolvedValue(undefined);
     jest.spyOn(window, "confirm").mockReturnValue(true);
     const image: EditorialArticleImageAsset = {
@@ -181,6 +175,7 @@ describe("EditorialArticleImagePanel", () => {
       />,
     );
 
+    expect(screen.getByRole("button", { name: "تغيير صورة المقال" })).toBeDisabled();
     fireEvent.click(
       screen.getByRole("button", {
         name: "admin.marketing.editorial_image_remove",

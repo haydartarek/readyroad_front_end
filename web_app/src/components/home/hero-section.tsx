@@ -162,10 +162,6 @@ export function HeroSection() {
       <div className="rv-container">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 xl:gap-20">
           <div className="max-w-3xl">
-            <span className="rv-eyebrow mb-5 border-b border-foreground/25 pb-2 text-foreground">
-              {t("home.hero.badge")}
-            </span>
-
             <h1
               className={[
                 "max-w-3xl text-[clamp(2.55rem,5vw,4.75rem)] font-semibold leading-[1.02] text-foreground",

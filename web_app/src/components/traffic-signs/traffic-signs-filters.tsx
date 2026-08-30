@@ -93,7 +93,7 @@ export function TrafficSignsFilters({
         </div>
 
         <div
-          className="flex gap-1 overflow-x-auto md:flex-wrap md:overflow-visible"
+          className="flex flex-nowrap gap-1 overflow-x-auto"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {categories.map((cat) => {
@@ -104,12 +104,12 @@ export function TrafficSignsFilters({
                 key={cat.value}
                 variant={isSelected ? "default" : "outline"}
                 onClick={() => onCategoryChange(cat.value)}
-                className="h-7 flex-shrink-0 rounded-full px-2.5 text-[10px] font-semibold whitespace-nowrap md:h-8 md:px-3 md:text-sm"
+                className="h-6 flex-shrink-0 rounded-full px-2 text-[9px] font-semibold whitespace-nowrap md:h-7 md:px-2.5 md:text-[11px]"
                 size="sm"
               >
                 <span>{cat.label}</span>
                 <span
-                  className={`ml-1 rounded-full px-1.5 py-0.5 text-[8px] font-black md:px-1.5 md:text-[9px] ${isSelected ? "bg-black/20 text-white" : "bg-muted text-foreground"}`}
+                  className={`ml-1 rounded-full px-1 py-0.5 text-[7px] font-black leading-none md:text-[8px] ${isSelected ? "bg-black/20 text-white" : "bg-muted text-foreground"}`}
                 >
                   {cat.count}
                 </span>

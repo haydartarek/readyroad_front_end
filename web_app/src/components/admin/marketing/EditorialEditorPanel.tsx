@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 
 import EditorialArticleImagePanel from "@/components/admin/marketing/EditorialArticleImagePanel";
+import EditorialConfirmDialog from "@/components/admin/marketing/EditorialConfirmDialog";
 import EditorialAuthoringPanel from "@/components/admin/marketing/EditorialAuthoringPanel";
 import EditorialMarkdownEditor from "@/components/admin/marketing/EditorialMarkdownEditor";
 import ArticleMarkdown, {
@@ -39,6 +40,14 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/language-context";
 import { apiClient, getApiErrorMessage, logApiError } from "@/lib/api";
 import { editorialCmsCopy } from "@/lib/editorial-cms-copy";
+import {
+  editorialArticleLabel,
+  editorialLifecycleLabel,
+  editorialQualityGateLabel,
+  editorialTaskStatusLabel,
+  editorialTopicSourceLabel,
+  editorialWorkflowCopy,
+} from "@/lib/editorial-ui-labels";
 import type {
   EditorialApprovalRequest,
   EditorialInternalLinkInput,
@@ -59,6 +68,26 @@ type Translate = (
   variables?: Record<string, string | number>,
 ) => string;
 type DateFormatter = (value: string | null) => string;
+
+const EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED = false;
+const EDITORIAL_VERSION_DELETE_SUPPORTED = false;
+
+interface VersionDeleteCopy {
+  action: string;
+  confirm: (versionNumber: number) => string;
+  deleted: string;
+  failed: string;
+  saveFirst: string;
+  historyNote: string;
+}
+
+interface EditorialConfirmState {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  onConfirm: () => void;
+}
 
 interface EditorialEditorPanelProps {
   workspace: EditorialWorkspace;
@@ -128,6 +157,20 @@ function formFromVersion(
   };
 }
 
+function slugFromFocusKeyword(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{M}+/gu, "")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-")
+    .slice(0, 255)
+    .replace(/-+$/g, "");
+}
+
+
 export default function EditorialEditorPanel({
   workspace,
   strategy,
@@ -143,6 +186,30 @@ export default function EditorialEditorPanel({
 }: EditorialEditorPanelProps) {
   const { language: uiLanguage } = useLanguage();
   const copy = editorialCmsCopy(uiLanguage);
+  const workflowCopy = editorialWorkflowCopy(uiLanguage);
+  const versionDeleteCopy: VersionDeleteCopy = {
+    action: t("admin.marketing.editorial_version_delete"),
+    confirm: (versionNumber: number) =>
+      t("admin.marketing.editorial_version_delete_confirm", {
+        version: versionNumber,
+      }),
+    deleted: t("admin.marketing.editorial_version_deleted"),
+    failed: t("admin.marketing.editorial_version_delete_failed"),
+    saveFirst: t("admin.marketing.editorial_version_delete_save_first"),
+    historyNote: t("admin.marketing.editorial_version_history_note"),
+  };
+
+  const [confirmState, setConfirmState] =
+    useState<EditorialConfirmState | null>(null);
+
+  const confirmDirection =
+    uiLanguage.toLowerCase() === "ar" ? "rtl" : "ltr";
+
+  const acceptConfirmation = () => {
+    const action = confirmState?.onConfirm;
+    setConfirmState(null);
+    action?.();
+  };
   const [search, setSearch] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(
     workspace.topics[0]?.topicId ?? null,
@@ -162,6 +229,7 @@ export default function EditorialEditorPanel({
   const [performanceLoading, setPerformanceLoading] = useState(false);
   const [performanceError, setPerformanceError] = useState<string | null>(null);
   const [updateStarting, setUpdateStarting] = useState(false);
+  const [workflowAdvancing, setWorkflowAdvancing] = useState(false);
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [approvalReason, setApprovalReason] = useState("");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -172,6 +240,25 @@ export default function EditorialEditorPanel({
       workspace.topics.find((topic) => topic.topicId === selectedTopicId) ?? null,
     [selectedTopicId, workspace.topics],
   );
+
+  useEffect(() => {
+    if (workspace.topics.length === 0) {
+      setSelectedTopicId(null);
+      return;
+    }
+
+    if (workspace.topics.some((topic) => topic.topicId === selectedTopicId)) {
+      return;
+    }
+
+    const firstTopic = workspace.topics[0];
+    setSelectedTopicId(firstTopic.topicId);
+    setLanguage(
+      firstTopic.canonicalLanguage ??
+        firstTopic.primaryLanguage ??
+        firstTopic.titleLanguage,
+    );
+  }, [selectedTopicId, workspace.topics]);
   const filteredTopics = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     if (!query) return workspace.topics;
@@ -191,6 +278,23 @@ export default function EditorialEditorPanel({
   const requestingTranslations = busy === "editorial-translation";
   const requestingApproval = busy === "editorial-approval";
   const lifecycleState = selectedTopic?.lifecycleState;
+  const editorLanguages: EditorialLanguage[] = ["AR", "NL", "FR", "EN"];
+  const focusKeywords = useMemo<Record<EditorialLanguage, string>>(
+    () => ({
+      AR: selectedTopic?.currentVersions.find((version) => version.language === "AR")?.focusKeyword ?? "",
+      NL: selectedTopic?.currentVersions.find((version) => version.language === "NL")?.focusKeyword ?? "",
+      FR: selectedTopic?.currentVersions.find((version) => version.language === "FR")?.focusKeyword ?? "",
+      EN: selectedTopic?.currentVersions.find((version) => version.language === "EN")?.focusKeyword ?? "",
+    }),
+    [selectedTopic?.currentVersions],
+  );
+  const dynamicSlugSource = focusKeywords[language]?.trim()
+    || currentSummary?.title?.trim()
+    || selectedTopic?.title?.trim()
+    || "";
+  const dynamicSlug =
+    form.slug.trim() || slugFromFocusKeyword(dynamicSlugSource);
+
   const editorLocked = [
     "WAITING_APPROVAL",
     "APPROVED",
@@ -202,7 +306,7 @@ export default function EditorialEditorPanel({
   const internalLinksComplete = form.internalLinks.every(
     (link) => link.targetPath.trim() && link.anchorText.trim(),
   );
-  const hasEveryLanguage = workspace.languages.every((item) =>
+  const hasEveryLanguage = editorLanguages.every((item) =>
     selectedTopic?.currentVersions.some((version) => version.language === item),
   );
   const canonicalVersion = selectedTopic?.currentVersions.find(
@@ -215,6 +319,26 @@ export default function EditorialEditorPanel({
       !dirty &&
       !historyLoading,
   );
+  const canAdvanceWorkflow = Boolean(
+    EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED &&
+      selectedTopic?.articleId &&
+      ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED"].includes(
+        lifecycleState ?? "",
+      ) &&
+      !dirty &&
+      !historyLoading &&
+      !workflowAdvancing,
+  );
+
+  const workflowActionLabel =
+    lifecycleState === "DRAFT_READY"
+      ? workflowCopy.startFactCheck
+      : lifecycleState === "FACT_CHECK_REQUIRED"
+        ? workflowCopy.confirmFactCheck
+        : lifecycleState === "LEGAL_REVIEW_REQUIRED"
+          ? workflowCopy.confirmLegalReview
+          : workflowCopy.advance;
+
   const canRequestApproval = Boolean(
     selectedTopic?.articleId &&
       lifecycleState === "IMAGE_REQUIRED" &&
@@ -320,20 +444,38 @@ export default function EditorialEditorPanel({
     };
   }, [lifecycleState, selectedTopic?.articleId]);
 
-  const canLeave = () =>
-    !dirty || window.confirm(t("admin.marketing.editorial_discard_changes"));
+  const requestLeave = (action: () => void) => {
+    if (!dirty) {
+      action();
+      return;
+    }
+
+    setConfirmState({
+      title: t("admin.marketing.editorial_discard_title"),
+      description: t("admin.marketing.editorial_discard_changes"),
+      confirmLabel: t("admin.marketing.editorial_discard_confirm"),
+      destructive: true,
+      onConfirm: action,
+    });
+  };
 
   const selectTopic = (topic: EditorialTopic) => {
-    if (!canLeave()) return;
-    setSelectedTopicId(topic.topicId);
-    setLanguage(
-      topic.canonicalLanguage ?? topic.primaryLanguage ?? topic.titleLanguage,
-    );
+    requestLeave(() => {
+      setSelectedTopicId(topic.topicId);
+      setLanguage(
+        topic.canonicalLanguage ??
+          topic.primaryLanguage ??
+          topic.titleLanguage,
+      );
+    });
   };
 
   const selectLanguage = (next: EditorialLanguage) => {
-    if (next === language || !canLeave()) return;
-    setLanguage(next);
+    if (next === language) return;
+
+    requestLeave(() => {
+      setLanguage(next);
+    });
   };
 
   const save = async () => {
@@ -349,7 +491,7 @@ export default function EditorialEditorPanel({
 
     const result = await onSave(selectedTopic.topicId, language, {
       title: form.title.trim(),
-      slug: form.slug.trim() || null,
+      slug: dynamicSlug || form.slug.trim() || null,
       summary: form.summary.trim() || null,
       body: form.body,
       metaTitle: form.metaTitle.trim(),
@@ -370,11 +512,114 @@ export default function EditorialEditorPanel({
     setBaseline(next);
   };
 
+  const versionDeleteProtectedStates = [
+    "WAITING_APPROVAL",
+    "APPROVED",
+    "SCHEDULED",
+    "PUBLISHED",
+  ];
+
+  const canDeleteVersion = (version: EditorialVersion) =>
+    EDITORIAL_VERSION_DELETE_SUPPORTED &&
+    history.length > 1 &&
+    !dirty &&
+    !historyLoading &&
+    version.status !== "PUBLISHED" &&
+    !(
+      version.current &&
+      versionDeleteProtectedStates.includes(lifecycleState ?? "")
+    );
+
+  const performDeleteVersion = async (version: EditorialVersion) => {
+    const articleId = selectedTopic?.articleId;
+
+    if (!articleId || historyLoading) return;
+
+    if (dirty) {
+      toast.error(versionDeleteCopy.saveFirst);
+      return;
+    }
+
+
+    setHistoryLoading(true);
+    setHistoryError(null);
+
+    try {
+      await apiClient.delete(
+        `/admin/marketing/editorial/editor/articles/${articleId}/versions/${version.id}`,
+      );
+
+      const response = await apiClient.get<EditorialVersion[]>(
+        `/admin/marketing/editorial/editor/articles/${articleId}/versions`,
+        { language },
+      );
+
+      const versions = response.data;
+      const current =
+        versions.find((item) => item.current) ?? versions[0] ?? null;
+
+      const next = current
+        ? formFromVersion(current, current.versionNumber)
+        : EMPTY_FORM;
+
+      setHistory(versions);
+      setForm(next);
+      setBaseline(next);
+
+      if (historyPreview?.id === version.id) {
+        setHistoryPreview(null);
+      }
+
+      toast.success(versionDeleteCopy.deleted);
+
+      await onRefresh();
+    } catch (error) {
+      logApiError("Failed to permanently delete editorial article version", error);
+
+      const message = getApiErrorMessage(
+        error,
+        versionDeleteCopy.failed,
+      );
+
+      setHistoryError(message);
+      toast.error(message);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const deleteVersion = (version: EditorialVersion) => {
+    if (dirty) {
+      toast.error(versionDeleteCopy.saveFirst);
+      return;
+    }
+
+    setConfirmState({
+      title: t("admin.marketing.editorial_version_delete_title"),
+      description: versionDeleteCopy.confirm(version.versionNumber),
+      confirmLabel: versionDeleteCopy.action,
+      destructive: true,
+      onConfirm: () => void performDeleteVersion(version),
+    });
+  };
+
   const restoreVersion = (version: EditorialVersion) => {
     if (version.current || !form.expectedCurrentVersion) return;
-    if (!window.confirm(copy.versionRestoreConfirm)) return;
-    setForm(formFromVersion(version, form.expectedCurrentVersion));
-    toast.success(copy.versionLoaded);
+
+    setConfirmState({
+      title: t("admin.marketing.editorial_version_restore_title"),
+      description: copy.versionRestoreConfirm,
+      confirmLabel: copy.versionRestore,
+      onConfirm: () => {
+        setForm(
+          formFromVersion(
+            version,
+            form.expectedCurrentVersion as number,
+          ),
+        );
+        toast.success(copy.versionLoaded);
+      },
+    });
   };
 
   const startUpdate = async () => {
@@ -395,6 +640,50 @@ export default function EditorialEditorPanel({
     }
   };
 
+  const performAdvanceWorkflow = async () => {
+    const articleId = selectedTopic?.articleId;
+
+    if (!articleId || !canAdvanceWorkflow) return;
+
+
+    setWorkflowAdvancing(true);
+
+    try {
+      await apiClient.post(
+        `/admin/marketing/editorial/editor/articles/${articleId}/workflow/advance`,
+      );
+
+      toast.success(workflowCopy.advanced);
+      await onRefresh();
+    } catch (error) {
+      logApiError("Failed to advance editorial workflow", error);
+      toast.error(
+        getApiErrorMessage(
+          error,
+          t("admin.marketing.action_failed"),
+        ),
+      );
+    } finally {
+      setWorkflowAdvancing(false);
+    }
+  };
+  const advanceWorkflow = () => {
+    if (!selectedTopic?.articleId || !canAdvanceWorkflow) return;
+
+    const description =
+      lifecycleState === "DRAFT_READY"
+        ? workflowCopy.startFactCheckConfirm
+        : lifecycleState === "FACT_CHECK_REQUIRED"
+          ? workflowCopy.factCheckConfirm
+          : workflowCopy.legalReviewConfirm;
+
+    setConfirmState({
+      title: t("admin.marketing.editorial_workflow_confirm_title"),
+      description,
+      confirmLabel: workflowActionLabel,
+      onConfirm: () => void performAdvanceWorkflow(),
+    });
+  };
   const requestTranslations = async () => {
     if (!selectedTopic?.articleId || !canonicalVersion || !canRequestTranslations) return;
     await onRequestTranslations(
@@ -461,11 +750,15 @@ export default function EditorialEditorPanel({
             >
               <span className="flex min-w-0 items-start justify-between gap-2">
                 <span className="min-w-0 break-words text-sm font-bold">{topic.title}</span>
-                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">#{topic.order}</span>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{editorialArticleLabel(topic.order, uiLanguage)}</span>
               </span>
               <span className="mt-2 flex flex-wrap items-center gap-1.5">
                 {topic.priority ? <Badge variant="outline">{topic.priority}</Badge> : null}
-                <Badge variant="outline">{topic.lifecycleState ?? topic.sourceType}</Badge>
+                <Badge variant="outline">
+                  {topic.lifecycleState
+                    ? editorialLifecycleLabel(topic.lifecycleState, uiLanguage)
+                    : editorialTopicSourceLabel(topic.sourceType, uiLanguage)}
+                </Badge>
                 <span className="text-xs text-muted-foreground">
                   {topic.currentVersions.length}/4 {t("admin.marketing.editorial_languages")}
                 </span>
@@ -478,17 +771,35 @@ export default function EditorialEditorPanel({
       {selectedTopic ? (
         <main className="min-w-0 space-y-5">
           <section className="min-w-0 overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm">
+            {selectedTopic.articleId ? (
+              <div
+                className="border-b border-border/50 bg-sky-50/30 p-4 dark:bg-sky-950/10 sm:p-6"
+                data-testid="editorial-translation-top"
+              >
+                <TranslationPanel
+                  languages={editorLanguages}
+                  topic={selectedTopic}
+                  dirty={dirty}
+                  canonicalVersionAvailable={Boolean(canonicalVersion)}
+                  busy={requestingTranslations}
+                  canRequest={canRequestTranslations}
+                  t={t}
+                  onRequest={() => void requestTranslations()}
+                />
+              </div>
+            ) : null}
+
             <header className="border-b border-border/50 bg-gradient-to-b from-primary/[0.055] to-transparent p-4 sm:p-6">
               <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
-                    {selectedTopic.topicKey}
+                    {editorialArticleLabel(selectedTopic.order, uiLanguage)}
                   </p>
                   <h2 className="mt-1 break-words text-xl font-black text-foreground sm:text-2xl">
                     {selectedTopic.title}
                   </h2>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Badge variant="outline">{selectedTopic.lifecycleState ?? t("admin.marketing.editorial_not_started")}</Badge>
+                    <Badge variant="outline">{selectedTopic.lifecycleState ? editorialLifecycleLabel(selectedTopic.lifecycleState, uiLanguage) : t("admin.marketing.editorial_not_started")}</Badge>
                     <Badge variant="outline">
                       {selectedTopic.strategyContextResolved
                         ? t("admin.marketing.editorial_strategy_ready")
@@ -497,7 +808,7 @@ export default function EditorialEditorPanel({
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1 rounded-xl border border-border/50 bg-background/80 p-1" role="tablist" aria-label={t("admin.marketing.editorial_language")}>
-                  {workspace.languages.map((item) => (
+                  {editorLanguages.map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -527,6 +838,38 @@ export default function EditorialEditorPanel({
                 onChanged={onRefresh}
               />
 
+              {EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED &&
+              ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED"].includes(
+                lifecycleState ?? "",
+              ) ? (
+                <section
+                  className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4 sm:p-5"
+                  data-testid="editorial-workflow-advance"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="font-black text-foreground">
+                        {workflowCopy.title}
+                      </h3>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                        {workflowCopy.currentStage}: {editorialLifecycleLabel(lifecycleState, uiLanguage)}
+                      </p>
+                    </div>
+
+                    <Button
+                      type="button"
+                      className="shrink-0 gap-2"
+                      onClick={() => void advanceWorkflow()}
+                      disabled={!canAdvanceWorkflow}
+                    >
+                      {workflowAdvancing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : null}
+                      {workflowActionLabel}
+                    </Button>
+                  </div>
+                </section>
+              ) : null}
               {lifecycleState === "PUBLISHED" ? (
                 <section className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4 sm:p-5" data-testid="editorial-start-update">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -557,22 +900,53 @@ export default function EditorialEditorPanel({
               ) : null}
 
               <section className="space-y-4" aria-label={copy.editorTitle}>
+                <section className="min-w-0 space-y-2">
+                  <div>
+                    <h3 className="font-black text-foreground">{copy.editorTitle}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t("admin.marketing.editorial_markdown_help")}
+                    </p>
+                  </div>
+
+                  <EditorialMarkdownEditor
+                    value={form.body}
+                    disabled={editorLocked}
+                    dir={language === "AR" ? "rtl" : "ltr"}
+                    maxLength={500000}
+                    t={t}
+                    onChange={(body) => setForm((current) => ({ ...current, body }))}
+                    typography={form.typography}
+                  />
+                </section>
+
                 <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                   <Field label={t("admin.marketing.editorial_title")} required>
                     <Input
                       value={form.title}
                       disabled={editorLocked}
-                      onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          title: event.target.value,
+                        }))
+                      }
                       maxLength={500}
                       className="h-11 rounded-xl"
                     />
                   </Field>
+
                   <Field label={t("admin.marketing.editorial_slug")}>
                     <Input
-                      dir="ltr"
-                      value={form.slug}
+                      dir={language === "AR" ? "rtl" : "ltr"}
+                      value={dynamicSlug || form.slug}
                       disabled={editorLocked}
-                      onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
+                      readOnly={Boolean(dynamicSlug)}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          slug: event.target.value,
+                        }))
+                      }
                       maxLength={255}
                       className="h-11 rounded-xl"
                     />
@@ -583,7 +957,12 @@ export default function EditorialEditorPanel({
                   <textarea
                     value={form.summary}
                     disabled={editorLocked}
-                    onChange={(event) => setForm((current) => ({ ...current, summary: event.target.value }))}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        summary: event.target.value,
+                      }))
+                    }
                     maxLength={2000}
                     rows={4}
                     className="w-full resize-y rounded-xl border border-border/60 bg-background px-4 py-3 text-sm leading-6 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
@@ -595,40 +974,33 @@ export default function EditorialEditorPanel({
                     <Input
                       value={form.metaTitle}
                       disabled={editorLocked}
-                      onChange={(event) => setForm((current) => ({ ...current, metaTitle: event.target.value }))}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          metaTitle: event.target.value,
+                        }))
+                      }
                       maxLength={500}
                       className="h-11 rounded-xl"
                     />
                   </Field>
+
                   <Field label={t("admin.marketing.editorial_meta_description")} required>
                     <textarea
                       value={form.metaDescription}
                       disabled={editorLocked}
-                      onChange={(event) => setForm((current) => ({ ...current, metaDescription: event.target.value }))}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          metaDescription: event.target.value,
+                        }))
+                      }
                       maxLength={2000}
                       rows={4}
                       className="w-full resize-y rounded-xl border border-border/60 bg-background px-4 py-3 text-sm leading-6 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                     />
                   </Field>
                 </div>
-
-                <section className="min-w-0 space-y-2">
-                  <div>
-                    <h3 className="font-black text-foreground">{copy.editorTitle}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t("admin.marketing.editorial_markdown_help")}
-                    </p>
-                  </div>
-                  <EditorialMarkdownEditor
-                    value={form.body}
-                    disabled={editorLocked}
-                    dir={language === "AR" ? "rtl" : "ltr"}
-                    maxLength={500000}
-                    t={t}
-                    onChange={(body) => setForm((current) => ({ ...current, body }))}
-                    typography={form.typography}
-                  />
-                </section>
               </section>
 
               <InternalLinksEditor
@@ -670,24 +1042,13 @@ export default function EditorialEditorPanel({
                 </div>
               </div>
 
-              {lifecycleState === "TRANSLATION_REQUIRED" ? (
-                <TranslationPanel
-                  languages={workspace.languages}
-                  topic={selectedTopic}
-                  dirty={dirty}
-                  canonicalVersionAvailable={Boolean(canonicalVersion)}
-                  busy={requestingTranslations}
-                  canRequest={canRequestTranslations}
-                  t={t}
-                  onRequest={() => void requestTranslations()}
-                />
-              ) : null}
 
               {selectedTopic.articleId ? (
                 <EditorialArticleImagePanel
                   key={selectedTopic.articleId}
                   articleId={selectedTopic.articleId}
-                  suggestedFileName={`${form.slug || selectedTopic.topicKey}-${language.toLowerCase()}-hero`}
+                  suggestedFileName={`${dynamicSlug || form.slug || selectedTopic.topicKey}-${language.toLowerCase()}-hero`}
+                  focusKeywords={focusKeywords}
                   image={selectedTopic.image ?? null}
                   busy={busy === "editorial-image"}
                   t={t}
@@ -699,6 +1060,7 @@ export default function EditorialEditorPanel({
               {lifecycleState === "IMAGE_REQUIRED" ? (
                 <ApprovalPanel
                   qualityGates={workspace.qualityGates}
+                  uiLanguage={uiLanguage}
                   hasEveryLanguage={hasEveryLanguage}
                   dirty={dirty}
                   confirmed={approvalConfirmed}
@@ -731,8 +1093,12 @@ export default function EditorialEditorPanel({
                 copy={copy}
                 formatDate={formatDate}
                 t={t}
+                uiLanguage={uiLanguage}
                 onPreview={setHistoryPreview}
                 onRestore={restoreVersion}
+                onDelete={(version) => void deleteVersion(version)}
+                canDelete={canDeleteVersion}
+                deleteCopy={versionDeleteCopy}
               />
             </div>
           </section>
@@ -747,12 +1113,32 @@ export default function EditorialEditorPanel({
         t={t}
       />
 
+      <EditorialConfirmDialog
+        open={Boolean(confirmState)}
+        title={confirmState?.title ?? ""}
+        description={confirmState?.description ?? ""}
+        confirmLabel={
+          confirmState?.confirmLabel ??
+          t("admin.marketing.confirm")
+        }
+        cancelLabel={t("admin.marketing.cancel")}
+        direction={confirmDirection}
+        destructive={Boolean(confirmState?.destructive)}
+        onOpenChange={(open) => {
+          if (!open) setConfirmState(null);
+        }}
+        onConfirm={acceptConfirmation}
+      />
+
       <VersionPreviewDialog
         version={historyPreview}
         onClose={() => setHistoryPreview(null)}
         language={language}
         formatDate={formatDate}
         copy={copy}
+        onDelete={(version) => void deleteVersion(version)}
+        canDelete={canDeleteVersion}
+        deleteCopy={versionDeleteCopy}
       />
     </div>
   );
@@ -851,8 +1237,12 @@ function VersionHistory({
   copy,
   formatDate,
   t,
+  uiLanguage,
   onPreview,
   onRestore,
+  onDelete,
+  canDelete,
+  deleteCopy,
 }: {
   history: EditorialVersion[];
   loading: boolean;
@@ -860,8 +1250,12 @@ function VersionHistory({
   copy: ReturnType<typeof editorialCmsCopy>;
   formatDate: DateFormatter;
   t: Translate;
+  uiLanguage: string;
   onPreview: (version: EditorialVersion) => void;
   onRestore: (version: EditorialVersion) => void;
+  onDelete: (version: EditorialVersion) => void;
+  canDelete: (version: EditorialVersion) => boolean;
+  deleteCopy: VersionDeleteCopy;
 }) {
   return (
     <section className="min-w-0 border-t border-border/50 pt-5" aria-busy={loading} data-testid="editorial-version-history">
@@ -889,7 +1283,7 @@ function VersionHistory({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-black text-foreground">v{version.versionNumber}</span>
-                  {version.current ? <Badge>{copy.versionCurrent}</Badge> : <Badge variant="outline">{version.status}</Badge>}
+                  {version.current ? <Badge>{copy.versionCurrent}</Badge> : <Badge variant="outline">{editorialTaskStatusLabel(version.status, uiLanguage)}</Badge>}
                 </div>
                 <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -906,6 +1300,18 @@ function VersionHistory({
                   <Button type="button" variant="outline" size="sm" onClick={() => onRestore(version)}>
                     <Undo2 />
                     {copy.versionRestore}
+                  </Button>
+                ) : null}
+                {EDITORIAL_VERSION_DELETE_SUPPORTED ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => onDelete(version)}
+                    disabled={!canDelete(version)}
+                  >
+                    <Trash2 />
+                    {deleteCopy.action}
                   </Button>
                 ) : null}
               </div>
@@ -974,6 +1380,7 @@ function TranslationPanel({
 
 function ApprovalPanel({
   qualityGates,
+  uiLanguage,
   hasEveryLanguage,
   dirty,
   confirmed,
@@ -986,6 +1393,7 @@ function ApprovalPanel({
   onRequest,
 }: {
   qualityGates: string[];
+  uiLanguage: string;
   hasEveryLanguage: boolean;
   dirty: boolean;
   confirmed: boolean;
@@ -1004,7 +1412,15 @@ function ApprovalPanel({
         <p className="mt-1 text-sm text-muted-foreground">{t("admin.marketing.editorial_approval_description")}</p>
       </div>
       <div className="flex flex-wrap gap-1.5" aria-label={t("admin.marketing.editorial_quality_gates")}>
-        {qualityGates.map((gate) => <Badge key={gate} variant="outline" className="bg-background/80">{gate.replaceAll("_", " ")}</Badge>)}
+        {qualityGates.map((gate) => (
+          <Badge
+            key={gate}
+            variant="outline"
+            className="bg-background/80"
+          >
+            {editorialQualityGateLabel(gate, uiLanguage)}
+          </Badge>
+        ))}
       </div>
       <label className="flex items-start gap-3 text-sm font-semibold">
         <input type="checkbox" checked={confirmed} disabled={busy} onChange={(event) => onConfirmed(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-primary" />
@@ -1105,12 +1521,18 @@ function VersionPreviewDialog({
   language,
   formatDate,
   copy,
+  onDelete,
+  canDelete,
+  deleteCopy,
 }: {
   version: EditorialVersion | null;
   onClose: () => void;
   language: EditorialLanguage;
   formatDate: DateFormatter;
   copy: ReturnType<typeof editorialCmsCopy>;
+  onDelete: (version: EditorialVersion) => void;
+  canDelete: (version: EditorialVersion) => boolean;
+  deleteCopy: VersionDeleteCopy;
 }) {
   return (
     <Dialog open={Boolean(version)} onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -1122,6 +1544,19 @@ function VersionPreviewDialog({
               <DialogDescription>{formatDate(version.createdAt)} · {version.createdBy ?? "—"}</DialogDescription>
             </DialogHeader>
             <ArticlePreview language={language} title={version.title} summary={version.summary ?? ""} body={version.body} typography={version.typography ?? DEFAULT_ARTICLE_TYPOGRAPHY} internalLinks={version.internalLinks} t={(key) => key} />
+            {EDITORIAL_VERSION_DELETE_SUPPORTED ? (
+              <div className="flex justify-end border-t border-border/60 pt-4">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => onDelete(version)}
+                  disabled={!canDelete(version)}
+                >
+                  <Trash2 />
+                  {deleteCopy.action}
+                </Button>
+              </div>
+            ) : null}
           </>
         ) : null}
       </DialogContent>

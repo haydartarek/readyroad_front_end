@@ -44,6 +44,12 @@ describe("EditorialArticleImagePanel", () => {
       <EditorialArticleImagePanel
         articleId={17}
         suggestedFileName="belgian-theory-ar-hero"
+        focusKeywords={{
+          AR: "Arabic focus keyword",
+          NL: "Nederlandse focus keyword",
+          FR: "Mot-clé français",
+          EN: "English focus keyword",
+        }}
         image={null}
         busy={false}
         t={t}
@@ -54,7 +60,27 @@ describe("EditorialArticleImagePanel", () => {
 
     expect(screen.getByText("المقال لا يحتوي على صورة")).toBeInTheDocument();
     const upload = screen.getByRole("button", { name: "رفع صورة المقال" });
-    expect(upload).toBeDisabled();
+    expect(upload).toBeEnabled();
+
+    expect(
+      screen.getByLabelText("admin.marketing.editorial_image_alt AR"),
+    ).toHaveValue("Arabic focus keyword");
+    expect(
+      screen.getByLabelText("admin.marketing.editorial_image_alt NL"),
+    ).toHaveValue("Nederlandse focus keyword");
+    expect(
+      screen.getByLabelText("admin.marketing.editorial_image_alt FR"),
+    ).toHaveValue("Mot-clé français");
+    expect(
+      screen.getByLabelText("admin.marketing.editorial_image_alt EN"),
+    ).toHaveValue("English focus keyword");
+
+    const fileInput = screen.getByTestId("editorial-image-file-input");
+    const fileInputClick = jest.spyOn(fileInput, "click");
+
+    fireEvent.click(upload);
+
+    expect(fileInputClick).toHaveBeenCalledTimes(1);
 
     expect(screen.queryByText(/ترخيص|مالك الصورة|سبب اعتماد|نقطة التركيز/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/caption|التعليق/i)).not.toBeInTheDocument();
@@ -134,7 +160,6 @@ describe("EditorialArticleImagePanel", () => {
 
   it("shows change action for an attached image and removes only after confirmation", async () => {
     const onRemove = jest.fn().mockResolvedValue(undefined);
-    jest.spyOn(window, "confirm").mockReturnValue(true);
     const image: EditorialArticleImageAsset = {
       id: 4,
       articleId: 17,
@@ -175,12 +200,21 @@ describe("EditorialArticleImagePanel", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "تغيير صورة المقال" })).toBeDisabled();
+    const changeImage = screen.getByRole("button", { name: "تغيير صورة المقال" });
+    expect(changeImage).toBeEnabled();
     fireEvent.click(
       screen.getByRole("button", {
         name: "admin.marketing.editorial_image_remove",
       }),
     );
+    expect(onRemove).not.toHaveBeenCalled();
+
+    const confirmRemove = screen.getByRole("button", {
+      name: /editorial_image_remove_confirm_label|حذف الصورة|Remove image|Afbeelding verwijderen|Supprimer l’image/i,
+    });
+
+    fireEvent.click(confirmRemove);
+
     await waitFor(() => expect(onRemove).toHaveBeenCalledWith(17));
   });
 });

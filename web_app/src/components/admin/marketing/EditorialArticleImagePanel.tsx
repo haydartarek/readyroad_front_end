@@ -1,7 +1,10 @@
 "use client";
 
+import { editorialImageActionLabel } from "@/lib/editorial-ui-labels";
+import EditorialConfirmDialog from "@/components/admin/marketing/EditorialConfirmDialog";
+
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FileImage, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +19,14 @@ type Translate = (
   variables?: Record<string, string | number>,
 ) => string;
 
+type EditorialImageFocusKeywords = Partial<
+  Record<"AR" | "NL" | "FR" | "EN", string | null>
+>;
+
 interface EditorialArticleImagePanelProps {
   articleId: number;
   suggestedFileName: string;
+  focusKeywords?: EditorialImageFocusKeywords;
   image: EditorialArticleImageAsset | null;
   busy: boolean;
   t: Translate;
@@ -34,6 +42,7 @@ interface ImageForm {
 }
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const EMPTY_FOCUS_KEYWORDS: EditorialImageFocusKeywords = {};
 
 function localization(
   image: EditorialArticleImageAsset | null,
@@ -42,12 +51,26 @@ function localization(
   return image?.localizations.find((item) => item.language === language)?.altText ?? "";
 }
 
-function initialForm(image: EditorialArticleImageAsset | null): ImageForm {
+function focusKeywordForm(
+  focusKeywords: EditorialImageFocusKeywords,
+): ImageForm {
   return {
-    altTextAr: localization(image, "AR"),
-    altTextNl: localization(image, "NL"),
-    altTextFr: localization(image, "FR"),
-    altTextEn: localization(image, "EN"),
+    altTextAr: focusKeywords.AR?.trim() ?? "",
+    altTextNl: focusKeywords.NL?.trim() ?? "",
+    altTextFr: focusKeywords.FR?.trim() ?? "",
+    altTextEn: focusKeywords.EN?.trim() ?? "",
+  };
+}
+
+function initialForm(
+  image: EditorialArticleImageAsset | null,
+  keywords: ImageForm,
+): ImageForm {
+  return {
+    altTextAr: localization(image, "AR") || keywords.altTextAr,
+    altTextNl: localization(image, "NL") || keywords.altTextNl,
+    altTextFr: localization(image, "FR") || keywords.altTextFr,
+    altTextEn: localization(image, "EN") || keywords.altTextEn,
   };
 }
 
@@ -77,6 +100,7 @@ export default function EditorialArticleImagePanel(
 function EditorialArticleImagePanelContent({
   articleId,
   suggestedFileName,
+  focusKeywords = EMPTY_FOCUS_KEYWORDS,
   image,
   busy,
   t,
@@ -85,10 +109,43 @@ function EditorialArticleImagePanelContent({
 }: EditorialArticleImagePanelProps) {
   const { language } = useLanguage();
   const copy = editorialCmsCopy(language);
+  const imageActionLabel = editorialImageActionLabel(Boolean(image), language);
+  const fileInputId = `editorial-image-file-${articleId}`;
+  const keywordForm = useMemo(
+    () => focusKeywordForm(focusKeywords),
+    [focusKeywords],
+  );
   const [file, setFile] = useState<File | null>(null);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [form, setForm] = useState<ImageForm>(() => initialForm(image));
+  const [form, setForm] = useState<ImageForm>(() => initialForm(image, keywordForm));
+  const previousKeywordForm = useRef(keywordForm);
+
+  useEffect(() => {
+    const previous = previousKeywordForm.current;
+
+    setForm((current) => ({
+      altTextAr:
+        !current.altTextAr.trim() || current.altTextAr === previous.altTextAr
+          ? keywordForm.altTextAr
+          : current.altTextAr,
+      altTextNl:
+        !current.altTextNl.trim() || current.altTextNl === previous.altTextNl
+          ? keywordForm.altTextNl
+          : current.altTextNl,
+      altTextFr:
+        !current.altTextFr.trim() || current.altTextFr === previous.altTextFr
+          ? keywordForm.altTextFr
+          : current.altTextFr,
+      altTextEn:
+        !current.altTextEn.trim() || current.altTextEn === previous.altTextEn
+          ? keywordForm.altTextEn
+          : current.altTextEn,
+    }));
+
+    previousKeywordForm.current = keywordForm;
+  }, [keywordForm]);
 
   useEffect(() => {
     if (!previewUrl || typeof URL.revokeObjectURL !== "function") return;
@@ -167,7 +224,7 @@ function EditorialArticleImagePanelContent({
   };
 
   const remove = async () => {
-    if (!image || !window.confirm(t("admin.marketing.editorial_image_remove_confirm"))) return;
+    if (!image) return;
     await onRemove(articleId);
   };
 
@@ -224,7 +281,7 @@ function EditorialArticleImagePanelContent({
               variant="outline"
               size="sm"
               className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive/5 sm:w-fit"
-              onClick={() => void remove()}
+              onClick={() => setRemoveConfirmOpen(true)}
               disabled={busy}
               aria-busy={busy}
             >
@@ -258,13 +315,15 @@ function EditorialArticleImagePanelContent({
 
       <div className="min-w-0 space-y-2">
         <span className="block text-sm font-bold text-foreground">
-          {copy.imageFile}
+          {imageActionLabel}
         </span>
         <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
           <div className="relative min-w-0">
             <FileImage className="pointer-events-none absolute start-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
-              aria-label={copy.imageFile}
+              id={fileInputId}
+              data-testid="editorial-image-file-input"
+              aria-label={imageActionLabel}
               type="file"
               accept="image/jpeg,image/png"
               disabled={busy}
@@ -273,14 +332,22 @@ function EditorialArticleImagePanelContent({
             />
           </div>
           <Button
+            data-testid="editorial-image-upload-action"
             type="button"
+            onClickCapture={(event) => {
+              if (!file) {
+                event.preventDefault();
+                event.stopPropagation();
+                document.getElementById(fileInputId)?.click();
+              }
+            }}
             className="h-12 min-w-40 gap-2 px-5"
             onClick={() => void upload()}
-            disabled={!valid || busy}
+            disabled={busy || (Boolean(file) && (!valid || busy))}
             aria-busy={busy}
           >
             {busy ? <Loader2 className="animate-spin" /> : <Upload />}
-            {image ? copy.imageReplace : copy.imageUpload}
+            {imageActionLabel}
           </Button>
         </div>
         {fileError ? (
@@ -300,13 +367,16 @@ function EditorialArticleImagePanelContent({
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
           {(["AR", "NL", "FR", "EN"] as const).map((locale) => {
             const field = `altText${locale[0]}${locale.slice(1).toLowerCase()}` as keyof ImageForm;
+            const altLabel = `${t("admin.marketing.editorial_image_alt")} ${locale}`;
+
             return (
               <ImageField
                 key={locale}
-                label={`${t("admin.marketing.editorial_image_alt")} ${locale}`}
+                label={altLabel}
               >
                 <Input
                   required
+                  aria-label={altLabel}
                   dir={locale === "AR" ? "rtl" : "ltr"}
                   value={form[field]}
                   maxLength={500}
@@ -318,7 +388,23 @@ function EditorialArticleImagePanelContent({
           })}
         </div>
       </div>
-    </section>
+          <EditorialConfirmDialog
+        open={removeConfirmOpen}
+        title={t("admin.marketing.editorial_image_remove_title")}
+        description={t("admin.marketing.editorial_image_remove_confirm")}
+        confirmLabel={t("admin.marketing.editorial_image_remove_confirm_label")}
+        cancelLabel={t("admin.marketing.cancel")}
+        direction={language.toLowerCase() === "ar" ? "rtl" : "ltr"}
+        destructive
+        busy={busy}
+        onOpenChange={setRemoveConfirmOpen}
+        onConfirm={() => {
+          setRemoveConfirmOpen(false);
+          void remove();
+        }}
+      />
+
+</section>
   );
 }
 

@@ -8,6 +8,9 @@ import type {
 } from "@/lib/marketing-admin";
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
+jest.mock("@/contexts/language-context", () => ({
+  useLanguage: () => ({ language: "en" }),
+}));
 jest.mock("@/lib/api", () => ({
   apiClient: { get: jest.fn(), post: jest.fn() },
   logApiError: jest.fn(),
@@ -32,6 +35,11 @@ const topic: EditorialTopic = {
   contentPillarId: 2,
   funnelStageId: 3,
   conversionGoalId: 4,
+  keywordClusterId: 12,
+  targetQueries: [
+    "Belgian driving theory exam questions",
+    "how many questions Belgian theory exam",
+  ],
   articleId: 9,
   lifecycleState: "BRIEF_READY",
   canonicalLanguage: "EN",
@@ -86,6 +94,49 @@ describe("EditorialAuthoringPanel", () => {
       value: () => "00000000-0000-4000-8000-000000000001",
     });
     post.mockResolvedValue({ data: { id: 1, status: "WAITING_APPROVAL" } });
+  });
+
+  it("uses the official target queries as read-only brief input", async () => {
+    get.mockResolvedValue({
+      data: status({
+        topicStatus: "PLANNED",
+        articleId: null,
+        lifecycleState: null,
+        briefId: null,
+        briefStatus: null,
+        briefLanguage: null,
+        briefReference: null,
+        latestBriefTaskStatus: null,
+        canCreateBrief: true,
+        canCollectSources: false,
+      }),
+    });
+    render(<EditorialAuthoringPanel
+      topic={{ ...topic, articleId: null, lifecycleState: null, canonicalLanguage: null }}
+      language="EN"
+      strategy={strategy}
+      t={t}
+      onChanged={jest.fn().mockResolvedValue(undefined)}
+    />);
+
+    const queries = await screen.findByLabelText("admin.marketing.editorial_authoring_queries");
+    expect(queries).toHaveValue(topic.targetQueries.join("\n"));
+    expect(queries).toHaveAttribute("readonly");
+
+    fireEvent.change(screen.getByLabelText("admin.marketing.editorial_authoring_purpose"), {
+      target: { value: "Explain the official topic from verified sources." },
+    });
+    fireEvent.change(screen.getByLabelText("admin.marketing.editorial_authoring_requirements"), {
+      target: { value: "Official Belgian source" },
+    });
+    fireEvent.click(screen.getByRole("button", {
+      name: "admin.marketing.editorial_authoring_create_brief",
+    }));
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith(
+      "/admin/marketing/editorial/topics/2/briefs",
+      expect.objectContaining({ targetQueries: topic.targetQueries }),
+    ));
   });
 
   it("submits one explicit reviewed source claim through the approval-controlled API", async () => {

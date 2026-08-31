@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import EditorialEditorPanel from "@/components/admin/marketing/EditorialEditorPanel";
+import { LanguageProvider } from "@/contexts/language-context";
 import { apiClient } from "@/lib/api";
 import type { EditorialWorkspace, MarketingStrategySnapshot } from "@/lib/marketing-admin";
 
@@ -46,6 +47,8 @@ const workspace: EditorialWorkspace = {
     contentPillarId: 1,
     funnelStageId: 1,
     conversionGoalId: 1,
+    keywordClusterId: 1,
+    targetQueries: ["Belgian theory exam"],
     articleId: 17,
     lifecycleState: "PUBLISHED",
     canonicalLanguage: "EN",
@@ -135,7 +138,8 @@ describe("EditorialEditorPanel performance monitoring", () => {
 
   it("renders real read-only Search Console evidence for a published article", async () => {
     render(
-      <EditorialEditorPanel
+      <LanguageProvider initialLanguage="en">
+        <EditorialEditorPanel
         workspace={workspace}
         strategy={strategy}
         busy={null}
@@ -147,7 +151,8 @@ describe("EditorialEditorPanel performance monitoring", () => {
         onUploadImage={jest.fn()}
         onRemoveImage={jest.fn()}
         onRefresh={jest.fn().mockResolvedValue(undefined)}
-      />,
+        />
+      </LanguageProvider>,
     );
 
     expect(await screen.findByTestId("editorial-performance")).toBeInTheDocument();

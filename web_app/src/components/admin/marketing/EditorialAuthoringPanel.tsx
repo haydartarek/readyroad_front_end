@@ -1,5 +1,18 @@
 "use client";
 
+import {
+  editorialBriefReferenceLabel,
+  editorialClaimTypeLabel,
+  editorialEvidenceSourceTypeLabel,
+  editorialLegalReviewStatusLabel,
+  editorialSourceLocationLabel,
+  editorialSourceTrustLabel,
+  editorialStrategyOptionLabel,
+  editorialTaskStatusLabel,
+} from "@/lib/editorial-ui-labels";
+
+import { useLanguage } from "@/contexts/language-context";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BookOpenCheck, DatabaseZap, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -78,12 +91,14 @@ const CLAIM_TYPES = [
   "STATISTIC",
 ] as const;
 
-function initialBrief(topic: EditorialTopic): BriefForm {
+function initialBrief(topic: EditorialTopic, language: EditorialLanguage): BriefForm {
   return {
     searchIntent: "INFORMATIONAL",
     workingTitle: topic.title,
     purpose: "",
-    targetQueries: "",
+    targetQueries: language === topic.titleLanguage
+      ? (topic.targetQueries ?? []).join("\n")
+      : "",
     sourceRequirements: "",
     legalReviewRequired: false,
     uspId: topic.uspId?.toString() ?? "",
@@ -112,8 +127,9 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
   const [status, setStatus] = useState<EditorialAuthoringStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<"brief" | "source" | "draft" | null>(null);
-  const [brief, setBrief] = useState<BriefForm>(() => initialBrief(topic));
+  const [brief, setBrief] = useState<BriefForm>(() => initialBrief(topic, language));
   const [source, setSource] = useState<SourceForm>(EMPTY_SOURCE);
+  const { language: uiLanguage } = useLanguage();
   const selectDirection = language === "AR" ? "rtl" : "ltr";
 
   const loadStatus = useCallback(async () => {
@@ -132,10 +148,10 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
   }, [t, topic.topicId]);
 
   useEffect(() => {
-    setBrief(initialBrief(topic));
+    setBrief(initialBrief(topic, language));
     setSource(EMPTY_SOURCE);
     void loadStatus();
-  }, [loadStatus, topic]);
+  }, [language, loadStatus, topic]);
 
   const activeUsps = useMemo(() => strategy.usps.filter((item) => item.active), [strategy.usps]);
   const activeIcps = useMemo(() => strategy.icps.filter((item) => item.active), [strategy.icps]);
@@ -163,7 +179,9 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
   );
   const briefComplete = Boolean(
     strategyComplete && brief.workingTitle.trim() && brief.purpose.trim()
-      && lines(brief.targetQueries).length && lines(brief.sourceRequirements).length,
+      && lines(brief.targetQueries).length
+      && lines(brief.targetQueries).every((query) => query.length <= 120)
+      && lines(brief.sourceRequirements).length,
   );
   const sourceComplete = Boolean(
     source.claimKey.trim() && source.claimText.trim() && source.title.trim()
@@ -299,9 +317,9 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
       {status ? (
         <>
           <div className="grid min-w-0 gap-2 sm:grid-cols-3">
-            <StatusCard label={t("admin.marketing.editorial_authoring_brief")} value={status.briefStatus ?? status.latestBriefTaskStatus ?? "NOT_STARTED"} />
+            <StatusCard label={t("admin.marketing.editorial_authoring_brief")} value={editorialTaskStatusLabel(status.briefStatus ?? status.latestBriefTaskStatus ?? "NOT_STARTED", uiLanguage)} />
             <StatusCard label={t("admin.marketing.editorial_authoring_evidence")} value={`${status.claimsSupported}/${status.claimsTotal}`} />
-            <StatusCard label={t("admin.marketing.editorial_authoring_draft")} value={status.latestDraftTaskStatus ?? status.lifecycleState ?? "NOT_STARTED"} />
+            <StatusCard label={t("admin.marketing.editorial_authoring_draft")} value={editorialTaskStatusLabel(status.latestDraftTaskStatus ?? status.lifecycleState ?? "NOT_STARTED", uiLanguage)} />
           </div>
 
           {status.canCreateBrief ? (
@@ -314,26 +332,47 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
                   value={brief.searchIntent}
                   onChange={(value) => setBrief((current) => ({ ...current, searchIntent: value }))}
                   options={[
-                    { value: "INFORMATIONAL", label: "INFORMATIONAL" },
-                    { value: "TRANSACTIONAL", label: "TRANSACTIONAL" },
-                    { value: "NAVIGATIONAL", label: "NAVIGATIONAL" },
+                    {
+                      value: "INFORMATIONAL",
+                      label: t(
+                        "admin.marketing.editorial_search_intent_informational",
+                      ),
+                    },
+                    {
+                      value: "TRANSACTIONAL",
+                      label: t(
+                        "admin.marketing.editorial_search_intent_transactional",
+                      ),
+                    },
+                    {
+                      value: "NAVIGATIONAL",
+                      label: t(
+                        "admin.marketing.editorial_search_intent_navigational",
+                      ),
+                    },
                   ]}
                 />
                 <FormField label={t("admin.marketing.editorial_authoring_working_title")}>
                   <Input value={brief.workingTitle} maxLength={500} onChange={(event) => setBrief((current) => ({ ...current, workingTitle: event.target.value }))} />
                 </FormField>
-                <StrategySelect direction={selectDirection} label="USP" value={brief.uspId} onChange={(value) => setBrief((current) => ({ ...current, uspId: value }))} options={activeUsps.map((item) => ({ value: item.id.toString(), label: item.title }))} />
-                <StrategySelect direction={selectDirection} label="ICP" value={brief.icpId} onChange={(value) => setBrief((current) => ({ ...current, icpId: value }))} options={activeIcps.map((item) => ({ value: item.id, label: item.name }))} />
-                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_pillar")} value={brief.contentPillarId} onChange={(value) => setBrief((current) => ({ ...current, contentPillarId: value }))} options={activePillars.map((item) => ({ value: item.id.toString(), label: item.name }))} />
-                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_funnel")} value={brief.funnelStageId} onChange={(value) => setBrief((current) => ({ ...current, funnelStageId: value, conversionGoalId: "" }))} options={activeFunnels.map((item) => ({ value: item.id.toString(), label: item.stageKey }))} />
-                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_goal")} disabled={!brief.funnelStageId} value={brief.conversionGoalId} onChange={(value) => setBrief((current) => ({ ...current, conversionGoalId: value }))} options={activeGoals.map((item) => ({ value: item.id.toString(), label: item.name }))} />
+                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_usp")} value={brief.uspId} onChange={(value) => setBrief((current) => ({ ...current, uspId: value }))} options={activeUsps.map((item) => ({ value: item.id.toString(), label: editorialStrategyOptionLabel("USP", item.id.toString(), item.title, uiLanguage) }))} />
+                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_icp")} value={brief.icpId} onChange={(value) => setBrief((current) => ({ ...current, icpId: value }))} options={activeIcps.map((item) => ({ value: item.id, label: editorialStrategyOptionLabel("ICP", item.id, item.name, uiLanguage) }))} />
+                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_pillar")} value={brief.contentPillarId} onChange={(value) => setBrief((current) => ({ ...current, contentPillarId: value }))} options={activePillars.map((item) => ({ value: item.id.toString(), label: editorialStrategyOptionLabel("CONTENT_PILLAR", item.pillarKey, item.name, uiLanguage) }))} />
+                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_funnel")} value={brief.funnelStageId} onChange={(value) => setBrief((current) => ({ ...current, funnelStageId: value, conversionGoalId: "" }))} options={activeFunnels.map((item) => ({ value: item.id.toString(), label: editorialStrategyOptionLabel("FUNNEL_STAGE", item.stageKey, item.stageKey, uiLanguage) }))} />
+                <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_goal")} disabled={!brief.funnelStageId} value={brief.conversionGoalId} onChange={(value) => setBrief((current) => ({ ...current, conversionGoalId: value }))} options={activeGoals.map((item) => ({ value: item.id.toString(), label: editorialStrategyOptionLabel("CONVERSION_GOAL", item.goalKey, item.name, uiLanguage) }))} />
               </div>
               <FormField label={t("admin.marketing.editorial_authoring_purpose")}>
                 <textarea className={textareaClasses} rows={3} maxLength={4000} value={brief.purpose} onChange={(event) => setBrief((current) => ({ ...current, purpose: event.target.value }))} />
               </FormField>
               <div className="grid gap-3 sm:grid-cols-2">
                 <FormField label={t("admin.marketing.editorial_authoring_queries")}>
-                  <textarea className={textareaClasses} rows={4} value={brief.targetQueries} onChange={(event) => setBrief((current) => ({ ...current, targetQueries: event.target.value }))} />
+                  <textarea
+                    className={textareaClasses}
+                    rows={4}
+                    value={brief.targetQueries}
+                    readOnly={topic.sourceType === "OFFICIAL_STRATEGIC_BACKLOG" && language === topic.titleLanguage}
+                    onChange={(event) => setBrief((current) => ({ ...current, targetQueries: event.target.value }))}
+                  />
                 </FormField>
                 <FormField label={t("admin.marketing.editorial_authoring_requirements")}>
                   <textarea className={textareaClasses} rows={4} value={brief.sourceRequirements} onChange={(event) => setBrief((current) => ({ ...current, sourceRequirements: event.target.value }))} />
@@ -360,7 +399,7 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
             <div className="min-w-0 space-y-4 rounded-xl border border-border/60 bg-background/75 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h4 className="font-bold">2. {t("admin.marketing.editorial_authoring_collect_source")}</h4>
-                <Badge variant="outline">{status.briefReference}</Badge>
+                <Badge variant="outline">{editorialBriefReferenceLabel(status.briefReference, uiLanguage)}</Badge>
               </div>
               {status.latestSourceTaskStatus === "WAITING_APPROVAL" ? (
                 <p className="text-sm font-semibold text-amber-700">{t("admin.marketing.editorial_authoring_source_waiting")}</p>
@@ -371,13 +410,13 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
                     <FormField label={t("admin.marketing.editorial_authoring_claim_key")}>
                       <Input dir="ltr" value={source.claimKey} maxLength={128} onChange={(event) => setSource((current) => ({ ...current, claimKey: event.target.value }))} />
                     </FormField>
-                    <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_claim_type")} value={source.claimType} onChange={(value) => setSource((current) => ({ ...current, claimType: value }))} options={CLAIM_TYPES.map((item) => ({ value: item, label: item }))} />
+                    <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_claim_type")} value={source.claimType} onChange={(value) => setSource((current) => ({ ...current, claimType: value }))} options={CLAIM_TYPES.map((item) => ({ value: item, label: editorialClaimTypeLabel(item, uiLanguage) }))} />
                   </div>
                   <FormField label={t("admin.marketing.editorial_authoring_claim_text")}>
                     <textarea className={textareaClasses} rows={3} maxLength={8000} value={source.claimText} onChange={(event) => setSource((current) => ({ ...current, claimText: event.target.value }))} />
                   </FormField>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_source_type")} value={source.sourceType} onChange={(value) => setSource((current) => ({ ...current, sourceType: value, url: "", internalReference: "" }))} options={SOURCE_TYPES.map((item) => ({ value: item, label: sourceTypeLabel(item) }))} />
+                    <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_source_type")} value={source.sourceType} onChange={(value) => setSource((current) => ({ ...current, sourceType: value, url: "", internalReference: "" }))} options={SOURCE_TYPES.map((item) => ({ value: item, label: editorialEvidenceSourceTypeLabel(item, uiLanguage) }))} />
                     <FormField label={t("admin.marketing.editorial_authoring_source_title")}>
                       <Input value={source.title} maxLength={2000} onChange={(event) => setSource((current) => ({ ...current, title: event.target.value }))} />
                     </FormField>
@@ -394,11 +433,14 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
                       <Input dir="ltr" value={source.fingerprint} maxLength={128} onChange={(event) => setSource((current) => ({ ...current, fingerprint: event.target.value }))} />
                     </FormField>
                     {legalClaim ? (
-                      <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_legal_status")} value={source.legalReviewStatus} onChange={(value) => setSource((current) => ({ ...current, legalReviewStatus: value }))} options={[{ value: "REQUIRES_REVIEW", label: "REQUIRES_REVIEW" }, { value: "VERIFIED", label: "VERIFIED" }]} />
+                      <StrategySelect direction={selectDirection} label={t("admin.marketing.editorial_authoring_legal_status")} value={source.legalReviewStatus} onChange={(value) => setSource((current) => ({ ...current, legalReviewStatus: value }))} options={["REQUIRES_REVIEW", "VERIFIED"].map((item) => ({ value: item, label: editorialLegalReviewStatusLabel(item, uiLanguage) }))} />
                     ) : null}
                   </div>
                   <p className="text-xs leading-5 text-muted-foreground">
-                    {t("admin.marketing.editorial_authoring_source_policy", { location: sourceLocation, trust: sourceTrust })}
+                    {t("admin.marketing.editorial_authoring_source_policy", {
+                      location: editorialSourceLocationLabel(sourceLocation, uiLanguage),
+                      trust: editorialSourceTrustLabel(sourceTrust, uiLanguage),
+                    })}
                   </p>
                   <Button
                     type="button"
@@ -416,13 +458,20 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
             </div>
           ) : null}
 
-          <div className="min-w-0 space-y-3 rounded-xl border border-border/60 bg-background/75 p-4">
-            <h4 className="font-bold">3. {t("admin.marketing.editorial_authoring_generate_draft")}</h4>
+          <div
+            className="min-w-0 space-y-3 rounded-xl border border-border/60 bg-background/75 p-4"
+            data-testid="editorial-draft-step"
+          >
+            <h4 className="font-bold">
+              3. {t("admin.marketing.editorial_authoring_generate_draft")}
+            </h4>
+
             <p className="text-sm leading-6 text-muted-foreground">
               {status.canCreateDraft
                 ? t("admin.marketing.editorial_authoring_draft_ready")
                 : t("admin.marketing.editorial_authoring_draft_blocked")}
             </p>
+
             <Button
               type="button"
               className="w-full sm:w-auto"
@@ -430,7 +479,11 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
               aria-busy={busy === "draft"}
               onClick={() => void createDraft()}
             >
-              {busy === "draft" ? <Loader2 className="animate-spin" /> : <Sparkles />}
+              {busy === "draft" ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Sparkles />
+              )}
               {t("admin.marketing.editorial_authoring_generate_draft")}
             </Button>
           </div>
@@ -444,7 +497,7 @@ function StatusCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 rounded-xl border border-border/50 bg-background/75 p-3 text-center">
       <span className="block text-xs font-semibold text-muted-foreground">{label}</span>
-      <strong className="mt-1 block break-words text-sm">{value.replaceAll("_", " ")}</strong>
+      <strong className="mt-1 block break-words text-sm">{value}</strong>
     </div>
   );
 }
@@ -521,11 +574,6 @@ function trustForSource(sourceType: string) {
   if (sourceType === "RIJVIA_CORE_DATA") return "CORE_TRUSTED";
   if (sourceType.startsWith("OFFICIAL_")) return "OFFICIAL";
   return "APPROVED_REFERENCE";
-}
-
-function sourceTypeLabel(sourceType: string) {
-  if (sourceType === "RIJVIA_CORE_DATA") return "RijVia Core Data";
-  return sourceType.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 const textareaClasses = "w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15";

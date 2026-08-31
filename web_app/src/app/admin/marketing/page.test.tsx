@@ -168,6 +168,8 @@ const responses: Record<string, unknown> = {
         contentPillarId: 2,
         funnelStageId: 3,
         conversionGoalId: 4,
+        keywordClusterId: 1,
+        targetQueries: ["امتحان السياقة النظري في بلجيكا"],
         articleId: null,
         lifecycleState: null,
         canonicalLanguage: null,
@@ -292,7 +294,7 @@ describe("MarketingAdminPage", () => {
     fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_meta_description/), {
       target: { value: "Prepare for the Belgian theory exam with this reviewed RijVia guide." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.editorial_save" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save new version" }));
 
     await waitFor(() => {
       expect(put).toHaveBeenCalledWith(
@@ -317,6 +319,192 @@ describe("MarketingAdminPage", () => {
         },
       );
     });
+  });
+
+  it("keeps the selected article after a save refresh", async () => {
+    const firstTopic = (responses["/admin/marketing/editorial/editor"] as {
+      topics: Record<string, unknown>[];
+    }).topics[0];
+    const editorResponse = {
+      ...(responses["/admin/marketing/editorial/editor"] as Record<string, unknown>),
+      topics: [
+        firstTopic,
+        {
+          ...firstTopic,
+          topicId: 2,
+          topicKey: "OFFICIAL-002",
+          order: 2,
+          title: "Second article",
+          titleLanguage: "EN",
+          primaryLanguage: "EN",
+        },
+      ],
+    };
+    let editorRequests = 0;
+    let resolveEditorReload!: (value: { data: typeof editorResponse }) => void;
+    const editorReload = new Promise<{ data: typeof editorResponse }>((resolve) => {
+      resolveEditorReload = resolve;
+    });
+
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        editorRequests += 1;
+        return editorRequests === 1
+          ? Promise.resolve({ data: editorResponse })
+          : editorReload;
+      }
+      if (url === "/admin/marketing/editorial/editor/topics/2/authoring-status") {
+        return Promise.resolve({
+          data: {
+            ...(responses["/admin/marketing/editorial/editor/topics/1/authoring-status"] as Record<string, unknown>),
+            topicId: 2,
+          },
+        });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+
+    const secondTopicButton = await screen.findByRole("button", { name: /Second article/ });
+    fireEvent.click(secondTopicButton);
+    expect(secondTopicButton).toHaveClass("border-primary/30");
+
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_slug/), {
+      target: { value: "second-article" },
+    });
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_body/), {
+      target: { value: "Second article body" },
+    });
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_meta_title/), {
+      target: { value: "Second article | RijVia" },
+    });
+    fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_meta_description/), {
+      target: { value: "Second article metadata description for RijVia learners." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save new version" }));
+
+    await waitFor(() => {
+      expect(put).toHaveBeenCalledWith(
+        "/admin/marketing/editorial/editor/topics/2/versions/EN",
+        expect.objectContaining({ slug: "second-article" }),
+      );
+    });
+    await waitFor(() => expect(editorRequests).toBe(2));
+    expect(screen.getByRole("button", { name: /Second article/ }))
+      .toHaveClass("border-primary/30");
+
+    resolveEditorReload({ data: editorResponse });
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Second article/ }))
+        .toHaveClass("border-primary/30");
+    });
+  });
+
+  it("derives the read-only slug from the localized focus keyword", async () => {
+    const topic = {
+      ...((responses["/admin/marketing/editorial/editor"] as {
+        topics: Record<string, unknown>[];
+      }).topics[0]),
+      articleId: 11,
+      lifecycleState: "DRAFT_READY",
+      canonicalLanguage: "AR",
+      currentVersions: [{
+        language: "AR",
+        versionNumber: 1,
+        title: "دليل الامتحان النظري",
+        slug: null,
+        focusKeyword: "امتحان السياقة النظري في بلجيكا",
+        status: "DRAFT",
+        createdAt: "2026-08-31T10:00:00Z",
+        createdBy: "admin",
+      }],
+    };
+
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({
+          data: {
+            ...(responses["/admin/marketing/editorial/editor"] as Record<string, unknown>),
+            topics: [topic],
+          },
+        });
+      }
+      if (url === "/admin/marketing/editorial/editor/articles/11/versions") {
+        return Promise.resolve({
+          data: [{
+            ...topic.currentVersions[0],
+            id: 21,
+            articleId: 11,
+            summary: "ملخص",
+            body: "محتوى المقال",
+            metaTitle: "دليل الامتحان النظري | RijVia",
+            metaDescription: "دليل موثق للاستعداد للامتحان النظري في بلجيكا.",
+            internalLinks: [],
+            typography: {
+              h1Size: "DEFAULT",
+              h2Size: "DEFAULT",
+              h3Size: "DEFAULT",
+              h4Size: "DEFAULT",
+              paragraphSize: "DEFAULT",
+              textColor: "DEFAULT",
+            },
+            current: true,
+          }],
+        });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+
+    const slug = await screen.findByLabelText(/admin.marketing.editorial_slug/);
+    expect(slug).toHaveValue("امتحان-السياقة-النظري-في-بلجيكا");
+    expect(slug).toHaveAttribute("readonly");
+  });
+
+  it("derives the initial slug from the real topic title before the first draft exists", async () => {
+    const topic = {
+      ...((responses["/admin/marketing/editorial/editor"] as {
+        topics: Record<string, unknown>[];
+      }).topics[0]),
+      articleId: 11,
+      lifecycleState: "DRAFTING",
+      canonicalLanguage: "AR",
+      title: "كم عدد أسئلة امتحان السياقة النظري في بلجيكا؟",
+      currentVersions: [],
+    };
+
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({
+          data: {
+            ...(responses["/admin/marketing/editorial/editor"] as Record<string, unknown>),
+            topics: [topic],
+          },
+        });
+      }
+      if (url === "/admin/marketing/editorial/editor/articles/11/versions") {
+        return Promise.resolve({ data: [] });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+
+    const slug = await screen.findByLabelText(/admin.marketing.editorial_slug/);
+    expect(slug).toHaveValue("كم-عدد-اسيلة-امتحان-السياقة-النظري-في-بلجيكا");
+    expect(slug).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("admin.marketing.editorial_image_alt AR")).toHaveValue("");
+    expect(screen.getByLabelText("admin.marketing.editorial_image_alt NL")).toHaveValue("");
+    expect(screen.getByLabelText("admin.marketing.editorial_image_alt FR")).toHaveValue("");
+    expect(screen.getByLabelText("admin.marketing.editorial_image_alt EN")).toHaveValue("");
   });
 
   it("queues a strategy-bound article brief from the editorial workflow", async () => {
@@ -369,7 +557,7 @@ describe("MarketingAdminPage", () => {
     fireEvent.change(screen.getByLabelText(/admin.marketing.editorial_body/), {
       target: { value: "Unsaved preview body" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.editorial_preview" }));
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(screen.getByRole("dialog", { name: "admin.marketing.editorial_preview_title" }))
       .toBeInTheDocument();

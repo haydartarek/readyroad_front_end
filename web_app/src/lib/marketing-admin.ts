@@ -186,6 +186,7 @@ export interface EditorialCurrentVersion {
   versionNumber: number;
   title: string;
   slug: string | null;
+  focusKeyword?: string | null;
   status: string;
   createdAt: string;
   createdBy: string | null;
@@ -206,6 +207,8 @@ export interface EditorialTopic {
   contentPillarId: number | null;
   funnelStageId: number | null;
   conversionGoalId: number | null;
+  keywordClusterId: number | null;
+  targetQueries: string[];
   articleId: number | null;
   lifecycleState: string | null;
   canonicalLanguage: EditorialLanguage | null;

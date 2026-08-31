@@ -250,13 +250,32 @@ export default function MarketingAdminPage() {
   const uploadEditorialImage = async (articleId: number, formData: FormData) => {
     setBusy("editorial-image");
     try {
-      await apiClient.post(
+      const response = await apiClient.post(
         "/admin/marketing/editorial/editor/articles/" + articleId + "/image",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } },
       );
+
+      const uploadedImage =
+        response.data as PlatformData["editorial"]["topics"][number]["image"];
+
+      setData((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          editorial: {
+            ...current.editorial,
+            topics: current.editorial.topics.map((topic) =>
+              topic.articleId === articleId
+                ? { ...topic, image: uploadedImage }
+                : topic,
+            ),
+          },
+        };
+      });
+
       toast.success(t("admin.marketing.editorial_image_saved"));
-      await load();
     } catch (requestError) {
       logApiError("Editorial image upload failed", requestError);
       toast.error(getApiErrorMessage(requestError, t("admin.marketing.action_failed")));
@@ -272,8 +291,24 @@ export default function MarketingAdminPage() {
       await apiClient.delete(
         "/admin/marketing/editorial/editor/articles/" + articleId + "/image",
       );
+
+      setData((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          editorial: {
+            ...current.editorial,
+            topics: current.editorial.topics.map((topic) =>
+              topic.articleId === articleId
+                ? { ...topic, image: null }
+                : topic,
+            ),
+          },
+        };
+      });
+
       toast.success(t("admin.marketing.editorial_image_removed"));
-      await load();
     } catch (requestError) {
       logApiError("Editorial image removal failed", requestError);
       toast.error(getApiErrorMessage(requestError, t("admin.marketing.action_failed")));
@@ -351,8 +386,8 @@ export default function MarketingAdminPage() {
         </div>
       </nav>
 
-      {loading ? <LoadingState /> : null}
-      {!loading && error ? (
+      {loading && !data ? <LoadingState /> : null}
+      {error ? (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
           <p className="font-bold text-destructive">{t("admin.marketing.load_failed")}</p>
           <p className="mx-auto mt-2 max-w-2xl break-words text-sm text-destructive/85">
@@ -361,7 +396,7 @@ export default function MarketingAdminPage() {
           <Button className="mt-4" onClick={load}>{t("common.retry")}</Button>
         </div>
       ) : null}
-      {!loading && data && !error ? (
+      {data ? (
         <div
           id="marketing-panel"
           role="tabpanel"

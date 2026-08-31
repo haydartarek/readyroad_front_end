@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { SeoIntentSection } from "@/components/seo/seo-intent-section";
 import { createLearningEntryMetadata } from "@/lib/learning-entry-metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -13,8 +14,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return { robots: { index: false, follow: false } };
 }
 
-export default function PracticeLayout({
+export default async function PracticeLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return children;
+  const pathname = (await headers()).get("x-rijvia-pathname") || "/practice";
+
+  return (
+    <>
+      {children}
+      {pathname === "/practice" ? <SeoIntentSection page="practice" /> : null}
+    </>
+  );
 }

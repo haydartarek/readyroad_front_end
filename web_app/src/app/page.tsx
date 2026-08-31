@@ -8,6 +8,7 @@ import { CategoriesPreview } from "@/components/home/categories-preview";
 import { ExamCta } from "@/components/home/exam-cta";
 import { ContactCtaSection } from "@/components/home/contact-cta-section";
 import { StickyCTA } from "@/components/home/sticky-cta";
+import { SeoIntentSection } from "@/components/seo/seo-intent-section";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
@@ -64,6 +65,7 @@ export default function Home() {
         <FeaturesSection />
         <HowItWorksSection />
         <CategoriesPreview />
+        <SeoIntentSection page="home" />
         <ExamCta />
         <ContactCtaSection />
       </main>

@@ -78,21 +78,12 @@ interface QuestionQuality {
   flags: string[];
 }
 
-interface QuestionExposure {
-  questionId: number;
-  categoryCode: string;
-  difficulty: string;
-  presentations: number;
-}
-
 interface BankHealth {
   generatedAt: string;
   summary: BankSummary;
   locales: LocaleHealth[];
   categories: CategoryHealth[];
   questionsNeedingReview: QuestionQuality[];
-  rarelyExposedQuestions: QuestionExposure[];
-  heavilyExposedQuestions: QuestionExposure[];
 }
 
 export function AdminTheoryBankHealth() {
@@ -210,7 +201,6 @@ export function AdminTheoryBankHealth() {
                   <p className="mt-2 text-xs text-muted-foreground">
                     {t("admin.quizzes.health.eligible")}: {category.eligibleAllLocales} · {t("admin.quizzes.health.presentations")}: {category.totalPresentations}
                   </p>
-
                 </article>
               ))}
             </div>
@@ -245,14 +235,8 @@ export function AdminTheoryBankHealth() {
               </div>
             )}
           </div>
-
-          <div className="grid min-w-0 gap-3 lg:grid-cols-2">
-            <ExposureList title={t("admin.quizzes.health.rarely_exposed")} items={health.rarelyExposedQuestions} t={t} />
-            <ExposureList title={t("admin.quizzes.health.heavily_exposed")} items={health.heavilyExposedQuestions} t={t} />
-          </div>
         </>
       ) : null}
-
     </section>
   );
 }
@@ -269,29 +253,6 @@ function HealthMetric({ label, value, tone = "default" }: { label: string; value
     <div className="min-w-0 rounded-xl border border-border/40 bg-background/60 p-3 text-center">
       <p className="break-words text-xs font-semibold text-muted-foreground">{label}</p>
       <p className={tone === "danger" ? "mt-1 text-xl font-black text-destructive" : "mt-1 text-xl font-black text-foreground"}>{value}</p>
-    </div>
-  );
-}
-
-function ExposureList({ title, items, t }: {
-  title: string;
-  items: QuestionExposure[];
-  t: (key: string) => string;
-}) {
-  return (
-    <div className="min-w-0 rounded-xl border border-border/40 bg-muted/20 p-3">
-      <h3 className="text-sm font-black text-foreground">{title}</h3>
-      {items.length === 0 ? (
-        <p className="mt-1 text-xs text-muted-foreground">{t("admin.quizzes.health.no_exposure_data")}</p>
-      ) : (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {items.map((item) => (
-            <Badge key={item.questionId} variant="outline">
-              #{item.questionId} · {item.categoryCode} · {item.difficulty} · {item.presentations}
-            </Badge>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

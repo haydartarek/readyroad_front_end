@@ -4,6 +4,7 @@ import {
   getPublicLessons,
 } from "@/lib/server/public-catalog";
 import LessonStructuredData from "@/app/lessons/[lessonId]/lesson-structured-data";
+import LessonKeywordSupport from "@/components/lessons/lesson-keyword-support";
 import RelatedLearningArticles from "@/components/content/related-learning-articles";
 import { localizePathname } from "@/lib/i18n-routing";
 import { getRelatedPublicArticles } from "@/lib/server/articles";
@@ -33,6 +34,9 @@ export default async function LessonDetailPage({
         initialLessons={lessons}
         initialPageNumber={1}
       />
+      {lesson && (
+        <LessonKeywordSupport lessonCode={lesson.lessonCode} locale={locale} />
+      )}
       <RelatedLearningArticles articles={relatedArticles} locale={locale} />
     </>
   );

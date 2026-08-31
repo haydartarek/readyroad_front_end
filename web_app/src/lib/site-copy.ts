@@ -5,21 +5,40 @@ export type SiteLocale = "en" | "ar" | "fr" | "nl";
 export const DEFAULT_APP_URL = "https://rijvia.be";
 export const DEFAULT_SITE_LOCALE: SiteLocale = "en";
 
-const SHARED_KEYWORDS = [
-  "Belgian driving license exam",
-  "Belgian driving theory test",
-  "traffic signs Belgium",
-  "RijVia",
-  "rijbewijs theorie examen",
-  "rijexamen oefenen",
-  "verkeerstekens België",
-  "permis de conduire belgique",
-  "examen théorique permis conduire",
-  "panneaux signalisation belgique",
-  "رخصة السياقة في بلجيكا",
-  "امتحان السياقة في بلجيكا",
-  "العلامات المرورية البلجيكية",
-];
+const HOME_KEYWORDS: Record<SiteLocale, string[]> = {
+  en: [
+    "Belgian driving theory exam preparation",
+    "Belgian driving theory test",
+    "Belgian driving theory test in English",
+    "Belgian traffic rules",
+    "Belgian traffic signs",
+    "category B theory Belgium",
+  ],
+  nl: [
+    "theorie rijbewijs B België",
+    "Belgisch theorie-examen",
+    "rijbewijs B theorie",
+    "Belgische verkeersregels",
+    "verkeersborden België",
+    "theorievragen oefenen",
+  ],
+  fr: [
+    "examen théorique permis B Belgique",
+    "permis théorique belge",
+    "code de la route belge",
+    "panneaux de signalisation Belgique",
+    "théorie permis B Belgique",
+    "questions permis B Belgique",
+  ],
+  ar: [
+    "امتحان السياقة النظري في بلجيكا",
+    "تعليم السياقة في بلجيكا بالعربية",
+    "رخصة السياقة في بلجيكا",
+    "قواعد المرور البلجيكية بالعربية",
+    "العلامات المرورية في بلجيكا",
+    "امتحان تيوري بلجيكا",
+  ],
+};
 
 const OPEN_GRAPH_LOCALES: Record<SiteLocale, string> = {
   en: "en_BE",
@@ -56,17 +75,17 @@ const SITE_COPY: Record<
     homeMetadata: {
       title: "RijVia | Belgian Driving Theory Exam Preparation",
       description:
-        "Prepare for the Belgian driving theory exam with traffic signs, structured lessons, focused practice, and one clear progress dashboard.",
-      keywords: SHARED_KEYWORDS,
+        "Prepare for the Belgian driving theory exam with category B lessons, Belgian traffic signs, practice questions and a realistic theory exam simulation.",
+      keywords: HOME_KEYWORDS.en,
       openGraphTitle: "RijVia | Belgian Driving Theory Exam Preparation",
       openGraphDescription:
-        "Study traffic signs, review theory lessons, practise by category, and track your progress in one place.",
+        "Learn Belgian road rules, study traffic signs, practise theory questions and test yourself with an exam simulation.",
     },
     layoutMetadata: {
       defaultTitle: "RijVia | Belgian Driving Theory Exam Preparation",
       description:
-        "RijVia helps learners prepare for the Belgian driving theory exam with traffic signs, lessons, timed practice, and progress insights.",
-      keywords: SHARED_KEYWORDS,
+        "RijVia helps learners prepare for the Belgian driving theory exam with traffic signs, category B lessons, practice questions and progress insights.",
+      keywords: HOME_KEYWORDS.en,
       openGraphDescription:
         "Practice Belgian theory topics, study traffic signs, and track your progress from one dashboard.",
       twitterDescription:
@@ -75,7 +94,7 @@ const SITE_COPY: Record<
         "RijVia is an independent learning platform for Belgian driving theory exam preparation.",
       websiteDescription: "Belgian driving theory exam preparation platform.",
       softwareDescription:
-        "Prepare for the Belgian driving theory exam with practice flows, traffic signs, lessons, and progress analytics.",
+        "Prepare for the Belgian driving theory exam with practice flows, traffic signs, lessons and progress analytics.",
     },
   },
   ar: {
@@ -83,17 +102,17 @@ const SITE_COPY: Record<
     homeMetadata: {
       title: "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا",
       description:
-        "استعد لامتحان السياقة النظري في بلجيكا من خلال الدروس والعلامات المرورية والاختبارات التدريبية، وتابع تقدمك في مكان واحد.",
-      keywords: SHARED_KEYWORDS,
+        "استعد لامتحان السياقة النظري في بلجيكا بالعربية من خلال دروس النظري وقواعد المرور والعلامات المرورية والأسئلة التدريبية ومحاكاة الامتحان.",
+      keywords: HOME_KEYWORDS.ar,
       openGraphTitle: "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا",
       openGraphDescription:
-        "تعلّم العلامات المرورية، واقرأ الدروس النظرية، وتدرّب حسب الفئة، وتابع تقدمك في مكان واحد.",
+        "تعلّم قواعد المرور البلجيكية بالعربية، وراجع العلامات، وتدرّب على الأسئلة، واختبر نفسك بمحاكاة الامتحان.",
     },
     layoutMetadata: {
       defaultTitle: "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا",
       description:
         "يساعدك RijVia على الاستعداد لامتحان السياقة النظري في بلجيكا من خلال العلامات المرورية والدروس والتدريب ومتابعة التقدم.",
-      keywords: SHARED_KEYWORDS,
+      keywords: HOME_KEYWORDS.ar,
       openGraphDescription:
         "تدرّب على مواضيع الامتحان النظري البلجيكي، وتعلّم العلامات المرورية، وتابع تقدمك من لوحة تحكم واحدة.",
       twitterDescription:
@@ -110,17 +129,17 @@ const SITE_COPY: Record<
     homeMetadata: {
       title: "RijVia | Préparation à l'examen théorique permis B en Belgique",
       description:
-        "Préparez l'examen théorique belge avec les panneaux, des leçons structurées, un entraînement ciblé et un tableau de bord clair.",
-      keywords: SHARED_KEYWORDS,
+        "Préparez l’examen théorique permis B en Belgique avec le code de la route belge, les panneaux de signalisation, des exercices et une simulation d’examen.",
+      keywords: HOME_KEYWORDS.fr,
       openGraphTitle: "RijVia | Préparation à l'examen théorique permis B en Belgique",
       openGraphDescription:
-        "Étudiez les panneaux, révisez la théorie, entraînez-vous par catégorie et suivez vos progrès au même endroit.",
+        "Étudiez le code de la route belge, révisez les panneaux, faites des exercices et testez-vous avec une simulation.",
     },
     layoutMetadata: {
       defaultTitle: "RijVia | préparation à l'examen théorique belge",
       description:
         "RijVia aide les apprenants à préparer l'examen théorique belge grâce aux panneaux, aux leçons, à l'entraînement chronométré et au suivi des progrès.",
-      keywords: SHARED_KEYWORDS,
+      keywords: HOME_KEYWORDS.fr,
       openGraphDescription:
         "Entraînez-vous sur la théorie belge, étudiez les panneaux et suivez vos progrès depuis un tableau de bord unique.",
       twitterDescription:
@@ -138,18 +157,17 @@ const SITE_COPY: Record<
     homeMetadata: {
       title: "RijVia | Theorie Rijbewijs B België",
       description:
-        "Bereid je voor op het Belgische theorie-examen met verkeersborden, gestructureerde lessen, gerichte oefening en een duidelijk voortgangsdashboard.",
-      keywords: SHARED_KEYWORDS,
-      openGraphTitle:
-        "RijVia | Theorie Rijbewijs B België",
+        "Bereid je voor op theorie rijbewijs B in België met Belgische verkeersregels, verkeersborden, theorielessen, oefenvragen en een proefexamen.",
+      keywords: HOME_KEYWORDS.nl,
+      openGraphTitle: "RijVia | Theorie Rijbewijs B België",
       openGraphDescription:
-        "Bestudeer verkeersborden, herhaal theorielessen, oefen per categorie en volg je vooruitgang op één plek.",
+        "Leer Belgische verkeersregels, bestudeer verkeersborden, oefen theorievragen en test jezelf met een proefexamen.",
     },
     layoutMetadata: {
       defaultTitle: "RijVia | voorbereiding op het Belgische theorie-examen",
       description:
         "RijVia helpt leerlingen zich voor te bereiden op het Belgische theorie-examen met verkeersborden, lessen, getimede oefening en voortgangsinzichten.",
-      keywords: SHARED_KEYWORDS,
+      keywords: HOME_KEYWORDS.nl,
       openGraphDescription:
         "Oefen Belgische theoriethema's, bestudeer verkeersborden en volg je vooruitgang vanuit één dashboard.",
       twitterDescription:

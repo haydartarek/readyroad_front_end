@@ -1,5 +1,7 @@
 import { getRequestLocale } from "@/lib/server/request-locale";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { SeoIntentSection } from "@/components/seo/seo-intent-section";
 import { getLessonsSeoCopy } from "@/lib/learning-seo-copy";
 import {
   DEFAULT_APP_URL,
@@ -47,14 +49,19 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function LessonsLayout({
+export default async function LessonsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = (await headers()).get("x-rijvia-pathname") || "/lessons";
+
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        {children}
+        {pathname === "/lessons" ? <SeoIntentSection page="lessons" /> : null}
+      </main>
     </div>
   );
 }

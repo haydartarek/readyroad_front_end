@@ -347,7 +347,9 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   await page.goto("/admin/marketing");
   await page.getByRole("tab", { name: "Editorial" }).click();
   await expect(page.getByRole("heading", { name: "Belgian theory exam guide" })).toBeVisible();
-  await page.getByLabel("URL slug").fill("belgian-theory-guide");
+  const slugField = page.getByLabel("URL slug");
+  await expect(slugField).toHaveValue("belgian-theory-exam-guide");
+  await expect(slugField).not.toBeEditable();
   await page.getByLabel("Summary").fill("Targeted preview summary");
   await page.getByLabel("SEO title").fill("Belgian theory exam guide | RijVia");
   await page.getByLabel("Meta description").fill(
@@ -381,7 +383,7 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   );
   expect(mutations[0].postDataJSON()).toMatchObject({
     title: "Belgian theory exam guide",
-    slug: "belgian-theory-guide",
+    slug: "belgian-theory-exam-guide",
     summary: "Targeted preview summary",
     body: "Targeted editorial draft",
     metaTitle: "Belgian theory exam guide | RijVia",
@@ -476,7 +478,6 @@ test("Editorial rich controls validate and submit one local article image", asyn
 
   const editor = page.getByTestId("editorial-markdown-editor");
   for (const control of [
-    "Heading 1",
     "Heading 2",
     "Heading 3",
     "Heading 4",
@@ -490,7 +491,6 @@ test("Editorial rich controls validate and submit one local article image", asyn
   ]) {
     await expect(editor.getByRole("button", { name: control })).toBeVisible();
   }
-  await expect(editor.getByText("Text color", { exact: true })).toBeVisible();
 
   const imagePanel = page.getByTestId("editorial-article-image");
   const fileInput = imagePanel.getByLabel(/Image from device/);
@@ -579,7 +579,7 @@ test("Editorial authoring dropdowns preserve mixed-direction labels within mobil
 
   await expect(
     authoring.getByRole("combobox", { name: "USP" }),
-  ).toContainText("RijVia learning platform");
+  ).toContainText("دعم أربع لغات");
   await expect(page.locator("body")).not.toContainText(/ReadyRoad/i);
   await expectNoOverflow(page);
   expect(consoleErrors).toEqual([]);

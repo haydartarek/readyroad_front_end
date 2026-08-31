@@ -1,0 +1,102 @@
+name: Deploy Web to VPS
+
+on:
+  workflow_run:
+    workflows: ["Web CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rijvia-production-web-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy verified main to RijVia VPS
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Validate deployment secrets
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_SSH_PRIVATE_KEY"
+          test -n "$VPS_SSH_KNOWN_HOSTS"
+
+      - name: Configure SSH
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy verified frontend commit
+        env:
+          FRONTEND_REF: ${{ github.event.workflow_run.head_sha }}
+          VPS_HOST: 187.127.232.106
+          VPS_USER: root
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            bash -s -- "$FRONTEND_REF" <<'REMOTE'
+          set -euo pipefail
+
+          FRONTEND_REF="$1"
+          DEPLOY_BIN="/opt/readyroad/bin/readyroad-deploy"
+          SMOKE_BIN="/opt/readyroad/bin/readyroad-smoke"
+
+          test -x "$DEPLOY_BIN"
+          test -x "$SMOKE_BIN"
+
+          current_release="$(readlink -f /opt/readyroad/current)"
+          current_id="$(basename "$current_release")"
+
+          backend_short="$(printf '%s' "$current_id" | sed -nE 's/^[0-9]{8}-([0-9a-f]{7,40})-[0-9a-f]{7,40}$/\1/p')"
+
+          if [ -z "$backend_short" ]; then
+            echo "Could not derive backend ref from active release: $current_id" >&2
+            exit 1
+          fi
+
+          release_id="$(date -u +%Y%m%d)-${backend_short:0:7}-${FRONTEND_REF:0:7}"
+
+          echo "Current release : $current_id"
+          echo "Backend ref     : $backend_short"
+          echo "Frontend ref    : $FRONTEND_REF"
+          echo "Target release  : $release_id"
+
+          "$DEPLOY_BIN" \
+            --backend-ref "$backend_short" \
+            --frontend-ref "$FRONTEND_REF" \
+            --release-id "$release_id"
+
+          active_release="$(basename "$(readlink -f /opt/readyroad/current)")"
+          echo "Active release  : $active_release"
+
+          if [ "$active_release" != "$release_id" ]; then
+            echo "Active release does not match target release." >&2
+            exit 1
+          fi
+
+          "$SMOKE_BIN"
+          REMOTE

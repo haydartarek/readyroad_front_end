@@ -60,4 +60,21 @@ describe("admin learning UI contracts", () => {
     expect(localizedCategoryName(category, "fr")).toBe("Français");
     expect(localizedCategoryName(category, "ar")).toBe("العربية");
   });
+
+  it("does not use the internal category code as a visible name", () => {
+    const category: CategoryPerformance = {
+      categoryId: 1,
+      categoryCode: "TH01",
+      nameEn: "",
+      nameNl: "",
+      nameFr: "",
+      nameAr: "",
+      questionsAttempted: 0,
+      correctAnswers: 0,
+      accuracy: 0,
+      lastPracticedAt: null,
+    };
+
+    expect(localizedCategoryName(category, "en")).toBe("");
+  });
 });

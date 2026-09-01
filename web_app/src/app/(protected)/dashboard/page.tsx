@@ -614,7 +614,7 @@ export function TheoryTimeoutWidget({
       <div className="grid gap-3 md:grid-cols-2">
         {analysis.items.map((item) => {
           const question = localized(item, "questionText");
-          const category = localized(item, "categoryName") || item.categoryCode;
+          const category = localized(item, "categoryName");
           const occurredAt = new Intl.DateTimeFormat(
             `${language}-u-ca-gregory`,
             { dateStyle: "medium" },

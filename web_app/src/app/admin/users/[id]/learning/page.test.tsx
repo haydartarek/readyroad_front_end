@@ -71,14 +71,15 @@ describe("Admin learner profile", () => {
   it("loads coverage, difficulty evidence, and existing strong and weak areas lazily", async () => {
     render(<AdminUserLearningPage />);
 
-    await screen.findByText("A · Priority");
+    await screen.findByText("Priority");
     expect(screen.getByRole("link", { name: "admin.learning.back_to_users" })).toHaveAttribute("href", "/admin/users");
-    expect(screen.getByText("B · Speed")).toBeInTheDocument();
+    expect(screen.getByText("Speed")).toBeInTheDocument();
+    expect(screen.queryByText(/^[A-Z]\d* · /)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "admin.learning.section.coverage" }));
     await screen.findByText("50/100");
     expect(screen.getAllByText("dashboard.theory_coverage.confidence_medium")).toHaveLength(2);
-    expect(screen.getAllByText("A · Priority")).toHaveLength(2);
+    expect(screen.getAllByText("Priority")).toHaveLength(2);
     expect(get).toHaveBeenCalledWith("/admin/learning/users/42/coverage");
 
     fireEvent.click(screen.getByRole("tab", { name: "admin.learning.section.difficulty" }));
@@ -100,7 +101,7 @@ describe("Admin learner profile", () => {
 
   it("uses the backend error-patterns contract for the errors tab", async () => {
     render(<AdminUserLearningPage />);
-    await screen.findByText("A · Priority");
+    await screen.findByText("Priority");
 
     fireEvent.click(screen.getByRole("tab", { name: "admin.learning.section.errors" }));
 

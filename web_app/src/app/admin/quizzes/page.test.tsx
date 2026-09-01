@@ -157,5 +157,6 @@ describe("Admin quiz quality controls", () => {
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(await screen.findAllByText("Priority and intersections")).not.toHaveLength(0);
     expect(screen.queryByText("TH01")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("theory-bank-health")).not.toBeInTheDocument();
   });
 });

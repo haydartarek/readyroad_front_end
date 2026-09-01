@@ -3,6 +3,7 @@
 import { FolderCog } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { AdminQuestionExposure } from "@/components/admin/admin-question-exposure";
+import { AdminTheoryBankHealth } from "@/components/admin/admin-theory-bank-health";
 import { AdminTheoryCategories } from "@/components/admin/admin-theory-categories";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -17,8 +18,9 @@ export default function AdminTheoryCategoriesPage() {
         description={t("admin.quizzes.health.category_management_description")}
       />
 
-      <AdminQuestionExposure />
       <AdminTheoryCategories />
+      <AdminTheoryBankHealth />
+      <AdminQuestionExposure />
     </div>
   );
 }

@@ -355,7 +355,7 @@ export default function AdminAnalyticsPage() {
                   >
                     <div className="flex-1 min-w-0">
                       <span className="text-sm font-semibold text-foreground truncate block">
-                        {cat.categoryName || cat.categoryCode}
+                        {cat.categoryName || t("common.not_available")}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {cat.totalCorrect}/{cat.totalAttempted}{" "}

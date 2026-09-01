@@ -157,7 +157,7 @@ export default function AdminUserLearningPage() {
 function CategoryHighlights({ title, categories, language, emptyLabel }: { title: string; categories: CategoryPerformance[]; language: string; emptyLabel: string }) {
   return <AdminSectionCard title={title}>
     {categories.length === 0 ? <p className="py-4 text-center text-sm text-muted-foreground">{emptyLabel}</p> : <div className="flex flex-wrap gap-2">
-      {categories.map((category) => <Badge key={category.categoryId} variant="outline" className="gap-1.5 py-1.5"><span>{category.categoryCode} · {localizedCategoryName(category, language)}</span><strong>{Math.round(category.accuracy)}%</strong></Badge>)}
+      {categories.map((category) => <Badge key={category.categoryId} variant="outline" className="gap-1.5 py-1.5"><span>{localizedCategoryName(category, language)}</span><strong>{Math.round(category.accuracy)}%</strong></Badge>)}
     </div>}
   </AdminSectionCard>;
 }
@@ -199,11 +199,11 @@ function LearningRow({ row, section, userId, language, t }: { row: GenericRow; s
   }
   if (section === "categories") {
     const category = row as unknown as CategoryPerformance;
-    return <div className="grid gap-2 rounded-xl border border-border/50 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"><div><p className="font-bold">{category.categoryCode} · {localizedCategoryName(category, language)}</p><p className="text-xs text-muted-foreground">{category.correctAnswers}/{category.questionsAttempted}</p></div><Badge variant="outline">{Math.round(category.accuracy)}%</Badge></div>;
+    return <div className="grid gap-2 rounded-xl border border-border/50 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"><div><p className="font-bold">{localizedCategoryName(category, language)}</p><p className="text-xs text-muted-foreground">{category.correctAnswers}/{category.questionsAttempted}</p></div><Badge variant="outline">{Math.round(category.accuracy)}%</Badge></div>;
   }
   if (section === "coverage") {
     const coverage = row as unknown as TheoryCoverageCategory;
-    return <div className="grid gap-2 rounded-xl border border-border/50 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"><div><p className="font-bold">{coverage.categoryCode} · {coverage.categoryName}</p><p className="text-xs text-muted-foreground">{coverage.uniqueQuestionsSeen}/{coverage.eligibleQuestions} · {t("admin.learning.questions_seen")}</p></div><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{t("admin.learning.coverage")} {percentage(coverage.coveragePercentage)}</Badge><Badge variant="outline">{t("admin.learning.accuracy")} {percentage(coverage.accuracyPercentage)}</Badge><Badge variant="outline">{t(`dashboard.theory_coverage.confidence_${coverage.confidenceState.toLowerCase()}`)}</Badge></div></div>;
+    return <div className="grid gap-2 rounded-xl border border-border/50 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"><div><p className="font-bold">{coverage.categoryName || t("common.not_available")}</p><p className="text-xs text-muted-foreground">{coverage.uniqueQuestionsSeen}/{coverage.eligibleQuestions} · {t("admin.learning.questions_seen")}</p></div><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{t("admin.learning.coverage")} {percentage(coverage.coveragePercentage)}</Badge><Badge variant="outline">{t("admin.learning.accuracy")} {percentage(coverage.accuracyPercentage)}</Badge><Badge variant="outline">{t(`dashboard.theory_coverage.confidence_${coverage.confidenceState.toLowerCase()}`)}</Badge></div></div>;
   }
   if (section === "difficulty") {
     const difficulty = row as unknown as DifficultyPerformance;

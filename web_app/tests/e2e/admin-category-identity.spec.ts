@@ -57,6 +57,43 @@ const categories = [
 ];
 
 const bankHealth = {
+  generatedAt: "2026-09-01T00:00:00Z",
+  summary: {
+    totalQuestions: 93,
+    activeQuestions: 93,
+    inactiveQuestions: 0,
+    publishedQuestions: 92,
+    eligibleAllLocales: 89,
+    translationGapQuestions: 4,
+    explanationGapQuestions: 2,
+    invalidQuestions: 0,
+    underrepresentedCategories: 0,
+    overrepresentedCategories: 0,
+  },
+  locales: [
+    { locale: "ar", eligibleQuestions: 89, translationGapQuestions: 4 },
+    { locale: "nl", eligibleQuestions: 89, translationGapQuestions: 4 },
+    { locale: "en", eligibleQuestions: 89, translationGapQuestions: 4 },
+    { locale: "fr", eligibleQuestions: 89, translationGapQuestions: 4 },
+  ],
+  categories,
+  questionsNeedingReview: [{
+    questionId: 66,
+    categoryCode: "TH02",
+    difficulty: "MEDIUM",
+    presentations: 1,
+    answered: 1,
+    correctRate: 0,
+    incorrectRate: 100,
+    averageAnswerTimeSeconds: 8,
+    performanceByLocale: {
+      ar: { answered: 1, correct: 0, correctRate: 0, averageAnswerTimeSeconds: 8 },
+      nl: { answered: 0, correct: 0, correctRate: null, averageAnswerTimeSeconds: null },
+      en: { answered: 0, correct: 0, correctRate: null, averageAnswerTimeSeconds: null },
+      fr: { answered: 0, correct: 0, correctRate: null, averageAnswerTimeSeconds: null },
+    },
+    flags: ["LOCALE_DIVERGENCE"],
+  }],
   rarelyExposedQuestions: [
     {
       questionId: 66,
@@ -139,7 +176,9 @@ test("Arabic category management uses names instead of internal TH codes", async
   await expect(page.getByText(/^TH\d+$/)).toHaveCount(0);
 
   await expect(page.getByTestId("question-exposure-panel")).toBeVisible();
+  await expect(page.getByTestId("theory-bank-health")).toBeVisible();
   await expect(page.getByTestId("theory-category-management")).toBeVisible();
+  await expect(page.getByText(/TH\d+/)).toHaveCount(0);
 
   const widths = await page.evaluate(() => ({
     viewport: window.innerWidth,

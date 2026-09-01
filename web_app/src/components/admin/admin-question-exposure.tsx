@@ -272,7 +272,7 @@ function ExposureCard({
                       variant="outline"
                       className="rounded-lg px-1.5 py-0 text-[10px] font-semibold text-muted-foreground"
                     >
-                      {item.difficulty}
+                      {t(`difficulty.${item.difficulty.toLowerCase()}`)}
                     </Badge>
                   </div>
 

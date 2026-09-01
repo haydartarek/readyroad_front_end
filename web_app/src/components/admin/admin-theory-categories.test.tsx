@@ -97,6 +97,10 @@ describe("AdminTheoryCategories", () => {
     ).toBeInTheDocument();
 
     expect(screen.queryByText(/^TH\d+$/)).not.toBeInTheDocument();
+    expect(screen.getByText("difficulty.easy")).toBeInTheDocument();
+    expect(screen.getByText("difficulty.medium")).toBeInTheDocument();
+    expect(screen.getByText("difficulty.hard")).toBeInTheDocument();
+    expect(screen.queryByText(/^EASY|MEDIUM|HARD$/)).not.toBeInTheDocument();
 
     expect(
       screen.getByRole("link", {

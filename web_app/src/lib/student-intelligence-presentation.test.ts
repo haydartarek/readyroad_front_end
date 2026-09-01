@@ -1,6 +1,7 @@
 import {
   durationValue,
   intelligenceMetricValue,
+  localizedCategoryName,
   localizedPriorityName,
   signedMetricValue,
 } from "./student-intelligence-presentation";
@@ -27,6 +28,13 @@ describe("student intelligence presentation", () => {
     expect(localizedPriorityName(priority, "nl")).toBe("Voorrang");
     expect(localizedPriorityName(priority, "fr")).toBe("Priorité");
     expect(localizedPriorityName(priority, "en")).toBe("Priority");
+  });
+
+  it("never exposes an internal theory category code as a display name", () => {
+    expect(localizedCategoryName({ categoryCode: "TH01" }, "en", "Not available"))
+      .toBe("Not available");
+    expect(localizedPriorityName({ ...priority, categoryCode: "TH01", categoryNameEn: null, categoryNameNl: null, categoryNameFr: null, categoryNameAr: null }, "en"))
+      .toBe("");
   });
 
   it("shows unavailable state instead of a fake zero", () => {

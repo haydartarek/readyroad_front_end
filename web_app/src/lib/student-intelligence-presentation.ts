@@ -31,7 +31,6 @@ export function localizedCategoryName(
     category.categoryNameFr ||
     category.categoryNameAr ||
     category.categoryName ||
-    category.categoryCode ||
     unavailable
   );
 }
@@ -47,7 +46,7 @@ export function localizedPriorityName(
   >,
   language: Language,
 ): string {
-  return localizedCategoryName(priority, language, priority.categoryCode);
+  return localizedCategoryName(priority, language);
 }
 
 export function intelligenceMetricValue(

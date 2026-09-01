@@ -9,17 +9,6 @@ jest.mock("@/contexts/language-context", () => ({
   }),
 }));
 
-jest.mock("@/components/localized-link", () => ({
-  __esModule: true,
-  default: ({
-    href,
-    children,
-  }: {
-    href: string;
-    children: React.ReactNode;
-  }) => <a href={href}>{children}</a>,
-}));
-
 jest.mock("@/lib/api", () => ({
   apiClient: {
     get: jest.fn(),
@@ -159,15 +148,16 @@ describe("AdminTheoryBankHealth", () => {
   it("renders theory-bank analytics without duplicate exposure or category write controls", async () => {
     render(<AdminTheoryBankHealth />);
 
-    expect(
-      await screen.findByText("Priority and intersections"),
-    ).toBeInTheDocument();
+    await screen.findByText("admin.quizzes.health.quality_title");
 
     expect(screen.getAllByText("204")).not.toHaveLength(0);
 
-    expect(
-      screen.getByText("#11 · TH01 · HARD"),
-    ).toBeInTheDocument();
+    expect(screen.getByText((_, element) =>
+      element?.tagName === "STRONG" &&
+      element.textContent === "admin.learning.question 11 · Priority and intersections · difficulty.hard",
+    )).toBeInTheDocument();
+    expect(screen.queryByText(/TH01/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^HARD$/)).not.toBeInTheDocument();
 
     expect(
       screen.queryByText("admin.quizzes.health.rarely_exposed"),
@@ -189,18 +179,16 @@ describe("AdminTheoryBankHealth", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("links category management to the dedicated admin page", async () => {
+  it("does not duplicate category management inside the integrated health panel", async () => {
     render(<AdminTheoryBankHealth />);
 
-    await screen.findByText("Priority and intersections");
+    await screen.findByText("admin.quizzes.health.quality_title");
 
     expect(
-      screen.getByRole("link", {
+      screen.queryByRole("link", {
         name: "admin.quizzes.health.category_management_title",
       }),
-    ).toHaveAttribute(
-      "href",
-      "/admin/quizzes/categories",
-    );
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("admin.quizzes.health.categories")).not.toBeInTheDocument();
   });
 });

@@ -120,6 +120,9 @@ describe("AdminQuestionExposure", () => {
     expect(screen.getByText("Vehicle and technical safety")).toBeInTheDocument();
 
     expect(screen.queryByText(/^TH\d+$/)).not.toBeInTheDocument();
+    expect(screen.getAllByText("difficulty.easy")).not.toHaveLength(0);
+    expect(screen.getByText("difficulty.medium")).toBeInTheDocument();
+    expect(screen.queryByText(/^EASY|MEDIUM|HARD$/)).not.toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: /#5/ })).toHaveAttribute(
       "href",

@@ -17,7 +17,6 @@ import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { NATIVE_SELECT_COMPACT_CLASS } from "@/lib/native-select-styles";
 import { buildAdminQuizEditHref } from "@/lib/admin-quiz-form";
 import { cn } from "@/lib/utils";
-import { AdminTheoryBankHealth } from "@/components/admin/admin-theory-bank-health";
 import {
   ClipboardList,
   Plus,
@@ -407,7 +406,7 @@ export default function AdminQuizzesPage() {
 
   const getCategoryLabel = (code: string) => {
     const c = categories.find((x) => x.code === code);
-    if (!c) return code;
+    if (!c) return t("common.not_available");
     return (
       { en: c.nameEn, ar: c.nameAr, nl: c.nameNl, fr: c.nameFr }[language] ||
       c.nameEn
@@ -544,8 +543,6 @@ export default function AdminQuizzesPage() {
       <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
         {t("admin.quizzes.bank_theory_desc")}
       </div>
-
-      <AdminTheoryBankHealth />
 
       {distribution && (
         <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-sm">

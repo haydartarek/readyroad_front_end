@@ -183,7 +183,7 @@ export function localizedCategoryName(
   return (
     category[`name${suffix}` as keyof CategoryPerformance] ||
     category.nameEn ||
-    category.categoryCode
+    ""
   ).toString();
 }
 

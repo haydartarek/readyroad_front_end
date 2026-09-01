@@ -368,7 +368,7 @@ export function AdminTheoryCategories() {
                   {(["EASY", "MEDIUM", "HARD"] as const).map((difficulty) => (
                     <Metric
                       key={difficulty}
-                      label={difficulty}
+                      label={t(`difficulty.${difficulty.toLowerCase()}`)}
                       value={category.eligibleByDifficulty[difficulty] ?? 0}
                       compact
                     />

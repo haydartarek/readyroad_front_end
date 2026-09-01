@@ -40,7 +40,7 @@ export default function AdminLearningExamDetailPage() {
     {detail?.historicalContentStatus === "SNAPSHOT_PARTIAL" ? <p role="status" className="rounded-xl border border-amber-300/70 bg-amber-50 p-4 text-sm text-amber-900">{t("admin.learning.partial_snapshot_notice")}</p> : null}
     <AdminSectionCard title={t("admin.learning.answer_review")}>
       {!detail ? <p className="py-12 text-center text-sm text-muted-foreground">{t("common.loading")}</p> : questions.length === 0 ? <p className="py-12 text-center text-sm text-muted-foreground">{t("admin.learning.no_historical_answers")}</p> : <div className="space-y-3">
-        {questions.map((question, index) => <QuestionReview key={String(question.questionId ?? index)} question={question} index={index} language={language} subjectCode={String(detail.result.signCode ?? "")} resultImage={String(detail.result.signImagePath ?? "")} t={t} />)}
+        {questions.map((question, index) => <QuestionReview key={String(question.questionId ?? index)} question={question} index={index} language={language} resultImage={String(detail.result.signImagePath ?? "")} t={t} />)}
       </div>}
     </AdminSectionCard>
   </div>;
@@ -89,7 +89,7 @@ function historicalId(row: QuestionRow, ...keys: string[]): string {
   return value == null ? "" : `#${String(value)}`;
 }
 
-function QuestionReview({ question, index, language, subjectCode, resultImage, t }: { question: QuestionRow; index: number; language: string; subjectCode: string; resultImage: string; t: (key: string) => string }) {
+function QuestionReview({ question, index, language, resultImage, t }: { question: QuestionRow; index: number; language: string; resultImage: string; t: (key: string) => string }) {
   const correct = Boolean(question.isCorrect);
   const questionText = firstLocalized(question, language, "questionText", "question");
   const selected = firstLocalized(question, language, "selectedOptionText", "selectedText", "selectedChoice")
@@ -97,8 +97,7 @@ function QuestionReview({ question, index, language, subjectCode, resultImage, t
   const answer = firstLocalized(question, language, "correctOptionText", "correctText", "correctChoice")
     || historicalId(question, "correctOptionId", "correctChoiceId");
   const explanation = localized(question, "explanation", language);
-  const category = firstLocalized(question, language, "categoryName")
-    || String(question.categoryCode ?? question.signCode ?? subjectCode);
+  const category = firstLocalized(question, language, "categoryName");
   const difficulty = String(question.difficulty ?? "").toLowerCase();
   const image = String(question.contentImageUrl ?? question.signImagePath ?? resultImage);
   const unanswered = question.answered === false

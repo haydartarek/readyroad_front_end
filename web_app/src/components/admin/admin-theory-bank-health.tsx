@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, AlertTriangle, FolderCog, RefreshCw } from "lucide-react";
-import Link from "@/components/localized-link";
+import { Activity, AlertTriangle, RefreshCw } from "lucide-react";
 import { apiClient, logApiError } from "@/lib/api";
-import { API_ENDPOINTS } from "@/lib/constants";
+import { API_ENDPOINTS, LANGUAGES } from "@/lib/constants";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -131,17 +130,9 @@ export function AdminTheoryBankHealth() {
             <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("admin.quizzes.health.description")}</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => void load()} disabled={loading} aria-label={t("admin.quizzes.health.refresh")}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          <Button type="button" size="sm" variant="outline" className="gap-2" asChild>
-            <Link href="/admin/quizzes/categories">
-              <FolderCog className="h-4 w-4" />
-              {t("admin.quizzes.health.category_management_title")}
-            </Link>
-          </Button>
-        </div>
+        <Button type="button" variant="outline" size="sm" onClick={() => void load()} disabled={loading} aria-label={t("admin.quizzes.health.refresh")}>
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       </div>
 
       {error ? (
@@ -169,41 +160,11 @@ export function AdminTheoryBankHealth() {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {health.locales.map((locale) => (
               <div key={locale.locale} className="rounded-xl border border-border/40 bg-muted/20 p-3 text-center">
-                <p className="text-xs font-bold uppercase text-muted-foreground">{locale.locale}</p>
+                <p className="text-xs font-bold text-muted-foreground">{languageName(locale.locale)}</p>
                 <p className="mt-1 text-lg font-black text-foreground">{locale.eligibleQuestions}</p>
                 <p className="text-xs text-muted-foreground">{t("admin.quizzes.health.gaps")}: {locale.translationGapQuestions}</p>
               </div>
             ))}
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-sm font-black text-foreground">{t("admin.quizzes.health.categories")}</h3>
-            <div className="grid min-w-0 gap-2 xl:grid-cols-2">
-              {health.categories.map((category) => (
-                <article key={category.id} className="min-w-0 rounded-xl border border-border/40 bg-background/60 p-3">
-                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="break-words text-sm font-black text-foreground">{categoryName(category, language)}</p>
-                      <p className="text-xs text-muted-foreground">{category.code} · {t("admin.quizzes.health.weight")}: {category.examTargetWeight ?? "—"}</p>
-                    </div>
-                    <Badge variant={category.active ? "default" : "outline"}>
-                      {t(`admin.quizzes.health.status_${category.representationStatus.toLowerCase()}`)}
-                    </Badge>
-                  </div>
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                    {(["EASY", "MEDIUM", "HARD"] as const).map((difficulty) => (
-                      <div key={difficulty} className="rounded-lg bg-muted/35 p-2">
-                        <p className="font-semibold text-muted-foreground">{difficulty}</p>
-                        <p className="font-black text-foreground">{category.eligibleByDifficulty[difficulty] ?? 0}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {t("admin.quizzes.health.eligible")}: {category.eligibleAllLocales} · {t("admin.quizzes.health.presentations")}: {category.totalPresentations}
-                  </p>
-                </article>
-              ))}
-            </div>
           </div>
 
           <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
@@ -215,7 +176,9 @@ export function AdminTheoryBankHealth() {
                 {health.questionsNeedingReview.map((question) => (
                   <div key={question.questionId} className="min-w-0 rounded-lg border border-border/40 bg-background/60 p-3 text-xs">
                     <div className="flex flex-wrap items-center gap-2">
-                      <strong>#{question.questionId} · {question.categoryCode} · {question.difficulty}</strong>
+                      <strong>
+                        {t("admin.learning.question")} {question.questionId} · {categoryNameByCode(question.categoryCode, health.categories, language, t)} · {t(`difficulty.${question.difficulty.toLowerCase()}`)}
+                      </strong>
                       {question.flags.map((flag) => (
                         <Badge key={flag} variant="outline">{t(`admin.quizzes.health.flag_${flag.toLowerCase()}`)}</Badge>
                       ))}
@@ -227,7 +190,7 @@ export function AdminTheoryBankHealth() {
                       {Object.entries(question.performanceByLocale)
                         .filter(([, performance]) => performance.answered > 0)
                         .map(([locale, performance]) => (
-                          <Badge key={locale} variant="outline">{locale.toUpperCase()} · {performance.answered} · {formatPercent(performance.correctRate)}</Badge>
+                          <Badge key={locale} variant="outline">{languageName(locale as LocaleCode)} · {performance.answered} · {formatPercent(performance.correctRate)}</Badge>
                         ))}
                     </div>
                   </div>
@@ -246,6 +209,20 @@ function categoryName(category: CategoryHealth, language: string): string {
   if (language === "nl") return category.nameNl;
   if (language === "fr") return category.nameFr;
   return category.nameEn;
+}
+
+function categoryNameByCode(
+  code: string,
+  categories: CategoryHealth[],
+  language: string,
+  t: (key: string) => string,
+): string {
+  const category = categories.find((item) => item.code === code);
+  return category ? categoryName(category, language) : t("common.not_available");
+}
+
+function languageName(locale: LocaleCode): string {
+  return LANGUAGES.find((language) => language.code === locale)?.nativeName ?? locale;
 }
 
 function HealthMetric({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "danger" }) {

@@ -375,7 +375,7 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   expect(mutations).toHaveLength(0);
   await preview.locator('[data-slot="dialog-close"]').click();
   await expect(preview).toBeHidden();
-  await page.getByRole("button", { name: "Save draft" }).click();
+  await page.getByRole("button", { name: "Save new version" }).click();
 
   await expect.poll(() => mutations.length).toBe(1);
   expect(mutations[0].method()).toBe("PUT");

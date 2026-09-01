@@ -373,7 +373,8 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   await expect(preview.getByText("Start the theory exam")).toBeVisible();
   await expect(preview.getByTestId("editorial-preview")).toHaveAttribute("dir", "ltr");
   expect(mutations).toHaveLength(0);
-  await page.keyboard.press("Escape");
+  await preview.locator('[data-slot="dialog-close"]').click();
+  await expect(preview).toBeHidden();
   await page.getByRole("button", { name: "Save draft" }).click();
 
   await expect.poll(() => mutations.length).toBe(1);
@@ -493,7 +494,7 @@ test("Editorial rich controls validate and submit one local article image", asyn
   }
 
   const imagePanel = page.getByTestId("editorial-article-image");
-  const fileInput = imagePanel.getByLabel(/Image from device/);
+  const fileInput = imagePanel.getByTestId("editorial-image-file-input");
   await fileInput.setInputFiles({
     name: "animated.gif",
     mimeType: "image/gif",
@@ -510,16 +511,12 @@ test("Editorial rich controls validate and submit one local article image", asyn
     ),
   });
   await expect(imagePanel.getByText("Only JPEG or PNG files are supported.")).toHaveCount(0);
-  await imagePanel.getByLabel(/Image owner or file source/).fill("RijVia owner upload");
-  await imagePanel.getByLabel(/License name/).fill("Owned media");
   await imagePanel.getByLabel(/Alt text AR/).fill("طريق بلجيكي آمن");
   await imagePanel.getByLabel(/Alt text NL/).fill("Een veilige Belgische weg");
   await imagePanel.getByLabel(/Alt text FR/).fill("Une route belge sûre");
   await imagePanel.getByLabel(/Alt text EN/).fill("A safe Belgian road");
-  await imagePanel.getByLabel(/Image approval reason/).fill("Ownership and publication rights verified");
-  await imagePanel.getByRole("checkbox").check();
 
-  const upload = imagePanel.getByRole("button", { name: "Upload and process image" });
+  const upload = imagePanel.getByTestId("editorial-image-upload-action");
   await expect(upload).toBeEnabled();
   await upload.click();
 

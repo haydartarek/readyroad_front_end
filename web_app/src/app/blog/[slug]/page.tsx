@@ -17,8 +17,17 @@ type BlogArticlePageProps = Readonly<{
   params: Promise<{ slug: string }>;
 }>;
 
+function decodeArticleSlug(slug: string): string {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    notFound();
+  }
+}
+
 export async function generateMetadata({ params }: BlogArticlePageProps): Promise<Metadata> {
-  const [{ slug }, locale] = await Promise.all([params, getRequestLocale()]);
+  const [{ slug: routeSlug }, locale] = await Promise.all([params, getRequestLocale()]);
+  const slug = decodeArticleSlug(routeSlug);
   const article = await getPublicArticle(locale, slug);
 
   if (!article) {
@@ -29,7 +38,8 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
 }
 
 export default async function BlogArticlePage({ params }: BlogArticlePageProps) {
-  const [{ slug }, locale] = await Promise.all([params, getRequestLocale()]);
+  const [{ slug: routeSlug }, locale] = await Promise.all([params, getRequestLocale()]);
+  const slug = decodeArticleSlug(routeSlug);
   const article = await getPublicArticle(locale, slug);
 
   if (!article) {

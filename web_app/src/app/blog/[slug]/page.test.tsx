@@ -134,4 +134,49 @@ describe("localized public blog article", () => {
     })).rejects.toThrow("NEXT_NOT_FOUND");
     expect(notFound).toHaveBeenCalledTimes(1);
   });
+
+  it.each(["القيادة-الآمنة-في-بلجيكا", encodeURIComponent("القيادة-الآمنة-في-بلجيكا")])(
+    "resolves an Arabic route slug once without redirecting to the same URL: %s",
+    async (routeSlug) => {
+      const slug = "القيادة-الآمنة-في-بلجيكا";
+      getLocale.mockResolvedValue("ar");
+      getArticle.mockResolvedValue({
+        language: "AR",
+        slug,
+        title: "القيادة الآمنة في بلجيكا",
+        summary: "ملخص منشور",
+        metaTitle: "القيادة الآمنة في بلجيكا | RijVia",
+        metaDescription: "مبادئ القيادة الآمنة في بلجيكا.",
+        body: "محتوى منشور",
+        publishedAt: "2026-08-22T10:00:00Z",
+        image: null,
+        internalLinks: [],
+        typography,
+        alternateSlugs: { AR: slug },
+      });
+      const props = { params: Promise.resolve({ slug: routeSlug }) };
+
+      const metadata = await generateMetadata(props);
+      render(await BlogArticlePage(props));
+
+      expect(getArticle).toHaveBeenNthCalledWith(1, "ar", slug);
+      expect(getArticle).toHaveBeenNthCalledWith(2, "ar", slug);
+      expect(metadata.alternates?.canonical).toBe(
+        `https://rijvia.be/ar/blog/${encodeURIComponent(slug)}`,
+      );
+      expect(screen.getByRole("heading", { name: "القيادة الآمنة في بلجيكا", level: 1 }))
+        .toBeInTheDocument();
+      expect(redirect).not.toHaveBeenCalled();
+      expect(notFound).not.toHaveBeenCalled();
+    },
+  );
+
+  it("returns 404 for malformed route encoding without requesting the API", async () => {
+    getLocale.mockResolvedValue("ar");
+    const props = { params: Promise.resolve({ slug: "%D8" }) };
+
+    await expect(generateMetadata(props)).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(BlogArticlePage(props)).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(getArticle).not.toHaveBeenCalled();
+  });
 });

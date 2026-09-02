@@ -90,7 +90,7 @@ const articleSlugs = {
   EN: "safe-driving-belgium",
   NL: "veilig-rijden-belgie",
   FR: "conduite-sure-belgique",
-  AR: "al-qiyada-al-amina",
+  AR: "القيادة-الآمنة-في-بلجيكا",
 };
 
 const articleTitles = {

@@ -26,7 +26,7 @@ const localizedArticles = [
   {
     locale: "ar",
     indexPath: "/ar/blog",
-    slug: "al-qiyada-al-amina",
+    slug: "القيادة-الآمنة-في-بلجيكا",
     title: "القيادة الآمنة في بلجيكا",
     language: "ar",
   },
@@ -47,23 +47,26 @@ test.describe("localized public blog routes", () => {
     page.on("pageerror", (error) => consoleErrors.push(error.message));
 
     for (const article of localizedArticles) {
+      const articlePath = `${article.indexPath}/${encodeURIComponent(article.slug)}`;
       const response = await page.goto(article.indexPath);
       expect(response?.status(), article.indexPath).toBe(200);
       const link = page.getByRole("link", { name: article.title }).first();
       await expect(link).toHaveAttribute(
         "href",
-        `${article.indexPath}/${article.slug}`,
+        articlePath,
       );
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
         "href",
         `https://rijvia.be${article.indexPath}`,
       );
-      const articleResponse = await page.goto(`${article.indexPath}/${article.slug}`);
+      await link.click();
+      await expect(page.getByRole("heading", { name: article.title })).toBeVisible();
+      const articleResponse = await page.goto(articlePath);
       expect(articleResponse?.status(), `${article.indexPath}/${article.slug}`).toBe(200);
       await expect(page).toHaveURL(
-        new RegExp(`${article.indexPath}/${article.slug}$`),
+        new RegExp(`${articlePath}$`),
       );
-      const canonicalUrl = `https://rijvia.be${article.indexPath}/${article.slug}`;
+      const canonicalUrl = `https://rijvia.be${articlePath}`;
       await expect(page).toHaveTitle(`${article.title} | RijVia`);
       await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
@@ -109,7 +112,7 @@ test.describe("localized public blog routes", () => {
     const response = await page.goto("/ar/blog/safe-driving-belgium");
 
     expect(response?.status()).toBe(200);
-    await expect(page).toHaveURL(/\/ar\/blog\/al-qiyada-al-amina$/);
+    await expect(page).toHaveURL(new RegExp(`/ar/blog/${encodeURIComponent("القيادة-الآمنة-في-بلجيكا")}$`));
     await expect(
       page.getByRole("heading", { name: "القيادة الآمنة في بلجيكا" }),
     ).toBeVisible();

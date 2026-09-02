@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { seedCookieConsent } from "./helpers/consent";
+import { translateMessage } from "../../src/lib/messages";
 
 const localizedArticles = [
   {
@@ -124,4 +125,59 @@ test.describe("localized public blog routes", () => {
     await expect(page.getByTestId("not-found-page")).toBeVisible();
     await expect(page.getByTestId("not-found-code")).toHaveText("404");
   });
+
+  for (const width of [1280, 390]) {
+  test(`shows localized learning cards and blog navigation at ${width}px`, async ({ page }, testInfo) => {
+    test.setTimeout(60_000);
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+      await page.setViewportSize({ width, height: 900 });
+      for (const article of localizedArticles) {
+        await page.goto(article.indexPath);
+        await expect.poll(() => page.getByTestId("blog-article-grid")
+          .evaluate((grid) => getComputedStyle(grid).gridTemplateColumns.split(" ").length))
+          .toBe(width >= 1024 ? 4 : 1);
+        await expect(page.getByTitle(translateMessage(article.locale, "nav.theme_dark"), { exact: true })).toHaveCount(1);
+
+        const blogName = translateMessage(article.locale, "nav.blog");
+        if (width >= 1280) {
+          const navigation = page.getByTestId("desktop-primary-navigation");
+          await expect(navigation.getByRole("link", { name: blogName, exact: true })).toHaveAttribute("href", article.indexPath);
+          const navBox = await navigation.boundingBox();
+          const actionsBox = await page.getByTestId("navbar-actions").boundingBox();
+          expect(navBox).not.toBeNull();
+          expect(actionsBox).not.toBeNull();
+          for (const link of await navigation.getByRole("link").all()) {
+            const box = await link.boundingBox();
+            expect(box).not.toBeNull();
+            expect(box!.x).toBeGreaterThanOrEqual(navBox!.x - 1);
+            expect(box!.x + box!.width).toBeLessThanOrEqual(navBox!.x + navBox!.width + 1);
+          }
+        } else {
+          await page.getByRole("button", { name: translateMessage(article.locale, "nav.open_menu"), exact: true }).click();
+          const blogLink = page.getByTestId("mobile-navigation-dialog").getByRole("link", { name: blogName, exact: true });
+          await expect(blogLink).toHaveAttribute("href", article.indexPath);
+          await blogLink.click();
+          await expect(page.getByTestId("mobile-navigation-dialog")).not.toBeVisible();
+        }
+
+        await page.goto(`${article.indexPath}/${encodeURIComponent(article.slug)}`);
+        const cards = page.getByTestId("article-learning-cards");
+        await expect(cards).toHaveCount(1);
+        expect(await cards.evaluate((element) => element.previousElementSibling?.textContent)).toBe("Second reviewed paragraph.");
+        const prefix = article.locale === "en" ? "" : `/${article.locale}`;
+        const links = cards.getByRole("link");
+        await expect(links).toHaveCount(3);
+        for (const [index, route] of ["/traffic-signs", "/practice", "/exam"].entries()) {
+          await expect(links.nth(index)).toHaveAttribute("href", `${prefix}${route}`);
+          await expect.poll(() => links.nth(index).locator("img").evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+        }
+        expect(await cards.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length)).toBe(width >= 640 ? 3 : 1);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await cards.screenshot({ path: testInfo.outputPath(`learning-cards-${article.locale}-${width}.png`) });
+      }
+    expect(errors).toEqual([]);
+  });
+  }
 });

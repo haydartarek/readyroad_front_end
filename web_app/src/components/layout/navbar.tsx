@@ -79,6 +79,7 @@ const NAV_ITEMS = [
     compactName: "nav.compact_videos",
     href: ROUTES.VIDEOS,
   },
+  { name: "nav.blog", compactName: "nav.blog", href: "/blog" },
 ] as const;
 
 const AUTH_PATHS = [

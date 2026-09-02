@@ -32,6 +32,7 @@ const mockLabels: Record<Language, Record<string, string>> = {
     "nav.dashboard": "Dashboard",
     "nav.profile": "Profile",
     "nav.videos": "Driving Videos",
+    "nav.blog": "Blog",
     "nav.compact_home": "Home",
     "nav.compact_lessons": "Lessons",
     "nav.compact_traffic_signs": "Traffic Signs",
@@ -51,6 +52,7 @@ const mockLabels: Record<Language, Record<string, string>> = {
     "nav.dashboard": "Dashboard",
     "nav.profile": "Profiel",
     "nav.videos": "Rijlesvideo’s",
+    "nav.blog": "Blog",
     "nav.compact_home": "Home",
     "nav.compact_lessons": "Lessen",
     "nav.compact_traffic_signs": "Verkeersborden",
@@ -70,6 +72,7 @@ const mockLabels: Record<Language, Record<string, string>> = {
     "nav.dashboard": "Tableau de Bord",
     "nav.profile": "Profil",
     "nav.videos": "Vidéos de conduite",
+    "nav.blog": "Articles",
     "nav.compact_home": "Accueil",
     "nav.compact_lessons": "Cours",
     "nav.compact_traffic_signs": "Panneaux",
@@ -89,6 +92,7 @@ const mockLabels: Record<Language, Record<string, string>> = {
     "nav.dashboard": "لوحة التحكم",
     "nav.profile": "الملف الشخصي",
     "nav.videos": "فيديوهات تعليم السياقة",
+    "nav.blog": "المقالات",
     "nav.compact_home": "الرئيسية",
     "nav.compact_lessons": "الدروس",
     "nav.compact_traffic_signs": "العلامات",
@@ -241,6 +245,7 @@ describe("Navbar responsive account navigation", () => {
         "Practice",
         "Exam",
         "Driving Videos",
+        "Blog",
       ],
     ],
     [
@@ -252,6 +257,7 @@ describe("Navbar responsive account navigation", () => {
         "Oefenen",
         "Examen",
         "Rijlesvideo’s",
+        "Blog",
       ],
     ],
     [
@@ -263,6 +269,7 @@ describe("Navbar responsive account navigation", () => {
         "Entraînement",
         "Examen",
         "Vidéos de conduite",
+        "Articles",
       ],
     ],
     [
@@ -274,6 +281,7 @@ describe("Navbar responsive account navigation", () => {
         "التدريب",
         "الامتحان",
         "فيديوهات تعليم السياقة",
+        "المقالات",
       ],
     ],
   ] as const)("uses the learner journey order in %s", (language, labels) => {
@@ -449,6 +457,25 @@ describe("Navbar responsive account navigation", () => {
       );
     },
   );
+
+  test.each([
+    ["en", "Blog", "/blog"],
+    ["nl", "Blog", "/nl/blog"],
+    ["fr", "Articles", "/fr/blog"],
+    ["ar", "المقالات", "/ar/blog"],
+  ] as const)("links to the %s blog in both menus and stays active on articles", async (language, label, href) => {
+    mockLanguage = language;
+    mockPathname = "/blog/published-article";
+    render(<Navbar />);
+    const desktopLink = within(screen.getByTestId("desktop-primary-navigation"))
+      .getByRole("link", { name: label });
+    expect(desktopLink).toHaveAttribute("href", href);
+    expect(desktopLink).toHaveClass("bg-primary");
+    fireEvent.click(screen.getByRole("button", { name: "nav.open_menu" }));
+    const menu = within(await screen.findByTestId("mobile-navigation-dialog"));
+    expect(menu.getAllByRole("link", { name: label })).toHaveLength(1);
+    expect(menu.getByRole("link", { name: label })).toHaveAttribute("href", href);
+  });
 
   test("keeps one notification trigger available outside the mobile menu", () => {
     render(<Navbar />);

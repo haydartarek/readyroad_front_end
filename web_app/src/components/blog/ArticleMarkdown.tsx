@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Root } from "hast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
@@ -7,6 +8,19 @@ interface ArticleMarkdownProps {
   body: string;
   className?: string;
   typography?: Partial<ArticleTypography> | null;
+  afterSecondParagraph?: ReactNode;
+}
+
+function markSecondParagraph() {
+  return (tree: Root) => {
+    // Count body paragraphs only, excluding paragraphs inside lists or quotations.
+    const paragraph = tree.children.filter(
+      (node) => node.type === "element" && node.tagName === "p",
+    )[1];
+    if (paragraph?.type === "element") {
+      paragraph.properties.dataLearningCards = true;
+    }
+  };
 }
 
 export interface ArticleTypography {
@@ -97,6 +111,7 @@ export default function ArticleMarkdown({
   body,
   className,
   typography,
+  afterSecondParagraph,
 }: ArticleMarkdownProps) {
   const styles: ArticleTypography = {
     ...DEFAULT_ARTICLE_TYPOGRAPHY,
@@ -110,6 +125,7 @@ export default function ArticleMarkdown({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={afterSecondParagraph ? [markSecondParagraph] : []}
         skipHtml
         components={{
           h1: ({ children }) => (
@@ -132,10 +148,13 @@ export default function ArticleMarkdown({
               {children}
             </h4>
           ),
-          p: ({ children }) => (
-            <p className={cn("mt-5 whitespace-pre-wrap leading-inherit first:mt-0", PARAGRAPH_CLASSES[styles.paragraphSize])}>
-              {children}
-            </p>
+          p: ({ children, node }) => (
+            <>
+              <p className={cn("mt-5 whitespace-pre-wrap leading-inherit first:mt-0", PARAGRAPH_CLASSES[styles.paragraphSize])}>
+                {children}
+              </p>
+              {node?.properties.dataLearningCards ? afterSecondParagraph : null}
+            </>
           ),
           ul: ({ children }) => (
             <ul className="mt-5 list-disc space-y-2 ps-6 marker:text-primary">

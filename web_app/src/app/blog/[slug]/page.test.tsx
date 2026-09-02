@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { getPublicArticle } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
 import { notFound, redirect } from "next/navigation";
@@ -29,6 +29,31 @@ const typography = {
 describe("localized public blog article", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it.each([
+    ["ar", "/ar", ["تدرب على العلامات المرورية", "امتحان العلامات المرورية", "محاكي الامتحان النظري"]],
+    ["en", "", ["Practise traffic signs", "Traffic signs test", "Theory exam simulator"]],
+    ["nl", "/nl", ["Verkeersborden oefenen", "Verkeersbordentest", "Theorie-examensimulator"]],
+    ["fr", "/fr", ["S’entraîner aux panneaux routiers", "Test des panneaux routiers", "Simulateur d’examen théorique"]],
+  ])("adds three localized learning cards after paragraph two in %s", async (locale, prefix, labels) => {
+    getLocale.mockResolvedValue(locale);
+    getArticle.mockResolvedValue({
+      language: String(locale).toUpperCase(), slug: "safe-driving", title: "Published article",
+      summary: "Summary is not a body paragraph.", body: "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.",
+      publishedAt: "2026-08-22T10:00:00Z", image: null, internalLinks: [], typography,
+      alternateSlugs: { [String(locale).toUpperCase()]: "safe-driving" },
+    });
+    render(await BlogArticlePage({ params: Promise.resolve({ slug: "safe-driving" }) }));
+    const cards = screen.getByTestId("article-learning-cards");
+    expect(cards.previousElementSibling).toHaveTextContent("Second paragraph.");
+    expect(within(cards).getAllByRole("link")).toHaveLength(3);
+    ["/traffic-signs", "/practice", "/exam"].forEach((path, index) => {
+      const link = within(cards).getByRole("link", { name: labels[index] });
+      expect(link).toHaveAttribute("href", `${prefix}${path}`);
+      const imageUrl = new URL(link.querySelector("img")!.getAttribute("src")!, "http://localhost:3000");
+      expect(imageUrl.searchParams.get("url")).toBe(`/images${path}.png`);
+    });
   });
 
   it("renders the published Markdown snapshot with its approved typography", async () => {

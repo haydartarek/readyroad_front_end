@@ -2,6 +2,27 @@ import { render, screen } from "@testing-library/react";
 import ArticleMarkdown from "@/components/blog/ArticleMarkdown";
 
 describe("ArticleMarkdown", () => {
+  it("inserts learning content once after the second body paragraph, not inside a list or quote", () => {
+    const body = "## Heading\n\nFirst paragraph.\n\n> Quoted paragraph.\n\n- List item\n\nSecond paragraph with **emphasis**.\n\nThird paragraph.";
+    const { rerender } = render(
+      <ArticleMarkdown body={body} afterSecondParagraph={<aside>Learning cards</aside>} />,
+    );
+
+    const cards = screen.getByRole("complementary");
+    expect(cards.previousElementSibling).toHaveTextContent("Second paragraph with emphasis.");
+    expect(cards.nextElementSibling).toHaveTextContent("Third paragraph.");
+    expect(cards.parentElement).toBe(screen.getByTestId("article-markdown"));
+    rerender(<ArticleMarkdown body={body} afterSecondParagraph={<aside>Learning cards</aside>} />);
+    expect(screen.getAllByRole("complementary")).toHaveLength(1);
+  });
+
+  it("leaves editor previews and bodies without a second paragraph unchanged", () => {
+    const { rerender } = render(<ArticleMarkdown body={"First.\n\nSecond."} />);
+    expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+    rerender(<ArticleMarkdown body="Only paragraph." afterSecondParagraph={<aside>Learning cards</aside>} />);
+    expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
+  });
+
   it("renders structured Markdown without accepting raw HTML or unsafe URLs", () => {
     render(
       <ArticleMarkdown

@@ -41,6 +41,7 @@ describe("localized public blog index", () => {
     render(await BlogPage());
 
     expect(getArticles).toHaveBeenCalledWith(locale);
+    expect(screen.getByTestId("blog-article-grid")).toHaveClass("grid-cols-1", "md:grid-cols-2", "lg:grid-cols-4");
     expect(screen.getByRole("link", { name: /Safer driving in Belgium/i })).toHaveAttribute(
       "href",
       href,

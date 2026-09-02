@@ -82,7 +82,7 @@ export default async function BlogPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:gap-6">
+          <div data-testid="blog-article-grid" className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4 lg:gap-6">
             {articles.map((article) => {
               const href = localizePathname(
                 `/blog/${encodeURIComponent(article.slug)}`,
@@ -92,7 +92,7 @@ export default async function BlogPage() {
               return (
                 <article
                   key={`${article.language}:${article.slug}`}
-                  className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-colors hover:border-primary/25"
+                  className="flex min-w-0 flex-col rounded-lg border border-border/60 bg-card shadow-sm transition-colors hover:border-primary/25"
                 >
                   {article.image ? (
                     <Link href={href} className="relative block aspect-video bg-muted">
@@ -100,19 +100,19 @@ export default async function BlogPage() {
                         src={article.image.cardUrl}
                         alt={article.image.altText}
                         fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover transition-transform duration-300 hover:scale-[1.02]"
+                        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 280px"
+                        className="rounded-t-lg object-cover"
                       />
                     </Link>
                   ) : null}
-                  <div className="flex flex-1 flex-col p-5 sm:p-6">
+                  <div className="flex flex-1 flex-col p-4">
                   <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
                     <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <time dateTime={article.publishedAt}>
                       {formatArticleDate(article.publishedAt, locale)}
                     </time>
                   </div>
-                  <h2 className="mt-4 break-words text-xl font-black leading-snug tracking-normal">
+                  <h2 className="mt-4 break-words text-lg font-black leading-snug tracking-normal">
                     <Link href={href} className="outline-none hover:text-primary focus-visible:text-primary">
                       {article.title}
                     </Link>

@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { formatArticleDate } from "@/app/blog/blog-format";
 import ArticleMarkdown from "@/components/blog/ArticleMarkdown";
+import ArticleLearningCards from "@/components/blog/ArticleLearningCards";
 import { localizePathname } from "@/lib/i18n-routing";
 import { createArticleMetadata } from "@/lib/article-metadata";
 import { createArticleStructuredData } from "@/lib/article-structured-data";
@@ -133,6 +134,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
         <ArticleMarkdown
           body={article.body}
           typography={article.typography}
+          afterSecondParagraph={<ArticleLearningCards locale={locale} />}
           className="mx-auto mt-8 max-w-[70ch] text-start leading-8 md:mt-10 md:leading-9"
         />
 

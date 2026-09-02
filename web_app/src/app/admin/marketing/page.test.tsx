@@ -7,7 +7,7 @@ jest.mock("@/contexts/language-context", () => ({
   useLanguage: () => ({ t: (key: string) => key, language: "en", isRTL: false }),
 }));
 jest.mock("@/lib/api", () => ({
-  apiClient: { get: jest.fn(), put: jest.fn(), post: jest.fn() },
+  apiClient: { get: jest.fn(), put: jest.fn(), post: jest.fn(), delete: jest.fn() },
   getApiErrorMessage: (error: unknown, fallback: string) =>
     error instanceof Error && error.message ? error.message : fallback,
   logApiError: jest.fn(),
@@ -16,6 +16,7 @@ jest.mock("@/lib/api", () => ({
 const get = apiClient.get as jest.Mock;
 const put = apiClient.put as jest.Mock;
 const post = apiClient.post as jest.Mock;
+const remove = apiClient.delete as jest.Mock;
 
 const responses: Record<string, unknown> = {
   "/admin/marketing/overview": {
@@ -173,6 +174,8 @@ const responses: Record<string, unknown> = {
         articleId: null,
         lifecycleState: null,
         canonicalLanguage: null,
+        pendingApprovalTaskId: null,
+        image: null,
         currentVersions: [],
       },
     ],
@@ -252,6 +255,7 @@ describe("MarketingAdminPage", () => {
       return Promise.resolve({ data: { status: "WAITING_APPROVAL" } });
     });
     post.mockResolvedValue({ data: { status: "PENDING" } });
+    remove.mockResolvedValue({ data: null });
   });
 
   it("loads the operational overview and exposes every basic platform tab", async () => {
@@ -301,7 +305,7 @@ describe("MarketingAdminPage", () => {
         "/admin/marketing/editorial/editor/topics/1/versions/AR",
         {
           title: "Belgian theory exam guide",
-          slug: "theory-guide",
+          slug: "belgian-theory-exam-guide",
           summary: null,
           body: "Draft body",
           metaTitle: "Belgian theory exam guide | RijVia",
@@ -702,10 +706,245 @@ describe("MarketingAdminPage", () => {
       expect(post).toHaveBeenCalledWith(
         "/admin/marketing/editorial/editor/articles/11/translation-requests",
         {
-          idempotencyKey: "admin-translation-11-AR-v3",
+          idempotencyKey: "admin-translation-11-AR-v3-NL-FR-EN-seo-v2",
         },
       );
     });
+  });
+
+  it("repairs missing localized SEO metadata from IMAGE_REQUIRED without regenerating editor content", async () => {
+    const currentVersions = ["AR", "NL", "FR", "EN"].map((language, index) => ({
+      language,
+      versionNumber: 1,
+      title: `${language} saved article`,
+      slug: `${language.toLowerCase()}-saved-article`,
+      focusKeyword: language === "AR" ? "امتحان السياقة النظري" : null,
+      status: "DRAFT",
+      createdAt: "2026-08-26T10:00:00Z",
+      createdBy: "admin",
+      id: 41 + index,
+      articleId: 11,
+      summary: `${language} summary`,
+      metaTitle: `${language} title | RijVia`,
+      metaDescription: `${language} description`,
+      body: `${language} body that must remain unchanged`,
+      internalLinks: [],
+      current: true,
+    }));
+
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({
+          data: {
+            languages: ["AR", "NL", "FR", "EN"],
+            qualityGates: ["TRANSLATION_QUALITY"],
+            contentGraph: {
+              articleNodeCount: 1,
+              assetNodeCount: 0,
+              edgeCount: 0,
+              orphanArticleCount: 1,
+              nodes: [],
+              edges: [],
+              orphanArticles: [],
+            },
+            topics: [{
+              ...((responses["/admin/marketing/editorial/editor"] as {
+                topics: Record<string, unknown>[];
+              }).topics[0]),
+              articleId: 11,
+              lifecycleState: "IMAGE_REQUIRED",
+              canonicalLanguage: "AR",
+              image: null,
+              currentVersions,
+            }],
+          },
+        });
+      }
+
+      if (url === "/admin/marketing/editorial/editor/articles/11/versions") {
+        return Promise.resolve({ data: currentVersions });
+      }
+
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+
+    const translationButton = await screen.findByRole("button", {
+      name: "admin.marketing.editorial_translation_action",
+    });
+    expect(translationButton).toBeEnabled();
+    fireEvent.click(translationButton);
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/admin/marketing/editorial/editor/articles/11/translation-requests",
+        {
+          idempotencyKey: "admin-translation-11-AR-v1-NL-FR-EN-seo-v2",
+        },
+      );
+    });
+    expect(put).not.toHaveBeenCalled();
+  });
+
+  it("advances the editorial workflow before translation through the restored endpoint", async () => {
+    const version = {
+      language: "AR",
+      versionNumber: 1,
+      title: "Canonical draft",
+      slug: "canonical-draft",
+      focusKeyword: "امتحان السياقة النظري",
+      status: "DRAFT_READY",
+      createdAt: "2026-08-26T10:00:00Z",
+      createdBy: "admin",
+      id: 31,
+      articleId: 11,
+      summary: "Summary",
+      metaTitle: "Canonical draft | RijVia",
+      metaDescription: "Canonical metadata description",
+      body: "Canonical body",
+      internalLinks: [],
+      typography: {
+        h1Size: "DEFAULT", h2Size: "DEFAULT", h3Size: "DEFAULT", h4Size: "DEFAULT",
+        paragraphSize: "DEFAULT", textColor: "DEFAULT",
+      },
+      current: true,
+    };
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({ data: {
+          ...(responses[url] as object),
+          topics: [{
+            ...((responses[url] as { topics: Record<string, unknown>[] }).topics[0]),
+            articleId: 11,
+            lifecycleState: "DRAFT_READY",
+            canonicalLanguage: "AR",
+            pendingApprovalTaskId: null,
+            image: null,
+            currentVersions: [version],
+          }],
+        } });
+      }
+      if (url === "/admin/marketing/editorial/editor/articles/11/versions") {
+        return Promise.resolve({ data: [version] });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    const advance = await screen.findByRole("button", { name: "Start fact check" });
+    fireEvent.click(advance);
+    const confirmations = await screen.findAllByRole("button", { name: "Start fact check" });
+    fireEvent.click(confirmations.at(-1) as HTMLElement);
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith(
+      "/admin/marketing/editorial/editor/articles/11/workflow/advance",
+    ));
+  });
+
+  it("deletes an unneeded article version through the guarded version endpoint", async () => {
+    const versions = [2, 1].map((versionNumber) => ({
+      language: "EN",
+      versionNumber,
+      title: `Article v${versionNumber}`,
+      slug: `article-v${versionNumber}`,
+      focusKeyword: "Belgian theory exam",
+      status: "DRAFT",
+      createdAt: "2026-08-26T10:00:00Z",
+      createdBy: "admin",
+      id: 30 + versionNumber,
+      articleId: 11,
+      summary: "Summary",
+      metaTitle: "Article | RijVia",
+      metaDescription: "Article metadata description",
+      body: `Body v${versionNumber}`,
+      internalLinks: [],
+      typography: {
+        h1Size: "DEFAULT", h2Size: "DEFAULT", h3Size: "DEFAULT", h4Size: "DEFAULT",
+        paragraphSize: "DEFAULT", textColor: "DEFAULT",
+      },
+      current: versionNumber === 2,
+    }));
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({ data: {
+          ...(responses[url] as object),
+          topics: [{
+            ...((responses[url] as { topics: Record<string, unknown>[] }).topics[0]),
+            articleId: 11,
+            lifecycleState: "DRAFT_READY",
+            canonicalLanguage: "EN",
+            pendingApprovalTaskId: null,
+            image: null,
+            currentVersions: [versions[0]],
+          }],
+        } });
+      }
+      if (url === "/admin/marketing/editorial/editor/articles/11/versions") {
+        return Promise.resolve({ data: versions });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    const deleteButtons = await screen.findAllByRole("button", {
+      name: "admin.marketing.editorial_version_delete",
+    });
+    fireEvent.click(deleteButtons[1]);
+    const confirms = await screen.findAllByRole("button", {
+      name: "admin.marketing.editorial_version_delete",
+    });
+    fireEvent.click(confirms.at(-1) as HTMLElement);
+
+    await waitFor(() => expect(remove).toHaveBeenCalledWith(
+      "/admin/marketing/editorial/editor/articles/11/versions/31",
+    ));
+  });
+
+  it("publishes the waiting article through its exact approval task", async () => {
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({ data: {
+          ...(responses[url] as object),
+          topics: [{
+            ...((responses[url] as { topics: Record<string, unknown>[] }).topics[0]),
+            articleId: 11,
+            lifecycleState: "WAITING_APPROVAL",
+            canonicalLanguage: "AR",
+            pendingApprovalTaskId: 55,
+            image: null,
+            currentVersions: [],
+          }],
+        } });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    await screen.findByTestId("editorial-awaiting-approval");
+    fireEvent.change(screen.getByLabelText("admin.marketing.editorial_publish_reason"), {
+      target: { value: "Reviewed and approved for publication." },
+    });
+    fireEvent.click(screen.getByRole("button", {
+      name: "admin.marketing.editorial_publish_action",
+    }));
+    const publishButtons = await screen.findAllByRole("button", {
+      name: "admin.marketing.editorial_publish_action",
+    });
+    fireEvent.click(publishButtons.at(-1) as HTMLElement);
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith(
+      "/admin/marketing/tasks/55/approve",
+      { reason: "Reviewed and approved for publication." },
+    ));
   });
   it("submits the exact saved article versions for human approval", async () => {
     const currentVersions = ["AR", "NL", "FR", "EN"].map((language, index) => ({

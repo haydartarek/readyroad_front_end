@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Save,
   Search,
+  Send,
   ShieldCheck,
   Trash2,
   Undo2,
@@ -69,8 +70,8 @@ type Translate = (
 ) => string;
 type DateFormatter = (value: string | null) => string;
 
-const EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED = false;
-const EDITORIAL_VERSION_DELETE_SUPPORTED = false;
+const EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED = true;
+const EDITORIAL_VERSION_DELETE_SUPPORTED = true;
 
 interface VersionDeleteCopy {
   action: string;
@@ -108,6 +109,7 @@ interface EditorialEditorPanelProps {
     articleId: number,
     request: EditorialApprovalRequest,
   ) => Promise<void>;
+  onPublishArticle: (taskId: number, reason: string) => Promise<void>;
   onUploadImage: (articleId: number, formData: FormData) => Promise<void>;
   onRemoveImage: (articleId: number) => Promise<void>;
   onRefresh: () => Promise<void>;
@@ -180,6 +182,7 @@ export default function EditorialEditorPanel({
   onSave,
   onRequestTranslations,
   onRequestApproval,
+  onPublishArticle,
   onUploadImage,
   onRemoveImage,
   onRefresh,
@@ -232,6 +235,7 @@ export default function EditorialEditorPanel({
   const [workflowAdvancing, setWorkflowAdvancing] = useState(false);
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [approvalReason, setApprovalReason] = useState("");
+  const [publishReason, setPublishReason] = useState("");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [baseline, setBaseline] = useState<FormState>(EMPTY_FORM);
 
@@ -277,6 +281,7 @@ export default function EditorialEditorPanel({
   const saving = busy === "editorial-save";
   const requestingTranslations = busy === "editorial-translation";
   const requestingApproval = busy === "editorial-approval";
+  const publishing = busy === "editorial-publish";
   const lifecycleState = selectedTopic?.lifecycleState;
   const editorLanguages: EditorialLanguage[] = ["AR", "NL", "FR", "EN"];
   const focusKeywords = useMemo<Record<EditorialLanguage, string>>(
@@ -292,8 +297,7 @@ export default function EditorialEditorPanel({
     || currentSummary?.title?.trim()
     || selectedTopic?.title?.trim()
     || "";
-  const dynamicSlug =
-    form.slug.trim() || slugFromFocusKeyword(dynamicSlugSource);
+  const dynamicSlug = slugFromFocusKeyword(dynamicSlugSource);
 
   const editorLocked = [
     "WAITING_APPROVAL",
@@ -312,10 +316,17 @@ export default function EditorialEditorPanel({
   const canonicalVersion = selectedTopic?.currentVersions.find(
     (version) => version.language === selectedTopic.canonicalLanguage,
   );
+  const translationsRequiringAdaptation = editorLanguages.filter((item) =>
+    item !== selectedTopic?.canonicalLanguage
+      && !selectedTopic?.currentVersions.some(
+        (version) => version.language === item && Boolean(version.focusKeyword?.trim()),
+      ),
+  );
   const canRequestTranslations = Boolean(
     selectedTopic?.articleId &&
-      lifecycleState === "TRANSLATION_REQUIRED" &&
+      ["TRANSLATION_REQUIRED", "IMAGE_REQUIRED"].includes(lifecycleState ?? "") &&
       canonicalVersion &&
+      translationsRequiringAdaptation.length > 0 &&
       !dirty &&
       !historyLoading,
   );
@@ -351,6 +362,7 @@ export default function EditorialEditorPanel({
   useEffect(() => {
     setApprovalConfirmed(false);
     setApprovalReason("");
+    setPublishReason("");
   }, [selectedTopicId, lifecycleState]);
 
   useEffect(() => {
@@ -688,7 +700,7 @@ export default function EditorialEditorPanel({
     if (!selectedTopic?.articleId || !canonicalVersion || !canRequestTranslations) return;
     await onRequestTranslations(
       selectedTopic.articleId,
-      `admin-translation-${selectedTopic.articleId}-${canonicalVersion.language}-v${canonicalVersion.versionNumber}`,
+      `admin-translation-${selectedTopic.articleId}-${canonicalVersion.language}-v${canonicalVersion.versionNumber}-${translationsRequiringAdaptation.join("-")}-seo-v2`,
     );
   };
 
@@ -697,6 +709,18 @@ export default function EditorialEditorPanel({
     await onRequestApproval(selectedTopic.articleId, {
       passedQualityGates: workspace.qualityGates,
       reason: approvalReason.trim(),
+    });
+  };
+
+  const publishArticle = () => {
+    const taskId = selectedTopic?.pendingApprovalTaskId;
+    const reason = publishReason.trim();
+    if (!taskId || !reason || publishing) return;
+    setConfirmState({
+      title: t("admin.marketing.editorial_publish_title"),
+      description: t("admin.marketing.editorial_publish_confirm"),
+      confirmLabel: t("admin.marketing.editorial_publish_action"),
+      onConfirm: () => void onPublishArticle(taskId, reason),
     });
   };
 
@@ -1075,7 +1099,7 @@ export default function EditorialEditorPanel({
               ) : null}
 
               {lifecycleState === "WAITING_APPROVAL" ? (
-                <section className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 dark:bg-amber-950/10 sm:p-5" data-testid="editorial-awaiting-approval">
+                <section className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-4 dark:bg-amber-950/10 sm:p-5" data-testid="editorial-awaiting-approval">
                   <h3 className="flex items-center gap-2 font-black">
                     <ShieldCheck className="h-4 w-4" />
                     {t("admin.marketing.editorial_waiting_approval")}
@@ -1083,6 +1107,31 @@ export default function EditorialEditorPanel({
                   <p className="mt-1 text-sm text-muted-foreground">
                     {t("admin.marketing.editorial_waiting_approval_description")}
                   </p>
+                  <label className="block space-y-1.5 text-sm font-semibold">
+                    <span>{t("admin.marketing.editorial_publish_reason")}</span>
+                    <textarea
+                      value={publishReason}
+                      onChange={(event) => setPublishReason(event.target.value)}
+                      maxLength={1000}
+                      rows={3}
+                      disabled={publishing}
+                      className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+                    />
+                  </label>
+                  {!selectedTopic.pendingApprovalTaskId ? (
+                    <p className="text-sm font-semibold text-destructive">
+                      {t("admin.marketing.editorial_publish_task_missing")}
+                    </p>
+                  ) : null}
+                  <Button
+                    type="button"
+                    onClick={publishArticle}
+                    disabled={publishing || !selectedTopic.pendingApprovalTaskId || !publishReason.trim()}
+                    aria-busy={publishing}
+                  >
+                    {publishing ? <Loader2 className="animate-spin" /> : <Send />}
+                    {t("admin.marketing.editorial_publish_action")}
+                  </Button>
                 </section>
               ) : null}
 
@@ -1360,7 +1409,10 @@ function TranslationPanel({
       </div>
       <div className="flex flex-wrap gap-2">
         {languages.map((item) => {
-          const available = topic.currentVersions.some((version) => version.language === item);
+          const version = topic.currentVersions.find((candidate) => candidate.language === item);
+          const available = Boolean(
+            version && (item === topic.canonicalLanguage || version.focusKeyword?.trim()),
+          );
           return (
             <Badge key={item} variant="outline" className={available ? "border-emerald-300 text-emerald-700" : "border-amber-300 text-amber-700"}>
               {item}: {t(available ? "admin.marketing.editorial_translation_available" : "admin.marketing.editorial_translation_missing")}

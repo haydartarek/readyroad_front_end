@@ -43,6 +43,7 @@ const topic: EditorialTopic = {
   articleId: 9,
   lifecycleState: "BRIEF_READY",
   canonicalLanguage: "EN",
+  pendingApprovalTaskId: null,
   image: null,
   currentVersions: [],
 };

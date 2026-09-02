@@ -52,6 +52,7 @@ const workspace: EditorialWorkspace = {
     articleId: 17,
     lifecycleState: "PUBLISHED",
     canonicalLanguage: "EN",
+    pendingApprovalTaskId: null,
     image: null,
     currentVersions: [{
       language: "EN",
@@ -148,6 +149,7 @@ describe("EditorialEditorPanel performance monitoring", () => {
         onSave={jest.fn()}
         onRequestTranslations={jest.fn()}
         onRequestApproval={jest.fn()}
+        onPublishArticle={jest.fn()}
         onUploadImage={jest.fn()}
         onRemoveImage={jest.fn()}
         onRefresh={jest.fn().mockResolvedValue(undefined)}

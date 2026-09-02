@@ -247,6 +247,21 @@ export default function MarketingAdminPage() {
     }
   };
 
+  const publishEditorialArticle = async (taskId: number, reason: string) => {
+    setBusy("editorial-publish");
+    try {
+      await apiClient.post(`/admin/marketing/tasks/${taskId}/approve`, { reason });
+      toast.success(t("admin.marketing.editorial_publish_approved"));
+      await load();
+    } catch (requestError) {
+      logApiError("Editorial publication approval failed", requestError);
+      toast.error(getApiErrorMessage(requestError, t("admin.marketing.action_failed")));
+      throw requestError;
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const uploadEditorialImage = async (articleId: number, formData: FormData) => {
     setBusy("editorial-image");
     try {
@@ -453,6 +468,7 @@ export default function MarketingAdminPage() {
               onSave={saveEditorial}
               onRequestTranslations={requestEditorialTranslations}
               onRequestApproval={requestEditorialApproval}
+              onPublishArticle={publishEditorialArticle}
               onUploadImage={uploadEditorialImage}
               onRemoveImage={removeEditorialImage}
               onRefresh={load}

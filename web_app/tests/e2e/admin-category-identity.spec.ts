@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { seedCookieConsent } from "./helpers/consent";
 
 const adminUser = {
   id: 1,
@@ -112,7 +113,7 @@ const bankHealth = {
   ],
 };
 
-async function mockAdmin(page: Page) {
+async function mockAdmin(page: Page, baseURL: string) {
   const header = Buffer.from(
     JSON.stringify({ alg: "none", typ: "JWT" }),
   ).toString("base64url");
@@ -124,14 +125,14 @@ async function mockAdmin(page: Page) {
     {
       name: "token",
       value: `${header}.${payload}.test-signature`,
-      url: "http://127.0.0.1:3005",
+      url: baseURL,
       httpOnly: true,
       sameSite: "Lax",
     },
     {
       name: "csrf_token",
       value: "playwright-csrf-token",
-      url: "http://127.0.0.1:3005",
+      url: baseURL,
       sameSite: "Lax",
     },
   ]);
@@ -151,11 +152,15 @@ async function mockAdmin(page: Page) {
   );
 }
 
-test("Arabic category management uses names instead of internal TH codes", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await mockAdmin(page);
+for (const locale of ["ar", "en"] as const) {
+for (const width of [390, 1280]) {
+test(`${locale} category management uses shared admin styles and names at ${width}px`, async ({
+  page, baseURL,
+}, testInfo) => {
+  if (!baseURL) throw new Error("The category route test requires a configured baseURL");
+  await page.setViewportSize({ width, height: 844 });
+  await seedCookieConsent(page);
+  await mockAdmin(page, baseURL);
 
   const browserErrors: string[] = [];
   const failedResponses: string[] = [];
@@ -169,16 +174,25 @@ test("Arabic category management uses names instead of internal TH codes", async
     }
   });
 
-  await page.goto("/ar/admin/quizzes/categories");
+  await page.goto(`${locale === "en" ? "" : `/${locale}`}/admin/quizzes/categories`);
 
-  await expect(page.getByText("الأولوية والتقاطعات").first()).toBeVisible();
-  await expect(page.getByText("السرعة والطرق والمسافات").first()).toBeVisible();
+  const nameKey = locale === "ar" ? "nameAr" : "nameEn";
+  await expect(page.getByText(categories[0][nameKey]).first()).toBeVisible();
+  await expect(page.getByText(categories[1][nameKey]).first()).toBeVisible();
   await expect(page.getByText(/^TH\d+$/)).toHaveCount(0);
 
   await expect(page.getByTestId("question-exposure-panel")).toBeVisible();
   await expect(page.getByTestId("theory-bank-health")).toBeVisible();
   await expect(page.getByTestId("theory-category-management")).toBeVisible();
   await expect(page.getByText(/TH\d+/)).toHaveCount(0);
+
+  const management = page.getByTestId("theory-category-management");
+  const categoryCard = management.getByRole("article").first();
+  await expect(categoryCard).toHaveClass(/rounded-2xl/);
+  await expect(categoryCard).not.toHaveCSS("overflow", "hidden");
+  await expect(categoryCard.getByRole("heading")).toHaveCSS("font-size", "16px");
+  await expect(management.locator('[class*="bg-gradient"]')).toHaveCount(0);
+  await categoryCard.screenshot({ path: testInfo.outputPath(`category-${locale}-${width}.png`) });
 
   const widths = await page.evaluate(() => ({
     viewport: window.innerWidth,
@@ -193,3 +207,5 @@ test("Arabic category management uses names instead of internal TH codes", async
     failedResponses: [],
   });
 });
+}
+}

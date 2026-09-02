@@ -24,14 +24,21 @@ export default function ArticleLearningCards({ locale }: { locale: SiteLocale })
           href={localizePathname(card.href, locale)}
           className="group flex min-w-0 flex-col rounded-lg border border-border/60 bg-card shadow-sm transition-colors hover:border-primary/60 hover:bg-primary/[0.03] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
         >
-          <Image
-            src={card.image}
-            alt=""
-            width={1672}
-            height={941}
-            sizes="(max-width: 639px) calc(100vw - 48px), 240px"
-            className="h-auto w-full rounded-t-lg"
-          />
+          <span className="relative block">
+            <Image
+              src={card.image}
+              alt=""
+              width={1672}
+              height={941}
+              sizes="(max-width: 639px) calc(100vw - 48px), 240px"
+              className="h-auto w-full rounded-t-lg"
+            />
+            <span
+              aria-hidden="true"
+              data-testid="article-learning-card-overlay"
+              className="pointer-events-none absolute inset-0 rounded-t-lg bg-black/40"
+            />
+          </span>
           <span className="flex flex-1 items-center justify-between gap-3 p-4 text-sm font-bold leading-6">
             <span className="min-w-0 break-words">{translateMessage(locale, card.label)}</span>
             <ArrowRight className="h-4 w-4 shrink-0 text-primary rtl:rotate-180" aria-hidden="true" />

@@ -61,6 +61,18 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
     locale,
     translateMessage(locale, "blog.eyebrow"),
   );
+  const imageCaption = article.image?.caption?.trim();
+  const imageSourceUrl = article.image?.sourceUrl?.trim();
+  const photographer = article.image?.photographerName?.trim();
+  const imageCreditSource = (imageSourceUrl
+    ? article.image?.sourcePlatform
+    : article.image?.licenseName)?.trim();
+  const imageCredit = photographer && imageCreditSource
+    ? translateMessage(locale, "blog.photo_credit", {
+        photographer,
+        source: imageCreditSource,
+      })
+    : null;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -105,29 +117,25 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
               sizes="(max-width: 768px) 100vw, 896px"
               className="h-auto w-full rounded-2xl border border-border/60 object-cover shadow-sm"
             />
-            <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">
-              {article.image.caption ? <span className="me-2">{article.image.caption}</span> : null}
-              {article.image.sourceUrl ? (
-                <a
-                  href={article.image.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-primary hover:underline"
-                >
-                  {translateMessage(locale, "blog.photo_credit", {
-                    photographer: article.image.photographerName,
-                    source: article.image.sourcePlatform,
-                  })}
-                </a>
-              ) : (
-                <span className="font-semibold">
-                  {translateMessage(locale, "blog.photo_credit", {
-                    photographer: article.image.photographerName,
-                    source: article.image.licenseName,
-                  })}
-                </span>
-              )}
-            </figcaption>
+            {imageCaption || imageCredit ? (
+              <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">
+                {imageCaption ? <span className="me-2">{imageCaption}</span> : null}
+                {imageCredit ? (
+                  imageSourceUrl ? (
+                    <a
+                      href={imageSourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-primary hover:underline"
+                    >
+                      {imageCredit}
+                    </a>
+                  ) : (
+                    <span className="font-semibold">{imageCredit}</span>
+                  )
+                ) : null}
+              </figcaption>
+            ) : null}
           </figure>
         ) : null}
 

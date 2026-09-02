@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
-import { getPublicArticle } from "@/lib/server/articles";
+import { getPublicArticle, type PublicArticleImage } from "@/lib/server/articles";
+import { translateMessage } from "@/lib/messages";
 import { getRequestLocale } from "@/lib/server/request-locale";
 import { notFound, redirect } from "next/navigation";
 import BlogArticlePage, { generateMetadata } from "./page";
@@ -31,6 +32,77 @@ describe("localized public blog article", () => {
     jest.clearAllMocks();
   });
 
+  describe.each(["ar", "en", "nl", "fr"] as const)("image attribution in %s", (locale) => {
+    const uploadedImage: PublicArticleImage = {
+      assetId: 1,
+      heroUrl: "/images/exam.png",
+      cardUrl: "/images/exam.png",
+      mobileUrl: "/images/exam.png",
+      ogUrl: "/images/exam.png",
+      altText: "Learning to drive",
+    };
+    const imageArticle = {
+      language: locale.toUpperCase(), slug: "safe-driving", title: "Published article",
+      summary: "Published summary", body: "Reviewed article content.",
+      publishedAt: "2026-08-22T10:00:00Z", internalLinks: [], typography,
+      alternateSlugs: { [locale.toUpperCase()]: "safe-driving" },
+    };
+
+    beforeEach(() => {
+      getLocale.mockResolvedValue(locale);
+    });
+
+    it.each([
+      ["omitted", {}],
+      ["null", { photographerName: null, sourcePlatform: null, licenseName: null }],
+      ["blank", { photographerName: "  ", sourcePlatform: " ", licenseName: " " }],
+      ["missing source", { photographerName: "Alex", sourceUrl: "https://example.com/photo" }],
+      ["missing photographer", { sourcePlatform: "Photo Library", sourceUrl: "https://example.com/photo" }],
+    ])("omits incomplete credits (%s) without hiding the uploaded image or ALT", async (_, attribution) => {
+      getArticle.mockResolvedValue({ ...imageArticle, image: { ...uploadedImage, ...attribution } });
+      const { container } = render(await BlogArticlePage({ params: Promise.resolve({ slug: "safe-driving" }) }));
+
+      expect(container.querySelector("figcaption")).not.toBeInTheDocument();
+      expect(container.querySelector("article")).not.toHaveTextContent(/undefined|null/);
+      const hero = screen.getByRole("img", { name: uploadedImage.altText });
+      expect(new URL(hero.getAttribute("src")!, "http://localhost:3000").searchParams.get("url"))
+        .toBe(uploadedImage.heroUrl);
+    });
+
+    it("preserves a caption without inventing photo credits", async () => {
+      getArticle.mockResolvedValue({ ...imageArticle, image: { ...uploadedImage, caption: "  Driving lesson  " } });
+      const { container } = render(await BlogArticlePage({ params: Promise.resolve({ slug: "safe-driving" }) }));
+
+      expect(container.querySelector("figcaption")?.textContent).toBe("Driving lesson");
+    });
+
+    it("preserves complete localized credits and their source link", async () => {
+      getArticle.mockResolvedValue({
+        ...imageArticle,
+        image: { ...uploadedImage, photographerName: "Alex", sourcePlatform: "Photo Library", sourceUrl: "https://example.com/photo" },
+      });
+      render(await BlogArticlePage({ params: Promise.resolve({ slug: "safe-driving" }) }));
+
+      const credit = screen.getByRole("link", {
+        name: translateMessage(locale, "blog.photo_credit", { photographer: "Alex", source: "Photo Library" }),
+      });
+      expect(credit).toHaveAttribute("href", "https://example.com/photo");
+      expect(credit).toHaveAttribute("rel", "noreferrer");
+    });
+
+    it("preserves complete license credits without a source URL", async () => {
+      getArticle.mockResolvedValue({
+        ...imageArticle,
+        image: { ...uploadedImage, photographerName: "Alex", licenseName: "CC BY 4.0" },
+      });
+      const { container } = render(await BlogArticlePage({ params: Promise.resolve({ slug: "safe-driving" }) }));
+
+      expect(container.querySelector("figcaption")?.textContent).toBe(
+        translateMessage(locale, "blog.photo_credit", { photographer: "Alex", source: "CC BY 4.0" }),
+      );
+    });
+  });
+
   it.each([
     ["ar", "/ar", ["تدرب على العلامات المرورية", "امتحان العلامات المرورية", "محاكي الامتحان النظري"]],
     ["en", "", ["Practise traffic signs", "Traffic signs test", "Theory exam simulator"]],
@@ -53,6 +125,11 @@ describe("localized public blog article", () => {
       expect(link).toHaveAttribute("href", `${prefix}${path}`);
       const imageUrl = new URL(link.querySelector("img")!.getAttribute("src")!, "http://localhost:3000");
       expect(imageUrl.searchParams.get("url")).toBe(`/images${path}.png`);
+      const overlay = within(link).getByTestId("article-learning-card-overlay");
+      expect(overlay).toHaveAttribute("aria-hidden", "true");
+      expect(overlay).toHaveClass("pointer-events-none", "absolute", "inset-0", "bg-black/40");
+      expect(overlay.parentElement).toHaveClass("relative");
+      expect(overlay.previousElementSibling).toBe(link.querySelector("img"));
     });
   });
 

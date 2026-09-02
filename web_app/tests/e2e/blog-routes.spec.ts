@@ -83,6 +83,11 @@ test.describe("localized public blog routes", () => {
       await expect(
         page.getByRole("article").getByText(/immutable published body/i),
       ).toBeVisible();
+      const hero = page.getByRole("article").getByRole("img", { name: article.title, exact: true });
+      await expect(hero).toBeVisible();
+      await expect.poll(() => hero.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+      await expect(page.getByRole("article").locator("figcaption")).toHaveCount(0);
+      await expect(page.getByRole("article")).not.toContainText(/undefined|null/);
       const structuredDataScript = page.locator("#article-structured-data");
       await expect(structuredDataScript).toHaveCount(1);
       const structuredData = JSON.parse(
@@ -172,6 +177,11 @@ test.describe("localized public blog routes", () => {
         for (const [index, route] of ["/traffic-signs", "/practice", "/exam"].entries()) {
           await expect(links.nth(index)).toHaveAttribute("href", `${prefix}${route}`);
           await expect.poll(() => links.nth(index).locator("img").evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+          const overlay = links.nth(index).getByTestId("article-learning-card-overlay");
+          await expect(overlay).toHaveCSS("pointer-events", "none");
+          await expect(overlay).toHaveCSS("position", "absolute");
+          expect(await overlay.boundingBox()).toEqual(await links.nth(index).locator("img").boundingBox());
+          await links.nth(index).click({ trial: true });
         }
         expect(await cards.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length)).toBe(width >= 640 ? 3 : 1);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

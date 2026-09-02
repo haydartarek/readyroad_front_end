@@ -110,6 +110,15 @@ function publishedArticle(language) {
     metaDescription: `${articleTitles[language]} reviewed metadata description.`,
     body: "Immutable published body.\n\nSecond reviewed paragraph.",
     publishedAt: "2026-08-22T10:00:00Z",
+    image: {
+      assetId: 1,
+      heroUrl: "/images/exam.png",
+      cardUrl: "/images/exam.png",
+      mediumUrl: "/images/exam.png",
+      mobileUrl: "/images/exam.png",
+      ogUrl: "/images/exam.png",
+      altText: articleTitles[language],
+    },
     alternateSlugs: articleSlugs,
     internalLinks: [],
   };

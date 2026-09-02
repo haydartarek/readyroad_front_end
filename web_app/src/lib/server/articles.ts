@@ -27,16 +27,16 @@ export type PublicArticleImage = Readonly<{
   heroUrl: string;
   cardUrl: string;
   mobileUrl: string;
-  thumbnailUrl: string;
+  thumbnailUrl?: string;
   ogUrl: string;
   altText: string;
-  caption: string | null;
-  sourcePlatform: string;
-  sourceUrl: string | null;
-  photographerName: string;
-  photographerUrl: string | null;
-  licenseName: string;
-  licenseUrl: string | null;
+  caption?: string | null;
+  sourcePlatform?: string | null;
+  sourceUrl?: string | null;
+  photographerName?: string | null;
+  photographerUrl?: string | null;
+  licenseName?: string | null;
+  licenseUrl?: string | null;
 }>;
 
 export type PublicArticleInternalLink = Readonly<{

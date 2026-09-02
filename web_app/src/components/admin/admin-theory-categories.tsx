@@ -5,9 +5,10 @@ import Link from "@/components/localized-link";
 import {
   AlertTriangle,
   CheckCircle2,
-  FolderCog,
+  Eye,
   Pencil,
   Plus,
+  Power,
   RefreshCw,
   Save,
   X,
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
@@ -201,7 +203,7 @@ export function AdminTheoryCategories() {
   if (loading && categories.length === 0) {
     return (
       <div
-        className="h-64 animate-pulse rounded-3xl border border-border/50 bg-muted/30"
+        className="h-64 animate-pulse rounded-2xl border border-border/50 bg-muted/30"
         data-testid="theory-categories-loading"
       />
     );
@@ -212,76 +214,56 @@ export function AdminTheoryCategories() {
       className="min-w-0 space-y-5"
       data-testid="theory-category-management"
     >
-      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-primary/[0.09] via-primary/[0.035] to-transparent" />
+      <AdminSectionCard
+        className="min-w-0 p-4 sm:p-5"
+        title={t("admin.quizzes.health.categories")}
+        actions={
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => void load()}
+              disabled={loading}
+              aria-label={t("admin.quizzes.health.refresh")}
+              title={t("admin.quizzes.health.refresh")}
+            >
+              <RefreshCw
+                className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+              />
+            </Button>
 
-        <div className="relative space-y-5 p-4 sm:p-5 lg:p-6">
-          <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
-            <div className="flex min-w-0 items-start gap-3.5">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary shadow-sm">
-                <FolderCog className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-                  {t("admin.quizzes.health.categories")}
-                </p>
-                <h2 className="mt-1 text-lg font-black tracking-tight text-foreground sm:text-xl">
-                  {t("admin.quizzes.health.category_management_title")}
-                </h2>
-                <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground sm:text-sm">
-                  {t("admin.quizzes.health.category_management_description")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => void load()}
-                disabled={loading}
-                aria-label={t("admin.quizzes.health.refresh")}
-                className="h-9 w-9 rounded-xl border-border/60 bg-background/80 p-0 shadow-sm"
-              >
-                <RefreshCw
-                  className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"}
-                />
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
-                className="gap-2 rounded-xl shadow-sm"
-                onClick={() =>
-                  setDraft({
-                    ...EMPTY_DRAFT,
-                    displayOrder: nextDisplayOrder(categories),
-                  })
-                }
-              >
-                <Plus className="h-4 w-4" />
-                {t("admin.quizzes.health.add_category")}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() =>
+                setDraft({
+                  ...EMPTY_DRAFT,
+                  displayOrder: nextDisplayOrder(categories),
+                })
+              }
+            >
+              <Plus className="h-4 w-4" />
+              {t("admin.quizzes.health.add_category")}
+            </Button>
           </div>
-
-          <div className="grid gap-2.5 sm:grid-cols-3">
-            <SummaryMetric
-              label={t("admin.quizzes.health.categories")}
-              value={categories.length}
-            />
-            <SummaryMetric
-              label={t("admin.quizzes.health.eligible")}
-              value={summary.eligible}
-            />
-            <SummaryMetric
-              label={t("admin.quizzes.health.published")}
-              value={summary.published}
-            />
-          </div>
-        </div>
-      </div>
+        }
+      >
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <SummaryMetric
+            label={t("admin.quizzes.health.categories")}
+            value={categories.length}
+          />
+          <SummaryMetric
+            label={t("admin.quizzes.health.eligible")}
+            value={summary.eligible}
+          />
+          <SummaryMetric
+            label={t("admin.quizzes.health.published")}
+            value={summary.published}
+          />
+        </dl>
+      </AdminSectionCard>
 
       {error ? (
         <div className="flex items-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/[0.04] p-3 text-sm text-destructive">
@@ -304,42 +286,34 @@ export function AdminTheoryCategories() {
         {categories.map((category) => (
           <article
             key={category.id}
-            className="group relative min-w-0 overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm transition hover:border-primary/25 hover:shadow-md"
+            className="min-w-0 rounded-2xl border border-border/50 bg-card shadow-sm"
           >
-            <div
-              className={
-                category.examEligible
-                  ? "absolute inset-x-0 top-0 h-1 bg-primary"
-                  : "absolute inset-x-0 top-0 h-1 bg-muted-foreground/20"
-              }
-            />
-
-            <div className="space-y-4 p-4 pt-5 sm:p-5 sm:pt-6">
-              <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="space-y-4 p-4 sm:p-5">
+              <div className="flex min-w-0 flex-col items-start justify-between gap-3 sm:flex-row">
                 <div className="min-w-0">
-                  <h3 className="break-words text-base font-black leading-6 text-foreground sm:text-lg">
+                  <h3 className="break-words text-base font-black leading-6 text-foreground">
                     {categoryName(category, language)}
                   </h3>
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-lg border border-border/50 bg-muted/20 px-2 py-1 font-semibold">
+                    <span className="font-semibold">
                       {t("admin.quizzes.health.order")}: {category.displayOrder}
                     </span>
-                    <span className="rounded-lg border border-border/50 bg-muted/20 px-2 py-1 font-semibold">
+                    <span className="font-semibold">
                       {t("admin.quizzes.health.weight")}: {category.examTargetWeight}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex shrink-0 flex-col items-end gap-2">
+                <div className="flex max-w-full flex-wrap gap-2 sm:shrink-0 sm:flex-col sm:items-end">
                   <Badge
                     variant={category.examEligible ? "default" : "outline"}
-                    className="rounded-full"
+                    className="max-w-full whitespace-normal break-words text-start"
                   >
                     {category.examEligible
                       ? t("admin.quizzes.health.exam_ready")
                       : t("admin.quizzes.health.questions_needed")}
                   </Badge>
-                  <Badge variant="outline" className="rounded-full bg-background/80">
+                  <Badge variant="outline" className="max-w-full whitespace-normal break-words text-start">
                     {category.active
                       ? t("admin.quizzes.health.active")
                       : t("admin.quizzes.health.inactive")}
@@ -363,7 +337,7 @@ export function AdminTheoryCategories() {
                 />
               </div>
 
-              <div className="rounded-2xl border border-border/50 bg-background/60 p-3.5">
+              <div className="border-t border-border/40 pt-4">
                 <div className="grid grid-cols-3 gap-2">
                   {(["EASY", "MEDIUM", "HARD"] as const).map((difficulty) => (
                     <Metric
@@ -376,13 +350,7 @@ export function AdminTheoryCategories() {
                 </div>
               </div>
 
-              <div
-                className={
-                  category.examEligible
-                    ? "rounded-2xl border border-primary/15 bg-primary/[0.035] p-3.5"
-                    : "rounded-2xl border border-border/50 bg-muted/20 p-3.5"
-                }
-              >
+              <div className="border-t border-border/40 pt-4">
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2
                     className={
@@ -392,7 +360,7 @@ export function AdminTheoryCategories() {
                     }
                   />
                   <div className="min-w-0">
-                    <p className="text-sm font-black text-foreground">
+                    <p className="break-words text-sm font-semibold text-foreground">
                       {category.eligibleAllLocales}/{category.minimumRequired}{" "}
                       {category.examEligible
                         ? t("admin.quizzes.health.exam_ready")
@@ -410,7 +378,6 @@ export function AdminTheoryCategories() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="gap-2 rounded-xl"
                   onClick={() => setDraft(draftFromCategory(category))}
                 >
                   <Pencil className="h-4 w-4" />
@@ -421,10 +388,10 @@ export function AdminTheoryCategories() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-xl"
                   disabled={saving}
                   onClick={() => void toggle(category)}
                 >
+                  <Power className="h-4 w-4" />
                   {t(
                     category.active
                       ? "admin.quizzes.health.deactivate"
@@ -436,12 +403,12 @@ export function AdminTheoryCategories() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-xl"
                   asChild
                 >
                   <Link
                     href={`/admin/quizzes?categoryCode=${encodeURIComponent(category.code)}`}
                   >
+                    <Eye className="h-4 w-4" />
                     {t("admin.quizzes.health.view_questions")}
                   </Link>
                 </Button>
@@ -452,7 +419,7 @@ export function AdminTheoryCategories() {
       </div>
 
       {!loading && categories.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           {t("admin.quizzes.health.categories")}
         </div>
       ) : null}
@@ -483,17 +450,12 @@ function CategoryForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="relative overflow-hidden rounded-3xl border border-primary/20 bg-card shadow-sm"
+      className="min-w-0 rounded-2xl border border-border/50 bg-card shadow-sm"
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary/[0.08] to-transparent" />
-
-      <div className="relative space-y-5 p-4 sm:p-5 lg:p-6">
+      <div className="space-y-5 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-              {t("admin.quizzes.health.categories")}
-            </p>
-            <h2 className="mt-1 text-lg font-black text-foreground">
+            <h2 className="text-base font-black text-foreground">
               {t(
                 draft.id == null
                   ? "admin.quizzes.health.add_category"
@@ -511,7 +473,6 @@ function CategoryForm({
             type="button"
             size="icon"
             variant="ghost"
-            className="rounded-xl"
             onClick={() => setDraft(null)}
             aria-label={t("admin.quizzes.health.cancel")}
           >
@@ -596,9 +557,10 @@ function CategoryForm({
           })}
         </div>
 
-        <label className="flex w-fit items-center gap-2 rounded-xl border border-border/50 bg-background/70 px-3 py-2 text-sm font-semibold">
+        <label className="flex w-fit cursor-pointer items-center gap-2 text-sm font-semibold">
           <input
             type="checkbox"
+            className="h-4 w-4 accent-primary"
             checked={draft.active}
             onChange={(event) => update("active", event.target.checked)}
           />
@@ -609,7 +571,6 @@ function CategoryForm({
           <Button
             type="submit"
             disabled={saving}
-            className="gap-2 rounded-xl"
           >
             <Save className="h-4 w-4" />
             {t("admin.quizzes.health.save")}
@@ -618,7 +579,6 @@ function CategoryForm({
           <Button
             type="button"
             variant="outline"
-            className="rounded-xl"
             onClick={() => setDraft(null)}
           >
             {t("admin.quizzes.health.cancel")}
@@ -646,11 +606,11 @@ function Field({
 
 function SummaryMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-border/45 bg-background/65 px-3.5 py-3 shadow-[0_1px_0_rgb(0_0_0/0.02)]">
-      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-black tracking-tight text-foreground">
+    <div className="min-w-0">
+      <dt className="break-words text-xs font-semibold text-muted-foreground">{label}</dt>
+      <dd className="mt-1 text-2xl font-black text-foreground">
         {value}
-      </p>
+      </dd>
     </div>
   );
 }
@@ -667,22 +627,12 @@ function Metric({
   emphasized?: boolean;
 }) {
   return (
-    <div
-      className={
-        emphasized
-          ? "rounded-xl border border-primary/15 bg-primary/[0.045] p-2.5 text-center"
-          : "rounded-xl border border-border/40 bg-muted/20 p-2.5 text-center"
-      }
-    >
-      <p className="truncate text-[11px] font-semibold text-muted-foreground sm:text-xs">
+    <div className="min-w-0 text-center">
+      <p className="break-words text-xs font-semibold text-muted-foreground">
         {label}
       </p>
       <p
-        className={
-          compact
-            ? "mt-1 text-base font-black text-foreground"
-            : "mt-1 text-lg font-black text-foreground"
-        }
+        className={`mt-1 font-black ${compact ? "text-base" : "text-lg"} ${emphasized ? "text-primary" : "text-foreground"}`}
       >
         {value}
       </p>

@@ -6,12 +6,11 @@ import {
 } from "@testing-library/react";
 import { AdminTheoryCategories } from "./admin-theory-categories";
 import { apiClient } from "@/lib/api";
+import { useLanguage } from "@/contexts/language-context";
+import { translateMessage } from "@/lib/messages";
 
 jest.mock("@/contexts/language-context", () => ({
-  useLanguage: () => ({
-    t: (key: string) => key,
-    language: "en",
-  }),
+  useLanguage: jest.fn(),
 }));
 
 jest.mock("@/components/localized-link", () => ({
@@ -65,6 +64,10 @@ const category = {
 describe("AdminTheoryCategories", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (useLanguage as jest.Mock).mockReturnValue({
+      t: (key: string) => key,
+      language: "en",
+    });
 
     (apiClient.get as jest.Mock).mockResolvedValue({
       data: [category],
@@ -110,6 +113,59 @@ describe("AdminTheoryCategories", () => {
       "href",
       "/admin/quizzes?categoryCode=TH01",
     );
+  });
+
+  it.each([
+    ["ar", "nameAr"], ["en", "nameEn"], ["nl", "nameNl"], ["fr", "nameFr"],
+  ] as const)("uses shared admin surfaces and readable localized controls in %s", async (locale, nameKey) => {
+    const t = (key: string) => translateMessage(locale, key);
+    (useLanguage as jest.Mock).mockReturnValue({ t, language: locale });
+    render(<AdminTheoryCategories />);
+
+    const heading = await screen.findByRole("heading", { name: category[nameKey] });
+    const section = screen.getByRole("heading", {
+      name: t("admin.quizzes.health.categories"), level: 2,
+    }).closest("section");
+    expect(section).toHaveClass("rounded-2xl", "border-border/50", "bg-card");
+    expect(heading.closest("article")).toHaveClass("rounded-2xl", "border-border/50", "bg-card");
+    expect(heading.parentElement?.parentElement).toHaveClass("flex-col", "sm:flex-row");
+    expect(screen.getByTestId("theory-category-management").querySelector('[class*="bg-gradient"]')).toBeNull();
+    expect(screen.getByText(t("difficulty.medium"))).toHaveClass("break-words");
+    expect(screen.getByRole("button", { name: t("admin.quizzes.health.refresh") })).toHaveAttribute("data-size", "icon");
+    expect(screen.queryByText(/TH\d+/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: t("admin.quizzes.health.edit_category") }));
+    const arabicName = screen.getByLabelText(t("admin.quizzes.health.name_ar"));
+    expect(arabicName.closest("form")).toHaveClass("rounded-2xl", "border-border/50", "bg-card");
+    expect(arabicName).toHaveAttribute("dir", "rtl");
+    for (const language of ["en", "nl", "fr"]) {
+      expect(screen.getByLabelText(t(`admin.quizzes.health.name_${language}`))).toHaveAttribute("dir", "ltr");
+    }
+  });
+
+  it("preserves the category payload when editing through the restyled form", async () => {
+    render(<AdminTheoryCategories />);
+    await screen.findByText(category.nameEn);
+    fireEvent.click(screen.getByRole("button", { name: "admin.quizzes.health.edit_category" }));
+    fireEvent.change(screen.getByLabelText("admin.quizzes.health.name_en"), {
+      target: { value: "Priority rules" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "admin.quizzes.health.save" }));
+
+    await waitFor(() => expect(apiClient.put).toHaveBeenCalledWith(
+      "/admin/quiz/categories/1",
+      expect.objectContaining({
+        code: category.code,
+        nameEn: "Priority rules",
+        nameAr: category.nameAr,
+        nameNl: category.nameNl,
+        nameFr: category.nameFr,
+        examTargetWeight: category.examTargetWeight,
+        displayOrder: category.displayOrder,
+        active: category.active,
+        contentScope: category.contentScope,
+      }),
+    ));
   });
 
   it("creates a category without requiring an admin-entered code", async () => {

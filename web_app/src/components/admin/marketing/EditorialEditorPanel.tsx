@@ -91,6 +91,7 @@ interface EditorialConfirmState {
 }
 
 interface EditorialEditorPanelProps {
+  translationPending?: boolean;
   workspace: EditorialWorkspace;
   strategy: MarketingStrategySnapshot;
   busy: string | null;
@@ -186,6 +187,7 @@ export default function EditorialEditorPanel({
   onUploadImage,
   onRemoveImage,
   onRefresh,
+  translationPending = false,
 }: EditorialEditorPanelProps) {
   const { language: uiLanguage } = useLanguage();
   const copy = editorialCmsCopy(uiLanguage);
@@ -279,7 +281,7 @@ export default function EditorialEditorPanel({
   const currentVersionNumber = currentSummary?.versionNumber;
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
   const saving = busy === "editorial-save";
-  const requestingTranslations = busy === "editorial-translation";
+  const requestingTranslations = busy === "editorial-translation" || translationPending;
   const requestingApproval = busy === "editorial-approval";
   const publishing = busy === "editorial-publish";
   const lifecycleState = selectedTopic?.lifecycleState;
@@ -324,7 +326,7 @@ export default function EditorialEditorPanel({
   );
   const canRequestTranslations = Boolean(
     selectedTopic?.articleId &&
-      ["TRANSLATION_REQUIRED", "IMAGE_REQUIRED"].includes(lifecycleState ?? "") &&
+      ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED", "IMAGE_REQUIRED"].includes(lifecycleState ?? "") &&
       canonicalVersion &&
       translationsRequiringAdaptation.length > 0 &&
       !dirty &&
@@ -333,9 +335,10 @@ export default function EditorialEditorPanel({
   const canAdvanceWorkflow = Boolean(
     EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED &&
       selectedTopic?.articleId &&
-      ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED"].includes(
+      ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED"].includes(
         lifecycleState ?? "",
       ) &&
+      (lifecycleState !== "TRANSLATION_REQUIRED" || hasEveryLanguage) &&
       !dirty &&
       !historyLoading &&
       !workflowAdvancing,
@@ -348,6 +351,8 @@ export default function EditorialEditorPanel({
         ? workflowCopy.confirmFactCheck
         : lifecycleState === "LEGAL_REVIEW_REQUIRED"
           ? workflowCopy.confirmLegalReview
+          : lifecycleState === "TRANSLATION_REQUIRED"
+            ? workflowCopy.continueToImage
           : workflowCopy.advance;
 
   const canRequestApproval = Boolean(
@@ -687,7 +692,9 @@ export default function EditorialEditorPanel({
         ? workflowCopy.startFactCheckConfirm
         : lifecycleState === "FACT_CHECK_REQUIRED"
           ? workflowCopy.factCheckConfirm
-          : workflowCopy.legalReviewConfirm;
+          : lifecycleState === "TRANSLATION_REQUIRED"
+            ? workflowCopy.translationsCompleteConfirm
+            : workflowCopy.legalReviewConfirm;
 
     setConfirmState({
       title: t("admin.marketing.editorial_workflow_confirm_title"),
@@ -863,7 +870,7 @@ export default function EditorialEditorPanel({
               />
 
               {EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED &&
-              ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED"].includes(
+              ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED"].includes(
                 lifecycleState ?? "",
               ) ? (
                 <section
@@ -1422,6 +1429,7 @@ function TranslationPanel({
       </div>
       {dirty ? <p className="text-sm font-semibold text-destructive">{t("admin.marketing.editorial_translation_save_first")}</p> : null}
       {!canonicalVersionAvailable ? <p className="text-sm font-semibold text-destructive">{t("admin.marketing.editorial_translation_source_required")}</p> : null}
+      {busy ? <p role="status" className="text-sm text-muted-foreground">{t("admin.marketing.editorial_translation_running")}</p> : null}
       <Button type="button" onClick={onRequest} disabled={busy || !canRequest}>
         {busy ? <Loader2 className="animate-spin" /> : <FilePenLine />}
         {t("admin.marketing.editorial_translation_action")}

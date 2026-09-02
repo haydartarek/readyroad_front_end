@@ -106,6 +106,7 @@ export default function MarketingAdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [translationTaskId, setTranslationTaskId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -157,6 +158,40 @@ export default function MarketingAdminPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (!translationTaskId) return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const poll = async () => {
+      try {
+        const response = await apiClient.get<MarketingTask>(`/admin/marketing/tasks/${translationTaskId}`);
+        if (!active) return;
+        if (response.data.status === "COMPLETED") {
+          const workspace = await apiClient.get<EditorialWorkspace>("/admin/marketing/editorial/editor");
+          if (!active) return;
+          setData((current) => current ? { ...current, editorial: workspace.data } : current);
+          setTranslationTaskId(null);
+          toast.success(t("admin.marketing.editorial_translation_completed"));
+        } else if (["FAILED", "CANCELLED", "REJECTED"].includes(response.data.status)) {
+          setTranslationTaskId(null);
+          toast.error(t("admin.marketing.editorial_translation_failed"));
+        } else {
+          timer = setTimeout(() => void poll(), 5000);
+        }
+      } catch (requestError) {
+        if (!active) return;
+        setTranslationTaskId(null);
+        logApiError("Editorial translation status failed", requestError);
+        toast.error(t("admin.marketing.editorial_translation_failed"));
+      }
+    };
+    void poll();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [translationTaskId, t]);
+
   const mutate = async (key: string, action: () => Promise<unknown>, messageKey: string) => {
     setBusy(key);
     try {
@@ -207,12 +242,13 @@ export default function MarketingAdminPage() {
   ) => {
     setBusy("editorial-translation");
     try {
-      await apiClient.post(
+      const response = await apiClient.post<MarketingTask>(
         `/admin/marketing/editorial/editor/articles/${articleId}/translation-requests`,
         { idempotencyKey },
       );
+      if (!response.data?.id) throw new Error(t("admin.marketing.editorial_translation_failed"));
+      setTranslationTaskId(response.data.id);
       toast.success(t("admin.marketing.editorial_translation_requested"));
-      await load();
     } catch (requestError) {
       logApiError("Editorial translation request failed", requestError);
       toast.error(
@@ -467,6 +503,7 @@ export default function MarketingAdminPage() {
               formatDate={formatDate}
               onSave={saveEditorial}
               onRequestTranslations={requestEditorialTranslations}
+              translationPending={translationTaskId !== null}
               onRequestApproval={requestEditorialApproval}
               onPublishArticle={publishEditorialArticle}
               onUploadImage={uploadEditorialImage}

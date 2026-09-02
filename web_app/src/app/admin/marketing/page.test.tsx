@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { toast } from "sonner";
 import MarketingAdminPage from "./page";
 import { apiClient } from "@/lib/api";
 
@@ -19,6 +20,7 @@ const post = apiClient.post as jest.Mock;
 const remove = apiClient.delete as jest.Mock;
 
 const responses: Record<string, unknown> = {
+  "/admin/marketing/tasks/81": { id: 81, status: "COMPLETED" },
   "/admin/marketing/overview": {
     enabled: true,
     tasksByStatus: { COMPLETED: 3, FAILED: 1, WAITING_APPROVAL: 1 },
@@ -254,7 +256,7 @@ describe("MarketingAdminPage", () => {
       }
       return Promise.resolve({ data: { status: "WAITING_APPROVAL" } });
     });
-    post.mockResolvedValue({ data: { status: "PENDING" } });
+    post.mockResolvedValue({ data: { id: 81, status: "PENDING" } });
     remove.mockResolvedValue({ data: null });
   });
 
@@ -572,7 +574,7 @@ describe("MarketingAdminPage", () => {
     expect(put).not.toHaveBeenCalled();
   });
 
-  it("requests the missing editorial translations from the canonical version", async () => {
+  it.each(["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED"])("requests translations from the saved canonical version in %s", async (state) => {
     const canonicalVersion = {
       language: "AR",
       versionNumber: 3,
@@ -619,7 +621,7 @@ describe("MarketingAdminPage", () => {
                 topics: Record<string, unknown>[];
               }).topics[0]),
               articleId: 11,
-              lifecycleState: "TRANSLATION_REQUIRED",
+              lifecycleState: state,
               canonicalLanguage: "AR",
               image: null,
               currentVersions: [{
@@ -712,6 +714,65 @@ describe("MarketingAdminPage", () => {
     });
   });
 
+  it.each(["COMPLETED", "FAILED"])("tracks a draft translation task to %s without losing the selected image", async (status) => {
+    URL.createObjectURL = jest.fn(() => "blob:pending-image");
+    URL.revokeObjectURL = jest.fn();
+    let translated = false;
+    let finishTask!: (value: { data: { id: number; status: string } }) => void;
+    const taskResult = new Promise<{ data: { id: number; status: string } }>((resolve) => { finishTask = resolve; });
+    const version = {
+      id: 31, articleId: 11, language: "AR", versionNumber: 1, title: "Saved draft", slug: "saved-draft",
+      focusKeyword: "Arabic keyword", summary: "Summary", body: "Saved body", status: "DRAFT",
+      metaTitle: "Saved draft", metaDescription: "Saved description", internalLinks: [], current: true,
+      createdAt: "2026-08-26T10:00:00Z", createdBy: "admin",
+    };
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/tasks/81") return taskResult;
+      if (url === "/admin/marketing/editorial/editor") return Promise.resolve({ data: {
+        ...(responses[url] as object),
+        topics: [{
+          ...((responses[url] as { topics: Record<string, unknown>[] }).topics[0]),
+          articleId: 11, lifecycleState: "DRAFT_READY", canonicalLanguage: "AR", image: null,
+          currentVersions: translated
+            ? [version, ...["NL", "FR", "EN"].map((language) => ({ ...version, language, focusKeyword: `${language} keyword` }))]
+            : [version],
+        }],
+      } });
+      if (url.endsWith("/articles/11/versions")) return Promise.resolve({ data: [version] });
+      return Promise.resolve({ data: responses[url] });
+    });
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    const translate = await screen.findByRole("button", { name: "admin.marketing.editorial_translation_action" });
+    await waitFor(() => expect(translate).toBeEnabled());
+    fireEvent.change(screen.getByTestId("editorial-image-file-input"), {
+      target: { files: [new File(["jpeg"], "road.jpg", { type: "image/jpeg" })] },
+    });
+    expect(screen.getByTestId("editorial-image-upload-action")).toBeDisabled();
+    fireEvent.click(translate);
+    await screen.findByText("admin.marketing.editorial_translation_running");
+    expect(translate).toBeDisabled();
+    await act(async () => {
+      translated = status === "COMPLETED";
+      finishTask({ data: { id: 81, status } });
+    });
+    await waitFor(() => expect(screen.queryByText("admin.marketing.editorial_translation_running")).not.toBeInTheDocument());
+    expect(screen.getByTestId("editorial-image-pending")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start fact check" })).toBeInTheDocument();
+    if (status === "COMPLETED") {
+      for (const language of ["NL", "FR", "EN"]) {
+        expect(screen.getByLabelText(`admin.marketing.editorial_image_alt ${language}`)).toHaveValue(`${language} keyword`);
+      }
+      expect(screen.getByTestId("editorial-image-upload-action")).toBeEnabled();
+      expect(toast.success).toHaveBeenCalledWith("admin.marketing.editorial_translation_completed");
+    } else {
+      expect(translate).toBeEnabled();
+      expect(screen.getByTestId("editorial-image-upload-action")).toBeDisabled();
+      expect(toast.error).toHaveBeenCalledWith("admin.marketing.editorial_translation_failed");
+    }
+  });
+
   it("repairs missing localized SEO metadata from IMAGE_REQUIRED without regenerating editor content", async () => {
     const currentVersions = ["AR", "NL", "FR", "EN"].map((language, index) => ({
       language,
@@ -789,7 +850,10 @@ describe("MarketingAdminPage", () => {
     expect(put).not.toHaveBeenCalled();
   });
 
-  it("advances the editorial workflow before translation through the restored endpoint", async () => {
+  it.each([
+    ["DRAFT_READY", "Start fact check"],
+    ["TRANSLATION_REQUIRED", "Continue to article image"],
+  ])("advances %s through the guarded workflow endpoint", async (lifecycleState, actionLabel) => {
     const version = {
       language: "AR",
       versionNumber: 1,
@@ -812,6 +876,9 @@ describe("MarketingAdminPage", () => {
       },
       current: true,
     };
+    const versions = lifecycleState === "TRANSLATION_REQUIRED"
+      ? ["AR", "NL", "FR", "EN"].map((language) => ({ ...version, language }))
+      : [version];
     get.mockImplementation((url: string) => {
       if (url === "/admin/marketing/editorial/editor") {
         return Promise.resolve({ data: {
@@ -819,16 +886,16 @@ describe("MarketingAdminPage", () => {
           topics: [{
             ...((responses[url] as { topics: Record<string, unknown>[] }).topics[0]),
             articleId: 11,
-            lifecycleState: "DRAFT_READY",
+            lifecycleState,
             canonicalLanguage: "AR",
             pendingApprovalTaskId: null,
             image: null,
-            currentVersions: [version],
+            currentVersions: versions,
           }],
         } });
       }
       if (url === "/admin/marketing/editorial/editor/articles/11/versions") {
-        return Promise.resolve({ data: [version] });
+        return Promise.resolve({ data: versions });
       }
       return Promise.resolve({ data: responses[url] });
     });
@@ -836,9 +903,9 @@ describe("MarketingAdminPage", () => {
     render(<MarketingAdminPage />);
     await screen.findByText("admin.marketing.tasks_today");
     fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
-    const advance = await screen.findByRole("button", { name: "Start fact check" });
+    const advance = await screen.findByRole("button", { name: actionLabel });
     fireEvent.click(advance);
-    const confirmations = await screen.findAllByRole("button", { name: "Start fact check" });
+    const confirmations = await screen.findAllByRole("button", { name: actionLabel });
     fireEvent.click(confirmations.at(-1) as HTMLElement);
 
     await waitFor(() => expect(post).toHaveBeenCalledWith(

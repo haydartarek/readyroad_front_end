@@ -434,6 +434,7 @@ test("Editorial rich controls validate and submit one local article image", asyn
     body: "Targeted editorial draft",
     metaTitle: "Belgian theory exam guide | RijVia",
     metaDescription: "Prepare for the Belgian theory exam with this reviewed RijVia guide.",
+    focusKeyword: "Belgian theory exam",
     internalLinks: [],
     status: "DRAFT",
     current: true,
@@ -476,6 +477,7 @@ test("Editorial rich controls validate and submit one local article image", asyn
 
   await page.goto("/admin/marketing");
   await page.getByRole("tab", { name: "Editorial" }).click();
+  await expect(page.getByRole("button", { name: "Create missing translations" })).toBeEnabled();
 
   const editor = page.getByTestId("editorial-markdown-editor");
   for (const control of [
@@ -511,6 +513,10 @@ test("Editorial rich controls validate and submit one local article image", asyn
     ),
   });
   await expect(imagePanel.getByText("Only JPEG or PNG files are supported.")).toHaveCount(0);
+  await expect(imagePanel.getByTestId("editorial-image-pending")).toBeVisible();
+  await expect(imagePanel.getByTestId("editorial-image-missing-alt")).toContainText("AR, NL, FR");
+  await expect(imagePanel.getByTestId("editorial-image-upload-action")).toBeDisabled();
+  await expect(imagePanel.getByLabel(/Alt text EN/)).toHaveValue("Belgian theory exam");
   await imagePanel.getByLabel(/Alt text AR/).fill("طريق بلجيكي آمن");
   await imagePanel.getByLabel(/Alt text NL/).fill("Een veilige Belgische weg");
   await imagePanel.getByLabel(/Alt text FR/).fill("Une route belge sûre");

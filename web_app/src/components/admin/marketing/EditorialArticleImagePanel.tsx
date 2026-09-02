@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/language-context";
 import { editorialCmsCopy } from "@/lib/editorial-cms-copy";
+import { getApiErrorMessage } from "@/lib/api";
 import type { EditorialArticleImageAsset } from "@/lib/marketing-admin";
 
 type Translate = (
@@ -167,6 +168,10 @@ function EditorialArticleImagePanelContent({
       form.altTextFr.trim() &&
       form.altTextEn.trim(),
   );
+  const missingAltLanguages = (["AR", "NL", "FR", "EN"] as const).filter((locale) => {
+    const field = `altText${locale[0]}${locale.slice(1).toLowerCase()}` as keyof ImageForm;
+    return !form[field].trim();
+  });
 
   const update = (field: keyof ImageForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -177,6 +182,8 @@ function EditorialArticleImagePanelContent({
     if (!nextFile) {
       setFile(null);
       setPreviewUrl(null);
+      const input = document.getElementById(fileInputId);
+      if (input instanceof HTMLInputElement) input.value = "";
       return;
     }
     if (!["image/jpeg", "image/png"].includes(nextFile.type)) {
@@ -217,15 +224,21 @@ function EditorialArticleImagePanelContent({
         { type: "application/json" },
       ),
     );
-    await onUpload(articleId, data);
-    setFile(null);
-    setPreviewUrl(null);
-    setFileError(null);
+    try {
+      await onUpload(articleId, data);
+      selectFile(null);
+    } catch (error) {
+      setFileError(getApiErrorMessage(error, t("admin.marketing.action_failed")));
+    }
   };
 
   const remove = async () => {
     if (!image) return;
-    await onRemove(articleId);
+    try {
+      await onRemove(articleId);
+    } catch (error) {
+      setFileError(getApiErrorMessage(error, t("admin.marketing.action_failed")));
+    }
   };
 
   return (
@@ -290,18 +303,25 @@ function EditorialArticleImagePanelContent({
             </Button>
           </div>
         </div>
-      ) : (
+      ) : !file ? (
         <div className="flex min-h-24 items-center justify-center rounded-2xl border border-dashed border-border/70 bg-muted/15 px-4 py-6 text-center text-sm font-semibold text-muted-foreground">
           {copy.imageEmpty}
         </div>
-      )}
+      ) : null}
 
-      {previewUrl ? (
-        <div className="space-y-2">
-          <p className="text-sm font-bold text-foreground">
-            {t("admin.marketing.editorial_image_preview")}
-          </p>
-          <div className="relative aspect-video w-full max-w-2xl overflow-hidden rounded-2xl border border-primary/20 bg-muted shadow-sm">
+      {file ? (
+        <div className="space-y-2" data-testid="editorial-image-pending">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-bold text-foreground" role="status">
+              {copy.imagePending}
+            </p>
+            <Button type="button" variant="ghost" size="icon" disabled={busy}
+              data-testid="editorial-image-clear-selection" title={copy.imageClearSelection}
+              aria-label={copy.imageClearSelection} onClick={() => selectFile(null)}>
+              <Trash2 aria-hidden="true" />
+            </Button>
+          </div>
+          {previewUrl ? <div className="relative aspect-video w-full max-w-2xl overflow-hidden rounded-2xl border border-primary/20 bg-muted shadow-sm">
             <Image
               src={previewUrl}
               alt={t("admin.marketing.editorial_image_preview")}
@@ -309,7 +329,7 @@ function EditorialArticleImagePanelContent({
               unoptimized
               className="object-cover"
             />
-          </div>
+          </div> : null}
         </div>
       ) : null}
 
@@ -351,10 +371,15 @@ function EditorialArticleImagePanelContent({
           </Button>
         </div>
         {fileError ? (
-          <p className="text-xs font-semibold text-destructive">{fileError}</p>
+          <p role="alert" className="text-xs font-semibold text-destructive">{fileError}</p>
         ) : (
           <p className="text-xs text-muted-foreground">{copy.imageFileHint}</p>
         )}
+        {file && missingAltLanguages.length > 0 ? (
+          <p role="status" data-testid="editorial-image-missing-alt" className="text-sm font-semibold text-destructive">
+            {copy.imageMissingAlt(missingAltLanguages.join(", "))}
+          </p>
+        ) : null}
       </div>
 
       <div className="rounded-2xl border border-border/50 bg-card/60 p-4 sm:p-5">

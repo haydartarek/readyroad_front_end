@@ -38,6 +38,54 @@ function readBlob(blob: Blob): Promise<string> {
 }
 
 describe("EditorialArticleImagePanel", () => {
+  beforeEach(() => {
+    URL.createObjectURL = jest.fn(() => "blob:editorial-test-preview");
+    URL.revokeObjectURL = jest.fn();
+  });
+
+  it("distinguishes a selected file from a saved image and unlocks upload when translated keywords arrive", async () => {
+    const onUpload = jest.fn().mockResolvedValue(undefined);
+    const props = {
+      articleId: 17, suggestedFileName: "draft-image", image: null,
+      busy: false, t, onUpload, onRemove: jest.fn(),
+    };
+    const { rerender } = render(<EditorialArticleImagePanel {...props} focusKeywords={{ AR: "Arabic keyword" }} />);
+    const file = new File(["jpeg"], "selected.jpg", { type: "image/jpeg" });
+    fireEvent.change(screen.getByTestId("editorial-image-file-input"), { target: { files: [file] } });
+    expect(screen.getByTestId("editorial-image-pending")).toBeInTheDocument();
+    expect(screen.queryByText("المقال لا يحتوي على صورة")).not.toBeInTheDocument();
+    expect(screen.getByTestId("editorial-image-missing-alt")).toHaveTextContent("NL, FR, EN");
+    expect(screen.getByTestId("editorial-image-upload-action")).toBeDisabled();
+    expect(onUpload).not.toHaveBeenCalled();
+
+    rerender(<EditorialArticleImagePanel {...props} focusKeywords={{
+      AR: "Arabic keyword", NL: "Dutch keyword", FR: "French keyword", EN: "English keyword",
+    }} />);
+    await waitFor(() => expect(screen.getByTestId("editorial-image-upload-action")).toBeEnabled());
+    expect(screen.getByLabelText("admin.marketing.editorial_image_alt NL")).toHaveValue("Dutch keyword");
+    expect(screen.getByTestId("editorial-image-pending")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("editorial-image-upload-action"));
+    await waitFor(() => expect(onUpload).toHaveBeenCalledTimes(1));
+    expect((onUpload.mock.calls[0][1] as FormData).get("file")).toBe(file);
+  });
+
+  it("keeps a failed upload available to retry and lets the writer clear the unuploaded selection", async () => {
+    const onUpload = jest.fn().mockRejectedValue(new Error("Upload unavailable"));
+    render(<EditorialArticleImagePanel articleId={17} suggestedFileName="draft-image" image={null}
+      busy={false} t={t} onUpload={onUpload} onRemove={jest.fn()}
+      focusKeywords={{ AR: "AR keyword", NL: "NL keyword", FR: "FR keyword", EN: "EN keyword" }} />);
+    fireEvent.change(screen.getByTestId("editorial-image-file-input"), {
+      target: { files: [new File(["jpeg"], "selected.jpg", { type: "image/jpeg" })] },
+    });
+    fireEvent.click(screen.getByTestId("editorial-image-upload-action"));
+    await screen.findByText("Upload unavailable");
+    expect(screen.getByTestId("editorial-image-pending")).toBeInTheDocument();
+    expect(screen.getByTestId("editorial-image-upload-action")).toBeEnabled();
+    fireEvent.click(screen.getByTestId("editorial-image-clear-selection"));
+    expect(screen.queryByTestId("editorial-image-pending")).not.toBeInTheDocument();
+    expect(screen.getByText("المقال لا يحتوي على صورة")).toBeInTheDocument();
+  });
+
   it("shows the writer-first image UI and submits only useful image metadata", async () => {
     const onUpload = jest.fn().mockResolvedValue(undefined);
     render(

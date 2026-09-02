@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import EditorialArticleImagePanel from "@/components/admin/marketing/EditorialArticleImagePanel";
 import type { EditorialArticleImageAsset } from "@/lib/marketing-admin";
 
@@ -133,12 +134,6 @@ describe("EditorialArticleImagePanel", () => {
     expect(screen.queryByText(/ترخيص|مالك الصورة|سبب اعتماد|نقطة التركيز/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/caption|التعليق/i)).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("رفع صورة المقال"), {
-      target: {
-        files: [new File(["jpeg"], "belgian-road.jpg", { type: "image/jpeg" })],
-      },
-    });
-
     const values: Array<[string, string]> = [
       ["admin.marketing.editorial_image_alt AR", "طريق بلجيكي آمن"],
       ["admin.marketing.editorial_image_alt NL", "Een veilige Belgische weg"],
@@ -150,7 +145,11 @@ describe("EditorialArticleImagePanel", () => {
     }
 
     expect(upload).toBeEnabled();
-    fireEvent.click(upload);
+    fireEvent.change(screen.getByLabelText("رفع صورة المقال"), {
+      target: {
+        files: [new File(["jpeg"], "belgian-road.jpg", { type: "image/jpeg" })],
+      },
+    });
 
     await waitFor(() => expect(onUpload).toHaveBeenCalledTimes(1));
     const [articleId, payload] = onUpload.mock.calls[0] as [number, FormData];
@@ -264,5 +263,41 @@ describe("EditorialArticleImagePanel", () => {
     fireEvent.click(confirmRemove);
 
     await waitFor(() => expect(onRemove).toHaveBeenCalledWith(17));
+  });
+
+  it("uploads on selection once and clears pending state only after the server confirms the asset", async () => {
+    let finishUpload!: () => void;
+    const request = new Promise<void>((resolve) => { finishUpload = resolve; });
+    const onUpload = jest.fn(() => request);
+    const asset: EditorialArticleImageAsset = {
+      id: 45, articleId: 17, status: "APPROVED", originalFileName: "road.jpg", storedFileName: "road",
+      originalWidth: 1672, originalHeight: 941, focalPointX: 0.5, focalPointY: 0.5,
+      variants: [{ type: "HERO", format: "JPEG", publicPath: "/images/articles/road.jpg",
+        width: 1672, height: 940, byteSize: 1000 }],
+      localizations: [{ language: "AR", altText: "طريق بلجيكي", caption: null }],
+      license: null, createdAt: "2026-09-02T00:00:00Z", createdBy: "admin",
+    };
+    function SavedImageHarness() {
+      const [image, setImage] = useState<EditorialArticleImageAsset | null>(null);
+      return <EditorialArticleImagePanel articleId={17} suggestedFileName="road" image={image}
+        busy={false} t={t} onRemove={jest.fn()} focusKeywords={{ AR: "AR", NL: "NL", FR: "FR", EN: "EN" }}
+        onUpload={async () => { await onUpload(); setImage(asset); }} />;
+    }
+    render(<SavedImageHarness />);
+    const input = screen.getByTestId("editorial-image-file-input");
+    const select = { target: { files: [new File(["jpeg"], "road.jpg", { type: "image/jpeg" })] } };
+    fireEvent.change(input, select);
+    fireEvent.change(input, select);
+    fireEvent.click(screen.getByTestId("editorial-image-upload-action"));
+    expect(onUpload).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("editorial-image-pending")).toHaveTextContent("جارٍ رفع صورة المقال");
+    expect(screen.getByTestId("editorial-image-upload-action")).toBeDisabled();
+    await act(async () => { finishUpload(); await request; });
+    expect(screen.queryByTestId("editorial-image-pending")).not.toBeInTheDocument();
+    expect(screen.queryByText("صورة مختارة، لم تُرفع بعد")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "تغيير صورة المقال" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "admin.marketing.editorial_image_remove" })).toBeEnabled();
+    expect(screen.getByTestId("editorial-image-file-input")).toHaveValue("");
+    expect(onUpload).toHaveBeenCalledTimes(1);
   });
 });

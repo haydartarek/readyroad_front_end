@@ -5,11 +5,24 @@ import {
   editorialStrategyOptionLabel,
   editorialTaskStatusLabel,
   editorialTopicSourceLabel,
+  editorialVersionLabel,
 } from "@/lib/editorial-ui-labels";
 
 const languages = ["ar", "nl", "fr", "en"] as const;
 
 describe("editorial UI labels", () => {
+  it.each([
+    ["ar", "النسخة الأولى", "النسخة الثانية", "النسخة الثالثة"],
+    ["nl", "Eerste versie", "Tweede versie", "Derde versie"],
+    ["fr", "Première version", "Deuxième version", "Troisième version"],
+    ["en", "First version", "Second version", "Third version"],
+  ])("names successive versions in %s", (locale, first, second, third) => {
+    expect(editorialVersionLabel(1, locale)).toBe(first);
+    expect(editorialVersionLabel(2, locale)).toBe(second);
+    expect(editorialVersionLabel(3, locale)).toBe(third);
+    expect(editorialVersionLabel(21, locale)).toContain(new Intl.NumberFormat(locale).format(21));
+    expect(editorialVersionLabel(21, locale)).not.toMatch(/^v\d/i);
+  });
   it.each(languages)("localizes workflow values for %s", (language) => {
     expect(editorialTaskStatusLabel("FAILED", language)).not.toBe("FAILED");
     expect(editorialTaskStatusLabel("APPROVED", language)).not.toBe("APPROVED");

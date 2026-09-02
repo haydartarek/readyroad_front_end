@@ -123,7 +123,11 @@ const EMPTY_SOURCE: SourceForm = {
   fingerprint: "",
 };
 
-export default function EditorialAuthoringPanel({ topic, language, strategy, t, onChanged }: Props) {
+export default function EditorialAuthoringPanel(props: Props) {
+  return <EditorialAuthoringForm key={`${props.topic.topicId}:${props.language}`} {...props} />;
+}
+
+function EditorialAuthoringForm({ topic, language, strategy, t, onChanged }: Props) {
   const [status, setStatus] = useState<EditorialAuthoringStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<"brief" | "source" | "draft" | null>(null);
@@ -148,10 +152,8 @@ export default function EditorialAuthoringPanel({ topic, language, strategy, t, 
   }, [t, topic.topicId]);
 
   useEffect(() => {
-    setBrief(initialBrief(topic, language));
-    setSource(EMPTY_SOURCE);
     void loadStatus();
-  }, [language, loadStatus, topic]);
+  }, [loadStatus, topic]);
 
   const activeUsps = useMemo(() => strategy.usps.filter((item) => item.active), [strategy.usps]);
   const activeIcps = useMemo(() => strategy.icps.filter((item) => item.active), [strategy.icps]);
@@ -530,7 +532,7 @@ function StrategySelect({
       <span className="block text-muted-foreground">{label}</span>
       <Select
         dir={direction}
-        value={value || undefined}
+        value={value}
         onValueChange={onChange}
         disabled={disabled}
       >

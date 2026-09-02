@@ -194,6 +194,36 @@ describe("EditorialAuthoringPanel", () => {
     expect(onChanged).toHaveBeenCalled();
   });
 
+  it("preserves unsaved source fields across same-topic workspace refreshes", async () => {
+    get.mockResolvedValue({ data: status() });
+    const props = { topic, language: "EN" as const, strategy, t, onChanged: jest.fn() };
+    const { rerender } = render(<EditorialAuthoringPanel {...props} />);
+    const claim = await screen.findByLabelText("admin.marketing.editorial_authoring_claim_text");
+    fireEvent.change(claim, { target: { value: "Verified claim in progress" } });
+    rerender(<EditorialAuthoringPanel {...props} topic={{ ...topic }} />);
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    expect(await screen.findByLabelText("admin.marketing.editorial_authoring_claim_text"))
+      .toHaveValue("Verified claim in progress");
+
+    rerender(<EditorialAuthoringPanel {...props} language="AR" />);
+    expect(await screen.findByLabelText("admin.marketing.editorial_authoring_claim_text")).toHaveValue("");
+  });
+
+  it("preserves an unfinished brief on refresh but resets it when switching topic", async () => {
+    get.mockResolvedValue({ data: status({ canCreateBrief: true, briefId: null }) });
+    const props = { topic, language: "EN" as const, strategy, t, onChanged: jest.fn() };
+    const { rerender } = render(<EditorialAuthoringPanel {...props} />);
+    fireEvent.change(await screen.findByLabelText("admin.marketing.editorial_authoring_purpose"), {
+      target: { value: "Owner purpose in progress" },
+    });
+    rerender(<EditorialAuthoringPanel {...props} topic={{ ...topic }} />);
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    expect(await screen.findByLabelText("admin.marketing.editorial_authoring_purpose"))
+      .toHaveValue("Owner purpose in progress");
+    rerender(<EditorialAuthoringPanel {...props} topic={{ ...topic, topicId: 3, uspId: null }} />);
+    expect(await screen.findByLabelText("admin.marketing.editorial_authoring_purpose")).toHaveValue("");
+  });
+
   it("enables the Content Agent draft request only after every claim is supported", async () => {
     get.mockResolvedValue({
       data: status({ claimsTotal: 2, claimsSupported: 2, canCollectSources: true, canCreateDraft: true }),

@@ -547,6 +547,27 @@ export function editorialImageActionLabel(
   return hasImage ? "Change article image" : "Upload article image";
 }
 
+const versionOrdinals = {
+  ar: ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة", "السابعة", "الثامنة", "التاسعة", "العاشرة",
+    "الحادية عشرة", "الثانية عشرة", "الثالثة عشرة", "الرابعة عشرة", "الخامسة عشرة", "السادسة عشرة", "السابعة عشرة", "الثامنة عشرة", "التاسعة عشرة", "العشرون"],
+  nl: ["Eerste", "Tweede", "Derde", "Vierde", "Vijfde", "Zesde", "Zevende", "Achtste", "Negende", "Tiende",
+    "Elfde", "Twaalfde", "Dertiende", "Veertiende", "Vijftiende", "Zestiende", "Zeventiende", "Achttiende", "Negentiende", "Twintigste"],
+  fr: ["Première", "Deuxième", "Troisième", "Quatrième", "Cinquième", "Sixième", "Septième", "Huitième", "Neuvième", "Dixième",
+    "Onzième", "Douzième", "Treizième", "Quatorzième", "Quinzième", "Seizième", "Dix-septième", "Dix-huitième", "Dix-neuvième", "Vingtième"],
+  en: ["First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth",
+    "Eleventh", "Twelfth", "Thirteenth", "Fourteenth", "Fifteenth", "Sixteenth", "Seventeenth", "Eighteenth", "Nineteenth", "Twentieth"],
+};
+
+export function editorialVersionLabel(version: number, uiLanguage: string): string {
+  const locale = language(uiLanguage);
+  const ordinal = versionOrdinals[locale][version - 1];
+  if (ordinal) return locale === "ar" ? `النسخة ${ordinal}` : `${ordinal} ${locale === "nl" ? "versie" : "version"}`;
+  const number = new Intl.NumberFormat(locale, { useGrouping: false }).format(version);
+  if (locale === "ar") return `النسخة رقم ${number}`;
+  if (locale === "nl") return `Versie ${number}`;
+  return `Version ${number}`;
+}
+
 export function editorialWorkflowCopy(uiLanguage: string) {
   return workflowLabels[language(uiLanguage)];
 }

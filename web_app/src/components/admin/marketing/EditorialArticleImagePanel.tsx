@@ -117,6 +117,9 @@ function EditorialArticleImagePanelContent({
     [focusKeywords],
   );
   const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const uploadInFlight = useRef(false);
+  const operationBusy = busy || uploading;
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -178,6 +181,7 @@ function EditorialArticleImagePanelContent({
   };
 
   const selectFile = (nextFile: File | null) => {
+    if (nextFile && (busy || uploadInFlight.current)) return;
     setFileError(null);
     if (!nextFile) {
       setFile(null);
@@ -203,18 +207,22 @@ function EditorialArticleImagePanelContent({
     setPreviewUrl(
       typeof URL.createObjectURL === "function" ? URL.createObjectURL(nextFile) : null,
     );
+    if (missingAltLanguages.length === 0) void upload(nextFile);
   };
 
-  const upload = async () => {
-    if (!file || !valid) return;
+  const upload = async (selectedFile = file) => {
+    if (!selectedFile || missingAltLanguages.length > 0 || busy || uploadInFlight.current) return;
+    uploadInFlight.current = true;
+    setUploading(true);
+    setFileError(null);
     const data = new FormData();
-    data.append("file", file);
+    data.append("file", selectedFile);
     data.append(
       "metadata",
       new Blob(
         [
           JSON.stringify({
-            storedFileName,
+            storedFileName: seoFileName(suggestedFileName || selectedFile.name, `article-${articleId}`),
             altTextAr: form.altTextAr.trim(),
             altTextNl: form.altTextNl.trim(),
             altTextFr: form.altTextFr.trim(),
@@ -229,6 +237,9 @@ function EditorialArticleImagePanelContent({
       selectFile(null);
     } catch (error) {
       setFileError(getApiErrorMessage(error, t("admin.marketing.action_failed")));
+    } finally {
+      uploadInFlight.current = false;
+      setUploading(false);
     }
   };
 
@@ -245,7 +256,7 @@ function EditorialArticleImagePanelContent({
     <section
       className="min-w-0 space-y-5 border-t border-border/50 pt-5"
       data-testid="editorial-article-image"
-      aria-busy={busy}
+      aria-busy={operationBusy}
     >
       <header className="flex min-w-0 items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary">
@@ -295,8 +306,8 @@ function EditorialArticleImagePanelContent({
               size="sm"
               className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive/5 sm:w-fit"
               onClick={() => setRemoveConfirmOpen(true)}
-              disabled={busy}
-              aria-busy={busy}
+              disabled={operationBusy}
+              aria-busy={operationBusy}
             >
               {busy ? <Loader2 className="animate-spin" /> : <Trash2 />}
               {t("admin.marketing.editorial_image_remove")}
@@ -313,9 +324,9 @@ function EditorialArticleImagePanelContent({
         <div className="space-y-2" data-testid="editorial-image-pending">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-bold text-foreground" role="status">
-              {copy.imagePending}
+              {uploading ? copy.imageUploading : copy.imagePending}
             </p>
-            <Button type="button" variant="ghost" size="icon" disabled={busy}
+            <Button type="button" variant="ghost" size="icon" disabled={operationBusy}
               data-testid="editorial-image-clear-selection" title={copy.imageClearSelection}
               aria-label={copy.imageClearSelection} onClick={() => selectFile(null)}>
               <Trash2 aria-hidden="true" />
@@ -346,7 +357,7 @@ function EditorialArticleImagePanelContent({
               aria-label={imageActionLabel}
               type="file"
               accept="image/jpeg,image/png"
-              disabled={busy}
+              disabled={operationBusy}
               className="h-12 w-full ps-10 file:me-3 file:h-9 file:font-bold"
               onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
             />
@@ -363,10 +374,10 @@ function EditorialArticleImagePanelContent({
             }}
             className="h-12 min-w-40 gap-2 px-5"
             onClick={() => void upload()}
-            disabled={busy || (Boolean(file) && (!valid || busy))}
-            aria-busy={busy}
+            disabled={operationBusy || (Boolean(file) && !valid)}
+            aria-busy={operationBusy}
           >
-            {busy ? <Loader2 className="animate-spin" /> : <Upload />}
+            {operationBusy ? <Loader2 className="animate-spin" /> : <Upload />}
             {imageActionLabel}
           </Button>
         </div>
@@ -405,7 +416,7 @@ function EditorialArticleImagePanelContent({
                   dir={locale === "AR" ? "rtl" : "ltr"}
                   value={form[field]}
                   maxLength={500}
-                  disabled={busy}
+                  disabled={operationBusy}
                   onChange={(event) => update(field, event.target.value)}
                 />
               </ImageField>
@@ -421,7 +432,7 @@ function EditorialArticleImagePanelContent({
         cancelLabel={t("admin.marketing.cancel")}
         direction={language.toLowerCase() === "ar" ? "rtl" : "ltr"}
         destructive
-        busy={busy}
+        busy={operationBusy}
         onOpenChange={setRemoveConfirmOpen}
         onConfirm={() => {
           setRemoveConfirmOpen(false);

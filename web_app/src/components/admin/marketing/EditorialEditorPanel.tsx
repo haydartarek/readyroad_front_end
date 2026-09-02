@@ -47,6 +47,7 @@ import {
   editorialQualityGateLabel,
   editorialTaskStatusLabel,
   editorialTopicSourceLabel,
+  editorialVersionLabel,
   editorialWorkflowCopy,
 } from "@/lib/editorial-ui-labels";
 import type {
@@ -196,7 +197,7 @@ export default function EditorialEditorPanel({
     action: t("admin.marketing.editorial_version_delete"),
     confirm: (versionNumber: number) =>
       t("admin.marketing.editorial_version_delete_confirm", {
-        version: versionNumber,
+        version: editorialVersionLabel(versionNumber, uiLanguage),
       }),
     deleted: t("admin.marketing.editorial_version_deleted"),
     failed: t("admin.marketing.editorial_version_delete_failed"),
@@ -1045,7 +1046,7 @@ export default function EditorialEditorPanel({
               <div className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-2xl border border-border/60 bg-background/95 p-3 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-muted-foreground">
                   {currentSummary
-                    ? t("admin.marketing.editorial_current_version", { version: currentSummary.versionNumber })
+                    ? t("admin.marketing.editorial_current_version", { version: editorialVersionLabel(currentSummary.versionNumber, uiLanguage) })
                     : t("admin.marketing.editorial_first_version")}
                   {dirty ? ` · ${t("admin.marketing.editorial_unsaved")}` : ""}
                 </p>
@@ -1338,7 +1339,7 @@ function VersionHistory({
             <article key={version.id} className="flex min-w-0 flex-col gap-3 rounded-2xl border border-border/50 bg-background/65 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-black text-foreground">v{version.versionNumber}</span>
+                  <span className="text-sm font-black text-foreground">{editorialVersionLabel(version.versionNumber, uiLanguage)}</span>
                   {version.current ? <Badge>{copy.versionCurrent}</Badge> : <Badge variant="outline">{editorialTaskStatusLabel(version.status, uiLanguage)}</Badge>}
                 </div>
                 <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
@@ -1594,13 +1595,14 @@ function VersionPreviewDialog({
   canDelete: (version: EditorialVersion) => boolean;
   deleteCopy: VersionDeleteCopy;
 }) {
+  const { language: uiLanguage } = useLanguage();
   return (
     <Dialog open={Boolean(version)} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-3xl lg:max-w-4xl">
         {version ? (
           <>
             <DialogHeader className="text-start">
-              <DialogTitle>{copy.versionPreview} · v{version.versionNumber}</DialogTitle>
+              <DialogTitle>{copy.versionPreview} · {editorialVersionLabel(version.versionNumber, uiLanguage)}</DialogTitle>
               <DialogDescription>{formatDate(version.createdAt)} · {version.createdBy ?? "—"}</DialogDescription>
             </DialogHeader>
             <ArticlePreview language={language} title={version.title} summary={version.summary ?? ""} body={version.body} typography={version.typography ?? DEFAULT_ARTICLE_TYPOGRAPHY} internalLinks={version.internalLinks} t={(key) => key} />

@@ -423,6 +423,8 @@ test("All Marketing tabs remain usable without responsive overflow or browser er
 
 test("Editorial rich controls validate and submit one local article image", async ({ page }) => {
   const mutations: Request[] = [];
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
   const currentVersion = {
     id: 21,
     articleId: 11,
@@ -473,6 +475,15 @@ test("Editorial rich controls validate and submit one local article image", asyn
       }],
     },
     "/admin/marketing/editorial/editor/articles/11/versions": [currentVersion],
+  });
+  await page.route("**/api/proxy/admin/marketing/editorial/editor/articles/11/image", (route) => {
+    mutations.push(route.request());
+    return route.fulfill({ status: 200, json: {
+      id: 7, articleId: 11, status: "APPROVED", originalFileName: "belgian-road.png",
+      storedFileName: "belgian-road", originalWidth: 1672, originalHeight: 941,
+      variants: [{ type: "HERO", format: "JPEG", publicPath: "/images/logo.png", width: 1600, height: 900, byteSize: 1000 }],
+      localizations: [{ language: "EN", altText: "A safe Belgian road" }], createdAt: now, createdBy: "admin",
+    } });
   });
 
   await page.goto("/admin/marketing");
@@ -534,6 +545,12 @@ test("Editorial rich controls validate and submit one local article image", asyn
   );
   expect(imageRequest?.method()).toBe("POST");
   expect(imageRequest?.headers()["content-type"]).toContain("multipart/form-data; boundary=");
+  await expect(imagePanel.getByTestId("editorial-image-pending")).toHaveCount(0);
+  await expect(imagePanel.getByTestId("editorial-image-upload-action")).toBeEnabled();
+  await expect(imagePanel.getByTestId("editorial-image-upload-action")).toHaveText("Change article image");
+  await expect(imagePanel.getByRole("button", { name: "Remove image", exact: true })).toBeEnabled();
+  await expect(page.getByTestId("editorial-version-history").getByText("First version", { exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
   await expectNoOverflow(page);
 });
 

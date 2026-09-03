@@ -34,6 +34,10 @@ import {
   StructuredData,
   StructuredRecordCard,
   TechnicalDetails,
+  MarketingDetails,
+  MarketingList,
+  marketingErrorText,
+  marketingImportError,
   machineLabel,
   marketingDisplayText,
 } from "@/components/admin/marketing/MarketingDataPresentation";
@@ -95,8 +99,8 @@ const VIEWS: Array<{ key: View; icon: typeof Activity }> = [
   { key: "settings", icon: Settings2 },
 ];
 
-function StatusBadge({ status, t, showCode = false }: { status: string; t: Translate; showCode?: boolean }) {
-  return <HumanStatusBadge status={status} t={t} showCode={showCode} />;
+function StatusBadge({ status, t }: { status: string; t: Translate }) {
+  return <HumanStatusBadge status={status} t={t} />;
 }
 
 export default function MarketingAdminPage() {
@@ -200,7 +204,9 @@ export default function MarketingAdminPage() {
       await load();
     } catch (requestError) {
       logApiError("Marketing admin action failed", requestError);
-      toast.error(getApiErrorMessage(requestError, t("admin.marketing.action_failed")));
+      toast.error(key === "seo-import"
+        ? marketingImportError(t, requestError)
+        : getApiErrorMessage(requestError, t("admin.marketing.action_failed")));
     } finally {
       setBusy(null);
     }
@@ -695,18 +701,12 @@ function Overview({ data, t, formatDate }: { data: PlatformData; t: Translate; f
                         {machineLabel(t, item.eventType)}
                       </p>
 
-                      <code
-                        dir="ltr"
-                        className="mt-0.5 block max-w-full break-all text-start text-[11px] text-muted-foreground"
-                      >
-                        {item.eventType}
-                      </code>
 
                       <p
                         dir="ltr"
                         className="mt-1 max-w-full break-all text-start text-xs text-muted-foreground"
                       >
-                        {item.actor}
+                        {actorLabel(item.actor, t)}
                       </p>
                     </div>
 
@@ -768,15 +768,9 @@ function Agents({ agents, busy, t, formatDate, onToggle }: { agents: MarketingAg
                 </div>
 
                 <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">
-                  {agent.description}
+                  {t("admin.marketing.agent_description_" + agent.agentType.toLowerCase())}
                 </p>
 
-                <code
-                  dir="ltr"
-                  className="mt-2 block max-w-full break-all text-start text-[11px] text-muted-foreground"
-                >
-                  {agent.displayName}{" · "}{agent.agentType}
-                </code>
               </div>
 
               {agent.agentType !== "ADMIN_PLATFORM" ? (
@@ -826,7 +820,7 @@ function Tasks({ tasks, busy, t, formatDate, onRetry }: { tasks: MarketingTask[]
   }
 
   return (
-    <div className="min-w-0 space-y-3">
+    <MarketingList t={t}>
       {tasks.map((task) => {
         const retryBusy = busy === "retry-" + task.id;
 
@@ -850,18 +844,12 @@ function Tasks({ tasks, busy, t, formatDate, onRetry }: { tasks: MarketingTask[]
                 {machineLabel(t, task.taskType)}
               </p>
 
-              <code
-                dir="ltr"
-                className="mt-1 block max-w-full break-all text-start text-[11px] text-muted-foreground"
-              >
-                {task.agentType} / {task.taskType}
-              </code>
 
               <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <time>{formatDate(task.createdAt)}</time>
                 <span aria-hidden="true">{"·"}</span>
-                <span dir="ltr">
-                  {task.attempts}/{task.maxAttempts}
+                <span>
+                  {t("admin.marketing.attempt_count", { count: task.attempts, max: task.maxAttempts })}
                 </span>
               </div>
 
@@ -871,16 +859,11 @@ function Tasks({ tasks, busy, t, formatDate, onRetry }: { tasks: MarketingTask[]
                     {machineLabel(t, task.errorCode)}
                   </p>
 
-                  <code
-                    dir="ltr"
-                    className="mt-1 block max-w-full break-all text-start text-[11px] text-destructive/80"
-                  >
-                    {task.errorCode}
-                  </code>
 
                   <p className="mt-2 break-words text-sm leading-6 text-destructive">
-                    {task.errorMessage}
+                    {marketingErrorText(t, task.errorCode)}
                   </p>
+                  {task.nextRetryAt ? <p className="mt-2 text-xs">{t("admin.marketing.next_retry")}: {formatDate(task.nextRetryAt)}</p> : null}
                 </div>
               ) : null}
             </div>
@@ -900,7 +883,7 @@ function Tasks({ tasks, busy, t, formatDate, onRetry }: { tasks: MarketingTask[]
           </article>
         );
       })}
-    </div>
+    </MarketingList>
   );
 }
 
@@ -935,14 +918,9 @@ function Approvals({ tasks, busy, t, onDecision }: { tasks: MarketingTask[]; bus
 
               <p className="mt-2 break-words text-sm font-semibold">
                 {machineLabel(t, task.agentType)}
+                {" · "}{machineLabel(t, task.taskType)}
               </p>
 
-              <code
-                dir="ltr"
-                className="mt-1 block max-w-full break-all text-start text-[11px] text-muted-foreground"
-              >
-                {task.agentType} / {task.taskType}
-              </code>
             </div>
 
             <div className="min-w-0 space-y-3">
@@ -1020,7 +998,7 @@ function Errors({ items, t, formatDate }: { items: MarketingErrorItem[]; t: Tran
   }
 
   return (
-    <div className="min-w-0 space-y-3">
+    <MarketingList t={t}>
       {items.map((item) => (
         <article
           key={item.id}
@@ -1032,12 +1010,6 @@ function Errors({ items, t, formatDate }: { items: MarketingErrorItem[]; t: Tran
                 {machineLabel(t, item.eventCode)}
               </p>
 
-              <code
-                dir="ltr"
-                className="mt-1 block max-w-full break-all text-start text-[11px] text-destructive/80"
-              >
-                {item.eventCode}
-              </code>
             </div>
 
             <time className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
@@ -1046,168 +1018,41 @@ function Errors({ items, t, formatDate }: { items: MarketingErrorItem[]; t: Tran
           </div>
 
           <p className="mt-3 break-words text-sm leading-6">
-            {item.message}
+            {marketingErrorText(t, item.eventCode)}
           </p>
 
           <p
             dir="ltr"
             className="mt-2 break-all text-start text-xs text-muted-foreground"
           >
-            Task #{item.taskId}
-            {item.attemptId
-              ? "  Attempt #" + item.attemptId
-              : ""}
+            {t("admin.marketing.task_reference", { id: item.taskId })}
           </p>
         </article>
       ))}
-    </div>
+    </MarketingList>
   );
 }
 
+function actorLabel(actor: string, t: Translate) {
+  return /^(?:[0-9a-f]{8}-[0-9a-f-]{27,}|worker[:_-].*|SYSTEM(?:_.*)?)$/i.test(actor)
+    ? t("admin.marketing.automatic_worker") : marketingDisplayText(actor);
+}
+
 function Audit({ items, t, formatDate }: { items: MarketingAuditItem[]; t: Translate; formatDate: DateFormatter }) {
-  if (!items.length) {
-    return <Empty t={t} />;
-  }
-
+  if (!items.length) return <Empty t={t} />;
   return (
-    <div className="min-w-0">
-      <div className="space-y-3 md:hidden">
-        {items.map((item) => (
-          <article
-            key={item.id}
-            className="min-w-0 rounded-2xl border border-border/60 bg-card p-4 shadow-sm"
-          >
-            <div className="flex min-w-0 flex-col gap-2">
-              <p className="break-words font-semibold">
-                {machineLabel(t, item.eventType)}
-              </p>
-
-              <code
-                dir="ltr"
-                className="block max-w-full break-all text-start text-[11px] text-muted-foreground"
-              >
-                {item.eventType}
-              </code>
-            </div>
-
-            <dl className="mt-4 grid min-w-0 gap-3">
-              <div className="min-w-0">
-                <dt className="text-xs font-semibold text-muted-foreground">
-                  {t("admin.marketing.actor")}
-                </dt>
-                <dd
-                  dir="ltr"
-                  className="mt-1 break-all text-start text-sm"
-                >
-                  {item.actor}
-                </dd>
-              </div>
-
-              <div className="min-w-0">
-                <dt className="text-xs font-semibold text-muted-foreground">
-                  {t("admin.marketing.entity")}
-                </dt>
-                <dd className="mt-1 min-w-0 text-sm">
-                  <p className="break-words">
-                    {item.entityType
-                      ? machineLabel(t, item.entityType)
-                      : ""}
-                  </p>
-
-                  {item.entityId ? (
-                    <code
-                      dir="ltr"
-                      className="mt-1 block max-w-full break-all text-start text-[11px] text-muted-foreground"
-                    >
-                      {item.entityId}
-                    </code>
-                  ) : null}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">
-                  {t("admin.marketing.date")}
-                </dt>
-                <dd className="mt-1 text-sm text-muted-foreground">
-                  {formatDate(item.createdAt)}
-                </dd>
-              </div>
-            </dl>
-          </article>
-        ))}
-      </div>
-
-      <div className="hidden overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm md:block">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-muted/50 text-muted-foreground">
-            <tr>
-              <th className="p-3 text-start">
-                {t("admin.marketing.event")}
-              </th>
-              <th className="p-3 text-start">
-                {t("admin.marketing.actor")}
-              </th>
-              <th className="p-3 text-start">
-                {t("admin.marketing.entity")}
-              </th>
-              <th className="p-3 text-start">
-                {t("admin.marketing.date")}
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {items.map((item) => (
-              <tr
-                key={item.id}
-                className="border-t border-border/50 transition-colors hover:bg-muted/20"
-              >
-                <td className="p-3 align-top">
-                  <p className="font-semibold">
-                    {machineLabel(t, item.eventType)}
-                  </p>
-                  <code
-                    dir="ltr"
-                    className="block max-w-64 break-all text-start text-[11px] text-muted-foreground"
-                  >
-                    {item.eventType}
-                  </code>
-                </td>
-
-                <td
-                  dir="ltr"
-                  className="max-w-64 break-all p-3 text-start align-top"
-                >
-                  {item.actor}
-                </td>
-
-                <td className="p-3 align-top">
-                  <p>
-                    {item.entityType
-                      ? machineLabel(t, item.entityType)
-                      : ""}
-                  </p>
-
-                  {item.entityId ? (
-                    <code
-                      dir="ltr"
-                      className="block max-w-64 break-all text-start text-[11px] text-muted-foreground"
-                    >
-                      {item.entityId}
-                    </code>
-                  ) : null}
-                </td>
-
-                <td className="whitespace-nowrap p-3 align-top text-muted-foreground">
-                  {formatDate(item.createdAt)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <MarketingList t={t}>
+      {items.map((item) => (
+        <article key={item.id} className="grid min-w-0 gap-3 border-b border-border/50 py-3 sm:grid-cols-[2fr_1fr_1fr]">
+          <div className="min-w-0">
+            <p className="break-words text-sm font-semibold">{machineLabel(t, item.eventType)}</p>
+            {item.entityType ? <p className="mt-1 text-xs text-muted-foreground">{machineLabel(t, item.entityType)}</p> : null}
+          </div>
+          <p className="min-w-0 break-words text-sm">{actorLabel(item.actor, t)}</p>
+          <time className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</time>
+        </article>
+      ))}
+    </MarketingList>
   );
 }
 
@@ -1246,7 +1091,7 @@ function Settings({ data, t, formatDate }: { data: PlatformData; t: Translate; f
 
         <div className="mt-4 min-w-0 space-y-3">
           {data.settings.settings.length ? (
-            data.settings.settings.map((setting) => (
+            <MarketingList t={t} pageSize={5}>{data.settings.settings.map((setting) => (
               <article
                 key={setting.id}
                 className="min-w-0 rounded-xl border border-border/50 bg-muted/25 p-3 sm:p-4"
@@ -1255,29 +1100,24 @@ function Settings({ data, t, formatDate }: { data: PlatformData; t: Translate; f
                   <h3 className="break-words font-bold">
                     {machineLabel(t, setting.key)}
                   </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{machineLabel(t, setting.agentType)}</p>
 
-                  <code
-                    dir="ltr"
-                    className="mt-1 block max-w-full break-all text-start text-[11px] text-muted-foreground"
-                  >
-                    {setting.agentType}
-                  </code>
                 </div>
 
-                <div className="mt-3 min-w-0">
+                <MarketingDetails title={t("admin.marketing.details")}>
                   <StructuredData
                     data={setting.value}
                     t={t}
                     formatDate={formatDate}
                   />
-                </div>
+                </MarketingDetails>
 
                 <p className="mt-3 break-words text-xs text-muted-foreground">
                   {t("admin.marketing.updated")}:{" "}
                   {formatDate(setting.updatedAt)}
                 </p>
               </article>
-            ))
+            ))}</MarketingList>
           ) : (
             <Empty t={t} />
           )}
@@ -1328,29 +1168,7 @@ function Settings({ data, t, formatDate }: { data: PlatformData; t: Translate; f
                   />
                 </dl>
 
-                <details className="mt-3 min-w-0 rounded-lg border border-border/50 bg-background/70 p-2.5">
-                  <summary className="cursor-pointer rounded-md text-xs font-semibold text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
-                    {t("admin.marketing.technical_details")}
-                  </summary>
-
-                  <code
-                    dir="ltr"
-                    className="mt-2 block max-w-full break-all text-start text-xs text-muted-foreground"
-                  >
-                    {schedule.agentType}
-                    {" · "}
-                    {schedule.taskType}
-                  </code>
-
-                  <code
-                    dir="ltr"
-                    className="mt-1 block max-w-full break-all text-start text-xs text-muted-foreground"
-                  >
-                    {schedule.cronExpression}
-                    {" · "}
-                    {schedule.zoneId}
-                  </code>
-                </details>
+                <p className="mt-3 text-xs text-muted-foreground">{machineLabel(t, schedule.taskType)} · {schedule.zoneId}</p>
               </article>
             ))
           ) : (
@@ -1487,12 +1305,6 @@ function AnalyticsPanel({ data, busy, t, formatDate, onSync, onSettings }: { dat
                 <p className="break-words font-semibold">
                   {machineLabel(t, alert)}
                 </p>
-                <code
-                  dir="ltr"
-                  className="mt-0.5 block max-w-full break-all text-start text-[11px] opacity-80"
-                >
-                  {alert}
-                </code>
               </div>
             ))}
           </div>
@@ -1581,7 +1393,7 @@ function AnalyticsPanel({ data, busy, t, formatDate, onSync, onSettings }: { dat
 
         <div className="mt-4 min-w-0 space-y-3">
           {data.reports.length ? (
-            data.reports.map((report, index) => (
+            <MarketingList t={t} pageSize={5}>{data.reports.map((report, index) => (
               <StructuredRecordCard
                 key={String(report.id ?? index)}
                 data={report}
@@ -1590,7 +1402,7 @@ function AnalyticsPanel({ data, busy, t, formatDate, onSync, onSettings }: { dat
                 t={t}
                 formatDate={formatDate}
               />
-            ))
+            ))}</MarketingList>
           ) : (
             <Empty t={t} />
           )}
@@ -1818,7 +1630,7 @@ function DiscoveryPanel({ data, t, formatDate }: { data: AnalyticsDiscovery; t: 
 
           <div className="mt-4 min-w-0 space-y-3">
             {items.length ? (
-              items.map((item, index) => (
+              <MarketingList t={t} pageSize={5}>{items.map((item, index) => (
                 <StructuredRecordCard
                   key={
                     key +
@@ -1835,7 +1647,7 @@ function DiscoveryPanel({ data, t, formatDate }: { data: AnalyticsDiscovery; t: 
                   t={t}
                   formatDate={formatDate}
                 />
-              ))
+              ))}</MarketingList>
             ) : (
               <Empty t={t} />
             )}
@@ -1946,12 +1758,7 @@ function SeoMigrationPanel({
 
             {latest.sourceFileName ? (
               <div className="mt-3 min-w-0">
-                <StructuredData
-                  data={latest}
-                  t={t}
-                  formatDate={formatDate}
-                  technicalDetails
-                />
+                <p className="text-xs text-muted-foreground">{t("admin.marketing.updated")}: {formatDate(latest.importedAt ?? null)}</p>
               </div>
             ) : null}
           </div>
@@ -2015,23 +1822,21 @@ function SeoMigrationPanel({
 
         <div className="mt-4 min-w-0 space-y-3">
           {workspace.opportunities.length ? (
-            workspace.opportunities
-              .slice(0, 25)
-              .map((item, index) => (
+            <MarketingList t={t} pageSize={5}>{workspace.opportunities.map((item, index) => (
                 <StructuredRecordCard
                   key={
                     "seo-opportunity-" +
                     String(item.id ?? index)
                   }
                   data={item}
-                  titleField="query"
+                  titleField={item.query ? "query" : "page"}
                   fallbackTitle={t(
                     "admin.marketing.opportunity_item"
                   )}
                   t={t}
                   formatDate={formatDate}
                 />
-              ))
+              ))}</MarketingList>
           ) : (
             <Empty t={t} />
           )}
@@ -2040,14 +1845,10 @@ function SeoMigrationPanel({
 
       <div className="grid min-w-0 gap-5 xl:grid-cols-2">
         {sections.map(([key, value]) => (
-          <section
+          <MarketingDetails
             key={key}
-            className="min-w-0 rounded-2xl border border-border/60 bg-card p-4 shadow-sm sm:p-5"
+            title={t("admin.marketing.seo_" + key)}
           >
-            <h2 className="break-words font-black">
-              {t("admin.marketing.seo_" + key)}
-            </h2>
-
             <div className="mt-4 min-w-0">
               <StructuredData
                 data={value}
@@ -2055,7 +1856,7 @@ function SeoMigrationPanel({
                 formatDate={formatDate}
               />
             </div>
-          </section>
+          </MarketingDetails>
         ))}
       </div>
 

@@ -734,7 +734,7 @@ describe("MarketingAdminPage", () => {
           ...((responses[url] as { topics: Record<string, unknown>[] }).topics[0]),
           articleId: 11, lifecycleState: "DRAFT_READY", canonicalLanguage: "AR", image: null,
           currentVersions: translated
-            ? [version, ...["NL", "FR", "EN"].map((language) => ({ ...version, language, focusKeyword: `${language} keyword` }))]
+            ? [version, ...["NL", "FR", "EN"].map((language, index) => ({ ...version, id: 32 + index, language, focusKeyword: `${language} keyword` }))]
             : [version],
         }],
       } });
@@ -877,7 +877,7 @@ describe("MarketingAdminPage", () => {
       current: true,
     };
     const versions = lifecycleState === "TRANSLATION_REQUIRED"
-      ? ["AR", "NL", "FR", "EN"].map((language) => ({ ...version, language }))
+      ? ["AR", "NL", "FR", "EN"].map((language, index) => ({ ...version, id: 31 + index, language }))
       : [version];
     get.mockImplementation((url: string) => {
       if (url === "/admin/marketing/editorial/editor") {
@@ -1185,7 +1185,7 @@ describe("MarketingAdminPage", () => {
     });
   });
 
-  it("renders operational records as readable fields and keeps raw payloads inside technical details", async () => {
+  it("renders operational records as readable fields without raw payloads", async () => {
     const originalSettings = responses["/admin/marketing/analytics/settings"];
     const originalReports = responses["/admin/marketing/analytics/reports"];
     const originalDiscovery = responses["/admin/marketing/analytics/organic-discovery"];
@@ -1245,8 +1245,8 @@ describe("MarketingAdminPage", () => {
       expect(screen.getByText("7.5%")).toBeInTheDocument();
 
       const rawBlocks = Array.from(document.querySelectorAll("pre"));
-      expect(rawBlocks.length).toBeGreaterThan(0);
-      expect(rawBlocks.every((block) => block.closest("details"))).toBe(true);
+      expect(rawBlocks).toHaveLength(0);
+      expect(document.querySelectorAll("code")).toHaveLength(0);
     } finally {
       responses["/admin/marketing/analytics/settings"] = originalSettings;
       responses["/admin/marketing/analytics/reports"] = originalReports;

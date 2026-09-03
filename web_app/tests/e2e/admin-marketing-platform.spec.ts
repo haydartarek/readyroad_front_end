@@ -335,6 +335,7 @@ test("Marketing operations remain usable on mobile and preserve approval control
   await page.getByRole("tab", { name: "Settings" }).click();
   await expect(page.getByText("Runtime settings")).toBeVisible();
   await expect(page.getByText("Agent settings")).toBeVisible();
+  await page.getByText("Details", { exact: true }).click();
   await expect(page.getByText("Europe/Brussels", { exact: true })).toBeVisible();
   await expectNoOverflow(page);
 });
@@ -711,7 +712,7 @@ test("Admin requests and decides exact-version article approval", async ({ page 
   });
 
   await page.getByRole("tab", { name: "Approvals" }).click();
-  const approval = page.getByText("ARTICLE_APPROVAL").locator("..").locator("..");
+  const approval = page.getByRole("tabpanel").getByRole("article").filter({ has: page.getByLabel("Decision reason") });
   await approval.getByLabel("Decision reason").fill("Approved exact versions.");
   await approval.getByRole("button", { name: "Approve" }).click();
 
@@ -737,6 +738,7 @@ test("Live local Marketing data remains readable through the real Backend", asyn
       !process.env.PLAYWRIGHT_ADMIN_PASSWORD,
     "Requires the explicitly configured local Admin account.",
   );
+  expect(new URL(process.env.PLAYWRIGHT_BASE_URL ?? "").origin).toBe("http://localhost:3000");
 
   const browserErrors: string[] = [];
   const failedApiResponses: string[] = [];
@@ -781,6 +783,23 @@ test("Live local Marketing data remains readable through the real Backend", asyn
       for (let index = 0; index < 12; index += 1) {
         await tabs.nth(index).click();
         await expectNoOverflow(page);
+        await expect(page.getByRole("tabpanel").locator("code")).toHaveCount(0);
+        if (localePath === "/ar/admin/marketing" && [5, 11].includes(index)) {
+          const screenshot = test.info().outputPath(`marketing-${index}-${width}.png`);
+          await page.screenshot({ path: screenshot, fullPage: true });
+          await test.info().attach(`marketing-${index}-${width}`, { path: screenshot, contentType: "image/png" });
+          const next = page.getByRole("tabpanel").getByRole("button", { name: "الصفحة التالية", exact: true });
+          if (await next.count()) {
+            await next.first().click();
+            await expectNoOverflow(page);
+          }
+          const details = page.getByRole("tabpanel").locator("summary").first();
+          if (await details.count()) {
+            await details.click();
+            await expect(details.locator("..")).toHaveAttribute("open", "");
+            await expectNoOverflow(page);
+          }
+        }
       }
 
       await expect(page.locator("body")).not.toContainText(/ReadyRoad/i);
@@ -793,4 +812,47 @@ test("Live local Marketing data remains readable through the real Backend", asyn
 
   expect(failedApiResponses).toEqual([]);
   expect(browserErrors).toEqual([]);
+});
+
+test("Local evidence import preserves multipart, reuses real evidence and explains invalid reports", async ({ page }) => {
+  test.skip(process.env.PLAYWRIGHT_LIVE_ADMIN !== "true" || !process.env.PLAYWRIGHT_ADMIN_PASSWORD || !process.env.PLAYWRIGHT_SEARCH_CONSOLE_XLSX,
+    "Requires the approved local account and real Performance export.");
+  expect(new URL(process.env.PLAYWRIGHT_BASE_URL ?? "").origin).toBe("http://localhost:3000");
+  await seedCookieConsent(page);
+  const login = await page.request.post("/api/auth/login", {
+    data: { username: "admin", password: process.env.PLAYWRIGHT_ADMIN_PASSWORD },
+  });
+  expect(login.status()).toBe(200);
+  await page.goto("/ar/admin/marketing");
+  await page.getByRole("tab", { name: "هجرة SEO" }).click();
+  const file = page.locator('input[type="file"]');
+  const upload = page.getByRole("button", { name: "استيراد الأدلة", exact: true });
+  await file.setInputFiles(process.env.PLAYWRIGHT_SEARCH_CONSOLE_XLSX!);
+  const importOnce = async () => {
+    await expect(upload).toBeEnabled();
+    const pending = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith("/seo-migration/import") && response.request().method() === "POST", { timeout: 40_000 });
+    await upload.click();
+    const response = await pending;
+    expect(response.request().headers()["content-type"]).toMatch(/^multipart\/form-data; boundary=/);
+    expect([200, 201]).toContain(response.status());
+    const result = await response.json();
+    await expect(upload).toBeEnabled();
+    return result;
+  };
+  const first = await importOnce();
+  const repeated = await importOnce();
+  expect(repeated.created).toBe(false);
+  expect(repeated.importId).toBe(first.importId);
+  expect(repeated.workspace.opportunities).toHaveLength(first.workspace.opportunities.length);
+  for (const opportunity of repeated.workspace.opportunities) {
+    expect(Array.isArray(opportunity.classifications)).toBe(true);
+    expect(opportunity.evidence).not.toHaveProperty("type", "jsonb");
+  }
+  await file.setInputFiles({ name: "invalid.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from("invalid workbook") });
+  const rejected = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith("/seo-migration/import"), { timeout: 40_000 });
+  await upload.click();
+  expect((await rejected).status()).toBe(400);
+  await expect(page.getByText("اختر ملف XLSX صالحًا لتقرير الأداء من Search Console.", { exact: true })).toBeVisible();
+  const current = await page.request.get("/api/proxy/admin/marketing/seo-migration/workspace");
+  expect((await current.json()).latestImport.id).toBe(first.importId);
 });

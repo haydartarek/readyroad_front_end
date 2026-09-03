@@ -8,6 +8,8 @@ import {
   marketingImportError,
   HumanStatusBadge,
   StructuredRecordCard,
+  marketingActorLabel,
+  fieldLabel,
 } from "@/components/admin/marketing/MarketingDataPresentation";
 import en from "@/messages/en.json";
 import ar from "@/messages/ar.json";
@@ -17,6 +19,34 @@ import fr from "@/messages/fr.json";
 const t = (key: string) => key;
 
 describe("MarketingDataPresentation", () => {
+  it.each([en, ar, nl, fr])("localizes live task, audit and analytics fields", (messages) => {
+    const translate = (key: string) => {
+      const value = messages[key as keyof typeof messages];
+      return typeof value === "string" ? value : key;
+    };
+    for (const value of ["TASK_CLAIMED", "TASK_FAILED", "TASK_RETRY_SCHEDULED", "ADMIN_QUIZ_UPDATED", "AGENT_TASK", "QUIZ_QUESTION", "ARTICLE_DRAFT_CREATE", "ARTICLE_SOURCE_COLLECT", "SEARCH_CONSOLE_DATA_DELAYED", "MONTHLY_REPORT", "WEEKLY_REPORT"]) {
+      const key = `admin.marketing.value_${value.toLowerCase()}`;
+      expect(translate(key)).not.toBe(key);
+      expect(machineLabel(translate, value)).toBe(translate(key));
+    }
+    for (const field of ["latest_period_end", "last_synced_at", "snapshot_count", "partial_snapshot_count"]) {
+      const key = `admin.marketing.field_${field}`;
+      expect(translate(key)).not.toBe(key);
+      expect(fieldLabel(translate, field)).toBe(translate(key));
+    }
+    for (const language of ["AR", "NL", "FR", "EN"]) {
+      expect(machineLabel(translate, language)).toBe(translate(`admin.settings_page.language_${language.toLowerCase()}`));
+    }
+  });
+
+  it("identifies the real hostname-prefixed worker without replacing admin names", () => {
+    for (const actor of ["00f11207420d-e4e0499b-5119-4100-977f-d6d4227c91f1", "worker-host-e4e0499b-5119-4100-977f-d6d4227c91f1", "e4e0499b-5119-4100-977f-d6d4227c91f1", "SYSTEM"]) {
+      expect(marketingActorLabel(actor, t)).toBe("admin.marketing.automatic_worker");
+    }
+    expect(marketingActorLabel("admin", t)).toBe("admin");
+    expect(marketingActorLabel("editor-team", t)).toBe("editor-team");
+  });
+
   it.each([en, ar, nl, fr])("localizes observed settings, schedules and opportunity states", (messages) => {
     const translate = (key: string) => {
       const value = messages[key as keyof typeof messages];

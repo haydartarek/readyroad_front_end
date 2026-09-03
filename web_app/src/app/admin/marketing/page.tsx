@@ -40,6 +40,7 @@ import {
   marketingImportError,
   machineLabel,
   marketingDisplayText,
+  marketingActorLabel as actorLabel,
 } from "@/components/admin/marketing/MarketingDataPresentation";
 import {
   type MarketingAgent,
@@ -1033,11 +1034,6 @@ function Errors({ items, t, formatDate }: { items: MarketingErrorItem[]; t: Tran
   );
 }
 
-function actorLabel(actor: string, t: Translate) {
-  return /^(?:[0-9a-f]{8}-[0-9a-f-]{27,}|worker[:_-].*|SYSTEM(?:_.*)?)$/i.test(actor)
-    ? t("admin.marketing.automatic_worker") : marketingDisplayText(actor);
-}
-
 function Audit({ items, t, formatDate }: { items: MarketingAuditItem[]; t: Translate; formatDate: DateFormatter }) {
   if (!items.length) return <Empty t={t} />;
   return (
@@ -1558,7 +1554,7 @@ function YouTubeVideoList({ title, videos, t }: { title: string; videos: Array<R
 
       <div className="mt-4 min-w-0 space-y-3">
         {videos.length ? (
-          videos.map((video) => (
+          <MarketingList t={t} pageSize={5}>{videos.map((video) => (
             <article
               key={String(video.video_id)}
               className="min-w-0 rounded-xl border border-border/40 bg-muted/30 p-3 sm:p-4"
@@ -1579,7 +1575,7 @@ function YouTubeVideoList({ title, videos, t }: { title: string; videos: Array<R
                 t={t}
               />
             </article>
-          ))
+          ))}</MarketingList>
         ) : (
           <Empty t={t} />
         )}

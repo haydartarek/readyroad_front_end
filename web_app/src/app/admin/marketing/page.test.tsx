@@ -1168,6 +1168,22 @@ describe("MarketingAdminPage", () => {
     });
   });
 
+  it("keeps long YouTube lists paginated without losing videos", async () => {
+    const status = responses["/admin/marketing/youtube/status"] as Record<string, unknown>;
+    get.mockImplementation((url: string) => Promise.resolve({ data: url === "/admin/marketing/youtube/status"
+      ? { ...status, bestVideos: [], latestVideos: Array.from({ length: 12 }, (_, index) => ({ video_id: `video-${index}`, title: `Video ${index + 1}`, view_count: index })) }
+      : responses[url] }));
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_youtube" }));
+    expect(screen.getByText("Video 5")).toBeVisible();
+    expect(screen.queryByText("Video 6")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.next_page" }));
+    expect(screen.getByText("Video 10")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.next_page" }));
+    expect(screen.getByText("Video 12")).toBeVisible();
+  });
+
   it("requests an approval-bound agent state change instead of toggling locally", async () => {
     render(<MarketingAdminPage />);
     await screen.findByText("admin.marketing.tasks_today");

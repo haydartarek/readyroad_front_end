@@ -106,6 +106,10 @@ export function fieldLabel(t: MarketingTranslate, field: string) {
 
 export function machineLabel(t: MarketingTranslate, value: string) {
   const normalized = normalizeKey(value);
+  if (["ar", "nl", "fr", "en"].includes(normalized)) {
+    return t(`admin.settings_page.language_${normalized}`);
+  }
+  if (normalized === "ga4") return machineLabel(t, "google.ga4");
   if (normalized === "readyroad_core_data" || normalized === "rijvia_core_data") {
     return translatedOrFallback(t, "admin.marketing.value_rijvia_core_data", "RijVia Core Data");
   }
@@ -147,6 +151,13 @@ function presentationSafeValue(value: unknown): unknown {
 
 export function marketingDisplayText(value: string) {
   return String(presentationSafeValue(value));
+}
+
+export function marketingActorLabel(actor: string, t: MarketingTranslate) {
+  // The worker identifies itself with hostname + UUID, not a user account.
+  const workerIdentity = /^(?:[a-z0-9._-]+-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return workerIdentity.test(actor) || /^(?:worker[:_-].*|SYSTEM(?:_.*)?)$/i.test(actor)
+    ? t("admin.marketing.automatic_worker") : marketingDisplayText(actor);
 }
 
 export function marketingErrorText(t: MarketingTranslate, code: string) {

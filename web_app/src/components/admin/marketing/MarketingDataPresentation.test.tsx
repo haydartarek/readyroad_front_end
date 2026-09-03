@@ -18,7 +18,10 @@ const t = (key: string) => key;
 
 describe("MarketingDataPresentation", () => {
   it.each([en, ar, nl, fr])("localizes observed settings, schedules and opportunity states", (messages) => {
-    const translate = (key: string) => (messages as Record<string, string>)[key] ?? key;
+    const translate = (key: string) => {
+      const value = messages[key as keyof typeof messages];
+      return typeof value === "string" ? value : key;
+    };
     for (const value of ["P0", "P1", "P2", "P3", "MIGRATION_RISK", "CTR_REPAIR", "google.ga4", "opportunity.thresholds", "sync.policy", "analytics.fullSync", "youtube.channelMonitor", "YOUTUBE_CHANNEL_SYNC"]) {
       expect(machineLabel(translate, value)).toBe(translate(`admin.marketing.value_${value.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replaceAll(".", "_").toLowerCase()}`));
       expect(machineLabel(translate, value)).not.toContain("admin.marketing.");

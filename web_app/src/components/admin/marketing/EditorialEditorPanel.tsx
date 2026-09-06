@@ -307,6 +307,7 @@ export default function EditorialEditorPanel({
     "APPROVED",
     "SCHEDULED",
     "PUBLISHED",
+    "UPDATE_RECOMMENDED",
     "REJECTED",
     "ARCHIVED",
   ].includes(lifecycleState ?? "");
@@ -336,7 +337,7 @@ export default function EditorialEditorPanel({
   const canAdvanceWorkflow = Boolean(
     EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED &&
       selectedTopic?.articleId &&
-      ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED"].includes(
+      ["DRAFTING", "DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED"].includes(
         lifecycleState ?? "",
       ) &&
       (lifecycleState !== "TRANSLATION_REQUIRED" || hasEveryLanguage) &&
@@ -346,7 +347,9 @@ export default function EditorialEditorPanel({
   );
 
   const workflowActionLabel =
-    lifecycleState === "DRAFT_READY"
+    lifecycleState === "DRAFTING"
+      ? workflowCopy.submitDraft
+      : lifecycleState === "DRAFT_READY"
       ? workflowCopy.startFactCheck
       : lifecycleState === "FACT_CHECK_REQUIRED"
         ? workflowCopy.confirmFactCheck
@@ -642,7 +645,7 @@ export default function EditorialEditorPanel({
 
   const startUpdate = async () => {
     const articleId = selectedTopic?.articleId;
-    if (!articleId || lifecycleState !== "PUBLISHED" || updateStarting) return;
+    if (!articleId || !["PUBLISHED", "UPDATE_RECOMMENDED"].includes(lifecycleState ?? "") || updateStarting) return;
     setUpdateStarting(true);
     try {
       await apiClient.post(
@@ -689,7 +692,9 @@ export default function EditorialEditorPanel({
     if (!selectedTopic?.articleId || !canAdvanceWorkflow) return;
 
     const description =
-      lifecycleState === "DRAFT_READY"
+      lifecycleState === "DRAFTING"
+        ? workflowCopy.submitDraftConfirm
+        : lifecycleState === "DRAFT_READY"
         ? workflowCopy.startFactCheckConfirm
         : lifecycleState === "FACT_CHECK_REQUIRED"
           ? workflowCopy.factCheckConfirm
@@ -871,7 +876,7 @@ export default function EditorialEditorPanel({
               />
 
               {EDITORIAL_WORKFLOW_ADVANCE_SUPPORTED &&
-              ["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED"].includes(
+              ["DRAFTING", "DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED"].includes(
                 lifecycleState ?? "",
               ) ? (
                 <section
@@ -902,7 +907,7 @@ export default function EditorialEditorPanel({
                   </div>
                 </section>
               ) : null}
-              {lifecycleState === "PUBLISHED" ? (
+              {["PUBLISHED", "UPDATE_RECOMMENDED"].includes(lifecycleState ?? "") ? (
                 <section className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4 sm:p-5" data-testid="editorial-start-update">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">

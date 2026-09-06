@@ -211,6 +211,8 @@ const qualityGateLabels: Record<
 const workflowLabels = {
   ar: {
     title: "سير عمل المقال",
+    submitDraft: "إرسال التعديل للمراجعة",
+    submitDraftConfirm: "هل اكتمل حفظ التعديلات وأصبحت جاهزة للمراجعة قبل النشر؟",
     currentStage: "المرحلة الحالية",
     startFactCheck: "بدء التحقق من الحقائق",
     confirmFactCheck: "تأكيد اكتمال التحقق",
@@ -226,6 +228,8 @@ const workflowLabels = {
 
   nl: {
     title: "Artikelworkflow",
+    submitDraft: "Wijzigingen ter controle indienen",
+    submitDraftConfirm: "Zijn de wijzigingen opgeslagen en klaar voor controle vóór publicatie?",
     currentStage: "Huidige fase",
     startFactCheck: "Feitencontrole starten",
     confirmFactCheck: "Feitencontrole bevestigen",
@@ -241,6 +245,8 @@ const workflowLabels = {
 
   fr: {
     title: "Flux éditorial",
+    submitDraft: "Soumettre les modifications à la révision",
+    submitDraftConfirm: "Les modifications sont-elles enregistrées et prêtes à être révisées avant publication ?",
     currentStage: "Étape actuelle",
     startFactCheck: "Démarrer la vérification des faits",
     confirmFactCheck: "Confirmer la vérification des faits",
@@ -256,6 +262,8 @@ const workflowLabels = {
 
   en: {
     title: "Editorial workflow",
+    submitDraft: "Submit changes for review",
+    submitDraftConfirm: "Are the changes saved and ready for review before publication?",
     currentStage: "Current stage",
     startFactCheck: "Start fact check",
     confirmFactCheck: "Confirm fact check",

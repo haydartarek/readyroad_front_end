@@ -1,5 +1,7 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { seedCookieConsent } from "./helpers/consent";
+import { editorialCmsCopy } from "../../src/lib/editorial-cms-copy";
+import { editorialWorkflowCopy } from "../../src/lib/editorial-ui-labels";
 
 const adminUser = {
   id: 1,
@@ -395,6 +397,75 @@ test("Admin can save a versioned editorial draft without mobile overflow", async
   });
   await expectNoOverflow(page);
 });
+
+for (const [locale, tabLabel, width] of [
+  ["en", "Editorial", 1440], ["ar", "المحرر", 390],
+  ["nl", "Redactie", 390], ["fr", "Éditorial", 1440],
+] as const) {
+  test(`Published article update keeps the review gate in ${locale}`, async ({ page }) => {
+    const mutations: Request[] = [];
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+    await page.setViewportSize({ width, height: 900 });
+    let state = "PUBLISHED";
+    const version = {
+      id: 21, articleId: 11, versionNumber: 1, language: "EN", title: "Belgian theory exam guide",
+      slug: "belgian-theory-exam", summary: "A reviewed guide", body: "Published content",
+      metaTitle: "Belgian theory exam", metaDescription: "A reviewed Belgian theory exam guide.",
+      focusKeyword: "Belgian theory exam", internalLinks: [], status: "PUBLISHED", current: true,
+      createdAt: now, createdBy: "admin",
+    };
+    const base = responses["/admin/marketing/editorial/editor"] as { topics: object[] };
+    const workspace = () => ({ ...base, topics: [{ ...base.topics[0], articleId: 11,
+      lifecycleState: state, canonicalLanguage: "EN", currentVersions: [version] }] });
+    await mockAdmin(page, mutations, {
+      "/admin/marketing/editorial/editor/articles/11/versions": [version],
+      "/admin/marketing/editorial/editor/articles/11/performance": { latestSnapshots: [], latestRecommendation: null },
+    });
+    await page.route("**/api/proxy/admin/marketing/editorial/editor", (route) => route.fulfill({ json: workspace() }));
+    await page.route("**/api/proxy/admin/marketing/editorial/editor/articles/11/update-session", (route) => {
+      mutations.push(route.request());
+      state = "DRAFTING";
+      version.status = "DRAFT";
+      version.versionNumber = 2;
+      return route.fulfill({ json: { articleId: 11, lifecycleState: state, changed: true } });
+    });
+    await page.route("**/api/proxy/admin/marketing/editorial/editor/articles/11/workflow/advance", (route) => {
+      mutations.push(route.request());
+      state = "DRAFT_READY";
+      return route.fulfill({ json: { articleId: 11, state } });
+    });
+    await page.route("**/api/proxy/admin/marketing/editorial/editor/topics/1/versions/EN", (route) => {
+      mutations.push(route.request());
+      version.body = route.request().postDataJSON().body;
+      version.versionNumber = 3;
+      return route.fulfill({ json: { topicId: 1, articleId: 11, lifecycleState: state, created: true, version } });
+    });
+    await page.goto(`${locale === "en" ? "" : `/${locale}`}/admin/marketing`);
+    await page.getByRole("tab", { name: tabLabel, exact: true }).click();
+    const copy = editorialCmsCopy(locale);
+    const workflow = editorialWorkflowCopy(locale);
+    const editor = page.getByTestId("editorial-markdown-editor").getByRole("textbox");
+    await expect(editor).not.toBeEditable();
+    await page.getByRole("button", { name: copy.startUpdate, exact: true }).click();
+    await expect(editor).toBeEditable();
+    await expect(editor).toHaveValue("Published content");
+    await expect(page.getByRole("button", { name: workflow.submitDraft, exact: true })).toBeEnabled();
+    await editor.fill("Updated content for review");
+    await expect(page.getByRole("button", { name: workflow.submitDraft, exact: true })).toBeDisabled();
+    await page.getByRole("button", { name: copy.saveDraft, exact: true }).click();
+    await expect(editor).toHaveValue("Updated content for review");
+    await page.getByRole("button", { name: workflow.submitDraft, exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: workflow.submitDraft, exact: true }).click();
+    await expect(page.getByRole("button", { name: workflow.startFactCheck, exact: true })).toBeVisible();
+    expect(mutations.map((request) => request.method())).toEqual(["POST", "PUT", "POST"]);
+    expect(mutations[1].postDataJSON()).toMatchObject({ body: "Updated content for review", expectedCurrentVersion: 2 });
+    await expectNoOverflow(page);
+    expect(errors).toEqual([]);
+    await page.screenshot({ path: `test-results/published-article-update-${locale}.png`, fullPage: true });
+  });
+}
 
 test("All Marketing tabs remain usable without responsive overflow or browser errors", async ({ page }) => {
   const consoleErrors: string[] = [];

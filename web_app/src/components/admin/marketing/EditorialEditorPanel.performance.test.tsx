@@ -1,12 +1,13 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import EditorialEditorPanel from "@/components/admin/marketing/EditorialEditorPanel";
 import { LanguageProvider } from "@/contexts/language-context";
 import { apiClient } from "@/lib/api";
 import type { EditorialWorkspace, MarketingStrategySnapshot } from "@/lib/marketing-admin";
 
 jest.mock("@/lib/api", () => ({
-  apiClient: { get: jest.fn() },
+  apiClient: { get: jest.fn(), post: jest.fn() },
   logApiError: jest.fn(),
+  getApiErrorMessage: jest.fn((_error, fallback) => fallback),
 }));
 
 jest.mock("@/components/ui/dialog", () => ({
@@ -77,6 +78,7 @@ const strategy: MarketingStrategySnapshot = {
 describe("EditorialEditorPanel performance monitoring", () => {
   beforeEach(() => {
     get.mockReset();
+    (apiClient.post as jest.Mock).mockReset().mockResolvedValue({ data: {} });
     get.mockImplementation((url: string) => {
       if (url.endsWith("/versions")) {
         return Promise.resolve({ data: [] });
@@ -165,5 +167,41 @@ describe("EditorialEditorPanel performance monitoring", () => {
     expect(screen.getByText("DISCOVERED")).toBeInTheDocument();
     expect(screen.getByText("123")).toBeInTheDocument();
     expect(screen.getByText("admin.marketing.editorial_performance_stable")).toBeInTheDocument();
+  });
+
+  it.each(["PUBLISHED", "UPDATE_RECOMMENDED"])("reopens %s through the existing Admin endpoint", async (state) => {
+    const onRefresh = jest.fn().mockResolvedValue(undefined);
+    render(
+      <LanguageProvider initialLanguage="en">
+        <EditorialEditorPanel
+          workspace={{ ...workspace, topics: [{ ...workspace.topics[0], lifecycleState: state }] }}
+          strategy={strategy} busy={null} t={t} formatDate={(value) => value ?? ""}
+          onSave={jest.fn()} onRequestTranslations={jest.fn()} onRequestApproval={jest.fn()}
+          onPublishArticle={jest.fn()} onUploadImage={jest.fn()} onRemoveImage={jest.fn()}
+          onRefresh={onRefresh}
+        />
+      </LanguageProvider>,
+    );
+    const button = await screen.findByRole("button", { name: "Edit published article" });
+    fireEvent.click(button);
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalledTimes(1));
+    expect(apiClient.post).toHaveBeenCalledWith("/admin/marketing/editorial/editor/articles/17/update-session");
+    await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("offers review submission after reopening a published article", async () => {
+    render(
+      <LanguageProvider initialLanguage="en">
+        <EditorialEditorPanel
+          workspace={{ ...workspace, topics: [{ ...workspace.topics[0], lifecycleState: "DRAFTING" }] }}
+          strategy={strategy} busy={null} t={t} formatDate={(value) => value ?? ""}
+          onSave={jest.fn()} onRequestTranslations={jest.fn()} onRequestApproval={jest.fn()}
+          onPublishArticle={jest.fn()} onUploadImage={jest.fn()} onRemoveImage={jest.fn()}
+          onRefresh={jest.fn()}
+        />
+      </LanguageProvider>,
+    );
+    expect(await screen.findByRole("button", { name: "Submit changes for review" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit published article" })).not.toBeInTheDocument();
   });
 });

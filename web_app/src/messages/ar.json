@@ -2518,6 +2518,7 @@
   "admin.marketing.editorial_version_history_note": "يمكن حذف النسخ غير المطلوبة نهائيًا. تبقى آخر نسخة لكل لغة والنسخ المنشورة محمية من الحذف.",
   "admin.marketing.editorial_version_restore_title": "تحميل نسخة إلى المحرر",
   "admin.marketing.editorial_workflow_confirm_title": "تأكيد انتقال المقال",
+  "admin.marketing.editorial_workflow_save_draft_first": "احفظ مسودة مكتملة أولًا قبل إرسالها للمراجعة.",
   "admin.marketing.editorial_image_remove_title": "حذف صورة المقال",
   "admin.marketing.editorial_image_remove_confirm_label": "حذف الصورة",
   "admin.marketing.editorial_authoring_usp": "الميزة التنافسية (USP)",

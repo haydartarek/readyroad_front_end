@@ -2518,6 +2518,7 @@
   "admin.marketing.editorial_version_history_note": "Les versions inutiles peuvent être supprimées définitivement. La dernière version de chaque langue et les versions publiées restent protégées.",
   "admin.marketing.editorial_version_restore_title": "Charger une version dans l’éditeur",
   "admin.marketing.editorial_workflow_confirm_title": "Confirmer l’étape de l’article",
+  "admin.marketing.editorial_workflow_save_draft_first": "Enregistrez d’abord un brouillon complet avant de l’envoyer en révision.",
   "admin.marketing.editorial_image_remove_title": "Supprimer l’image de l’article",
   "admin.marketing.editorial_image_remove_confirm_label": "Supprimer l’image",
   "admin.marketing.editorial_authoring_usp": "Proposition de valeur unique (USP)",

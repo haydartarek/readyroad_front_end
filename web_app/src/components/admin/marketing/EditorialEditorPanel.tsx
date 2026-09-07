@@ -320,6 +320,7 @@ export default function EditorialEditorPanel({
   const canonicalVersion = selectedTopic?.currentVersions.find(
     (version) => version.language === selectedTopic.canonicalLanguage,
   );
+  const canonicalDraftReady = canonicalVersion?.status === "DRAFT";
   const translationsRequiringAdaptation = editorLanguages.filter((item) =>
     item !== selectedTopic?.canonicalLanguage
       && !selectedTopic?.currentVersions.some(
@@ -341,6 +342,7 @@ export default function EditorialEditorPanel({
         lifecycleState ?? "",
       ) &&
       (lifecycleState !== "TRANSLATION_REQUIRED" || hasEveryLanguage) &&
+      (lifecycleState !== "DRAFTING" || canonicalDraftReady) &&
       !dirty &&
       !historyLoading &&
       !workflowAdvancing,
@@ -905,6 +907,11 @@ export default function EditorialEditorPanel({
                       {workflowActionLabel}
                     </Button>
                   </div>
+                  {lifecycleState === "DRAFTING" && !canonicalDraftReady ? (
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                      {t("admin.marketing.editorial_workflow_save_draft_first")}
+                    </p>
+                  ) : null}
                 </section>
               ) : null}
               {["PUBLISHED", "UPDATE_RECOMMENDED"].includes(lifecycleState ?? "") ? (
@@ -1198,6 +1205,7 @@ export default function EditorialEditorPanel({
         language={language}
         formatDate={formatDate}
         copy={copy}
+        t={t}
         onDelete={(version) => void deleteVersion(version)}
         canDelete={canDeleteVersion}
         deleteCopy={versionDeleteCopy}
@@ -1587,6 +1595,7 @@ function VersionPreviewDialog({
   language,
   formatDate,
   copy,
+  t,
   onDelete,
   canDelete,
   deleteCopy,
@@ -1596,6 +1605,7 @@ function VersionPreviewDialog({
   language: EditorialLanguage;
   formatDate: DateFormatter;
   copy: ReturnType<typeof editorialCmsCopy>;
+  t: Translate;
   onDelete: (version: EditorialVersion) => void;
   canDelete: (version: EditorialVersion) => boolean;
   deleteCopy: VersionDeleteCopy;
@@ -1610,7 +1620,7 @@ function VersionPreviewDialog({
               <DialogTitle>{copy.versionPreview} · {editorialVersionLabel(version.versionNumber, uiLanguage)}</DialogTitle>
               <DialogDescription>{formatDate(version.createdAt)} · {version.createdBy ?? "—"}</DialogDescription>
             </DialogHeader>
-            <ArticlePreview language={language} title={version.title} summary={version.summary ?? ""} body={version.body} typography={version.typography ?? DEFAULT_ARTICLE_TYPOGRAPHY} internalLinks={version.internalLinks} t={(key) => key} />
+            <ArticlePreview language={language} title={version.title} summary={version.summary ?? ""} body={version.body} typography={version.typography ?? DEFAULT_ARTICLE_TYPOGRAPHY} internalLinks={version.internalLinks} t={t} />
             {EDITORIAL_VERSION_DELETE_SUPPORTED ? (
               <div className="flex justify-end border-t border-border/60 pt-4">
                 <Button

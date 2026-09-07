@@ -2518,6 +2518,7 @@
   "admin.marketing.editorial_version_history_note": "Unneeded versions can be permanently deleted. The last version for each language and published versions remain protected.",
   "admin.marketing.editorial_version_restore_title": "Load version into editor",
   "admin.marketing.editorial_workflow_confirm_title": "Confirm article transition",
+  "admin.marketing.editorial_workflow_save_draft_first": "Save a complete draft before submitting it for review.",
   "admin.marketing.editorial_image_remove_title": "Remove article image",
   "admin.marketing.editorial_image_remove_confirm_label": "Remove image",
   "admin.marketing.editorial_authoring_usp": "Unique selling proposition (USP)",

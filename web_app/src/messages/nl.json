@@ -2518,6 +2518,7 @@
   "admin.marketing.editorial_version_history_note": "Onnodige versies kunnen definitief worden verwijderd. De laatste versie per taal en gepubliceerde versies blijven beschermd.",
   "admin.marketing.editorial_version_restore_title": "Versie in editor laden",
   "admin.marketing.editorial_workflow_confirm_title": "Artikelovergang bevestigen",
+  "admin.marketing.editorial_workflow_save_draft_first": "Sla eerst een volledige conceptversie op voordat je ze ter controle indient.",
   "admin.marketing.editorial_image_remove_title": "Artikelafbeelding verwijderen",
   "admin.marketing.editorial_image_remove_confirm_label": "Afbeelding verwijderen",
   "admin.marketing.editorial_authoring_usp": "Uniek verkoopargument (USP)",

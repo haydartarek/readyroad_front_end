@@ -5,7 +5,11 @@ import { apiClient } from "@/lib/api";
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 jest.mock("@/contexts/language-context", () => ({
-  useLanguage: () => ({ t: (key: string) => key, language: "en", isRTL: false }),
+  useLanguage: () => ({
+    t: (key: string) => key === "admin.marketing.editorial_internal_links" ? "Internal learning links" : key,
+    language: "en",
+    isRTL: false,
+  }),
 }));
 jest.mock("@/lib/api", () => ({
   apiClient: { get: jest.fn(), put: jest.fn(), post: jest.fn(), delete: jest.fn() },
@@ -586,6 +590,71 @@ describe("MarketingAdminPage", () => {
     expect(within(preview).getByText("Preview summary")).toBeInTheDocument();
     expect(within(preview).getByText("Unsaved preview body")).toBeInTheDocument();
     expect(put).not.toHaveBeenCalled();
+  });
+
+  it("renders a human internal-links heading in the preview", async () => {
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    await screen.findByText("admin.marketing.editorial_authoring_generate_draft");
+    fireEvent.change(await screen.findByLabelText(/admin.marketing.editorial_body/), {
+      target: { value: "Preview body" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.editorial_internal_link_add" }));
+    const internalLinks = within(screen.getByTestId("editorial-internal-links"));
+    const [targetInput, anchorInput] = internalLinks.getAllByRole("textbox");
+    fireEvent.change(targetInput, {
+      target: { value: "/ar/lessons" },
+    });
+    fireEvent.change(anchorInput, {
+      target: { value: "Open lesson" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    const preview = screen.getByTestId("editorial-preview");
+    expect(within(preview).getByText("Internal learning links")).toBeInTheDocument();
+    expect(within(preview).queryByText("admin.marketing.editorial_internal_links")).not.toBeInTheDocument();
+  });
+
+  it.each([2, 3, 4])("does not allow submitting drafting article %i without a saved canonical draft", async (articleId) => {
+    const topic = {
+      ...((responses["/admin/marketing/editorial/editor"] as {
+        topics: Record<string, unknown>[];
+      }).topics[0]),
+      articleId,
+      lifecycleState: "DRAFTING",
+      currentVersions: [],
+    };
+
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        return Promise.resolve({
+          data: {
+            ...(responses["/admin/marketing/editorial/editor"] as Record<string, unknown>),
+            topics: [topic],
+          },
+        });
+      }
+      if (url === `/admin/marketing/editorial/editor/articles/${articleId}/versions`) {
+        return Promise.resolve({ data: [] });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+
+    const workflowButton = await screen.findByRole("button", {
+      name: "Submit changes for review",
+    });
+    expect(workflowButton).toBeDisabled();
+    expect(screen.getByText("admin.marketing.editorial_workflow_save_draft_first")).toBeInTheDocument();
+    expect(post).not.toHaveBeenCalledWith(
+      `/admin/marketing/editorial/editor/articles/${articleId}/workflow/advance`,
+      expect.anything(),
+    );
   });
 
   it.each(["DRAFT_READY", "FACT_CHECK_REQUIRED", "LEGAL_REVIEW_REQUIRED", "TRANSLATION_REQUIRED"])("requests translations from the saved canonical version in %s", async (state) => {

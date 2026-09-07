@@ -2,9 +2,22 @@ import {
   buildAbsoluteUrl,
   serializeJsonLd,
   toMetadataDescription,
+  toBrandedMetadataTitle,
 } from "@/lib/seo";
 
 describe("SEO helpers", () => {
+  it.each([
+    ["Article", "Article | RijVia"],
+    ["Article - RijVia", "Article | RijVia"],
+    ["Article \u2013 RijVia", "Article | RijVia"],
+    ["Article \u2014 RijVia", "Article | RijVia"],
+    ["Article | RijVia", "Article | RijVia"],
+    ["Article | RijVia | RijVia", "Article | RijVia"],
+    ["A long-term plan", "A long-term plan | RijVia"],
+  ])("normalizes the brand separator without changing content: %s", (input, expected) => {
+    expect(toBrandedMetadataTitle(input)).toBe(expected);
+  });
+
   it("builds absolute URLs and encodes spaces", () => {
     expect(
       buildAbsoluteUrl(

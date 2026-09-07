@@ -43,9 +43,6 @@ export function TrafficSignsGrid({
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {info.title[lang]}
                   </p>
-                  <span className="rounded-full border border-border/60 bg-background px-3 py-1 font-mono text-sm font-semibold tracking-wide text-muted-foreground">
-                    {sign.signCode}
-                  </span>
                 </div>
 
                 <div

@@ -32,6 +32,20 @@ describe("localized public blog article", () => {
     jest.clearAllMocks();
   });
 
+  it.each(["ar", "nl", "fr", "en"])("uses one pipe-separated brand in %s article metadata", async (locale) => {
+    getLocale.mockResolvedValue(locale);
+    getArticle.mockResolvedValue({
+      language: locale.toUpperCase(), slug: "published-article",
+      metaTitle: "Published article - RijVia", metaDescription: "Reviewed description",
+      publishedAt: "2026-09-02T12:00:00Z", image: null,
+      alternateSlugs: { [locale.toUpperCase()]: "published-article" },
+    });
+    const metadata = await generateMetadata({ params: Promise.resolve({ slug: "published-article" }) });
+    expect(metadata.title).toEqual({ absolute: "Published article | RijVia" });
+    expect(metadata.openGraph?.title).toBe("Published article | RijVia");
+    expect(metadata.twitter?.title).toBe("Published article | RijVia");
+  });
+
   describe.each(["ar", "en", "nl", "fr"] as const)("image attribution in %s", (locale) => {
     const uploadedImage: PublicArticleImage = {
       assetId: 1,

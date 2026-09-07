@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
-import { buildAbsoluteUrl } from "@/lib/seo";
+import { buildAbsoluteUrl, toBrandedMetadataTitle } from "@/lib/seo";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
@@ -54,6 +54,7 @@ export function createArticleMetadata(
   locale: SiteLocale,
 ): Metadata {
   const canonical = buildLocalizedUrl(articlePath(article.slug), locale, APP_URL);
+  const title = toBrandedMetadataTitle(article.metaTitle);
   const image = article.image
     ? {
         url: buildAbsoluteUrl(article.image.ogUrl, APP_URL),
@@ -64,7 +65,7 @@ export function createArticleMetadata(
     : { ...getSharedOgImage(locale), alt: article.metaTitle };
 
   return {
-    title: { absolute: article.metaTitle },
+    title: { absolute: title },
     description: article.metaDescription,
     alternates: {
       canonical,
@@ -72,7 +73,7 @@ export function createArticleMetadata(
     },
     openGraph: {
       type: "article",
-      title: article.metaTitle,
+      title,
       description: article.metaDescription,
       url: canonical,
       siteName: "RijVia",
@@ -83,7 +84,7 @@ export function createArticleMetadata(
     },
     twitter: {
       card: "summary_large_image",
-      title: article.metaTitle,
+      title,
       description: article.metaDescription,
       images: [image.url],
     },

@@ -112,12 +112,15 @@ export function getTrafficSignName(
   sign: TrafficSignCatalogItem,
   language: LangKey,
 ): string {
-  return {
+  const name = {
     nl: sign.nameNl,
     en: sign.nameEn,
     ar: sign.nameAr,
     fr: sign.nameFr,
   }[language];
+
+  const code = sign.signCode.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return name?.replace(new RegExp(`^\\s*${code}\\s*[-\u2013\u2014:]\\s*`, "i"), "").trim() || name;
 }
 
 export function getTrafficSignDescription(

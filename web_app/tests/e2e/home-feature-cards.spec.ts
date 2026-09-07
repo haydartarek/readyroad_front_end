@@ -123,6 +123,12 @@ test.describe("Homepage learning feature cards", () => {
         const ctas = page.getByTestId("home-feature-cta");
 
         await expect(grid).toBeVisible();
+        const heading = page.getByTestId("home-features-heading");
+        const headingWidth = await heading.evaluate((element) => ({
+          actual: element.getBoundingClientRect().width,
+          parent: element.parentElement!.getBoundingClientRect().width,
+        }));
+        expect(headingWidth.actual / headingWidth.parent).toBeCloseTo(width >= 1024 ? 0.5 : 1, 2);
         await expect(cards).toHaveCount(6);
         await expect(links).toHaveCount(6);
         await expect(ctas).toHaveCount(6);

@@ -2,6 +2,11 @@ export function buildAbsoluteUrl(path: string, appUrl: string): string {
   return new URL(path, `${appUrl.replace(/\/+$/, "")}/`).toString();
 }
 
+export function toBrandedMetadataTitle(title: string): string {
+  const content = title.trim().replace(/(?:\s*[-\u2013\u2014|]\s*RijVia)+\s*$/iu, "").trim();
+  return content ? `${content} | RijVia` : "RijVia";
+}
+
 export function toMetadataDescription(
   value: string | null | undefined,
   fallback: string,

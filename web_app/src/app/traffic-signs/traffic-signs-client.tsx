@@ -400,7 +400,7 @@ function TrafficSignsContent({
                       href={`/traffic-signs/${routeCode}`}
                       className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                     >
-                      {sign.signCode}: {getTrafficSignName(sign, lang)}
+                      {getTrafficSignName(sign, lang)}
                     </Link>
                   );
                 })}

@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { seedCookieConsent } from "./helpers/consent";
+import type { TrafficSignCatalogItem } from "../../src/lib/types";
 
 const signPayload = {
   signCode: "A1b",
@@ -36,6 +37,15 @@ async function fulfillJson(route: Route, status: number, body: unknown) {
     contentType: "application/json",
     body: JSON.stringify(body),
   });
+}
+
+async function catalogForPage(page: Page, fallback: TrafficSignCatalogItem[]) {
+  // The page may already contain the server-rendered catalog before browser mocks run.
+  const response = await page.request.get("/api/proxy/traffic-signs");
+  const body: unknown = response.ok() ? await response.json() : null;
+  const catalog: TrafficSignCatalogItem[] = Array.isArray(body) && body.length ? body : fallback;
+  await page.route("**/api/proxy/traffic-signs", (route) => fulfillJson(route, 200, catalog));
+  return catalog;
 }
 
 async function installPublicTrafficSignMocks(page: Page) {
@@ -88,6 +98,42 @@ async function installPublicTrafficSignMocks(page: Page) {
 }
 
 test.describe("Public traffic sign detail page", () => {
+  for (const locale of ["ar", "nl", "fr", "en"] as const) {
+    test(`${locale} catalog displays human names without codes and preserves routes`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await seedCookieConsent(page);
+      await page.addInitScript((language) => {
+        window.localStorage.setItem("rijvia_locale", language);
+      }, locale);
+      await page.route("**/api/auth/me", (route) => fulfillJson(route, 200, { authenticated: false, user: null }));
+      const names = { ar: "أعمدة قابلة للسحب", nl: "Intrekbare palen", fr: "Bornes rétractables", en: "Retractable bollards" };
+      const catalog = await catalogForPage(page, [{
+        ...signPayload, signCode: "A53", routeCode: "A53",
+        nameAr: `A53 - ${names.ar}`, nameNl: `A53 - ${names.nl}`,
+        nameFr: `A53 - ${names.fr}`, nameEn: `A53 - ${names.en}`,
+        imageUrl: "/images/traffic-signs.png",
+      }]);
+      const sign = catalog.find((item) => item.signCode === "A53");
+      expect(sign).toBeDefined();
+      const nameField = { ar: "nameAr", nl: "nameNl", fr: "nameFr", en: "nameEn" } as const;
+      const expectedName = sign![nameField[locale]]!.replace(/^A53\s*[-\u2013\u2014:]\s*/, "");
+      const prefix = locale === "en" ? "" : `/${locale}`;
+      const response = await page.goto(`${prefix}/traffic-signs`);
+      expect(response?.status()).toBe(200);
+      for (const width of [375, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        const card = page.locator(`a.traffic-sign-card[href="${prefix}/traffic-signs/A53"]`);
+        await expect(card.getByRole("heading")).toHaveText(expectedName);
+        await expect(card).not.toContainText("A53");
+        await expect(card).toHaveAttribute("href", `${prefix}/traffic-signs/A53`);
+        await expect(card.getByRole("img")).toHaveAttribute("alt", expectedName);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      }
+      expect(errors).toEqual([]);
+    });
+  }
+
   test("renders the complete catalog once without a Load More control", async ({
     page,
   }) => {
@@ -98,18 +144,15 @@ test.describe("Public traffic sign detail page", () => {
     await page.route("**/api/auth/me", (route) =>
       fulfillJson(route, 401, { error: "Unauthorized" }),
     );
-    await page.route("**/api/proxy/traffic-signs", (route) =>
-      fulfillJson(
-        route,
-        200,
-        Array.from({ length: 40 }, (_, index) => ({
+    const catalog = await catalogForPage(page,
+      Array.from({ length: 40 }, (_, index) => ({
+          ...signPayload,
           signCode: `A${index + 1}`,
           routeCode: `A${index + 1}`,
           categoryCode: "A",
           nameEn: `Traffic sign ${index + 1}`,
           imageUrl: `/images/signs/test/A${index + 1}.png`,
-        })),
-      ),
+      })),
     );
 
     await page.goto("/traffic-signs");
@@ -124,8 +167,8 @@ test.describe("Public traffic sign detail page", () => {
     await expect(catalogLinks.first()).toBeAttached();
 
     const discoverableLinkCount = await catalogLinks.count();
-    await expect(cards).toHaveCount(40);
-    expect(discoverableLinkCount).toBe(40);
+    await expect(cards).toHaveCount(catalog.length);
+    expect(discoverableLinkCount).toBe(catalog.length);
     await expect(catalogLinks).toHaveCount(discoverableLinkCount);
     await expect(
       page.getByRole("button", { name: "Load more signs" }),
@@ -134,8 +177,9 @@ test.describe("Public traffic sign detail page", () => {
     const hrefs = await cards.evaluateAll((links) =>
       links.map((link) => link.getAttribute("href")),
     );
-    expect(hrefs).toEqual(
-      Array.from({ length: 40 }, (_, index) => `/traffic-signs/A${index + 1}`),
+    expect(new Set(hrefs).size).toBe(catalog.length);
+    expect(hrefs.sort()).toEqual(
+      catalog.map((sign) => `/traffic-signs/${sign.routeCode ?? sign.signCode}`).sort(),
     );
   });
 

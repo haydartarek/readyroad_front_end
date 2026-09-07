@@ -1884,6 +1884,8 @@
   "admin.quizzes.form.option_text_fr_placeholder": "Option de réponse...",
   "admin.sidebar.marketing": "Opérations marketing",
   "admin.marketing.title": "Opérations marketing",
+  "admin.marketing.on_demand_execution": "Exécution sur demande uniquement",
+  "admin.marketing.automatic_execution": "Tâches planifiées activées",
   "admin.marketing.description": "Surveillez les agents, les tâches, les approbations, les erreurs et l’état du worker depuis une seule vue.",
   "admin.marketing.refresh": "Actualiser",
   "admin.marketing.tab_overview": "Vue d’ensemble",

@@ -21,6 +21,7 @@ export interface MarketingErrorItem {
 
 export interface MarketingOverview {
   enabled: boolean;
+  automaticTasksEnabled?: boolean;
   tasksByStatus: TaskCounts;
   tasksToday: number;
   activeAgents: number;

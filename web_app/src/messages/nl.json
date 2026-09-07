@@ -1884,6 +1884,8 @@
   "admin.quizzes.form.option_text_fr_placeholder": "Option de réponse...",
   "admin.sidebar.marketing": "Marketingactiviteiten",
   "admin.marketing.title": "Marketingactiviteiten",
+  "admin.marketing.on_demand_execution": "Alleen uitvoeren op verzoek",
+  "admin.marketing.automatic_execution": "Geplande taken ingeschakeld",
   "admin.marketing.description": "Bewaak agents, taken, goedkeuringen, fouten en workerstatus vanuit één operationeel overzicht.",
   "admin.marketing.refresh": "Vernieuwen",
   "admin.marketing.tab_overview": "Overzicht",

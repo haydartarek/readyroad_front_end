@@ -45,7 +45,7 @@ describe("public article API", () => {
     await expect(getPublicArticles("ar")).resolves.toEqual(summaries);
     expect(global.fetch).toHaveBeenCalledWith(
       "https://backend.example.test/api/articles?language=AR",
-      expect.objectContaining({ headers: { Accept: "application/json" } }),
+      { headers: { Accept: "application/json" }, cache: "no-store" },
     );
   });
 
@@ -55,8 +55,23 @@ describe("public article API", () => {
     await expect(getPublicArticle("fr", "priorite & route")).resolves.toBeNull();
     expect(global.fetch).toHaveBeenCalledWith(
       "https://backend.example.test/api/articles/priorite%20%26%20route?language=FR",
-      expect.any(Object),
+      { headers: { Accept: "application/json" }, cache: "no-store" },
     );
+  });
+
+  it("reads the latest published replacement on the same URL", async () => {
+    const first = { slug: "published-guide", body: "Original published version" };
+    const updated = { ...first, body: "Reviewed replacement" };
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ ok: true, json: async () => first })
+      .mockResolvedValueOnce({ ok: true, json: async () => updated });
+
+    await expect(getPublicArticle("en", "published-guide")).resolves.toEqual(first);
+    await expect(getPublicArticle("en", "published-guide")).resolves.toEqual(updated);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    for (const [, options] of (global.fetch as jest.Mock).mock.calls) {
+      expect(options).toEqual({ headers: { Accept: "application/json" }, cache: "no-store" });
+    }
   });
 
   it("loads published articles that link back to a real learning asset", async () => {

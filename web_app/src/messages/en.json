@@ -1884,6 +1884,8 @@
   "admin.quizzes.form.option_text_fr_placeholder": "Option de réponse...",
   "admin.sidebar.marketing": "Marketing Operations",
   "admin.marketing.title": "Marketing Operations",
+  "admin.marketing.on_demand_execution": "Runs only when requested",
+  "admin.marketing.automatic_execution": "Scheduled tasks enabled",
   "admin.marketing.description": "Monitor agents, tasks, approvals, failures, and worker health from one operational view.",
   "admin.marketing.refresh": "Refresh",
   "admin.marketing.tab_overview": "Overview",

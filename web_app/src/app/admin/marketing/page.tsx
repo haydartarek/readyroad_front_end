@@ -391,7 +391,18 @@ export default function MarketingAdminPage() {
         icon={<Bot className="h-6 w-6" />}
         title={t("admin.marketing.title")}
         description={t("admin.marketing.description")}
-        badge={data ? <StatusBadge status={data.worker.status} t={t} /> : undefined}
+        badge={data ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={data.worker.status} t={t} />
+            {typeof data.overview.automaticTasksEnabled === "boolean" ? (
+              <span className="text-sm font-medium text-muted-foreground" data-testid="marketing-execution-mode">
+                {t(data.overview.automaticTasksEnabled
+                  ? "admin.marketing.automatic_execution"
+                  : "admin.marketing.on_demand_execution")}
+              </span>
+            ) : null}
+          </div>
+        ) : undefined}
         actions={
           <Button
             className="w-full sm:w-auto"

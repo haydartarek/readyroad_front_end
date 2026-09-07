@@ -3,8 +3,6 @@ import "server-only";
 import type { SiteLocale } from "@/lib/site-copy";
 import { getPublicBackendApiUrl } from "@/lib/server/public-catalog";
 
-const ARTICLE_REVALIDATE_SECONDS = 15 * 60;
-
 const API_LANGUAGE: Record<SiteLocale, "AR" | "NL" | "FR" | "EN"> = {
   ar: "AR",
   nl: "NL",
@@ -68,7 +66,7 @@ async function fetchArticleApi<T>(path: string): Promise<T | null> {
   try {
     const response = await fetch(`${getPublicBackendApiUrl()}${path}`, {
       headers: { Accept: "application/json" },
-      next: { revalidate: ARTICLE_REVALIDATE_SECONDS },
+      cache: "no-store",
     });
 
     if (!response.ok) {

@@ -15,6 +15,7 @@ const now = "2026-08-12T10:00:00Z";
 const responses: Record<string, unknown> = {
   "/admin/marketing/overview": {
     enabled: true,
+    automaticTasksEnabled: false,
     tasksByStatus: { COMPLETED: 3, FAILED: 1, WAITING_APPROVAL: 1 },
     tasksToday: 5,
     activeAgents: 2,
@@ -444,6 +445,12 @@ for (const [locale, tabLabel, width] of [
     });
     await page.goto(`${locale === "en" ? "" : `/${locale}`}/admin/marketing`);
     await page.getByRole("tab", { name: tabLabel, exact: true }).click();
+    const modeLabels = {
+      ar: "التشغيل عند الطلب فقط", en: "Runs only when requested",
+      nl: "Alleen uitvoeren op verzoek", fr: "Exécution sur demande uniquement",
+    };
+    await expect(page.getByTestId("marketing-execution-mode")).toHaveText(modeLabels[locale]);
+    expect(mutations).toHaveLength(0);
     const copy = editorialCmsCopy(locale);
     const workflow = editorialWorkflowCopy(locale);
     const editor = page.getByTestId("editorial-markdown-editor").getByRole("textbox");

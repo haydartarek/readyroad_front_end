@@ -23,6 +23,7 @@ const responses: Record<string, unknown> = {
   "/admin/marketing/tasks/81": { id: 81, status: "COMPLETED" },
   "/admin/marketing/overview": {
     enabled: true,
+    automaticTasksEnabled: false,
     tasksByStatus: { COMPLETED: 3, FAILED: 1, WAITING_APPROVAL: 1 },
     tasksToday: 5,
     activeAgents: 2,
@@ -265,9 +266,22 @@ describe("MarketingAdminPage", () => {
 
     expect(await screen.findByText("admin.marketing.tasks_today")).toBeInTheDocument();
     expect(screen.getAllByText("Healthy").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("marketing-execution-mode"))
+      .toHaveTextContent("admin.marketing.on_demand_execution");
+    expect(post).not.toHaveBeenCalled();
     expect(screen.getAllByRole("tab")).toHaveLength(12);
     expect(get).toHaveBeenCalledWith("/admin/marketing/tasks", { limit: 100 });
     expect(get).toHaveBeenCalledWith("/admin/marketing/analytics/organic-discovery", { limit: 100 });
+  });
+
+  it("shows the actual automatic mode when explicitly enabled", async () => {
+    get.mockImplementation((path: string) => Promise.resolve({ data: path === "/admin/marketing/overview"
+      ? { ...(responses[path] as object), automaticTasksEnabled: true }
+      : responses[path] }));
+    render(<MarketingAdminPage />);
+    expect(await screen.findByTestId("marketing-execution-mode"))
+      .toHaveTextContent("admin.marketing.automatic_execution");
+    expect(post).not.toHaveBeenCalled();
   });
 
   it("shows the exact backend reason when the platform load fails", async () => {

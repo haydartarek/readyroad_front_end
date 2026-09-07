@@ -1884,6 +1884,8 @@
   "admin.quizzes.form.option_text_fr_placeholder": "Option de réponse...",
   "admin.sidebar.marketing": "عمليات التسويق",
   "admin.marketing.title": "عمليات التسويق",
+  "admin.marketing.on_demand_execution": "التشغيل عند الطلب فقط",
+  "admin.marketing.automatic_execution": "المهام المجدولة مفعّلة",
   "admin.marketing.description": "راقب الوكلاء والمهام والموافقات والأخطاء وحالة العامل من واجهة تشغيل واحدة.",
   "admin.marketing.refresh": "تحديث",
   "admin.marketing.tab_overview": "نظرة عامة",

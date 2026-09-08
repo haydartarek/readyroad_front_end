@@ -82,6 +82,7 @@ const echoHeadersAdapter: AxiosAdapter = async (config) => ({
 
 describe("API Client (HttpOnly Cookie Proxy)", () => {
   beforeEach(() => {
+    document.documentElement.lang = "en";
     mockFetch.mockReset();
     client.defaults.adapter = originalAdapter;
     document.cookie =
@@ -96,6 +97,16 @@ describe("API Client (HttpOnly Cookie Proxy)", () => {
 
   test("login route constant is correct", () => {
     expect(ROUTES.LOGIN).toBe("/login");
+  });
+
+  test.each(["ar", "nl", "fr", "en"])("uses the active editor locale %s for backend errors", async (locale) => {
+    document.documentElement.lang = locale;
+    client.defaults.adapter = async (config) => ({
+      ...await echoHeadersAdapter(config),
+      data: readHeader(config.headers, "Accept-Language"),
+    });
+    const response = await apiClient.post("/admin/marketing/editorial/editor/articles/6/image", new FormData());
+    expect(response.data).toBe(locale);
   });
 
   test("protected 401 responses trigger logout through the real response interceptor", async () => {

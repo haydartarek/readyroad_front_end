@@ -67,6 +67,7 @@ describe("authenticated BFF proxy", () => {
           cookie: "access_token=signed; csrf_token=csrf",
           "x-csrf-token": "csrf",
           "content-type": `multipart/form-data; boundary=${boundary}`,
+          "accept-language": "ar",
         },
         body: rawBody,
       }),
@@ -76,7 +77,20 @@ describe("authenticated BFF proxy", () => {
     const options = (global.fetch as jest.Mock).mock.calls[0][1] as RequestInit;
     expect(options.headers).toEqual(expect.objectContaining({
       "Content-Type": `multipart/form-data; boundary=${boundary}`,
+      "Accept-Language": "ar",
     }));
     expect(new TextDecoder().decode(options.body as ArrayBuffer)).toBe(rawBody);
+  });
+
+  it("preserves localized editorial validation errors from the backend", async () => {
+    const body = { message: "هذه الصورة مرتبطة بمقال آخر. اختر صورة مختلفة." };
+    (global.fetch as jest.Mock).mockResolvedValue(new Response(JSON.stringify(body), {
+      status: 409, headers: { "content-type": "application/json" },
+    }));
+    const response = await POST(new NextRequest("http://localhost:3000/api/proxy/admin/marketing/editorial/editor/articles/6/image", {
+      method: "POST", headers: { "accept-language": "ar" },
+    }), context(["admin", "marketing", "editorial", "editor", "articles", "6", "image"]));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual(body);
   });
 });

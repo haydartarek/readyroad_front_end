@@ -54,6 +54,8 @@ async function proxyRequest(
 
   const contentType = request.headers.get("content-type");
   if (contentType) headers["Content-Type"] = contentType;
+  const acceptLanguage = request.headers.get("accept-language");
+  if (acceptLanguage) headers["Accept-Language"] = acceptLanguage;
 
   const options: RequestInit = {
     method: request.method,

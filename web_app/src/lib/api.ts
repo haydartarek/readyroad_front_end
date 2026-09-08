@@ -65,6 +65,12 @@ class ApiClient {
     // Request: attach CSRF token on mutation requests
     this.instance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
+        if (config.url?.startsWith("/admin/marketing") && typeof document !== "undefined") {
+          const locale = document.documentElement.lang.toLowerCase().split("-")[0];
+          if (["ar", "nl", "fr", "en"].includes(locale)) {
+            config.headers["Accept-Language"] = locale;
+          }
+        }
         const method = config.method?.toUpperCase() ?? "";
         if (MUTATION_METHODS.has(method)) {
           const csrf = getCsrfToken();

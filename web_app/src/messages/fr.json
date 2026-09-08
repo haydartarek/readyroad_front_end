@@ -1,4 +1,8 @@
 {
+  "admin.marketing.editorial_approval_image_required": "Importez l’image et complétez son texte alternatif dans les quatre langues avant de demander l’approbation. Sélectionner un fichier ne suffit pas.",
+  "admin.marketing.editorial_authoring_draft_failed": "La création du brouillon a échoué. Vérifiez la cause puis réessayez ; aucune version enregistrée ne sera remplacée.",
+  "admin.marketing.editorial_authoring_draft_active": "La demande de brouillon est en cours de traitement. Son état sera actualisé automatiquement.",
+  "admin.marketing.editorial_authoring_retry_draft": "Réessayer la création du brouillon",
   "app.name": "RijVia",
   "app.tagline": "Maîtrisez Votre Permis de Conduire Belge",
   "common.service_unavailable": "Service temporairement indisponible. Veuillez réessayer plus tard.",

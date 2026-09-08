@@ -1,4 +1,8 @@
 {
+  "admin.marketing.editorial_approval_image_required": "ارفع صورة المقال وأكمل نصها البديل باللغات الأربع قبل طلب الموافقة. اختيار الملف وحده لا يرفعه.",
+  "admin.marketing.editorial_authoring_draft_failed": "توقفت محاولة إنشاء المسودة. راجع السبب ثم أعد المحاولة؛ لن تُستبدل أي نسخة محفوظة.",
+  "admin.marketing.editorial_authoring_draft_active": "طلب إنشاء المسودة قيد المعالجة. ستتحدث الحالة تلقائيًا.",
+  "admin.marketing.editorial_authoring_retry_draft": "إعادة محاولة إنشاء المسودة",
   "app.name": "RijVia",
   "app.tagline": "استعد للحصول على رخصة السياقة البلجيكية",
   "common.service_unavailable": "الخدمة غير متاحة مؤقتًا. يُرجى المحاولة لاحقًا.",

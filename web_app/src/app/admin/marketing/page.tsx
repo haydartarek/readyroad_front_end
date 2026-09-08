@@ -284,7 +284,6 @@ export default function MarketingAdminPage() {
     } catch (requestError) {
       logApiError("Editorial approval request failed", requestError);
       toast.error(getApiErrorMessage(requestError, t("admin.marketing.action_failed")));
-      throw requestError;
     } finally {
       setBusy(null);
     }
@@ -299,7 +298,6 @@ export default function MarketingAdminPage() {
     } catch (requestError) {
       logApiError("Editorial publication approval failed", requestError);
       toast.error(getApiErrorMessage(requestError, t("admin.marketing.action_failed")));
-      throw requestError;
     } finally {
       setBusy(null);
     }

@@ -234,6 +234,7 @@ export interface EditorialAuthoringStatus {
   latestBriefTaskStatus: string | null;
   latestSourceTaskStatus: string | null;
   latestDraftTaskStatus: string | null;
+  latestDraftErrorCode?: string | null;
   canCreateBrief: boolean;
   canCollectSources: boolean;
   canCreateDraft: boolean;

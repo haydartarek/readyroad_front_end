@@ -1,4 +1,8 @@
 {
+  "admin.marketing.editorial_approval_image_required": "Upload the article image and complete its alt text in all four languages before requesting approval. Selecting a file alone does not upload it.",
+  "admin.marketing.editorial_authoring_draft_failed": "Draft creation stopped. Review the cause and retry; no saved version will be replaced.",
+  "admin.marketing.editorial_authoring_draft_active": "The draft request is being processed. Its status will update automatically.",
+  "admin.marketing.editorial_authoring_retry_draft": "Retry draft creation",
   "app.name": "RijVia",
   "app.tagline": "Master Your Belgian Driving License",
   "common.service_unavailable": "Service temporarily unavailable. Please try again later.",

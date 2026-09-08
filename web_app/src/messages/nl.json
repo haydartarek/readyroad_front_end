@@ -1,4 +1,8 @@
 {
+  "admin.marketing.editorial_approval_image_required": "Upload de artikelafbeelding en vul de alternatieve tekst in alle vier talen in voordat u goedkeuring aanvraagt. Alleen een bestand selecteren uploadt het niet.",
+  "admin.marketing.editorial_authoring_draft_failed": "Het maken van het concept is gestopt. Bekijk de oorzaak en probeer opnieuw; opgeslagen versies blijven behouden.",
+  "admin.marketing.editorial_authoring_draft_active": "Het conceptverzoek wordt verwerkt. De status wordt automatisch bijgewerkt.",
+  "admin.marketing.editorial_authoring_retry_draft": "Concept opnieuw proberen",
   "app.name": "RijVia",
   "app.tagline": "Beheers je Belgisch Rijbewijs",
   "common.service_unavailable": "Service tijdelijk niet beschikbaar. Probeer het later opnieuw.",

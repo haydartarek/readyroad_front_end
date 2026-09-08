@@ -365,6 +365,7 @@ export default function EditorialEditorPanel({
     selectedTopic?.articleId &&
       lifecycleState === "IMAGE_REQUIRED" &&
       hasEveryLanguage &&
+      selectedTopic.image?.status === "APPROVED" &&
       !dirty &&
       approvalConfirmed &&
       approvalReason.trim(),
@@ -1106,6 +1107,7 @@ export default function EditorialEditorPanel({
                   qualityGates={workspace.qualityGates}
                   uiLanguage={uiLanguage}
                   hasEveryLanguage={hasEveryLanguage}
+                  hasImage={selectedTopic.image?.status === "APPROVED"}
                   dirty={dirty}
                   confirmed={approvalConfirmed}
                   reason={approvalReason}
@@ -1456,6 +1458,7 @@ function ApprovalPanel({
   qualityGates,
   uiLanguage,
   hasEveryLanguage,
+  hasImage,
   dirty,
   confirmed,
   reason,
@@ -1469,6 +1472,7 @@ function ApprovalPanel({
   qualityGates: string[];
   uiLanguage: string;
   hasEveryLanguage: boolean;
+  hasImage: boolean;
   dirty: boolean;
   confirmed: boolean;
   reason: string;
@@ -1505,6 +1509,7 @@ function ApprovalPanel({
         <textarea value={reason} disabled={busy} required onChange={(event) => onReason(event.target.value)} maxLength={1000} rows={3} className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15" />
       </label>
       {!hasEveryLanguage ? <p className="text-sm font-semibold text-destructive">{t("admin.marketing.editorial_approval_languages_required")}</p> : null}
+      {!hasImage ? <p role="status" className="text-sm font-semibold text-destructive">{t("admin.marketing.editorial_approval_image_required")}</p> : null}
       {dirty ? <p className="text-sm font-semibold text-destructive">{t("admin.marketing.editorial_approval_save_first")}</p> : null}
       <Button type="button" onClick={onRequest} disabled={busy || !canRequest}>
         {busy ? <Loader2 className="animate-spin" /> : <ShieldCheck />}

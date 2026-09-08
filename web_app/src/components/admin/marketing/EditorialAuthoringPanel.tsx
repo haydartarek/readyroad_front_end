@@ -18,6 +18,7 @@ import { BookOpenCheck, DatabaseZap, Loader2, RefreshCw, Sparkles } from "lucide
 import { toast } from "sonner";
 import { apiClient, getApiErrorMessage, logApiError } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
+import { marketingErrorText } from "./MarketingDataPresentation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -143,6 +144,7 @@ function EditorialAuthoringForm({ topic, language, strategy, t, onChanged }: Pro
         `/admin/marketing/editorial/editor/topics/${topic.topicId}/authoring-status`,
       );
       setStatus(response.data);
+      return response.data;
     } catch (error) {
       logApiError("Failed to load editorial authoring readiness", error);
       toast.error(getApiErrorMessage(error, t("admin.marketing.action_failed")));
@@ -154,6 +156,32 @@ function EditorialAuthoringForm({ topic, language, strategy, t, onChanged }: Pro
   useEffect(() => {
     void loadStatus();
   }, [loadStatus, topic]);
+
+  const draftFailed = status?.latestDraftTaskStatus === "FAILED";
+  const draftActive = ["PENDING", "SCHEDULED", "WAITING_APPROVAL", "APPROVED", "RUNNING", "RETRY_SCHEDULED"]
+    .includes(status?.latestDraftTaskStatus ?? "");
+
+  useEffect(() => {
+    if (!draftActive) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      const updated = await loadStatus();
+      if (cancelled) return;
+      if (updated && ["COMPLETED", "FAILED", "CANCELLED", "REJECTED"].includes(updated.latestDraftTaskStatus ?? "")) {
+        try {
+          await onChanged();
+        } catch (error) {
+          logApiError("Failed to refresh completed editorial draft", error);
+          toast.error(getApiErrorMessage(error, t("admin.marketing.action_failed")));
+        }
+      } else {
+        timer = setTimeout(() => void poll(), 5000);
+      }
+    };
+    timer = setTimeout(() => void poll(), 5000);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [draftActive, loadStatus, onChanged, t]);
 
   const activeUsps = useMemo(() => strategy.usps.filter((item) => item.active), [strategy.usps]);
   const activeIcps = useMemo(() => strategy.icps.filter((item) => item.active), [strategy.icps]);
@@ -469,10 +497,20 @@ function EditorialAuthoringForm({ topic, language, strategy, t, onChanged }: Pro
             </h4>
 
             <p className="text-sm leading-6 text-muted-foreground">
-              {status.canCreateDraft
+              {draftFailed
+                ? t("admin.marketing.editorial_authoring_draft_failed")
+                : draftActive
+                ? t("admin.marketing.editorial_authoring_draft_active")
+                : status.canCreateDraft
                 ? t("admin.marketing.editorial_authoring_draft_ready")
                 : t("admin.marketing.editorial_authoring_draft_blocked")}
             </p>
+
+            {draftFailed && status.latestDraftErrorCode ? (
+              <p role="status" className="text-sm text-destructive">
+                {marketingErrorText(t, status.latestDraftErrorCode)}
+              </p>
+            ) : null}
 
             <Button
               type="button"
@@ -486,7 +524,7 @@ function EditorialAuthoringForm({ topic, language, strategy, t, onChanged }: Pro
               ) : (
                 <Sparkles />
               )}
-              {t("admin.marketing.editorial_authoring_generate_draft")}
+              {t(draftFailed ? "admin.marketing.editorial_authoring_retry_draft" : "admin.marketing.editorial_authoring_generate_draft")}
             </Button>
           </div>
         </>

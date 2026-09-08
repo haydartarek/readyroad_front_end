@@ -1096,7 +1096,7 @@ describe("MarketingAdminPage", () => {
       { reason: "Reviewed and approved for publication." },
     ));
   });
-  it("submits the exact saved article versions for human approval", async () => {
+  it.each(["ready", "missing-image", "rejected"])("handles article approval prerequisites and response: %s", async (scenario) => {
     const currentVersions = ["AR", "NL", "FR", "EN"].map((language, index) => ({
       language,
       versionNumber: 1,
@@ -1134,7 +1134,11 @@ describe("MarketingAdminPage", () => {
               articleId: 11,
               lifecycleState: "IMAGE_REQUIRED",
               canonicalLanguage: "AR",
-              image: null,
+              image: scenario === "missing-image" ? null : {
+                id: 4, articleId: 11, status: "APPROVED", originalFileName: "article.png",
+                storedFileName: "article.png", originalWidth: 1000, originalHeight: 600,
+                variants: [], localizations: [], createdAt: "2026-08-22T10:00:00Z", createdBy: "admin",
+              },
               currentVersions,
             }],
           },
@@ -1158,6 +1162,14 @@ describe("MarketingAdminPage", () => {
     fireEvent.change(screen.getByLabelText("admin.marketing.editorial_approval_reason"), {
       target: { value: "All required evidence was reviewed." },
     });
+    if (scenario === "missing-image") {
+      expect(requestButton).toBeDisabled();
+      expect(screen.getByText("admin.marketing.editorial_approval_image_required")).toBeVisible();
+      fireEvent.click(requestButton);
+      expect(post).not.toHaveBeenCalledWith(expect.stringContaining("approval-requests"), expect.anything());
+      return;
+    }
+    if (scenario === "rejected") post.mockRejectedValueOnce(new Error("Upload the article image first."));
     fireEvent.click(requestButton);
 
     await waitFor(() => {
@@ -1169,6 +1181,10 @@ describe("MarketingAdminPage", () => {
         },
       );
     });
+    if (scenario === "rejected") {
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Upload the article image first."));
+      expect(requestButton).toBeEnabled();
+    }
   });
 
   it("requires a reason for an article approval decision", async () => {

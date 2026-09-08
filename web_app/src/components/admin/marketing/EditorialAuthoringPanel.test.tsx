@@ -247,4 +247,21 @@ describe("EditorialAuthoringPanel", () => {
       { idempotencyKey: expect.stringMatching(/^admin-draft-9-/) },
     ));
   });
+
+  it.each([2, 3, 4])("offers an explicit retry with a human failure reason for article %s", async (articleId) => {
+    get.mockResolvedValue({ data: status({
+      articleId, lifecycleState: "DRAFTING", claimsTotal: 1, claimsSupported: 1,
+      latestDraftTaskStatus: "FAILED", latestDraftErrorCode: "OPENAI_QUOTA_EXHAUSTED", canCreateDraft: true,
+    }) });
+    render(<EditorialAuthoringPanel topic={{ ...topic, articleId }} language="EN" strategy={strategy} t={t} onChanged={jest.fn().mockResolvedValue(undefined)} />);
+    const retry = await screen.findByRole("button", { name: "admin.marketing.editorial_authoring_retry_draft" });
+    expect(screen.getByText("admin.marketing.editorial_authoring_draft_failed")).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent("admin.marketing.error_openai_quota");
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.click(retry);
+    await waitFor(() => expect(post).toHaveBeenCalledWith(
+      `/admin/marketing/editorial/editor/articles/${articleId}/draft-requests`,
+      { idempotencyKey: expect.stringMatching(`^admin-draft-${articleId}-`) },
+    ));
+  });
 });

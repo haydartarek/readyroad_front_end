@@ -412,6 +412,7 @@ function EditorialArticleImagePanelContent({
               >
                 <Input
                   required
+                  name={`articleImageAlt${locale}`}
                   aria-label={altLabel}
                   dir={locale === "AR" ? "rtl" : "ltr"}
                   value={form[field]}

@@ -586,6 +586,30 @@ test("Editorial rich controls validate and submit one local article image", asyn
   }
 
   const imagePanel = page.getByTestId("editorial-article-image");
+  const bodyInput = editor.getByRole("textbox");
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    const body = `${"Earlier article paragraph.\n\n".repeat(100)}Selected words`;
+    await bodyInput.fill(body);
+    await bodyInput.evaluate((element) => {
+      const input = element as HTMLTextAreaElement;
+      input.focus();
+      input.setSelectionRange(input.value.length - "Selected words".length, input.value.length);
+      input.scrollTop = input.scrollHeight;
+    });
+    const previousScroll = await bodyInput.evaluate((element) => element.scrollTop);
+    expect(previousScroll).toBeGreaterThan(0);
+    await editor.getByRole("button", { name: "Add link", exact: true }).click();
+    await expect(bodyInput).toHaveValue(body.replace("Selected words", "[Selected words](/path)"));
+    await expect.poll(async () => bodyInput.evaluate((element) => {
+      const input = element as HTMLTextAreaElement;
+      return input.value.slice(input.selectionStart, input.selectionEnd);
+    })).toBe("Selected words");
+    expect(Math.abs(await bodyInput.evaluate((element) => element.scrollTop) - previousScroll)).toBeLessThan(3);
+    await expect(bodyInput).toBeFocused();
+    await expect(bodyInput).toHaveAttribute("name", "articleBody");
+  }
+  await bodyInput.fill(currentVersion.body);
   const fileInput = imagePanel.getByTestId("editorial-image-file-input");
   await fileInput.setInputFiles({
     name: "animated.gif",

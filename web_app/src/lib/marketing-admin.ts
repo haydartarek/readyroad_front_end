@@ -214,6 +214,12 @@ export interface EditorialTopic {
   lifecycleState: string | null;
   canonicalLanguage: EditorialLanguage | null;
   pendingApprovalTaskId: number | null;
+  publicationTask?: {
+    id: number;
+    taskType: string;
+    status: string;
+    errorCode: string | null;
+  } | null;
   image: EditorialArticleImageAsset | null;
   currentVersions: EditorialCurrentVersion[];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Activity,
@@ -28,6 +28,7 @@ import AdminMetricCard from "@/components/admin/AdminMetricCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { editorialCmsCopy } from "@/lib/editorial-cms-copy";
 import EditorialEditorPanel from "@/components/admin/marketing/EditorialEditorPanel";
 import {
   HumanStatusBadge,
@@ -112,6 +113,41 @@ export default function MarketingAdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [translationTaskId, setTranslationTaskId] = useState<number | null>(null);
+  const publicationRequest = useRef<number | null>(null);
+  const publicationPending = Boolean(data?.editorial.topics.some((topic) =>
+    ["WAITING_APPROVAL", "APPROVED", "SCHEDULED"].includes(topic.lifecycleState ?? "") &&
+    topic.publicationTask &&
+    !["WAITING_APPROVAL", "FAILED", "CANCELLED", "REJECTED"].includes(topic.publicationTask.status),
+  ));
+
+  useEffect(() => {
+    if (view !== "editorial" || !publicationPending) return;
+    let active = true;
+    let failures = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const response = await apiClient.get<EditorialWorkspace>("/admin/marketing/editorial/editor");
+        if (!active) return;
+        failures = 0;
+        setData((current) => current ? { ...current, editorial: response.data } : current);
+      } catch (requestError) {
+        if (!active) return;
+        failures += 1;
+        if (failures >= 3) {
+          logApiError("Editorial publication status refresh failed", requestError);
+          toast.error(editorialCmsCopy(language).publicationRefreshFailed);
+          return;
+        }
+      }
+      if (active) timer = setTimeout(() => void poll(), 3000);
+    };
+    timer = setTimeout(() => void poll(), 1500);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [view, publicationPending, language]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -290,6 +326,8 @@ export default function MarketingAdminPage() {
   };
 
   const publishEditorialArticle = async (taskId: number, reason: string) => {
+    if (publicationRequest.current !== null) return;
+    publicationRequest.current = taskId;
     setBusy("editorial-publish");
     try {
       await apiClient.post(`/admin/marketing/tasks/${taskId}/approve`, { reason });
@@ -299,6 +337,7 @@ export default function MarketingAdminPage() {
       logApiError("Editorial publication approval failed", requestError);
       toast.error(getApiErrorMessage(requestError, t("admin.marketing.action_failed")));
     } finally {
+      publicationRequest.current = null;
       setBusy(null);
     }
   };

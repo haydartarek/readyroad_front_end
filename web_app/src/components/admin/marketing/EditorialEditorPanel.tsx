@@ -768,6 +768,7 @@ export default function EditorialEditorPanel({
         <div className="relative">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            name="editorialTopicSearch"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("admin.marketing.editorial_search")}
@@ -967,6 +968,7 @@ export default function EditorialEditorPanel({
                 <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                   <Field label={t("admin.marketing.editorial_title")} required>
                     <Input
+                      name="articleTitle"
                       value={form.title}
                       disabled={editorLocked}
                       onChange={(event) =>
@@ -982,6 +984,7 @@ export default function EditorialEditorPanel({
 
                   <Field label={t("admin.marketing.editorial_slug")}>
                     <Input
+                      name="articleSlug"
                       dir={language === "AR" ? "rtl" : "ltr"}
                       value={dynamicSlug || form.slug}
                       disabled={editorLocked}
@@ -1000,6 +1003,7 @@ export default function EditorialEditorPanel({
 
                 <Field label={t("admin.marketing.editorial_summary")}>
                   <textarea
+                    name="articleSummary"
                     value={form.summary}
                     disabled={editorLocked}
                     onChange={(event) =>
@@ -1017,6 +1021,7 @@ export default function EditorialEditorPanel({
                 <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                   <Field label={t("admin.marketing.editorial_meta_title")} required>
                     <Input
+                      name="articleMetaTitle"
                       value={form.metaTitle}
                       disabled={editorLocked}
                       onChange={(event) =>
@@ -1032,6 +1037,7 @@ export default function EditorialEditorPanel({
 
                   <Field label={t("admin.marketing.editorial_meta_description")} required>
                     <textarea
+                      name="articleMetaDescription"
                       value={form.metaDescription}
                       disabled={editorLocked}
                       onChange={(event) =>
@@ -1120,8 +1126,9 @@ export default function EditorialEditorPanel({
                 />
               ) : null}
 
-              {lifecycleState === "WAITING_APPROVAL" ? (
+              {["WAITING_APPROVAL", "APPROVED", "SCHEDULED"].includes(lifecycleState ?? "") ? (
                 <section className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-4 dark:bg-amber-950/10 sm:p-5" data-testid="editorial-awaiting-approval">
+                  {selectedTopic.pendingApprovalTaskId ? (<>
                   <h3 className="flex items-center gap-2 font-black">
                     <ShieldCheck className="h-4 w-4" />
                     {t("admin.marketing.editorial_waiting_approval")}
@@ -1132,6 +1139,7 @@ export default function EditorialEditorPanel({
                   <label className="block space-y-1.5 text-sm font-semibold">
                     <span>{t("admin.marketing.editorial_publish_reason")}</span>
                     <textarea
+                      name="publicationApprovalReason"
                       value={publishReason}
                       onChange={(event) => setPublishReason(event.target.value)}
                       maxLength={1000}
@@ -1140,11 +1148,6 @@ export default function EditorialEditorPanel({
                       className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
                     />
                   </label>
-                  {!selectedTopic.pendingApprovalTaskId ? (
-                    <p className="text-sm font-semibold text-destructive">
-                      {t("admin.marketing.editorial_publish_task_missing")}
-                    </p>
-                  ) : null}
                   <Button
                     type="button"
                     onClick={publishArticle}
@@ -1154,6 +1157,23 @@ export default function EditorialEditorPanel({
                     {publishing ? <Loader2 className="animate-spin" /> : <Send />}
                     {t("admin.marketing.editorial_publish_action")}
                   </Button>
+                  </>) : (
+                    <div className="space-y-3" role="status">
+                      <p className="text-sm font-semibold">
+                        {selectedTopic.publicationTask
+                          ? ["FAILED", "CANCELLED", "REJECTED"].includes(selectedTopic.publicationTask.status)
+                            ? copy.publicationStopped
+                            : copy.publicationInProgress
+                          : t("admin.marketing.editorial_publish_task_missing")}
+                      </p>
+                      {selectedTopic.publicationTask ? (
+                        <Badge variant="outline">{editorialTaskStatusLabel(selectedTopic.publicationTask.status, uiLanguage)}</Badge>
+                      ) : null}
+                      <Button type="button" variant="outline" onClick={() => void onRefresh()}>
+                        <RefreshCw />{t("admin.marketing.refresh")}
+                      </Button>
+                    </div>
+                  )}
                 </section>
               ) : null}
 
@@ -1258,6 +1278,7 @@ function InternalLinksEditor({
             <div key={index} className="grid min-w-0 gap-3 rounded-2xl border border-border/50 bg-background/60 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
               <Field label={t("admin.marketing.editorial_internal_link_target")} required>
                 <Input
+                  name={`articleInternalLinkTarget${index}`}
                   dir="ltr"
                   value={link.targetPath}
                   disabled={disabled}
@@ -1272,6 +1293,7 @@ function InternalLinksEditor({
               </Field>
               <Field label={t("admin.marketing.editorial_internal_link_anchor")} required>
                 <Input
+                  name={`articleInternalLinkAnchor${index}`}
                   value={link.anchorText}
                   disabled={disabled}
                   maxLength={500}
@@ -1501,12 +1523,12 @@ function ApprovalPanel({
         ))}
       </div>
       <label className="flex items-start gap-3 text-sm font-semibold">
-        <input type="checkbox" checked={confirmed} disabled={busy} onChange={(event) => onConfirmed(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-primary" />
+        <input name="articleQualityConfirmed" type="checkbox" checked={confirmed} disabled={busy} onChange={(event) => onConfirmed(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-primary" />
         <span>{t("admin.marketing.editorial_approval_confirm")}</span>
       </label>
       <label className="block space-y-1.5 text-sm font-semibold">
         <span>{t("admin.marketing.editorial_approval_reason")}</span>
-        <textarea value={reason} disabled={busy} required onChange={(event) => onReason(event.target.value)} maxLength={1000} rows={3} className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15" />
+        <textarea name="articleApprovalReason" value={reason} disabled={busy} required onChange={(event) => onReason(event.target.value)} maxLength={1000} rows={3} className="w-full resize-y rounded-xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15" />
       </label>
       {!hasEveryLanguage ? <p className="text-sm font-semibold text-destructive">{t("admin.marketing.editorial_approval_languages_required")}</p> : null}
       {!hasImage ? <p role="status" className="text-sm font-semibold text-destructive">{t("admin.marketing.editorial_approval_image_required")}</p> : null}

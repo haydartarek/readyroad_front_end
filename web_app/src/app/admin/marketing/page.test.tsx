@@ -1057,6 +1057,54 @@ describe("MarketingAdminPage", () => {
     ));
   });
 
+  it.each(["complete", "failed"])("tracks approved publication without a false missing-task error: %s", async (outcome) => {
+    let approved = false;
+    let progressReads = 0;
+    get.mockImplementation((url: string) => {
+      if (url === "/admin/marketing/editorial/editor") {
+        const finished = approved && ++progressReads > 1;
+        return Promise.resolve({ data: {
+          ...(responses[url] as object),
+          topics: [{
+            ...((responses[url] as { topics: Record<string, unknown>[] }).topics[0]),
+            articleId: 11, canonicalLanguage: "AR", currentVersions: [],
+            lifecycleState: finished ? (outcome === "complete" ? "PUBLISHED" : "SCHEDULED") : "WAITING_APPROVAL",
+            pendingApprovalTaskId: approved ? null : 55,
+            publicationTask: {
+              id: finished ? 56 : 55,
+              taskType: finished ? "ARTICLE_PUBLISH" : "ARTICLE_APPROVAL",
+              status: finished ? (outcome === "complete" ? "COMPLETED" : "FAILED") : (approved ? "APPROVED" : "WAITING_APPROVAL"),
+              errorCode: finished && outcome === "failed" ? "ARTICLE_PUBLICATION_STALE" : null,
+            },
+          }],
+        } });
+      }
+      return Promise.resolve({ data: responses[url] });
+    });
+    post.mockImplementation(() => {
+      approved = true;
+      return Promise.resolve({ data: { id: 55, status: "APPROVED" } });
+    });
+    render(<MarketingAdminPage />);
+    await screen.findByText("admin.marketing.tasks_today");
+    fireEvent.click(screen.getByRole("tab", { name: "admin.marketing.tab_editorial" }));
+    fireEvent.change(await screen.findByLabelText("admin.marketing.editorial_publish_reason"), {
+      target: { value: "Reviewed for publication" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "admin.marketing.editorial_publish_action" }));
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "admin.marketing.editorial_publish_action" }));
+    await screen.findByText(/Publication is approved and processing/);
+    expect(screen.queryByText("admin.marketing.editorial_publish_task_missing")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "admin.marketing.editorial_publish_action" })).not.toBeInTheDocument();
+    if (outcome === "complete") {
+      expect(await screen.findByRole("button", { name: "Edit published article" }, { timeout: 6000 })).toBeEnabled();
+    } else {
+      expect(await screen.findByText(/The publication task stopped/, {}, { timeout: 6000 })).toBeVisible();
+    }
+    expect(post.mock.calls.filter(([url]) => url === "/admin/marketing/tasks/55/approve")).toHaveLength(1);
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
   it("publishes the waiting article through its exact approval task", async () => {
     get.mockImplementation((url: string) => {
       if (url === "/admin/marketing/editorial/editor") {

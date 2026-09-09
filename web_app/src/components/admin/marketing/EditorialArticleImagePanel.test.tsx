@@ -64,6 +64,10 @@ describe("EditorialArticleImagePanel", () => {
     }} />);
     await waitFor(() => expect(screen.getByTestId("editorial-image-upload-action")).toBeEnabled());
     expect(screen.getByLabelText("admin.marketing.editorial_image_alt NL")).toHaveValue("Dutch keyword");
+    for (const locale of ["AR", "NL", "FR", "EN"]) {
+      expect(screen.getByLabelText(`admin.marketing.editorial_image_alt ${locale}`))
+        .toHaveAttribute("name", `articleImageAlt${locale}`);
+    }
     expect(screen.getByTestId("editorial-image-pending")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("editorial-image-upload-action"));
     await waitFor(() => expect(onUpload).toHaveBeenCalledTimes(1));

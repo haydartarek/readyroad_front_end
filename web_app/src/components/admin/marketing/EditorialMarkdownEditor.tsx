@@ -75,11 +75,15 @@ export default function EditorialMarkdownEditor({
     const next = `${value.slice(0, start)}${before}${selected}${after}${value.slice(end)}`;
     if (next.length > maxLength) return;
 
+    const { scrollTop, scrollLeft } = textarea;
     onChange(next);
     requestAnimationFrame(() => {
-      textarea.focus();
+      if (!textarea.isConnected) return;
+      textarea.focus({ preventScroll: true });
       const cursorStart = start + before.length;
       textarea.setSelectionRange(cursorStart, cursorStart + selected.length);
+      textarea.scrollTop = scrollTop;
+      textarea.scrollLeft = scrollLeft;
     });
   };
 
@@ -97,10 +101,14 @@ export default function EditorialMarkdownEditor({
     const next = `${value.slice(0, start)}${formatted}${value.slice(end)}`;
     if (next.length > maxLength) return;
 
+    const { scrollTop, scrollLeft } = textarea;
     onChange(next);
     requestAnimationFrame(() => {
-      textarea.focus();
+      if (!textarea.isConnected) return;
+      textarea.focus({ preventScroll: true });
       textarea.setSelectionRange(start, start + formatted.length);
+      textarea.scrollTop = scrollTop;
+      textarea.scrollLeft = scrollLeft;
     });
   };
 
@@ -250,6 +258,7 @@ export default function EditorialMarkdownEditor({
                   <button
                     key={command}
                     type="button"
+                    onMouseDown={(event) => event.preventDefault()}
                     onClick={() => applyToolbarCommand(command)}
                     disabled={disabled}
                     title={label}
@@ -265,6 +274,7 @@ export default function EditorialMarkdownEditor({
 
           <textarea
             ref={textareaRef}
+            name="articleBody"
             aria-label={t("admin.marketing.editorial_body")}
             dir={dir}
             value={value}

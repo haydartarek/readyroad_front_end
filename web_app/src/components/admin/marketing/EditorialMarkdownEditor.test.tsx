@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import EditorialMarkdownEditor from "@/components/admin/marketing/EditorialMarkdownEditor";
 import { DEFAULT_ARTICLE_TYPOGRAPHY } from "@/components/blog/ArticleMarkdown";
 
@@ -44,6 +44,33 @@ function editor(value: string, onChange: (next: string) => void, maxLength = 500
 }
 
 describe("EditorialMarkdownEditor", () => {
+  it.each(["Add link", "Heading 2"])("preserves selection and scroll after %s", (command) => {
+    let frame: FrameRequestCallback | undefined;
+    const raf = jest.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      frame = callback;
+      return 1;
+    });
+    let value = "Earlier paragraphs\n\nSelected words";
+    const onChange = (next: string) => { value = next; };
+    const { rerender } = render(editor(value, onChange));
+    const textarea = screen.getByLabelText("admin.marketing.editorial_body") as HTMLTextAreaElement;
+    expect(textarea).toHaveAttribute("name", "articleBody");
+    textarea.setSelectionRange(20, value.length);
+    textarea.scrollTop = 900;
+    textarea.scrollLeft = 12;
+    const focus = jest.spyOn(textarea, "focus");
+    fireEvent.click(screen.getByRole("button", { name: command }));
+    rerender(editor(value, onChange));
+    textarea.scrollTop = 0;
+    textarea.scrollLeft = 0;
+    act(() => frame?.(0));
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    expect(textarea.scrollTop).toBe(900);
+    expect(textarea.scrollLeft).toBe(12);
+    expect(textarea.value.slice(textarea.selectionStart, textarea.selectionEnd)).toContain("Selected words");
+    raf.mockRestore();
+  });
+
   it("inserts structured Markdown and renders it in the live preview", () => {
     let value = "";
     const onChange = (next: string) => {

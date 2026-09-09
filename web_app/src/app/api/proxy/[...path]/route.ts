@@ -12,7 +12,6 @@ import {
 } from "@/lib/server/auth";
 
 const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-const NOTIFICATION_UNREAD_COUNT_PATH = "users/me/notifications/unread-count";
 
 function validateCsrf(request: NextRequest): boolean {
   if (!MUTATION_METHODS.has(request.method)) return true;
@@ -21,19 +20,6 @@ function validateCsrf(request: NextRequest): boolean {
   const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
   return Boolean(cookieToken && headerToken && cookieToken === headerToken);
-}
-
-function unreadCountFallback() {
-  return NextResponse.json(
-    { unreadCount: 0, degraded: true },
-    {
-      status: 200,
-      headers: {
-        "cache-control": "no-store",
-        "x-rijvia-fallback": "notifications-unread-count",
-      },
-    },
-  );
 }
 
 async function proxyRequest(
@@ -74,13 +60,6 @@ async function proxyRequest(
 
   try {
     const backendResponse = await fetch(url, options);
-    if (
-      targetPath === NOTIFICATION_UNREAD_COUNT_PATH
-      && backendResponse.status >= 500
-    ) {
-      return unreadCountFallback();
-    }
-
     const responseBody = [204, 205, 304].includes(backendResponse.status)
       ? null
       : await backendResponse.arrayBuffer();
@@ -99,9 +78,6 @@ async function proxyRequest(
     const connectionError = error instanceof TypeError
       && (error.message.includes("fetch failed") || error.message.includes("ECONNREFUSED"));
     if (connectionError) {
-      if (targetPath === NOTIFICATION_UNREAD_COUNT_PATH) {
-        return unreadCountFallback();
-      }
       return NextResponse.json(
         { message: "Backend service unavailable" },
         { status: 503 },

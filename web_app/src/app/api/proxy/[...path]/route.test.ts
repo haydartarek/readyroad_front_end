@@ -16,6 +16,13 @@ const authToken = getAuthTokenFromCookie as jest.Mock;
 const context = (path: string[]) => ({ params: Promise.resolve({ path }) });
 
 describe("authenticated BFF proxy", () => {
+  it("does not turn a notification service failure into a successful zero count", async () => {
+    authToken.mockResolvedValue("signed-jwt");
+    global.fetch = jest.fn().mockResolvedValue(new Response("Unavailable", { status: 503 }));
+    const response = await GET(new NextRequest("http://localhost:3000/api/proxy/users/me/notifications/unread-count"),
+      context(["users", "me", "notifications", "unread-count"]));
+    expect(response.status).toBe(503);
+  });
   beforeEach(() => {
     jest.clearAllMocks();
     authToken.mockResolvedValue("signed-jwt");

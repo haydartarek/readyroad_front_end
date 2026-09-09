@@ -49,35 +49,20 @@ export interface UpdatePreferredLanguageRequest {
 export async function getUnreadNotificationCount(
   signal?: AbortSignal,
 ): Promise<number> {
-  try {
-    const response = await apiClient.get<NotificationCount>(
+  const response = await apiClient.get<NotificationCount>(
       API_ENDPOINTS.USERS.NOTIFICATIONS_COUNT,
       undefined,
       { signal },
     );
-    return response.data.unreadCount;
-  } catch (error) {
-    if (signal?.aborted) return 0;
-    const status = (error as { response?: { status?: number } }).response
-      ?.status;
-    if (status === 401 || status === 403) throw error;
-    return 0;
-  }
+  return response.data.unreadCount;
 }
 
 /** GET /api/users/me/notifications — returns up to 50 latest notifications */
 export async function getNotifications(): Promise<AppNotification[]> {
-  try {
-    const response = await apiClient.get<AppNotification[]>(
+  const response = await apiClient.get<AppNotification[]>(
       API_ENDPOINTS.USERS.NOTIFICATIONS,
     );
-    return response.data ?? [];
-  } catch (error) {
-    const status = (error as { response?: { status?: number } }).response
-      ?.status;
-    if (status === 401 || status === 403) throw error;
-    return [];
-  }
+  return response.data ?? [];
 }
 
 /** PATCH /api/users/me/notifications/{id}/read */

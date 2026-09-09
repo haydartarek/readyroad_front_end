@@ -22,6 +22,8 @@ import {
   isValidQuizOptionCount,
   optionDisplayLabel,
   QUIZ_DIFFICULTIES,
+  quizValidationErrors,
+  quizServerError,
   resolveAdminQuizReturnTo,
 } from "@/lib/admin-quiz-form";
 import {
@@ -429,56 +431,9 @@ export default function AdminEditQuizQuestionPage() {
   };
 
   const validate = (): boolean => {
-    const errors: Record<string, string> = {};
-    if (!form.categoryCode.trim())
-      errors.categoryCode =
-        t("admin.quizzes.form.error_category") || "Category is required";
-    (["En", "Ar", "Nl", "Fr"] as const).forEach((suffix) => {
-      const key = `question${suffix}` as keyof QuestionForm;
-      if (!String(form[key]).trim()) {
-        errors[key] =
-          t("admin.quizzes.form.error_question_all_languages") ||
-          "Question text is required in all four languages";
-      }
-    });
-    if (form.options.length < 2)
-      errors.options =
-        t("admin.quizzes.form.error_min_options") ||
-        "At least 2 options are required";
-    if (form.options.length > 3)
-      errors.options =
-        t("admin.quizzes.form.error_max_options") ||
-        "Maximum 3 options allowed";
-    const correctCount = form.options.filter((o) => o.isCorrect).length;
-    if (correctCount === 0)
-      errors.correct =
-        t("admin.quizzes.form.error_exactly_one_correct") ||
-        "Exactly one option must be marked as correct";
-    if (correctCount > 1)
-      errors.correct =
-        t("admin.quizzes.form.error_only_one_correct") ||
-        "Only one option can be marked as correct";
-    const languageFields = ["textEn", "textAr", "textNl", "textFr"] as const;
-    form.options.forEach((o, i) => {
-      languageFields.forEach((field) => {
-        if (!o[field].trim()) {
-          errors[`option_${i}_${field}`] =
-            t("admin.quizzes.form.error_option_all_languages") ||
-            "Every option is required in all four languages";
-        }
-      });
-    });
-    languageFields.forEach((field) => {
-      const values = form.options.map((option) =>
-        option[field].trim().replace(/\s+/g, " ").toLocaleLowerCase(),
-      );
-      if (values.some((value, index) => value && values.indexOf(value) !== index)) {
-        errors.options =
-          t("admin.quizzes.form.error_duplicate_options") ||
-          "Answer options must be unique in every language";
-      }
-    });
+    const errors = quizValidationErrors(form, categories.map((category) => category.code), t);
     setFieldErrors(errors);
+    setErrorMsg(Object.values(errors).join(" · ") || null);
     return Object.keys(errors).length === 0;
   };
 
@@ -604,25 +559,11 @@ export default function AdminEditQuizQuestionPage() {
       logApiError("Failed to update quiz question", err);
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
       else {
-        const axiosErr = err as {
-          response?: {
-            status?: number;
-            data?: { error?: string; message?: string };
-          };
-          message?: string;
-        };
-        const msg =
-          axiosErr?.response?.data?.error ||
-          axiosErr?.response?.data?.message ||
-          axiosErr?.message;
-        setErrorMsg(String(
-          axiosErr?.response?.status === 409
-            ? t("admin.quizzes.form.edit_conflict") ||
-                "This question changed in another session. Reload it before saving."
-            : msg ||
-                t("admin.quizzes.form.update_error") ||
-                "Failed to update question",
-        ));
+        const failure = quizServerError(err, t("admin.quizzes.form.update_error"));
+        setFieldErrors(failure.fields);
+        setErrorMsg((err as { response?: { status?: number } }).response?.status === 409
+          ? t("admin.quizzes.form.edit_conflict")
+          : [failure.message, ...Object.values(failure.fields)].join(" · "));
       }
     } finally {
       setSubmitting(false);
@@ -1120,7 +1061,7 @@ export default function AdminEditQuizQuestionPage() {
                       "admin.quizzes.form.option_text_en_placeholder",
                     )}
                     value={opt.textEn}
-                    error={fieldErrors[`option_${idx}_textEn`]}
+                    error={fieldErrors[`option_${idx}_textEn`] || fieldErrors[`option_${idx}`]}
                     onChange={(v) => setOptionField(idx, "textEn", v)}
                   />
                   <FormField

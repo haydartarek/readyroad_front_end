@@ -1,4 +1,5 @@
 "use client";
+import { disableLearningPush } from "@/lib/learning-push";
 
 import {
   createContext,
@@ -364,6 +365,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    // Revoke this browser's subscription before removing account credentials.
+    await disableLearningPush().catch(() => {});
     // Save display name BEFORE clearing auth state
     const displayName =
       user?.firstName ?? user?.fullName?.split(" ")[0] ?? user?.username ?? "";

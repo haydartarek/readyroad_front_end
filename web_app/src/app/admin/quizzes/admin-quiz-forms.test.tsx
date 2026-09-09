@@ -82,6 +82,22 @@ const question = {
 const originalFetch = global.fetch;
 
 describe("Admin theoretical question forms", () => {
+  test("edit displays backend field validation errors beside the affected option", async () => {
+    (apiClient.get as jest.Mock).mockImplementation((url: string) => Promise.resolve({
+      data: url === "/admin/quiz/categories" ? [category] : question,
+    }));
+    (apiClient.put as jest.Mock).mockRejectedValue({ response: { status: 400, data: {
+      error: "BAD_REQUEST", message: "Check the answers",
+      fields: { "options[1].textAr": "Arabic answer is required" },
+    } } });
+    const { container } = render(<AdminEditQuizQuestionPage />);
+    await screen.findByLabelText("admin.quizzes.form.category *");
+    fireEvent.submit(container.querySelector("form")!);
+    await waitFor(() => expect(apiClient.put).toHaveBeenCalledTimes(1));
+    expect(await screen.findAllByText(/Arabic answer is required/)).not.toHaveLength(0);
+    expect(screen.queryByText("BAD_REQUEST")).not.toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn().mockResolvedValue({

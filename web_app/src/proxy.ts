@@ -167,6 +167,9 @@ function withRouteLocale(
 }
 
 export default async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/learning-notifications-sw.js") {
+    return NextResponse.next();
+  }
   if (request.headers.get("x-rijvia-routed") === "1") {
     return NextResponse.next();
   }

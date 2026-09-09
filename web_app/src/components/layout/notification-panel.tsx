@@ -18,8 +18,10 @@ import {
   Megaphone,
   BookOpen,
   ArrowRight,
+  RotateCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationChannelSettings } from "./notification-channel-settings";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/language-context";
 import { useNotifications } from "@/contexts/notification-context";
@@ -155,6 +157,7 @@ export function NotificationPanel() {
   const [items, setItems] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasRequestError, setHasRequestError] = useState(false);
   const [visibleCount, setVisibleCount] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
   const syncedRevisionRef = useRef(revision);
@@ -202,6 +205,7 @@ export function NotificationPanel() {
     syncedRevisionRef.current = revision;
     setIsOpen(true);
     setIsLoading(true);
+    setHasRequestError(false);
     try {
       const notifs = mergeUniqueNotifications(await getNotifications());
       setItems(notifs);
@@ -214,7 +218,7 @@ export function NotificationPanel() {
         await markAllRead();
       }
     } catch {
-      // Never block the UI on fetch failure
+      setHasRequestError(true);
     } finally {
       setIsLoading(false);
     }
@@ -232,10 +236,11 @@ export function NotificationPanel() {
         if (latest.length < MAX_VISIBLE_NOTIFICATIONS) {
           setVisibleCount((current) => Math.max(current, latest.length));
         }
-        syncedRevisionRef.current = revision;
         await markAllRead();
+        syncedRevisionRef.current = revision;
+        setHasRequestError(false);
       } catch {
-        // The next successful poll can retry without interrupting the current UI.
+        setHasRequestError(true);
       }
     };
     void syncOpenPanel();
@@ -250,8 +255,9 @@ export function NotificationPanel() {
       const latest = await getNotifications();
       setItems((current) => mergeUniqueNotifications(latest, current));
       setVisibleCount(MAX_VISIBLE_NOTIFICATIONS);
+      setHasRequestError(false);
     } catch {
-      // Keep the existing list and allow another attempt.
+      setHasRequestError(true);
     } finally {
       setIsLoadingMore(false);
     }
@@ -265,10 +271,14 @@ export function NotificationPanel() {
       }
 
       if (!notif.isRead) {
-        setItems((prev) =>
-          prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n)),
-        );
-        await markNotificationAsRead(notif.id).catch(() => {});
+        try {
+          await markNotificationAsRead(notif.id);
+          setItems((prev) =>
+            prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n)),
+          );
+        } catch {
+          setHasRequestError(true);
+        }
       }
     },
     [],
@@ -364,13 +374,23 @@ export function NotificationPanel() {
           </div>
 
           {/* Body */}
+          <NotificationChannelSettings />
+          {hasRequestError && (
+            <div role="alert" className="mb-2 flex items-center gap-2 px-3 py-2 text-sm text-destructive">
+              <span className="min-w-0 flex-1">{t("notif.request_failed")}</span>
+              <Button type="button" variant="ghost" size="icon" onClick={() => void openPanel()}
+                aria-label={t("notif.retry")} title={t("notif.retry")}>
+                <RotateCw className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
           <div className="max-h-[420px] overflow-y-auto px-0.5">
             {isLoading ? (
               // Loading state
               <div className="flex items-center justify-center rounded-[1.2rem] border border-border/50 bg-background/70 py-10">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
-            ) : items.length === 0 ? (
+            ) : items.length === 0 && !hasRequestError ? (
               // Empty state
               <div className="flex flex-col items-center gap-2 rounded-[1.2rem] border border-border/50 bg-background/70 py-10 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-muted/60 shadow-sm">

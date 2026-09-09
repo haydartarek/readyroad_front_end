@@ -5,10 +5,10 @@
  *
  * Single source of truth for unread notification count.
  * - Polls the unread-count notification endpoint every 30 s (base interval)
- * - Exponential backoff up to MAX_ERRORS consecutive failures, then stops
+ * - Bounded exponential backoff with recovery after transient failures
  * - Deduplicates rapid calls (DEDUPE_MS guard)
  * - Refreshes on tab-focus (visibilitychange)
- * - optimistically resets count to 0 on markAllRead()
+ * - Clears count only after a successful markAllRead()
  *
  * Wrap the authenticated part of the app with <NotificationProvider>.
  * Any component calls `useNotifications()` instead of running its own poll.
@@ -33,19 +33,19 @@ import {
 
 const BASE_POLL_MS = 30_000;
 const DEDUPE_MS = 2_000;
-const MAX_ERRORS = 3;
+const MAX_RETRY_MS = 5 * 60_000;
 
 // ─── Context shape ────────────────────────────────────────
 
 export interface NotificationCtx {
-  /** Current unread count (updated optimistically on markAllRead) */
+  /** Last confirmed unread count */
   unreadCount: number;
   /** Force an immediate re-fetch (bypasses DEDUPE_MS guard) */
   refresh: () => void;
   /** Changes when polling discovers new unread notification state. */
   revision: number;
   /**
-   * Optimistically sets count to 0 and fires markAllNotificationsAsRead.
+   * Sets count to 0 after markAllNotificationsAsRead succeeds.
    * Call this whenever the user explicitly clears notifications.
    */
   markAllRead: () => Promise<void>;
@@ -111,11 +111,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     if (now - lastFetchRef.current < DEDUPE_MS) return;
     lastFetchRef.current = now;
 
-    if (errorsRef.current >= MAX_ERRORS) {
-      stopPolling();
-      return;
-    }
-
     cancelInFlight();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -130,16 +125,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
       errorsRef.current = 0;
       scheduleFetch(BASE_POLL_MS);
-    } catch {
+    } catch (error) {
       if (controller.signal.aborted) return;
-      errorsRef.current += 1;
-      if (errorsRef.current >= MAX_ERRORS) {
+      const status = (error as { response?: { status?: number } }).response?.status;
+      if (status === 401 || status === 403) {
         stopPolling();
-        console.warn(
-          "[NotificationContext] Polling stopped after repeated failures",
-        );
       } else {
-        scheduleFetch(BASE_POLL_MS * Math.pow(2, errorsRef.current));
+        errorsRef.current = Math.min(errorsRef.current + 1, 4);
+        scheduleFetch(Math.min(MAX_RETRY_MS, BASE_POLL_MS * Math.pow(2, errorsRef.current)));
       }
     } finally {
       if (abortRef.current === controller) {
@@ -199,9 +192,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // ── Public API ────────────────────────────────────────
 
   const markAllRead = useCallback(async () => {
+    await markAllNotificationsAsRead();
     unreadCountRef.current = 0;
-    setUnreadCount(0); // optimistic
-    await markAllNotificationsAsRead().catch(() => {});
+    setUnreadCount(0);
   }, []);
 
   const refresh = useCallback(() => {

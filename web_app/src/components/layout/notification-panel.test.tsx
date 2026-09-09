@@ -12,6 +12,7 @@ import { NotificationPanel } from "@/components/layout/notification-panel";
 type Language = "en" | "nl" | "fr" | "ar";
 
 const mockGetNotifications = jest.fn<Promise<AppNotification[]>, []>();
+jest.mock("./notification-channel-settings", () => ({ NotificationChannelSettings: () => null }));
 const mockMarkNotificationAsRead = jest.fn();
 const mockMarkAllRead = jest.fn();
 let mockLanguage: Language = "en";
@@ -95,6 +96,18 @@ function notification(id: number): AppNotification {
 function notifications(count: number): AppNotification[] {
   return Array.from({ length: count }, (_, index) => notification(index + 1));
 }
+
+it("shows a retryable error instead of an empty inbox when loading fails", async () => {
+  mockGetNotifications.mockRejectedValueOnce(new Error("offline"));
+  render(<NotificationPanel />);
+  fireEvent.click(screen.getByRole("button", { name: labels[mockLanguage]["notif.title"] }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("notif.request_failed");
+  expect(screen.queryByText("notif.empty_title")).not.toBeInTheDocument();
+  mockGetNotifications.mockResolvedValueOnce(notifications(1));
+  fireEvent.click(screen.getByRole("button", { name: "notif.retry" }));
+  expect(await screen.findByText("Notification 1")).toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
 
 async function openPanel() {
   fireEvent.click(

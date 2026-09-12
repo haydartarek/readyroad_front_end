@@ -12,7 +12,6 @@ import { NotificationPanel } from "@/components/layout/notification-panel";
 type Language = "en" | "nl" | "fr" | "ar";
 
 const mockGetNotifications = jest.fn<Promise<AppNotification[]>, []>();
-jest.mock("./notification-channel-settings", () => ({ NotificationChannelSettings: () => null }));
 const mockMarkNotificationAsRead = jest.fn();
 const mockMarkAllRead = jest.fn();
 let mockLanguage: Language = "en";

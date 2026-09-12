@@ -32,3 +32,16 @@ test("maps nested Bean Validation fields and preserves human response message", 
   expect(error.fields.option_1).toBe("Arabic option text is required");
   expect(error.fields.questionNl).toBe("Dutch question text is required");
 });
+
+test("retains HTTP status and all server validation messages without request credentials", () => {
+  const result = quizServerError({
+    config: { headers: { Authorization: "must-not-log" } },
+    response: { status: 400, data: { message: "Invalid question", fields: {
+      "options[1].textNl": "Dutch text required", "options[1].textAr": "Arabic text required",
+    } } },
+  }, "Fallback");
+  expect(result.status).toBe(400);
+  expect(result.fields.option_1).toContain("Dutch text required");
+  expect(result.fields.option_1).toContain("Arabic text required");
+  expect(JSON.stringify(result)).not.toContain("must-not-log");
+});

@@ -462,10 +462,12 @@ export default function AdminAddQuizQuestionPage() {
       });
       setTimeout(() => router.push("/admin/quizzes"), 600);
     } catch (err: unknown) {
-      logApiError("Failed to create quiz question", err);
+      const failure = quizServerError(err, t("admin.quizzes.form.error_generic"));
+      logApiError("Failed to create quiz question", {
+        response: { status: failure.status, data: { message: failure.message, fields: failure.fields } },
+      });
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
       else {
-        const failure = quizServerError(err, t("admin.quizzes.form.error_generic"));
         setFieldErrors(failure.fields);
         setErrorMsg([failure.message, ...Object.values(failure.fields)].join(" · "));
       }

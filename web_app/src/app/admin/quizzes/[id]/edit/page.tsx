@@ -556,10 +556,12 @@ export default function AdminEditQuizQuestionPage() {
       });
       setTimeout(() => router.push(returnTo), 600);
     } catch (err: unknown) {
-      logApiError("Failed to update quiz question", err);
+      const failure = quizServerError(err, t("admin.quizzes.form.update_error"));
+      logApiError("Failed to update quiz question", {
+        response: { status: failure.status, data: { message: failure.message, fields: failure.fields } },
+      });
       if (isServiceUnavailable(err)) setServiceUnavailable(true);
       else {
-        const failure = quizServerError(err, t("admin.quizzes.form.update_error"));
         setFieldErrors(failure.fields);
         setErrorMsg((err as { response?: { status?: number } }).response?.status === 409
           ? t("admin.quizzes.form.edit_conflict")

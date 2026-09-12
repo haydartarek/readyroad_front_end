@@ -15,15 +15,24 @@ export async function learningPushSubscription() {
   return registration.pushManager.getSubscription();
 }
 
-export async function enableLearningPush(publicKey: string) {
+function assertEnrollmentActive(signal?: AbortSignal) {
+  if (signal?.aborted) throw new DOMException("Push enrollment aborted", "AbortError");
+}
+
+export async function enableLearningPush(publicKey: string, signal?: AbortSignal) {
+  assertEnrollmentActive(signal);
   if (!supportsLearningPush()) throw new Error("Push unavailable");
-  if (await Notification.requestPermission() !== "granted") throw new Error("Push permission denied");
+  if (Notification.permission !== "granted"
+      && await Notification.requestPermission() !== "granted") throw new Error("Push permission denied");
+  assertEnrollmentActive(signal);
   const existingRegistration = await navigator.serviceWorker.getRegistration("/");
   if (existingRegistration && !existingRegistration.active?.scriptURL.endsWith(WORKER))
     throw new Error("Another service worker owns this scope");
+  assertEnrollmentActive(signal);
   await navigator.serviceWorker.register(WORKER, { scope: "/" });
   const registration = await navigator.serviceWorker.ready;
   const current = await registration.pushManager.getSubscription();
+  assertEnrollmentActive(signal);
   const key = publicKey.replace(/-/g, "+").replace(/_/g, "/");
   const subscription = current ?? await registration.pushManager.subscribe({
     userVisibleOnly: true,
@@ -31,9 +40,10 @@ export async function enableLearningPush(publicKey: string) {
   });
   const data = subscription.toJSON();
   try {
+    assertEnrollmentActive(signal);
     await apiClient.post(CHANNELS_URL + "/push", {
       endpoint: data.endpoint, p256dh: data.keys?.p256dh, auth: data.keys?.auth,
-    });
+    }, { signal });
   } catch (error) {
     if (!current) await subscription.unsubscribe();
     throw error;

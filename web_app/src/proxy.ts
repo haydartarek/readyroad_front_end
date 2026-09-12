@@ -203,10 +203,10 @@ export default async function proxy(request: NextRequest) {
     return redirectTo("/privacy-policy", request, locale, 308);
   }
 
-  const legacyLessonPageOne = pathname.match(/^\/lessons\/([^/]+)\/1\/?$/);
-  if (legacyLessonPageOne) {
+  const legacyLessonPage = pathname.match(/^\/lessons\/([^/]+)\/[1-9]\d*\/?$/);
+  if (legacyLessonPage) {
     return redirectTo(
-      `/lessons/${legacyLessonPageOne[1]}`,
+      `/lessons/${legacyLessonPage[1]}`,
       request,
       locale,
       308,

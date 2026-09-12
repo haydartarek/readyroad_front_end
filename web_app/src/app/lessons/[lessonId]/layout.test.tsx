@@ -1,3 +1,9 @@
+import LegacyLessonPage from "@/app/lessons/[lessonId]/[pageNumber]/page";
+import { permanentRedirect, notFound } from "next/navigation";
+jest.mock("next/navigation", () => ({
+  permanentRedirect: jest.fn(() => { throw new Error("redirect"); }),
+  notFound: jest.fn(() => { throw new Error("not-found"); }),
+}));
 import { generateMetadata } from "@/app/lessons/[lessonId]/layout";
 import { getPublicLesson } from "@/lib/server/public-catalog";
 import { DEFAULT_APP_URL } from "@/lib/site-copy";
@@ -79,5 +85,22 @@ describe("lesson detail metadata", () => {
     });
 
     expect(metadata.robots).toEqual({ index: false, follow: false });
+  });
+});
+
+describe("retired lesson page URLs", () => {
+  test.each(["en", "ar", "nl", "fr"])("redirects every numbered page to its %s lesson", async (locale) => {
+    mockedCookies.mockResolvedValue({ get: jest.fn(() => ({ value: locale })) } as never);
+    mockedGetPublicLesson.mockResolvedValue({ lessonCode: "les-19" } as Awaited<ReturnType<typeof getPublicLesson>>);
+    for (const pageNumber of ["1", "2", "8"]) {
+      await expect(LegacyLessonPage({ params: Promise.resolve({ lessonId: "les-19", pageNumber }) }))
+        .rejects.toThrow("redirect");
+      expect(permanentRedirect).toHaveBeenLastCalledWith(`${locale === "en" ? "" : "/" + locale}/lessons/les-19`);
+    }
+  });
+  test.each(["0", "-1", "2.5", "wrong"])("rejects invalid page number %s", async (pageNumber) => {
+    await expect(LegacyLessonPage({ params: Promise.resolve({ lessonId: "les-19", pageNumber }) }))
+      .rejects.toThrow("not-found");
+    expect(notFound).toHaveBeenCalled();
   });
 });

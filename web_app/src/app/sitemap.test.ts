@@ -55,7 +55,7 @@ describe("public sitemap", () => {
     const urls = entries.map((entry) => entry.url);
 
     expect(urls).toHaveLength(
-      (STATIC_PUBLIC_PAGE_COUNT + 2 + 3) * LOCALE_COUNT + LOCALE_COUNT,
+      (STATIC_PUBLIC_PAGE_COUNT + 2 + 1) * LOCALE_COUNT + LOCALE_COUNT,
     );
     expect(new Set(urls).size).toBe(urls.length);
     expect(urls.every((url) => new URL(url).origin === appUrl)).toBe(true);
@@ -77,8 +77,10 @@ describe("public sitemap", () => {
     expect(urls).toContain(`${appUrl}/traffic-signs/A1a`);
     expect(urls).toContain(`${appUrl}/traffic-signs/B1`);
     expect(urls).toContain(`${appUrl}/lessons/les-0`);
-    expect(urls).toContain(`${appUrl}/nl/lessons/les-0/2`);
-    expect(urls).toContain(`${appUrl}/fr/lessons/les-0/3`);
+    expect(urls).not.toContain(`${appUrl}/nl/lessons/les-0/2`);
+    expect(urls).toContain(`${appUrl}/nl/lessons/les-0`);
+    expect(urls).not.toContain(`${appUrl}/fr/lessons/les-0/3`);
+    expect(urls).toContain(`${appUrl}/fr/lessons/les-0`);
     expect(urls).toContain(`${appUrl}/ar/traffic-signs/B1`);
     expect(urls).toContain(`${appUrl}/blog/safe-driving`);
     expect(urls).toContain(`${appUrl}/nl/blog/veilig-rijden`);

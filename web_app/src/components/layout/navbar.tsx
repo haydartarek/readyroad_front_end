@@ -253,7 +253,7 @@ export function Navbar() {
           aria-label="RijVia"
           className="flex shrink-0 items-center"
         >
-          <span className="relative block h-11 w-[132px] shrink-0 min-[1536px]:h-12 min-[1536px]:w-[144px]">
+          <span className="relative block h-11 w-[72px] shrink-0 min-[360px]:w-[100px] sm:w-[132px] min-[1536px]:h-12 min-[1536px]:w-[144px]">
             <Image
               src="/images/logo.png"
               alt=""
@@ -518,7 +518,7 @@ export function Navbar() {
             )}
           </button>
 
-          <div className="hidden lg:block">
+          <div data-testid="navbar-language" className="order-1 xl:order-none">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -593,7 +593,7 @@ export function Navbar() {
             </div>
           ) : null}
 
-          <div className="flex items-center xl:hidden">
+          <div className="order-2 flex items-center xl:order-none xl:hidden">
             <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -674,25 +674,6 @@ export function Navbar() {
                         )}
                       </button>
 
-                      <div className="flex min-w-0 flex-1 items-center justify-end gap-1 rounded-full border border-border/70 bg-card p-1 shadow-sm">
-                        {LANGUAGES.map((lang) => (
-                          <button
-                            key={lang.code}
-                            type="button"
-                            onClick={() => setLanguage(lang.code as LangCode)}
-                            className={cn(
-                              "inline-flex min-w-10 items-center justify-center rounded-full px-2.5 py-2 text-xs font-bold transition-all duration-200",
-                              language === lang.code
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                            )}
-                            aria-label={lang.nativeName}
-                            title={lang.nativeName}
-                          >
-                            {lang.flag}
-                          </button>
-                        ))}
-                      </div>
                     </div>
 
                     {isAuthenticated && user ? (

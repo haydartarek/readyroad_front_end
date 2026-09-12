@@ -116,13 +116,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lessonPages = lessons.flatMap((lesson) => {
     if (!lesson.lessonCode) return [];
     const lessonPath = `/lessons/${encodeURIComponent(lesson.lessonCode)}`;
-    const totalPages = Math.max(lesson.totalPages || 1, 1);
-
-    return Array.from({ length: totalPages }, (_, index) => ({
-      pathname: index === 0 ? lessonPath : `${lessonPath}/${index + 1}`,
+    return [{
+      pathname: lessonPath,
       changeFrequency: "monthly" as const,
-      priority: index === 0 ? 0.7 : 0.6,
-    }));
+      priority: 0.7,
+    }];
   });
   const routes = [...publicPages, ...signPages, ...lessonPages];
   const articlePages = localizedArticles.flatMap((articles, localeIndex) => {

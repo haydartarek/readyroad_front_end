@@ -24,6 +24,8 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { apiClient, logApiError } from "@/lib/api";
+import { CHANNELS_URL, enableLearningPush, supportsLearningPush } from "@/lib/learning-push";
 import {
   getUnreadNotificationCount,
   markAllNotificationsAsRead,
@@ -188,6 +190,69 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("pagehide", onPageHide);
     };
   }, [user, isAuthenticated, isLoading, stopPolling, cancelInFlight]);
+
+  // Enrol learner browsers once per authenticated session. Browser permission
+  // remains a browser requirement; there is no separate delivery-settings step.
+  useEffect(() => {
+    if (!isAuthenticated || isLoading || user?.role !== "USER" || !supportsLearningPush()) return;
+    const controller = new AbortController();
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    let busy = false;
+    let subscribed = false;
+    let prompted = false;
+    let publicKey = "";
+
+    function removeGestureListeners() {
+      document.removeEventListener("pointerdown", onGesture);
+      document.removeEventListener("keydown", onGesture);
+    }
+    async function enrol() {
+      if (controller.signal.aborted || busy || subscribed) return;
+      busy = true;
+      try {
+        await enableLearningPush(publicKey, controller.signal);
+        subscribed = true;
+        removeGestureListeners();
+      } catch (error) {
+        if (!controller.signal.aborted && Notification.permission === "granted") {
+          logApiError("Failed to register learning Push", error);
+          retry = setTimeout(() => void sync(), BASE_POLL_MS);
+        }
+      } finally { busy = false; }
+    }
+    function onGesture() {
+      if (!publicKey || prompted) return;
+      prompted = true;
+      removeGestureListeners();
+      void enrol();
+    }
+    async function sync() {
+      if (controller.signal.aborted || busy || subscribed || Notification.permission === "denied") return;
+      try {
+        const { data } = await apiClient.get<{ pushAvailable: boolean; publicKey: string }>(
+          CHANNELS_URL, undefined, { signal: controller.signal },
+        );
+        if (controller.signal.aborted || !data.pushAvailable || !data.publicKey) return;
+        publicKey = data.publicKey;
+        if (Notification.permission === "granted") await enrol();
+        else if (!prompted) {
+          document.addEventListener("pointerdown", onGesture);
+          document.addEventListener("keydown", onGesture);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          logApiError("Failed to load learning Push configuration", error);
+          retry = setTimeout(() => void sync(), BASE_POLL_MS);
+        }
+      }
+    }
+    void sync();
+    return () => {
+      controller.abort();
+      clearTimeout(retry);
+      removeGestureListeners();
+    };
+  }, [isAuthenticated, isLoading, user?.role, user?.userId]);
 
   // ── Public API ────────────────────────────────────────
 

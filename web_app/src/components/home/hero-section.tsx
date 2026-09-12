@@ -206,10 +206,6 @@ export function HeroSection() {
           </div>
 
           <div className="relative">
-            <div className="mb-3 flex items-center justify-between text-xs font-medium text-muted-foreground">
-              <span>RijVia</span>
-              <span>Category B</span>
-            </div>
             <ExamPreview />
           </div>
         </div>

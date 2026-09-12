@@ -544,3 +544,18 @@ describe("Navbar responsive account navigation", () => {
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
 });
+
+test("offers all four languages beside the menu without opening mobile navigation", async () => {
+  render(<Navbar />);
+  const language = screen.getByTestId("navbar-language");
+  expect(language).not.toHaveClass("hidden");
+  const trigger = within(language).getByRole("button");
+  trigger.focus();
+  fireEvent.keyDown(trigger, { key: "Enter", code: "Enter" });
+  for (const name of ["English", "Nederlands", "Français", "العربية"]) {
+    expect(await screen.findByRole("menuitem", { name: new RegExp(name) })).toBeVisible();
+  }
+  fireEvent.click(screen.getByRole("menuitem", { name: /العربية/ }));
+  expect(mockSetLanguage).toHaveBeenCalledWith("ar");
+  expect(screen.queryByTestId("mobile-navigation-dialog")).not.toBeInTheDocument();
+});

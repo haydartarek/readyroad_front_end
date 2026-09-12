@@ -32,8 +32,6 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   CheckCircle2,
 } from "lucide-react";
@@ -108,11 +106,9 @@ function getPageContent(page: LessonPage, lang: string) {
 export default function LessonDetailClient({
   initialLesson,
   initialLessons,
-  initialPageNumber,
 }: Readonly<{
   initialLesson: LessonDetail | null;
   initialLessons: Lesson[];
-  initialPageNumber: number;
 }>) {
   const params = useParams();
   const lessonIdOrCode = params.lessonId as string;
@@ -123,7 +119,8 @@ export default function LessonDetailClient({
   const [allLessons, setAllLessons] = useState<Lesson[]>(initialLessons);
   const [loading, setLoading] = useState(initialLesson === null);
   const [error, setError] = useState<string | null>(null);
-  const activePage = Math.max(initialPageNumber - 1, 0);
+  const [activePage, setActivePage] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [lessonProgress, setLessonProgress] = useState<LessonProgress | null>(
     null,
   );
@@ -214,7 +211,19 @@ export default function LessonDetailClient({
   ]);
 
   useEffect(() => {
-    if (!user || !lesson || lesson.pages.length === 0) {
+    if (loading || !lesson || !contentRef.current || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      const section = visible[0]?.target as HTMLElement | undefined;
+      if (section) setActivePage(Number(section.dataset.lessonPage) - 1);
+    }, { rootMargin: "-80px 0px -50% 0px", threshold: 0 });
+    contentRef.current.querySelectorAll("[data-lesson-page]").forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [lesson, loading]);
+
+  useEffect(() => {
+    if (loading || !user || !lesson || lesson.pages.length === 0) {
       return;
     }
 
@@ -255,7 +264,7 @@ export default function LessonDetailClient({
     return () => {
       cancelled = true;
     };
-  }, [user, lesson, activePage]);
+  }, [user, lesson, activePage, loading]);
 
   if (serviceUnavailable) {
     return (
@@ -316,11 +325,7 @@ export default function LessonDetailClient({
     currentIndex >= 0 && currentIndex < totalLessons - 1
       ? allLessons[currentIndex + 1]
       : null;
-  const currentPage = lesson.pages[activePage];
-  const pageHref = (pageNumber: number) =>
-    pageNumber <= 1
-      ? `/lessons/${lesson.lessonCode}`
-      : `/lessons/${lesson.lessonCode}/${pageNumber}`;
+  const pageHref = (pageNumber: number) => `#section-${pageNumber}`;
   const pagesRead = user
     ? Math.min(lessonProgress?.pagesRead ?? 0, lesson.pages.length)
     : Math.min(activePage + 1, lesson.pages.length);
@@ -332,11 +337,10 @@ export default function LessonDetailClient({
   const isRtl = language === "ar";
   const ArrowStart = isRtl ? ArrowRight : ArrowLeft;
   const ArrowEnd = isRtl ? ArrowLeft : ArrowRight;
-  const ChevronStart = isRtl ? ChevronRight : ChevronLeft;
-  const ChevronEnd = isRtl ? ChevronLeft : ChevronRight;
 
   return (
     <div
+      ref={contentRef}
       dir={isRtl ? "rtl" : "ltr"}
       className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(223,88,48,0.10),_transparent_34%),linear-gradient(to_bottom,_hsl(var(--muted))_0%,_hsl(var(--background))_22%)]"
     >
@@ -400,29 +404,7 @@ export default function LessonDetailClient({
               </div>
             </PageHeroSurface>
 
-            {lesson.pages.length > 1 && (
-              <div className="flex flex-wrap gap-2">
-                {lesson.pages.map((page, index) => (
-                  <Button
-                    key={page.pageNumber}
-                    variant={activePage === index ? "default" : "outline"}
-                    size="sm"
-                    className={cn(
-                      "rounded-full px-4 transition-all",
-                      activePage === index && "shadow-md shadow-primary/20",
-                    )}
-                    asChild
-                  >
-                    <Link href={pageHref(page.pageNumber)}>
-                      {page.pageNumber}
-                    </Link>
-                  </Button>
-                ))}
-              </div>
-            )}
-
-            {currentPage &&
-              (() => {
+            {[...lesson.pages].sort((a, b) => a.pageNumber - b.pageNumber).map((currentPage) => {
                 const { title, content, bullets } = getPageContent(
                   currentPage,
                   language,
@@ -433,7 +415,9 @@ export default function LessonDetailClient({
                   .filter(Boolean);
 
                 return (
-                  <PageSectionSurface className="overflow-hidden p-0">
+                  <section key={currentPage.pageNumber} id={`section-${currentPage.pageNumber}`}
+                    data-lesson-page={currentPage.pageNumber} className="scroll-mt-24">
+                  <PageSectionSurface className="p-0">
                     <div className="border-b border-border/40 bg-primary/[0.035] px-4 py-5 sm:px-6">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
@@ -516,61 +500,9 @@ export default function LessonDetailClient({
                       )}
                     </div>
                   </PageSectionSurface>
+                  </section>
                 );
-              })()}
-
-            {lesson.pages.length > 1 && (
-              <PageSectionSurface className="p-4">
-                {activePage === 0 ? (
-                  <Button
-                    variant="outline"
-                    disabled
-                    className="w-full rounded-xl px-3 sm:w-auto sm:px-5"
-                  >
-                    <ChevronStart className="h-4 w-4" />
-                    {t("lessons.previous_page")}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full rounded-xl px-3 sm:w-auto sm:px-5"
-                    asChild
-                  >
-                    <Link href={pageHref(activePage)}>
-                      <ChevronStart className="h-4 w-4" />
-                      {t("lessons.previous_page")}
-                    </Link>
-                  </Button>
-                )}
-
-                <div className="break-words text-center text-sm font-medium text-muted-foreground">
-                  {t("lessons.question_progress", {
-                    current: activePage + 1,
-                    total: lesson.pages.length,
-                  })}
-                </div>
-
-                {activePage >= lesson.pages.length - 1 ? (
-                  <Button
-                    disabled
-                    className="w-full rounded-xl px-3 shadow-sm shadow-primary/15 sm:w-auto sm:px-5"
-                  >
-                    {t("lessons.next_page")}
-                    <ChevronEnd className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                    className="w-full rounded-xl px-3 shadow-sm shadow-primary/15 sm:w-auto sm:px-5"
-                    asChild
-                  >
-                    <Link href={pageHref(activePage + 2)}>
-                      {t("lessons.next_page")}
-                      <ChevronEnd className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
-              </PageSectionSurface>
-            )}
+              })}
 
             <div className="grid gap-3 md:grid-cols-2">
               {prevLesson ? (
@@ -649,7 +581,7 @@ export default function LessonDetailClient({
 
             <PageSectionSurface title={t("lessons.pages_overview")}>
               {lesson.pages.map((page, index) => (
-                <Link
+                <a
                   key={page.pageNumber}
                   href={pageHref(page.pageNumber)}
                   className={cn(
@@ -668,7 +600,7 @@ export default function LessonDetailClient({
                       {getLangTitle(page, language)}
                     </span>
                   </div>
-                </Link>
+                </a>
               ))}
             </PageSectionSurface>
 

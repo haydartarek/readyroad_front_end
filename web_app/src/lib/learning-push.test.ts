@@ -15,7 +15,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   Object.defineProperty(window, "isSecureContext", { configurable: true, value: true });
   Object.defineProperty(window, "PushManager", { configurable: true, value: function() {} });
-  Object.defineProperty(window, "Notification", { configurable: true, value: { requestPermission: permission } });
+  Object.defineProperty(window, "Notification", { configurable: true, value: { permission: "default", requestPermission: permission } });
   Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: {
     getRegistration: jest.fn().mockResolvedValue(registration),
     register: jest.fn().mockResolvedValue(registration),
@@ -42,5 +42,20 @@ it("unsubscribes the browser even when server deletion fails", async () => {
   getSubscription.mockResolvedValue(subscription);
   jest.mocked(apiClient.delete).mockRejectedValue(new Error("offline"));
   await expect(disableLearningPush()).rejects.toThrow("offline");
+  expect(unsubscribe).toHaveBeenCalledTimes(1);
+});
+
+it("uses an already granted browser permission without another request", async () => {
+  Object.defineProperty(window, "Notification", { configurable: true,
+    value: { permission: "granted", requestPermission: permission } });
+  await enableLearningPush("AQ");
+  expect(permission).not.toHaveBeenCalled();
+  expect(apiClient.post).toHaveBeenCalledTimes(1);
+});
+it("does not register a subscription after logout aborts enrollment", async () => {
+  const controller = new AbortController();
+  subscribe.mockImplementationOnce(async () => { controller.abort(); return subscription; });
+  await expect(enableLearningPush("AQ", controller.signal)).rejects.toThrow();
+  expect(apiClient.post).not.toHaveBeenCalled();
   expect(unsubscribe).toHaveBeenCalledTimes(1);
 });

@@ -51,7 +51,8 @@ export function quizValidationErrors(form: QuizInput, categoryCodes: string[], t
 }
 
 export function quizServerError(error: unknown, fallback: string) {
-  const data = (error as { response?: { data?: { message?: unknown; error?: unknown; fields?: unknown } } })?.response?.data;
+  const response = (error as { response?: { status?: number; data?: { message?: unknown; error?: unknown; fields?: unknown } } })?.response;
+  const data = response?.data;
   const fields: Record<string, string> = {};
   if (data?.fields && typeof data.fields === "object") {
     for (const [path, value] of Object.entries(data.fields)) {
@@ -62,6 +63,7 @@ export function quizServerError(error: unknown, fallback: string) {
     }
   }
   return {
+    status: response?.status,
     fields,
     message: typeof data?.message === "string" && data.message.trim() ? data.message
       : typeof data?.error === "string" && data.error.trim() ? data.error : fallback,

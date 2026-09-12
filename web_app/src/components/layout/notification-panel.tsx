@@ -21,7 +21,6 @@ import {
   RotateCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NotificationChannelSettings } from "./notification-channel-settings";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/language-context";
 import { useNotifications } from "@/contexts/notification-context";
@@ -374,7 +373,6 @@ export function NotificationPanel() {
           </div>
 
           {/* Body */}
-          <NotificationChannelSettings />
           {hasRequestError && (
             <div role="alert" className="mb-2 flex items-center gap-2 px-3 py-2 text-sm text-destructive">
               <span className="min-w-0 flex-1">{t("notif.request_failed")}</span>

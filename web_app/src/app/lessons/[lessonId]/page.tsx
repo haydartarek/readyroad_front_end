@@ -32,7 +32,6 @@ export default async function LessonDetailPage({
       <LessonDetailClient
         initialLesson={lesson}
         initialLessons={lessons}
-        initialPageNumber={1}
       />
       {lesson && (
         <LessonKeywordSupport lessonCode={lesson.lessonCode} locale={locale} />

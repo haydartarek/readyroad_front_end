@@ -26,15 +26,15 @@ test("serves indexable locale routes with reciprocal metadata", async ({
   ).toBeVisible();
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
-    /\/fr\/lessons\/les-19\/2$/,
+    /\/fr\/lessons\/les-19$/,
   );
   await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute(
     "href",
-    /\/lessons\/les-19\/2$/,
+    /\/lessons\/les-19$/,
   );
   await expect(
     page.locator('link[rel="alternate"][hreflang="x-default"]'),
-  ).toHaveAttribute("href", /\/lessons\/les-19\/2$/);
+  ).toHaveAttribute("href", /\/lessons\/les-19$/);
   const schemas = await page
     .locator('script[type="application/ld+json"]')
     .allTextContents();
@@ -48,17 +48,17 @@ test("every lesson locale publishes the same reciprocal hreflang cluster", async
 }) => {
   test.setTimeout(60_000);
   const variants = [
-    ["/lessons/les-19/2", /\/lessons\/les-19\/2$/],
-    ["/nl/lessons/les-19/2", /\/nl\/lessons\/les-19\/2$/],
-    ["/fr/lessons/les-19/2", /\/fr\/lessons\/les-19\/2$/],
-    ["/ar/lessons/les-19/2", /\/ar\/lessons\/les-19\/2$/],
+    ["/lessons/les-19/2", /\/lessons\/les-19$/],
+    ["/nl/lessons/les-19/2", /\/nl\/lessons\/les-19$/],
+    ["/fr/lessons/les-19/2", /\/fr\/lessons\/les-19$/],
+    ["/ar/lessons/les-19/2", /\/ar\/lessons\/les-19$/],
   ] as const;
   const alternates = {
-    en: /\/lessons\/les-19\/2$/,
-    "nl-BE": /\/nl\/lessons\/les-19\/2$/,
-    "fr-BE": /\/fr\/lessons\/les-19\/2$/,
-    ar: /\/ar\/lessons\/les-19\/2$/,
-    "x-default": /\/lessons\/les-19\/2$/,
+    en: /\/lessons\/les-19$/,
+    "nl-BE": /\/nl\/lessons\/les-19$/,
+    "fr-BE": /\/fr\/lessons\/les-19$/,
+    ar: /\/ar\/lessons\/les-19$/,
+    "x-default": /\/lessons\/les-19$/,
   } as const;
 
   for (const [path, canonical] of variants) {
@@ -83,12 +83,8 @@ test("Arabic is RTL and internal links retain the locale prefix", async ({
 
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await expect(page.locator('a[href="/ar/lessons/les-19"]')).toHaveCount(
-    await page.locator('a[href="/ar/lessons/les-19"]').count(),
-  );
-  expect(await page.locator('a[href="/ar/lessons/les-19"]').count()).toBeGreaterThan(
-    0,
-  );
+  await expect(page.locator('a[href="/ar/lessons"]').first()).toBeVisible();
+  await expect(page.locator('a[href="#section-2"]')).toBeAttached();
 });
 
 test("language switch keeps the current lesson page", async ({ page }) => {
@@ -97,7 +93,7 @@ test("language switch keeps the current lesson page", async ({ page }) => {
   await page.getByRole("button", { name: /language/i }).click();
   await page.getByRole("menuitem", { name: /Nederlands/i }).click();
 
-  await expect(page).toHaveURL(/\/nl\/lessons\/les-19\/2$/);
+  await expect(page).toHaveURL(/\/nl\/lessons\/les-19$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
 });
 
@@ -186,11 +182,13 @@ test("navbar uses a stable compact menu without overflow below desktop", async (
     { width: 1024, height: 768 },
     { width: 768, height: 1024 },
     { width: 375, height: 812 },
+    { width: 320, height: 812 },
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/ar/lessons/les-19/2");
 
     await expect(page.getByTestId("site-navbar")).toHaveCSS("height", "75px");
+    await expect(page.getByTestId("navbar-language").getByRole("button")).toBeVisible();
     await expect(
       page.getByTestId("desktop-primary-navigation"),
     ).toBeHidden();
@@ -455,4 +453,20 @@ test("localized lesson route is stable on a mobile RTL viewport", async ({
   expect(errors.filter((error) => /hydration|uncaught|error/i.test(error))).toEqual(
     [],
   );
+});
+
+test("a complete lesson renders every section and redirects retired numbered URLs", async ({ page, request }) => {
+  await page.goto("/lessons/les-19");
+  await expect(page.getByRole("heading", { name: "The basic rule" })).toBeVisible();
+  await expect(page.locator("[data-lesson-page]")).toHaveCount(2);
+  await expect(page.locator("#section-2")).toContainText("Applying the rule");
+  await page.locator('a[href="#section-2"]').click();
+  await expect(page).toHaveURL(/\/lessons\/les-19#section-2$/);
+  for (const prefix of ["", "/nl", "/fr", "/ar"]) {
+    for (const number of [2, 8]) {
+      const response = await request.get(`${prefix}/lessons/les-19/${number}?source=legacy`, { maxRedirects: 0 });
+      expect(response.status()).toBe(308);
+      expect(response.headers().location).toBe(`${prefix}/lessons/les-19?source=legacy`);
+    }
+  }
 });

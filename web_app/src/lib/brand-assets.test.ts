@@ -135,7 +135,8 @@ describe("RijVia brand assets", () => {
       expect(source).toContain("object-contain");
     }
 
-    expect(navbarSource).toContain("h-11 w-[132px]");
+    expect(navbarSource).toContain("h-11");
+    expect(navbarSource).toContain("sm:w-[132px]");
     expect(footerSource).toContain("h-[60px] w-[180px]");
   });
 });

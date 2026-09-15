@@ -81,7 +81,7 @@ export function FocusedExamShell({
                   </span>
                 </div>
               ) : null}
-              <div className={cn("flex min-w-0 items-center justify-center px-1.5 font-black tabular-nums text-foreground", compactInformationBar ? "text-[13px] sm:text-sm" : "text-sm sm:text-base")}>
+              <div data-testid="exam-question-counter" aria-live="polite" aria-atomic="true" dir="ltr" className={cn("flex min-w-0 items-center justify-center px-1.5 font-black tabular-nums text-foreground", compactInformationBar ? "text-[13px] sm:text-sm" : "text-sm sm:text-base")}>
                 {counter}
               </div>
             </div>

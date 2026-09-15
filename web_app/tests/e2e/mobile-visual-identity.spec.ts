@@ -1577,11 +1577,11 @@ test.describe("RijVia mobile visual identity", () => {
     expect(pageErrors).toEqual([]);
   });
 
-  test("mobile theory counter advances once after timeout and once after Next in every locale", async ({
+  test("theory counter on mobile and desktop advances once after timeout and once after Next in every locale", async ({
     context,
     page,
   }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(240_000);
     await seedCookieConsent(page);
     await installAuthenticatedSession(context, page);
 
@@ -1589,7 +1589,7 @@ test.describe("RijVia mobile visual identity", () => {
       examId: 42,
       startedAt: "2026-08-20T00:00:00Z",
       expiresAt: "2026-08-20T01:00:00Z",
-      questions: [1, 2, 3, 4].map((questionId) => ({
+      questions: [4, 2, 1, 3].map((questionId) => ({
         questionId,
         questionOrder: questionId,
         questionTextEn: `Question ${questionId}`,
@@ -1619,12 +1619,13 @@ test.describe("RijVia mobile visual identity", () => {
       fulfillJson(route, { hasActiveExam: true, activeExam: exam }),
     );
 
-    for (const locale of locales) {
-      await page.setViewportSize({ width: 320, height: 800 });
+    for (const [locale, width] of [["en", 1280], ["ar", 320], ["nl", 320], ["fr", 1280]] as const) {
+      await page.setViewportSize({ width, height: 800 });
       await navigate(page, localizedPath("/exam/42", locale));
 
       const status = page.getByTestId("exam-status-card");
       await expect(status.getByText("1 / 4", { exact: true })).toBeVisible();
+      await expect(page.getByTestId("exam-question-title")).toHaveText(locale === "ar" ? "السؤال 1" : locale === "nl" ? "Vraag 1" : "Question 1");
 
       await expect
         .poll(
@@ -1635,10 +1636,7 @@ test.describe("RijVia mobile visual identity", () => {
         .toBe("2 / 4");
 
       await page.getByTestId("exam-option-card").first().click();
-      const nextButton = page
-        .getByTestId("exam-actions")
-        .locator("button")
-        .last();
+      const nextButton = page.getByTestId("exam-next");
       await expect(nextButton).toBeEnabled();
       await nextButton.click();
 
@@ -1651,11 +1649,106 @@ test.describe("RijVia mobile visual identity", () => {
         bodyWidth: document.body.scrollWidth,
       }));
       expect(widths).toEqual({
-        viewport: 320,
-        documentWidth: 320,
-        bodyWidth: 320,
+        viewport: width,
+        documentWidth: width,
+        bodyWidth: width,
       });
     }
+  });
+
+
+  test("theory timer starts after slow exam data arrives and actions stay separated", async ({ context, page }) => {
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+    await page.clock.install();
+    const browserErrors: string[] = [];
+    page.on("pageerror", (error) => browserErrors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") browserErrors.push(message.text());
+    });
+    let releaseExam!: () => void;
+    const pendingExam = new Promise<void>((resolve) => { releaseExam = resolve; });
+    const exam = {
+      examId: 42,
+      startedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 750000).toISOString(),
+      questions: [1, 2, 3].map((id) => ({
+        questionId: id, questionOrder: id,
+        questionTextAr: "كيف تتصرف عند الاقتراب من هذا التقاطع؟",
+        questionTextEn: "How should you approach this junction?",
+        difficultyLevel: "MEDIUM", imageUrl: ["/images/logo.png", "/icons/icon-maskable-192.png", "/icons/icon-maskable-512.png"][id - 1],
+        options: [1, 2, 3].map((n) => ({
+          optionId: id * 10 + n,
+          optionTextAr: ["أخفف السرعة وأراقب الطريق.", "أواصل السير بحذر.", "أعطي الأولوية عند اللزوم."][n - 1],
+          optionTextEn: ["Slow down and watch the road.", "Continue carefully.", "Give way when required."][n - 1],
+        })),
+      })),
+    };
+    await page.route("**/api/proxy/exams/simulations/active", async (route) => {
+      await pendingExam;
+      await fulfillJson(route, { hasActiveExam: true, activeExam: exam });
+    });
+    const requestedImages: string[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (url.pathname === "/_next/image") requestedImages.push(url.searchParams.get("url") ?? "");
+    });
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto("/ar/exam/42", { waitUntil: "domcontentloaded" });
+    await page.clock.runFor(20000);
+    releaseExam();
+    await expect.poll(async () => ({
+      counter: await page.getByTestId("exam-question-counter").allTextContents(),
+      errors: browserErrors,
+    }), { timeout: 10000 }).toEqual({ counter: ["1 / 3"], errors: [] });
+    await expect(page.getByTestId("exam-timer-slot")).toContainText("15s");
+    await expect.poll(() => requestedImages).toContain("/icons/icon-maskable-192.png");
+    expect(requestedImages).not.toContain("/icons/icon-maskable-512.png");
+    await page.evaluate(() => document.fonts.ready);
+    const layout = await page.evaluate(() => {
+      const card = document.querySelector('[data-testid="exam-main-card"]')!;
+      const next = document.querySelector('[data-testid="exam-next"]')!;
+      const actions = document.querySelector('[data-testid="exam-actions"]')!;
+      const options = Array.from(document.querySelectorAll('[data-testid="exam-option-card"]'));
+      return {
+        nextInside: card.contains(next),
+        actionsOutside: !card.contains(actions),
+        actionsCount: actions.children.length,
+        separator: parseFloat(getComputedStyle(actions).borderTopWidth),
+        gap: actions.getBoundingClientRect().top - card.getBoundingClientRect().bottom,
+        answerBottom: Math.max(...options.map((option) => option.getBoundingClientRect().bottom)),
+        viewport: innerHeight,
+      };
+    });
+    expect(layout.nextInside).toBe(true);
+    expect(layout.actionsOutside).toBe(true);
+    expect(layout.actionsCount).toBe(2);
+    expect(layout.separator).toBeGreaterThan(0);
+    expect(layout.gap).toBeGreaterThan(0);
+    expect(layout.answerBottom).toBeLessThanOrEqual(layout.viewport);
+    await page.clock.runFor(14000);
+    await expect(page.getByTestId("exam-question-counter")).toHaveText("1 / 3");
+    await page.clock.runFor(1000);
+    await expect(page.getByTestId("exam-question-counter")).toHaveText("2 / 3");
+  });
+
+  test("practice catalog appears before slow learner progress", async ({ context, page }) => {
+    await seedCookieConsent(page);
+    await installAuthenticatedSession(context, page);
+    await page.route("**/api/proxy/traffic-signs", (route) =>
+      fulfillJson(route, [trafficSignCatalogFixture]),
+    );
+    let releaseProgress!: () => void;
+    const pendingProgress = new Promise<void>((resolve) => { releaseProgress = resolve; });
+    await page.route("**/api/proxy/sign-quiz/user-progress", async (route) => {
+      await pendingProgress;
+      await fulfillJson(route, []);
+    });
+    await page.goto("/ar/practice", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("practice-category-card").first()).toBeVisible();
+    await expect(page.getByTestId("practice-category-progress-value").first()).toHaveText("…");
+    releaseProgress();
+    await expect(page.getByTestId("practice-category-progress-value").first()).toHaveText("0%");
   });
 
   test("dashboard statistic cards use a consistent mobile content order", async ({

@@ -1,3 +1,5 @@
+import { getLessonSearchCopy } from "@/lib/learning-seo-copy";
+
 type LessonKeywordSupportProps = Readonly<{
   lessonCode: string;
   locale: string;
@@ -72,10 +74,6 @@ const LESSON_KEYWORD_COPY: Record<string, readonly [string, string]> = {
     "مهارة التجاوز لا تُبنى بالحفظ وحده، ولهذا من المفيد تدريبها تدريجيًا خلال فترة التدريب الإلزامية قبل الامتحان العملي وفي ظروف آمنة.",
     "استفد من فترة التدريب الإلزامية قبل الامتحان العملي لترسيخ خطوات التجاوز التي يشرحها هذا الدرس، مع التركيز على الملاحظة والتوقيت والمسافة.",
   ],
-  "les-17": [
-    "أماكن منع التجاوز من النقاط التي تحتاج فهمًا دقيقًا عند مراجعة الأخطاء الخطيرة في امتحان السياقة النظري، لأن السؤال قد يختبر قدرتك على قراءة الموقف لا حفظ العبارة.",
-    "عندما تراجع الأخطاء الخطيرة في امتحان السياقة النظري، عد إلى حالات منع التجاوز هنا وحلل سبب المنع في كل مثال قبل اختيار الإجابة.",
-  ],
   "les-18": [
     "إشارات الشرطة والأشخاص المخولين من القواعد التي تحتاج إجابة دقيقة أثناء التحضير للوصول إلى نقطة النجاح في امتحان السياقة النظري بلجيكا.",
     "لا تجعل نقطة النجاح في امتحان السياقة النظري بلجيكا هدفًا عدديًا فقط؛ استخدم هذا الدرس لإتقان ترتيب الأوامر والإشارات وفهم الموقف بسرعة.",
@@ -130,11 +128,8 @@ export default function LessonKeywordSupport({
   lessonCode,
   locale,
 }: LessonKeywordSupportProps) {
-  if (locale !== "ar") {
-    return null;
-  }
-
-  const paragraphs = LESSON_KEYWORD_COPY[lessonCode];
+  const searchCopy = getLessonSearchCopy(lessonCode, locale);
+  const paragraphs = searchCopy?.paragraphs ?? (locale === "ar" ? LESSON_KEYWORD_COPY[lessonCode] : undefined);
   if (!paragraphs) {
     return null;
   }
@@ -143,7 +138,7 @@ export default function LessonKeywordSupport({
 
   return (
     <section
-      dir="rtl"
+      dir={locale === "ar" ? "rtl" : "ltr"}
       aria-labelledby={headingId}
       className="container mx-auto px-4 pb-8"
     >
@@ -152,7 +147,7 @@ export default function LessonKeywordSupport({
           id={headingId}
           className="text-lg font-black tracking-tight text-foreground sm:text-xl"
         >
-          مراجعة مرتبطة بموضوع الدرس
+          {searchCopy?.heading ?? "مراجعة مرتبطة بموضوع الدرس"}
         </h2>
         <div className="mt-3 space-y-3 text-sm leading-7 text-muted-foreground sm:text-base">
           {paragraphs.map((paragraph) => (

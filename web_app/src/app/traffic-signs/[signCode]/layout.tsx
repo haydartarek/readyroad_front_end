@@ -118,6 +118,8 @@ export default async function SignLayout({
     {
       "@context": "https://schema.org",
       "@type": "LearningResource",
+      "@id": `${canonical}#learning-resource`,
+      mainEntityOfPage: canonical,
       name: `${sign.signCode}: ${copy.name}`,
       description,
       url: canonical,

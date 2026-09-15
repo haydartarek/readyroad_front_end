@@ -2,7 +2,7 @@
 
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
 import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
@@ -36,6 +36,7 @@ import {
 
 /** Seconds per question from the shared Theory Exam timing contract. */
 const QUESTION_TIME = EXAM_RULES.QUESTION_TIME_SECONDS;
+const QUESTION_IMAGE_SIZES = "(max-width: 1023px) calc(100vw - 48px), 700px";
 
 interface Question {
   id: number;
@@ -57,7 +58,6 @@ interface Question {
 
 interface ExamData {
   id: number;
-  createdAt: string;
   expiresAt: string;
   questions: Question[];
 }
@@ -91,12 +91,10 @@ interface BackendExamData {
 export function normalizeExamData(backendData: BackendExamData): ExamData {
   return {
     id: backendData.examId,
-    createdAt:
-      backendData.startedAt ||
-      backendData.startTime ||
-      new Date().toISOString(),
     expiresAt: backendData.expiresAt,
-    questions: (backendData.questions ?? []).map((q) => ({
+    questions: [...(backendData.questions ?? [])]
+      .sort((a, b) => (a.questionOrder ?? Number.MAX_SAFE_INTEGER) - (b.questionOrder ?? Number.MAX_SAFE_INTEGER))
+      .map((q) => ({
       id: q.questionId,
       questionTextEn: q.questionTextEn,
       questionTextAr: q.questionTextAr,
@@ -504,33 +502,45 @@ export default function ExamQuestionsPage() {
     handleNextOrSubmitRef.current = handleNextOrSubmit;
   }, [handleNextOrSubmit]);
 
-  // ── Per-question 15-second countdown ───────────────────
+  // Start only when a question is available. Keep transitions outside a state
+  // updater: React may replay updater functions, while navigation must run once.
   useEffect(() => {
-    if (isSubmitting || sessionEnded) {
-      if (timerRef.current) clearInterval(timerRef.current);
+    if (isLoading || !presentedQuestionId || isSubmitting || sessionEnded) {
       return;
     }
-    // Reset timer whenever the question changes
     setQuestionTimeLeft(QUESTION_TIME);
     questionStartedAtRef.current = Date.now();
-    if (timerRef.current) clearInterval(timerRef.current);
+    const deadline = questionStartedAtRef.current + QUESTION_TIME * 1000;
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setQuestionTimeLeft(remaining);
+      if (remaining === 0) {
+        clearInterval(timer);
+        void handleNextOrSubmitRef.current("timeout");
+      }
+    }, 250);
+    timerRef.current = timer;
+    return () => clearInterval(timer);
+  }, [isLoading, presentedQuestionId, isSubmitting, sessionEnded, timerRestartKey]);
 
-    timerRef.current = setInterval(() => {
-      setQuestionTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Time's up — auto-advance
-          clearInterval(timerRef.current!);
-          void handleNextOrSubmitRef.current("timeout");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [currentQuestionIndex, isSubmitting, sessionEnded, timerRestartKey]);
+  const nextImageUrl = convertToPublicImageUrl(
+    examData?.questions[currentQuestionIndex + 1]?.imageUrl,
+  );
+  useEffect(() => {
+    if (!nextImageUrl || isSubmitting || sessionEnded) return;
+    const { props } = getImageProps({
+      src: nextImageUrl,
+      alt: "",
+      fill: true,
+      sizes: QUESTION_IMAGE_SIZES,
+    });
+    const image = new window.Image();
+    image.fetchPriority = "low";
+    image.decoding = "async";
+    image.sizes = props.sizes ?? "";
+    image.srcset = props.srcSet ?? "";
+    image.src = props.src;
+  }, [nextImageUrl, isSubmitting, sessionEnded]);
 
   const handleExitStay = useCallback(() => {
     pendingNavigation.current = null;
@@ -649,12 +659,12 @@ export default function ExamQuestionsPage() {
         <>
           <div
             data-testid="exam-actions"
-            className="grid grid-cols-1 gap-2 pb-3 pt-1 sm:grid-cols-3"
+            className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-5 pb-3"
           >
           <Button
             variant="destructive"
             size="lg"
-            className="order-3 w-full sm:order-1"
+            className="w-full whitespace-normal px-3"
             onClick={() => {
               pendingNavigation.current = "/exam";
               setShowExitDialog(true);
@@ -665,7 +675,7 @@ export default function ExamQuestionsPage() {
           <Button
             variant="outline"
             size="lg"
-            className="order-2 w-full"
+            className="w-full whitespace-normal px-3"
             asChild
           >
             <Link href="/contact">
@@ -673,24 +683,7 @@ export default function ExamQuestionsPage() {
               {t("practice_exam.report_question")}
             </Link>
           </Button>
-          <Button
-            size="lg"
-            onClick={() => void handleNextOrSubmit("answered")}
-            disabled={
-              isSubmitting || !finalizedQuestionIds.has(currentQuestion.id)
-            }
-            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
-          >
-            {isLastQuestion
-              ? t("practice_exam.submit_btn")
-              : t("practice_exam.next_btn")}
-            {!isLastQuestion &&
-              (isRTL ? (
-                <ArrowLeft className="h-4 w-4" />
-              ) : (
-                <ArrowRight className="h-4 w-4" />
-              ))}
-          </Button>
+
           </div>
           <ExitConfirmDialog
             open={showExitDialog}
@@ -703,6 +696,28 @@ export default function ExamQuestionsPage() {
     >
       <FocusedQuestionCard
         compactOptionGap
+        compactMobile
+        footer={
+          <Button
+            data-testid="exam-next"
+            size="lg"
+            onClick={() => void handleNextOrSubmit("answered")}
+            disabled={
+              isSubmitting || !finalizedQuestionIds.has(currentQuestion.id)
+            }
+            className="w-full shadow-md shadow-primary/20"
+          >
+            {isLastQuestion
+              ? t("practice_exam.submit_btn")
+              : t("practice_exam.next_btn")}
+            {!isLastQuestion &&
+              (isRTL ? (
+                <ArrowLeft className="h-4 w-4" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              ))}
+          </Button>
+        }
         difficultyBadge={
           difficultyLabel ? (
             <span className="inline-flex min-h-8 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-black text-primary">
@@ -712,7 +727,7 @@ export default function ExamQuestionsPage() {
         }
         media={
           questionImageUrl ? (
-            <ExamQuestionImageFrame variant="theory">
+            <ExamQuestionImageFrame variant="theory" className="max-lg:max-h-[28svh] max-lg:p-1.5">
               {failedImageUrl === questionImageUrl ? (
                 <div
                   role="status"
@@ -726,9 +741,10 @@ export default function ExamQuestionsPage() {
                   src={questionImageUrl}
                   alt={t("practice.question_image_alt")}
                   fill
-                  sizes="(max-width: 768px) 100vw, 640px"
+                  sizes={QUESTION_IMAGE_SIZES}
                   className="object-contain"
-                  priority
+                  loading="eager"
+                  fetchPriority="high"
                   onError={() => {
                     console.error(
                       "Failed to load theoretical question image",

@@ -272,6 +272,76 @@ export function getLocalizedTrafficSignSeo(
   };
 }
 
+type LessonSearchCopy = Readonly<{
+  title: string;
+  description: string;
+  heading: string;
+  paragraphs: readonly string[];
+}>;
+
+// Editorial search summaries; lesson content and titles remain in the public catalog.
+const LESSON_SEARCH_COPY: Record<string, Partial<Record<SiteLocale, LessonSearchCopy>>> = {
+  "les-5": {
+    "nl": {
+      "title": "Rijbaan en rijstrook: verschil en wegmarkeringen | RijVia",
+      "description": "Wat is een rijbaan en wat is een rijstrook? Leer het verschil, herken wegmarkeringen en bereid je voor op het Belgische theorie-examen.",
+      "heading": "Wat is het verschil tussen een rijbaan en een rijstrook?",
+      "paragraphs": [
+        "De rijbaan is het deel van de openbare weg dat voor het verkeer van voertuigen in het algemeen is ingericht. Een rijstrook is een in de lengterichting afgebakend deel van die rijbaan, gemarkeerd met witte doorlopende of onderbroken lijnen. Eén rijbaan kan dus meerdere rijstroken hebben.",
+        "Een weg zonder rijstrookmarkeringen kan wel een rijbaan zijn. Kijk bij een examenvraag afzonderlijk naar de rijbaan, de gemarkeerde rijstroken en de pijlen of lijnen die aangeven waar je mag rijden. Deze les legt de wegindeling en de markeringen uit."
+      ]
+    }
+  },
+  "les-9": {
+    "fr": {
+      "title": "Route pour automobiles ou autoroute : différences | RijVia",
+      "description": "Quelle différence entre route pour automobiles et autoroute en Belgique ? Comparez les panneaux F9 et F5, les accès et les règles à reconnaître.",
+      "heading": "Quelle différence entre route pour automobiles et autoroute ?",
+      "paragraphs": [
+        "En Belgique, le panneau F9 annonce une route pour automobiles et le panneau F5 une autoroute. Ce sont deux catégories de routes différentes : la présence du panneau F9 ne signifie donc pas que toutes les règles propres à l’autoroute s’appliquent.",
+        "Une route pour automobiles peut comporter des carrefours à niveau ou des feux. Pour déterminer la vitesse autorisée, l’accès et le comportement à adopter, vérifiez le type de route et la signalisation présente. Comparez ces situations dans les sections de cette leçon."
+      ]
+    }
+  },
+  "les-6": {
+    "en": {
+      "title": "Belgian Traffic Rules: Lights, Safety and Accidents | RijVia",
+      "description": "Study Belgium's general traffic rules: using vehicle lights, driving safely, alcohol risks and what to do after an accident. Prepare for your theory exam.",
+      "heading": "Which general traffic rules should you study in Belgium?",
+      "paragraphs": [
+        "General traffic rules connect safe driving with the condition of your vehicle and the situation on the road. This lesson covers the basic rules, correct use of lights, alcohol and driving, and the steps to take after an accident.",
+        "Use each section to connect the rule to a practical situation. For example, changing visibility affects the lights you need, while an accident requires you to think about immediate safety and assistance. Read the full explanation before practising related questions."
+      ]
+    }
+  },
+  "les-12": {
+    "nl": {
+      "title": "Maximaal toegelaten massa (MTM): uitleg en voorbeelden | RijVia",
+      "description": "Wat betekent maximaal toegelaten massa (MTM)? Leer het verschil met de werkelijke massa en hoe inzittenden en lading meetellen bij het theorie-examen.",
+      "heading": "Wat betekent maximaal toegelaten massa (MTM)?",
+      "paragraphs": [
+        "De maximaal toegelaten massa, afgekort MTM, is de toegelaten bovengrens voor de massa van het beladen voertuig. De werkelijke massa is wat het voertuig op dat moment weegt, met de aanwezige inzittenden en lading. De MTM verandert dus niet telkens wanneer je iets in- of uitlaadt.",
+        "Een voertuig kan in werkelijkheid minder wegen dan zijn MTM. Lees daarom bij een examenvraag zorgvuldig of het gaat over de toegelaten maximumwaarde of over de actuele massa. De betekenis van het verkeersbord en een eventueel onderbord bepaalt welke waarde je moet beoordelen."
+      ]
+    }
+  },
+  "les-17": {
+    "ar": {
+      "title": "حالات منع التجاوز في بلجيكا: العلامات والرؤية | RijVia",
+      "description": "تعلّم حالات منع التجاوز في بلجيكا: ضعف الرؤية وعلامات C35 وC39 والخطوط والتقاطعات، مع شرح الشروط والاستثناءات استعدادًا للامتحان النظري.",
+      "heading": "ما حالات منع التجاوز في بلجيكا؟",
+      "paragraphs": [
+        "من حالات منع التجاوز من اليسار عدم القدرة على رؤية المركبات القادمة في الاتجاه المعاكس من مسافة كافية لإتمام المناورة بأمان. لذلك تُقيَّم الرؤية الفعلية عند المنعطفات والمرتفعات، ولا يكفي أن يبدو المسار المقابل خاليًا للحظة.",
+        "انتبه أيضًا إلى علامتَي C35 وC39، وإلى الخطوط الأرضية والتقاطعات والمعابر. يختلف نطاق المنع بحسب العلامة ونوع المركبة والموقف؛ اقرأ شروط كل حالة واستثناءاتها في الدرس قبل اختيار الإجابة، ولا تفترض أن جميع حالات التجاوز تخضع للقاعدة نفسها."
+      ]
+    }
+  }
+};
+
+export function getLessonSearchCopy(lessonCode: string, locale: string) {
+  return LESSON_SEARCH_COPY[lessonCode]?.[locale as SiteLocale];
+}
+
 export function getLocalizedLessonSeo(
   lesson: LessonDetail,
   locale: SiteLocale,
@@ -284,12 +354,13 @@ export function getLocalizedLessonSeo(
   }[locale];
   const resource = LESSON_RESOURCE_COPY[locale];
   const title = localized.title || lesson.titleEn || lesson.lessonCode;
-  const description = localized.description || lesson.descriptionEn;
+  const searchCopy = getLessonSearchCopy(lesson.lessonCode, locale);
+  const description = searchCopy?.description || localized.description || lesson.descriptionEn;
 
   return {
     name: title,
     description,
-    title: `${title} | ${resource.contextLabel} | RijVia`,
+    title: searchCopy?.title || `${title} | ${resource.contextLabel} | RijVia`,
     fallbackDescription: `${resource.contextLabel}: ${title}.`,
     imageAlt: `${title} | RijVia`,
     ...resource,

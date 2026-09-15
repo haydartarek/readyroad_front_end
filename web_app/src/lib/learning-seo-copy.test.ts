@@ -1,5 +1,6 @@
 import {
   getLessonsSeoCopy,
+  getLessonSearchCopy,
   getLocalizedLessonSeo,
   getLocalizedTrafficSignSeo,
   getTrafficSignsSeoCopy,
@@ -57,5 +58,28 @@ describe("learning SEO copy", () => {
     expect(copy.name).toBe("الأولوية من اليمين");
     expect(copy.description).toBe("درس عربي");
     expect(copy.title).toContain("قواعد السياقة البلجيكية");
+  });
+});
+
+describe("lesson search intent summaries", () => {
+  it.each([
+    ["les-5", "nl", "rijstrook"],
+    ["les-9", "fr", "autoroute"],
+    ["les-6", "en", "Traffic Rules"],
+    ["les-12", "nl", "MTM"],
+    ["les-17", "ar", "منع التجاوز"],
+  ] as const)("uses the selected summary for %s in %s without replacing the catalog name", (lessonCode, locale, query) => {
+    const copy = getLocalizedLessonSeo({ ...lesson, lessonCode }, locale);
+    expect(copy.title).toContain(query);
+    expect(copy.title.length).toBeLessThanOrEqual(70);
+    expect(copy.description.length).toBeLessThanOrEqual(165);
+    expect(copy.name).toBe({ en: lesson.titleEn, nl: lesson.titleNl, fr: lesson.titleFr, ar: lesson.titleAr }[locale]);
+    expect(getLessonSearchCopy(lessonCode, locale)?.paragraphs.length).toBeGreaterThan(0);
+  });
+
+  it("keeps the existing catalog metadata for other lesson and locale combinations", () => {
+    expect(getLessonSearchCopy("les-5", "ar")).toBeUndefined();
+    expect(getLessonSearchCopy("missing-lesson", "nl")).toBeUndefined();
+    expect(getLocalizedLessonSeo({ ...lesson, lessonCode: "les-5" }, "ar").description).toBe("درس عربي");
   });
 });

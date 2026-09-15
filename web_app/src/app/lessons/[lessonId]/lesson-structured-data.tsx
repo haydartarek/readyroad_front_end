@@ -49,13 +49,24 @@ export default async function LessonStructuredData({
     {
       "@context": "https://schema.org",
       "@type": "LearningResource",
+      "@id": `${canonical}#lesson`,
+      mainEntityOfPage: canonical,
       name: copy.name,
       description,
       url: canonical,
       inLanguage: locale,
       learningResourceType: copy.learningResourceType,
       educationalUse: copy.educationalUse,
-      timeRequired: `PT${lesson.estimatedMinutes}M`,
+      timeRequired: lesson.estimatedMinutes > 0 ? `PT${lesson.estimatedMinutes}M` : undefined,
+      hasPart: [...lesson.pages]
+        .sort((a, b) => a.pageNumber - b.pageNumber)
+        .map((page) => ({
+          "@type": "WebPageElement",
+          "@id": `${canonical}#section-${page.pageNumber}`,
+          url: `${canonical}#section-${page.pageNumber}`,
+          name: { en: page.titleEn, nl: page.titleNl, fr: page.titleFr, ar: page.titleAr }[locale],
+          position: page.pageNumber,
+        })),
       isPartOf: { "@id": `${APP_URL}/#website` },
     },
   ];

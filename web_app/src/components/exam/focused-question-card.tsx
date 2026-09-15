@@ -25,6 +25,8 @@ interface FocusedQuestionCardProps {
   options: FocusedQuestionOption[];
   feedback?: ReactNode;
   compactOptionGap?: boolean;
+  compactMobile?: boolean;
+  footer?: ReactNode;
 }
 
 export function FocusedQuestionCard({
@@ -36,12 +38,15 @@ export function FocusedQuestionCard({
   options,
   feedback,
   compactOptionGap = false,
+  compactMobile = false,
+  footer,
 }: FocusedQuestionCardProps) {
   return (
     <div
       data-testid="exam-question-layout"
       className={cn(
         "grid min-w-0 gap-3 px-3 py-3 sm:px-5 sm:py-4 lg:gap-6 lg:px-6 lg:py-5",
+        compactMobile && "max-lg:gap-2 max-lg:px-2.5 max-lg:py-2",
         media &&
           "lg:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.05fr)] lg:items-start",
       )}
@@ -62,6 +67,7 @@ export function FocusedQuestionCard({
           data-testid="exam-question-title"
           className={cn(
             "mx-auto max-w-3xl break-words text-center text-lg font-black leading-8 text-foreground sm:text-xl md:text-[1.35rem] lg:mx-0 lg:text-start",
+            compactMobile && "max-lg:text-base max-lg:leading-6",
             titleClassName,
           )}
         >
@@ -72,6 +78,7 @@ export function FocusedQuestionCard({
           {options.map((option, index) => (
             <ExamOptionCard
               key={option.key}
+              className={compactMobile ? "max-lg:min-h-11 max-lg:gap-2 max-lg:rounded-xl max-lg:px-2.5 max-lg:py-1.5" : undefined}
               index={index}
               text={option.text}
               disabled={option.disabled}
@@ -81,6 +88,7 @@ export function FocusedQuestionCard({
           ))}
         </div>
 
+        {footer ? <div className="pt-1">{footer}</div> : null}
         {feedback ? <div className="min-w-0 pt-0.5">{feedback}</div> : null}
       </div>
     </div>

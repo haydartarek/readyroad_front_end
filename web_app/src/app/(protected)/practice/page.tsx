@@ -2,7 +2,7 @@
 
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Card,
@@ -85,8 +85,11 @@ export default function PracticePage() {
     ? (language as Lang)
     : "en";
 
-  const [categories, setCategories] = useState<CategoryCardData[]>([]);
-  const [totalSigns, setTotalSigns] = useState(0);
+  const [signs, setSigns] = useState<TrafficSign[]>([]);
+  const [progressList, setProgressList] = useState<SignUserProgress[]>([]);
+  const [isProgressLoading, setIsProgressLoading] = useState(true);
+  const [progressError, setProgressError] = useState(false);
+  const [progressRetryKey, setProgressRetryKey] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
@@ -99,29 +102,67 @@ export default function PracticePage() {
       setIsLoading(true);
       setError(null);
 
-      const [signsResp, progressList] = await Promise.all([
-        apiClient.get<TrafficSign[]>(API_ENDPOINTS.TRAFFIC_SIGNS.LIST),
-        isAuthenticated
-          ? getAllSignProgress()
-          : Promise.resolve<SignUserProgress[]>([]),
-      ]);
-
+      const signsResp = await apiClient.get<TrafficSign[]>(API_ENDPOINTS.TRAFFIC_SIGNS.LIST);
+      if (requestId !== requestIdRef.current) return;
+      setSigns(Array.isArray(signsResp.data) ? signsResp.data : []);
+    } catch (err) {
       if (requestId !== requestIdRef.current) return;
 
-      const allSigns = Array.isArray(signsResp.data) ? signsResp.data : [];
+      logApiError("Failed to load sign practice hub", err);
+      if (isServiceUnavailable(err)) {
+        setServiceUnavailable(true);
+      } else {
+        setError(t("practice.load_error"));
+      }
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    return () => {
+      requestIdRef.current += 1;
+    };
+    // Public catalog data does not change with authentication or UI language.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (isAuthLoading) return;
+    setProgressList([]);
+    setProgressError(false);
+    setIsProgressLoading(isAuthenticated);
+    if (isAuthenticated) {
+      getAllSignProgress()
+        .then((progress) => { if (!cancelled) setProgressList(progress); })
+        .catch((err) => {
+          if (cancelled) return;
+          logApiError("Failed to load practice progress", err);
+          setProgressError(true);
+        })
+        .finally(() => { if (!cancelled) setIsProgressLoading(false); });
+    }
+    return () => { cancelled = true; };
+  }, [isAuthLoading, isAuthenticated, progressRetryKey]);
+
+  const categories = useMemo<CategoryCardData[]>(() => {
       const progressMap = new Map(
         progressList.map((item) => [item.routeCode ?? item.signCode, item]),
       );
 
       const groupedSigns = new Map<string, TrafficSign[]>();
-      allSigns.forEach((sign) => {
+      signs.forEach((sign) => {
         const group = getTrafficSignGroup(sign);
         const current = groupedSigns.get(group) ?? [];
         current.push(sign);
         groupedSigns.set(group, current);
       });
 
-      const categoryCards: CategoryCardData[] = TRAFFIC_SIGN_GROUP_ORDER.map(
+      return TRAFFIC_SIGN_GROUP_ORDER.map(
         (group) => {
           const signs = groupedSigns.get(group) ?? [];
           if (signs.length === 0) {
@@ -149,33 +190,10 @@ export default function PracticePage() {
         },
       ).filter((card): card is CategoryCardData => card !== null);
 
-      if (requestId !== requestIdRef.current) return;
 
-      setCategories(categoryCards);
-      setTotalSigns(categoryCards.reduce((sum, cat) => sum + cat.signCount, 0));
-    } catch (err) {
-      if (requestId !== requestIdRef.current) return;
-
-      logApiError("Failed to load sign practice hub", err);
-      if (isServiceUnavailable(err)) {
-        setServiceUnavailable(true);
-      } else {
-        setError(t("practice.load_error"));
-      }
-    } finally {
-      if (requestId === requestIdRef.current) {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    return () => {
-      requestIdRef.current += 1;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, language]);
+  }, [signs, progressList, lang]);
+  const totalSigns = signs.length;
+  const progressUnavailable = isAuthLoading || isProgressLoading || progressError;
 
   const isRtl = language === "ar";
   const ChevDir = isRtl ? ChevronLeft : ChevronRight;
@@ -260,17 +278,20 @@ export default function PracticePage() {
           />
         )}
 
-        {error && (
+        {(error || progressError) && (
           <Alert
             variant="destructive"
             className="animate-in fade-in-50 duration-300"
           >
             <AlertDescription className="flex items-center justify-between">
-              <span>⚠️ {error}</span>
+              <span>⚠️ {error || t("practice.load_error")}</span>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={fetchData}
+                onClick={() => {
+                  if (error) void fetchData();
+                  if (progressError) setProgressRetryKey((key) => key + 1);
+                }}
                 className="ms-4 gap-1"
               >
                 <RefreshCw className="w-3 h-3" /> {t("practice.retry")}
@@ -444,7 +465,7 @@ export default function PracticePage() {
                               data-testid="practice-category-stat-value"
                               className="mt-1 text-lg font-black text-emerald-800"
                             >
-                              {cat.practiceCompleted}
+                              {progressUnavailable ? "…" : cat.practiceCompleted}
                             </p>
                           </div>
                           <div
@@ -467,7 +488,7 @@ export default function PracticePage() {
                               data-testid="practice-category-stat-value"
                               className="mt-1 text-lg font-black text-amber-800"
                             >
-                              {cat.passedSigns}
+                              {progressUnavailable ? "…" : cat.passedSigns}
                             </p>
                           </div>
                         </div>
@@ -485,7 +506,7 @@ export default function PracticePage() {
                             data-testid="practice-category-progress-value"
                             className={cn("shrink-0", visual.actionTone)}
                           >
-                            {practicePct}%
+                            {progressUnavailable ? "…" : `${practicePct}%`}
                           </span>
                         </div>
                         <div
@@ -493,7 +514,8 @@ export default function PracticePage() {
                           role="progressbar"
                           aria-valuemin={0}
                           aria-valuemax={100}
-                          aria-valuenow={practicePct}
+                          aria-valuenow={progressUnavailable ? undefined : practicePct}
+                          aria-busy={progressUnavailable}
                           className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
                         >
                           <div

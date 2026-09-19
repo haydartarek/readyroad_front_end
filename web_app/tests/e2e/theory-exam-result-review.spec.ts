@@ -178,23 +178,24 @@ for (const [language, content] of Object.entries(localized)) {
       expect(page.url()).toBe(urlBefore);
 
       const header = firstQuestion.getByTestId("result-review-header");
-      const questionCategory = header.getByTestId(
-        "result-review-question-category",
-      );
-      const status = header.getByTestId("result-review-status");
-      const [questionRect, statusRect] = await Promise.all([
-        questionCategory.boundingBox(),
-        status.boundingBox(),
-      ]);
-      expect(questionRect).not.toBeNull();
-      expect(statusRect).not.toBeNull();
+      // Read both positions in one frame: smooth scrolling can move the page
+      // between separate boundingBox calls, even when they run in Promise.all.
+      const readAlignment = () => header.evaluate((element) => {
+        const category = element.querySelector('[data-testid="result-review-question-category"]');
+        const status = element.querySelector('[data-testid="result-review-status"]');
+        if (!category || !status) throw new Error("Review header is incomplete");
+        const categoryRect = category.getBoundingClientRect();
+        const statusRect = status.getBoundingClientRect();
+        return {
+          topDifference: Math.abs(statusRect.top - categoryRect.top),
+          gapBelowCategory: statusRect.top - categoryRect.bottom,
+        };
+      });
 
       if (width === 390) {
-        expect(statusRect!.y).toBeGreaterThanOrEqual(
-          questionRect!.y + questionRect!.height,
-        );
+        await expect.poll(async () => (await readAlignment()).gapBelowCategory).toBeGreaterThanOrEqual(0);
       } else {
-        expect(Math.abs(statusRect!.y - questionRect!.y)).toBeLessThan(8);
+        await expect.poll(async () => (await readAlignment()).topDifference).toBeLessThan(8);
       }
 
       await expect(firstQuestion.getByText(content.selected, { exact: true })).toBeVisible();

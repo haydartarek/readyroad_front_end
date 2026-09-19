@@ -368,6 +368,24 @@ async function navigate(page: Page, pathname: string) {
   throw new Error(`Unable to navigate to ${pathname}`);
 }
 
+async function navigateAuthenticated(page: Page, pathname: string) {
+  // A visible <main> may still be the loading shell. Finish the mocked
+  // session request before measuring or navigating away from this document.
+  const [response, sessionResponse] = await Promise.all([
+    navigate(page, pathname),
+    page.waitForResponse((response) =>
+      new URL(response.url()).pathname === "/api/auth/me" &&
+      response.request().method() === "GET",
+    ),
+  ]);
+  expect(sessionResponse.ok()).toBe(true);
+  expect(await sessionResponse.finished()).toBeNull();
+  await expect(page.getByRole("button", {
+    name: /^(Account menu|Accountmenu|Menu du compte|قائمة الحساب)$/,
+  })).toBeVisible();
+  return response;
+}
+
 async function waitForDocumentContainment(
   page: Page,
   width: number,
@@ -3599,7 +3617,7 @@ test.describe("RijVia mobile visual identity", () => {
     for (const locale of locales) {
       for (const route of protectedRoutes) {
         const pathname = localizedPath(route, locale);
-        const response = await navigate(page, pathname);
+        const response = await navigateAuthenticated(page, pathname);
         expect(response?.status(), pathname).toBeLessThan(400);
         await expect(page.locator("main"), pathname).toBeVisible();
 
@@ -3789,7 +3807,7 @@ test.describe("RijVia mobile visual identity", () => {
     for (const locale of locales) {
       for (const route of protectedRoutes) {
         const pathname = localizedPath(route, locale);
-        const response = await navigate(page, pathname);
+        const response = await navigateAuthenticated(page, pathname);
         expect(response?.status(), pathname).toBeLessThan(400);
         await expect(page.locator("main"), pathname).toBeVisible();
 

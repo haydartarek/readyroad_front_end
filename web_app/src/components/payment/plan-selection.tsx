@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { checkoutRequestId, createCheckout, forgetCheckoutRequest, PAYMENT_PLANS, type PaymentPlan } from "@/services/paymentService";
+import { checkoutRequestId, createCheckout, forgetCheckoutRequest, PAYMENTS_ENABLED, PAYMENT_PLANS, type PaymentPlan } from "@/services/paymentService";
 
 export function PlanSelection() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -17,7 +17,7 @@ export function PlanSelection() {
   const submitting = useRef(false);
 
   async function choose(plan: PaymentPlan) {
-    if (submitting.current) return;
+    if (!PAYMENTS_ENABLED || submitting.current) return;
     if (!isAuthenticated || !user) {
       router.push("/login?returnUrl=%2Fplans");
       return;
@@ -55,7 +55,7 @@ export function PlanSelection() {
             <CardHeader><CardTitle>{t(`payment.plan.${plan}`)}</CardTitle></CardHeader>
             <CardContent>
               <p className="mb-6 text-sm text-muted-foreground">{t("payment.extension")}</p>
-              <Button className="w-full whitespace-normal" disabled={isLoading || busy !== null} onClick={() => void choose(plan)}>
+              <Button className="w-full whitespace-normal" disabled={!PAYMENTS_ENABLED || isLoading || busy !== null} onClick={() => void choose(plan)}>
                 {t(busy === plan ? "payment.opening" : "payment.choose")}
               </Button>
             </CardContent>

@@ -17,6 +17,7 @@ import {
   checkoutRequestId,
   createCheckout,
   forgetCheckoutRequest,
+  PAYMENTS_ENABLED,
   PAYMENT_PLANS,
   type PaymentPlan,
 } from "@/services/paymentService";
@@ -76,6 +77,11 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
   useEffect(() => {
     if (!resumeCheckout || isLoading || submitting.current) return;
+
+    if (!PAYMENTS_ENABLED) {
+      router.replace("/#pricing");
+      return;
+    }
 
     if (!isAuthenticated || !user) {
       router.replace("/#pricing");
@@ -148,7 +154,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
   ]);
 
   async function choose(plan: PaymentPlan) {
-    if (submitting.current) return;
+    if (!PAYMENTS_ENABLED || submitting.current) return;
 
     if (!isAuthenticated || !user) {
       try {
@@ -386,7 +392,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
                 <button
                   type="button"
-                  disabled={isLoading || busy !== null}
+                  disabled={!PAYMENTS_ENABLED || isLoading || busy !== null}
                   onClick={() => void choose(plan)}
                   aria-label={`${t("home.pricing.choose")}: ${t(
                     `payment.plan.${plan}`,

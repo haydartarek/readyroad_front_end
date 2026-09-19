@@ -1,6 +1,8 @@
 import { apiClient } from "@/lib/api";
 import { isValidLanguage } from "@/lib/messages";
 
+export const PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED !== "false";
+
 export const PAYMENT_PLANS = ["RIJVIA_3_DAYS", "RIJVIA_1_WEEK", "RIJVIA_4_WEEKS"] as const;
 export type PaymentPlan = (typeof PAYMENT_PLANS)[number];
 export interface PurchaseStatus {
@@ -12,6 +14,7 @@ export interface PurchaseStatus {
 export interface CheckoutResult { purchaseId: string; checkoutUrl: string }
 
 export async function createCheckout(plan: PaymentPlan, clientRequestId: string, locale: string) {
+  if (!PAYMENTS_ENABLED) throw new Error("Payments are disabled");
   if (!isValidLanguage(locale)) throw new Error("Unsupported checkout locale");
   const response = await apiClient.post<CheckoutResult>("/checkout", { plan, clientRequestId }, {
     headers: { "Accept-Language": locale },
@@ -27,6 +30,7 @@ export async function getPurchaseStatus(id: string, signal?: AbortSignal) {
 }
 
 export async function resumeCheckout(id: string) {
+  if (!PAYMENTS_ENABLED) throw new Error("Payments are disabled");
   if (!isPurchaseId(id)) {
     throw new Error("Invalid purchase ID");
   }

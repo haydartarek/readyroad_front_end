@@ -209,9 +209,11 @@ test.describe("Footer bottom row", () => {
     await languageTrigger.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("listbox")).toBeVisible();
-    await page.getByRole("option", { name: "العربية" }).focus();
+    const arabicOption = page.getByRole("option", { name: "العربية" });
+    await expect(arabicOption).toBeVisible();
+
     await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("ArrowUp");
+    await expect(arabicOption).toBeFocused();
     await page.keyboard.press("Enter");
 
     await expect(page).toHaveURL("/ar/about");

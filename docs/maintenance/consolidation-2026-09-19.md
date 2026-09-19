@@ -17,6 +17,7 @@
 - Payment mocks now return a complete typed Axios response, fixing TypeScript validation without casts or application changes.
 - Protected layout audits wait for the mocked session response and the authenticated account control, rather than measuring the loading shell and navigating away during session resolution.
 - Result-review alignment reads both DOM rectangles in one browser frame, so smooth scrolling cannot distort separate measurements. Existing geometry tolerances and timeouts are unchanged.
+- Web CI exposed an unstable translation-function mock in the admin-user page test: every render recreated `t`, retriggering the fetch effect. The mock now matches the provider's stable callback, with an assertion that the initial list and summary are fetched exactly once. Its targeted CI/coverage rerun passed both cases.
 
 ## Recovery archive
 

@@ -2,9 +2,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import AdminUsersPage from "./page";
 import apiClient from "@/lib/api";
 
-jest.mock("@/contexts/language-context", () => ({
-  useLanguage: () => ({ t: (key: string) => key, language: "en" }),
-}));
+jest.mock("@/contexts/language-context", () => {
+  // Match the provider's stable translation callback: a new function on every
+  // render retriggers the page's fetch effect and keeps it in a loading loop.
+  const t = (key: string) => key;
+  return { useLanguage: () => ({ t, language: "en" }) };
+});
 
 jest.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: { username: "admin" } }),
@@ -115,5 +118,6 @@ describe("Admin user creation", () => {
         "/admin/users/42/learning",
       );
     });
+    expect(mockedGet).toHaveBeenCalledTimes(2);
   });
 });

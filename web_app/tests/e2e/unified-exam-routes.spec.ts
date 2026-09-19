@@ -198,38 +198,41 @@ async function expectSingleVisibleText(page: Page, text: string) {
 }
 
 for (const [locale, labels] of Object.entries(locales)) {
-  test(`${locale} traffic-sign and random exams share the responsive shell`, async ({
-    page,
-  }) => {
-    test.setTimeout(90_000);
-    await prepare(page);
-
-    for (const viewport of [
-      { width: 320, height: 800 },
-      { width: 360, height: 800 },
-      { width: 375, height: 812 },
-      { width: 390, height: 844 },
-      { width: 393, height: 852 },
-      { width: 414, height: 896 },
-      { width: 430, height: 932 },
-      { width: 768, height: 1024 },
-      { width: 1024, height: 768 },
-      { width: 1280, height: 800 },
-      { width: 1366, height: 768 },
-      { width: 1440, height: 900 },
-      { width: 1536, height: 864 },
-      { width: 1920, height: 1080 },
-    ]) {
-      await page.setViewportSize(viewport);
-
-      await page.goto(`${labels.prefix}/traffic-signs/A1b/exam/1`);
+  for (const kind of ["traffic-sign", "random"] as const) {
+    test(`${locale} traffic-sign and random exams share the responsive shell: ${kind}`, async ({
+      page,
+    }) => {
+      await prepare(page);
+      await page.clock.install();
+      await page.setViewportSize({ width: 320, height: 800 });
+      await page.goto(`${labels.prefix}${kind === "traffic-sign" ? "/traffic-signs/A1b/exam/1" : "/practice/random"}`, { waitUntil: "domcontentloaded" });
+      if (kind === "random") await page.getByRole("button", { name: labels.start }).click();
       await expectSingleVisibleText(page, labels.difficulty);
-      await expectUnifiedLayout(page, viewport.width);
+      // Layout coverage must not race the separate question countdown tests.
+      await page.clock.pauseAt(new Date(Date.now() + 1000));
 
-      await page.goto(`${labels.prefix}/practice/random`);
-      await page.getByRole("button", { name: labels.start }).click();
-      await expectSingleVisibleText(page, labels.difficulty);
-      await expectUnifiedLayout(page, viewport.width);
-    }
-  });
+      for (const viewport of [
+        { width: 320, height: 800 },
+        { width: 360, height: 800 },
+        { width: 375, height: 812 },
+        { width: 390, height: 844 },
+        { width: 393, height: 852 },
+        { width: 414, height: 896 },
+        { width: 430, height: 932 },
+        { width: 768, height: 1024 },
+        { width: 1024, height: 768 },
+        { width: 1280, height: 800 },
+        { width: 1366, height: 768 },
+        { width: 1440, height: 900 },
+        { width: 1536, height: 864 },
+        { width: 1920, height: 1080 },
+      ]) {
+        await page.setViewportSize(viewport);
+
+        await page.clock.runFor(32);
+        await expectSingleVisibleText(page, labels.difficulty);
+        await expectUnifiedLayout(page, viewport.width);
+      }
+    });
+  }
 }

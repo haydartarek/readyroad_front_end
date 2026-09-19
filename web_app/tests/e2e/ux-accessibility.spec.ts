@@ -164,6 +164,13 @@ test.describe("Milestone 4 UX and accessibility", () => {
   }) => {
     await useAnonymousLanguage(page, "en");
     await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route("**/api/proxy/categories", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "[]",
+      }),
+    );
     await page.goto("/");
 
     const navbar = page.getByTestId("site-navbar");

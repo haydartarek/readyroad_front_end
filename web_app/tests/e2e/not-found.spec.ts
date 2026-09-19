@@ -162,11 +162,17 @@ test.describe("404 page", () => {
     await page.setViewportSize({ width: 375, height: 812 });
 
     await page.goto("/missing-readyroad-page");
-    await page.getByRole("link", { name: "Go Home" }).click();
+    await Promise.all([
+      page.waitForURL("/"),
+      page.getByRole("link", { name: "Go Home" }).click(),
+    ]);
     await expect(page).toHaveURL("/");
 
     await page.goto("/missing-readyroad-page");
-    await page.getByRole("link", { name: "Contact support" }).click();
+    await Promise.all([
+      page.waitForURL("/contact"),
+      page.getByRole("link", { name: "Contact support" }).click(),
+    ]);
     await expect(page).toHaveURL("/contact");
   });
 });

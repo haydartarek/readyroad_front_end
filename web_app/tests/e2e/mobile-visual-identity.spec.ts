@@ -1440,85 +1440,93 @@ test.describe("RijVia mobile visual identity", () => {
     await expect(page.getByRole("dialog")).toContainText(
       "لن تُحتسب ضمن نتائجك أو إحصاءاتك",
     );
-    await page.getByRole("button", { name: /مغادرة الامتحان/ }).click();
+    await Promise.all([
+      page.waitForURL(/\/ar\/exam$/),
+      page.getByRole("button", { name: /مغادرة الامتحان/ }).click(),
+    ]);
     await expect.poll(() => abandoned).toBe(true);
     await expect(page).toHaveURL(/\/ar\/exam$/);
   });
 
-  test("theory exam keeps timer, progress and constrained media in one responsive flow", async ({
-    context,
-    page,
-  }) => {
-    test.setTimeout(180_000);
-    await seedCookieConsent(page);
-    await installAuthenticatedSession(context, page);
+  for (const locale of locales) {
+    test(`theory exam keeps timer, progress and constrained media in one responsive flow: ${locale}`, async ({
+      context,
+      page,
+    }) => {
+      await seedCookieConsent(page);
+      await installAuthenticatedSession(context, page);
+      await page.clock.install();
 
-    const exam = {
-      examId: 42,
-      startedAt: "2026-08-09T00:00:00Z",
-      expiresAt: "2026-08-09T01:00:00Z",
-      questions: [
-        {
-          questionId: 1,
-          questionOrder: 1,
-          questionTextEn: "Who has priority at this intersection?",
-          questionTextNl: "Wie heeft voorrang op dit kruispunt?",
-          questionTextFr: "Qui a la priorité à ce carrefour ?",
-          questionTextAr: "من له الأولوية عند هذا التقاطع؟",
-          difficultyLevel: "MEDIUM",
-          imageUrl: "/images/logo.png",
-          options: [
-            {
-              optionId: 11,
-              optionTextEn: "Vehicle A",
-              optionTextNl: "Voertuig A",
-              optionTextFr: "Véhicule A",
-              optionTextAr: "المركبة أ",
-            },
-            {
-              optionId: 12,
-              optionTextEn: "Vehicle B",
-              optionTextNl: "Voertuig B",
-              optionTextFr: "Véhicule B",
-              optionTextAr: "المركبة ب",
-            },
-          ],
-        },
-      ],
-    };
-    await page.route("**/api/proxy/exams/simulations/active", (route) =>
-      fulfillJson(route, { hasActiveExam: true, activeExam: exam }),
-    );
+      const exam = {
+        examId: 42,
+        startedAt: "2026-08-09T00:00:00Z",
+        expiresAt: "2026-08-09T01:00:00Z",
+        questions: [
+          {
+            questionId: 1,
+            questionOrder: 1,
+            questionTextEn: "Who has priority at this intersection?",
+            questionTextNl: "Wie heeft voorrang op dit kruispunt?",
+            questionTextFr: "Qui a la priorité à ce carrefour ?",
+            questionTextAr: "من له الأولوية عند هذا التقاطع؟",
+            difficultyLevel: "MEDIUM",
+            imageUrl: "/images/logo.png",
+            options: [
+              {
+                optionId: 11,
+                optionTextEn: "Vehicle A",
+                optionTextNl: "Voertuig A",
+                optionTextFr: "Véhicule A",
+                optionTextAr: "المركبة أ",
+              },
+              {
+                optionId: 12,
+                optionTextEn: "Vehicle B",
+                optionTextNl: "Voertuig B",
+                optionTextFr: "Véhicule B",
+                optionTextAr: "المركبة ب",
+              },
+            ],
+          },
+        ],
+      };
+      await page.route("**/api/proxy/exams/simulations/active", (route) =>
+        fulfillJson(route, { hasActiveExam: true, activeExam: exam }),
+      );
 
-    const consoleErrors: string[] = [];
-    const pageErrors: string[] = [];
-    page.on("console", (message) => {
-      if (message.type() === "error") consoleErrors.push(message.text());
-    });
-    page.on("pageerror", (error) => pageErrors.push(error.message));
+      const consoleErrors: string[] = [];
+      const pageErrors: string[] = [];
+      page.on("console", (message) => {
+        if (message.type() === "error") consoleErrors.push(message.text());
+      });
+      page.on("pageerror", (error) => pageErrors.push(error.message));
 
-    const viewports = [
-      { width: 320, height: 800 },
-      { width: 360, height: 800 },
-      { width: 375, height: 812 },
-      { width: 390, height: 844 },
-      { width: 393, height: 852 },
-      { width: 414, height: 896 },
-      { width: 430, height: 932 },
-      { width: 768, height: 1024 },
-      { width: 1024, height: 768 },
-      { width: 1280, height: 800 },
-      { width: 1366, height: 768 },
-      { width: 1440, height: 900 },
-      { width: 1536, height: 864 },
-      { width: 1920, height: 1080 },
-    ];
+      const viewports = [
+        { width: 320, height: 800 },
+        { width: 360, height: 800 },
+        { width: 375, height: 812 },
+        { width: 390, height: 844 },
+        { width: 393, height: 852 },
+        { width: 414, height: 896 },
+        { width: 430, height: 932 },
+        { width: 768, height: 1024 },
+        { width: 1024, height: 768 },
+        { width: 1280, height: 800 },
+        { width: 1366, height: 768 },
+        { width: 1440, height: 900 },
+        { width: 1536, height: 864 },
+        { width: 1920, height: 1080 },
+      ];
 
-    for (const locale of locales) {
+      await page.setViewportSize(viewports[0]);
+      await navigate(page, localizedPath("/exam/42", locale));
+      await expect(page.getByTestId("exam-question-title")).toBeVisible();
+      // Freeze the countdown only for layout measurements, not the timer tests.
+      await page.clock.pauseAt(new Date(Date.now() + 1000));
       for (const viewport of viewports) {
         const { width } = viewport;
         await page.setViewportSize(viewport);
-        await navigate(page, localizedPath("/exam/42", locale));
+        await page.clock.runFor(32);
         await expect(page.getByTestId("exam-question-title")).toBeVisible();
         await expect(page.getByTestId("exam-shell-header")).toHaveCount(0);
         await expect(page.getByTestId("exam-actions")).toBeVisible();
@@ -1571,11 +1579,11 @@ test.describe("RijVia mobile visual identity", () => {
           expect(measurements?.stacked).toBe(true);
         }
       }
-    }
 
-    expect(consoleErrors).toEqual([]);
-    expect(pageErrors).toEqual([]);
-  });
+      expect(consoleErrors).toEqual([]);
+      expect(pageErrors).toEqual([]);
+    });
+  }
 
   test("theory counter on mobile and desktop advances once after timeout and once after Next in every locale", async ({
     context,
@@ -3027,7 +3035,9 @@ test.describe("RijVia mobile visual identity", () => {
       await page.setViewportSize({ width: 320, height: 900 });
       await navigate(page, localizedPath("/exam", locale));
 
-      const summaryGrid = page.getByTestId("exam-summary-grid");
+      const visibleMain = page.locator("main:visible");
+      await expect(visibleMain).toHaveCount(1);
+      const summaryGrid = visibleMain.getByTestId("exam-summary-grid");
       const cards = summaryGrid.getByTestId("dashboard-stat-card");
       await expect(summaryGrid).toBeVisible();
       await expect(cards).toHaveCount(3);
@@ -3445,11 +3455,12 @@ test.describe("RijVia mobile visual identity", () => {
       const code = await firstCard
         .getByTestId("practice-category-code")
         .textContent();
-      await firstCard.getByTestId("practice-category-action").click();
-      await expect(page).toHaveURL(
-        new RegExp(`${localizedPath(`/practice/${code}`, locale)}$`),
-        { timeout: 20_000 },
-      );
+      const destination = new RegExp(`${localizedPath(`/practice/${code}`, locale)}$`);
+      await Promise.all([
+        page.waitForURL(destination),
+        firstCard.getByTestId("practice-category-action").click(),
+      ]);
+      await expect(page).toHaveURL(destination);
     }
   });
 

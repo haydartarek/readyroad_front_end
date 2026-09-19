@@ -224,7 +224,10 @@ test.describe("Homepage learning feature cards", () => {
 
     const signsCard = page.getByTestId("home-feature-link").nth(3);
     await expect(signsCard).toHaveAttribute("href", "/traffic-signs");
-    await signsCard.click({ position: { x: 24, y: 88 } });
+    await Promise.all([
+      page.waitForURL("/traffic-signs"),
+      signsCard.click({ position: { x: 24, y: 88 } }),
+    ]);
     await expect(page).toHaveURL("/traffic-signs");
   });
 });

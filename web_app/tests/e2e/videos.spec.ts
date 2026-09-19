@@ -62,6 +62,9 @@ async function fulfillJson(route: Route, body: unknown) {
 
 async function prepareVideos(page: Page) {
   await seedCookieConsent(page);
+  await page.route("https://www.youtube-nocookie.com/embed/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<!doctype html><title>Test video player</title>" }),
+  );
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({
       status: 401,
@@ -80,8 +83,10 @@ async function prepareVideos(page: Page) {
 async function loadVideosPage(page: Page, path: string) {
   const response = await page.goto(path);
   expect(response?.status()).toBe(200);
-  const retry = page.getByTestId("videos-retry");
-  const playButtons = page.locator("main button[aria-label]");
+  const visibleMain = page.locator("main:visible");
+  await expect(visibleMain).toHaveCount(1);
+  const retry = visibleMain.getByTestId("videos-retry");
+  const playButtons = visibleMain.locator("button[aria-label]");
   await expect
     .poll(
       async () => (await retry.isVisible()) || (await playButtons.count()) > 0,
@@ -204,17 +209,17 @@ test.describe("multilingual YouTube videos page", () => {
     await expect(page.locator("html")).toHaveJSProperty("scrollWidth", 390);
   });
 
-  test("reserves a non-overlapping 44px close control beside the video title", async ({
-    page,
-  }) => {
-    const paths = ["/videos", "/nl/videos", "/fr/videos", "/ar/videos"];
-
-    for (const path of paths) {
+  for (const path of ["/videos", "/nl/videos", "/fr/videos", "/ar/videos"]) {
+    test(`reserves a non-overlapping 44px close control beside the video title: ${path}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 900 });
+      await loadVideosPage(page, path);
       for (const width of [390, 1280, 1920]) {
         await page.setViewportSize({ width, height: 900 });
-        await loadVideosPage(page, path);
         await page.locator("main button[aria-label]").first().click();
 
+        await expect(page.getByTestId("video-dialog-header")).toBeVisible();
         const measurements = await page.evaluate(() => {
           const header = document.querySelector<HTMLElement>(
             '[data-testid="video-dialog-header"]',
@@ -260,8 +265,8 @@ test.describe("multilingual YouTube videos page", () => {
 
         await page.getByTestId("video-dialog-close").click();
       }
-    }
-  });
+    });
+  }
 
   test("preserves RTL/LTR and contains every supported mobile and desktop viewport", async ({
     page,

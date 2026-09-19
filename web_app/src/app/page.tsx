@@ -5,6 +5,7 @@ import { StatsHighlights } from "@/components/home/stats-highlights";
 import { FeaturesSection } from "@/components/home/features-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { CategoriesPreview } from "@/components/home/categories-preview";
+import { PricingSection } from "@/components/home/pricing-section";
 import { ExamCta } from "@/components/home/exam-cta";
 import { ContactCtaSection } from "@/components/home/contact-cta-section";
 import { StickyCTA } from "@/components/home/sticky-cta";
@@ -56,7 +57,24 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function Home() {
+type HomeProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams;
+  const resumeCheckout = params.resumeCheckout === "1";
+
+  if (resumeCheckout) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <main>
+          <PricingSection resumeCheckout />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <main>
@@ -65,6 +83,7 @@ export default function Home() {
         <FeaturesSection />
         <HowItWorksSection />
         <CategoriesPreview />
+        <PricingSection />
         <SeoIntentSection page="home" />
         <ExamCta />
         <ContactCtaSection />

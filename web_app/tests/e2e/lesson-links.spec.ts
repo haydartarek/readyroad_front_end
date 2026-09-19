@@ -1,4 +1,5 @@
 import { expect, test, type APIResponse } from "@playwright/test";
+import { seedCookieConsent } from "./helpers/consent";
 
 const localePrefixes = ["", "/ar", "/nl", "/fr"] as const;
 
@@ -17,6 +18,7 @@ async function expectLessonDocument(response: APIResponse) {
 test("a lesson card opens its matching lesson instead of FAQ content", async ({
   page,
 }) => {
+  await seedCookieConsent(page);
   const response = await page.goto("/lessons");
   expect(response?.status()).toBe(200);
 
@@ -25,7 +27,10 @@ test("a lesson card opens its matching lesson instead of FAQ content", async ({
   const href = await firstLessonLink.getAttribute("href");
   expect(href).toBeTruthy();
 
-  await firstLessonLink.click();
+  await Promise.all([
+    page.waitForURL(new RegExp(`${unlocalizedLessonPath(href!)}$`)),
+    firstLessonLink.click(),
+  ]);
   await expect(page).toHaveURL(new RegExp(`${unlocalizedLessonPath(href!)}$`));
 
   const schemas = await page

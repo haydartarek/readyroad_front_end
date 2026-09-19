@@ -9,6 +9,7 @@ import { isMissingPublishedArticle } from "@/lib/server/article-route-status";
 import { STORAGE_KEYS } from "@/lib/constants";
 
 const PROTECTED_ROUTES = [
+  "/checkout",
   "/dashboard",
   "/exam",
   "/practice",

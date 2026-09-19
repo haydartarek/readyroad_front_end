@@ -140,8 +140,17 @@ test.describe("localized public blog routes", () => {
       await page.setViewportSize({ width, height: 900 });
       for (const article of localizedArticles) {
         await page.goto(article.indexPath);
-        await expect.poll(() => page.getByTestId("blog-article-grid")
-          .evaluate((grid) => getComputedStyle(grid).gridTemplateColumns.split(" ").length))
+        const articleGrid = page
+          .getByRole("main")
+          .getByTestId("blog-article-grid");
+
+        await expect
+          .poll(() =>
+            articleGrid.evaluate(
+              (grid) =>
+                getComputedStyle(grid).gridTemplateColumns.split(" ").length,
+            ),
+          )
           .toBe(width >= 1024 ? 4 : 1);
         await expect(page.getByTitle(translateMessage(article.locale, "nav.theme_dark"), { exact: true })).toHaveCount(1);
 
@@ -170,9 +179,17 @@ test.describe("localized public blog routes", () => {
         await page.goto(`${article.indexPath}/${encodeURIComponent(article.slug)}`);
         const cards = page.getByTestId("article-learning-cards");
         await expect(cards).toHaveCount(1);
-        expect(await cards.evaluate((element) => element.previousElementSibling?.textContent)).toBe("Second reviewed paragraph.");
+
+        const learningCards = cards.first();
+        await expect(learningCards).toBeVisible();
+        expect(
+          await learningCards.evaluate(
+            (element) => element.previousElementSibling?.textContent,
+          ),
+        ).toBe("Second reviewed paragraph.");
+
         const prefix = article.locale === "en" ? "" : `/${article.locale}`;
-        const links = cards.getByRole("link");
+        const links = learningCards.getByRole("link");
         await expect(links).toHaveCount(3);
         for (const [index, route] of ["/traffic-signs", "/practice", "/exam"].entries()) {
           await expect(links.nth(index)).toHaveAttribute("href", `${prefix}${route}`);

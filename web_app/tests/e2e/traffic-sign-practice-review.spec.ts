@@ -52,8 +52,10 @@ async function prepareCompletedPractice(page: Page) {
   await page.context().addCookies([
     {
       name: "token",
-      value: "test-token",
-      url: "http://127.0.0.1:3005",
+      value: ["eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0",
+        Buffer.from(JSON.stringify({ sub: "learner", role: "USER", exp: 2_000_000_000 })).toString("base64url"),
+        "test-signature"].join("."),
+      url: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005",
       httpOnly: true,
       sameSite: "Lax",
     },
@@ -68,6 +70,7 @@ async function prepareCompletedPractice(page: Page) {
     const url = new URL(route.request().url());
     const path = url.pathname.replace("/api/proxy", "");
 
+    if (path === "/users/me/notifications/unread-count") return fulfillJson(route, { unreadCount: 0 });
     if (path === "/traffic-signs/A1b") return fulfillJson(route, sign);
     if (path === "/sign-quiz/practice/A1b") {
       return fulfillJson(route, {
@@ -123,8 +126,10 @@ async function prepareActivePractice(page: Page) {
   await page.context().addCookies([
     {
       name: "token",
-      value: "test-token",
-      url: "http://127.0.0.1:3005",
+      value: ["eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0",
+        Buffer.from(JSON.stringify({ sub: "learner", role: "USER", exp: 2_000_000_000 })).toString("base64url"),
+        "test-signature"].join("."),
+      url: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005",
       httpOnly: true,
       sameSite: "Lax",
     },
@@ -139,6 +144,7 @@ async function prepareActivePractice(page: Page) {
     const url = new URL(route.request().url());
     const path = url.pathname.replace("/api/proxy", "");
 
+    if (path === "/users/me/notifications/unread-count") return fulfillJson(route, { unreadCount: 0 });
     if (path === "/traffic-signs/A1b") return fulfillJson(route, sign);
     if (path === "/sign-quiz/practice/A1b") {
       return fulfillJson(route, {
@@ -195,18 +201,15 @@ async function prepareActivePractice(page: Page) {
   });
 }
 
-test("review answers reveals and focuses the existing section without navigation", async ({
-  page,
-}) => {
-  await prepareCompletedPractice(page);
-
-  for (const { path, answer } of [
-    { path: "/traffic-signs/A1b/practice", answer: "Reduce speed" },
-    { path: "/nl/traffic-signs/A1b/practice", answer: "Snelheid verminderen" },
-    { path: "/fr/traffic-signs/A1b/practice", answer: "Réduire la vitesse" },
-    { path: "/ar/traffic-signs/A1b/practice", answer: "تخفيف السرعة" },
-  ]) {
-    await page.goto(path);
+for (const { path, answer } of [
+  { path: "/traffic-signs/A1b/practice", answer: "Reduce speed" },
+  { path: "/nl/traffic-signs/A1b/practice", answer: "Snelheid verminderen" },
+  { path: "/fr/traffic-signs/A1b/practice", answer: "Réduire la vitesse" },
+  { path: "/ar/traffic-signs/A1b/practice", answer: "تخفيف السرعة" },
+]) {
+  test(`review answers reveals and focuses the existing section without navigation (${path})`, async ({ page }) => {
+    await prepareCompletedPractice(page);
+    await page.goto(path, { waitUntil: "domcontentloaded" });
     const review = page.locator("#answer-review");
     await expect(review).toHaveCount(0);
 
@@ -219,33 +222,30 @@ test("review answers reveals and focuses the existing section without navigation
     );
     expect(page.url()).toBe(urlBefore);
     await expect(review.getByText(answer, { exact: true }).first()).toBeVisible();
-  }
-});
+  });
+}
 
-test("practice keeps immediate localized feedback without an exam timer", async ({
-  page,
-}) => {
-  await prepareActivePractice(page);
-
-  for (const { path, explanation } of [
-    {
-      path: "/traffic-signs/A1b/practice",
-      explanation: "Reduce speed before the bend.",
-    },
-    {
-      path: "/nl/traffic-signs/A1b/practice",
-      explanation: "Verminder snelheid voor de bocht.",
-    },
-    {
-      path: "/fr/traffic-signs/A1b/practice",
-      explanation: "Réduisez la vitesse avant le virage.",
-    },
-    {
-      path: "/ar/traffic-signs/A1b/practice",
-      explanation: "خفف السرعة قبل المنعطف.",
-    },
-  ]) {
-    await page.goto(path);
+for (const { path, explanation } of [
+  {
+    path: "/traffic-signs/A1b/practice",
+    explanation: "Reduce speed before the bend.",
+  },
+  {
+    path: "/nl/traffic-signs/A1b/practice",
+    explanation: "Verminder snelheid voor de bocht.",
+  },
+  {
+    path: "/fr/traffic-signs/A1b/practice",
+    explanation: "Réduisez la vitesse avant le virage.",
+  },
+  {
+    path: "/ar/traffic-signs/A1b/practice",
+    explanation: "خفف السرعة قبل المنعطف.",
+  },
+]) {
+  test(`practice keeps immediate localized feedback without an exam timer (${path})`, async ({ page }) => {
+    await prepareActivePractice(page);
+    await page.goto(path, { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("exam-timer-slot")).toHaveCount(0);
     await page.getByTestId("exam-option-card").nth(1).click();
     await page.getByTestId("submit-practice-answer").click();
@@ -255,42 +255,41 @@ test("practice keeps immediate localized feedback without an exam timer", async 
     );
     await expect(feedback).toBeVisible();
     await expect(feedback).toContainText(explanation);
-  }
-});
+  });
+}
 
-test("practice uses the shared responsive question flow without reserving timer space", async ({
-  page,
-}) => {
-  test.setTimeout(180_000);
-  await prepareActivePractice(page);
+for (const path of [
+  "/traffic-signs/A1b/practice",
+  "/nl/traffic-signs/A1b/practice",
+  "/fr/traffic-signs/A1b/practice",
+  "/ar/traffic-signs/A1b/practice",
+]) {
+  test(`practice uses the shared responsive question flow without reserving timer space (${path})`, async ({
+    page,
+  }) => {
+    await prepareActivePractice(page);
 
-  const paths = [
-    "/traffic-signs/A1b/practice",
-    "/nl/traffic-signs/A1b/practice",
-    "/fr/traffic-signs/A1b/practice",
-    "/ar/traffic-signs/A1b/practice",
-  ];
-  const viewports = [
-    { width: 320, height: 800 },
-    { width: 360, height: 800 },
-    { width: 375, height: 812 },
-    { width: 390, height: 844 },
-    { width: 393, height: 852 },
-    { width: 414, height: 896 },
-    { width: 430, height: 932 },
-    { width: 768, height: 1024 },
-    { width: 1024, height: 768 },
-    { width: 1280, height: 800 },
-    { width: 1366, height: 768 },
-    { width: 1440, height: 900 },
-    { width: 1536, height: 864 },
-    { width: 1920, height: 1080 },
-  ];
+    const viewports = [
+      { width: 320, height: 800 },
+      { width: 360, height: 800 },
+      { width: 375, height: 812 },
+      { width: 390, height: 844 },
+      { width: 393, height: 852 },
+      { width: 414, height: 896 },
+      { width: 430, height: 932 },
+      { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
+      { width: 1280, height: 800 },
+      { width: 1366, height: 768 },
+      { width: 1440, height: 900 },
+      { width: 1536, height: 864 },
+      { width: 1920, height: 1080 },
+    ];
 
-  for (const path of paths) {
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("exam-question-title")).toBeVisible();
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
-      await page.goto(path);
 
       await expect(page.getByTestId("exam-shell-header")).toHaveCount(0);
       await expect(page.getByTestId("exam-timer-slot")).toHaveCount(0);
@@ -340,5 +339,5 @@ test("practice uses the shared responsive question flow without reserving timer 
           : measurements?.stacked,
       ).toBe(true);
     }
-  }
-});
+  });
+}

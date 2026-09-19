@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { seedCookieConsent } from "./helpers/consent";
 
 const adminUser = {
   id: 1,
@@ -288,6 +289,10 @@ for (const locale of navigationByLocale) {
   test(`Navigation order and responsive behavior: ${locale.path}`, async ({
     page,
   }) => {
+    await seedCookieConsent(page);
+    await page.route("**/api/auth/me", (route) =>
+      route.fulfill({ json: { authenticated: false, user: null } }),
+    );
     const errors: string[] = [];
     const failedResponses: string[] = [];
     page.on("console", (message) => {
@@ -304,10 +309,11 @@ for (const locale of navigationByLocale) {
     );
 
     const desktop = page.getByTestId("desktop-primary-navigation");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(locale.path, { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => document.fonts.ready);
     for (const width of [1280, 1366, 1440, 1536, 1920]) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(locale.path);
-      await page.evaluate(() => document.fonts.ready);
       await expect(desktop).toBeVisible();
       await expect(
         page.getByRole("button", { name: locale.openMenu }),

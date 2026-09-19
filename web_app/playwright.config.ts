@@ -10,7 +10,8 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // All cases share one Next server; keep E2E execution deterministic.
+  workers: 1,
   reporter: [["html", { open: "never" }], ["list"]],
   use: {
     baseURL,
@@ -32,12 +33,14 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-      command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
+      command: `npm run build && node -e "const fs=require('fs'); fs.cpSync('.next/static', '.next/standalone/.next/static', { recursive: true, force: true }); fs.cpSync('public', '.next/standalone/public', { recursive: true, force: true })" && node .next/standalone/server.js`,
       url: baseURL,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       env: {
         ...process.env,
+        PORT: String(port),
+        HOSTNAME: "127.0.0.1",
         PLAYWRIGHT_BACKEND_PORT: String(backendPort),
         BACKEND_URL: `http://127.0.0.1:${backendPort}/api`,
         NEXT_PUBLIC_API_BASE_URL: `http://127.0.0.1:${backendPort}/api`,

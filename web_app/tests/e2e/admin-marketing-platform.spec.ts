@@ -708,21 +708,22 @@ test("Editorial authoring dropdowns preserve mixed-direction labels within mobil
   expect(consoleErrors).toEqual([]);
 });
 
-test("Marketing operations preserve localized responsive layouts", async ({ page }) => {
-  const mutations: Request[] = [];
-  await mockAdmin(page, mutations);
+for (const route of ["/admin/marketing", "/ar/admin/marketing", "/nl/admin/marketing", "/fr/admin/marketing"]) {
+  test(`Marketing operations preserve localized responsive layouts: ${route}`, async ({ page }) => {
+    const mutations: Request[] = [];
+    await mockAdmin(page, mutations);
 
-  const routes = ["/admin/marketing", "/ar/admin/marketing", "/nl/admin/marketing", "/fr/admin/marketing"];
-  const widths = [390, 768, 1280];
-  for (const route of routes) {
+    const widths = [390, 768, 1280];
+    await page.setViewportSize({ width: widths[0], height: 844 });
+    await page.goto(route, { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("tab")).toHaveCount(12);
     for (const width of widths) {
       await page.setViewportSize({ width, height: width < 600 ? 844 : 900 });
-      await page.goto(route);
       await expect(page.getByRole("tab")).toHaveCount(12);
       await expectNoOverflow(page);
     }
-  }
-});
+  });
+}
 
 test("Admin requests and decides exact-version article approval", async ({ page }) => {
   const mutations: Request[] = [];

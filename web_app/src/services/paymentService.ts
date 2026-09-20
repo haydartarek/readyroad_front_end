@@ -13,6 +13,12 @@ export interface PurchaseStatus {
 }
 export interface CheckoutResult { purchaseId: string; checkoutUrl: string }
 
+export function navigateToCheckout(
+  checkoutUrl: string,
+) {
+  window.location.assign(checkoutUrl);
+}
+
 export async function createCheckout(plan: PaymentPlan, clientRequestId: string, locale: string) {
   if (!PAYMENTS_ENABLED) throw new Error("Payments are disabled");
   if (!isValidLanguage(locale)) throw new Error("Unsupported checkout locale");

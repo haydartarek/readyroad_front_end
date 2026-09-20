@@ -1,4 +1,5 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -109,14 +110,19 @@ jest.mock(
       children,
       afterCard,
       counter,
+      timerPill,
     }: {
       children: ReactNode;
       afterCard?: ReactNode;
       counter?: ReactNode;
+      timerPill?: ReactNode;
     }) => (
       <main>
         <div data-testid="exam-counter">
           {counter}
+        </div>
+        <div data-testid="exam-timer">
+          {timerPill}
         </div>
         {children}
         {afterCard}
@@ -325,6 +331,84 @@ describe("theory exam preview paywall integration", () => {
           data: {},
         };
       },
+    );
+  });
+
+  test("preview feedback freezes the question timer until the learner presses Next", async () => {
+    const firstQuestionPreview = {
+      ...previewExam("PREVIEW_ACTIVE"),
+      resumeQuestionOrder: 1,
+      finalizedQuestionIds: [],
+    };
+
+    get.mockResolvedValue(
+      activeResponse(firstQuestionPreview),
+    );
+
+    post.mockImplementation(
+      async (url: string) => {
+        if (
+          url ===
+          "/exams/simulations/42/questions/1/answer"
+        ) {
+          return {
+            data: {
+              correct: true,
+              correctOptionId: 11,
+              accessState: "PREVIEW_ACTIVE",
+            },
+          };
+        }
+
+        return {
+          data: {},
+        };
+      },
+    );
+
+    render(<ExamQuestionsPage />);
+
+    expect(
+      await screen.findByText("Question 1"),
+    ).toBeVisible();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Q1 A",
+      }),
+    );
+
+    expect(
+      await screen.findByText(
+        "practice_exam.score_correct",
+      ),
+    ).toBeVisible();
+
+    const frozenTimer =
+      screen.getByTestId("exam-timer").textContent;
+
+    expect(frozenTimer).toBeTruthy();
+
+    await act(async () => {
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1300),
+      );
+    });
+
+    expect(
+      screen.getByTestId("exam-timer").textContent,
+    ).toBe(frozenTimer);
+
+    expect(
+      screen.getByText("Question 1"),
+    ).toBeVisible();
+
+    expect(
+      screen.queryByText("Question 2"),
+    ).not.toBeInTheDocument();
+
+    expect(post).not.toHaveBeenCalledWith(
+      "/exams/simulations/42/questions/1/timeout",
     );
   });
 

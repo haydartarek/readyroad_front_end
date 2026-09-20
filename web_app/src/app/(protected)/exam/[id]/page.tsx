@@ -332,6 +332,12 @@ export default function ExamQuestionsPage() {
   const freeLimitReached =
     examData?.accessState === "FREE_LIMIT_REACHED";
 
+  const previewFeedbackVisible =
+    presentedQuestionId !== undefined &&
+    Boolean(
+      previewFeedbackByQuestionId[presentedQuestionId],
+    );
+
   useExamQuestionPresentation(
     examId,
     presentedQuestionId,
@@ -646,7 +652,8 @@ export default function ExamQuestionsPage() {
       !presentedQuestionId ||
       isSubmitting ||
       sessionEnded ||
-      freeLimitReached
+      freeLimitReached ||
+      previewFeedbackVisible
     ) {
       return;
     }
@@ -663,7 +670,15 @@ export default function ExamQuestionsPage() {
     }, 250);
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [isLoading, presentedQuestionId, isSubmitting, sessionEnded, freeLimitReached, timerRestartKey]);
+  }, [
+    isLoading,
+    presentedQuestionId,
+    isSubmitting,
+    sessionEnded,
+    freeLimitReached,
+    previewFeedbackVisible,
+    timerRestartKey,
+  ]);
 
   const nextImageUrl = convertToPublicImageUrl(
     examData?.questions[currentQuestionIndex + 1]?.imageUrl,

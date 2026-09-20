@@ -17,6 +17,7 @@ import {
   checkoutRequestId,
   createCheckout,
   forgetCheckoutRequest,
+  navigateToCheckout,
   PAYMENTS_ENABLED,
   rememberExamCheckoutResume,
   type PaymentPlan,
@@ -90,7 +91,7 @@ export function FreeExamPaywall({
         checkout.purchaseId,
       );
 
-      window.location.assign(
+      navigateToCheckout(
         checkout.checkoutUrl,
       );
     } catch (err) {

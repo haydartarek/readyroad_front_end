@@ -1615,6 +1615,7 @@ test.describe("RijVia mobile visual identity", () => {
       examId: 42,
       startedAt: "2026-08-20T00:00:00Z",
       expiresAt: "2026-08-20T01:00:00Z",
+      totalQuestions: 4,
       questions: [4, 2, 1, 3].map((questionId) => ({
         questionId,
         questionOrder: questionId,
@@ -1698,6 +1699,7 @@ test.describe("RijVia mobile visual identity", () => {
       examId: 42,
       startedAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 750000).toISOString(),
+      totalQuestions: 3,
       questions: [1, 2, 3].map((id) => ({
         questionId: id, questionOrder: id,
         questionTextAr: "كيف تتصرف عند الاقتراب من هذا التقاطع؟",

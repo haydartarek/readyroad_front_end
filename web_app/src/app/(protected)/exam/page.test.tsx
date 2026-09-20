@@ -120,9 +120,7 @@ describe("TheoryExamPage persistent exam flow", () => {
 
     expect(requestUrls).toContain("POST /exams/simulations/start");
     expect(requestUrls.join("\n")).not.toContain("/quiz/theory-exam");
-    expect(JSON.parse(localStorage.getItem("current_exam") ?? "{}")).toEqual(
-      examResponse,
-    );
+    expect(localStorage.getItem("current_exam")).toBeNull();
   });
 
   it("resumes an existing persisted exam without creating a duplicate", async () => {

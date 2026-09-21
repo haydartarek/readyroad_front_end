@@ -55,7 +55,7 @@ test("plan -> hosted checkout -> pending -> paid, retaining Arabic route and own
     ...pending, status: "PAID", expiresAt: "2026-10-01T14:00:00+02:00",
   } }));
   await page.goto("/ar#pricing");
-  await page.getByRole("button", { name: "اختر هذه الخطة: 3 أيام" }).click();
+  await page.getByRole("button", { name: "اختر هذه الباقة: 3 أيام" }).click();
   await expect(page).toHaveURL("https://checkout.stripe.com/c/pay/rijvia-offline-fixture");
   const firstStatus = page.waitForResponse(response => response.url().endsWith(`/purchases/${purchaseId}/status`));
   const paidStatus = page.waitForResponse(async response =>

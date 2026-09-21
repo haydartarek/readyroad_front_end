@@ -1,3 +1,8 @@
-import { PlanSelection } from "@/components/payment/plan-selection";
+import { redirect } from "next/navigation";
+import { getRequestLocale } from "@/lib/server/request-locale";
+import { localizeHref } from "@/lib/i18n-routing";
 
-export default function PlansPage() { return <PlanSelection />; }
+export default async function PlansPage() {
+  const locale = await getRequestLocale();
+  redirect(localizeHref("/#pricing", locale));
+}

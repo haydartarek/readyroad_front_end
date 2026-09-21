@@ -75,7 +75,7 @@ test("FAILED shows retry and never success", async () => {
   render(<CheckoutSuccess />);
   await act(async () => { await jest.advanceTimersByTimeAsync(0); });
   expect(screen.getByRole("status")).toHaveTextContent("not completed");
-  expect(screen.getByRole("link", { name: "Back to plans" })).toHaveAttribute("href", "/plans");
+  expect(screen.getByRole("link", { name: "Back to packages" })).toHaveAttribute("href", "/#pricing");
 });
 
 test("unmount cancels in-flight polling", async () => {

@@ -111,7 +111,7 @@ function PurchaseConfirmation({ purchaseId, username, isAuthLoading }: {
           </div>
         </>
       )}
-      {(invalid || failed) && <Button asChild className="mt-6"><Link href="/plans">{t("payment.back_to_plans")}</Link></Button>}
+      {(invalid || failed) && <Button asChild className="mt-6"><Link href="/#pricing">{t("payment.back_to_plans")}</Link></Button>}
       {state === "login" && <Button asChild className="mt-6"><Link href={`/login?returnUrl=${encodeURIComponent(`/checkout/success?purchaseId=${purchaseId}`)}`}>{t("payment.login")}</Link></Button>}
       <p className="mt-6"><Link className="text-primary underline underline-offset-4" href="/dashboard">{t("payment.dashboard")}</Link></p>
     </main>

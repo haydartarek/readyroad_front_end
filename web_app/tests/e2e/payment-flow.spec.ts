@@ -23,17 +23,21 @@ async function prepare(page: Page) {
 test.beforeEach(async ({ page }) => prepare(page));
 
 for (const width of [390, 1366]) {
-  for (const [locale, title] of [["ar", "اختر مدة الوصول"], ["nl", "Kies je toegangsduur"],
-    ["fr", "Choisissez votre durée d’accès"], ["en", "Choose your access plan"]] as const) {
-    test(`plan selection ${locale} at ${width}px`, async ({ page }, testInfo) => {
+  for (const [locale, title] of [["ar", "اختر الباقة المناسبة لك"], ["nl", "Kies het pakket dat bij je past"],
+    ["fr", "Choisissez la formule qui vous convient"], ["en", "Choose the package that suits you"]] as const) {
+    test(`homepage pricing ${locale} at ${width}px`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(localizeHref("/plans", locale));
       await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
-      await expect(page.locator("main").last().getByRole("button")).toHaveCount(3);
-      await expect(page.locator("main").last().getByRole("button").first()).toBeEnabled();
+      await expect.poll(() => new URL(page.url()).hash).toBe("#pricing");
+      await expect(page.locator("#pricing").getByRole("button")).toHaveCount(3);
+      await expect(page.locator("#pricing").getByRole("button").first()).toBeEnabled();
+      await expect(page.locator("#pricing").getByText("€2.99", { exact: true })).toBeInViewport();
+      await expect(page.locator("#pricing").getByText("€14.99", { exact: true })).toBeInViewport();
+      await expect(page.locator("#pricing").getByRole("button").last()).toBeInViewport();
       await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      if (locale === "ar") await page.screenshot({ path: testInfo.outputPath(`plans-ar-${width}.png`), fullPage: true });
+      if (locale === "ar") await page.screenshot({ path: testInfo.outputPath(`pricing-ar-${width}.png`), fullPage: true });
     });
   }
 }
@@ -51,8 +55,8 @@ test("plan -> hosted checkout -> pending -> paid, retaining Arabic route and own
   await page.route(`**/api/proxy/purchases/${purchaseId}/status`, route => route.fulfill({ json: ++polls === 1 ? pending : {
     ...pending, status: "PAID", expiresAt: "2026-10-01T14:00:00+02:00",
   } }));
-  await page.goto("/ar/plans");
-  await page.getByRole("button", { name: "عرض السعر والدفع" }).first().click();
+  await page.goto("/ar#pricing");
+  await page.getByRole("button", { name: "اختر هذه الباقة: 3 أيام" }).click();
   await expect(page).toHaveURL("https://checkout.stripe.com/c/pay/rijvia-offline-fixture");
   const firstStatus = page.waitForResponse(response => response.url().endsWith(`/purchases/${purchaseId}/status`));
   const paidStatus = page.waitForResponse(async response =>
@@ -75,7 +79,7 @@ test("cancelled checkout returns to homepage pricing and invalid links remain sa
   await expect(page).toHaveURL(/\/fr#pricing$/);
   await page.goto("/fr/checkout/success?session_id=cs_fake&purchaseId=invalid");
   await expect(page.getByText(/Ce lien de paiement a expiré/)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Retour aux formules", exact: true })).toHaveAttribute("href", "/fr/plans");
+  await expect(page.getByRole("link", { name: "Retour aux formules", exact: true })).toHaveAttribute("href", "/fr#pricing");
 });
 
 test("pending after fifteen seconds remains a confirmation message", async ({ page }) => {

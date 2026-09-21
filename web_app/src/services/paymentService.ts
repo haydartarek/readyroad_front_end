@@ -11,6 +11,14 @@ export interface PurchaseStatus {
   plan: PaymentPlan;
   expiresAt: string | null;
 }
+
+export interface AccountAccess {
+  active: boolean;
+  status: "FREE" | "ACTIVE" | "EXPIRED";
+  plan: PaymentPlan | null;
+  expiresAt: string | null;
+}
+
 export interface CheckoutResult { purchaseId: string; checkoutUrl: string }
 
 export function navigateToCheckout(
@@ -31,6 +39,14 @@ export async function createCheckout(plan: PaymentPlan, clientRequestId: string,
 export async function getPurchaseStatus(id: string, signal?: AbortSignal) {
   const response = await apiClient.get<PurchaseStatus>(`/purchases/${encodeURIComponent(id)}/status`, undefined, {
     signal, skipAuthRedirect: true,
+  });
+  return response.data;
+}
+
+export async function getAccountAccess(signal?: AbortSignal) {
+  const response = await apiClient.get<AccountAccess>("/account/access", undefined, {
+    signal,
+    skipAuthRedirect: true,
   });
   return response.data;
 }

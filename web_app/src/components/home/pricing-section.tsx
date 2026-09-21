@@ -6,7 +6,9 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import {
   ArrowRight,
+  Banknote,
   CalendarCheck,
+  CalendarX2,
   CheckCircle2,
   ShieldCheck,
   Trophy,
@@ -218,7 +220,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
     <section
       id="pricing"
       aria-labelledby="pricing-heading"
-      className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-background via-muted/20 to-background py-16 lg:py-24"
+      className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-background via-muted/20 to-background py-10 sm:py-12 lg:py-16"
     >
       <div
         aria-hidden
@@ -231,31 +233,31 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
       />
 
       <div className="rv-container relative">
-        <div className="mx-auto mb-10 max-w-3xl text-center lg:mb-14">
+        <div className="mx-auto mb-6 max-w-3xl text-center lg:mb-8">
           <h2
             id="pricing-heading"
-            className="text-balance text-3xl font-extrabold tracking-tight text-secondary md:text-4xl lg:text-5xl"
+            className="text-balance text-3xl font-extrabold tracking-tight text-secondary md:text-4xl"
           >
             {t("home.pricing.title")}
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mx-auto mt-3 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
             {t("home.pricing.subtitle")}
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm font-semibold text-muted-foreground">
-            <span className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 shadow-sm">
-              <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
+          <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-semibold text-muted-foreground sm:text-sm">
+            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-2 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-3">
+              <Banknote className="h-4 w-4 shrink-0 text-primary" aria-hidden />
               {t("home.pricing.one_time")}
             </span>
 
-            <span className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 shadow-sm">
-              <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
+            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-2 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-3">
+              <CalendarX2 className="h-4 w-4 shrink-0 text-primary" aria-hidden />
               {t("home.pricing.no_renewal")}
             </span>
 
-            <span className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 shadow-sm">
-              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden />
+            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-2 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-3">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden />
               {t("home.pricing.secure")}
             </span>
           </div>
@@ -270,7 +272,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
           </p>
         )}
 
-        <div className="mx-auto grid max-w-6xl items-stretch gap-5 lg:grid-cols-3 lg:gap-6">
+        <div className="mx-auto grid max-w-6xl items-stretch gap-2.5 lg:grid-cols-3 lg:gap-5">
           {PAYMENT_PLANS.map((plan) => {
             const featured = plan === "RIJVIA_1_WEEK";
 
@@ -278,10 +280,10 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
               <article
                 key={plan}
                 className={[
-                  "group relative flex h-full flex-col overflow-hidden rounded-[28px] border p-6 transition-all duration-300 md:p-7",
-                  "hover:-translate-y-1 hover:shadow-xl",
+                  "group relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 overflow-hidden rounded-2xl border px-3 py-3 transition-all duration-300 lg:flex lg:h-full lg:flex-col lg:rounded-[24px] lg:p-5",
+                  "hover:-translate-y-0.5 hover:shadow-lg lg:hover:-translate-y-1 lg:hover:shadow-xl",
                   featured
-                    ? "border-secondary bg-secondary text-secondary-foreground shadow-xl shadow-secondary/15 lg:-translate-y-2"
+                    ? "border-secondary bg-secondary text-secondary-foreground shadow-lg shadow-secondary/15 lg:-translate-y-1"
                     : "border-border bg-card text-card-foreground shadow-sm hover:border-primary/25 hover:shadow-primary/10",
                 ].join(" ")}
               >
@@ -290,15 +292,15 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                 )}
 
                 {featured && (
-                  <span className="absolute end-5 top-5 rounded-full bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground shadow-sm">
+                  <span className="absolute end-3 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-black text-primary-foreground shadow-sm lg:end-4 lg:top-4 lg:px-2.5 lg:py-1 lg:text-xs">
                     {t("home.pricing.recommended")}
                   </span>
                 )}
 
-                <div className="mb-5 flex flex-col items-center text-center">
+                <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 text-start lg:mb-3 lg:flex-col lg:text-center">
                   <div
                     className={[
-                      "grid h-9 w-9 shrink-0 place-items-center rounded-xl border",
+                      "grid h-7 w-7 shrink-0 place-items-center rounded-lg border lg:h-8 lg:w-8 lg:rounded-xl",
                       featured
                         ? "border-primary bg-primary text-primary-foreground shadow-sm"
                         : "border-primary/15 bg-primary/10 text-primary",
@@ -309,7 +311,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
                   <h3
                     className={[
-                      "mt-3 text-center text-2xl font-black",
+                      "mt-0 truncate text-start text-base font-black lg:mt-2 lg:text-center lg:text-xl",
                       featured
                         ? "text-secondary-foreground"
                         : "text-secondary",
@@ -319,11 +321,11 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                   </h3>
                 </div>
 
-                <div className="mb-6 text-center">
+                <div className="col-start-2 row-start-1 row-span-2 text-end lg:mb-4 lg:text-center">
                   <bdi
                     dir="ltr"
                     className={[
-                      "block text-5xl font-black tracking-tight md:text-6xl",
+                      "block text-xl font-black tracking-tight lg:text-4xl",
                       featured
                         ? "text-secondary-foreground"
                         : "text-secondary",
@@ -334,14 +336,14 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
                   <bdi
                     dir="ltr"
-                    className="mt-2 block text-sm font-semibold text-primary"
+                    className="mt-0.5 block text-[11px] font-semibold text-primary lg:mt-1 lg:text-xs"
                   >
                     {t(`home.pricing.per_day.${plan}`)}
                   </bdi>
 
                   <p
                     className={[
-                      "mt-4 text-center text-base font-bold leading-relaxed",
+                      "hidden text-center font-bold leading-relaxed lg:mt-2 lg:block lg:text-sm",
                       featured
                         ? "text-secondary-foreground"
                         : "text-foreground",
@@ -353,17 +355,17 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
                 <div
                   className={[
-                    "mb-7 h-px w-full",
+                    "hidden h-px w-full lg:mb-4 lg:block",
                     featured ? "bg-white/10" : "bg-border",
                   ].join(" ")}
                 />
 
-                <ul className="mb-8 space-y-3.5">
+                <ul className="hidden lg:mb-5 lg:block lg:space-y-2">
                   {FEATURES.map((feature) => (
                     <li
                       key={feature}
                       className={[
-                        "flex items-start gap-3 text-sm font-semibold leading-6",
+                        "flex items-start gap-2.5 text-xs font-semibold leading-5",
                         featured
                           ? "text-secondary-foreground/85"
                           : "text-foreground/80",
@@ -393,7 +395,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                     `payment.plan.${plan}`,
                   )}`}
                   className={[
-                    "mt-auto inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-extrabold transition-all",
+                    "col-span-2 mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-extrabold transition-all lg:mt-auto lg:h-11",
                     "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
                     "disabled:cursor-not-allowed disabled:opacity-60",
                     featured
@@ -422,7 +424,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
           })}
         </div>
 
-        <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground">
+        <p className="mx-auto mt-4 max-w-2xl text-center text-xs leading-relaxed text-muted-foreground lg:mt-6 lg:text-sm">
           {t("home.pricing.extension_note")}
         </p>
       </div>

@@ -60,6 +60,7 @@ import { ProfilePageContent } from "@/app/(protected)/profile/page";
 import { StudentIntelligencePanel } from "@/components/dashboard/student-intelligence-panel";
 import { localizedCategoryName } from "@/lib/student-intelligence-presentation";
 import { TheoryCoverageWidget } from "@/components/dashboard/theory-coverage-widget";
+import { AccountAccessCard } from "@/components/payment/account-access-card";
 
 // ─── Progress Tracker types (inline, no extra file) ──────────────────────────
 
@@ -930,6 +931,8 @@ function DashboardHome() {
         name={`${t("dashboard.welcome_back")} ${firstName}`}
         subtitle={t("dashboard.subtitle")}
       />
+
+      <AccountAccessCard />
 
       {/* Quick Stats Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

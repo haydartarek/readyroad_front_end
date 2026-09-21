@@ -34,6 +34,7 @@ for (const width of [390, 1366]) {
       await expect(page.locator("#pricing").getByRole("button").first()).toBeEnabled();
       await expect(page.locator("#pricing").getByText("€2.99", { exact: true })).toBeInViewport();
       await expect(page.locator("#pricing").getByText("€14.99", { exact: true })).toBeInViewport();
+      await expect(page.locator("#pricing").getByRole("button").last()).toBeInViewport();
       await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       if (locale === "ar") await page.screenshot({ path: testInfo.outputPath(`pricing-ar-${width}.png`), fullPage: true });

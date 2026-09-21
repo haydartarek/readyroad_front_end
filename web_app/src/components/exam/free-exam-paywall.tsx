@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Trophy, Zap } from "lucide-react";
 
 import {
   Dialog,
@@ -35,13 +35,32 @@ const PRICE_BY_PLAN: Record<PaymentPlan, string> = {
   RIJVIA_4_WEEKS: "€14.99",
 };
 
+function PlanIcon({ plan }: { plan: PaymentPlan }) {
+  const iconClass = "h-4 w-4";
+
+  switch (plan) {
+    case "RIJVIA_3_DAYS":
+      return <Zap className={iconClass} aria-hidden />;
+
+    case "RIJVIA_1_WEEK":
+      return <CalendarCheck className={iconClass} aria-hidden />;
+
+    case "RIJVIA_4_WEEKS":
+      return <Trophy className={iconClass} aria-hidden />;
+  }
+}
+
 export function FreeExamPaywall({
   open,
   examId,
+  totalQuestions,
+  completedQuestions,
   onOpenChange,
 }: {
   open: boolean;
   examId: number;
+  totalQuestions: number;
+  completedQuestions: number;
   onOpenChange: (open: boolean) => void;
 }) {
   const { user, isAuthenticated } = useAuth();
@@ -56,6 +75,19 @@ export function FreeExamPaywall({
   );
 
   const submitting = useRef(false);
+
+  const safeTotalQuestions = Math.max(1, totalQuestions);
+  const safeCompletedQuestions = Math.min(
+    Math.max(0, completedQuestions),
+    safeTotalQuestions,
+  );
+  const remainingQuestions = Math.max(
+    0,
+    safeTotalQuestions - safeCompletedQuestions,
+  );
+  const progressPercent = Math.round(
+    (safeCompletedQuestions / safeTotalQuestions) * 100,
+  );
 
   async function continueToCheckout() {
     if (
@@ -123,27 +155,68 @@ export function FreeExamPaywall({
     >
       <DialogContent
         dir={isRTL ? "rtl" : "ltr"}
-        className="max-h-[90vh] overflow-y-auto sm:max-w-3xl"
+        className="max-h-[96vh] gap-3 overflow-y-auto p-4 sm:max-w-3xl sm:p-5"
       >
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-black">
+        <DialogHeader className={isRTL ? "text-right sm:text-right" : "text-left sm:text-left"}>
+          <DialogTitle className="text-xl font-black sm:text-2xl">
             {t("exam.paywall.title")}
           </DialogTitle>
 
-          <DialogDescription className="text-sm leading-6">
+          <DialogDescription className={["text-sm leading-5", isRTL ? "text-right" : "text-left"].join(" ")}>
             {t("exam.paywall.description")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold">
+        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-start text-sm font-semibold">
           <span className="inline-flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             {t("exam.paywall.answers_saved")}
           </span>
         </div>
 
+        <div className="rounded-2xl border bg-muted/30 px-4 py-3">
+          <div className="flex items-end justify-between gap-4">
+            <div className="text-start">
+              <bdi
+                dir="ltr"
+                className="text-2xl font-black tracking-tight text-foreground"
+              >
+                {safeCompletedQuestions} / {safeTotalQuestions}
+              </bdi>
+
+              <p className="mt-1 text-sm font-bold text-foreground">
+                {t("exam.paywall.progress_label")}
+              </p>
+            </div>
+
+            <span className="text-xs font-bold text-muted-foreground">
+              {progressPercent}%
+            </span>
+          </div>
+
+          <div
+            role="progressbar"
+            aria-label={t("exam.paywall.progress_label")}
+            aria-valuemin={0}
+            aria-valuemax={safeTotalQuestions}
+            aria-valuenow={safeCompletedQuestions}
+            className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
+          >
+            <div
+              className="h-full rounded-full bg-primary transition-[width]"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          <p className="mt-1.5 text-start text-xs font-medium text-muted-foreground">
+            {t("exam.paywall.remaining", {
+              count: remainingQuestions,
+            })}
+          </p>
+        </div>
+
         <div>
-          <p className="mb-3 text-sm font-black">
+          <p className="mb-2 text-start text-sm font-black">
             {t("exam.paywall.choose_plan")}
           </p>
 
@@ -165,7 +238,7 @@ export function FreeExamPaywall({
                     setSelectedPlan(plan)
                   }
                   className={[
-                    "relative rounded-2xl border-2 px-4 py-4 text-start transition",
+                    "relative flex min-h-[132px] flex-col rounded-2xl border-2 px-3.5 py-4 text-start transition",
                     selected
                       ? "border-primary bg-primary/10 shadow-md"
                       : "border-border bg-card hover:border-primary/40",
@@ -173,19 +246,37 @@ export function FreeExamPaywall({
                 >
                   {recommended ? (
                     <span className="absolute -top-3 end-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-black text-primary-foreground">
-                      {t(
-                        "exam.paywall.recommended",
-                      )}
+                      {t("home.pricing.recommended")}
                     </span>
                   ) : null}
 
-                  <p className="font-black">
-                    {t(`payment.plan.${plan}`)}
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-primary/15 bg-primary/10 text-primary">
+                      <PlanIcon plan={plan} />
+                    </span>
+
+                    <p className="font-black">
+                      {t(`payment.plan.${plan}`)}
+                    </p>
+                  </div>
+
+                  <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                    {t(`home.pricing.tagline.${plan}`)}
                   </p>
 
-                  <p className="mt-2 text-2xl font-black text-primary">
+                  <bdi
+                    dir="ltr"
+                    className="mt-auto block pt-3 text-2xl font-black text-primary"
+                  >
                     {PRICE_BY_PLAN[plan]}
-                  </p>
+                  </bdi>
+
+                  <bdi
+                    dir="ltr"
+                    className="mt-1 block text-xs font-bold text-muted-foreground"
+                  >
+                    {t(`home.pricing.per_day.${plan}`)}
+                  </bdi>
                 </button>
               );
             })}
@@ -203,7 +294,7 @@ export function FreeExamPaywall({
 
         <Button
           size="lg"
-          className="w-full"
+          className="w-full gap-2 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
           disabled={
             busy ||
             !PAYMENTS_ENABLED
@@ -212,15 +303,18 @@ export function FreeExamPaywall({
             void continueToCheckout()
           }
         >
-          {t(
-            busy
-              ? "payment.opening"
-              : "exam.paywall.continue",
+          {busy ? (
+            t("payment.opening")
+          ) : (
+            <>
+              <span>{t("exam.paywall.continue")}</span>
+              <bdi dir="ltr">{PRICE_BY_PLAN[selectedPlan]}</bdi>
+            </>
           )}
         </Button>
 
-        <p className="text-center text-xs text-muted-foreground">
-          {t("payment.one_time")}
+        <p className="text-center text-xs font-medium text-muted-foreground">
+          {t("exam.paywall.trust")}
         </p>
       </DialogContent>
     </Dialog>

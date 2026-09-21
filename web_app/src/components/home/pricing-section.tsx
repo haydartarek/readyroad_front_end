@@ -39,7 +39,7 @@ const FEATURES = [
 const PENDING_PLAN_KEY = "rijvia.pendingCheckoutPlan";
 
 function PlanIcon({ plan }: { plan: PaymentPlan }) {
-  const iconClass = "h-5 w-5";
+  const iconClass = "h-4 w-4";
 
   switch (plan) {
     case "RIJVIA_3_DAYS":
@@ -289,60 +289,55 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                   <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
                 )}
 
-                <div className="mb-6 flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={[
-                        "grid h-10 w-10 shrink-0 place-items-center rounded-xl border",
-                        featured
-                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                          : "border-primary/15 bg-primary/10 text-primary",
-                      ].join(" ")}
-                    >
-                      <PlanIcon plan={plan} />
-                    </div>
+                {featured && (
+                  <span className="absolute end-5 top-5 rounded-full bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground shadow-sm">
+                    {t("home.pricing.recommended")}
+                  </span>
+                )}
 
-                    <h3
-                      className={[
-                        "text-xl font-extrabold",
-                        featured
-                          ? "text-secondary-foreground"
-                          : "text-secondary",
-                      ].join(" ")}
-                    >
-                      {t(`payment.plan.${plan}`)}
-                    </h3>
+                <div className="mb-5 flex flex-col items-center text-center">
+                  <div
+                    className={[
+                      "grid h-9 w-9 shrink-0 place-items-center rounded-xl border",
+                      featured
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                        : "border-primary/15 bg-primary/10 text-primary",
+                    ].join(" ")}
+                  >
+                    <PlanIcon plan={plan} />
                   </div>
 
-                  {featured && (
-                    <span className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground shadow-sm">
-                      {t("home.pricing.popular")}
-                    </span>
-                  )}
+                  <h3
+                    className={[
+                      "mt-3 text-center text-2xl font-black",
+                      featured
+                        ? "text-secondary-foreground"
+                        : "text-secondary",
+                    ].join(" ")}
+                  >
+                    {t(`payment.plan.${plan}`)}
+                  </h3>
                 </div>
 
                 <div className="mb-6 text-center">
-                  <div
+                  <bdi
+                    dir="ltr"
                     className={[
-                      "text-5xl font-black tracking-tight md:text-6xl",
+                      "block text-5xl font-black tracking-tight md:text-6xl",
                       featured
                         ? "text-secondary-foreground"
                         : "text-secondary",
                     ].join(" ")}
                   >
                     {PRICE_BY_PLAN[plan]}
-                  </div>
+                  </bdi>
 
-                  <p
-                    className={[
-                      "mt-2 text-sm font-semibold",
-                      featured
-                        ? "text-primary"
-                        : "text-primary",
-                    ].join(" ")}
+                  <bdi
+                    dir="ltr"
+                    className="mt-2 block text-sm font-semibold text-primary"
                   >
                     {t(`home.pricing.per_day.${plan}`)}
-                  </p>
+                  </bdi>
 
                   <p
                     className={[
@@ -352,7 +347,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                         : "text-foreground",
                     ].join(" ")}
                   >
-                    {t(`home.pricing.access.${plan}`)}
+                    {t(`home.pricing.tagline.${plan}`)}
                   </p>
                 </div>
 

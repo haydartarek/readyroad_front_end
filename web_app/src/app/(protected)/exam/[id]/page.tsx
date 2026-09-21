@@ -883,6 +883,8 @@ export default function ExamQuestionsPage() {
           <FreeExamPaywall
             open={showPaywall}
             examId={examId}
+            totalQuestions={examData.totalQuestions}
+            completedQuestions={finalizedQuestionIds.size}
             onOpenChange={setShowPaywall}
           />
         </>

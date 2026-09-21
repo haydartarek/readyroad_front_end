@@ -14,6 +14,9 @@ import {
   rememberExamCheckoutResume,
 } from "@/services/paymentService";
 
+let mockLanguage: "en" | "ar" = "en";
+let mockIsRTL = false;
+
 jest.mock("@/contexts/auth-context", () => ({
   useAuth: () => ({
     user: { username: "preview-user" },
@@ -23,12 +26,12 @@ jest.mock("@/contexts/auth-context", () => ({
 
 jest.mock("@/contexts/language-context", () => ({
   useLanguage: () => ({
-    language: "en",
-    isRTL: false,
+    language: mockLanguage,
+    isRTL: mockIsRTL,
     t: (
       key: string,
       params?: Record<string, string | number>,
-    ) => translateMessage("en", key, params),
+    ) => translateMessage(mockLanguage, key, params),
   }),
 }));
 
@@ -52,15 +55,36 @@ jest.mock("@/components/ui/dialog", () => ({
 
   DialogContent: ({
     children,
+    dir,
+    className,
   }: {
     children: React.ReactNode;
-  }) => <div>{children}</div>,
+    dir?: "rtl" | "ltr";
+    className?: string;
+  }) => (
+    <div
+      data-testid="dialog-content"
+      dir={dir}
+      className={className}
+    >
+      {children}
+    </div>
+  ),
 
   DialogHeader: ({
     children,
+    className,
   }: {
     children: React.ReactNode;
-  }) => <div>{children}</div>,
+    className?: string;
+  }) => (
+    <div
+      data-testid="dialog-header"
+      className={className}
+    >
+      {children}
+    </div>
+  ),
 
   DialogTitle: ({
     children,
@@ -81,7 +105,12 @@ const PURCHASE_ID =
 const CHECKOUT_URL =
   "https://checkout.stripe.com/test-session";
 
+const EURO = "\u20AC";
+
 beforeEach(() => {
+  mockLanguage = "en";
+  mockIsRTL = false;
+
   jest.clearAllMocks();
 
   jest.mocked(checkoutRequestId)
@@ -99,6 +128,8 @@ test("weekly plan is recommended and selected by default", () => {
     <FreeExamPaywall
       open
       examId={42}
+      totalQuestions={50}
+      completedQuestions={10}
       onOpenChange={jest.fn()}
     />,
   );
@@ -108,15 +139,27 @@ test("weekly plan is recommended and selected by default", () => {
   ).toBeVisible();
 
   expect(
-    screen.getByText("€2.99"),
-  ).toBeVisible();
+    screen.getByTestId(
+      "exam-paywall-RIJVIA_3_DAYS",
+    ),
+  ).toHaveTextContent(`${EURO}2.99`);
 
   expect(
-    screen.getByText("€6.99"),
-  ).toBeVisible();
+    screen.getByTestId(
+      "exam-paywall-RIJVIA_1_WEEK",
+    ),
+  ).toHaveTextContent(`${EURO}6.99`);
 
   expect(
-    screen.getByText("€14.99"),
+    screen.getByTestId(
+      "exam-paywall-RIJVIA_4_WEEKS",
+    ),
+  ).toHaveTextContent(`${EURO}14.99`);
+
+  expect(
+    screen.getByText(
+      "A good amount of time for regular practice and review",
+    ),
   ).toBeVisible();
 
   expect(
@@ -129,18 +172,101 @@ test("weekly plan is recommended and selected by default", () => {
   );
 });
 
+test("Arabic paywall uses RTL and right-aligned content", () => {
+  mockLanguage = "ar";
+  mockIsRTL = true;
+
+  render(
+    <FreeExamPaywall
+      open
+      examId={42}
+      totalQuestions={50}
+      completedQuestions={10}
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  expect(
+    screen.getByTestId("dialog-content"),
+  ).toHaveAttribute("dir", "rtl");
+
+  expect(
+    screen.getByTestId("dialog-header"),
+  ).toHaveClass(
+    "text-right",
+    "sm:text-right",
+  );
+
+  expect(
+    screen.getByRole("heading", {
+      name: translateMessage(
+        "ar",
+        "exam.paywall.title",
+      ),
+    }),
+  ).toBeVisible();
+
+  expect(
+    screen.getByText(
+      translateMessage(
+        "ar",
+        "home.pricing.tagline.RIJVIA_1_WEEK",
+      ),
+    ),
+  ).toBeVisible();
+});
+
+test("progress uses the actual completed and total question counts", () => {
+  render(
+    <FreeExamPaywall
+      open
+      examId={42}
+      totalQuestions={40}
+      completedQuestions={8}
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  expect(
+    screen.getByText("8 / 40"),
+  ).toBeVisible();
+
+  expect(
+    screen.getByRole("progressbar"),
+  ).toHaveAttribute(
+    "aria-valuenow",
+    "8",
+  );
+
+  expect(
+    screen.getByRole("progressbar"),
+  ).toHaveAttribute(
+    "aria-valuemax",
+    "40",
+  );
+
+  expect(
+    screen.getByText(
+      "32 questions remain to complete this exam.",
+    ),
+  ).toBeVisible();
+});
+
 test("Continue starts weekly checkout and preserves the exact exam resume", async () => {
   render(
     <FreeExamPaywall
       open
       examId={42}
+      totalQuestions={50}
+      completedQuestions={10}
       onOpenChange={jest.fn()}
     />,
   );
 
   fireEvent.click(
     screen.getByRole("button", {
-      name: "Continue securely",
+      name:
+        `Continue from question 11 now ${EURO}6.99`,
     }),
   );
 
@@ -152,7 +278,9 @@ test("Continue starts weekly checkout and preserves the exact exam resume", asyn
     ),
   );
 
-  expect(checkoutRequestId).toHaveBeenCalledWith(
+  expect(
+    checkoutRequestId,
+  ).toHaveBeenCalledWith(
     "preview-user",
     "RIJVIA_1_WEEK",
   );
@@ -164,7 +292,9 @@ test("Continue starts weekly checkout and preserves the exact exam resume", asyn
     PURCHASE_ID,
   );
 
-  expect(navigateToCheckout).toHaveBeenCalledWith(
+  expect(
+    navigateToCheckout,
+  ).toHaveBeenCalledWith(
     CHECKOUT_URL,
   );
 });
@@ -174,6 +304,8 @@ test("the learner can change the selected plan", () => {
     <FreeExamPaywall
       open
       examId={42}
+      totalQuestions={50}
+      completedQuestions={10}
       onOpenChange={jest.fn()}
     />,
   );
@@ -201,4 +333,11 @@ test("the learner can change the selected plan", () => {
     "aria-pressed",
     "false",
   );
+
+  expect(
+    screen.getByRole("button", {
+      name:
+        `Continue from question 11 now ${EURO}2.99`,
+    }),
+  ).toBeVisible();
 });

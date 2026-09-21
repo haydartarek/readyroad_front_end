@@ -294,7 +294,7 @@ export function FreeExamPaywall({
 
         <Button
           size="lg"
-          className="w-full gap-2 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
+          className="w-full gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700"
           disabled={
             busy ||
             !PAYMENTS_ENABLED

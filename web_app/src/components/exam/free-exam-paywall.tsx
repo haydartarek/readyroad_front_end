@@ -155,36 +155,36 @@ export function FreeExamPaywall({
     >
       <DialogContent
         dir={isRTL ? "rtl" : "ltr"}
-        className="max-h-[96vh] gap-3 overflow-y-auto p-4 sm:max-w-3xl sm:p-5"
+        className="max-h-[calc(100dvh-0.75rem)] gap-2 overflow-y-auto p-3 sm:max-w-3xl sm:gap-3 sm:p-5"
       >
         <DialogHeader className={isRTL ? "text-right sm:text-right" : "text-left sm:text-left"}>
-          <DialogTitle className="text-xl font-black sm:text-2xl">
+          <DialogTitle className="text-lg font-black sm:text-2xl">
             {t("exam.paywall.title")}
           </DialogTitle>
 
-          <DialogDescription className={["text-sm leading-5", isRTL ? "text-right" : "text-left"].join(" ")}>
+          <DialogDescription className={["text-xs leading-4 sm:text-sm sm:leading-5", isRTL ? "text-right" : "text-left"].join(" ")}>
             {t("exam.paywall.description")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-start text-sm font-semibold">
+        <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-start text-xs font-semibold sm:px-4 sm:py-2.5 sm:text-sm">
           <span className="inline-flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             {t("exam.paywall.answers_saved")}
           </span>
         </div>
 
-        <div className="rounded-2xl border bg-muted/30 px-4 py-3">
+        <div className="rounded-xl border bg-muted/30 px-3 py-2 sm:rounded-2xl sm:px-4 sm:py-3">
           <div className="flex items-end justify-between gap-4">
             <div className="text-start">
               <bdi
                 dir="ltr"
-                className="text-2xl font-black tracking-tight text-foreground"
+                className="text-xl font-black tracking-tight text-foreground sm:text-2xl"
               >
                 {safeCompletedQuestions} / {safeTotalQuestions}
               </bdi>
 
-              <p className="mt-1 text-sm font-bold text-foreground">
+              <p className="mt-0.5 text-xs font-bold text-foreground sm:mt-1 sm:text-sm">
                 {t("exam.paywall.progress_label")}
               </p>
             </div>
@@ -200,7 +200,7 @@ export function FreeExamPaywall({
             aria-valuemin={0}
             aria-valuemax={safeTotalQuestions}
             aria-valuenow={safeCompletedQuestions}
-            className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
+            className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted sm:mt-2 sm:h-2"
           >
             <div
               className="h-full rounded-full bg-primary transition-[width]"
@@ -208,7 +208,7 @@ export function FreeExamPaywall({
             />
           </div>
 
-          <p className="mt-1.5 text-start text-xs font-medium text-muted-foreground">
+          <p className="mt-1 text-start text-[11px] font-medium text-muted-foreground sm:mt-1.5 sm:text-xs">
             {t("exam.paywall.remaining", {
               count: remainingQuestions,
             })}
@@ -216,11 +216,11 @@ export function FreeExamPaywall({
         </div>
 
         <div>
-          <p className="mb-2 text-start text-sm font-black">
+          <p className="mb-1 text-start text-xs font-black sm:mb-2 sm:text-sm">
             {t("exam.paywall.choose_plan")}
           </p>
 
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-2 md:grid-cols-3 md:gap-3">
             {PAYWALL_PLANS.map((plan) => {
               const selected =
                 selectedPlan === plan;
@@ -238,42 +238,42 @@ export function FreeExamPaywall({
                     setSelectedPlan(plan)
                   }
                   className={[
-                    "relative flex min-h-[132px] flex-col rounded-2xl border-2 px-3.5 py-4 text-start transition",
+                    "relative grid min-h-0 grid-cols-[1fr_auto] items-center gap-x-3 rounded-xl border-2 px-3 py-2 text-start transition md:flex md:min-h-[132px] md:flex-col md:items-stretch md:rounded-2xl md:px-3.5 md:py-4",
                     selected
                       ? "border-primary bg-primary/10 shadow-md"
                       : "border-border bg-card hover:border-primary/40",
                   ].join(" ")}
                 >
                   {recommended ? (
-                    <span className="absolute -top-3 end-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-black text-primary-foreground">
+                    <span className="absolute -top-2 end-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-black text-primary-foreground md:-top-3 md:end-3 md:px-2.5 md:py-1 md:text-[11px]">
                       {t("home.pricing.recommended")}
                     </span>
                   ) : null}
 
-                  <div className="flex items-center gap-2.5">
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-primary/15 bg-primary/10 text-primary">
+                  <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 md:gap-2.5">
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-primary/15 bg-primary/10 text-primary md:h-7 md:w-7">
                       <PlanIcon plan={plan} />
                     </span>
 
-                    <p className="font-black">
+                    <p className="truncate text-sm font-black md:text-base">
                       {t(`payment.plan.${plan}`)}
                     </p>
                   </div>
 
-                  <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                  <p className="hidden text-sm leading-5 text-muted-foreground md:mt-2 md:block">
                     {t(`home.pricing.tagline.${plan}`)}
                   </p>
 
                   <bdi
                     dir="ltr"
-                    className="mt-auto block pt-3 text-2xl font-black text-primary"
+                    className="col-start-2 row-start-1 self-center text-lg font-black text-primary md:mt-auto md:block md:self-auto md:pt-3 md:text-2xl"
                   >
                     {PRICE_BY_PLAN[plan]}
                   </bdi>
 
                   <bdi
                     dir="ltr"
-                    className="mt-1 block text-xs font-bold text-muted-foreground"
+                    className="col-start-2 row-start-2 self-start text-[11px] font-bold text-muted-foreground md:mt-1 md:block md:text-xs"
                   >
                     {t(`home.pricing.per_day.${plan}`)}
                   </bdi>
@@ -313,7 +313,7 @@ export function FreeExamPaywall({
           )}
         </Button>
 
-        <p className="text-center text-xs font-medium text-muted-foreground">
+        <p className="text-center text-[11px] font-medium text-muted-foreground sm:text-xs">
           {t("exam.paywall.trust")}
         </p>
       </DialogContent>

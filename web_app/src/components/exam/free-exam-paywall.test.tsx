@@ -172,6 +172,49 @@ test("weekly plan is recommended and selected by default", () => {
   );
 });
 
+test("mobile paywall keeps the plans compact while preserving desktop cards", () => {
+  render(
+    <FreeExamPaywall
+      open
+      examId={42}
+      totalQuestions={50}
+      completedQuestions={10}
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  expect(
+    screen.getByTestId("dialog-content"),
+  ).toHaveClass(
+    "max-h-[calc(100dvh-0.75rem)]",
+    "gap-2",
+    "p-3",
+  );
+
+  expect(
+    screen.getByTestId(
+      "exam-paywall-RIJVIA_1_WEEK",
+    ),
+  ).toHaveClass(
+    "grid",
+    "min-h-0",
+    "grid-cols-[1fr_auto]",
+    "py-2",
+    "md:flex",
+    "md:min-h-[132px]",
+    "md:py-4",
+  );
+
+  expect(
+    screen.getByText(
+      "A good amount of time for regular practice and review",
+    ),
+  ).toHaveClass(
+    "hidden",
+    "md:block",
+  );
+});
+
 test("Arabic paywall uses RTL and right-aligned content", () => {
   mockLanguage = "ar";
   mockIsRTL = true;

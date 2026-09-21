@@ -1,10 +1,16 @@
 import { AxiosHeaders, type AxiosResponse } from "axios";
 import { apiClient } from "@/lib/api";
 import { ALL_MESSAGES } from "@/lib/messages";
-import { createCheckout, getPurchaseStatus } from "./paymentService";
+import {
+  createCheckout,
+  forgetExamCheckoutResume,
+  getPurchaseStatus,
+  readExamCheckoutResume,
+  rememberExamCheckoutResume,
+} from "./paymentService";
 
 jest.mock("@/lib/api", () => ({ apiClient: { post: jest.fn(), get: jest.fn() } }));
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => { jest.clearAllMocks(); sessionStorage.clear(); });
 
 function response<T>(data: T): AxiosResponse<T> {
   return {
@@ -39,4 +45,42 @@ test("all payment strings exist in the four existing locale files", () => {
     for (const key of keys) expect(ALL_MESSAGES[language][key].trim()).not.toBe("");
     expect(ALL_MESSAGES[language]["payment.expires"]).toContain("{date}");
   }
+});
+
+test("exam checkout resume is bound to the owned purchase id", () => {
+  const purchaseId =
+    "1c0c5a1b-9ab6-4f59-a9ac-31a87910fc64";
+
+  rememberExamCheckoutResume(42, purchaseId);
+
+  expect(
+    readExamCheckoutResume(purchaseId),
+  ).toBe(42);
+
+  expect(
+    readExamCheckoutResume(
+      "865d2812-991c-43f3-8fc5-4c09d4f9b964",
+    ),
+  ).toBeNull();
+});
+
+test("exam checkout resume can be cleared only for the matching purchase", () => {
+  const purchaseId =
+    "1c0c5a1b-9ab6-4f59-a9ac-31a87910fc64";
+
+  rememberExamCheckoutResume(42, purchaseId);
+
+  forgetExamCheckoutResume(
+    "865d2812-991c-43f3-8fc5-4c09d4f9b964",
+  );
+
+  expect(
+    readExamCheckoutResume(purchaseId),
+  ).toBe(42);
+
+  forgetExamCheckoutResume(purchaseId);
+
+  expect(
+    readExamCheckoutResume(purchaseId),
+  ).toBeNull();
 });

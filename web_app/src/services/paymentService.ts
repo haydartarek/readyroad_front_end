@@ -13,6 +13,12 @@ export interface PurchaseStatus {
 }
 export interface CheckoutResult { purchaseId: string; checkoutUrl: string }
 
+export function navigateToCheckout(
+  checkoutUrl: string,
+) {
+  window.location.assign(checkoutUrl);
+}
+
 export async function createCheckout(plan: PaymentPlan, clientRequestId: string, locale: string) {
   if (!PAYMENTS_ENABLED) throw new Error("Payments are disabled");
   if (!isValidLanguage(locale)) throw new Error("Unsupported checkout locale");
@@ -64,3 +70,95 @@ export function forgetCheckoutRequest(user: string, plan: PaymentPlan) {
 
 export const isPurchaseId = (id: string | null): id is string =>
   !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+const EXAM_CHECKOUT_RESUME_KEY =
+  "rijvia.examPaywallResume";
+
+interface ExamCheckoutResumeRecord {
+  examId: number;
+  purchaseId: string;
+}
+
+export function rememberExamCheckoutResume(
+  examId: number,
+  purchaseId: string,
+) {
+  if (
+    !Number.isInteger(examId) ||
+    examId <= 0 ||
+    !isPurchaseId(purchaseId)
+  ) {
+    return;
+  }
+
+  const record: ExamCheckoutResumeRecord = {
+    examId,
+    purchaseId,
+  };
+
+  try {
+    sessionStorage.setItem(
+      EXAM_CHECKOUT_RESUME_KEY,
+      JSON.stringify(record),
+    );
+  } catch {
+    // Checkout itself must still be allowed if storage is unavailable.
+  }
+}
+
+export function readExamCheckoutResume(
+  purchaseId: string,
+): number | null {
+  if (!isPurchaseId(purchaseId)) return null;
+
+  try {
+    const raw =
+      sessionStorage.getItem(EXAM_CHECKOUT_RESUME_KEY);
+
+    if (!raw) return null;
+
+    const parsed =
+      JSON.parse(raw) as Partial<ExamCheckoutResumeRecord>;
+
+    if (
+      parsed.purchaseId !== purchaseId ||
+      !Number.isInteger(parsed.examId) ||
+      Number(parsed.examId) <= 0
+    ) {
+      return null;
+    }
+
+    return Number(parsed.examId);
+  } catch {
+    return null;
+  }
+}
+
+export function forgetExamCheckoutResume(
+  purchaseId?: string,
+) {
+  try {
+    if (!purchaseId) {
+      sessionStorage.removeItem(
+        EXAM_CHECKOUT_RESUME_KEY,
+      );
+      return;
+    }
+
+    const raw =
+      sessionStorage.getItem(EXAM_CHECKOUT_RESUME_KEY);
+
+    if (!raw) return;
+
+    const parsed =
+      JSON.parse(raw) as Partial<ExamCheckoutResumeRecord>;
+
+    if (parsed.purchaseId === purchaseId) {
+      sessionStorage.removeItem(
+        EXAM_CHECKOUT_RESUME_KEY,
+      );
+    }
+  } catch {
+    // Ignore unavailable or corrupted session storage.
+  }
+}

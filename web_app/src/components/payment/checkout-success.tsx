@@ -6,7 +6,15 @@ import Link from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
-import { forgetCheckoutRequest, getPurchaseStatus, isPurchaseId, type PurchaseStatus } from "@/services/paymentService";
+import {
+  forgetCheckoutRequest,
+  forgetExamCheckoutResume,
+  getPurchaseStatus,
+  isPurchaseId,
+  readExamCheckoutResume,
+  type PurchaseStatus,
+} from "@/services/paymentService";
+import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 export function CheckoutSuccess() {
   const params = useSearchParams();
@@ -20,6 +28,7 @@ function PurchaseConfirmation({ purchaseId, username, isAuthLoading }: {
   purchaseId: string | null; username?: string; isAuthLoading: boolean;
 }) {
   const { language, t, isRTL } = useLanguage();
+  const { replace } = useLocalizedRouter();
   const [purchase, setPurchase] = useState<PurchaseStatus | null>(null);
   const [state, setState] = useState<"confirming" | "waiting" | "invalid" | "login">("confirming");
 
@@ -43,7 +52,24 @@ function PurchaseConfirmation({ purchaseId, username, isAuthLoading }: {
         if (result.status !== "PENDING") {
           active = false;
           clearTimeout(deadline);
-          if (username) forgetCheckoutRequest(username, result.plan);
+
+          if (username) {
+            forgetCheckoutRequest(
+              username,
+              result.plan,
+            );
+          }
+
+          if (result.status === "PAID") {
+            const resumeExamId =
+              readExamCheckoutResume(purchaseId!);
+
+            if (resumeExamId) {
+              forgetExamCheckoutResume(purchaseId!);
+              replace(`/exam/${resumeExamId}`);
+            }
+          }
+
           return;
         }
       } catch (err) {
@@ -60,7 +86,7 @@ function PurchaseConfirmation({ purchaseId, username, isAuthLoading }: {
     }
     void poll();
     return () => { active = false; clearTimeout(deadline); clearTimeout(pollTimer); abort.abort(); };
-  }, [purchaseId, username, isAuthLoading]);
+  }, [purchaseId, username, isAuthLoading, replace]);
 
   const invalid = !isPurchaseId(purchaseId) || state === "invalid";
   const paid = !invalid && purchase?.status === "PAID";

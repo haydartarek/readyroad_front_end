@@ -4,20 +4,21 @@ import { CheckoutSuccess } from "./checkout-success";
 import { CheckoutCancel } from "./checkout-cancel";
 import { PlanSelection } from "./plan-selection";
 import { translateMessage } from "@/lib/messages";
-import { createCheckout, getPurchaseStatus, forgetCheckoutRequest } from "@/services/paymentService";
+import { createCheckout, getPurchaseStatus, forgetCheckoutRequest, rememberExamCheckoutResume } from "@/services/paymentService";
 
 jest.mock("@/services/paymentService", () => ({
   ...jest.requireActual("@/services/paymentService"),
   createCheckout: jest.fn(), getPurchaseStatus: jest.fn(), forgetCheckoutRequest: jest.fn(),
 }));
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 let mockLocale: "ar" | "nl" | "fr" | "en" = "en";
 let mockAuthenticated = true;
 const mockUser = { username: "payment-fixture" };
 const id = "1c0c5a1b-9ab6-4f59-a9ac-31a87910fc64";
 let mockQuery = `purchaseId=${id}&session_id=untrusted`;
 jest.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(mockQuery) }));
-jest.mock("@/hooks/use-localized-router", () => ({ useLocalizedRouter: () => ({ push: mockPush }) }));
+jest.mock("@/hooks/use-localized-router", () => ({ useLocalizedRouter: () => ({ push: mockPush, replace: mockReplace }) }));
 jest.mock("@/contexts/auth-context", () => ({ useAuth: () => ({ user: mockUser, isAuthenticated: mockAuthenticated, isLoading: false }) }));
 jest.mock("@/contexts/language-context", () => ({ useLanguage: () => ({
   language: mockLocale, isRTL: mockLocale === "ar", t: (key: string, params?: Record<string, string | number>) => translateMessage(mockLocale, key, params),
@@ -28,7 +29,7 @@ const pending = { purchaseId: id, status: "PENDING" as const, plan: "RIJVIA_3_DA
 const paid = { ...pending, status: "PAID" as const, expiresAt: "2026-10-01T14:00:00+02:00" };
 
 beforeEach(() => {
-  jest.useFakeTimers(); jest.clearAllMocks(); sessionStorage.clear();
+  jest.useFakeTimers(); jest.clearAllMocks(); mockReplace.mockReset(); sessionStorage.clear();
   mockLocale = "en"; mockAuthenticated = true; mockQuery = `purchaseId=${id}&session_id=untrusted`;
   jest.mocked(getPurchaseStatus).mockResolvedValue(pending);
   Object.defineProperty(globalThis.crypto, "randomUUID", { configurable: true, value: jest.fn(() => "865d2812-991c-43f3-8fc5-4c09d4f9b964") });
@@ -120,4 +121,19 @@ test("unauthenticated buyer signs in before creating a purchase", () => {
   fireEvent.click(screen.getAllByRole("button")[0]);
   expect(mockPush).toHaveBeenCalledWith("/login?returnUrl=%2Fplans");
   expect(createCheckout).not.toHaveBeenCalled();
+});
+
+test("a confirmed exam paywall purchase resumes the exact same exam", async () => {
+  rememberExamCheckoutResume(42, id);
+  jest.mocked(getPurchaseStatus).mockResolvedValue(paid);
+
+  render(<CheckoutSuccess />);
+
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(0);
+  });
+
+  expect(mockReplace).toHaveBeenCalledWith(
+    "/exam/42",
+  );
 });

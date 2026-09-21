@@ -58,6 +58,14 @@ interface ExamStartResponse {
   startedAt: string;
   expiresAt: string;
   questions: ExamQuestionResponse[];
+  accessMode?: "PREVIEW" | "FULL";
+  accessState?:
+    | "PREVIEW_ACTIVE"
+    | "FREE_LIMIT_REACHED"
+    | "FULL_ACTIVE";
+  freeQuestionLimit?: number;
+  resumeQuestionOrder?: number;
+  finalizedQuestionIds?: number[];
 }
 
 interface ActiveExamResponse {
@@ -77,9 +85,16 @@ export default function TheoryExamPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
-  const persistAndOpenExam = useCallback(
+  const openExam = useCallback(
     (exam: ExamStartResponse) => {
-      localStorage.setItem("current_exam", JSON.stringify(exam));
+      // The backend /active endpoint is the source of truth.
+      // Remove any stale cache left by older frontend versions.
+      try {
+        localStorage.removeItem("current_exam");
+      } catch {
+        // Storage availability must never block exam navigation.
+      }
+
       router.push(`/exam/${exam.examId}`);
     },
     [router],
@@ -126,7 +141,7 @@ export default function TheoryExamPage() {
     }
 
     if (activeExam) {
-      persistAndOpenExam(activeExam);
+      openExam(activeExam);
       return;
     }
 
@@ -138,7 +153,7 @@ export default function TheoryExamPage() {
       const response = await apiClient.post<ExamStartResponse>(
         API_ENDPOINTS.EXAMS.START,
       );
-      persistAndOpenExam(response.data);
+      openExam(response.data);
     } catch (error) {
       logApiError("Failed to start persistent theory exam", error);
       if (isServiceUnavailable(error)) {

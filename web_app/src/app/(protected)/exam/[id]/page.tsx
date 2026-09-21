@@ -6,6 +6,7 @@ import Image, { getImageProps } from "next/image";
 import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
 import { ExitConfirmDialog } from "@/components/exam/exit-confirm-dialog";
+import { FreeExamPaywall } from "@/components/exam/free-exam-paywall";
 import { FocusedExamShell } from "@/components/exam/focused-exam-shell";
 import { FocusedQuestionCard } from "@/components/exam/focused-question-card";
 import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
@@ -16,6 +17,14 @@ import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { convertToPublicImageUrl } from "@/lib/image-utils";
 import { API_ENDPOINTS, EXAM_RULES } from "@/lib/constants";
+import {
+  canSubmitTheoryExam,
+  isPreviewBoundary,
+  resolvePreviewOptionState,
+  resolveVisibleResumeIndex,
+  type ExamAccessMode,
+  type ExamAccessState,
+} from "@/lib/theory-exam-access";
 import { useExamQuestionPresentation } from "@/hooks/use-exam-question-presentation";
 import {
   resolveNextTheoryQuestionIndex,
@@ -40,6 +49,7 @@ const QUESTION_IMAGE_SIZES = "(max-width: 1023px) calc(100vw - 48px), 700px";
 
 interface Question {
   id: number;
+  order: number;
   questionTextEn: string;
   questionTextAr: string;
   questionTextNl: string;
@@ -58,8 +68,14 @@ interface Question {
 
 interface ExamData {
   id: number;
+  totalQuestions: number;
   expiresAt: string;
   questions: Question[];
+  accessMode?: ExamAccessMode;
+  accessState?: ExamAccessState;
+  freeQuestionLimit?: number;
+  resumeQuestionOrder?: number;
+  finalizedQuestionIds: number[];
 }
 
 interface BackendQuestion {
@@ -82,20 +98,44 @@ interface BackendQuestion {
 
 interface BackendExamData {
   examId: number;
+  totalQuestions: number;
   startedAt?: string;
   startTime?: string;
   expiresAt: string;
   questions: BackendQuestion[];
+  accessMode?: ExamAccessMode;
+  accessState?: ExamAccessState;
+  freeQuestionLimit?: number;
+  resumeQuestionOrder?: number;
+  finalizedQuestionIds?: number[];
+}
+
+interface SubmitAnswerResponse {
+  correct?: boolean | null;
+  correctOptionId?: number | null;
+  accessState?: ExamAccessState;
+}
+
+interface PreviewAnswerFeedback {
+  correct: boolean;
+  correctOptionId: number;
 }
 
 export function normalizeExamData(backendData: BackendExamData): ExamData {
   return {
     id: backendData.examId,
+    totalQuestions: backendData.totalQuestions,
     expiresAt: backendData.expiresAt,
+    accessMode: backendData.accessMode,
+    accessState: backendData.accessState,
+    freeQuestionLimit: backendData.freeQuestionLimit,
+    resumeQuestionOrder: backendData.resumeQuestionOrder,
+    finalizedQuestionIds: backendData.finalizedQuestionIds ?? [],
     questions: [...(backendData.questions ?? [])]
       .sort((a, b) => (a.questionOrder ?? Number.MAX_SAFE_INTEGER) - (b.questionOrder ?? Number.MAX_SAFE_INTEGER))
       .map((q) => ({
       id: q.questionId,
+      order: q.questionOrder ?? 1,
       questionTextEn: q.questionTextEn,
       questionTextAr: q.questionTextAr,
       questionTextNl: q.questionTextNl,
@@ -170,11 +210,15 @@ export default function ExamQuestionsPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [finalizedQuestionIds, setFinalizedQuestionIds] = useState<Set<number>>(
     () => new Set(),
   );
+
+  const [previewFeedbackByQuestionId, setPreviewFeedbackByQuestionId] =
+    useState<Record<number, PreviewAnswerFeedback>>({});
 
   // ── Per-question countdown ──────────────────────────────
   const [questionTimeLeft, setQuestionTimeLeft] = useState<number>(QUESTION_TIME);
@@ -227,21 +271,7 @@ export default function ExamQuestionsPage() {
           toast.error(t("exam.results_invalid"));
           return;
         }
-        const storedExam = localStorage.getItem("current_exam");
-        if (storedExam) {
-          let parsedExam: BackendExamData | null = null;
-          try {
-            parsedExam = JSON.parse(storedExam) as BackendExamData;
-          } catch {
-            localStorage.removeItem("current_exam");
-          }
-          if (parsedExam && parsedExam.examId === examId) {
-            setExamData(normalizeExamData(parsedExam));
-            setError(null);
-            setIsLoading(false);
-            return;
-          }
-        }
+
         const response = await apiClient.get<{
           hasActiveExam: boolean;
           activeExam: BackendExamData;
@@ -249,8 +279,33 @@ export default function ExamQuestionsPage() {
 
         if (response.data.hasActiveExam && response.data.activeExam) {
           const normalized = normalizeExamData(response.data.activeExam);
-          if (normalized.id !== examId)
+
+          if (normalized.id !== examId) {
             router.replace(`/exam/${normalized.id}`);
+          }
+
+          const hydratedFinalizedIds =
+            new Set(normalized.finalizedQuestionIds);
+
+          finalizedQuestionIdsRef.current =
+            hydratedFinalizedIds;
+
+          setFinalizedQuestionIds(
+            new Set(hydratedFinalizedIds),
+          );
+
+          setCurrentQuestionIndex(
+            resolveVisibleResumeIndex(
+              normalized.resumeQuestionOrder,
+              normalized.questions.length,
+            ),
+          );
+
+          setShowPaywall(
+            normalized.accessState ===
+              "FREE_LIMIT_REACHED",
+          );
+
           setExamData(normalized);
           setError(null);
         } else {
@@ -273,10 +328,23 @@ export default function ExamQuestionsPage() {
 
   const presentedQuestionId =
     examData?.questions[currentQuestionIndex]?.id;
+
+  const freeLimitReached =
+    examData?.accessState === "FREE_LIMIT_REACHED";
+
+  const previewFeedbackVisible =
+    presentedQuestionId !== undefined &&
+    Boolean(
+      previewFeedbackByQuestionId[presentedQuestionId],
+    );
+
   useExamQuestionPresentation(
     examId,
     presentedQuestionId,
-    Boolean(examData) && !isSubmitting && !sessionEnded,
+    Boolean(examData) &&
+      !isSubmitting &&
+      !sessionEnded &&
+      !freeLimitReached,
   );
 
   // ── Save answer ─────────────────────────────────────────
@@ -287,6 +355,10 @@ export default function ExamQuestionsPage() {
       if (!currentQuestion) return;
 
       const questionId = currentQuestion.id;
+
+      if (previewFeedbackByQuestionId[questionId]) {
+        return;
+      }
       if (!Number.isFinite(questionId)) {
         toast.error(t("common.load_error"));
         return;
@@ -324,13 +396,46 @@ export default function ExamQuestionsPage() {
       );
 
       try {
-        await apiClient.post(
-          `/exams/simulations/${safeExamId}/questions/${questionId}/answer`,
-          {
-            selectedOptionId,
-            timeTakenSeconds,
-          },
-        );
+        const response =
+          await apiClient.post<SubmitAnswerResponse>(
+            `/exams/simulations/${safeExamId}/questions/${questionId}/answer`,
+            {
+              selectedOptionId,
+              timeTakenSeconds,
+            },
+          );
+
+        if (response.data.accessState) {
+          setExamData((current) =>
+            current
+              ? {
+                  ...current,
+                  accessState: response.data.accessState,
+                }
+              : current,
+          );
+        }
+
+        const previewCorrect = response.data.correct;
+        const previewCorrectOptionId =
+          response.data.correctOptionId;
+
+        if (
+          examData.accessMode === "PREVIEW" &&
+          typeof previewCorrect === "boolean" &&
+          typeof previewCorrectOptionId === "number"
+        ) {
+          const previewFeedback: PreviewAnswerFeedback = {
+            correct: previewCorrect,
+            correctOptionId: previewCorrectOptionId,
+          };
+
+          setPreviewFeedbackByQuestionId((current) => ({
+            ...current,
+            [questionId]: previewFeedback,
+          }));
+        }
+
         continuousInactivitySecondsRef.current = 0;
         finalizedQuestionIdsRef.current.add(questionId);
         setFinalizedQuestionIds(new Set(finalizedQuestionIdsRef.current));
@@ -347,16 +452,29 @@ export default function ExamQuestionsPage() {
         }
       }
     },
-    [answers, currentQuestionIndex, examData, examId, t],
+    [
+      answers,
+      currentQuestionIndex,
+      examData,
+      examId,
+      previewFeedbackByQuestionId,
+      t,
+    ],
   );
 
   // ── Submit exam ─────────────────────────────────────────
   const submitExam = useCallback(async () => {
     if (!examData) return;
     if (
-      finalizedQuestionIdsRef.current.size !== examData.questions.length
-    )
+      !canSubmitTheoryExam({
+        finalizedCount:
+          finalizedQuestionIdsRef.current.size,
+        totalQuestions: examData.totalQuestions,
+        accessState: examData.accessState,
+      })
+    ) {
       return;
+    }
     try {
       setIsSubmitting(true);
       isExamActive.current = false;
@@ -455,12 +573,36 @@ export default function ExamQuestionsPage() {
           return;
         }
 
+        if (
+          isPreviewBoundary({
+            accessMode: examData.accessMode,
+            freeQuestionLimit: examData.freeQuestionLimit,
+            questionOrder: currentQuestion.order,
+          })
+        ) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+
+          setExamData((current) =>
+            current
+              ? {
+                  ...current,
+                  accessState: "FREE_LIMIT_REACHED",
+                }
+              : current,
+          );
+
+          setShowPaywall(true);
+          return;
+        }
+
         const decision = resolveTheoryTimedAttemptStep({
           reason: resolvedReason,
           isLastQuestion:
-            currentQuestionIndex === examData.questions.length - 1,
+            currentQuestion.order >= examData.totalQuestions,
           finalizedCount: finalizedQuestionIdsRef.current.size,
-          totalQuestions: examData.questions.length,
+          totalQuestions: examData.totalQuestions,
           continuousInactivitySeconds:
             continuousInactivitySecondsRef.current,
         });
@@ -477,7 +619,7 @@ export default function ExamQuestionsPage() {
             resolveNextTheoryQuestionIndex({
               currentIndex: previousIndex,
               transitionFromIndex: currentQuestionIndex,
-              totalQuestions: examData.questions.length,
+              totalQuestions: examData.totalQuestions,
             }),
           );
           setQuestionTimeLeft(QUESTION_TIME);
@@ -505,7 +647,14 @@ export default function ExamQuestionsPage() {
   // Start only when a question is available. Keep transitions outside a state
   // updater: React may replay updater functions, while navigation must run once.
   useEffect(() => {
-    if (isLoading || !presentedQuestionId || isSubmitting || sessionEnded) {
+    if (
+      isLoading ||
+      !presentedQuestionId ||
+      isSubmitting ||
+      sessionEnded ||
+      freeLimitReached ||
+      previewFeedbackVisible
+    ) {
       return;
     }
     setQuestionTimeLeft(QUESTION_TIME);
@@ -521,7 +670,15 @@ export default function ExamQuestionsPage() {
     }, 250);
     timerRef.current = timer;
     return () => clearInterval(timer);
-  }, [isLoading, presentedQuestionId, isSubmitting, sessionEnded, timerRestartKey]);
+  }, [
+    isLoading,
+    presentedQuestionId,
+    isSubmitting,
+    sessionEnded,
+    freeLimitReached,
+    previewFeedbackVisible,
+    timerRestartKey,
+  ]);
 
   const nextImageUrl = convertToPublicImageUrl(
     examData?.questions[currentQuestionIndex + 1]?.imageUrl,
@@ -611,11 +768,11 @@ export default function ExamQuestionsPage() {
   }
 
   const currentQuestion = examData.questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === examData.questions.length - 1;
+  const isLastQuestion = currentQuestion.order >= examData.totalQuestions;
   const progressPercent = Math.round(
-    ((currentQuestionIndex + 1) / examData.questions.length) * 100,
+    (currentQuestion.order / examData.totalQuestions) * 100,
   );
-  const questionCounter = `${currentQuestionIndex + 1} / ${examData.questions.length}`;
+  const questionCounter = `${currentQuestion.order} / ${examData.totalQuestions}`;
   const timerToneClass =
     questionTimeLeft >= 10
       ? "text-green-700"
@@ -635,6 +792,37 @@ export default function ExamQuestionsPage() {
   const difficultyLabel = currentQuestion.difficultyLevel
     ? t(`practice_exam.difficulty_${currentQuestion.difficultyLevel.toLowerCase()}`)
     : null;
+
+  const currentPreviewFeedback =
+    previewFeedbackByQuestionId[currentQuestion.id];
+
+  const selectedOptionNumber =
+    answers[currentQuestion.id];
+
+  const selectedOption =
+    currentQuestion.options.find(
+      (option) =>
+        option.number === selectedOptionNumber,
+    );
+
+  const correctOption =
+    currentPreviewFeedback
+      ? currentQuestion.options.find(
+          (option) =>
+            option.id === currentPreviewFeedback.correctOptionId,
+        )
+      : undefined;
+
+  const correctOptionText =
+    correctOption
+      ? localizeText(
+          language,
+          correctOption.textEn,
+          correctOption.textAr,
+          correctOption.textNl,
+          correctOption.textFr,
+        )
+      : "";
 
   return (
     <FocusedExamShell
@@ -691,19 +879,56 @@ export default function ExamQuestionsPage() {
             onStay={handleExitStay}
             onLeave={handleExitLeave}
           />
+
+          <FreeExamPaywall
+            open={showPaywall}
+            examId={examId}
+            totalQuestions={examData.totalQuestions}
+            completedQuestions={finalizedQuestionIds.size}
+            onOpenChange={setShowPaywall}
+          />
         </>
       }
     >
       <FocusedQuestionCard
         compactOptionGap
         compactMobile
+        feedback={
+          currentPreviewFeedback ? (
+            <div
+              role="status"
+              aria-live="polite"
+              className={[
+                "rounded-xl border px-4 py-3 text-sm font-semibold",
+                currentPreviewFeedback.correct
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                  : "border-red-300 bg-red-50 text-red-900",
+              ].join(" ")}
+            >
+              <p className="font-black">
+                {t(
+                  currentPreviewFeedback.correct
+                    ? "practice_exam.score_correct"
+                    : "practice_exam.score_wrong",
+                )}
+              </p>
+
+              {correctOptionText ? (
+                <p className="mt-1">
+                  {t("exam.correct_answer")} {correctOptionText}
+                </p>
+              ) : null}
+            </div>
+          ) : null
+        }
         footer={
           <Button
             data-testid="exam-next"
             size="lg"
             onClick={() => void handleNextOrSubmit("answered")}
             disabled={
-              isSubmitting || !finalizedQuestionIds.has(currentQuestion.id)
+              isSubmitting ||
+              !finalizedQuestionIds.has(currentQuestion.id)
             }
             className="w-full shadow-md shadow-primary/20"
           >
@@ -767,8 +992,20 @@ export default function ExamQuestionsPage() {
             option.textNl,
             option.textFr,
           ),
-          selected: answers[currentQuestion.id] === option.number,
-          onSelect: () => handleAnswerSelect(option.number),
+          selected:
+            answers[currentQuestion.id] === option.number,
+          state: resolvePreviewOptionState({
+            optionId: option.id,
+            selectedOptionId: selectedOption?.id,
+            correctOptionId:
+              currentPreviewFeedback?.correctOptionId,
+            hasFeedback:
+              Boolean(currentPreviewFeedback),
+          }),
+          disabled:
+            Boolean(currentPreviewFeedback),
+          onSelect: () =>
+            handleAnswerSelect(option.number),
         }))}
       />
     </FocusedExamShell>

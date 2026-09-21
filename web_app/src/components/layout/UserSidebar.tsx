@@ -7,6 +7,7 @@ import {
   AlertCircle,
   ClipboardList,
   LayoutDashboard,
+  WalletCards,
   TrendingDown,
   User,
 } from "lucide-react";
@@ -58,9 +59,9 @@ const NAV_ITEMS: NavItem[] = [
 const ACCOUNT_ITEMS: NavItem[] = [
   {
     key: "plans",
-    labelKey: "payment.plans_title",
-    href: "/plans",
-    icon: ClipboardList,
+    labelKey: "account_access.packages",
+    href: "/#pricing",
+    icon: WalletCards,
     section: null,
   },
   {

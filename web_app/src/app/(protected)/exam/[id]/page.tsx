@@ -173,6 +173,29 @@ function localizeText(
   }
 }
 
+function isFreeExamLimitReached(error: unknown): boolean {
+  const response = (
+    error as {
+      response?: {
+        status?: number;
+        data?: unknown;
+      };
+    }
+  ).response;
+
+  if (response?.status !== 403) {
+    return false;
+  }
+
+  const data = response.data;
+
+  return Boolean(
+    data &&
+      typeof data === "object" &&
+      "code" in data &&
+      (data as { code?: unknown }).code === "FREE_LIMIT_REACHED",
+  );
+}
 function LoadingSpinner({ message }: { message: string }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
@@ -446,6 +469,19 @@ export default function ExamQuestionsPage() {
           else next[questionId] = previousAnswer;
           return next;
         });
+        if (isFreeExamLimitReached(err)) {
+          setExamData((current) =>
+            current
+              ? {
+                  ...current,
+                  accessState: "FREE_LIMIT_REACHED",
+                }
+              : current,
+          );
+
+          setShowPaywall(true);
+          return;
+        }
         logApiError("Failed to save answer", err);
         if (!isServiceUnavailable(err)) {
           toast.error(t("exam.answer_save_failed"));
@@ -625,6 +661,19 @@ export default function ExamQuestionsPage() {
           setQuestionTimeLeft(QUESTION_TIME);
         }
       } catch (err) {
+        if (isFreeExamLimitReached(err)) {
+          setExamData((current) =>
+            current
+              ? {
+                  ...current,
+                  accessState: "FREE_LIMIT_REACHED",
+                }
+              : current,
+          );
+
+          setShowPaywall(true);
+          return;
+        }
         logApiError("Failed to finalize timed exam question", err);
         setQuestionTimeLeft(QUESTION_TIME);
         setTimerRestartKey((current) => current + 1);

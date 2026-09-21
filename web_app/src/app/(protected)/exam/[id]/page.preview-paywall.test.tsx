@@ -484,6 +484,59 @@ describe("theory exam preview paywall integration", () => {
     );
   });
 
+  test("backend FREE_LIMIT_REACHED response opens paywall without exposing question eleven", async () => {
+    get.mockResolvedValue(
+      activeResponse(
+        previewExam("PREVIEW_ACTIVE"),
+      ),
+    );
+
+    post.mockImplementation(
+      async (url: string) => {
+        if (
+          url ===
+          "/exams/simulations/42/questions/10/answer"
+        ) {
+          throw {
+            response: {
+              status: 403,
+              data: {
+                code: "FREE_LIMIT_REACHED",
+              },
+            },
+          };
+        }
+
+        return {
+          data: {},
+        };
+      },
+    );
+
+    render(<ExamQuestionsPage />);
+
+    expect(
+      await screen.findByText("Question 10"),
+    ).toBeVisible();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Q10 A",
+      }),
+    );
+
+    expect(
+      await screen.findByTestId(
+        "free-exam-paywall",
+      ),
+    ).toHaveTextContent(
+      "PAYWALL EXAM 42",
+    );
+
+    expect(
+      screen.queryByText("Question 11"),
+    ).not.toBeInTheDocument();
+  });
   test("refresh at FREE_LIMIT_REACHED restores question ten behind an immediate paywall", async () => {
     get.mockResolvedValue(
       activeResponse(

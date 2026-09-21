@@ -280,10 +280,10 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
               <article
                 key={plan}
                 className={[
-                  "group relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 overflow-hidden rounded-2xl border px-3 py-3 transition-all duration-300 lg:flex lg:h-full lg:flex-col lg:rounded-[24px] lg:p-5",
+                  "group relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 overflow-hidden rounded-2xl border px-3 pb-3 pt-3 transition-all duration-300 lg:flex lg:h-full lg:flex-col lg:rounded-[24px] lg:px-5 lg:pb-5 lg:pt-5",
                   "hover:-translate-y-0.5 hover:shadow-lg lg:hover:-translate-y-1 lg:hover:shadow-xl",
                   featured
-                    ? "border-secondary bg-secondary text-secondary-foreground shadow-lg shadow-secondary/15 lg:-translate-y-1"
+                    ? "border-secondary bg-secondary pt-9 text-secondary-foreground shadow-lg shadow-secondary/15 lg:-translate-y-1 lg:pt-10"
                     : "border-border bg-card text-card-foreground shadow-sm hover:border-primary/25 hover:shadow-primary/10",
                 ].join(" ")}
               >
@@ -292,7 +292,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                 )}
 
                 {featured && (
-                  <span className="absolute end-3 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-black text-primary-foreground shadow-sm lg:end-4 lg:top-4 lg:px-2.5 lg:py-1 lg:text-xs">
+                  <span className="absolute left-1/2 top-2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-[10px] font-black text-primary-foreground shadow-sm lg:top-3 lg:px-2.5 lg:py-1 lg:text-xs">
                     {t("home.pricing.recommended")}
                   </span>
                 )}

@@ -9,11 +9,28 @@ The product is designed for learners who want one clear place to study Belgian t
 **Live website:** https://rijvia.be  
 **Public API:** https://api.rijvia.be
 
+## Product highlights
+
+- **480+ Belgian theory questions** with structured answers and explanations.
+- Full multilingual experience in **Arabic, Dutch, French and English**, including RTL support for Arabic.
+- **Theory lessons, traffic signs, category practice, random practice and realistic exam simulation** in one learning flow.
+- **Free exam preview** for the first 10 questions, followed by a controlled paywall that preserves progress and continues the same exam from question 11 after access is unlocked.
+- **Secure Stripe Checkout** for prepaid access packages using one-time payments without automatic renewal.
+- **Personal learning analytics** with overall progress, error patterns, weak areas, strong areas and recommendations.
+- **User accounts and authentication**, including Google sign-in integration and protected application areas.
+- **Administrative interface** for question-bank management, categories, traffic-sign content, users, exam history and platform analytics.
+- **Responsive Next.js web application** built with TypeScript and a separate **Flutter mobile application** connected to the same backend.
+- **Automated frontend testing** with Jest, Testing Library and Playwright.
+- **Production CI/CD** with GitHub Actions, verified revisions, health checks and deployment smoke tests.
+
+RijVia is not a static study website. It is a production learning platform that combines content management, secure user access, payments, exam workflows and personalised learning data across web and mobile clients.
+
 ---
 
 ## Table of contents
 
 - [About RijVia](#about-rijvia)
+- [Product highlights](#product-highlights)
 - [Product goals](#product-goals)
 - [Main learning experience](#main-learning-experience)
 - [Theory categories](#theory-categories)

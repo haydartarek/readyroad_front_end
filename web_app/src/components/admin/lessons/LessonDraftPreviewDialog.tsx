@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -129,17 +128,6 @@ export default function LessonDraftPreviewDialog({
   ] = useState<SupportedLanguage>(
     initialLanguage,
   );
-
-  useEffect(() => {
-    if (open) {
-      setPreviewLanguage(
-        initialLanguage,
-      );
-    }
-  }, [
-    initialLanguage,
-    open,
-  ]);
 
   const pages =
     useMemo(

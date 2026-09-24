@@ -8,6 +8,9 @@ import {
   getAdminLesson,
   getOrCreateAdminLessonDraft,
 } from "@/lib/admin-lessons";
+import {
+  isServiceUnavailable,
+} from "@/lib/api";
 
 jest.mock(
   "next/navigation",
@@ -29,8 +32,7 @@ jest.mock(
 );
 
 jest.mock("@/lib/api", () => ({
-  isServiceUnavailable: () =>
-    false,
+  isServiceUnavailable: jest.fn(),
   logApiError: jest.fn(),
 }));
 
@@ -76,6 +78,10 @@ const mockedGetAdminLesson =
 const mockedGetOrCreateAdminLessonDraft =
   getOrCreateAdminLessonDraft as jest.MockedFunction<
     typeof getOrCreateAdminLessonDraft
+  >;
+const mockedIsServiceUnavailable =
+  isServiceUnavailable as jest.MockedFunction<
+    typeof isServiceUnavailable
   >;
 
 const lesson = {
@@ -192,6 +198,8 @@ describe(
     beforeEach(() => {
       mockedGetAdminLesson.mockReset();
       mockedGetOrCreateAdminLessonDraft.mockReset();
+      mockedIsServiceUnavailable.mockReset();
+      mockedIsServiceUnavailable.mockReturnValue(false);
     });
 
     it(
@@ -277,6 +285,40 @@ describe(
         ).toHaveBeenCalledWith(
           "TH01",
         );
+      },
+    );
+
+    it(
+      "shows service unavailable state when the initial lesson request returns 503",
+      async () => {
+        mockedGetAdminLesson
+          .mockRejectedValue(
+            new Error(
+              "Service unavailable",
+            ),
+          );
+        mockedIsServiceUnavailable
+          .mockReturnValue(true);
+
+        render(
+          <AdminLessonEditorPage />,
+        );
+
+        expect(
+          await screen.findByText(
+            "common.service_unavailable",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getByRole(
+            "button",
+            {
+              name:
+                "common.retry",
+            },
+          ),
+        ).toBeInTheDocument();
       },
     );
 

@@ -16,6 +16,7 @@ on:
         type: string
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -119,6 +120,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BACKEND_INPUT: ${{ inputs.backend_ref }}
           FRONTEND_REF: ${{ steps.intent.outputs.frontend_ref }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -Eeuo pipefail
 
@@ -142,28 +144,73 @@ jobs:
 
           frontend_ref="$FRONTEND_REF"
 
+          latest_successful_production_backend() {
+            local runs_json
+            local run_id
+            local jobs_json
+            local job_id
+            local log_file
+            local candidate
+
+            runs_json="$(
+              curl --fail --silent --show-error --location \
+                --header "Accept: application/vnd.github+json" \
+                --header "Authorization: Bearer $GH_TOKEN" \
+                --header "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/haydartarek/readyroad_front_end/actions/workflows/deploy-production.yml/runs?status=success&per_page=50"
+            )"
+
+            while IFS= read -r run_id; do
+              [[ "$run_id" =~ ^[0-9]+$ ]] || continue
+
+              jobs_json="$(
+                curl --fail --silent --show-error --location \
+                  --header "Accept: application/vnd.github+json" \
+                  --header "Authorization: Bearer $GH_TOKEN" \
+                  --header "X-GitHub-Api-Version: 2022-11-28" \
+                  "https://api.github.com/repos/haydartarek/readyroad_front_end/actions/runs/${run_id}/jobs?per_page=100"
+              )"
+
+              job_id="$(
+                jq --exit-status --raw-output \
+                  '[.jobs[] | select(.name == "Deploy verified commits to VPS" and .conclusion == "success")][0].id // empty' \
+                  <<<"$jobs_json"
+              )"
+
+              [[ "$job_id" =~ ^[0-9]+$ ]] || continue
+
+              log_file="${RUNNER_TEMP}/deploy-${run_id}.log"
+              curl --fail --silent --show-error --location \
+                --header "Accept: application/vnd.github+json" \
+                --header "Authorization: Bearer $GH_TOKEN" \
+                --header "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/haydartarek/readyroad_front_end/actions/jobs/${job_id}/logs" \
+                --output "$log_file"
+
+              grep -Fq 'event=deployment_completed' "$log_file" || continue
+
+              candidate="$(
+                grep -Eo 'backend_ref=[0-9a-f]{40}' "$log_file" \
+                  | tail -n 1 \
+                  | cut -d= -f2
+              )"
+
+              if [[ "$candidate" =~ ^[0-9a-f]{40}$ ]]; then
+                printf '%s\n' "$candidate"
+                return 0
+              fi
+            done < <(
+              jq --raw-output '.workflow_runs[].id' <<<"$runs_json"
+            )
+
+            echo "No successful production deployment with a recoverable backend SHA was found." >&2
+            return 1
+          }
+
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             backend_ref="$BACKEND_INPUT"
           else
-            ssh_options=(
-              -i "$HOME/.ssh/rijvia-deploy"
-              -o BatchMode=yes
-              -o IdentitiesOnly=yes
-              -o StrictHostKeyChecking=yes
-              -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
-              -p "$VPS_PORT"
-            )
-
-            backend_ref="$(
-              ssh "${ssh_options[@]}" \
-                "${VPS_USER}@${VPS_HOST}" \
-                'set -Eeuo pipefail
-                 manifest=/opt/readyroad/current/release-manifest.env
-                 test -r "$manifest"
-                 grep -Fxq "DEPLOYMENT_STATUS=SUCCESS" "$manifest"
-                 grep -Fxq "HEALTH_RESULT=PASSED" "$manifest"
-                 sed -n "s/^BACKEND_GIT_COMMIT=//p" "$manifest" | head -n 1'
-            )"
+            backend_ref="$(latest_successful_production_backend)"
           fi
 
           [[ "$backend_ref" =~ ^[0-9a-f]{40}$ ]]

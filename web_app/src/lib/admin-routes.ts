@@ -10,6 +10,7 @@ import {
   Gauge,
   TrafficCone,
   ClipboardList,
+  BookOpenText,
   FolderUp,
   Users,
   ShieldCheck,
@@ -129,6 +130,20 @@ export const ADMIN_ROUTES: AdminRoute[] = [
     ],
   },
 
+  {
+    key: "lessons",
+    path: "/admin/lessons",
+    labelKey: "admin.sidebar.lessons",
+    icon: BookOpenText,
+    group: "content",
+    children: [
+      {
+        key: "lessons_all",
+        path: "/admin/lessons",
+        labelKey: "admin.sidebar.lessons_all",
+      },
+    ],
+  },
   // ── Data ──
   {
     key: "data-import",
@@ -189,6 +204,7 @@ const SEGMENT_LABEL_KEYS: Record<string, string> = {
   dashboard: "admin.sidebar.dashboard",
   signs: "admin.sidebar.signs",
   quizzes: "admin.sidebar.quizzes",
+  lessons: "admin.sidebar.lessons",
   categories: "admin.quizzes.health.category_management_title",
   users: "admin.sidebar.users",
   analytics: "admin.sidebar.analytics",
@@ -242,11 +258,22 @@ export function getBreadcrumbTrail(
     const seg = segments[i];
     currentPath += `/${seg}`;
 
-    if (NUMERIC_SEGMENT_RE.test(seg)) {
+    const labelKey = SEGMENT_LABEL_KEYS[seg];
+
+    const nextSegment =
+      segments[i + 1];
+
+    const isDynamicEditIdentifier =
+      nextSegment === "edit" &&
+      !labelKey;
+
+    if (
+      NUMERIC_SEGMENT_RE.test(seg) ||
+      isDynamicEditIdentifier
+    ) {
       continue;
     }
 
-    const labelKey = SEGMENT_LABEL_KEYS[seg];
     const label = labelKey
       ? t(labelKey)
       : seg

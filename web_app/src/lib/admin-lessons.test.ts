@@ -1,9 +1,11 @@
 import { apiClient } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import {
+  getAdminLessonVersions,
   saveAdminLessonDraft,
   type AdminLessonDocument,
   type AdminLessonDraft,
+  type AdminLessonVersion,
   type SaveAdminLessonDraftRequest,
 } from "@/lib/admin-lessons";
 
@@ -15,6 +17,8 @@ jest.mock("@/lib/api", () => ({
   },
 }));
 
+const mockedGet =
+  apiClient.get as jest.Mock;
 const mockedPut =
   apiClient.put as jest.Mock;
 
@@ -102,6 +106,7 @@ const response: AdminLessonDraft = {
 
 describe("admin lesson draft contract", () => {
   beforeEach(() => {
+    mockedGet.mockReset();
     mockedPut.mockReset();
   });
 
@@ -181,5 +186,38 @@ describe("admin lesson draft contract", () => {
     expect(
       sentRequest.document.categoryLinks,
     ).toEqual([]);
+  });
+
+  it("loads published version history from the dedicated versions endpoint", async () => {
+    const versions: AdminLessonVersion[] = [
+      {
+        id: 9,
+        versionNumber: 3,
+        source: "ADMIN",
+        changeNote: "Updated priority examples",
+        publishedByUserId: 1,
+        publishedAt: "2026-09-24T10:00:00Z",
+      },
+    ];
+
+    mockedGet.mockResolvedValue({
+      data: versions,
+    });
+
+    await expect(
+      getAdminLessonVersions(
+        "TH01",
+      ),
+    ).resolves.toEqual(
+      versions,
+    );
+
+    expect(
+      mockedGet,
+    ).toHaveBeenCalledWith(
+      API_ENDPOINTS.ADMIN.LESSONS.VERSIONS(
+        "TH01",
+      ),
+    );
   });
 });

@@ -29,7 +29,8 @@ jest.mock(
     getAdminLessonVersions:
       jest.fn(),
     getOrCreateAdminLessonDraft:
-      jest.fn(),    saveAdminLessonDraft:
+      jest.fn(),
+    saveAdminLessonDraft:
       jest.fn(),
   }),
 );

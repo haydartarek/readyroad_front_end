@@ -200,6 +200,17 @@ export const API_ENDPOINTS = {
       DETAIL: (id: number | string) => `/admin/signs/${id}`,
     },
 
+    LESSONS: {
+      LIST: "/admin/lessons",
+      CATEGORIES: "/admin/lessons/categories",
+      DETAIL: (idOrCode: number | string) => `/admin/lessons/${idOrCode}`,
+      DRAFT: (idOrCode: number | string) =>
+        `/admin/lessons/${idOrCode}/draft`,
+      VERSIONS: (idOrCode: number | string) =>
+        `/admin/lessons/${idOrCode}/versions`,
+      PUBLISH: (idOrCode: number | string) =>
+        `/admin/lessons/${idOrCode}/publish`,
+    },
     QUIZ_QUESTIONS: {
       CATEGORIES: "/admin/quiz/categories",
       CATEGORIES_MANAGE: "/admin/quiz/categories/manage",

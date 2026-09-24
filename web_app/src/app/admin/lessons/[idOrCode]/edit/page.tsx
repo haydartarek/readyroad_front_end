@@ -11,12 +11,14 @@ import Link from "@/components/localized-link";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminSectionCard from "@/components/admin/AdminSectionCard";
 import LessonDraftEditor from "@/components/admin/lessons/LessonDraftEditor";
+import LessonVersionHistory from "@/components/admin/lessons/LessonVersionHistory";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { useLanguage } from "@/contexts/language-context";
 import {
   getAdminLesson,
+  getAdminLessonVersions,
   getOrCreateAdminLessonDraft,
   type AdminLessonDetail,
   type AdminLessonDocumentLanguageMap,
@@ -151,7 +153,25 @@ export default function AdminLessonEditorPage() {
             idOrCode,
           );
 
-        setLesson(data);
+        let versions =
+          data.versions;
+
+        try {
+          versions =
+            await getAdminLessonVersions(
+              idOrCode,
+            );
+        } catch (versionError) {
+          logApiError(
+            "Failed to load Admin lesson version history",
+            versionError,
+          );
+        }
+
+        setLesson({
+          ...data,
+          versions,
+        });
       } catch (err) {
         logApiError(
           "Failed to load Admin lesson editor",
@@ -636,6 +656,12 @@ export default function AdminLessonEditorPage() {
               ) : null}
             </dl>
           </AdminSectionCard>
+
+          <LessonVersionHistory
+            versions={
+              lesson.versions
+            }
+          />
 
           <AdminSectionCard
             title={t(

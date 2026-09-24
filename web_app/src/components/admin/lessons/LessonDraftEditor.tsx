@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import LessonDraftPreviewDialog from "@/components/admin/lessons/LessonDraftPreviewDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import { useLanguage } from "@/contexts/language-context";
 import {
   AlertTriangle,
   Check,
+  Eye,
   Loader2,
   LockKeyhole,
   Save,
@@ -215,6 +217,11 @@ export default function LessonDraftEditor({
   const [
     saveSuccess,
     setSaveSuccess,
+  ] = useState(false);
+
+  const [
+    previewOpen,
+    setPreviewOpen,
   ] = useState(false);
 
   const lastSavedRevisionRef =
@@ -713,6 +720,23 @@ export default function LessonDraftEditor({
 
           <Button
             type="button"
+            variant="outline"
+            className="gap-2"
+            onClick={() =>
+              setPreviewOpen(
+                true,
+              )
+            }
+          >
+            <Eye className="h-4 w-4" />
+
+            {t(
+              "admin.lessons.preview.open",
+            )}
+          </Button>
+
+          <Button
+            type="button"
             className="gap-2"
             disabled={
               !dirty ||
@@ -1104,6 +1128,17 @@ export default function LessonDraftEditor({
           },
         )}
       </div>
+
+      <LessonDraftPreviewDialog
+        document={document}
+        open={previewOpen}
+        onOpenChange={
+          setPreviewOpen
+        }
+        initialLanguage={
+          contentLanguage
+        }
+      />
     </AdminSectionCard>
   );
 }

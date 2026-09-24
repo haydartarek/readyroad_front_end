@@ -3,6 +3,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import LessonDraftEditor from "./LessonDraftEditor";
 import { saveAdminLessonDraft } from "@/lib/admin-lessons";
@@ -318,6 +319,66 @@ describe(
         ).toHaveBeenCalledWith(
           savedDraft,
         );
+      },
+    );
+
+    it(
+      "previews unsaved draft content without saving it",
+      async () => {
+        render(
+          <LessonDraftEditor
+            idOrCode="TH01"
+            draft={draft}
+            onSaved={jest.fn()}
+          />,
+        );
+
+        fireEvent.change(
+          screen.getByLabelText(
+            "admin.lessons.editor.field_description",
+          ),
+          {
+            target: {
+              value:
+                "Unsaved preview description",
+            },
+          },
+        );
+
+        fireEvent.click(
+          screen.getByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.preview.open",
+            },
+          ),
+        );
+
+        const previewDialog =
+          await screen.findByRole(
+            "dialog",
+          );
+
+        expect(
+          within(
+            previewDialog,
+          ).getByText(
+            "admin.lessons.preview.title",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          within(
+            previewDialog,
+          ).getByText(
+            "Unsaved preview description",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          mockedSaveAdminLessonDraft,
+        ).not.toHaveBeenCalled();
       },
     );
 

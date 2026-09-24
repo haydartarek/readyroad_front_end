@@ -6,6 +6,7 @@ import {
 import AdminLessonEditorPage from "./page";
 import {
   getAdminLesson,
+  getAdminLessonVersions,
   getOrCreateAdminLessonDraft,
 } from "@/lib/admin-lessons";
 import {
@@ -25,8 +26,11 @@ jest.mock(
   "@/lib/admin-lessons",
   () => ({
     getAdminLesson: jest.fn(),
+    getAdminLessonVersions:
+      jest.fn(),
     getOrCreateAdminLessonDraft:
-      jest.fn(),    saveAdminLessonDraft:
+      jest.fn(),
+    saveAdminLessonDraft:
       jest.fn(),
   }),
 );
@@ -74,6 +78,10 @@ jest.mock(
 const mockedGetAdminLesson =
   getAdminLesson as jest.MockedFunction<
     typeof getAdminLesson
+  >;
+const mockedGetAdminLessonVersions =
+  getAdminLessonVersions as jest.MockedFunction<
+    typeof getAdminLessonVersions
   >;
 const mockedGetOrCreateAdminLessonDraft =
   getOrCreateAdminLessonDraft as jest.MockedFunction<
@@ -197,6 +205,8 @@ describe(
 
     beforeEach(() => {
       mockedGetAdminLesson.mockReset();
+      mockedGetAdminLessonVersions.mockReset();
+      mockedGetAdminLessonVersions.mockResolvedValue([]);
       mockedGetOrCreateAdminLessonDraft.mockReset();
       mockedIsServiceUnavailable.mockReset();
       mockedIsServiceUnavailable.mockReturnValue(false);
@@ -285,6 +295,12 @@ describe(
         ).toHaveBeenCalledWith(
           "TH01",
         );
+
+        expect(
+          mockedGetAdminLessonVersions,
+        ).toHaveBeenCalledWith(
+          "TH01",
+        );
       },
     );
 
@@ -319,6 +335,48 @@ describe(
             },
           ),
         ).toBeInTheDocument();
+      },
+    );
+
+    it(
+      "shows version history from the dedicated endpoint",
+      async () => {
+        mockedGetAdminLesson
+          .mockResolvedValue(
+            lesson,
+          );
+
+        mockedGetAdminLessonVersions
+          .mockResolvedValue([
+            {
+              id: 12,
+              versionNumber: 2,
+              source: "ADMIN",
+              changeNote:
+                "Initial published version",
+              publishedByUserId: 1,
+              publishedAt:
+                "2026-09-24T09:00:00Z",
+            },
+          ]);
+
+        render(
+          <AdminLessonEditorPage />,
+        );
+
+        expect(
+          await screen.findByText(
+            "Initial published version",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getAllByText(
+            "V2",
+          ).length,
+        ).toBeGreaterThanOrEqual(
+          1,
+        );
       },
     );
 

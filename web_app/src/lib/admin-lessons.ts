@@ -177,6 +177,18 @@ export async function getAdminLessonCategories(): Promise<
 
   return data;
 }
+
+export async function getAdminLessonVersions(
+  idOrCode: number | string,
+): Promise<AdminLessonVersion[]> {
+  const { data } = await apiClient.get<AdminLessonVersion[]>(
+    API_ENDPOINTS.ADMIN.LESSONS.VERSIONS(
+      idOrCode,
+    ),
+  );
+
+  return data;
+}
 export async function getOrCreateAdminLessonDraft(
   idOrCode: number | string,
 ): Promise<AdminLessonDraft> {

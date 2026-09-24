@@ -1130,6 +1130,7 @@ export default function LessonDraftEditor({
       </div>
 
       <LessonDraftPreviewDialog
+        key={`${contentLanguage}-${previewOpen ? "open" : "closed"}`}
         document={document}
         open={previewOpen}
         onOpenChange={

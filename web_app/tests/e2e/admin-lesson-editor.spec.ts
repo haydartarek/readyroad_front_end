@@ -139,6 +139,19 @@ const publishedDocument: LessonDocument = {
   categoryLinks: [],
 };
 
+const versionHistory = [
+  {
+    id: 12,
+    versionNumber: 2,
+    source: "ADMIN",
+    changeNote:
+      "Initial published version",
+    publishedByUserId: 1,
+    publishedAt:
+      "2026-09-24T09:00:00Z",
+  },
+];
+
 function cloneDocument(
   document: LessonDocument,
 ): LessonDocument {
@@ -270,6 +283,17 @@ async function mockAdminShell(
           unreadCount: 0,
         },
       }),
+  );
+
+  await page.route(
+    "**/api/proxy/admin/lessons/" +
+      lessonCode +
+      "/versions",
+    (route) =>
+      fulfillJson(
+        route,
+        versionHistory,
+      ),
   );
 }
 
@@ -526,6 +550,12 @@ async function runSuccessfulEditorFlow(
     ),
   ).toBeVisible();
 
+  await expect(
+    page.getByText(
+      "Initial published version",
+    ),
+  ).toBeVisible();
+
   expect(
     postCount,
   ).toBe(0);
@@ -612,6 +642,53 @@ async function runSuccessfulEditorFlow(
       },
     ),
   ).toBeVisible();
+
+  await page
+    .getByRole(
+      "button",
+      {
+        name:
+          "Preview",
+      },
+    )
+    .click();
+
+  const previewDialog =
+    page.getByRole(
+      "dialog",
+    );
+
+  await expect(
+    previewDialog.getByRole(
+      "heading",
+      {
+        name:
+          "Draft preview",
+      },
+    ),
+  ).toBeVisible();
+
+  await expect(
+    previewDialog.getByText(
+      "Updated description " +
+        width,
+    ),
+  ).toBeVisible();
+
+  await expect(
+    previewDialog.getByText(
+      "Updated page content " +
+        width,
+    ),
+  ).toBeVisible();
+
+  await page.keyboard.press(
+    "Escape",
+  );
+
+  await expect(
+    previewDialog,
+  ).toBeHidden();
 
   await page
     .getByRole(

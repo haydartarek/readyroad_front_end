@@ -3,6 +3,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import LessonDraftEditor from "./LessonDraftEditor";
 import { saveAdminLessonDraft } from "@/lib/admin-lessons";
@@ -354,14 +355,23 @@ describe(
           ),
         );
 
+        const previewDialog =
+          await screen.findByRole(
+            "dialog",
+          );
+
         expect(
-          await screen.findByText(
+          within(
+            previewDialog,
+          ).getByText(
             "admin.lessons.preview.title",
           ),
         ).toBeInTheDocument();
 
         expect(
-          screen.getByText(
+          within(
+            previewDialog,
+          ).getByText(
             "Unsaved preview description",
           ),
         ).toBeInTheDocument();

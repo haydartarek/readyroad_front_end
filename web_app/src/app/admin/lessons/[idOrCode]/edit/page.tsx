@@ -278,6 +278,19 @@ export default function AdminLessonEditorPage() {
   }
 
   if (
+    serviceUnavailable &&
+    !lesson
+  ) {
+    return (
+      <ServiceUnavailableBanner
+        onRetry={() =>
+          void loadLesson()
+        }
+      />
+    );
+  }
+
+  if (
     error &&
     !lesson
   ) {

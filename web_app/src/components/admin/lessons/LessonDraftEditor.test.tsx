@@ -322,6 +322,57 @@ describe(
     );
 
     it(
+      "previews unsaved draft content without saving it",
+      async () => {
+        render(
+          <LessonDraftEditor
+            idOrCode="TH01"
+            draft={draft}
+            onSaved={jest.fn()}
+          />,
+        );
+
+        fireEvent.change(
+          screen.getByLabelText(
+            "admin.lessons.editor.field_description",
+          ),
+          {
+            target: {
+              value:
+                "Unsaved preview description",
+            },
+          },
+        );
+
+        fireEvent.click(
+          screen.getByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.preview.open",
+            },
+          ),
+        );
+
+        expect(
+          await screen.findByText(
+            "admin.lessons.preview.title",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getByText(
+            "Unsaved preview description",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          mockedSaveAdminLessonDraft,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
       "keeps local edits after a 409 conflict",
       async () => {
         const onSaved =

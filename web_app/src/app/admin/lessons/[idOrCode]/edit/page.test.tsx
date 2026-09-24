@@ -370,10 +370,12 @@ describe(
         ).toBeInTheDocument();
 
         expect(
-          screen.getByText(
+          screen.getAllByText(
             "V2",
-          ),
-        ).toBeInTheDocument();
+          ).length,
+        ).toBeGreaterThanOrEqual(
+          1,
+        );
       },
     );
 

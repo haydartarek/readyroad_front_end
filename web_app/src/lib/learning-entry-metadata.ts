@@ -11,6 +11,7 @@ import {
 } from "@/lib/site-copy";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
+import { normalizeSeoBrand, toBrandedMetadataTitle } from "@/lib/seo";
 
 export type LearningEntryPage = "practice" | "signExam" | "theoryExam";
 
@@ -176,7 +177,7 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
     theoryExam: {
       title: "أسئلة امتحان السياقة النظري في بلجيكا",
       description:
-        "اختبر نفسك بمحاكاة RijVia من 50 سؤالًا لامتحان السياقة النظري في بلجيكا، مع 15 ثانية للإجابة بعد القراءة ودرجة نجاح 41 من 50.",
+        "اختبر نفسك بمحاكاة Rijvia من 50 سؤالًا لامتحان السياقة النظري في بلجيكا، مع 15 ثانية للإجابة بعد القراءة ودرجة نجاح 41 من 50.",
       keywords: [
         "أسئلة امتحان السياقة النظري في بلجيكا",
         "محاكاة امتحان السياقة النظري",
@@ -205,20 +206,20 @@ export async function createLearningEntryMetadata(
   const canonical = buildLocalizedUrl(path, locale, APP_URL);
   const image = {
     ...getSharedOgImage(locale),
-    alt: `${copy.title} | RijVia`,
+    alt: `${copy.title} | Rijvia`,
   };
 
   return {
-    title: copy.title,
-    description: copy.description,
+    title: { absolute: toBrandedMetadataTitle(copy.title) },
+    description: normalizeSeoBrand(copy.description),
     keywords: copy.keywords,
     alternates: getLocalizedAlternates(path, locale, APP_URL),
     robots: { index: true, follow: true },
     openGraph: {
-      title: `${copy.title} | RijVia`,
-      description: copy.description,
+      title: toBrandedMetadataTitle(copy.title),
+      description: normalizeSeoBrand(copy.description),
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [image],
@@ -226,8 +227,8 @@ export async function createLearningEntryMetadata(
     },
     twitter: {
       card: "summary_large_image",
-      title: `${copy.title} | RijVia`,
-      description: copy.description,
+      title: toBrandedMetadataTitle(copy.title),
+      description: normalizeSeoBrand(copy.description),
       images: [image.url],
     },
   };

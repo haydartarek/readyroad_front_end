@@ -245,23 +245,34 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
             {t("home.pricing.subtitle")}
           </p>
 
-          <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-semibold text-muted-foreground sm:text-sm">
-            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-2 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-3">
+          <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs font-semibold text-muted-foreground sm:text-sm">
+            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-4">
               <Banknote className="h-4 w-4 shrink-0 text-primary" aria-hidden />
               {t("home.pricing.one_time")}
             </span>
 
-            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-2 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-3">
+            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-4">
               <CalendarX2 className="h-4 w-4 shrink-0 text-primary" aria-hidden />
               {t("home.pricing.no_renewal")}
             </span>
 
-            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-2 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-3">
+            <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-card px-3 py-2 text-center leading-4 shadow-sm sm:gap-2 sm:px-4">
               <ShieldCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden />
               {t("home.pricing.secure")}
             </span>
           </div>
         </div>
+
+        <ul className="mx-auto mb-5 grid max-w-3xl grid-cols-1 gap-2 rounded-2xl border bg-card/70 p-3 text-xs font-semibold text-foreground/80 shadow-sm sm:grid-cols-2 sm:p-4 md:text-sm xl:hidden">
+          {FEATURES.map((feature) => (
+            <li key={feature} className="flex items-center gap-2">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+              </span>
+              <span>{t(feature)}</span>
+            </li>
+          ))}
+        </ul>
 
         {error && (
           <p
@@ -272,7 +283,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
           </p>
         )}
 
-        <div className="mx-auto grid max-w-6xl items-stretch gap-2.5 lg:grid-cols-3 lg:gap-5">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3 xl:gap-5">
           {PAYMENT_PLANS.map((plan) => {
             const featured = plan === "RIJVIA_1_WEEK";
 
@@ -280,10 +291,10 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
               <article
                 key={plan}
                 className={[
-                  "group relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 overflow-hidden rounded-2xl border px-3 pb-3 pt-3 transition-all duration-300 lg:flex lg:h-full lg:flex-col lg:rounded-[24px] lg:px-5 lg:pb-5 lg:pt-5",
-                  "hover:-translate-y-0.5 hover:shadow-lg lg:hover:-translate-y-1 lg:hover:shadow-xl",
+                  "group relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border px-4 pb-4 pt-4 transition-all duration-300 sm:px-5 md:rounded-[20px] xl:rounded-[24px] xl:px-5 xl:pb-5 xl:pt-5",
+                  "hover:-translate-y-0.5 hover:shadow-lg xl:hover:-translate-y-1 xl:hover:shadow-xl",
                   featured
-                    ? "border-secondary bg-secondary pt-9 text-secondary-foreground shadow-lg shadow-secondary/15 lg:-translate-y-1 lg:pt-10"
+                    ? "order-first border-secondary bg-secondary pt-10 text-secondary-foreground shadow-lg shadow-secondary/15 md:col-span-2 xl:order-none xl:col-span-1 xl:-translate-y-1 xl:pt-11"
                     : "border-border bg-card text-card-foreground shadow-sm hover:border-primary/25 hover:shadow-primary/10",
                 ].join(" ")}
               >
@@ -292,15 +303,15 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                 )}
 
                 {featured && (
-                  <span className="absolute left-1/2 top-2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-[10px] font-black text-primary-foreground shadow-sm lg:top-3 lg:px-2.5 lg:py-1 lg:text-xs">
+                  <span className="absolute left-1/2 top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-3 py-1 text-[11px] font-black text-primary-foreground shadow-sm xl:text-xs">
                     {t("home.pricing.recommended")}
                   </span>
                 )}
 
-                <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 text-start lg:mb-3 lg:flex-col lg:text-center">
+                <div className="mb-2 flex min-w-0 items-center justify-center gap-2 text-center xl:mb-3 xl:flex-col">
                   <div
                     className={[
-                      "grid h-7 w-7 shrink-0 place-items-center rounded-lg border lg:h-8 lg:w-8 lg:rounded-xl",
+                      "grid h-8 w-8 shrink-0 place-items-center rounded-xl border xl:h-9 xl:w-9",
                       featured
                         ? "border-primary bg-primary text-primary-foreground shadow-sm"
                         : "border-primary/15 bg-primary/10 text-primary",
@@ -311,7 +322,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
                   <h3
                     className={[
-                      "mt-0 truncate text-start text-base font-black lg:mt-2 lg:text-center lg:text-xl",
+                      "text-center text-lg font-black sm:text-xl xl:mt-1",
                       featured
                         ? "text-secondary-foreground"
                         : "text-secondary",
@@ -321,11 +332,11 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                   </h3>
                 </div>
 
-                <div className="col-start-2 row-start-1 row-span-2 text-end lg:mb-4 lg:text-center">
+                <div className="mb-3 text-center xl:mb-4">
                   <bdi
                     dir="ltr"
                     className={[
-                      "block text-xl font-black tracking-tight lg:text-4xl",
+                      "block text-3xl font-black tracking-tight sm:text-4xl",
                       featured
                         ? "text-secondary-foreground"
                         : "text-secondary",
@@ -336,14 +347,19 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
                   <bdi
                     dir="ltr"
-                    className="mt-0.5 block text-[11px] font-semibold text-primary lg:mt-1 lg:text-xs"
+                    className={[
+                      "mt-1 block text-xs font-bold sm:text-sm xl:text-xs",
+                      featured
+                        ? "text-secondary-foreground/80"
+                        : "text-primary",
+                    ].join(" ")}
                   >
                     {t(`home.pricing.per_day.${plan}`)}
                   </bdi>
 
                   <p
                     className={[
-                      "hidden text-center font-bold leading-relaxed lg:mt-2 lg:block lg:text-sm",
+                      "mx-auto mt-2 block max-w-[28rem] text-center text-sm font-bold leading-relaxed",
                       featured
                         ? "text-secondary-foreground"
                         : "text-foreground",
@@ -355,12 +371,12 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
                 <div
                   className={[
-                    "hidden h-px w-full lg:mb-4 lg:block",
+                    "hidden h-px w-full xl:mb-4 xl:block",
                     featured ? "bg-white/10" : "bg-border",
                   ].join(" ")}
                 />
 
-                <ul className="hidden lg:mb-5 lg:block lg:space-y-2">
+                <ul className="hidden xl:mb-5 xl:block xl:space-y-2">
                   {FEATURES.map((feature) => (
                     <li
                       key={feature}
@@ -395,7 +411,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                     `payment.plan.${plan}`,
                   )}`}
                   className={[
-                    "col-span-2 mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-extrabold transition-all lg:mt-auto lg:h-11",
+                    "mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-extrabold transition-all xl:mt-auto",
                     "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
                     "disabled:cursor-not-allowed disabled:opacity-60",
                     featured

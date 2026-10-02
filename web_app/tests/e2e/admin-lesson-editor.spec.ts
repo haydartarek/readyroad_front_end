@@ -36,7 +36,6 @@ type LessonDocument = {
     pageNumber: number;
     title: LanguageMap;
     content: LanguageMap;
-    bulletPointsRaw: LanguageMap;
   }>;
 
   structuredSections: unknown[];
@@ -119,12 +118,6 @@ const publishedDocument: LessonDocument = {
         en: "Original English content",
       },
 
-      bulletPointsRaw: {
-        ar: "نقطة عربية",
-        nl: "Nederlands punt",
-        fr: "Point français",
-        en: "English point",
-      },
     },
   ],
 

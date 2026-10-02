@@ -37,7 +37,7 @@ describe("traffic sign detail metadata", () => {
     });
 
     expect(metadata.title).toEqual({
-      absolute: "A1a: Dangerous bend to the left | RijVia",
+      absolute: "A1a: Dangerous bend to the left | Rijvia",
     });
     expect(metadata.alternates?.canonical).toBe(`${appUrl}/traffic-signs/A1a`);
     expect(metadata.description).toBe(
@@ -70,7 +70,7 @@ describe("traffic sign detail metadata", () => {
     });
 
     expect(metadata.title).toEqual({
-      absolute: "B1: Cédez le passage | RijVia",
+      absolute: "B1: Cédez le passage | Rijvia",
     });
     expect(metadata.description).toBe(
       "B1: Cédez le passage aux autres usagers.",

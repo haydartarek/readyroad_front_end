@@ -12,6 +12,7 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminSectionCard from "@/components/admin/AdminSectionCard";
 import LessonDraftEditor from "@/components/admin/lessons/LessonDraftEditor";
 import LessonVersionHistory from "@/components/admin/lessons/LessonVersionHistory";
+import LessonPublishDialog from "@/components/admin/lessons/lesson-publish-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -20,9 +21,11 @@ import {
   getAdminLesson,
   getAdminLessonVersions,
   getOrCreateAdminLessonDraft,
+  publishAdminLesson,
   type AdminLessonDetail,
   type AdminLessonDocumentLanguageMap,
 } from "@/lib/admin-lessons";
+import { adminLessonMediaUrl } from "@/lib/admin-lesson-media";
 import {
   isServiceUnavailable,
   logApiError,
@@ -85,6 +88,52 @@ function lessonTitle(
   );
 }
 
+function getErrorStatus(
+  error: unknown,
+): number | undefined {
+  if (
+    !error ||
+    typeof error !== "object"
+  ) {
+    return undefined;
+  }
+
+  if (
+    "status" in error &&
+    typeof (
+      error as {
+        status?: unknown;
+      }
+    ).status === "number"
+  ) {
+    return (
+      error as {
+        status: number;
+      }
+    ).status;
+  }
+
+  if ("response" in error) {
+    const response =
+      (
+        error as {
+          response?: {
+            status?: unknown;
+          };
+        }
+      ).response;
+
+    if (
+      response &&
+      typeof response.status === "number"
+    ) {
+      return response.status;
+    }
+  }
+
+  return undefined;
+}
+
 export default function AdminLessonEditorPage() {
   const params =
     useParams<{ idOrCode: string }>();
@@ -130,6 +179,38 @@ export default function AdminLessonEditorPage() {
   ] = useState<string | null>(
     null,
   );
+
+  const [
+    draftConflict,
+    setDraftConflict,
+  ] = useState(false);
+
+  const [
+    publishOpen,
+    setPublishOpen,
+  ] = useState(false);
+
+  const [
+    publishing,
+    setPublishing,
+  ] = useState(false);
+
+  const [
+    publishChangeNote,
+    setPublishChangeNote,
+  ] = useState("");
+
+  const [
+    publishError,
+    setPublishError,
+  ] = useState<string | null>(
+    null,
+  );
+
+  const [
+    publishSuccess,
+    setPublishSuccess,
+  ] = useState(false);
 
   const loadLesson =
     useCallback(async () => {
@@ -210,6 +291,7 @@ export default function AdminLessonEditorPage() {
       try {
         setStartingDraft(true);
         setDraftActionError(null);
+        setPublishSuccess(false);
         setServiceUnavailable(false);
 
         const draft =
@@ -245,6 +327,77 @@ export default function AdminLessonEditorPage() {
         );
       } finally {
         setStartingDraft(false);
+      }
+    };
+
+  const publishDraft =
+    async () => {
+      if (
+        !lesson?.draft ||
+        publishing ||
+        hasUnsavedChanges ||
+        draftConflict
+      ) {
+        return;
+      }
+
+      try {
+        setPublishing(true);
+        setPublishError(null);
+        setServiceUnavailable(false);
+
+        await publishAdminLesson(
+          idOrCode,
+          {
+            expectedRevision:
+              lesson.draft.revision,
+            changeNote:
+              publishChangeNote.trim() ||
+              null,
+          },
+        );
+
+        setPublishOpen(false);
+        setPublishChangeNote("");
+        setPublishError(null);
+        setPublishSuccess(true);
+        setHasUnsavedChanges(false);
+        setDraftConflict(false);
+
+        await loadLesson();
+      } catch (err) {
+        if (
+          getErrorStatus(err) === 409
+        ) {
+          setDraftConflict(true);
+
+          setPublishError(
+            t(
+              "admin.lessons.publish.conflict_error",
+            ),
+          );
+
+          return;
+        }
+
+        logApiError(
+          "Failed to publish Admin lesson draft",
+          err,
+        );
+
+        if (
+          isServiceUnavailable(err)
+        ) {
+          setServiceUnavailable(true);
+        }
+
+        setPublishError(
+          t(
+            "admin.lessons.publish.generic_error",
+          ),
+        );
+      } finally {
+        setPublishing(false);
       }
     };
 
@@ -368,6 +521,16 @@ export default function AdminLessonEditorPage() {
       language,
     );
 
+  const mediaById =
+    new Map(
+      lesson.mediaAssets.map(
+        (asset) => [
+          asset.id,
+          asset,
+        ],
+      ),
+    );
+
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
@@ -470,6 +633,9 @@ export default function AdminLessonEditorPage() {
           <LessonDraftEditor
             idOrCode={idOrCode}
             draft={lesson.draft}
+            mediaAssets={
+              lesson.mediaAssets
+            }
             onSaved={(draft) => {
               setLesson(
                 (current) =>
@@ -484,6 +650,19 @@ export default function AdminLessonEditorPage() {
             onDirtyChange={
               setHasUnsavedChanges
             }
+            externalConflict={
+              draftConflict
+            }
+            onConflictChange={
+              setDraftConflict
+            }
+            publishing={
+              publishing
+            }
+            onPublish={() => {
+              setPublishError(null);
+              setPublishOpen(true);
+            }}
           />
         ) : (
           <AdminSectionCard
@@ -528,6 +707,18 @@ export default function AdminLessonEditorPage() {
                         language,
                       );
 
+                    const imageAsset =
+                      page.imageAssetId
+                        ? mediaById.get(
+                            page.imageAssetId,
+                          )
+                        : undefined;
+
+                    const imageUrl =
+                      adminLessonMediaUrl(
+                        imageAsset,
+                      );
+
                     return (
                       <article
                         key={
@@ -561,6 +752,18 @@ export default function AdminLessonEditorPage() {
                             </p>
                           </div>
                         </div>
+
+                        {imageUrl ? (
+                          <div
+                            role="img"
+                            aria-label={title}
+                            className="mt-4 aspect-video w-full overflow-hidden rounded-xl border border-border/60 bg-muted bg-cover bg-center bg-no-repeat"
+                            style={{
+                              backgroundImage:
+                                `url("${imageUrl}")`,
+                            }}
+                          />
+                        ) : null}
                       </article>
                     );
                   },
@@ -682,9 +885,40 @@ export default function AdminLessonEditorPage() {
                 >
                   R{lesson.draft.revision}
                 </Badge>
+
+                {hasUnsavedChanges ? (
+                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                    {t(
+                      "admin.lessons.publish.blocked_unsaved",
+                    )}
+                  </p>
+                ) : null}
+
+                {draftConflict ? (
+                  <p
+                    role="alert"
+                    className="text-sm font-semibold text-destructive"
+                  >
+                    {t(
+                      "admin.lessons.publish.blocked_conflict",
+                    )}
+                  </p>
+                ) : null}
+
               </div>
             ) : (
               <div className="space-y-4">
+                {publishSuccess ? (
+                  <div
+                    role="status"
+                    className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-semibold text-foreground"
+                  >
+                    {t(
+                      "admin.lessons.publish.success",
+                    )}
+                  </div>
+                ) : null}
+
                 <p className="text-sm leading-6 text-muted-foreground">
                   {t(
                     "admin.lessons.editor.read_only_notice",
@@ -727,6 +961,43 @@ export default function AdminLessonEditorPage() {
           </AdminSectionCard>
         </div>
       </div>
+
+      {lesson.draft ? (
+        <LessonPublishDialog
+          open={publishOpen}
+          busy={publishing}
+          revision={
+            lesson.draft.revision
+          }
+          currentVersion={
+            lesson.currentVersion
+          }
+          changeNote={
+            publishChangeNote
+          }
+          error={publishError}
+          direction={
+            isRTL ? "rtl" : "ltr"
+          }
+          onChangeNote={
+            setPublishChangeNote
+          }
+          onOpenChange={(open) => {
+            if (publishing) {
+              return;
+            }
+
+            setPublishOpen(open);
+
+            if (!open) {
+              setPublishError(null);
+            }
+          }}
+          onConfirm={() =>
+            void publishDraft()
+          }
+        />
+      ) : null}
     </div>
   );
 }

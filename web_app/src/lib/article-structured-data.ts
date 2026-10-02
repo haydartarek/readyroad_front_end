@@ -1,5 +1,5 @@
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
-import { buildAbsoluteUrl } from "@/lib/seo";
+import { buildAbsoluteUrl, normalizeSeoBrand } from "@/lib/seo";
 import {
   DEFAULT_APP_URL,
   getSharedOgImage,
@@ -31,6 +31,9 @@ export function createArticleStructuredData(
   const image = article.image
     ? { url: article.image.ogUrl, width: 1200, height: 630 }
     : getSharedOgImage(locale);
+  const normalizedBlogLabel = normalizeSeoBrand(blogLabel)
+    .replace(/\bRijvia\b[\s:|\-]*/iu, "")
+    .trim() || "Blog";
 
   return {
     "@context": "https://schema.org",
@@ -40,8 +43,7 @@ export function createArticleStructuredData(
         "@id": `${canonical}#article`,
         url: canonical,
         headline: article.title,
-        description: article.summary,
-        datePublished: article.publishedAt,
+        description: normalizeSeoBrand(article.summary),
         inLanguage: ARTICLE_LANGUAGE[locale],
         mainEntityOfPage: canonical,
         image: {
@@ -61,13 +63,13 @@ export function createArticleStructuredData(
           {
             "@type": "ListItem",
             position: 1,
-            name: "RijVia",
+            name: "Rijvia",
             item: buildLocalizedUrl("/", locale, APP_URL),
           },
           {
             "@type": "ListItem",
             position: 2,
-            name: blogLabel,
+            name: normalizedBlogLabel,
             item: buildLocalizedUrl("/blog", locale, APP_URL),
           },
           {

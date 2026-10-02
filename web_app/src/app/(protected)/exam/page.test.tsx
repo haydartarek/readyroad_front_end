@@ -56,7 +56,10 @@ const examResponse = {
   questions: [],
 };
 
-function examAdapter(active: boolean): AxiosAdapter {
+function examAdapter(
+  active: boolean,
+  accessState?: "FREE_LIMIT_REACHED",
+): AxiosAdapter {
   return async (config) => {
     const url = config.url ?? "";
     requestUrls.push(`${config.method?.toUpperCase()} ${url}`);
@@ -65,7 +68,9 @@ function examAdapter(active: boolean): AxiosAdapter {
       return {
         data: {
           hasActiveExam: active,
-          activeExam: active ? examResponse : null,
+          activeExam: active
+            ? { ...examResponse, accessState }
+            : null,
         },
         status: 200,
         statusText: "OK",
@@ -134,6 +139,22 @@ describe("TheoryExamPage persistent exam flow", () => {
 
     expect(pushMock).toHaveBeenCalledWith("/exam/42");
     expect(requestUrls).not.toContain("POST /exams/simulations/start");
+  });
+
+  it("restarts the free preview through the existing start action after the paywall", async () => {
+    client.defaults.adapter = examAdapter(true, "FREE_LIMIT_REACHED");
+    render(<TheoryExamPage />);
+
+    const restartButton = await screen.findByRole("button", {
+      name: "exam.back_to_exam_start",
+    });
+    fireEvent.click(restartButton);
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/exam/42");
+    });
+
+    expect(requestUrls).toContain("POST /exams/simulations/start");
   });
 
   it("keeps the intro public and sends an anonymous visitor to login", async () => {

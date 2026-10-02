@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
-import { LessonIcon } from "@/components/lessons/lesson-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -33,7 +32,6 @@ import {
   ArrowRight,
   BookOpen,
   FileText,
-  CheckCircle2,
 } from "lucide-react";
 import type { Lesson, LessonDetail, LessonPage } from "@/lib/types";
 
@@ -77,27 +75,23 @@ function getLangDescription(obj: MultiLangDescription, lang: string): string {
 function getPageContent(page: LessonPage, lang: string) {
   const map: Record<
     string,
-    { title: string; content: string; bullets: string[] }
+    { title: string; content: string }
   > = {
     en: {
       title: page.titleEn,
       content: page.contentEn,
-      bullets: page.bulletPointsEn ?? [],
     },
     ar: {
       title: page.titleAr,
       content: page.contentAr,
-      bullets: page.bulletPointsAr ?? [],
     },
     nl: {
       title: page.titleNl,
       content: page.contentNl,
-      bullets: page.bulletPointsNl ?? [],
     },
     fr: {
       title: page.titleFr,
       content: page.contentFr,
-      bullets: page.bulletPointsFr ?? [],
     },
   };
   return map[lang] ?? map.en;
@@ -399,13 +393,12 @@ export default function LessonDetailClient({
                     </div>
                   </div>
 
-                  <LessonIcon icon={lesson.icon} />
                 </div>
               </div>
             </PageHeroSurface>
 
             {[...lesson.pages].sort((a, b) => a.pageNumber - b.pageNumber).map((currentPage) => {
-                const { title, content, bullets } = getPageContent(
+                const { title, content } = getPageContent(
                   currentPage,
                   language,
                 );
@@ -435,6 +428,18 @@ export default function LessonDetailClient({
                     </div>
 
                     <div className="min-w-0 space-y-6 px-4 py-5 sm:px-6 sm:py-6">
+                      {currentPage.imageUrl ? (
+                        <div
+                          role="img"
+                          aria-label={title}
+                          className="aspect-video w-full overflow-hidden rounded-2xl border border-border/60 bg-muted bg-cover bg-center bg-no-repeat"
+                          style={{
+                            backgroundImage:
+                              `url("${currentPage.imageUrl}")`,
+                          }}
+                        />
+                      ) : null}
+
                       <div className="space-y-4">
                         {paragraphs.map((paragraph, index) => {
                           const isBulletBlock = /^[•\-*]\s/.test(paragraph);
@@ -478,26 +483,6 @@ export default function LessonDetailClient({
                         })}
                       </div>
 
-                      {bullets.length > 0 && (
-                        <div className="rounded-2xl border border-border/50 bg-muted/25 px-5 py-4">
-                          <h3 className="mb-3 text-sm font-black text-foreground">
-                            {t("lessons.key_takeaways")}
-                          </h3>
-                          <ul className="space-y-2.5">
-                            {bullets.map((bullet) => (
-                              <li
-                                key={bullet}
-                                className="flex items-start gap-3"
-                              >
-                                <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                                <span className="min-w-0 break-words text-sm leading-6 text-foreground/90">
-                                  {bullet}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
                     </div>
                   </PageSectionSurface>
                   </section>

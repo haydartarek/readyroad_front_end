@@ -28,10 +28,6 @@ const lesson = {
       contentNl: "Op een kruispunt zonder borden verleen je voorrang aan rechts.",
       contentFr: "A un carrefour sans signalisation, cedez le passage a droite.",
       contentAr: "عند تقاطع بلا إشارات، امنح الأولوية للقادم من اليمين.",
-      bulletPointsEn: [],
-      bulletPointsNl: [],
-      bulletPointsFr: [],
-      bulletPointsAr: [],
     },
     {
       id: 192,
@@ -44,10 +40,6 @@ const lesson = {
       contentNl: "Controleer borden, markeringen en de richting van elke weggebruiker.",
       contentFr: "Verifiez les panneaux, les marquages et la direction de chaque usager.",
       contentAr: "تحقق من العلامات والتخطيط واتجاه كل مستعمل للطريق.",
-      bulletPointsEn: [],
-      bulletPointsNl: [],
-      bulletPointsFr: [],
-      bulletPointsAr: [],
     },
   ],
 };

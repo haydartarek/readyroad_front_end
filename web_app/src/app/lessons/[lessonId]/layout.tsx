@@ -6,7 +6,7 @@ import {
   getAlternateOpenGraphLocales,
   getOpenGraphLocale,
 } from "@/lib/site-copy";
-import { buildAbsoluteUrl, toMetadataDescription } from "@/lib/seo";
+import { buildAbsoluteUrl, toBrandedMetadataTitle, toMetadataDescription } from "@/lib/seo";
 import { getPublicLesson } from "@/lib/server/public-catalog";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
@@ -26,7 +26,7 @@ export async function generateMetadata({
 
   if (!lesson) {
     return {
-      title: { absolute: "Lesson Not Found | RijVia" },
+      title: { absolute: "Lesson Not Found | Rijvia" },
       robots: { index: false, follow: false },
     };
   }
@@ -40,7 +40,7 @@ export async function generateMetadata({
     copy.description,
     copy.fallbackDescription,
   );
-  const title = copy.title;
+  const title = toBrandedMetadataTitle(copy.title);
   const image = buildAbsoluteUrl("/opengraph-image", APP_URL);
 
   return {

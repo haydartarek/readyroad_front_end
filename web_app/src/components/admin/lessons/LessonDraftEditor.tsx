@@ -10,20 +10,29 @@ import AdminSectionCard from "@/components/admin/AdminSectionCard";
 import LessonDraftPreviewDialog from "@/components/admin/lessons/LessonDraftPreviewDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   saveAdminLessonDraft,
+  purgeAdminLessonMedia,
+  uploadAdminLessonMedia,
   type AdminLessonDocument,
   type AdminLessonDraft,
+  type AdminLessonMediaAsset,
 } from "@/lib/admin-lessons";
+import { adminLessonMediaUrl } from "@/lib/admin-lesson-media";
 import { logApiError } from "@/lib/api";
 import { useLanguage } from "@/contexts/language-context";
 import {
   AlertTriangle,
   Check,
   Eye,
+  ImageIcon,
+  ImagePlus,
   Loader2,
   LockKeyhole,
   Save,
+  Send,
+  Trash2,
 } from "lucide-react";
 
 type SupportedLanguage =
@@ -35,12 +44,19 @@ type SupportedLanguage =
 type LessonDraftEditorProps = {
   idOrCode: string;
   draft: AdminLessonDraft;
+  mediaAssets?: AdminLessonMediaAsset[];
   onSaved: (
     draft: AdminLessonDraft,
   ) => void;
   onDirtyChange?: (
     dirty: boolean,
   ) => void;
+  externalConflict?: boolean;
+  onConflictChange?: (
+    conflict: boolean,
+  ) => void;
+  publishing?: boolean;
+  onPublish?: () => void;
 };
 
 const CONTENT_LANGUAGES: Array<{
@@ -149,8 +165,13 @@ function optionalText(
 export default function LessonDraftEditor({
   idOrCode,
   draft,
+  mediaAssets,
   onSaved,
   onDirtyChange,
+  externalConflict = false,
+  onConflictChange,
+  publishing = false,
+  onPublish,
 }: LessonDraftEditorProps) {
   const {
     t,
@@ -168,6 +189,38 @@ export default function LessonDraftEditor({
     setContentLanguage,
   ] = useState<SupportedLanguage>(
     initialLanguage,
+  );
+
+  const [
+    availableMediaAssets,
+    setAvailableMediaAssets,
+  ] = useState<AdminLessonMediaAsset[]>(
+    () => mediaAssets ?? [],
+  );
+
+  const [
+    uploadingPageNumber,
+    setUploadingPageNumber,
+  ] = useState<number | null>(
+    null,
+  );
+
+  const [
+    deletingAssetId,
+    setDeletingAssetId,
+  ] = useState<number | null>(
+    null,
+  );
+  const [
+    pendingDeleteAssetId,
+    setPendingDeleteAssetId,
+  ] = useState<number | null>(null);
+
+  const [
+    imageUploadError,
+    setImageUploadError,
+  ] = useState<string | null>(
+    null,
   );
 
   const [
@@ -214,6 +267,10 @@ export default function LessonDraftEditor({
     setConflict,
   ] = useState(false);
 
+  const effectiveConflict =
+    conflict ||
+    externalConflict;
+
   const [
     saveSuccess,
     setSaveSuccess,
@@ -229,15 +286,51 @@ export default function LessonDraftEditor({
       null,
     );
 
+  const skipNextDraftHydrationRevisionRef =
+    useRef<number | null>(
+      null,
+    );
+
+  const fileInputRefs =
+    useRef<
+      Record<
+        number,
+        HTMLInputElement | null
+      >
+    >({});
+
   useEffect(() => {
+    if (mediaAssets) {
+      setAvailableMediaAssets(
+        mediaAssets,
+      );
+    }
+  }, [mediaAssets]);
+
+  useEffect(() => {
+    if (
+      skipNextDraftHydrationRevisionRef.current ===
+      draft.revision
+    ) {
+      skipNextDraftHydrationRevisionRef.current =
+        null;
+
+      setRevision(
+        draft.revision,
+      );
+
+      setSaveError(null);
+      setConflict(false);
+      onConflictChange?.(false);
+      return;
+    }
+
     const nextDocument =
       cloneDocument(
         draft.document,
       );
 
-    setDocument(
-      nextDocument,
-    );
+    setDocument(nextDocument);
 
     setBaseline(
       JSON.stringify(
@@ -251,6 +344,7 @@ export default function LessonDraftEditor({
 
     setSaveError(null);
     setConflict(false);
+    onConflictChange?.(false);
 
     const echoedLocalSave =
       lastSavedRevisionRef.current ===
@@ -262,7 +356,10 @@ export default function LessonDraftEditor({
 
     lastSavedRevisionRef.current =
       null;
-  }, [draft]);
+  }, [
+    draft,
+    onConflictChange,
+  ]);
 
   const serializedDocument =
     useMemo(
@@ -275,6 +372,20 @@ export default function LessonDraftEditor({
 
   const dirty =
     serializedDocument !== baseline;
+
+  const mediaById =
+    useMemo(
+      () =>
+        new Map(
+          availableMediaAssets.map(
+            (asset) => [
+              asset.id,
+              asset,
+            ],
+          ),
+        ),
+      [availableMediaAssets],
+    );
   useEffect(() => {
     onDirtyChange?.(
       dirty,
@@ -328,6 +439,151 @@ export default function LessonDraftEditor({
     () => {
       setSaveError(null);
       setSaveSuccess(false);
+    };
+
+  const uploadPageImage =
+    async (
+      pageNumber: number,
+      file: File,
+    ) => {
+      if (
+        uploadingPageNumber !==
+        null || deletingAssetId !== null
+      ) {
+        return;
+      }
+
+      try {
+        setUploadingPageNumber(
+          pageNumber,
+        );
+
+        setImageUploadError(
+          null,
+        );
+
+        const uploadedAsset =
+          await uploadAdminLessonMedia(
+            idOrCode,
+            file,
+            `${document.lesson.lessonCode}-page-${pageNumber}`,
+          );
+
+        setAvailableMediaAssets(
+          (current) => [
+            uploadedAsset,
+            ...current.filter(
+              (asset) =>
+                asset.id !==
+                uploadedAsset.id,
+            ),
+          ],
+        );
+
+        clearTransientStatus();
+
+        setDocument(
+          (current) => ({
+            ...current,
+
+            pages:
+              current.pages.map(
+                (page) =>
+                  page.pageNumber ===
+                  pageNumber
+                    ? {
+                        ...page,
+                        imageAssetId:
+                          uploadedAsset.id,
+                      }
+                    : page,
+              ),
+          }),
+        );
+      } catch (error) {
+        logApiError(
+          "Lesson image upload failed",
+          error,
+        );
+
+        setImageUploadError(
+          t(
+            "admin.lessons.editor.image_upload_error",
+          ),
+        );
+      } finally {
+        setUploadingPageNumber(
+          null,
+        );
+      }
+    };
+
+  const deletePageImage =
+    async (
+      assetId: number,
+    ) => {
+      if (
+        uploadingPageNumber !== null ||
+        deletingAssetId !== null ||
+        saving ||
+        publishing ||
+        effectiveConflict
+      ) {
+        return;
+      }
+
+      try {
+        setDeletingAssetId(assetId);
+        setImageUploadError(null);
+
+        const updatedDraft =
+          await purgeAdminLessonMedia(
+            assetId,
+          );
+
+        setAvailableMediaAssets(
+          (current) =>
+            current.filter(
+              (asset) => asset.id !== assetId,
+            ),
+        );
+
+        const clearReferences = (current: AdminLessonDocument): AdminLessonDocument => ({
+          ...current,
+          pages: current.pages.map((page) =>
+            page.imageAssetId === assetId
+              ? { ...page, imageAssetId: null }
+              : page,
+          ),
+        });
+        setDocument(clearReferences);
+        setBaseline((current) => JSON.stringify(clearReferences(JSON.parse(current))));
+        if (updatedDraft) {
+          setRevision(
+            updatedDraft.revision,
+          );
+
+          skipNextDraftHydrationRevisionRef.current =
+            updatedDraft.revision;
+
+          onSaved(
+            updatedDraft,
+          );
+        }
+        setPendingDeleteAssetId(null);
+      } catch (error) {
+        logApiError(
+          "Lesson image purge failed",
+          error,
+        );
+        setImageUploadError(
+          t(
+            "admin.lessons.editor.image_delete_error",
+          ),
+        );
+      } finally {
+        setDeletingAssetId(null);
+      }
     };
 
   const updateIcon =
@@ -408,6 +664,30 @@ export default function LessonDraftEditor({
         }),
       );
     };
+  const updateTitle =
+    (
+      value: string,
+    ) => {
+      clearTransientStatus();
+
+      setDocument(
+        (current) => ({
+          ...current,
+
+          lesson: {
+            ...current.lesson,
+
+            title: {
+              ...current.lesson.title,
+
+              [contentLanguage]:
+                value,
+            },
+          },
+        }),
+      );
+    };
+
   const updateDescription =
     (
       value: string,
@@ -500,42 +780,23 @@ export default function LessonDraftEditor({
       );
     };
 
-  const updatePageBullets =
-    (
-      pageNumber: number,
-      value: string,
-    ) => {
-      clearTransientStatus();
-
-      setDocument(
-        (current) => ({
-          ...current,
-
-          pages:
-            current.pages.map(
-              (page) =>
-                page.pageNumber ===
-                pageNumber
-                  ? {
-                      ...page,
-
-                      bulletPointsRaw: {
-                        ...page.bulletPointsRaw,
-
-                        [contentLanguage]:
-                          optionalText(
-                            value,
-                          ),
-                      },
-                    }
-                  : page,
-            ),
-        }),
-      );
-    };
 
   const validateDocument =
     (): string | null => {
+      const invalidLessonTitle =
+        CONTENT_LANGUAGES.some(
+          ({ code }) =>
+            !document.lesson.title[
+              code
+            ].trim(),
+        );
+
+      if (invalidLessonTitle) {
+        return t(
+          "admin.lessons.editor.validation_lesson_title",
+        );
+      }
+
       if (
         !Number.isInteger(
           document.lesson.displayOrder,
@@ -591,7 +852,7 @@ export default function LessonDraftEditor({
       if (
         !dirty ||
         saving ||
-        conflict
+        effectiveConflict
       ) {
         return;
       }
@@ -647,6 +908,7 @@ export default function LessonDraftEditor({
         );
 
         setConflict(false);
+        onConflictChange?.(false);
 
         lastSavedRevisionRef.current =
           savedDraft.revision;
@@ -663,6 +925,7 @@ export default function LessonDraftEditor({
           ) === 409
         ) {
           setConflict(true);
+          onConflictChange?.(true);
           setSaveError(null);
           setSaveSuccess(false);
         } else {
@@ -683,6 +946,11 @@ export default function LessonDraftEditor({
         setSaving(false);
       }
     };
+
+  const titleValue =
+    document.lesson.title[
+      contentLanguage
+    ] ?? "";
 
   const descriptionValue =
     document.lesson.description[
@@ -737,11 +1005,16 @@ export default function LessonDraftEditor({
 
           <Button
             type="button"
+            variant={
+              dirty
+                ? "default"
+                : "outline"
+            }
             className="gap-2"
             disabled={
               !dirty ||
               saving ||
-              conflict
+              effectiveConflict
             }
             onClick={() =>
               void saveDraft()
@@ -759,6 +1032,38 @@ export default function LessonDraftEditor({
                 )
               : t(
                   "admin.lessons.editor.save_draft",
+                )}
+          </Button>
+
+          <Button
+            type="button"
+            variant={
+              dirty
+                ? "outline"
+                : "default"
+            }
+            className="gap-2"
+            disabled={
+              dirty ||
+              saving ||
+              effectiveConflict ||
+              publishing ||
+              !onPublish
+            }
+            onClick={onPublish}
+          >
+            {publishing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+
+            {publishing
+              ? t(
+                  "admin.lessons.publish.publishing",
+                )
+              : t(
+                  "admin.lessons.publish.button",
                 )}
           </Button>
         </div>
@@ -918,7 +1223,7 @@ export default function LessonDraftEditor({
         </div>
       </div>
 
-      {conflict ? (
+      {effectiveConflict ? (
         <div
           role="alert"
           className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"
@@ -952,6 +1257,15 @@ export default function LessonDraftEditor({
         </p>
       ) : null}
 
+      {imageUploadError ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-semibold text-destructive"
+        >
+          {imageUploadError}
+        </p>
+      ) : null}
+
       {saveSuccess &&
       !dirty ? (
         <div
@@ -965,6 +1279,32 @@ export default function LessonDraftEditor({
           )}
         </div>
       ) : null}
+
+      <div className="space-y-2">
+        <label
+          htmlFor="lesson-draft-title"
+          className="text-sm font-bold text-foreground"
+        >
+          {t(
+            "admin.lessons.editor.field_title",
+          )}
+        </label>
+
+        <input
+          id="lesson-draft-title"
+          aria-label={t(
+            "admin.lessons.editor.field_title",
+          )}
+          dir={fieldDirection}
+          value={titleValue}
+          onChange={(event) =>
+            updateTitle(
+              event.target.value,
+            )
+          }
+          className="h-10 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-2 text-sm font-semibold shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        />
+      </div>
 
       <div className="space-y-2">
         <label
@@ -1001,8 +1341,25 @@ export default function LessonDraftEditor({
             const contentId =
               `lesson-page-${page.pageNumber}-content`;
 
-            const bulletsId =
-              `lesson-page-${page.pageNumber}-bullets`;
+
+            const imageInputId =
+              `lesson-page-${page.pageNumber}-image`;
+
+            const imageAsset =
+              page.imageAssetId
+                ? mediaById.get(
+                    page.imageAssetId,
+                  )
+                : undefined;
+
+            const imageUrl =
+              adminLessonMediaUrl(
+                imageAsset,
+              );
+
+            const isUploadingImage =
+              uploadingPageNumber ===
+              page.pageNumber;
 
             return (
               <article
@@ -1058,6 +1415,143 @@ export default function LessonDraftEditor({
                   />
                 </div>
 
+                <div className="space-y-3 rounded-xl border border-border/50 bg-muted/15 p-3 sm:p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-bold text-foreground">
+                        {t(
+                          "admin.lessons.editor.page_image",
+                        )}
+                      </p>
+
+                      <p className="text-xs leading-5 text-muted-foreground">
+                        {t(
+                          "admin.lessons.editor.page_image_help",
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-2 sm:items-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="shrink-0 gap-2"
+                        disabled={
+                          uploadingPageNumber !==
+                            null ||
+                          deletingAssetId !== null ||
+                          saving ||
+                          publishing ||
+                          effectiveConflict
+                        }
+                        onClick={() =>
+                          fileInputRefs.current[
+                            page.pageNumber
+                          ]?.click()
+                        }
+                      >
+                        {isUploadingImage ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ImagePlus className="h-4 w-4" />
+                        )}
+
+                        {isUploadingImage
+                          ? t(
+                              "admin.lessons.editor.uploading_image",
+                            )
+                          : imageUrl
+                            ? t(
+                                "admin.lessons.editor.change_image",
+                              )
+                            : t(
+                                "admin.lessons.editor.upload_image",
+                              )}
+                      </Button>
+
+                      {imageUrl && page.imageAssetId ? (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          className="shrink-0 gap-2"
+                          disabled={
+                            uploadingPageNumber !== null ||
+                            deletingAssetId !== null ||
+                            saving ||
+                            publishing ||
+                            effectiveConflict
+                          }
+                          onClick={() => setPendingDeleteAssetId(page.imageAssetId as number)}
+                        >
+                          {deletingAssetId === page.imageAssetId ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          {t(
+                            "admin.lessons.editor.delete_image_permanently",
+                          )}
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <input
+                    ref={(node) => {
+                      fileInputRefs.current[
+                        page.pageNumber
+                      ] = node;
+                    }}
+                    id={imageInputId}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    disabled={
+                      uploadingPageNumber !==
+                      null
+                    }
+                    onChange={(event) => {
+                      const file =
+                        event.currentTarget
+                          .files?.[0];
+
+                      event.currentTarget.value =
+                        "";
+
+                      if (file) {
+                        void uploadPageImage(
+                          page.pageNumber,
+                          file,
+                        );
+                      }
+                    }}
+                  />
+
+                  {imageUrl ? (
+                    <div
+                      role="img"
+                      aria-label={`${t(
+                        "admin.lessons.editor.page_image",
+                      )} ${page.pageNumber}`}
+                      className="aspect-video w-full overflow-hidden rounded-xl border border-border/60 bg-muted bg-cover bg-center bg-no-repeat"
+                      style={{
+                        backgroundImage:
+                          `url("${imageUrl}")`,
+                      }}
+                    />
+                  ) : (
+                    <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 text-center">
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/60" />
+
+                      <p className="text-sm font-semibold text-muted-foreground">
+                        {t(
+                          "admin.lessons.editor.no_page_image",
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <label
                     htmlFor={
@@ -1091,43 +1585,66 @@ export default function LessonDraftEditor({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label
-                    htmlFor={
-                      bulletsId
-                    }
-                    className="text-sm font-bold text-foreground"
-                  >
-                    {t(
-                      "admin.lessons.editor.page_bullets",
-                    )}
-                  </label>
-
-                  <textarea
-                    id={bulletsId}
-                    aria-label={`${t(
-                      "admin.lessons.editor.page_bullets",
-                    )} ${page.pageNumber}`}
-                    dir={fieldDirection}
-                    value={
-                      page.bulletPointsRaw[
-                        contentLanguage
-                      ] ?? ""
-                    }
-                    onChange={(event) =>
-                      updatePageBullets(
-                        page.pageNumber,
-                        event.target.value,
-                      )
-                    }
-                    className="min-h-24 w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-sm leading-6 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                  />
-                </div>
               </article>
             );
           },
         )}
       </div>
+
+      <Dialog
+        open={pendingDeleteAssetId !== null}
+        onOpenChange={(open) => {
+          if (!open && deletingAssetId === null) {
+            setPendingDeleteAssetId(null);
+          }
+        }}
+      >
+        <DialogContent
+          dir={contentLanguage === "ar" ? "rtl" : "ltr"}
+          className="w-[calc(100vw-2rem)] max-w-lg rounded-3xl"
+        >
+          <DialogHeader className="text-start">
+            <DialogTitle className="text-start">
+              {t("admin.lessons.editor.delete_image_permanently")}
+            </DialogTitle>
+            <DialogDescription className="text-start leading-6">
+              {t("admin.lessons.editor.confirm_delete_image")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={deletingAssetId !== null}
+              onClick={() => setPendingDeleteAssetId(null)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={
+                deletingAssetId !== null ||
+                pendingDeleteAssetId === null ||
+                saving ||
+                publishing ||
+                effectiveConflict
+              }
+              onClick={() => {
+                if (pendingDeleteAssetId !== null) {
+                  void deletePageImage(pendingDeleteAssetId);
+                }
+              }}
+            >
+              {deletingAssetId !== null ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              {t("admin.lessons.editor.delete_image_permanently")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <LessonDraftPreviewDialog
         key={`${contentLanguage}-${previewOpen ? "open" : "closed"}`}
@@ -1138,6 +1655,9 @@ export default function LessonDraftEditor({
         }
         initialLanguage={
           contentLanguage
+        }
+        mediaAssets={
+          availableMediaAssets
         }
       />
     </AdminSectionCard>

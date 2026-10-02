@@ -1,9 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
-import { formatArticleDate } from "@/app/blog/blog-format";
 import ArticleMarkdown from "@/components/blog/ArticleMarkdown";
 import ArticleLearningCards from "@/components/blog/ArticleLearningCards";
 import { localizePathname } from "@/lib/i18n-routing";
@@ -59,7 +58,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
   const structuredData = createArticleStructuredData(
     article,
     locale,
-    translateMessage(locale, "blog.eyebrow"),
+    translateMessage(locale, "nav.blog"),
   );
   const imageCaption = article.image?.caption?.trim();
   const imageSourceUrl = article.image?.sourceUrl?.trim();
@@ -97,13 +96,6 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
           <p className="mx-auto mt-4 max-w-2xl break-words text-base leading-8 text-muted-foreground">
             {article.summary}
           </p>
-          <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <CalendarDays className="h-4 w-4" aria-hidden="true" />
-            <span>{translateMessage(locale, "blog.published")}</span>
-            <time dateTime={article.publishedAt}>
-              {formatArticleDate(article.publishedAt, locale)}
-            </time>
-          </div>
         </header>
 
         {article.image ? (

@@ -109,10 +109,17 @@ async function fulfillJson(route: Route, body: unknown, status = 200) {
 
 async function prepareResult(page: Page) {
   await seedCookieConsent(page);
+  const token = [
+    "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0",
+    Buffer.from(
+      JSON.stringify({ sub: "result-review-fixture", role: "USER", exp: 2_000_000_000 }),
+    ).toString("base64url"),
+    "test-signature",
+  ].join(".");
   await page.context().addCookies([
     {
       name: "token",
-      value: "result-review-test-token",
+      value: token,
       url: String(test.info().project.use.baseURL ?? "http://localhost:3000"),
       httpOnly: true,
       sameSite: "Lax",

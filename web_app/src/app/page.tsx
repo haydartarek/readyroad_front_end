@@ -1,6 +1,8 @@
 import { getRequestLocale } from "@/lib/server/request-locale";
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/home/hero-section";
+import { HomeLessonsOverview } from "@/components/home/home-lessons-overview";
+import { getHomeLessonsOverview } from "@/lib/server/home-lessons-overview";
 import { StatsHighlights } from "@/components/home/stats-highlights";
 import { FeaturesSection } from "@/components/home/features-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
@@ -19,6 +21,7 @@ import {
 } from "@/lib/site-copy";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
+import { toBrandedMetadataTitle } from "@/lib/seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -29,15 +32,15 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonical = buildLocalizedUrl("/", locale, APP_URL);
 
   return {
-    title: { absolute: copy.title },
+    title: { absolute: toBrandedMetadataTitle(copy.title) },
     description: copy.description,
     keywords: copy.keywords,
     alternates: getLocalizedAlternates("/", locale, APP_URL),
     openGraph: {
-      title: copy.openGraphTitle,
+      title: toBrandedMetadataTitle(copy.openGraphTitle),
       description: copy.openGraphDescription,
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [ogImage],
@@ -75,10 +78,13 @@ export default async function Home({ searchParams }: HomeProps) {
     );
   }
 
+  const lessonsOverview = await getHomeLessonsOverview();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <main>
         <HeroSection />
+        <HomeLessonsOverview lessons={lessonsOverview} />
         <StatsHighlights />
         <FeaturesSection />
         <HowItWorksSection />

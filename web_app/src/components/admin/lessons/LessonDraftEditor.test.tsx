@@ -6,14 +6,20 @@ import {
   within,
 } from "@testing-library/react";
 import LessonDraftEditor from "./LessonDraftEditor";
-import { saveAdminLessonDraft } from "@/lib/admin-lessons";
+import {
+  purgeAdminLessonMedia,
+  saveAdminLessonDraft,
+} from "@/lib/admin-lessons";
 import type {
   AdminLessonDocument,
   AdminLessonDraft,
+  AdminLessonMediaAsset,
 } from "@/lib/admin-lessons";
 
 jest.mock("@/lib/admin-lessons", () => ({
   saveAdminLessonDraft:
+    jest.fn(),
+  purgeAdminLessonMedia:
     jest.fn(),
 }));
 
@@ -41,6 +47,11 @@ jest.mock(
 const mockedSaveAdminLessonDraft =
   saveAdminLessonDraft as jest.MockedFunction<
     typeof saveAdminLessonDraft
+  >;
+
+const mockedPurgeAdminLessonMedia =
+  purgeAdminLessonMedia as jest.MockedFunction<
+    typeof purgeAdminLessonMedia
   >;
 
 const document: AdminLessonDocument = {
@@ -87,12 +98,6 @@ const document: AdminLessonDocument = {
         en: "English content",
       },
 
-      bulletPointsRaw: {
-        ar: null,
-        nl: null,
-        fr: null,
-        en: "First point",
-      },
     },
   ],
 
@@ -140,8 +145,240 @@ describe(
   () => {
     beforeEach(() => {
       mockedSaveAdminLessonDraft.mockReset();
+      mockedPurgeAdminLessonMedia.mockReset();
     });
 
+    it(
+      "permanently deletes a page image through the admin purge endpoint",
+      async () => {
+        const asset: AdminLessonMediaAsset = {
+          id: 9,
+          storageKey: "lessons/TH01/page-1.png",
+          storageProvider: "LOCAL",
+          originalFilename: "page-1.png",
+          mimeType: "image/png",
+          sizeBytes: 10,
+          width: null,
+          height: null,
+          sha256: null,
+          status: "ACTIVE",
+          uploadedByUserId: 1,
+          createdAt: "2026-09-24T08:00:00Z",
+          archivedAt: null,
+        };
+        const imageDocument: AdminLessonDocument = {
+          ...document,
+          pages: document.pages.map((page) => ({
+            ...page,
+            imageAssetId: 9,
+          })),
+        };
+        const imageDraft: AdminLessonDraft = {
+          ...draft,
+          document: imageDocument,
+        };
+        const purgedDraft: AdminLessonDraft = {
+          ...imageDraft,
+          revision: 5,
+          document: {
+            ...imageDocument,
+            pages: imageDocument.pages.map((page) => ({
+              ...page,
+              imageAssetId: null,
+            })),
+          },
+        };
+        const onSaved = jest.fn();
+        mockedPurgeAdminLessonMedia.mockResolvedValue(purgedDraft);
+        render(
+          <LessonDraftEditor
+            idOrCode="TH01"
+            draft={imageDraft}
+            mediaAssets={[asset]}
+            onSaved={onSaved}
+          />,
+        );
+
+        fireEvent.click(
+          screen.getByRole("button", {
+            name: "admin.lessons.editor.delete_image_permanently",
+          }),
+        );
+
+        const deleteActions = screen.getAllByRole("button", {
+          name: "admin.lessons.editor.delete_image_permanently",
+        });
+        fireEvent.click(deleteActions[deleteActions.length - 1]);
+
+        await waitFor(() => {
+          expect(mockedPurgeAdminLessonMedia).toHaveBeenCalledWith(9);
+          expect(onSaved).toHaveBeenCalledWith(purgedDraft);
+        });
+      },
+    );
+
+    it(
+      "keeps other local page images when a purge response contains an older document",
+      async () => {
+        const baseAsset: AdminLessonMediaAsset = {
+          id: 9,
+          storageKey: "lessons/TH01/page-2.png",
+          storageProvider: "LOCAL",
+          originalFilename: "page-2.png",
+          mimeType: "image/png",
+          sizeBytes: 10,
+          width: null,
+          height: null,
+          sha256: null,
+          status: "ACTIVE",
+          uploadedByUserId: 1,
+          createdAt: "2026-09-24T08:00:00Z",
+          archivedAt: null,
+        };
+
+        const mediaAssets: AdminLessonMediaAsset[] = [
+          {
+            ...baseAsset,
+            id: 8,
+            storageKey: "lessons/TH01/page-1.png",
+            originalFilename: "page-1.png",
+          },
+          baseAsset,
+          {
+            ...baseAsset,
+            id: 10,
+            storageKey: "lessons/TH01/page-3.png",
+            originalFilename: "page-3.png",
+          },
+        ];
+
+        const basePage =
+          document.pages[0];
+
+        const imageDocument: AdminLessonDocument = {
+          ...document,
+          pages: [
+            {
+              ...basePage,
+              pageNumber: 1,
+              imageAssetId: 8,
+            },
+            {
+              ...basePage,
+              pageNumber: 2,
+              imageAssetId: 9,
+            },
+            {
+              ...basePage,
+              pageNumber: 3,
+              imageAssetId: 10,
+            },
+          ],
+        };
+
+        const imageDraft: AdminLessonDraft = {
+          ...draft,
+          document: imageDocument,
+        };
+
+        const stalePurgedDraft: AdminLessonDraft = {
+          ...imageDraft,
+          revision: 5,
+          document: {
+            ...imageDocument,
+            pages:
+              imageDocument.pages.map(
+                (page) => ({
+                  ...page,
+                  imageAssetId: null,
+                }),
+              ),
+          },
+        };
+
+        const onSaved =
+          jest.fn();
+
+        mockedPurgeAdminLessonMedia.mockResolvedValue(
+          stalePurgedDraft,
+        );
+
+        const view =
+          render(
+            <LessonDraftEditor
+              idOrCode="TH01"
+              draft={imageDraft}
+              mediaAssets={mediaAssets}
+              onSaved={onSaved}
+            />,
+          );
+
+        const initialDeleteButtons =
+          screen.getAllByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.editor.delete_image_permanently",
+            },
+          );
+
+        expect(
+          initialDeleteButtons,
+        ).toHaveLength(3);
+
+        fireEvent.click(
+          initialDeleteButtons[1],
+        );
+
+        const confirmButtons =
+          screen.getAllByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.editor.delete_image_permanently",
+            },
+          );
+
+        fireEvent.click(
+          confirmButtons[
+            confirmButtons.length - 1
+          ],
+        );
+
+        await waitFor(() => {
+          expect(
+            mockedPurgeAdminLessonMedia,
+          ).toHaveBeenCalledWith(9);
+
+          expect(
+            onSaved,
+          ).toHaveBeenCalledWith(
+            stalePurgedDraft,
+          );
+        });
+
+        view.rerender(
+          <LessonDraftEditor
+            idOrCode="TH01"
+            draft={stalePurgedDraft}
+            mediaAssets={mediaAssets}
+            onSaved={onSaved}
+          />,
+        );
+
+        await waitFor(() => {
+          expect(
+            screen.getAllByRole(
+              "button",
+              {
+                name:
+                  "admin.lessons.editor.delete_image_permanently",
+              },
+            ),
+          ).toHaveLength(2);
+        });
+      },
+    );
     it(
       "edits content and saves the complete draft with the current revision",
       async () => {

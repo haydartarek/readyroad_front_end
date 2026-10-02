@@ -65,6 +65,10 @@ const nextConfig: NextConfig = {
         source: "/images/articles/:path*",
         destination: `${backendBase}/images/articles/:path*`,
       },
+      {
+        source: "/images/lessons/:path*",
+        destination: `${backendBase}/images/lessons/:path*`,
+      },
     ];
   },
 

@@ -21,9 +21,12 @@ import {
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
-import type { AdminLessonDocument } from "@/lib/admin-lessons";
 import {
-  CheckCircle2,
+  type AdminLessonDocument,
+  type AdminLessonMediaAsset,
+} from "@/lib/admin-lessons";
+import { adminLessonMediaUrl } from "@/lib/admin-lesson-media";
+import {
   FileText,
 } from "lucide-react";
 
@@ -40,6 +43,7 @@ type LessonDraftPreviewDialogProps = {
     open: boolean,
   ) => void;
   initialLanguage: SupportedLanguage;
+  mediaAssets?: AdminLessonMediaAsset[];
 };
 
 const PREVIEW_LANGUAGES: Array<{
@@ -68,56 +72,13 @@ const PREVIEW_LANGUAGES: Array<{
   },
 ];
 
-function parseBulletPoints(
-  value: string | null,
-): string[] {
-  const trimmed =
-    value?.trim();
-
-  if (!trimmed) {
-    return [];
-  }
-
-  try {
-    const parsed =
-      JSON.parse(trimmed);
-
-    if (Array.isArray(parsed)) {
-      return parsed
-        .filter(
-          (
-            item,
-          ): item is string =>
-            typeof item ===
-            "string",
-        )
-        .map((item) =>
-          item.trim(),
-        )
-        .filter(Boolean);
-    }
-  } catch {
-    // Legacy values are not always JSON arrays.
-  }
-
-  return trimmed
-    .split(/\r?\n+/)
-    .map((item) =>
-      item
-        .replace(
-          /^[•\-*]\s*/,
-          "",
-        )
-        .trim(),
-    )
-    .filter(Boolean);
-}
 
 export default function LessonDraftPreviewDialog({
   document,
   open,
   onOpenChange,
   initialLanguage,
+  mediaAssets,
 }: LessonDraftPreviewDialogProps) {
   const { t } =
     useLanguage();
@@ -138,6 +99,23 @@ export default function LessonDraftPreviewDialog({
             b.pageNumber,
         ),
       [document.pages],
+    );
+
+  const mediaById =
+    useMemo(
+      () =>
+        new Map(
+          (
+            mediaAssets ??
+            []
+          ).map(
+            (asset) => [
+              asset.id,
+              asset,
+            ],
+          ),
+        ),
+      [mediaAssets],
     );
 
   const title =
@@ -284,12 +262,17 @@ export default function LessonDraftPreviewDialog({
                 )
                 .filter(Boolean);
 
-            const bullets =
-              parseBulletPoints(
-                page
-                  .bulletPointsRaw[
-                  previewLanguage
-                ],
+
+            const imageAsset =
+              page.imageAssetId
+                ? mediaById.get(
+                    page.imageAssetId,
+                  )
+                : undefined;
+
+            const imageUrl =
+              adminLessonMediaUrl(
+                imageAsset,
               );
 
             return (
@@ -323,6 +306,18 @@ export default function LessonDraftPreviewDialog({
                 </div>
 
                 <div className="min-w-0 space-y-5 px-4 py-5 sm:px-6 sm:py-6">
+                  {imageUrl ? (
+                    <div
+                      role="img"
+                      aria-label={pageTitle}
+                      className="aspect-video w-full overflow-hidden rounded-2xl border border-border/60 bg-muted bg-cover bg-center bg-no-repeat"
+                      style={{
+                        backgroundImage:
+                          `url("${imageUrl}")`,
+                      }}
+                    />
+                  ) : null}
+
                   <div className="space-y-4">
                     {paragraphs.map(
                       (
@@ -343,39 +338,6 @@ export default function LessonDraftPreviewDialog({
                     )}
                   </div>
 
-                  {bullets.length >
-                  0 ? (
-                    <div className="rounded-2xl border border-border/50 bg-muted/25 px-5 py-4">
-                      <h3 className="mb-3 text-sm font-black text-foreground">
-                        {t(
-                          "admin.lessons.preview.key_takeaways",
-                        )}
-                      </h3>
-
-                      <ul className="space-y-2.5">
-                        {bullets.map(
-                          (
-                            bullet,
-                          ) => (
-                            <li
-                              key={
-                                bullet
-                              }
-                              className="flex items-start gap-3"
-                            >
-                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-
-                              <span className="min-w-0 break-words text-sm leading-6 text-foreground/90">
-                                {
-                                  bullet
-                                }
-                              </span>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    </div>
-                  ) : null}
                 </div>
               </PageSectionSurface>
             );

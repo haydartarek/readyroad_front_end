@@ -349,6 +349,73 @@ export default function ExamQuestionsPage() {
     fetchExamData();
   }, [examId, fetchKey, router, t]);
 
+  // An administrator may update a question while this exam tab remains open.
+  // Refresh only the learner-visible difficulty metadata when the tab becomes
+  // active again; replacing the full exam would reset the timer and progress.
+  const refreshQuestionDifficulties = useCallback(async () => {
+    try {
+      const response = await apiClient.get<{
+        hasActiveExam: boolean;
+        activeExam?: BackendExamData | null;
+      }>("/exams/simulations/active");
+      const latestExam = response.data.activeExam;
+
+      if (
+        !response.data.hasActiveExam ||
+        !latestExam ||
+        latestExam.examId !== examId
+      ) {
+        return;
+      }
+
+      const latestDifficulties = new Map(
+        (latestExam.questions ?? []).map((question) => [
+          question.questionId,
+          question.difficultyLevel,
+        ]),
+      );
+
+      setExamData((current) => {
+        if (!current) return current;
+
+        let changed = false;
+        const questions = current.questions.map((question) => {
+          const latestDifficulty = latestDifficulties.get(question.id);
+          if (
+            latestDifficulty === undefined ||
+            latestDifficulty === question.difficultyLevel
+          ) {
+            return question;
+          }
+
+          changed = true;
+          return { ...question, difficultyLevel: latestDifficulty };
+        });
+
+        return changed ? { ...current, questions } : current;
+      });
+    } catch (err) {
+      // Metadata refresh is best effort; the already-loaded exam remains usable.
+      logApiError("Failed to refresh exam question difficulty", err);
+    }
+  }, [examId]);
+
+  useEffect(() => {
+    const refreshWhenActive = () => {
+      if (document.visibilityState === "visible") {
+        void refreshQuestionDifficulties();
+      }
+    };
+
+    window.addEventListener("focus", refreshWhenActive);
+    document.addEventListener("visibilitychange", refreshWhenActive);
+
+    return () => {
+      window.removeEventListener("focus", refreshWhenActive);
+      document.removeEventListener("visibilitychange", refreshWhenActive);
+    };
+  }, [refreshQuestionDifficulties]);
+
   const presentedQuestionId =
     examData?.questions[currentQuestionIndex]?.id;
 
@@ -935,6 +1002,12 @@ export default function ExamQuestionsPage() {
             totalQuestions={examData.totalQuestions}
             completedQuestions={finalizedQuestionIds.size}
             onOpenChange={setShowPaywall}
+            onCheckoutNavigationStart={() => {
+              isExamActive.current = false;
+            }}
+            onCheckoutNavigationFailed={() => {
+              isExamActive.current = true;
+            }}
           />
         </>
       }

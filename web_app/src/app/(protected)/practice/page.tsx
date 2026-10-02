@@ -13,10 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  PageHeroDescription,
-  PageHeroSurface,
-  PageHeroTitle,
-  PageMetricCard,
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
@@ -39,9 +35,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Languages,
   RefreshCw,
-  Shapes,
   Shuffle,
   Trophy,
 } from "lucide-react";
@@ -212,61 +206,6 @@ export default function PracticePage() {
       className="min-h-screen bg-background"
     >
       <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-        <PageHeroSurface contentClassName="space-y-4">
-          <div className="space-y-4">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-              <div className="space-y-3">
-                <PageHeroTitle className="max-w-3xl text-balance">
-                  {t("practice.title")}
-                </PageHeroTitle>
-                <PageHeroDescription className="max-w-3xl text-pretty">
-                  {t("practice.hub.subtitle")}
-                </PageHeroDescription>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="rounded-full border-0 bg-primary/10 text-primary"
-                  >
-                    {t("practice.hub.per_sign_questions")}
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="rounded-full border-0 bg-amber-500/10 text-amber-700"
-                  >
-                    {t("practice.hub.three_levels")}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-3 xl:w-[360px]">
-                {[
-                  {
-                    icon: <BookOpen className="h-4 w-4" />,
-                    value: isLoading ? "…" : String(totalSigns),
-                    label: t("practice.hub.metric_signs"),
-                  },
-                  {
-                    icon: <Shapes className="h-4 w-4" />,
-                    value: isLoading ? "…" : String(categories.length),
-                    label: t("practice.hub.metric_categories"),
-                  },
-                  {
-                    icon: <Languages className="h-4 w-4" />,
-                    value: "4",
-                    label: t("practice.hub.metric_languages"),
-                  },
-                ].map((metric) => (
-                  <PageMetricCard
-                    key={metric.label}
-                    icon={metric.icon}
-                    value={metric.value}
-                    label={metric.label}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </PageHeroSurface>
 
         {serviceUnavailable && (
           <ServiceUnavailableBanner

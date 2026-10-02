@@ -56,12 +56,16 @@ export function FreeExamPaywall({
   totalQuestions,
   completedQuestions,
   onOpenChange,
+  onCheckoutNavigationStart,
+  onCheckoutNavigationFailed,
 }: {
   open: boolean;
   examId: number;
   totalQuestions: number;
   completedQuestions: number;
   onOpenChange: (open: boolean) => void;
+  onCheckoutNavigationStart?: () => void;
+  onCheckoutNavigationFailed?: () => void;
 }) {
   const { user, isAuthenticated } = useAuth();
   const { language, t, isRTL } = useLanguage();
@@ -106,6 +110,8 @@ export function FreeExamPaywall({
     setBusy(true);
     setError(null);
 
+    let checkoutNavigationStarted = false;
+
     try {
       const requestId = checkoutRequestId(
         user.username,
@@ -123,10 +129,17 @@ export function FreeExamPaywall({
         checkout.purchaseId,
       );
 
+      onCheckoutNavigationStart?.();
+      checkoutNavigationStarted = true;
+
       navigateToCheckout(
         checkout.checkoutUrl,
       );
     } catch (err) {
+      if (checkoutNavigationStarted) {
+        onCheckoutNavigationFailed?.();
+      }
+
       const status =
         (err as { response?: { status?: number } })
           .response?.status;

@@ -45,19 +45,19 @@ describe("home metadata titles", () => {
   );
 
   it.each([
-    ["en", "RijVia | Belgian Driving Theory Exam Preparation"],
-    ["ar", "RijVia | الاستعداد لامتحان السياقة النظري في بلجيكا"],
-    ["nl", "RijVia | Theorie Rijbewijs B België"],
-    ["fr", "RijVia | Préparation à l'examen théorique permis B en Belgique"],
+    ["en", "Rijvia | Belgian Driving Theory Exam Preparation"],
+    ["ar", "Rijvia | الاستعداد لامتحان السياقة النظري في بلجيكا"],
+    ["nl", "Rijvia | Theorie Rijbewijs B België"],
+    ["fr", "Rijvia | Préparation à l'examen théorique permis B en Belgique"],
   ] as const)(
-    "uses one pipe-separated RijVia title for %s",
+    "uses one pipe-separated Rijvia title for %s",
     (locale, title) => {
       const copy = getHomeMetadataCopy(locale);
 
       expect(copy.title).toBe(title);
       expect(copy.openGraphTitle).toBe(title);
-      expect(copy.title).not.toContain("RijVia:");
-      expect(copy.title.match(/RijVia/g)).toHaveLength(1);
+      expect(copy.title).not.toContain("Rijvia:");
+      expect(copy.title.match(/Rijvia/g)).toHaveLength(1);
     },
   );
 
@@ -70,14 +70,14 @@ describe("home metadata titles", () => {
       const videosMetadata = await generateVideosMetadata();
 
       expect(homeMetadata.title).toEqual({
-        absolute: getHomeMetadataCopy(locale).title,
+        absolute: `${getHomeMetadataCopy(locale).title.split(" | ").slice(1).join(" | ")} | Rijvia`,
       });
       expect(videosMetadata.title).toEqual({
-        absolute: expect.stringContaining("| RijVia"),
+        absolute: expect.stringContaining("| Rijvia"),
       });
       expect(
         String((videosMetadata.title as { absolute: string }).absolute).match(
-          /RijVia/g,
+          /Rijvia/g,
         ),
       ).toHaveLength(1);
     },

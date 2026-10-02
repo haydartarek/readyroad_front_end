@@ -36,6 +36,7 @@ export interface AdminLessonDocumentLanguageMap {
 
 export interface AdminLessonDocumentPage {
   pageNumber: number;
+  imageAssetId?: number | null;
   title: {
     ar: string;
     nl: string;
@@ -43,7 +44,6 @@ export interface AdminLessonDocumentPage {
     en: string;
   };
   content: AdminLessonDocumentLanguageMap;
-  bulletPointsRaw: AdminLessonDocumentLanguageMap;
 }
 
 export interface AdminLessonDocument {
@@ -124,7 +124,7 @@ export interface AdminLessonMediaAsset {
   sizeBytes: number;
   width: number | null;
   height: number | null;
-  sha256: string;
+  sha256: string | null;
   status: string;
   uploadedByUserId: number | null;
   createdAt: string;
@@ -148,6 +148,44 @@ export interface AdminLessonDetail {
   categoryLinks: AdminLessonCategoryLink[];
   mediaAssets: AdminLessonMediaAsset[];
   versions: AdminLessonVersion[];
+}
+
+export interface CreateAdminLessonPageRequest {
+  titleAr: string;
+  titleNl: string;
+  titleFr: string;
+  titleEn: string;
+  contentAr?: string;
+  contentNl?: string;
+  contentFr?: string;
+  contentEn?: string;
+}
+
+export interface CreateAdminLessonRequest {
+  lessonCode: string;
+  titleAr: string;
+  titleNl: string;
+  titleFr: string;
+  titleEn: string;
+  descriptionAr?: string;
+  descriptionNl?: string;
+  descriptionFr?: string;
+  descriptionEn?: string;
+  icon?: string;
+  displayOrder: number;
+  estimatedMinutes: number;
+  page: CreateAdminLessonPageRequest;
+}
+
+export async function createAdminLesson(
+  request: CreateAdminLessonRequest,
+): Promise<AdminLessonDetail> {
+  const { data } = await apiClient.post<AdminLessonDetail>(
+    API_ENDPOINTS.ADMIN.LESSONS.CREATE,
+    request,
+  );
+
+  return data;
 }
 
 export async function getAdminLessons(): Promise<AdminLessonSummary[]> {
@@ -201,6 +239,55 @@ export async function getOrCreateAdminLessonDraft(
 
   return data;
 }
+export async function uploadAdminLessonMedia(
+  idOrCode: number | string,
+  file: File,
+  filename?: string,
+): Promise<AdminLessonMediaAsset> {
+  const formData =
+    new FormData();
+
+  formData.append(
+    "file",
+    file,
+  );
+
+  if (filename?.trim()) {
+    formData.append(
+      "filename",
+      filename.trim(),
+    );
+  }
+
+  const { data } =
+    await apiClient.post<AdminLessonMediaAsset>(
+      API_ENDPOINTS.ADMIN.LESSONS.MEDIA(
+        idOrCode,
+      ),
+      formData,
+      {
+        headers: {
+          "Content-Type":
+            "multipart/form-data",
+        },
+      },
+    );
+
+  return data;
+}
+
+export async function purgeAdminLessonMedia(
+  assetId: number,
+): Promise<AdminLessonDraft | null> {
+  const { data } = await apiClient.delete<AdminLessonDraft | null>(
+    API_ENDPOINTS.ADMIN.LESSONS.PURGE_MEDIA(
+      assetId,
+    ),
+  );
+
+  return data;
+}
+
 export interface SaveAdminLessonDraftRequest {
   expectedRevision: number;
   document: AdminLessonDocument;
@@ -213,6 +300,26 @@ export async function saveAdminLessonDraft(
   const { data } =
     await apiClient.put<AdminLessonDraft>(
       API_ENDPOINTS.ADMIN.LESSONS.DRAFT(
+        idOrCode,
+      ),
+      request,
+    );
+
+  return data;
+}
+
+export interface PublishAdminLessonRequest {
+  expectedRevision: number;
+  changeNote: string | null;
+}
+
+export async function publishAdminLesson(
+  idOrCode: number | string,
+  request: PublishAdminLessonRequest,
+): Promise<AdminLessonVersion> {
+  const { data } =
+    await apiClient.post<AdminLessonVersion>(
+      API_ENDPOINTS.ADMIN.LESSONS.PUBLISH(
         idOrCode,
       ),
       request,

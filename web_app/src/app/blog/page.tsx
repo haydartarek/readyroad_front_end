@@ -1,10 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { ArrowRight, BookOpenText, CalendarDays } from "lucide-react";
-import { formatArticleDate } from "@/app/blog/blog-format";
+import { ArrowRight } from "lucide-react";
 import { buildLocalizedUrl, localizePathname } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
+import { toBrandedMetadataTitle } from "@/lib/seo";
 import { translateMessage } from "@/lib/messages";
 import { getPublicArticles } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
@@ -19,13 +19,13 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
-  const title = translateMessage(locale, "blog.title");
+  const title = toBrandedMetadataTitle(translateMessage(locale, "blog.title"));
   const description = translateMessage(locale, "blog.introduction");
   const canonical = buildLocalizedUrl("/blog", locale, APP_URL);
   const image = { ...getSharedOgImage(locale), alt: title };
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: getLocalizedAlternates("/blog", locale, APP_URL),
     openGraph: {
@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [image],
@@ -56,12 +56,6 @@ export default async function BlogPage() {
     <main className="min-h-screen bg-background text-foreground">
       <section className="border-b border-border/50 bg-muted/25">
         <div className="container mx-auto max-w-6xl px-4 py-10 text-center sm:px-6 md:py-14">
-          <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
-            <BookOpenText className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <p className="text-sm font-bold text-primary">
-            {translateMessage(locale, "blog.eyebrow")}
-          </p>
           <h1 className="mt-2 text-balance text-3xl font-black tracking-normal sm:text-4xl">
             {translateMessage(locale, "blog.title")}
           </h1>
@@ -106,12 +100,6 @@ export default async function BlogPage() {
                     </Link>
                   ) : null}
                   <div className="flex flex-1 flex-col p-4">
-                  <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
-                    <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <time dateTime={article.publishedAt}>
-                      {formatArticleDate(article.publishedAt, locale)}
-                    </time>
-                  </div>
                   <h2 className="mt-4 break-words text-lg font-black leading-snug tracking-normal">
                     <Link href={href} className="outline-none hover:text-primary focus-visible:text-primary">
                       {article.title}

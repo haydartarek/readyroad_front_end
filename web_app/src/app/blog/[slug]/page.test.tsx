@@ -41,9 +41,9 @@ describe("localized public blog article", () => {
       alternateSlugs: { [locale.toUpperCase()]: "published-article" },
     });
     const metadata = await generateMetadata({ params: Promise.resolve({ slug: "published-article" }) });
-    expect(metadata.title).toEqual({ absolute: "Published article | RijVia" });
-    expect(metadata.openGraph?.title).toBe("Published article | RijVia");
-    expect(metadata.twitter?.title).toBe("Published article | RijVia");
+    expect(metadata.title).toEqual({ absolute: "Published article | Rijvia" });
+    expect(metadata.openGraph?.title).toBe("Published article | Rijvia");
+    expect(metadata.twitter?.title).toBe("Published article | Rijvia");
   });
 
   describe.each(["ar", "en", "nl", "fr"] as const)("image attribution in %s", (locale) => {
@@ -168,7 +168,7 @@ describe("localized public blog article", () => {
       alternateSlugs: { EN: "safe-driving" },
     });
 
-    render(await BlogArticlePage({
+    const { container } = render(await BlogArticlePage({
       params: Promise.resolve({ slug: "safe-driving" }),
     }));
 
@@ -177,6 +177,9 @@ describe("localized public blog article", () => {
     expect(screen.getByText("verified evidence")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Study the priority lesson/ }))
       .toHaveAttribute("href", "/lessons/les-19/2");
+    expect(screen.queryByRole("time")).not.toBeInTheDocument();
+    expect(container.querySelector('script[type="application/ld+json"]')?.textContent)
+      .not.toContain("datePublished");
   });
 
   it("uses immutable localized metadata and publication slugs", async () => {
@@ -205,7 +208,7 @@ describe("localized public blog article", () => {
       params: Promise.resolve({ slug: "veilig-rijden" }),
     });
 
-    expect(metadata.title).toEqual({ absolute: "Veiliger rijden in België | RijVia" });
+    expect(metadata.title).toEqual({ absolute: "Veiliger rijden in België | Rijvia" });
     expect(metadata.alternates).toEqual({
       canonical: "https://rijvia.be/nl/blog/veilig-rijden",
       languages: {

@@ -23,7 +23,7 @@ import {
   createOrganizationSchema,
   createWebsiteSchema,
 } from "@/lib/site-copy";
-import { serializeJsonLd } from "@/lib/seo";
+import { serializeJsonLd, toBrandedMetadataTitle } from "@/lib/seo";
 import { COOKIE_CONSENT_BOOTSTRAP_SCRIPT } from "@/lib/cookie-consent-bootstrap";
 import { CookieConsentManager } from "@/components/privacy/cookie-consent-manager";
 import { ConsentThemeController } from "@/components/privacy/consent-theme-controller";
@@ -67,14 +67,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(APP_URL),
     title: {
-      default: copy.defaultTitle,
-      template: "%s | RijVia",
+      default: toBrandedMetadataTitle(copy.defaultTitle),
+      template: "%s | Rijvia",
     },
     description: copy.description,
     keywords: copy.keywords,
-    authors: [{ name: "RijVia Team", url: APP_URL }],
-    creator: "RijVia",
-    publisher: "RijVia",
+    authors: [{ name: "Rijvia Team", url: APP_URL }],
+    creator: "Rijvia",
+    publisher: "Rijvia",
     category: "education",
     formatDetection: { email: false, address: false, telephone: false },
     alternates: getLocalizedAlternates(pathname, locale, APP_URL),
@@ -93,25 +93,25 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     manifest: "/manifest.json",
     openGraph: {
-      title: copy.defaultTitle,
+      title: toBrandedMetadataTitle(copy.defaultTitle),
       description: copy.openGraphDescription,
       type: "website",
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [ogImage],
     },
     twitter: {
       card: "summary_large_image",
-      title: copy.defaultTitle,
+      title: toBrandedMetadataTitle(copy.defaultTitle),
       description: copy.twitterDescription,
       images: [ogImage.url],
     },
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
-      title: "RijVia",
+      title: "Rijvia",
     },
     verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
       ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }

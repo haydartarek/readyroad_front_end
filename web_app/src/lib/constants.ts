@@ -202,12 +202,17 @@ export const API_ENDPOINTS = {
 
     LESSONS: {
       LIST: "/admin/lessons",
+      CREATE: "/admin/lessons",
       CATEGORIES: "/admin/lessons/categories",
       DETAIL: (idOrCode: number | string) => `/admin/lessons/${idOrCode}`,
       DRAFT: (idOrCode: number | string) =>
         `/admin/lessons/${idOrCode}/draft`,
       VERSIONS: (idOrCode: number | string) =>
         `/admin/lessons/${idOrCode}/versions`,
+      MEDIA: (idOrCode: number | string) =>
+        `/admin/lessons/${idOrCode}/media`,
+      PURGE_MEDIA: (assetId: number | string) =>
+        `/admin/lessons/media/${assetId}`,
       PUBLISH: (idOrCode: number | string) =>
         `/admin/lessons/${idOrCode}/publish`,
     },

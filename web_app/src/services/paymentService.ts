@@ -17,6 +17,7 @@ export interface AccountAccess {
   status: "FREE" | "ACTIVE" | "EXPIRED";
   plan: PaymentPlan | null;
   expiresAt: string | null;
+  unlimited?: boolean;
 }
 
 export interface CheckoutResult { purchaseId: string; checkoutUrl: string }

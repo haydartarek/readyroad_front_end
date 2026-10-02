@@ -23,6 +23,7 @@ import {
   FileText,
   History,
   Pencil,
+  Plus,
   Search,
 } from "lucide-react";
 
@@ -205,6 +206,14 @@ export default function AdminLessonsPage() {
         icon={<BookOpenText className="h-6 w-6" />}
         title={t("admin.lessons.title")}
         description={t("admin.lessons.description")}
+        actions={
+          <Button asChild className="gap-2">
+            <Link href="/admin/lessons/new">
+              <Plus className="h-4 w-4" />
+              {t("admin.lessons.add")}
+            </Link>
+          </Button>
+        }
         metrics={[
           {
             label: t("admin.lessons.total"),

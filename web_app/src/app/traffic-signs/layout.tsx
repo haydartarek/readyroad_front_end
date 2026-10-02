@@ -10,6 +10,7 @@ import {
 } from "@/lib/site-copy";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
+import { toBrandedMetadataTitle } from "@/lib/seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -19,15 +20,15 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonical = buildLocalizedUrl("/traffic-signs", locale, APP_URL);
 
   return {
-    title: copy.title,
+    title: { absolute: toBrandedMetadataTitle(copy.title) },
     description: copy.description,
     keywords: copy.keywords,
     alternates: getLocalizedAlternates("/traffic-signs", locale, APP_URL),
     openGraph: {
-      title: copy.openGraphTitle,
+      title: toBrandedMetadataTitle(copy.openGraphTitle),
       description: copy.openGraphDescription,
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [
@@ -42,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: copy.openGraphTitle,
+      title: toBrandedMetadataTitle(copy.openGraphTitle),
       description: copy.openGraphDescription,
       images: ["/opengraph-image"],
     },
@@ -54,7 +55,7 @@ export default async function TrafficSignsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = (await headers()).get("x-rijvia-pathname") || "/traffic-signs";
+  const pathname = (await headers()).get("x-Rijvia-pathname") || "/traffic-signs";
 
   return (
     <div className="min-h-screen flex flex-col">

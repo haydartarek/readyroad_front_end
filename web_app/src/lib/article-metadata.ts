@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
-import { buildAbsoluteUrl, toBrandedMetadataTitle } from "@/lib/seo";
+import { buildAbsoluteUrl, normalizeSeoBrand, toBrandedMetadataTitle } from "@/lib/seo";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
@@ -66,7 +66,7 @@ export function createArticleMetadata(
 
   return {
     title: { absolute: title },
-    description: article.metaDescription,
+    description: normalizeSeoBrand(article.metaDescription),
     alternates: {
       canonical,
       languages: createArticleLanguageAlternates(article.alternateSlugs),
@@ -74,18 +74,17 @@ export function createArticleMetadata(
     openGraph: {
       type: "article",
       title,
-      description: article.metaDescription,
+      description: normalizeSeoBrand(article.metaDescription),
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
-      publishedTime: article.publishedAt,
       images: [image],
     },
     twitter: {
       card: "summary_large_image",
       title,
-      description: article.metaDescription,
+      description: normalizeSeoBrand(article.metaDescription),
       images: [image.url],
     },
     robots: { index: true, follow: true },

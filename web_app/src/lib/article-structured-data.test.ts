@@ -46,7 +46,6 @@ describe("article structured data", () => {
         url: canonical,
         headline: article.title,
         description: article.summary,
-        datePublished: article.publishedAt,
         inLanguage: language,
         mainEntityOfPage: canonical,
         author: { "@id": "https://rijvia.be/#organization" },
@@ -66,13 +65,13 @@ describe("article structured data", () => {
         {
           "@type": "ListItem",
           position: 1,
-          name: "RijVia",
+          name: "Rijvia",
           item: "https://rijvia.be/nl",
         },
         {
           "@type": "ListItem",
           position: 2,
-          name: "RijVia articles",
+          name: "articles",
           item: "https://rijvia.be/nl/blog",
         },
         {

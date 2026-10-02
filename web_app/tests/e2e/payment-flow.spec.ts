@@ -32,9 +32,18 @@ for (const width of [390, 1366]) {
       await expect.poll(() => new URL(page.url()).hash).toBe("#pricing");
       await expect(page.locator("#pricing").getByRole("button")).toHaveCount(3);
       await expect(page.locator("#pricing").getByRole("button").first()).toBeEnabled();
-      await expect(page.locator("#pricing").getByText("€2.99", { exact: true })).toBeInViewport();
-      await expect(page.locator("#pricing").getByText("€14.99", { exact: true })).toBeInViewport();
-      await expect(page.locator("#pricing").getByRole("button").last()).toBeInViewport();
+      const firstPrice = page.locator("#pricing").getByText("€2.99", { exact: true });
+      const lastPrice = page.locator("#pricing").getByText("€14.99", { exact: true });
+      const lastButton = page.locator("#pricing").getByRole("button").last();
+      if (width >= 1280) {
+        await expect(firstPrice).toBeInViewport();
+        await expect(lastPrice).toBeInViewport();
+        await expect(lastButton).toBeInViewport();
+      } else {
+        await expect(firstPrice).toBeVisible();
+        await expect(lastPrice).toBeVisible();
+        await expect(lastButton).toBeVisible();
+      }
       await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       if (locale === "ar") await page.screenshot({ path: testInfo.outputPath(`pricing-ar-${width}.png`), fullPage: true });

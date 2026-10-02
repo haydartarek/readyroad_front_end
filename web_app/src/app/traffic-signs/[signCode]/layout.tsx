@@ -6,7 +6,12 @@ import {
   getAlternateOpenGraphLocales,
   getOpenGraphLocale,
 } from "@/lib/site-copy";
-import { buildAbsoluteUrl, serializeJsonLd, toMetadataDescription } from "@/lib/seo";
+import {
+  buildAbsoluteUrl,
+  serializeJsonLd,
+  toBrandedMetadataTitle,
+  toMetadataDescription,
+} from "@/lib/seo";
 import { getPublicTrafficSign } from "@/lib/server/public-catalog";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
@@ -26,7 +31,7 @@ export async function generateMetadata({
 
   if (!sign) {
     return {
-      title: { absolute: "Traffic Sign Not Found | RijVia" },
+      title: { absolute: "Traffic Sign Not Found | Rijvia" },
       robots: { index: false, follow: false },
     };
   }
@@ -42,7 +47,7 @@ export async function generateMetadata({
     copy.fallbackDescription,
   );
   const image = buildAbsoluteUrl(sign.imageUrl, APP_URL);
-  const title = copy.title;
+  const title = toBrandedMetadataTitle(copy.title);
 
   return {
     title: { absolute: title },
@@ -52,7 +57,7 @@ export async function generateMetadata({
       title,
       description,
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       type: "article",

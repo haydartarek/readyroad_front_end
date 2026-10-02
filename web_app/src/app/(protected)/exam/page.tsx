@@ -140,7 +140,10 @@ export default function TheoryExamPage() {
       return;
     }
 
-    if (activeExam) {
+    if (
+      activeExam &&
+      activeExam.accessState !== "FREE_LIMIT_REACHED"
+    ) {
       openExam(activeExam);
       return;
     }

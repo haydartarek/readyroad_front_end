@@ -4,6 +4,7 @@ import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
 import { translateMessage } from "@/lib/messages";
 import { serializeJsonLd } from "@/lib/seo";
+import { toBrandedMetadataTitle } from "@/lib/seo";
 import { getRequestLocale } from "@/lib/server/request-locale";
 import { getYouTubeVideoPage } from "@/lib/server/youtube";
 import {
@@ -20,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
-  const title = translateMessage(locale, "videos.metadata_title");
+  const title = toBrandedMetadataTitle(translateMessage(locale, "videos.metadata_title"));
   const description = translateMessage(locale, "videos.metadata_description");
   const canonical = buildLocalizedUrl("/videos", locale, APP_URL);
   const ogImage = getSharedOgImage(locale);
@@ -33,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [ogImage],

@@ -47,7 +47,7 @@ describe("learning SEO copy", () => {
   it("uses canonical localized sign fields without changing their meaning", () => {
     const copy = getLocalizedTrafficSignSeo(sign, "fr");
 
-    expect(copy.title).toBe("B1: Cédez le passage | RijVia");
+    expect(copy.title).toBe("B1: Cédez le passage | Rijvia");
     expect(copy.description).toBe("Description française");
     expect(copy.indexLabel).toBe("Panneaux de signalisation belges");
   });

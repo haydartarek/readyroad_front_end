@@ -12,6 +12,7 @@ import {
 } from "@/lib/site-copy";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
+import { normalizeSeoBrand, toBrandedMetadataTitle } from "@/lib/seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
@@ -28,14 +29,14 @@ export async function createPublicPageMetadata(
   };
 
   return {
-    title: copy.title,
-    description: copy.description,
+    title: { absolute: toBrandedMetadataTitle(copy.title) },
+    description: normalizeSeoBrand(copy.description),
     alternates: getLocalizedAlternates(path, locale, APP_URL),
     openGraph: {
-      title: copy.openGraphTitle,
-      description: copy.openGraphDescription,
+      title: toBrandedMetadataTitle(copy.openGraphTitle),
+      description: normalizeSeoBrand(copy.openGraphDescription),
       url: canonical,
-      siteName: "RijVia",
+      siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [ogImage],
@@ -43,8 +44,8 @@ export async function createPublicPageMetadata(
     },
     twitter: {
       card: "summary_large_image",
-      title: copy.openGraphTitle,
-      description: copy.openGraphDescription,
+      title: toBrandedMetadataTitle(copy.openGraphTitle),
+      description: normalizeSeoBrand(copy.openGraphDescription),
       images: [ogImage.url],
     },
     robots: { index: true, follow: true },

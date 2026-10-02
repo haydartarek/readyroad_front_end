@@ -1,4 +1,5 @@
 import LessonDetailClient from "@/app/lessons/[lessonId]/lesson-detail-client";
+import { notFound } from "next/navigation";
 import {
   getPublicLesson,
   getPublicLessons,
@@ -20,11 +21,24 @@ export default async function LessonDetailPage({
   const { lessonId } = await params;
   const locale = await getRequestLocale();
   const targetPath = localizePathname(`/lessons/${encodeURIComponent(lessonId)}`, locale);
-  const [lesson, lessons, relatedArticles] = await Promise.all([
+  const [lesson, lessons] = await Promise.all([
     getPublicLesson(lessonId),
     getPublicLessons(),
-    getRelatedPublicArticles(locale, targetPath),
   ]);
+
+  // Only declare a missing lesson when the active catalog loaded successfully.
+  // Keep the client retry path for temporary failures loading lesson details.
+  if (
+    !lesson &&
+    lessons.length > 0 &&
+    !lessons.some(
+      (item) => item.lessonCode === lessonId || String(item.id) === lessonId,
+    )
+  ) {
+    return <MissingLesson />;
+  }
+
+  const relatedArticles = await getRelatedPublicArticles(locale, targetPath);
 
   return (
     <>
@@ -39,4 +53,12 @@ export default async function LessonDetailPage({
       <RelatedLearningArticles articles={relatedArticles} locale={locale} />
     </>
   );
+}
+
+// Resolve asynchronous catalog reads before throwing the HTTP fallback.
+// This keeps React's development timing instrumentation out of the rejected
+// async page while retaining Next's not-found handling in every environment.
+function MissingLesson(): null {
+  notFound();
+  return null;
 }

@@ -30,10 +30,10 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "Belgian road signs meanings",
       "Belgian traffic signs explained",
     ],
-    openGraphTitle: "Belgian Traffic Signs and Meanings | RijVia",
+    openGraphTitle: "Belgian Traffic Signs and Meanings | Rijvia",
     openGraphDescription:
       "Browse 184 Belgian traffic signs by family with clear multilingual meanings and explanations.",
-    imageAlt: "Belgian traffic signs and meanings on RijVia",
+    imageAlt: "Belgian traffic signs and meanings on Rijvia",
   },
   nl: {
     title: "Verkeersborden België: betekenis en uitleg",
@@ -46,10 +46,10 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "verkeersborden uitleg",
       "Belgische verkeersborden betekenis",
     ],
-    openGraphTitle: "Verkeersborden België: betekenis en uitleg | RijVia",
+    openGraphTitle: "Verkeersborden België: betekenis en uitleg | Rijvia",
     openGraphDescription:
       "Bekijk 184 Belgische verkeersborden per familie met duidelijke meertalige betekenis en uitleg.",
-    imageAlt: "Belgische verkeersborden met betekenis op RijVia",
+    imageAlt: "Belgische verkeersborden met betekenis op Rijvia",
   },
   fr: {
     title: "Panneaux de signalisation Belgique : signification",
@@ -63,7 +63,7 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "panneaux Belgique explication",
     ],
     openGraphTitle:
-      "Panneaux de signalisation Belgique : signification | RijVia",
+      "Panneaux de signalisation Belgique : signification | Rijvia",
     openGraphDescription:
       "Parcourez 184 panneaux belges par famille avec des significations et explications multilingues claires.",
     imageAlt: "Panneaux de signalisation belges et leur signification",
@@ -79,10 +79,10 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "معاني العلامات المرورية البلجيكية",
       "معاني إشارات المرور في بلجيكا",
     ],
-    openGraphTitle: "العلامات المرورية في بلجيكا ومعانيها | RijVia",
+    openGraphTitle: "العلامات المرورية في بلجيكا ومعانيها | Rijvia",
     openGraphDescription:
       "تصفح 184 علامة مرورية بلجيكية مرتبة حسب الفئة، مع المعاني والشرح بأربع لغات.",
-    imageAlt: "العلامات المرورية البلجيكية ومعانيها على RijVia",
+    imageAlt: "العلامات المرورية البلجيكية ومعانيها على Rijvia",
   },
 };
 
@@ -98,10 +98,10 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "Belgian traffic rules explained",
       "learn Belgian driving theory",
     ],
-    openGraphTitle: "Belgian Driving Theory Lessons & Road Rules | RijVia",
+    openGraphTitle: "Belgian Driving Theory Lessons & Road Rules | Rijvia",
     openGraphDescription:
       "Study 30 structured category B lessons about Belgian road rules in English, Dutch, French and Arabic.",
-    imageAlt: "Belgian category B driving theory lessons on RijVia",
+    imageAlt: "Belgian category B driving theory lessons on Rijvia",
   },
   nl: {
     title: "Theorie Rijbewijs B België: Lessen & Verkeersregels",
@@ -114,10 +114,10 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "Belgische verkeersregels leren",
       "Belgische rijtheorie",
     ],
-    openGraphTitle: "Theorie Rijbewijs B België: Lessen | RijVia",
+    openGraphTitle: "Theorie Rijbewijs B België: Lessen | Rijvia",
     openGraphDescription:
       "Leer Belgische verkeersregels met 30 gestructureerde rijtheorielessen in vier talen.",
-    imageAlt: "Belgische rijtheorie voor rijbewijs B op RijVia",
+    imageAlt: "Belgische rijtheorie voor rijbewijs B op Rijvia",
   },
   fr: {
     title: "Cours Théorie Permis B Belgique & Code de la Route",
@@ -130,10 +130,10 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "règles de circulation belges",
       "apprendre théorie permis B",
     ],
-    openGraphTitle: "Cours Théorie Permis B Belgique | RijVia",
+    openGraphTitle: "Cours Théorie Permis B Belgique | Rijvia",
     openGraphDescription:
       "Étudiez le code de la route belge avec 30 leçons structurées en quatre langues.",
-    imageAlt: "Leçons de théorie du permis B belge sur RijVia",
+    imageAlt: "Leçons de théorie du permis B belge sur Rijvia",
   },
   ar: {
     title: "تعليم السياقة في بلجيكا بالعربية: دروس النظري",
@@ -146,10 +146,10 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "تعلم قانون السير البلجيكي",
       "دروس امتحان السياقة النظري في بلجيكا",
     ],
-    openGraphTitle: "تعليم السياقة في بلجيكا بالعربية | RijVia",
+    openGraphTitle: "تعليم السياقة في بلجيكا بالعربية | Rijvia",
     openGraphDescription:
       "تعلّم قواعد المرور البلجيكية من خلال 30 درسًا منظمًا للنظري بأربع لغات.",
-    imageAlt: "دروس السياقة النظرية البلجيكية على RijVia",
+    imageAlt: "دروس السياقة النظرية البلجيكية على Rijvia",
   },
 };
 
@@ -265,7 +265,7 @@ export function getLocalizedTrafficSignSeo(
   return {
     name,
     description,
-    title: `${sign.signCode}: ${name} | RijVia`,
+    title: `${sign.signCode}: ${name} | Rijvia`,
     fallbackDescription: `${resource.contextLabel} ${sign.signCode}: ${name}.`,
     imageAlt: `${sign.signCode}: ${name}`,
     ...resource,
@@ -283,7 +283,7 @@ type LessonSearchCopy = Readonly<{
 const LESSON_SEARCH_COPY: Record<string, Partial<Record<SiteLocale, LessonSearchCopy>>> = {
   "les-5": {
     "nl": {
-      "title": "Rijbaan en rijstrook: verschil en wegmarkeringen | RijVia",
+      "title": "Rijbaan en rijstrook: verschil en wegmarkeringen | Rijvia",
       "description": "Wat is een rijbaan en wat is een rijstrook? Leer het verschil, herken wegmarkeringen en bereid je voor op het Belgische theorie-examen.",
       "heading": "Wat is het verschil tussen een rijbaan en een rijstrook?",
       "paragraphs": [
@@ -294,7 +294,7 @@ const LESSON_SEARCH_COPY: Record<string, Partial<Record<SiteLocale, LessonSearch
   },
   "les-9": {
     "fr": {
-      "title": "Route pour automobiles ou autoroute : différences | RijVia",
+      "title": "Route pour automobiles ou autoroute : différences | Rijvia",
       "description": "Quelle différence entre route pour automobiles et autoroute en Belgique ? Comparez les panneaux F9 et F5, les accès et les règles à reconnaître.",
       "heading": "Quelle différence entre route pour automobiles et autoroute ?",
       "paragraphs": [
@@ -305,7 +305,7 @@ const LESSON_SEARCH_COPY: Record<string, Partial<Record<SiteLocale, LessonSearch
   },
   "les-6": {
     "en": {
-      "title": "Belgian Traffic Rules: Lights, Safety and Accidents | RijVia",
+      "title": "Belgian Traffic Rules: Lights, Safety and Accidents | Rijvia",
       "description": "Study Belgium's general traffic rules: using vehicle lights, driving safely, alcohol risks and what to do after an accident. Prepare for your theory exam.",
       "heading": "Which general traffic rules should you study in Belgium?",
       "paragraphs": [
@@ -316,7 +316,7 @@ const LESSON_SEARCH_COPY: Record<string, Partial<Record<SiteLocale, LessonSearch
   },
   "les-12": {
     "nl": {
-      "title": "Maximaal toegelaten massa (MTM): uitleg en voorbeelden | RijVia",
+      "title": "Maximaal toegelaten massa (MTM): uitleg en voorbeelden | Rijvia",
       "description": "Wat betekent maximaal toegelaten massa (MTM)? Leer het verschil met de werkelijke massa en hoe inzittenden en lading meetellen bij het theorie-examen.",
       "heading": "Wat betekent maximaal toegelaten massa (MTM)?",
       "paragraphs": [
@@ -327,7 +327,7 @@ const LESSON_SEARCH_COPY: Record<string, Partial<Record<SiteLocale, LessonSearch
   },
   "les-17": {
     "ar": {
-      "title": "حالات منع التجاوز في بلجيكا: العلامات والرؤية | RijVia",
+      "title": "حالات منع التجاوز في بلجيكا: العلامات والرؤية | Rijvia",
       "description": "تعلّم حالات منع التجاوز في بلجيكا: ضعف الرؤية وعلامات C35 وC39 والخطوط والتقاطعات، مع شرح الشروط والاستثناءات استعدادًا للامتحان النظري.",
       "heading": "ما حالات منع التجاوز في بلجيكا؟",
       "paragraphs": [
@@ -360,9 +360,9 @@ export function getLocalizedLessonSeo(
   return {
     name: title,
     description,
-    title: searchCopy?.title || `${title} | ${resource.contextLabel} | RijVia`,
+    title: searchCopy?.title || `${title} | ${resource.contextLabel} | Rijvia`,
     fallbackDescription: `${resource.contextLabel}: ${title}.`,
-    imageAlt: `${title} | RijVia`,
+    imageAlt: `${title} | Rijvia`,
     ...resource,
   };
 }

@@ -1,65 +1,69 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { seedCookieConsent } from "./helpers/consent";
 
-const entryPages = [
+const entryPages: EntryPage[] = [
   {
     path: "/practice",
-    title: "Belgian Driving Theory Practice by Category | RijVia",
-    heading: "Belgian Driving Theory Practice by Category",
+    title: "Belgian Driving Theory Practice by Category | Rijvia",
+    heading: "Practice Belgian driving theory questions by topic",
+    headingLevel: 2,
   },
   {
     path: "/nl/practice",
-    title: "Theorie Rijbewijs B Oefenen per Onderwerp | RijVia",
-    heading: "Theorie Rijbewijs B Oefenen per Onderwerp",
+    title: "Theorie Rijbewijs B Oefenen per Onderwerp | Rijvia",
+    heading: "Theorie rijbewijs B oefenen per onderwerp",
+    headingLevel: 2,
   },
   {
     path: "/fr/practice",
-    title: "Exercices Théorie Permis B Belgique | RijVia",
-    heading: "Exercices Théorie Permis B Belgique",
+    title: "Exercices Théorie Permis B Belgique | Rijvia",
+    heading: "Exercices théorie permis B Belgique par thème",
+    headingLevel: 2,
   },
   {
     path: "/ar/practice",
-    title: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا | RijVia",
-    heading: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا",
+    title: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا | Rijvia",
+    heading: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا حسب الموضوع",
+    headingLevel: 2,
   },
   {
     path: "/practice/random",
-    title: "Belgian Traffic Signs Test | RijVia",
+    title: "Belgian Traffic Signs Test | Rijvia",
     heading: "Belgian Traffic Signs Test",
   },
   {
     path: "/nl/practice/random",
-    title: "Verkeersborden Oefenen België | RijVia",
+    title: "Verkeersborden Oefenen België | Rijvia",
     heading: "Verkeersborden Oefenen België",
   },
   {
     path: "/fr/practice/random",
-    title: "Test Panneaux de Signalisation Belgique | RijVia",
+    title: "Test Panneaux de Signalisation Belgique | Rijvia",
     heading: "Test Panneaux de Signalisation Belgique",
   },
   {
     path: "/ar/practice/random",
-    title: "اختبار العلامات المرورية في بلجيكا | RijVia",
+    title: "اختبار العلامات المرورية في بلجيكا | Rijvia",
     heading: "اختبار العلامات المرورية في بلجيكا",
   },
   {
     path: "/exam",
-    title: "Belgian Driving Theory Practice Test | RijVia",
+    title: "Belgian Driving Theory Practice Test | Rijvia",
     heading: "Belgian Driving Theory Practice Test",
   },
   {
     path: "/nl/exam",
-    title: "Proefexamen Rijbewijs B België | RijVia",
+    title: "Proefexamen Rijbewijs B België | Rijvia",
     heading: "Proefexamen Rijbewijs B België",
   },
   {
     path: "/fr/exam",
-    title: "Examen Blanc Permis B Belgique | RijVia",
+    title: "Examen Blanc Permis B Belgique | Rijvia",
     heading: "Examen Blanc Permis B Belgique",
   },
   {
     path: "/ar/exam",
-    title: "أسئلة امتحان السياقة النظري في بلجيكا | RijVia",
+    title: "أسئلة امتحان السياقة النظري في بلجيكا | Rijvia",
     heading: "أسئلة امتحان السياقة النظري في بلجيكا",
   },
 ] as const;
@@ -82,6 +86,13 @@ async function useAnonymousVisitor(page: Page) {
   );
 }
 
+type EntryPage = {
+  path: string;
+  title: string;
+  heading: string;
+  headingLevel?: 1 | 2;
+};
+
 test.describe("Public learning entry pages", () => {
   test.beforeEach(async ({ page }) => {
     await useAnonymousVisitor(page);
@@ -96,7 +107,10 @@ test.describe("Public learning entry pages", () => {
       expect(response?.status()).toBe(200);
       await expect(page).toHaveTitle(entryPage.title);
       await expect(
-        page.getByRole("heading", { level: 1, name: entryPage.heading }),
+        page.getByRole("heading", {
+          level: entryPage.headingLevel ?? 1,
+          name: entryPage.heading,
+        }),
       ).toBeVisible();
       await expect(page.locator('meta[name="robots"]')).not.toHaveAttribute(
         "content",
@@ -168,7 +182,7 @@ test.describe("Public learning entry pages", () => {
       const html = await response.text();
 
       expect(response.status()).toBe(200);
-      expect(html).toContain("<h1");
+      expect(html).toContain(`<h${entryPage.headingLevel ?? 1}`);
       expect(html).toContain(entryPage.heading);
     }
   });
@@ -188,7 +202,13 @@ test.describe("Public learning entry pages", () => {
       await page.setViewportSize(viewport);
       for (const path of ["/ar/practice", "/ar/practice/random", "/ar/exam"]) {
         await page.goto(path);
-        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        const entryPage = entryPages.find((entry) => entry.path === path)!;
+        await expect(
+          page.getByRole("heading", {
+            level: entryPage.headingLevel ?? 1,
+            name: entryPage.heading,
+          }),
+        ).toBeVisible();
         expect(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= window.innerWidth,

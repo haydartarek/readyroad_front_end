@@ -18,14 +18,23 @@ export function getPublicBackendApiUrl(): string {
   return normalized.endsWith("/api") ? normalized : `${normalized}/api`;
 }
 
-async function fetchPublicCatalog<T>(path: string): Promise<T | null> {
+async function fetchPublicCatalog<T>(
+  path: string,
+  cacheMode: "cached" | "fresh" = "cached",
+): Promise<T | null> {
   const url = `${getPublicBackendApiUrl()}/${path.replace(/^\/+/, "")}`;
 
   try {
-    const response = await fetch(url, {
-      headers: { Accept: "application/json" },
-      next: { revalidate: CATALOG_REVALIDATE_SECONDS },
-    });
+    const response =
+      cacheMode === "fresh"
+        ? await fetch(url, {
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+          })
+        : await fetch(url, {
+            headers: { Accept: "application/json" },
+            next: { revalidate: CATALOG_REVALIDATE_SECONDS },
+          });
 
     if (!response.ok) {
       return null;
@@ -76,7 +85,12 @@ export async function getPublicTrafficSign(
 }
 
 export async function getPublicLessons(): Promise<Lesson[]> {
-  return (await fetchPublicCatalog<Lesson[]>("lessons")) ?? [];
+  return (
+    (await fetchPublicCatalog<Lesson[]>(
+      "lessons",
+      "fresh",
+    )) ?? []
+  );
 }
 
 export async function getPublicLesson(
@@ -84,5 +98,6 @@ export async function getPublicLesson(
 ): Promise<LessonDetail | null> {
   return fetchPublicCatalog<LessonDetail>(
     `lessons/${encodeURIComponent(lessonCode)}`,
+    "fresh",
   );
 }

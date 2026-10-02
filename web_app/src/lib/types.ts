@@ -94,10 +94,7 @@ export interface LessonPage {
   contentAr: string;
   contentNl: string;
   contentFr: string;
-  bulletPointsEn: string[];
-  bulletPointsAr: string[];
-  bulletPointsNl: string[];
-  bulletPointsFr: string[];
+  imageUrl?: string | null;
 }
 
 /** Lesson summary — returned by GET /api/lessons (no pages). */

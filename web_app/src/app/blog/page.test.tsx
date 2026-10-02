@@ -46,6 +46,7 @@ describe("localized public blog index", () => {
       "href",
       href,
     );
+    expect(screen.queryByRole("time")).not.toBeInTheDocument();
     expect(screen.queryByText("Draft body")).not.toBeInTheDocument();
   });
 
@@ -54,7 +55,9 @@ describe("localized public blog index", () => {
 
     const metadata = await generateMetadata();
 
-    expect(metadata.title).toBe("Comprenez plus clairement la théorie de la conduite belge");
+    expect(metadata.title).toEqual({
+      absolute: "Comprenez plus clairement la théorie de la conduite belge | Rijvia",
+    });
     expect(metadata.alternates).toEqual({
       canonical: "https://rijvia.be/fr/blog",
       languages: {

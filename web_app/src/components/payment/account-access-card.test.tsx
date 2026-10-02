@@ -12,6 +12,10 @@ jest.mock("@/services/paymentService", () => ({
   getAccountAccess: jest.fn(),
 }));
 
+jest.mock("@/contexts/auth-context", () => ({
+  useAuth: () => ({ user: { role: "USER" } }),
+}));
+
 jest.mock("@/contexts/language-context", () => ({
   useLanguage: () => ({
     language: mockLanguage,
@@ -82,4 +86,44 @@ test("shows free account state and package CTA without inventing paid access", a
   expect(
     screen.getByRole("link", { name: "View packages & pricing" }),
   ).toHaveAttribute("href", "/#pricing");
+});
+
+test("shows expired access and keeps the renewal path visible", async () => {
+  jest.mocked(getAccountAccess).mockResolvedValue({
+    active: false,
+    status: "EXPIRED",
+    plan: "RIJVIA_3_DAYS",
+    expiresAt: "2026-09-20T10:00:00+02:00",
+  });
+
+  render(<AccountAccessCard />);
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  expect(screen.getAllByText("Expired").length).toBeGreaterThan(0);
+  expect(screen.getByText("3 days")).toBeVisible();
+  expect(screen.getByRole("link", { name: "Renew access" })).toHaveAttribute(
+    "href",
+    "/#pricing",
+  );
+});
+
+test("changes an active response to expired when its deadline passes", async () => {
+  jest.mocked(getAccountAccess).mockResolvedValue({
+    active: true,
+    status: "ACTIVE",
+    plan: "RIJVIA_3_DAYS",
+    expiresAt: "2026-09-21T09:00:00+02:00",
+  });
+
+  render(<AccountAccessCard />);
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  expect(screen.getAllByText("Expired").length).toBeGreaterThan(0);
+  expect(screen.getByRole("link", { name: "Renew access" })).toBeVisible();
 });

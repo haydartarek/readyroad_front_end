@@ -2,12 +2,14 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import AdminLessonEditorPage from "./page";
 import {
   getAdminLesson,
   getAdminLessonVersions,
   getOrCreateAdminLessonDraft,
+  publishAdminLesson,
 } from "@/lib/admin-lessons";
 import {
   isServiceUnavailable,
@@ -31,6 +33,8 @@ jest.mock(
     getOrCreateAdminLessonDraft:
       jest.fn(),
     saveAdminLessonDraft:
+      jest.fn(),
+    publishAdminLesson:
       jest.fn(),
   }),
 );
@@ -87,6 +91,11 @@ const mockedGetOrCreateAdminLessonDraft =
   getOrCreateAdminLessonDraft as jest.MockedFunction<
     typeof getOrCreateAdminLessonDraft
   >;
+const mockedPublishAdminLesson =
+  publishAdminLesson as jest.MockedFunction<
+    typeof publishAdminLesson
+  >;
+
 const mockedIsServiceUnavailable =
   isServiceUnavailable as jest.MockedFunction<
     typeof isServiceUnavailable
@@ -158,12 +167,6 @@ const lesson = {
           en: "Content",
         },
 
-        bulletPointsRaw: {
-          ar: null,
-          nl: null,
-          fr: null,
-          en: null,
-        },
       },
     ],
 
@@ -208,6 +211,7 @@ describe(
       mockedGetAdminLessonVersions.mockReset();
       mockedGetAdminLessonVersions.mockResolvedValue([]);
       mockedGetOrCreateAdminLessonDraft.mockReset();
+      mockedPublishAdminLesson.mockReset();
       mockedIsServiceUnavailable.mockReset();
       mockedIsServiceUnavailable.mockReturnValue(false);
     });
@@ -446,6 +450,209 @@ describe(
       },
     );
 
+    it(
+      "publishes the current draft revision with a trimmed change note and reloads the lesson",
+      async () => {
+        const lessonWithDraft = {
+          ...lesson,
+          draft,
+        };
+
+        const publishedLesson = {
+          ...lesson,
+          currentVersion: 3,
+          draft: null,
+        };
+
+        mockedGetAdminLesson
+          .mockResolvedValueOnce(
+            lessonWithDraft,
+          )
+          .mockResolvedValueOnce(
+            publishedLesson,
+          );
+
+        mockedPublishAdminLesson
+          .mockResolvedValue({
+            id: 13,
+            versionNumber: 3,
+            source: "ADMIN",
+            changeNote:
+              "Updated priority examples",
+            publishedByUserId: 1,
+            publishedAt:
+              "2026-09-24T10:30:00Z",
+          });
+
+        render(
+          <AdminLessonEditorPage />,
+        );
+
+        const publishButton =
+          await screen.findByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.publish.button",
+            },
+          );
+
+        fireEvent.click(
+          publishButton,
+        );
+
+        fireEvent.change(
+          screen.getByLabelText(
+            "admin.lessons.publish.change_note_label",
+          ),
+          {
+            target: {
+              value:
+                "  Updated priority examples  ",
+            },
+          },
+        );
+
+        fireEvent.click(
+          screen.getByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.publish.confirm",
+            },
+          ),
+        );
+
+        await waitFor(() => {
+          expect(
+            mockedPublishAdminLesson,
+          ).toHaveBeenCalledWith(
+            "TH01",
+            {
+              expectedRevision: 0,
+              changeNote:
+                "Updated priority examples",
+            },
+          );
+        });
+
+        await waitFor(() => {
+          expect(
+            mockedGetAdminLesson,
+          ).toHaveBeenCalledTimes(2);
+        });
+
+        expect(
+          await screen.findByText(
+            "admin.lessons.publish.success",
+          ),
+        ).toBeInTheDocument();
+      },
+    );
+
+    it(
+      "blocks publishing while the draft has unsaved changes",
+      async () => {
+        mockedGetAdminLesson
+          .mockResolvedValue({
+            ...lesson,
+            draft,
+          });
+
+        render(
+          <AdminLessonEditorPage />,
+        );
+
+        const description =
+          await screen.findByLabelText(
+            "admin.lessons.editor.field_description",
+          );
+
+        fireEvent.change(
+          description,
+          {
+            target: {
+              value:
+                "Unsaved publish change",
+            },
+          },
+        );
+
+        expect(
+          screen.getByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.publish.button",
+            },
+          ),
+        ).toBeDisabled();
+
+        expect(
+          mockedPublishAdminLesson,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "keeps the current draft visible when publishing returns 409",
+      async () => {
+        mockedGetAdminLesson
+          .mockResolvedValue({
+            ...lesson,
+            draft,
+          });
+
+        mockedPublishAdminLesson
+          .mockRejectedValue({
+            response: {
+              status: 409,
+            },
+          });
+
+        render(
+          <AdminLessonEditorPage />,
+        );
+
+        fireEvent.click(
+          await screen.findByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.publish.button",
+            },
+          ),
+        );
+
+        fireEvent.click(
+          screen.getByRole(
+            "button",
+            {
+              name:
+                "admin.lessons.publish.confirm",
+            },
+          ),
+        );
+
+        expect(
+          await screen.findByText(
+            "admin.lessons.publish.conflict_error",
+          ),
+        ).toBeInTheDocument();
+
+        expect(
+          screen.getByLabelText(
+            "admin.lessons.editor.field_description",
+          ),
+        ).toHaveValue(
+          "English description",
+        );
+
+        expect(
+          mockedGetAdminLesson,
+        ).toHaveBeenCalledTimes(1);
+      },
+    );
     it(
       "confirms before internal navigation when the draft is dirty",
       async () => {

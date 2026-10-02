@@ -136,11 +136,13 @@ jest.mock(
   () => ({
     FocusedQuestionCard: ({
       title,
+      difficultyBadge,
       options,
       feedback,
       footer,
     }: {
       title?: ReactNode;
+      difficultyBadge?: ReactNode;
       feedback?: ReactNode;
       footer?: ReactNode;
       options: Array<{
@@ -152,6 +154,7 @@ jest.mock(
     }) => (
       <section>
         <h1>{title}</h1>
+        <div data-testid="exam-difficulty">{difficultyBadge}</div>
 
         <div>
           {options.map((option) => (
@@ -196,7 +199,10 @@ jest.mock("sonner", () => ({
 const get = apiClient.get as jest.Mock;
 const post = apiClient.post as jest.Mock;
 
-function question(order: number) {
+function question(
+  order: number,
+  difficulty: "EASY" | "MEDIUM" | "HARD" = "EASY",
+) {
   return {
     questionId: order,
     questionOrder: order,
@@ -206,7 +212,7 @@ function question(order: number) {
     questionTextNl: `Question ${order}`,
     questionTextFr: `Question ${order}`,
 
-    difficultyLevel: "EASY" as const,
+    difficultyLevel: difficulty,
 
     options: [
       {
@@ -331,6 +337,40 @@ describe("theory exam preview paywall integration", () => {
           data: {},
         };
       },
+    );
+  });
+
+  test("refreshes the displayed difficulty when the exam tab becomes active", async () => {
+    const initialExam = {
+      ...previewExam("PREVIEW_ACTIVE"),
+      resumeQuestionOrder: 1,
+      finalizedQuestionIds: [],
+      questions: [question(1)],
+    };
+    const updatedExam = {
+      ...initialExam,
+      questions: [question(1, "MEDIUM")],
+    };
+
+    get
+      .mockResolvedValueOnce(activeResponse(initialExam))
+      .mockResolvedValueOnce(activeResponse(updatedExam));
+
+    render(<ExamQuestionsPage />);
+
+    await screen.findByText("Question 1");
+    expect(screen.getByTestId("exam-difficulty")).toHaveTextContent(
+      "practice_exam.difficulty_easy",
+    );
+
+    await act(async () => {
+      window.dispatchEvent(new Event("focus"));
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("exam-difficulty")).toHaveTextContent(
+        "practice_exam.difficulty_medium",
+      ),
     );
   });
 

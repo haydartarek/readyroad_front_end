@@ -5,6 +5,7 @@ import { Clock3, Crown, ShieldCheck, WalletCards } from "lucide-react";
 
 import Link from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import {
   getAccountAccess,
@@ -22,14 +23,31 @@ function remainingParts(expiresAt: string, now: number) {
 }
 
 export function AccountAccessCard() {
+  const { user } = useAuth();
   const { language, t, isRTL } = useLanguage();
   const [access, setAccess] = useState<AccountAccess | null>(null);
   const [failed, setFailed] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const isStaff = user?.role === "ADMIN" || user?.role === "MODERATOR";
+  const resolvedAccess = useMemo<AccountAccess | null>(
+    () =>
+      isStaff
+        ? {
+            active: true,
+            status: "ACTIVE",
+            plan: null,
+            expiresAt: null,
+            unlimited: true,
+          }
+        : access,
+    [access, isStaff],
+  );
 
   useEffect(() => {
     const abort = new AbortController();
     let active = true;
+
+    if (isStaff) return () => abort.abort();
 
     getAccountAccess(abort.signal)
       .then((result) => {
@@ -37,8 +55,22 @@ export function AccountAccessCard() {
         setAccess(result);
         setFailed(false);
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active) return;
+
+        const status = (error as { response?: { status?: number } }).response
+          ?.status;
+        if (status === 404) {
+          setAccess({
+            active: false,
+            status: "FREE",
+            plan: null,
+            expiresAt: null,
+          });
+          setFailed(false);
+          return;
+        }
+
         setFailed(true);
       });
 
@@ -46,29 +78,29 @@ export function AccountAccessCard() {
       active = false;
       abort.abort();
     };
-  }, []);
+  }, [isStaff]);
 
   useEffect(() => {
-    if (!access?.active) return;
+    if (!resolvedAccess?.expiresAt) return;
 
     const timer = window.setInterval(() => {
       setNow(Date.now());
     }, 60_000);
 
     return () => window.clearInterval(timer);
-  }, [access?.active]);
+  }, [resolvedAccess?.expiresAt]);
 
   const expiryLabel = useMemo(() => {
-    if (!access?.active || !access.expiresAt) return "—";
+    if (!resolvedAccess?.expiresAt) return "—";
 
     return new Intl.DateTimeFormat(`${language}-u-ca-gregory`, {
       dateStyle: "medium",
       timeStyle: "short",
       timeZone: "Europe/Brussels",
-    }).format(new Date(access.expiresAt));
-  }, [access, language]);
+    }).format(new Date(resolvedAccess.expiresAt));
+  }, [resolvedAccess, language]);
 
-  if (!access && !failed) {
+  if (!resolvedAccess && !failed) {
     return (
       <section
         data-testid="account-access-card"
@@ -82,7 +114,7 @@ export function AccountAccessCard() {
     );
   }
 
-  if (failed || !access) {
+  if (failed || !resolvedAccess) {
     return (
       <section
         data-testid="account-access-card"
@@ -96,15 +128,32 @@ export function AccountAccessCard() {
     );
   }
 
-  const isPaid = access.active && Boolean(access.expiresAt);
+  const isUnlimited = Boolean(resolvedAccess.unlimited) || isStaff;
+  const hasExpired = resolvedAccess.expiresAt
+    ? new Date(resolvedAccess.expiresAt).getTime() <= now
+    : false;
+  const isPaid =
+    !isUnlimited && resolvedAccess.active && Boolean(resolvedAccess.expiresAt) && !hasExpired;
+  const isExpired =
+    !isUnlimited && (resolvedAccess.status === "EXPIRED" || hasExpired);
   const remaining =
-    isPaid && access.expiresAt
-      ? remainingParts(access.expiresAt, now)
+    isPaid && resolvedAccess.expiresAt
+      ? remainingParts(resolvedAccess.expiresAt, now)
       : null;
   const planLabel =
-    isPaid && access.plan
-      ? t(`payment.plan.${access.plan}`)
+    isUnlimited
+      ? t("account_access.unlimited")
+      : resolvedAccess.plan
+      ? t(`payment.plan.${resolvedAccess.plan}`)
       : "—";
+
+  const statusKey = isUnlimited
+    ? "account_access.unlimited"
+    : isPaid
+      ? "account_access.paid"
+      : isExpired
+        ? "account_access.expired"
+        : "account_access.free";
 
   return (
     <section
@@ -115,7 +164,7 @@ export function AccountAccessCard() {
       <div className="flex flex-col gap-3 border-b border-border/60 bg-muted/25 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex min-w-0 items-start gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-            {isPaid ? (
+            {isPaid || isUnlimited ? (
               <Crown className="h-4 w-4" aria-hidden />
             ) : (
               <WalletCards className="h-4 w-4" aria-hidden />
@@ -127,16 +176,20 @@ export function AccountAccessCard() {
               {t("account_access.title")}
             </h2>
             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-              {isPaid
-                ? t("account_access.active_hint")
-                : t("account_access.free_hint")}
+              {isUnlimited
+                ? t("account_access.unlimited_hint")
+                : isPaid
+                  ? t("account_access.active_hint")
+                  : isExpired
+                    ? t("account_access.expired_hint")
+                    : t("account_access.free_hint")}
             </p>
           </div>
         </div>
 
         <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-black text-primary">
           <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-          {t(isPaid ? "account_access.paid" : "account_access.free")}
+          {t(statusKey)}
         </span>
       </div>
 
@@ -146,7 +199,7 @@ export function AccountAccessCard() {
             {t("account_access.account_type")}
           </p>
           <p className="mt-1 text-sm font-black text-foreground">
-            {t(isPaid ? "account_access.paid" : "account_access.free")}
+            {t(statusKey)}
           </p>
         </div>
 
@@ -181,17 +234,21 @@ export function AccountAccessCard() {
         </div>
       </div>
 
-      <div className="flex justify-end px-4 py-3 sm:px-5">
-        <Button asChild size="sm" variant={isPaid ? "outline" : "default"}>
-          <Link href="/#pricing">
-            {t(
-              isPaid
-                ? "account_access.extend"
-                : "account_access.view_packages",
-            )}
-          </Link>
-        </Button>
-      </div>
+      {!isUnlimited ? (
+        <div className="flex justify-end px-4 py-3 sm:px-5">
+          <Button asChild size="sm" variant={isPaid ? "outline" : "default"}>
+            <Link href="/#pricing">
+              {t(
+                isPaid
+                  ? "account_access.extend"
+                  : isExpired
+                    ? "account_access.renew"
+                    : "account_access.view_packages",
+              )}
+            </Link>
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }

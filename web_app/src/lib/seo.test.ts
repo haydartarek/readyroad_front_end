@@ -7,13 +7,14 @@ import {
 
 describe("SEO helpers", () => {
   it.each([
-    ["Article", "Article | RijVia"],
-    ["Article - RijVia", "Article | RijVia"],
-    ["Article \u2013 RijVia", "Article | RijVia"],
-    ["Article \u2014 RijVia", "Article | RijVia"],
-    ["Article | RijVia", "Article | RijVia"],
-    ["Article | RijVia | RijVia", "Article | RijVia"],
-    ["A long-term plan", "A long-term plan | RijVia"],
+    ["Article", "Article | Rijvia"],
+    ["Article - RijVia", "Article | Rijvia"],
+    ["Article \u2013 RijVia", "Article | Rijvia"],
+    ["Article \u2014 RijVia", "Article | Rijvia"],
+    ["Article | RijVia", "Article | Rijvia"],
+    ["Article | RijVia | RijVia", "Article | Rijvia"],
+    ["A long-term plan", "A long-term plan | Rijvia"],
+    ["Section ‹ Topic > RijVia", "Section | Topic | Rijvia"],
   ])("normalizes the brand separator without changing content: %s", (input, expected) => {
     expect(toBrandedMetadataTitle(input)).toBe(expected);
   });

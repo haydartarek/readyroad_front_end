@@ -2,10 +2,12 @@ import { apiClient } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import {
   getAdminLessonVersions,
+  publishAdminLesson,
   saveAdminLessonDraft,
   type AdminLessonDocument,
   type AdminLessonDraft,
   type AdminLessonVersion,
+  type PublishAdminLessonRequest,
   type SaveAdminLessonDraftRequest,
 } from "@/lib/admin-lessons";
 
@@ -21,6 +23,8 @@ const mockedGet =
   apiClient.get as jest.Mock;
 const mockedPut =
   apiClient.put as jest.Mock;
+const mockedPost =
+  apiClient.post as jest.Mock;
 
 const document: AdminLessonDocument = {
   schemaVersion: 1,
@@ -66,12 +70,6 @@ const document: AdminLessonDocument = {
         en: "Updated page content",
       },
 
-      bulletPointsRaw: {
-        ar: null,
-        nl: null,
-        fr: null,
-        en: "Point one\nPoint two",
-      },
     },
   ],
 
@@ -108,6 +106,7 @@ describe("admin lesson draft contract", () => {
   beforeEach(() => {
     mockedGet.mockReset();
     mockedPut.mockReset();
+    mockedPost.mockReset();
   });
 
   it("sends expectedRevision and the complete document to the draft endpoint", async () => {
@@ -188,6 +187,43 @@ describe("admin lesson draft contract", () => {
     ).toEqual([]);
   });
 
+  it("publishes expectedRevision and changeNote to the publish endpoint", async () => {
+    const publishRequest: PublishAdminLessonRequest = {
+      expectedRevision: 5,
+      changeNote: "Updated priority examples",
+    };
+
+    const publishResponse: AdminLessonVersion = {
+      id: 10,
+      versionNumber: 3,
+      source: "ADMIN",
+      changeNote: "Updated priority examples",
+      publishedByUserId: 1,
+      publishedAt: "2026-09-24T10:30:00Z",
+    };
+
+    mockedPost.mockResolvedValue({
+      data: publishResponse,
+    });
+
+    await expect(
+      publishAdminLesson(
+        "TH01",
+        publishRequest,
+      ),
+    ).resolves.toEqual(
+      publishResponse,
+    );
+
+    expect(
+      mockedPost,
+    ).toHaveBeenCalledWith(
+      API_ENDPOINTS.ADMIN.LESSONS.PUBLISH(
+        "TH01",
+      ),
+      publishRequest,
+    );
+  });
   it("loads published version history from the dedicated versions endpoint", async () => {
     const versions: AdminLessonVersion[] = [
       {

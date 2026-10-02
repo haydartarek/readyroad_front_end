@@ -90,7 +90,7 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
   en: {
     title: "Belgian Driving Theory Lessons & Road Rules",
     description:
-      "Study 30 structured Belgian driving theory lessons for category B covering Belgian road rules, traffic signs, priority, speed, parking and safety.",
+      "Study 32 structured Belgian driving theory lessons for category B covering Belgian road rules, traffic signs, priority, speed, parking and safety through lesson 31.",
     keywords: [
       "Belgian driving theory lessons",
       "Belgian road rules",
@@ -100,13 +100,13 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
     ],
     openGraphTitle: "Belgian Driving Theory Lessons & Road Rules | Rijvia",
     openGraphDescription:
-      "Study 30 structured category B lessons about Belgian road rules in English, Dutch, French and Arabic.",
+      "Study 32 structured category B lessons about Belgian road rules in English, Dutch, French and Arabic through lesson 31.",
     imageAlt: "Belgian category B driving theory lessons on Rijvia",
   },
   nl: {
     title: "Theorie Rijbewijs B België: Lessen & Verkeersregels",
     description:
-      "Leer theorie rijbewijs B in België met 30 gestructureerde lessen over Belgische verkeersregels, verkeersborden, voorrang, snelheid, parkeren en veiligheid.",
+      "Leer theorie rijbewijs B in België met 32 gestructureerde lessen over Belgische verkeersregels, verkeersborden, voorrang, snelheid, parkeren en veiligheid tot en met les-31.",
     keywords: [
       "theorie rijbewijs B leren",
       "theorie rijbewijs B België",
@@ -116,13 +116,13 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
     ],
     openGraphTitle: "Theorie Rijbewijs B België: Lessen | Rijvia",
     openGraphDescription:
-      "Leer Belgische verkeersregels met 30 gestructureerde rijtheorielessen in vier talen.",
+      "Leer Belgische verkeersregels met 32 gestructureerde rijtheorielessen in vier talen tot en met les-31.",
     imageAlt: "Belgische rijtheorie voor rijbewijs B op Rijvia",
   },
   fr: {
     title: "Cours Théorie Permis B Belgique & Code de la Route",
     description:
-      "Étudiez 30 cours de théorie permis B en Belgique sur le code de la route belge : panneaux, priorités, vitesse, stationnement et sécurité.",
+      "Étudiez 32 cours de théorie permis B en Belgique sur le code de la route belge : panneaux, priorités, vitesse, stationnement et sécurité jusqu’à la leçon 31.",
     keywords: [
       "cours théorie permis B Belgique",
       "théorie permis B Belgique",
@@ -132,13 +132,13 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
     ],
     openGraphTitle: "Cours Théorie Permis B Belgique | Rijvia",
     openGraphDescription:
-      "Étudiez le code de la route belge avec 30 leçons structurées en quatre langues.",
+      "Étudiez le code de la route belge avec 32 leçons structurées en quatre langues jusqu’à la leçon 31.",
     imageAlt: "Leçons de théorie du permis B belge sur Rijvia",
   },
   ar: {
     title: "تعليم السياقة في بلجيكا بالعربية: دروس النظري",
     description:
-      "تعلّم قواعد المرور البلجيكية بالعربية من خلال 30 درسًا منظمًا للنظري من الفئة B، تشمل العلامات والأولوية والسرعة والركن والسلامة.",
+      "تعلّم قواعد المرور البلجيكية بالعربية من خلال 32 درسًا منظمًا للنظري من الفئة B، تشمل العلامات والأولوية والسرعة والركن والسلامة حتى الدرس 31.",
     keywords: [
       "تعليم السياقة في بلجيكا بالعربية",
       "دروس السياقة النظرية في بلجيكا",
@@ -148,7 +148,7 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
     ],
     openGraphTitle: "تعليم السياقة في بلجيكا بالعربية | Rijvia",
     openGraphDescription:
-      "تعلّم قواعد المرور البلجيكية من خلال 30 درسًا منظمًا للنظري بأربع لغات.",
+      "تعلّم قواعد المرور البلجيكية من خلال 32 درسًا منظمًا للنظري بأربع لغات حتى الدرس 31.",
     imageAlt: "دروس السياقة النظرية البلجيكية على Rijvia",
   },
 };

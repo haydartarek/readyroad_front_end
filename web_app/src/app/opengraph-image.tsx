@@ -82,7 +82,7 @@ export default function OpenGraphImage() {
         <div style={{ display: "flex", gap: 16, fontSize: 23, fontWeight: 700 }}>
           {[
             "184 traffic signs",
-            "30 theory lessons",
+            "32 theory lessons through lesson 31",
             "EN / NL / FR / AR",
           ].map((item) => (
             <div

@@ -142,7 +142,7 @@ describe(
             "img",
             {
               name:
-                "First page",
+                "Priority and intersections — First page",
             },
           );
 
@@ -150,12 +150,13 @@ describe(
           image,
         ).toBeInTheDocument();
 
-        expect(
-          image.getAttribute(
-            "style",
-          ),
-        ).toContain(
+        expect(image).toHaveAttribute(
+          "src",
           "/images/lessons/TH01/page-1.png",
+        );
+        expect(image).toHaveAttribute(
+          "alt",
+          "Priority and intersections — First page",
         );
       },
     );
@@ -187,7 +188,7 @@ describe(
             "img",
             {
               name:
-                "First page",
+                "Priority and intersections — First page",
             },
           ),
         ).not.toBeInTheDocument();

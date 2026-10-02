@@ -430,14 +430,16 @@ export default function LessonDetailClient({
                     <div className="min-w-0 space-y-6 px-4 py-5 sm:px-6 sm:py-6">
                       {currentPage.imageUrl ? (
                         <div
-                          role="img"
-                          aria-label={title}
-                          className="aspect-video w-full overflow-hidden rounded-2xl border border-border/60 bg-muted bg-cover bg-center bg-no-repeat"
-                          style={{
-                            backgroundImage:
-                              `url("${currentPage.imageUrl}")`,
-                          }}
-                        />
+                          className="aspect-video w-full overflow-hidden rounded-2xl border border-border/60 bg-muted"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={currentPage.imageUrl}
+                            alt={`${getLangTitle(lesson, language)} — ${title}`}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
                       ) : null}
 
                       <div className="space-y-4">

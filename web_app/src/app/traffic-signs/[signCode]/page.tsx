@@ -4,6 +4,7 @@ import RelatedLearningArticles from "@/components/content/related-learning-artic
 import { localizePathname } from "@/lib/i18n-routing";
 import { getRelatedPublicArticles } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
+import { SeoIntentSection } from "@/components/seo/seo-intent-section";
 
 type TrafficSignDetailPageProps = Readonly<{
   params: Promise<{ signCode: string }>;
@@ -26,6 +27,7 @@ export default async function TrafficSignDetailPage({
   return (
     <>
       <TrafficSignDetailClient initialSign={sign} />
+      {sign && <SeoIntentSection page="trafficSigns" />}
       <RelatedLearningArticles articles={relatedArticles} locale={locale} />
     </>
   );

@@ -69,7 +69,7 @@ jobs:
         run: npm run test:e2e
 
       - name: Build Frontend Docker image
-        run: docker build --tag readyroad-frontend:ci .
+        run: docker build --build-arg NEXT_PUBLIC_PAYMENTS_ENABLED=true --tag readyroad-frontend:ci .
 
       - name: Upload build artifacts
         if: success() && github.ref == 'refs/heads/main'

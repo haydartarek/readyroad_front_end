@@ -3,15 +3,12 @@ import type { Metadata } from "next";
 import { HeroSection } from "@/components/home/hero-section";
 import { HomeLessonsOverview } from "@/components/home/home-lessons-overview";
 import { getHomeLessonsOverview } from "@/lib/server/home-lessons-overview";
-import { StatsHighlights } from "@/components/home/stats-highlights";
 import { FeaturesSection } from "@/components/home/features-section";
-import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { CategoriesPreview } from "@/components/home/categories-preview";
 import { PricingSection } from "@/components/home/pricing-section";
 import { ExamCta } from "@/components/home/exam-cta";
 import { ContactCtaSection } from "@/components/home/contact-cta-section";
 import { StickyCTA } from "@/components/home/sticky-cta";
-import { SeoIntentSection } from "@/components/seo/seo-intent-section";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
@@ -85,12 +82,9 @@ export default async function Home({ searchParams }: HomeProps) {
       <main>
         <HeroSection />
         <HomeLessonsOverview lessons={lessonsOverview} />
-        <StatsHighlights />
         <FeaturesSection />
-        <HowItWorksSection />
         <CategoriesPreview />
         <PricingSection />
-        <SeoIntentSection page="home" />
         <ExamCta />
         <ContactCtaSection />
       </main>

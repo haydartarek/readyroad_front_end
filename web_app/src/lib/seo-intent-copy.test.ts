@@ -3,7 +3,6 @@ import type { SiteLocale } from "@/lib/site-copy";
 
 const locales: SiteLocale[] = ["en", "nl", "fr", "ar"];
 const pages: SeoIntentPage[] = [
-  "home",
   "practice",
   "signExam",
   "theoryExam",
@@ -21,14 +20,6 @@ describe("SEO intent copy", () => {
     }
   });
 
-  test("keeps Arabic colloquial theory terms supportive instead of primary", () => {
-    const home = getSeoIntentCopy("ar", "home");
-    const exam = getSeoIntentCopy("ar", "theoryExam");
-
-    expect(home.heading).not.toContain("تيوري");
-    expect(home.body).toContain("امتحان التيوري");
-    expect(exam.body).toContain("امتحان تيوري بلجيكا");
-  });
 
   test("keeps traffic-sign reference intent separate from the test intent", () => {
     const nlReference = getSeoIntentCopy("nl", "trafficSigns");

@@ -4,10 +4,7 @@ import Link from "@/components/localized-link";
 import {
   ArrowRight,
   BarChart3,
-  BookOpen,
   FileText,
-  Languages,
-  SignpostBig,
   Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,36 +73,7 @@ export function FeaturesSection() {
     },
   ];
 
-  const supportingFeatures: FeatureItem[] = [
-    {
-      icon: SignpostBig,
-      iconWrap: "border-emerald-500/20 bg-emerald-500/10",
-      iconTone: "text-emerald-600 dark:text-emerald-400",
-      cta: t("home.features.cta_signs"),
-      title: t("home.features.signs_title"),
-      description: t("home.features.signs_desc"),
-      href: "/traffic-signs",
-    },
-    {
-      icon: BookOpen,
-      iconWrap: "border-amber-500/20 bg-amber-500/10",
-      iconTone: "text-amber-600 dark:text-amber-400",
-      cta: t("home.features.cta_lessons"),
-      title: t("home.features.lessons_title"),
-      description: t("home.features.lessons_desc"),
-      href: "/lessons",
-    },
-    {
-      icon: Languages,
-      iconWrap: "border-teal-500/20 bg-teal-500/10",
-      iconTone: "text-teal-600 dark:text-teal-400",
-      cta: t("home.features.cta_language"),
-      title: t("home.features.multilingual_title"),
-      description: t("home.features.multilingual_desc"),
-      href: "#footer-lang",
-    },
-  ];
-  const features = [...primaryFeatures, ...supportingFeatures];
+  const features = primaryFeatures;
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/20 py-16 lg:py-24">
@@ -113,7 +81,7 @@ export function FeaturesSection() {
 
       <div className="container relative mx-auto px-4">
         <div className="mb-10 text-center lg:mb-14">
-          <h2 data-testid="home-features-heading" className="mx-auto mb-4 w-full text-balance text-3xl font-extrabold leading-snug tracking-normal text-secondary md:text-4xl lg:w-1/2 lg:text-5xl">
+          <h2 data-testid="home-features-heading" className="mx-auto mb-4 w-full text-balance text-3xl font-extrabold leading-snug tracking-normal text-secondary md:text-4xl lg:w-2/3 lg:text-5xl">
             {t("home.features.title")}
           </h2>
 

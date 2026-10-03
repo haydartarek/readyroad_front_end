@@ -9,9 +9,6 @@ const localeCases = [
       "Start exam",
       "Start practicing",
       "View progress",
-      "Browse signs",
-      "Start learning",
-      "Change language",
     ],
   },
   {
@@ -21,9 +18,6 @@ const localeCases = [
       "Start het examen",
       "Start met oefenen",
       "Bekijk je voortgang",
-      "Bekijk verkeersborden",
-      "Start met leren",
-      "Wijzig taal",
     ],
   },
   {
@@ -33,9 +27,6 @@ const localeCases = [
       "Commencer l'examen",
       "Commencer l'entraînement",
       "Voir ma progression",
-      "Parcourir les panneaux",
-      "Commencer à étudier",
-      "Changer de langue",
     ],
   },
   {
@@ -45,9 +36,6 @@ const localeCases = [
       "ابدأ الامتحان",
       "ابدأ التدريب",
       "اعرض تقدمك",
-      "استعرض العلامات",
-      "ابدأ الدراسة",
-      "غيّر اللغة",
     ],
   },
 ] as const;
@@ -128,10 +116,10 @@ test.describe("Homepage learning feature cards", () => {
           actual: element.getBoundingClientRect().width,
           parent: element.parentElement!.getBoundingClientRect().width,
         }));
-        expect(headingWidth.actual / headingWidth.parent).toBeCloseTo(width >= 1024 ? 0.5 : 1, 2);
-        await expect(cards).toHaveCount(6);
-        await expect(links).toHaveCount(6);
-        await expect(ctas).toHaveCount(6);
+        expect(headingWidth.actual / headingWidth.parent).toBeCloseTo(width >= 1024 ? 2 / 3 : 1, 2);
+        await expect(cards).toHaveCount(3);
+        await expect(links).toHaveCount(3);
+        await expect(ctas).toHaveCount(3);
 
         for (const [index, cta] of localeCase.ctas.entries()) {
           await expect(ctas.nth(index)).toContainText(cta);
@@ -215,19 +203,4 @@ test.describe("Homepage learning feature cards", () => {
     });
   }
 
-  test("clicking the traffic-sign card body opens its learning destination", async ({
-    page,
-  }) => {
-    await useAnonymousLocale(page, "en");
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
-
-    const signsCard = page.getByTestId("home-feature-link").nth(3);
-    await expect(signsCard).toHaveAttribute("href", "/traffic-signs");
-    await Promise.all([
-      page.waitForURL("/traffic-signs"),
-      signsCard.click({ position: { x: 24, y: 88 } }),
-    ]);
-    await expect(page).toHaveURL("/traffic-signs");
-  });
 });

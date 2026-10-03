@@ -1,7 +1,6 @@
 import type { SiteLocale } from "@/lib/site-copy";
 
 export type SeoIntentPage =
-  | "home"
   | "practice"
   | "signExam"
   | "theoryExam"
@@ -23,18 +22,6 @@ export type SeoIntentCopy = {
 
 const COPY: Record<SiteLocale, Record<SeoIntentPage, SeoIntentCopy>> = {
   en: {
-    home: {
-      kicker: "Belgian category B theory",
-      heading: "Prepare for the Belgian driving theory test with lessons, practice and exam simulation",
-      body: "RijVia brings Belgian driving theory lessons, category B practice questions, Belgian traffic signs and a realistic theory practice test together in one multilingual learning platform.",
-      relatedLabel: "Choose how you want to prepare",
-      links: [
-        { href: "/lessons", label: "Belgian driving theory lessons" },
-        { href: "/practice", label: "Belgian driving theory practice" },
-        { href: "/traffic-signs", label: "Belgian traffic signs and meanings" },
-        { href: "/exam", label: "Belgian driving theory practice test" },
-      ],
-    },
     practice: {
       kicker: "Practice by topic",
       heading: "Practice Belgian driving theory questions by topic",
@@ -92,18 +79,6 @@ const COPY: Record<SiteLocale, Record<SeoIntentPage, SeoIntentCopy>> = {
     },
   },
   nl: {
-    home: {
-      kicker: "Belgische theorie rijbewijs B",
-      heading: "Theorie rijbewijs B België: leren, oefenen en proefexamen",
-      body: "RijVia bundelt Belgische verkeersregels, theorielessen, theorievragen oefenen, verkeersborden en een proefexamen voor rijbewijs B in één meertalig leerplatform.",
-      relatedLabel: "Kies hoe je wilt voorbereiden",
-      links: [
-        { href: "/lessons", label: "Theorie rijbewijs B leren" },
-        { href: "/practice", label: "Theorie rijbewijs B oefenen" },
-        { href: "/traffic-signs", label: "Verkeersborden België betekenis" },
-        { href: "/exam", label: "Proefexamen rijbewijs B" },
-      ],
-    },
     practice: {
       kicker: "Oefenen per onderwerp",
       heading: "Theorie rijbewijs B oefenen per onderwerp",
@@ -161,18 +136,6 @@ const COPY: Record<SiteLocale, Record<SeoIntentPage, SeoIntentCopy>> = {
     },
   },
   fr: {
-    home: {
-      kicker: "Théorie permis B en Belgique",
-      heading: "Préparer l’examen théorique permis B en Belgique",
-      body: "RijVia réunit le code de la route belge, des cours de théorie, des exercices permis B, les panneaux de signalisation et un examen blanc dans une plateforme multilingue.",
-      relatedLabel: "Choisissez votre méthode de préparation",
-      links: [
-        { href: "/lessons", label: "Cours théorie permis B Belgique" },
-        { href: "/practice", label: "Exercices théorie permis B Belgique" },
-        { href: "/traffic-signs", label: "Panneaux de signalisation Belgique" },
-        { href: "/exam", label: "Examen blanc permis B Belgique" },
-      ],
-    },
     practice: {
       kicker: "Exercices par thème",
       heading: "Exercices théorie permis B Belgique par thème",
@@ -230,18 +193,6 @@ const COPY: Record<SiteLocale, Record<SeoIntentPage, SeoIntentCopy>> = {
     },
   },
   ar: {
-    home: {
-      kicker: "النظري البلجيكي بالعربية",
-      heading: "الاستعداد لامتحان السياقة النظري في بلجيكا بالعربية",
-      body: "يجمع RijVia دروس النظري وقواعد المرور البلجيكية بالعربية، والأسئلة التدريبية، والعلامات المرورية، ومحاكاة الامتحان. ويُعرف الامتحان لدى بعض المتعلمين أيضًا باسم امتحان التيوري (theorie-examen).",
-      relatedLabel: "اختر طريقة الاستعداد",
-      links: [
-        { href: "/lessons", label: "تعليم السياقة في بلجيكا بالعربية" },
-        { href: "/practice", label: "أسئلة تدريبية لامتحان السياقة النظري" },
-        { href: "/traffic-signs", label: "العلامات المرورية في بلجيكا ومعانيها" },
-        { href: "/exam", label: "أسئلة امتحان السياقة النظري في بلجيكا" },
-      ],
-    },
     practice: {
       kicker: "التدريب حسب الموضوع",
       heading: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا حسب الموضوع",

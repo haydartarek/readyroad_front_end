@@ -22,7 +22,7 @@ function remainingParts(expiresAt: string, now: number) {
   };
 }
 
-export function AccountAccessCard() {
+export function AccountAccessCard({ compact = false }: { compact?: boolean } = {}) {
   const { user } = useAuth();
   const { language, t, isRTL } = useLanguage();
   const [access, setAccess] = useState<AccountAccess | null>(null);
@@ -105,7 +105,11 @@ export function AccountAccessCard() {
       <section
         data-testid="account-access-card"
         aria-label={t("account_access.title")}
-        className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm"
+        className={
+          compact
+            ? "inline-flex min-h-12 max-w-full items-center rounded-2xl border border-border/60 bg-card px-3 py-2 shadow-sm"
+            : "rounded-2xl border border-border/60 bg-card p-4 shadow-sm"
+        }
       >
         <p className="text-sm font-semibold text-muted-foreground">
           {t("account_access.loading")}
@@ -119,7 +123,11 @@ export function AccountAccessCard() {
       <section
         data-testid="account-access-card"
         aria-label={t("account_access.title")}
-        className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm"
+        className={
+          compact
+            ? "inline-flex min-h-12 max-w-full items-center rounded-2xl border border-border/60 bg-card px-3 py-2 shadow-sm"
+            : "rounded-2xl border border-border/60 bg-card p-4 shadow-sm"
+        }
       >
         <p className="text-sm font-semibold text-muted-foreground">
           {t("account_access.unavailable")}
@@ -154,6 +162,72 @@ export function AccountAccessCard() {
       : isExpired
         ? "account_access.expired"
         : "account_access.free";
+
+  if (compact) {
+    const compactPrimaryLabel =
+      isUnlimited
+        ? t(statusKey)
+        : isPaid
+          ? planLabel
+          : t(statusKey);
+
+    return (
+      <section
+        data-testid="account-access-card"
+        aria-label={t("account_access.title")}
+        dir={isRTL ? "rtl" : "ltr"}
+        className="flex max-w-full flex-wrap items-center gap-3 rounded-2xl border border-border/60 bg-card px-3 py-2 shadow-sm"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          {isPaid || isUnlimited ? (
+            <Crown className="h-4 w-4" aria-hidden />
+          ) : (
+            <WalletCards className="h-4 w-4" aria-hidden />
+          )}
+        </span>
+
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-muted-foreground">
+            {t("account_access.title")}
+          </p>
+
+          <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="break-words text-sm font-black text-foreground">
+              {compactPrimaryLabel}
+            </span>
+
+            {remaining ? (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                <Clock3
+                  className="h-3.5 w-3.5 text-primary"
+                  aria-hidden
+                />
+                {t("account_access.remaining_value", remaining)}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        {!isUnlimited ? (
+          <Button
+            asChild
+            size="sm"
+            variant={isPaid ? "outline" : "default"}
+          >
+            <Link href="/#pricing">
+              {t(
+                isPaid
+                  ? "account_access.extend"
+                  : isExpired
+                    ? "account_access.renew"
+                    : "account_access.view_packages",
+              )}
+            </Link>
+          </Button>
+        ) : null}
+      </section>
+    );
+  }
 
   return (
     <section

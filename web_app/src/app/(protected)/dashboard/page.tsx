@@ -4,27 +4,25 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
-import { ProgressOverviewCard } from "@/components/dashboard/progress-overview-card";
-import { WeakAreasPreview } from "@/components/dashboard/weak-areas-preview";
+
+
 import {
   getOverallProgress,
   getStudentIntelligence,
-  getProgressByCategory,
   getRecentActivity,
-  getTheoryQuestionCoverage,
-  getTheoryTimeoutAnalysis,
   getWeakAreas,
 } from "@/services";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { StatusScreen } from "@/components/ui/status-screen";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+
 import {
   PageHeroDescription,
+  PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
-  PageMetricCard,
+  PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { cn } from "@/lib/utils";
 import Link from "@/components/localized-link";
@@ -32,46 +30,27 @@ import {
   Trophy,
   Target,
   BookOpen,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  PenLine,
-  Shield,
-  Shuffle,
-  Zap,
   CheckCircle,
-  Clock3,
   AlertTriangle,
   TimerOff,
 } from "lucide-react";
 import type {
-  CategoryProgressSummary,
   SignWeaknessSummary,
   StudentIntelligence,
-  TheoryQuestionCoverage,
   TheoryTimeoutAnalysis,
 } from "@/services/progressService";
-import { QuickActionsSection } from "@/components/dashboard/quick-actions-section";
+
 import { RecentActivityList } from "@/components/dashboard/recent-activity-list";
 import { WeakAreasPageContent } from "@/app/(protected)/analytics/weak-areas/page";
 import { ErrorPatternsContent } from "@/app/(protected)/analytics/error-patterns/page";
 import { ExamResultsPageContent } from "@/app/(protected)/exam/results/page";
 import { ProfilePageContent } from "@/app/(protected)/profile/page";
-import { StudentIntelligencePanel } from "@/components/dashboard/student-intelligence-panel";
-import { localizedCategoryName } from "@/lib/student-intelligence-presentation";
-import { TheoryCoverageWidget } from "@/components/dashboard/theory-coverage-widget";
+
+import { localizedPriorityName } from "@/lib/student-intelligence-presentation";
+
 import { AccountAccessCard } from "@/components/payment/account-access-card";
 
 // ─── Progress Tracker types (inline, no extra file) ──────────────────────────
-
-interface CategoryProgressItem {
-  categoryCode: string;
-  categoryName: string;
-  questionsAttempted: number;
-  correctAnswers: number;
-  accuracy: number;
-  trend: "improving" | "stable" | "declining" | "insufficient";
-}
 
 type DashboardSection =
   "overview" | "weak-areas" | "error-patterns" | "exam-results" | "profile";
@@ -91,18 +70,6 @@ interface DashboardActivityItem {
   questionsAnswered?: number;
   totalQuestions?: number;
   link?: string;
-}
-
-function TrendIcon({
-  trend,
-}: {
-  trend: "improving" | "stable" | "declining" | "insufficient";
-}) {
-  if (trend === "improving")
-    return <TrendingUp className="w-4 h-4 text-green-500" />;
-  if (trend === "declining")
-    return <TrendingDown className="w-4 h-4 text-red-500" />;
-  return <Minus className="w-4 h-4 text-muted-foreground" />;
 }
 
 type DashboardProgressData = {
@@ -134,433 +101,6 @@ const emptyProgressData: DashboardProgressData | null = null;
 function SkeletonCard() {
   return (
     <div className="h-32 bg-muted/60 animate-pulse rounded-2xl border border-border/30" />
-  );
-}
-
-function GreetingHeader({
-  name,
-  subtitle,
-}: {
-  name: string;
-  subtitle: string;
-}) {
-  return (
-    <PageHeroSurface>
-      <PageHeroTitle>{name}!</PageHeroTitle>
-      <PageHeroDescription>{subtitle}</PageHeroDescription>
-    </PageHeroSurface>
-  );
-}
-
-/** Strong categories widget (categories with >85% accuracy) */
-function StrongAreasWidget({
-  categories,
-  t,
-  language,
-}: {
-  categories: CategoryProgressSummary[];
-  t: (key: string) => string;
-  language: "en" | "nl" | "fr" | "ar";
-}) {
-  if (!categories || categories.length === 0) return null;
-
-  return (
-    <div className="space-y-4 rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-secondary/10 flex items-center justify-center">
-          <CheckCircle className="w-4 h-4 text-secondary" />
-        </div>
-        <h3 className="font-black text-secondary">
-          {t("dashboard.strong_areas")}
-        </h3>
-      </div>
-
-      <div className="space-y-3">
-        {categories.map((cat, idx) => {
-          const accuracyNum =
-            typeof cat.accuracy === "number"
-              ? cat.accuracy
-              : Number(cat.accuracy);
-          return (
-            <div
-              key={cat.categoryCode ?? cat.categoryName ?? idx}
-              className="flex flex-col gap-2 rounded-xl border border-green-100 bg-green-50/40 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-700">
-                  <CheckCircle className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 break-words text-sm font-semibold text-foreground">
-                  {localizedCategoryName(
-                    cat,
-                    language,
-                    t("common.not_available"),
-                  )}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0">
-                <span className="text-xs text-muted-foreground">
-                  {cat.attempted} {t("progress.questions_attempted")}
-                </span>
-                <span className="text-xs font-bold text-green-600">
-                  {accuracyNum.toFixed(1)}%
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-green-500 text-white">
-                  {t("dashboard.mastery_strong")}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** Compact category progress overview */
-function CategoryProgressWidget({
-  categories,
-  t,
-}: {
-  categories: CategoryProgressItem[];
-  t: (key: string) => string;
-}) {
-  const orderedCategories = [...categories].sort((a, b) => {
-    if (a.accuracy !== b.accuracy) {
-      return a.accuracy - b.accuracy;
-    }
-    return b.questionsAttempted - a.questionsAttempted;
-  });
-
-  if (orderedCategories.length === 0) return null;
-
-  return (
-    <div
-      data-testid="category-progress-widget"
-      className="min-w-0 max-w-full rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4"
-    >
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-          <TrendingUp className="w-4 h-4" />
-        </div>
-        <div className="min-w-0">
-          <h3 className="break-words font-black text-secondary">
-            {t("progress.badge")}
-          </h3>
-          <p className="break-words text-xs text-muted-foreground">
-            {t("progress.subtitle")}
-          </p>
-        </div>
-      </div>
-
-      <div
-        data-testid="category-progress-grid"
-        className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
-      >
-        {orderedCategories.map((cat) => {
-          const needsStudy = cat.accuracy < 70;
-
-          return (
-            <div
-              key={cat.categoryCode}
-              data-testid="category-progress-card"
-              className="min-w-0 w-full max-w-full rounded-xl border border-border/40 bg-background/60 p-4 space-y-3"
-            >
-              <div
-                data-testid="category-progress-header"
-                className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-3"
-              >
-                <div className="min-w-0">
-                  <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2">
-                    <span
-                      data-testid="category-progress-icon"
-                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"
-                    >
-                      <BookOpen className="h-4 w-4" aria-hidden />
-                    </span>
-                    <p
-                      data-testid="category-progress-name"
-                      className="line-clamp-2 min-w-0 break-words text-sm font-bold leading-5 text-foreground"
-                    >
-                      {cat.categoryName}
-                    </p>
-                    <span
-                      data-testid="category-progress-trend"
-                      className="shrink-0"
-                    >
-                      <TrendIcon trend={cat.trend} />
-                    </span>
-                  </div>
-                  <p className="mt-1 break-words text-xs text-muted-foreground">
-                    {cat.questionsAttempted} {t("progress.questions_attempted")}
-                  </p>
-                </div>
-
-                <span
-                  data-testid="category-progress-percentage"
-                  className={cn(
-                    "max-w-full shrink-0 justify-self-start whitespace-nowrap text-lg font-black sm:justify-self-auto",
-                    cat.accuracy >= 80
-                      ? "text-green-600"
-                      : cat.accuracy >= 60
-                        ? "text-orange-500"
-                        : "text-destructive",
-                  )}
-                >
-                  {cat.accuracy.toFixed(1)}%
-                </span>
-              </div>
-
-              <div
-                data-testid="category-progress-progress"
-                className="min-w-0 max-w-full space-y-1.5"
-              >
-                <Progress
-                  value={cat.accuracy}
-                  className={cn(
-                    "h-2 max-w-full",
-                    cat.accuracy >= 80
-                      ? "[&>div]:bg-green-500"
-                      : cat.accuracy >= 60
-                        ? "[&>div]:bg-orange-500"
-                        : "[&>div]:bg-destructive",
-                  )}
-                />
-                <div
-                  data-testid="category-progress-counts"
-                  className="flex min-w-0 flex-wrap justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground"
-                >
-                  <span>
-                    {cat.correctAnswers} {t("progress.correct")}
-                  </span>
-                  <span>
-                    {cat.questionsAttempted - cat.correctAnswers}{" "}
-                    {t("progress.wrong")}
-                  </span>
-                </div>
-              </div>
-
-              <div
-                data-testid="category-progress-actions"
-                className={cn(
-                  "grid min-w-0 max-w-full grid-cols-1 gap-2",
-                  needsStudy &&
-                    "min-[360px]:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2",
-                )}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="min-h-9 h-auto min-w-0 w-full gap-1 whitespace-normal rounded-full py-2 text-center transition-all hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:whitespace-nowrap sm:py-0"
-                >
-                  <Link href="/exam">
-                    <PenLine className="w-3.5 h-3.5 shrink-0" />
-                    {t("progress.practice")}
-                  </Link>
-                </Button>
-                {needsStudy && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="min-h-9 h-auto min-w-0 w-full gap-1 whitespace-normal rounded-full py-2 text-center transition-all hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:whitespace-nowrap sm:py-0"
-                  >
-                    <Link href="/lessons">
-                      <BookOpen className="w-3.5 h-3.5 shrink-0" />
-                      {t("progress.study")}
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** Sign quiz activity summary widget */
-function SignActivityWidget({
-  practiceCount,
-  examCount,
-  randomExamCount,
-  randomPassedCount,
-  passedCount,
-  t,
-}: {
-  practiceCount: number;
-  examCount: number;
-  randomExamCount: number;
-  randomPassedCount: number;
-  passedCount: number;
-  t: (key: string) => string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4">
-      <div className="flex min-w-0 items-start gap-2">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-          <Shield className="w-4 h-4 text-primary" />
-        </div>
-        <h3 className="min-w-0 break-words font-black text-secondary">
-          {t("dashboard.learning_activity_title")}
-        </h3>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {[
-          {
-            label: t("dashboard.sign_practice_sessions"),
-            value: practiceCount,
-            color: "text-primary",
-            bg: "bg-primary/10",
-            icon: <PenLine className="w-4 h-4" />,
-          },
-          {
-            label: t("dashboard.sign_exams_taken"),
-            value: examCount,
-            color: "text-secondary",
-            bg: "bg-secondary/10",
-            icon: <Zap className="w-4 h-4" />,
-          },
-          {
-            label: t("dashboard.sign_random_exams_taken"),
-            value: randomExamCount,
-            color: "text-orange-600",
-            bg: "bg-orange-100",
-            icon: <Shuffle className="w-4 h-4" />,
-          },
-          {
-            label: t("dashboard.sign_passed_signs"),
-            value: passedCount,
-            color: "text-green-600",
-            bg: "bg-green-100",
-            icon: <CheckCircle className="w-4 h-4" />,
-          },
-        ].map((item, i) => (
-          <div
-            key={i}
-            data-testid="dashboard-stat-card"
-            data-stat-kind="activity"
-            className="flex min-w-0 flex-col items-center gap-1 rounded-xl border border-border/40 bg-background/60 p-3 text-center"
-          >
-            <div
-              data-testid="dashboard-stat-icon"
-              className={`order-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.bg} ${item.color}`}
-            >
-              {item.icon}
-            </div>
-            <p
-              data-testid="dashboard-stat-label"
-              className="order-2 min-w-0 max-w-full break-words text-xs leading-tight text-muted-foreground sm:order-3"
-            >
-              {item.label}
-            </p>
-            <p
-              data-testid="dashboard-stat-value"
-              className={`order-3 min-w-0 max-w-full break-words text-xl font-black sm:order-2 ${item.color}`}
-            >
-              {item.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-border/40 bg-background/60 px-4 py-3 text-sm">
-        <span className="font-medium text-foreground">
-          {t("dashboard.sign_random_exams_passed")}
-        </span>
-        <span className="font-black text-orange-600">
-          {randomPassedCount}/{randomExamCount}
-        </span>
-      </div>
-
-      {practiceCount === 0 && examCount === 0 && randomExamCount === 0 && (
-          <p className="text-xs text-muted-foreground text-center">
-            {t("dashboard.sign_no_activity")}
-          </p>
-        )}
-    </div>
-  );
-}
-
-function WeakSignsWidget({
-  weakSigns,
-  t,
-  language,
-}: {
-  weakSigns: SignWeaknessSummary[];
-  t: (key: string) => string;
-  language: string;
-}) {
-  if (!weakSigns || weakSigns.length === 0) return null;
-
-  return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm p-5 space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-destructive/10 flex items-center justify-center">
-          <Target className="w-4 h-4 text-destructive" />
-        </div>
-        <div>
-          <h3 className="font-black text-secondary">
-            {t("dashboard.weak_signs_title")}
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            {t("dashboard.weak_signs_desc")}
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {weakSigns.map((sign, idx) => {
-          const localizedName =
-            language === "ar"
-              ? sign.signNameAr
-              : language === "nl"
-                ? sign.signNameNl
-                : language === "fr"
-                  ? sign.signNameFr
-                  : sign.signNameEn;
-
-          return (
-            <div
-              key={`${sign.signCode}-${idx}`}
-              className="rounded-xl border border-red-100 bg-red-50/40 px-3 py-3"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <p className="min-w-0 break-words text-sm font-black text-foreground">
-                  {localizedName ||
-                    sign.signNameEn ||
-                    t("common.not_available")}
-                </p>
-                <p className="text-sm font-black text-destructive">
-                  {sign.accuracy.toFixed(1)}%
-                </p>
-              </div>
-
-              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  {t("dashboard.weak_signs_attempts")}: {sign.attempted}
-                </span>
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs font-semibold"
-                >
-                  <Link
-                    href={`/traffic-signs/${encodeURIComponent(sign.signCode)}`}
-                  >
-                    {t("dashboard.weak_signs_view_sign")}
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -652,7 +192,6 @@ function DashboardHome() {
 
   const [progressData, setProgressData] =
     useState<DashboardProgressData | null>(emptyProgressData);
-  const [strongAreas, setStrongAreas] = useState<CategoryProgressSummary[]>([]);
   const [weakAreas, setWeakAreas] = useState<
     {
       categoryCode?: string;
@@ -664,40 +203,26 @@ function DashboardHome() {
   const [recentActivities, setRecentActivities] = useState<
     DashboardActivityItem[]
   >([]);
-  const [categoryProgress, setCategoryProgress] = useState<
-    CategoryProgressItem[]
-  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [studentIntelligence, setStudentIntelligence] =
     useState<StudentIntelligence | null>(null);
-  const [theoryTimeouts, setTheoryTimeouts] =
-    useState<TheoryTimeoutAnalysis | null>(null);
-  const [theoryCoverage, setTheoryCoverage] =
-    useState<TheoryQuestionCoverage | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
 
-  // Reset all dashboard state when the user changes (login / logout).
-  // Without this, a previous user's data stays visible while the new
-  // user's data is loading — or worse, after logout.
   const currentUserId = user?.userId ?? null;
+
   useEffect(() => {
     setProgressData(null);
-    setStrongAreas([]);
     setWeakAreas([]);
     setRecentActivities([]);
-    setCategoryProgress([]);
     setIsLoading(true);
     setServiceUnavailable(false);
     setLoadError(false);
     setStudentIntelligence(null);
-    setTheoryTimeouts(null);
-    setTheoryCoverage(null);
   }, [currentUserId]);
 
   useEffect(() => {
-    // Don't fetch if not authenticated (avoids leaking data between sessions)
     if (!user) return;
 
     const fetchDashboardData = async () => {
@@ -706,28 +231,19 @@ function DashboardHome() {
         setServiceUnavailable(false);
         setLoadError(false);
 
-        // Fetch all data in parallel
         const [
           progress,
           intelligence,
           weakAreasData,
           recentActivityData,
-          categoryProgressResponse,
-          coverage,
-          timeoutAnalysis,
         ] = await Promise.all([
           getOverallProgress(),
           getStudentIntelligence(),
           getWeakAreas(language),
           getRecentActivity(5),
-          getProgressByCategory(),
-          getTheoryQuestionCoverage(),
-          getTheoryTimeoutAnalysis(5),
         ]);
 
         setStudentIntelligence(intelligence);
-        setTheoryCoverage(coverage);
-        setTheoryTimeouts(timeoutAnalysis);
 
         setProgressData({
           totalExamsTaken: progress.totalExamsTaken,
@@ -753,9 +269,8 @@ function DashboardHome() {
           weakSigns: progress.weakSigns,
         });
 
-        setStrongAreas(progress.strongCategories);
-
         const areas = weakAreasData.weakAreas;
+
         setWeakAreas(
           areas.map((area) => ({
             categoryCode: area.categoryCode,
@@ -788,38 +303,9 @@ function DashboardHome() {
             link: activity.link,
           })),
         );
-
-        // Progress Tracker data
-        const categories = categoryProgressResponse.categories ?? [];
-        const categoryTrends = new Map(
-          intelligence.learningPriorities.map((category) => [
-            category.categoryCode,
-            category.trend,
-          ]),
-        );
-        setCategoryProgress(
-          categories.map((cat) => ({
-            categoryCode: cat.categoryCode,
-            categoryName: localizedCategoryName(
-              cat,
-              language,
-              t("common.not_available"),
-            ),
-            questionsAttempted: cat.questionsAttempted,
-            correctAnswers: cat.correctAnswers,
-            accuracy: cat.accuracyRate,
-            trend:
-              categoryTrends.get(cat.categoryCode) === "IMPROVING"
-                ? "improving"
-                : categoryTrends.get(cat.categoryCode) === "STABLE"
-                  ? "stable"
-                  : categoryTrends.get(cat.categoryCode) === "DECLINING"
-                    ? "declining"
-                    : "insufficient",
-          })),
-        );
       } catch (error) {
         logApiError("Failed to fetch dashboard data", error);
+
         if (isServiceUnavailable(error)) {
           setServiceUnavailable(true);
         } else {
@@ -831,42 +317,35 @@ function DashboardHome() {
     };
 
     fetchDashboardData();
-    // currentUserId is included so the effect re-runs when auth loads after mount
-    // (user starts as null → effect bails out → user loads → re-runs with actual data)
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey, currentUserId, language]);
 
-  const firstName = user?.firstName || user?.username || t("dashboard.learner");
-  const representedCategoryCodes = new Set([
-    ...weakAreas
-      .map((area) => area.categoryCode)
-      .filter((code): code is string => Boolean(code)),
-    ...strongAreas
-      .map((area) => area.categoryCode)
-      .filter((code): code is string => Boolean(code)),
-  ]);
-  const remainingCategoryProgress = categoryProgress.filter(
-    (category) => !representedCategoryCodes.has(category.categoryCode),
-  );
+  const firstName =
+    user?.firstName ||
+    user?.username ||
+    t("dashboard.learner");
 
   if (isLoading) {
     return (
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-        <div className="space-y-2 rounded-2xl border border-border/30 bg-muted/40 px-4 py-6 animate-pulse sm:px-6 sm:py-7">
-          <div className="h-3 w-24 bg-muted rounded-full" />
-          <div className="h-8 w-48 bg-muted rounded-full" />
-          <div className="h-3 w-64 max-w-full bg-muted rounded-full" />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(380px,0.65fr)]">
+          <div className="h-72 animate-pulse rounded-2xl border border-border/30 bg-muted/40" />
+          <div className="h-72 animate-pulse rounded-2xl border border-border/30 bg-muted/40" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <SkeletonCard key={i} />
+
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[...Array(4)].map((_, index) => (
+            <SkeletonCard key={index} />
           ))}
         </div>
-        <div className="h-40 bg-muted/40 animate-pulse rounded-2xl border border-border/30" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-64 bg-muted/40 animate-pulse rounded-2xl border border-border/30" />
-          <div className="h-64 bg-muted/40 animate-pulse rounded-2xl border border-border/30" />
+
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
+          <div className="h-64 animate-pulse rounded-2xl border border-border/30 bg-muted/40" />
+          <div className="h-64 animate-pulse rounded-2xl border border-border/30 bg-muted/40" />
         </div>
+
+        <div className="h-56 animate-pulse rounded-2xl border border-border/30 bg-muted/40" />
       </div>
     );
   }
@@ -924,113 +403,402 @@ function DashboardHome() {
     );
   }
 
+  const readiness =
+    studentIntelligence.examReadinessScore === null
+      ? null
+      : Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(studentIntelligence.examReadinessScore),
+          ),
+        );
+
+  const passProbability =
+    studentIntelligence.estimatedPassProbability === null
+      ? null
+      : Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(studentIntelligence.estimatedPassProbability),
+          ),
+        );
+
+  const topPriority =
+    studentIntelligence.learningPriorities[0] ?? null;
+
+  const topRecommendation =
+    studentIntelligence.recommendations[0] ?? null;
+
+  const fallbackWeakArea =
+    weakAreas[0] ?? null;
+
+  const priorityName =
+    topPriority
+      ? localizedPriorityName(topPriority, language)
+      : "";
+
+  const focusName =
+    priorityName ||
+    fallbackWeakArea?.category ||
+    t("common.not_available");
+
+  const focusAccuracy =
+    topPriority?.accuracy ??
+    fallbackWeakArea?.accuracy ??
+    null;
+
+  const focusCategoryCode =
+    topPriority?.categoryCode ??
+    fallbackWeakArea?.categoryCode ??
+    null;
+
+  const focusActionPath =
+    focusCategoryCode
+      ? `/practice/${focusCategoryCode}`
+      : topRecommendation?.actionPath || "/practice";
+
+  const hasFocusEvidence =
+    Boolean(topPriority || fallbackWeakArea);
+
+  const heroInsight =
+    hasFocusEvidence && focusAccuracy !== null
+      ? t("student_intelligence.top_priority", {
+          category: focusName,
+          accuracy: Math.round(focusAccuracy),
+        })
+      : t("dashboard.subtitle");
+
+  const recommendationText =
+    topRecommendation
+      ? t(topRecommendation.key, {
+          category: focusName,
+        })
+      : heroInsight;
+
+  const focusCtaLabel =
+    focusCategoryCode
+      ? t("dashboard.v2_focus_cta")
+      : topRecommendation
+        ? t(topRecommendation.key, {
+            category: focusName,
+          })
+        : t("dashboard.action_practice_title");
+
+  const recentScores =
+    studentIntelligence.examAnalytics.recentScores
+      .slice(0, 6)
+      .reverse()
+      .map((score) =>
+        Math.max(
+          0,
+          Math.min(
+            100,
+            Number(score) || 0,
+          ),
+        ),
+      );
+
+  const readinessLabel =
+    readiness === null
+      ? t("common.not_available")
+      : `${readiness}%`;
+
+  const passProbabilityLabel =
+    passProbability === null
+      ? t("common.not_available")
+      : `${passProbability}%`;
+
+  const levelLabel =
+    t(
+      `student_intelligence.level.${studentIntelligence.studentLevel.toLowerCase()}`,
+    );
+
+  const trendLabel =
+    t(
+      `student_intelligence.trend.${studentIntelligence.overallLearningTrend.toLowerCase()}`,
+    );
+
+  const metrics = [
+    {
+      label: t("dashboard.stat_questions_done"),
+      value: progressData.totalAttempted,
+      icon: BookOpen,
+      tone: "primary",
+    },
+    {
+      label: t("analytics.stat_accuracy"),
+      value: `${Math.round(progressData.averageScore)}%`,
+      icon: Target,
+      tone: "primary",
+    },
+    {
+      label: t("student_intelligence.exam.total"),
+      value: progressData.totalExamsTaken,
+      icon: Trophy,
+      tone: "secondary",
+    },
+    {
+      label: t("dashboard.lessons_completed"),
+      value: progressData.lessonsCompletedCount,
+      icon: CheckCircle,
+      tone: "secondary",
+    },
+  ] as const;
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-      {/* Welcome Header */}
-      <GreetingHeader
-        name={`${t("dashboard.welcome_back")} ${firstName}`}
-        subtitle={t("dashboard.subtitle")}
+    <div
+      dir={language === "ar" ? "rtl" : "ltr"}
+      className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8"
+    >
+      {/* Primary status area */}
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="break-words text-lg font-black text-foreground">
+            {t("dashboard.welcome_back")} {firstName}
+          </p>
+        </div>
+
+        <AccountAccessCard compact />
+      </div>
+
+      <PageHeroSurface>
+        <PageHeroEyebrow>
+          {t("student_intelligence.title")}
+        </PageHeroEyebrow>
+
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+          <div className="min-w-0">
+            <PageHeroTitle>
+              {t("student_intelligence.readiness")}
+            </PageHeroTitle>
+
+            <PageHeroDescription className="mt-2 max-w-3xl">
+              {heroInsight}
+            </PageHeroDescription>
+
+            <div className="mt-5 flex min-w-0 flex-wrap items-end gap-3">
+              <span className="text-4xl font-black tracking-tight text-primary sm:text-5xl">
+                {readinessLabel}
+              </span>
+
+              <span className="pb-1 text-sm font-semibold text-muted-foreground">
+                {levelLabel} · {trendLabel}
+              </span>
+            </div>
+
+            <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-500"
+                style={{
+                  width: `${readiness ?? 0}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="min-w-[150px] rounded-2xl border border-secondary/15 bg-secondary/[0.05] p-4">
+            <p className="text-xs font-semibold text-muted-foreground">
+              {t("student_intelligence.pass_probability")}
+            </p>
+
+            <p className="mt-1 text-2xl font-black text-secondary">
+              {passProbabilityLabel}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+          <Button asChild className="w-full sm:w-auto">
+            <Link href="/exam">
+              {t("dashboard.v2_exam_cta")}
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            <Link href={focusActionPath}>
+              {focusCtaLabel}
+            </Link>
+          </Button>
+        </div>
+      </PageHeroSurface>
+
+      {/* Four key metrics */}
+      <section
+        aria-label={t("progress.badge")}
+        className="grid grid-cols-2 gap-3 lg:grid-cols-4"
+      >
+        {metrics.map((metric) => {
+          const Icon = metric.icon;
+          const isPrimary = metric.tone === "primary";
+
+          return (
+            <div
+              key={metric.label}
+              className="min-w-0 rounded-2xl border border-border/60 bg-card p-4 shadow-sm"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                    isPrimary
+                      ? "bg-primary/10 text-primary"
+                      : "bg-secondary/10 text-secondary",
+                  )}
+                >
+                  <Icon
+                    className="h-4.5 w-4.5"
+                    aria-hidden
+                  />
+                </span>
+
+                <div className="min-w-0">
+                  <p className="break-words text-xs font-semibold text-muted-foreground">
+                    {metric.label}
+                  </p>
+
+                  <p
+                    className={cn(
+                      "mt-0.5 break-words text-xl font-black",
+                      isPrimary
+                        ? "text-primary"
+                        : "text-secondary",
+                    )}
+                  >
+                    {metric.value}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </section>
+
+      {/* One trend area + one next-focus area */}
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
+        <PageSectionSurface
+          title={t("student_intelligence.exam_history")}
+          description={t("student_intelligence.exam.score_trend")}
+        >
+          {recentScores.length === 0 ? (
+            <div className="flex min-h-40 items-center justify-center rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 text-center text-sm text-muted-foreground">
+              {t("common.not_available")}
+            </div>
+          ) : (
+            <div
+              dir="ltr"
+              className="flex h-48 min-w-0 items-end gap-2 rounded-2xl border border-border/60 bg-background/70 px-3 pb-3 pt-4 sm:gap-3 sm:px-4"
+            >
+              {recentScores.map((score, index) => {
+                const isLatest =
+                  index === recentScores.length - 1;
+
+                return (
+                  <div
+                    key={`${index}-${score}`}
+                    className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
+                    title={`${Math.round(score)}%`}
+                  >
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold sm:text-xs",
+                        isLatest
+                          ? "text-primary"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {Math.round(score)}%
+                    </span>
+
+                    <div className="flex h-28 w-full items-end overflow-hidden rounded-lg bg-muted/50 p-1">
+                      <div
+                        className={cn(
+                          "w-full rounded-md transition-[height] duration-500",
+                          isLatest
+                            ? "bg-primary"
+                            : "bg-secondary/30",
+                        )}
+                        style={{
+                          height: `${Math.max(6, score)}%`,
+                        }}
+                      />
+                    </div>
+
+                    <span
+                      className={cn(
+                        "text-[10px] font-semibold",
+                        isLatest
+                          ? "text-primary"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      #{index + 1}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </PageSectionSurface>
+
+        <PageSectionSurface
+          title={t("student_intelligence.next_steps")}
+          description={t("analytics.weak_areas")}
+        >
+          <div className="space-y-4">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Target
+                  className="h-4.5 w-4.5"
+                  aria-hidden
+                />
+              </span>
+
+              <div className="min-w-0">
+                <p className="break-words text-base font-black text-foreground">
+                  {focusName}
+                </p>
+
+                {focusAccuracy !== null ? (
+                  <p className="mt-1 text-sm font-semibold text-primary">
+                    {t("analytics.stat_accuracy")}:{" "}
+                    {Math.round(focusAccuracy)}%
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t("common.not_available")}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <p className="rounded-xl bg-muted/40 px-3 py-3 text-sm leading-6 text-muted-foreground">
+              {recommendationText}
+            </p>
+
+            <div className="border-t border-border/60 pt-4">
+              <Button asChild className="w-full">
+                <Link href={focusActionPath}>
+                  {focusCtaLabel}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </PageSectionSurface>
+      </div>
+
+      {/* History is intentionally last in the reading flow */}
+      <RecentActivityList
+        activities={recentActivities.slice(0, 3)}
       />
-
-      <AccountAccessCard />
-
-      {/* Quick Stats Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          {
-            icon: <Trophy className="w-4 h-4" />,
-            label: t("dashboard.stat_questions_done"),
-            value: progressData.totalAttempted,
-            color: "text-primary",
-            bg: "bg-primary/10",
-          },
-          {
-            icon: <Target className="w-4 h-4" />,
-            label: t("analytics.stat_accuracy"),
-            value: `${Math.round(progressData.averageScore)}%`,
-            color: "text-primary",
-            bg: "bg-primary/10",
-          },
-          {
-            icon: <BookOpen className="w-4 h-4" />,
-            label: t("dashboard.stat_lessons_read"),
-            value: progressData.lessonsStartedCount,
-            color: "text-secondary",
-            bg: "bg-secondary/10",
-          },
-          {
-            icon: <Clock3 className="w-4 h-4" />,
-            label: t("dashboard.stat_incomplete_activity"),
-            value: progressData.incompleteActivitiesCount,
-            color: "text-primary",
-            bg: "bg-primary/10",
-          },
-        ].map((stat, i) => (
-          <PageMetricCard
-            key={i}
-            icon={<span className={stat.color}>{stat.icon}</span>}
-            label={stat.label}
-            value={stat.value}
-            tone={stat.color === "text-secondary" ? "default" : "primary"}
-            mobileStacked
-          />
-        ))}
-      </div>
-
-      {theoryCoverage ? (
-        <TheoryCoverageWidget coverage={theoryCoverage} t={t} />
-      ) : null}
-
-      {/* Recent Activity */}
-      <RecentActivityList activities={recentActivities} />
-
-      {theoryTimeouts ? (
-        <TheoryTimeoutWidget
-          analysis={theoryTimeouts}
-          t={t}
-          language={language}
-        />
-      ) : null}
-
-      {/* Performance Overview */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1.35fr,1fr] gap-6">
-        <ProgressOverviewCard data={progressData} />
-        <SignActivityWidget
-          practiceCount={progressData.signPracticeCount}
-          examCount={progressData.signExamCount}
-          randomExamCount={progressData.signRandomExamCount}
-          randomPassedCount={progressData.signRandomExamPassedCount}
-          passedCount={progressData.signPassedCount}
-          t={t}
-        />
-      </div>
-
-      {/* Weak Areas & Category Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <WeakAreasPreview weakAreas={weakAreas} />
-        <CategoryProgressWidget categories={remainingCategoryProgress} t={t} />
-      </div>
-
-      {progressData.weakSigns.length > 0 && (
-        <WeakSignsWidget
-          weakSigns={progressData.weakSigns}
-          t={t}
-          language={language}
-        />
-      )}
-
-      {/* Strong Areas (only shown when user has ≥1 strong category) */}
-      {strongAreas.length > 0 && (
-        <StrongAreasWidget categories={strongAreas} t={t} language={language} />
-      )}
-
-      {/* Recommendations / Next Action */}
-      <QuickActionsSection />
-      <StudentIntelligencePanel data={studentIntelligence} />
     </div>
   );
 }
-
 function DashboardSectionNav({
   activeSection,
 }: {

@@ -82,14 +82,14 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
 
   if (activities.length === 0) {
     return (
-      <Card className="rounded-2xl border border-border bg-card shadow-sm">
-        <CardHeader>
+      <Card className="gap-0 overflow-hidden rounded-2xl border border-border bg-card py-0 shadow-sm">
+                <CardHeader className="border-b border-border/60 py-5">
           <CardTitle className="font-black text-secondary">
             {t("dashboard.recent_activity")}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">
+          <p className="px-5 py-8 text-center text-sm text-muted-foreground">
             {t("dashboard.no_activity")}
           </p>
         </CardContent>
@@ -98,15 +98,15 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
   }
 
   return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm">
-      <CardHeader>
+    <Card className="gap-0 overflow-hidden rounded-2xl border border-border bg-card py-0 shadow-sm">
+              <CardHeader className="border-b border-border/60 py-5">
         <CardTitle className="font-black text-secondary">
           {t("dashboard.recent_activity")}
         </CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="px-0">
+        <div className="divide-y divide-border/60">
           {activities.map((activity) => {
             const cfg = TYPE_CONFIG[activity.type];
             const Icon = cfg.icon;
@@ -147,9 +147,9 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
               <div
                 key={activity.id}
                 data-testid="recent-activity-card"
-                className="group flex min-w-0 flex-col items-center gap-3 rounded-xl border border-border bg-background/60 p-4 text-center transition-colors hover:bg-muted/50 sm:flex-row sm:justify-between sm:text-start"
+                className="group flex min-w-0 flex-col items-stretch gap-3 px-5 py-4 text-start transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="flex min-w-0 max-w-full flex-col items-center gap-2 sm:flex-row sm:gap-3">
+                <div className="flex min-w-0 max-w-full items-center gap-3">
                   <div
                     data-testid="recent-activity-icon"
                     className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10"
@@ -157,7 +157,7 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
 
-                  <div className="min-w-0 max-w-full text-center sm:text-start">
+                  <div className="min-w-0 max-w-full text-start">
                     <p
                       data-testid="recent-activity-name"
                       className="line-clamp-2 min-w-0 max-w-full break-words text-sm font-semibold text-foreground sm:truncate"
@@ -166,7 +166,7 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
                     </p>
                     <div
                       data-testid="recent-activity-meta"
-                      className="mt-1 flex min-w-0 max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:mt-0.5 sm:justify-start"
+                      className="mt-1 flex min-w-0 max-w-full flex-wrap items-center justify-start gap-x-2 gap-y-1 text-xs text-muted-foreground sm:mt-0.5"
                     >
                       <span>
                         {formatActivityDate(activity.date, language)}
@@ -194,7 +194,7 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
                           className={cn(
                             "flex items-center justify-center gap-1 text-xs font-semibold sm:justify-end",
                             activity.passed
-                              ? "text-primary"
+                              ? "text-green-600 dark:text-green-400"
                               : "text-destructive",
                           )}
                         >

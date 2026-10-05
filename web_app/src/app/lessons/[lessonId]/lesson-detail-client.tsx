@@ -573,7 +573,7 @@ export default function LessonDetailClient({
 
             <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2">
               <Button
-                className="h-11 justify-center gap-2 px-3 text-[12px] font-bold shadow-sm shadow-primary/15 sm:text-[13px]"
+                className="h-11 min-w-0 justify-center gap-2 whitespace-normal px-3 text-center text-[12px] font-bold shadow-sm shadow-primary/15 sm:text-[13px]"
                 asChild
               >
                 <Link href="/exam">
@@ -583,7 +583,7 @@ export default function LessonDetailClient({
               </Button>
               <Button
                 variant="outline"
-                className="h-11 justify-center gap-2 px-3 text-[12px] font-bold sm:text-[13px]"
+                className="h-11 min-w-0 justify-center gap-2 whitespace-normal px-3 text-center text-[12px] font-bold sm:text-[13px]"
                 asChild
               >
                 <Link href="/traffic-signs">

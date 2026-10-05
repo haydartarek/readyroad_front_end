@@ -381,9 +381,9 @@ export function ProfilePageContent({
           </PageHeroSurface>
 
           {/* ── Two-column layout ── */}
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-3">
             {/* ── Left sidebar ── */}
-            <div className="space-y-6">
+            <div className="min-w-0 space-y-6">
               {/* Stats */}
               <Card className="border-border/50 shadow-sm">
                 <CardHeader className="pb-3">
@@ -427,7 +427,7 @@ export function ProfilePageContent({
                     {
                       label: t("profile.account_type"),
                       value: (
-                        <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
+                        <Badge className="max-w-full whitespace-normal break-words bg-primary/10 text-center text-primary border-primary/20 text-xs">
                           {roleLabel}
                         </Badge>
                       ),
@@ -445,7 +445,7 @@ export function ProfilePageContent({
                       value: (
                         <Badge
                           className={cn(
-                            "text-xs",
+                            "max-w-full whitespace-normal break-words text-center text-xs",
                             user.emailVerified
                               ? "border-green-200 bg-green-500/10 text-green-600"
                               : "border-amber-200 bg-amber-500/10 text-amber-700",
@@ -460,9 +460,9 @@ export function ProfilePageContent({
                   ].map((row, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2.5"
+                      className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2.5"
                     >
-                      <span className="text-xs text-muted-foreground font-medium">
+                      <span className="min-w-0 break-words text-xs font-medium text-muted-foreground">
                         {row.label}
                       </span>
                       {row.value}
@@ -528,8 +528,8 @@ export function ProfilePageContent({
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="rounded-2xl border border-border/50 bg-muted/25 px-4 py-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="space-y-1">
+                    <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0 space-y-1">
                         <p className="text-sm font-bold text-foreground">
                           {t("profile.google_sign_in")}
                         </p>
@@ -541,7 +541,7 @@ export function ProfilePageContent({
                       </div>
                       <Badge
                         className={cn(
-                          "border text-xs",
+                          "max-w-full whitespace-normal break-words border text-center text-xs",
                           user.googleLinked
                             ? "border-green-500/20 bg-green-500/10 text-green-600"
                             : "border-border/60 bg-background text-muted-foreground",
@@ -567,7 +567,7 @@ export function ProfilePageContent({
             </div>
 
             {/* ── Right main content ── */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="min-w-0 space-y-6 lg:col-span-2">
               {/* Personal Information */}
               <Card className="border-border/50 shadow-sm">
                 <CardHeader className="pb-4">
@@ -782,8 +782,8 @@ export function ProfilePageContent({
                   />
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between rounded-2xl border border-destructive/20 bg-destructive/5 px-5 py-4">
-                    <div>
+                  <div className="flex min-w-0 flex-col items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
                       <p className="font-bold text-destructive text-sm">
                         {t("profile.delete_account")}
                       </p>

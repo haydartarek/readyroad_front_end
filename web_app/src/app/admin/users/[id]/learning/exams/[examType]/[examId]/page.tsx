@@ -9,6 +9,7 @@ import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-fr
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/language-context";
 import apiClient, { logApiError } from "@/lib/api";
+import { resolveRijviaMediaUrl } from "@/lib/image-utils";
 import { type AdminExamDetailResponse, type AdminExamSummary, examTypeKey } from "@/lib/admin-learning";
 import { ClipboardCheck } from "lucide-react";
 
@@ -99,7 +100,13 @@ function QuestionReview({ question, index, language, resultImage, t }: { questio
   const explanation = localized(question, "explanation", language);
   const category = firstLocalized(question, language, "categoryName");
   const difficulty = String(question.difficulty ?? "").toLowerCase();
-  const image = String(question.contentImageUrl ?? question.signImagePath ?? resultImage);
+  const image = resolveRijviaMediaUrl(
+    String(
+      question.contentImageUrl ??
+        question.signImagePath ??
+        resultImage,
+    ),
+  );
   const unanswered = question.answered === false
     || (!selected && question.selectedChoiceId == null && question.selectedOptionId == null);
   return <article className="space-y-3 rounded-xl border border-border/50 p-4">

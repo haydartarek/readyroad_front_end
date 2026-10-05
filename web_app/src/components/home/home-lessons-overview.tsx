@@ -77,15 +77,15 @@ export function HomeLessonsOverview({
   );
 
   return (
-    <section className="border-b border-border/60 bg-muted/20 py-12 sm:py-16 lg:py-20">
+    <section className="border-b border-border/60 bg-muted/20 py-14 sm:py-16 lg:py-20">
       <div className="rv-container">
         <div className="mx-auto max-w-5xl">
-          <div className="mx-auto mb-8 max-w-3xl text-center sm:mb-10">
-            <h2 className="text-balance text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+          <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-12">
+            <h2 className="text-balance text-3xl font-black leading-tight tracking-tight text-secondary sm:text-4xl">
               {t("lessons.page_title")}
             </h2>
 
-            <p className="mt-4 text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+            <p className="mx-auto mt-4 max-w-2xl text-pretty text-base font-semibold leading-7 text-muted-foreground sm:text-lg sm:leading-8">
               {t("lessons.page_subtitle")}
             </p>
           </div>

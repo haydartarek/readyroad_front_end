@@ -18,7 +18,12 @@ export default function ProtectedLayout({
     /^\/exam\/\d+$/.test(pathname);
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-background via-muted/10 to-background">
+    <div
+      className={cn(
+        "flex bg-gradient-to-br from-background via-muted/10 to-background",
+        !pathname.startsWith("/practice/random") && "min-h-screen",
+      )}
+    >
       <UserSidebar />
       <main
         className={cn(

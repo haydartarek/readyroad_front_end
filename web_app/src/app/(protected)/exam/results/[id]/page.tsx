@@ -26,6 +26,7 @@ import {
   localizeExamText,
 } from "@/lib/exam-results-presentation";
 import { cn } from "@/lib/utils";
+import { resolveRijviaMediaUrl } from "@/lib/image-utils";
 import { toast } from "sonner";
 import {
   AlertTriangle,
@@ -907,6 +908,11 @@ function ExamReviewCard({
     t("practice_exam.review_explanation_unavailable"),
   );
 
+  const contentImageUrl =
+    resolveRijviaMediaUrl(
+      answer.contentImageUrl,
+    );
+
   const statusConfig = answer.wasTimeout
     ? {
         icon: <TimerOff className="h-4 w-4 text-amber-600" />,
@@ -975,10 +981,10 @@ function ExamReviewCard({
           </span>
         </div>
 
-        {answer.contentImageUrl && (
+        {contentImageUrl && (
           <ExamQuestionImageFrame variant="wide">
             <Image
-              src={answer.contentImageUrl}
+              src={contentImageUrl}
               alt={questionText || t("practice.question_image_alt")}
               fill
               sizes="(max-width: 640px) 100vw, 520px"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CalendarCheck, CheckCircle2, Trophy, Zap } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 import {
   Dialog,
@@ -13,6 +13,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
+import {
+  PlanIdentity,
+  RecommendedPlanBadge,
+  RECOMMENDED_PAYMENT_PLAN,
+} from "@/components/payment/plan-identity";
 import {
   checkoutRequestId,
   createCheckout,
@@ -34,21 +39,6 @@ const PRICE_BY_PLAN: Record<PaymentPlan, string> = {
   RIJVIA_1_WEEK: "€6.99",
   RIJVIA_4_WEEKS: "€14.99",
 };
-
-function PlanIcon({ plan }: { plan: PaymentPlan }) {
-  const iconClass = "h-4 w-4";
-
-  switch (plan) {
-    case "RIJVIA_3_DAYS":
-      return <Zap className={iconClass} aria-hidden />;
-
-    case "RIJVIA_1_WEEK":
-      return <CalendarCheck className={iconClass} aria-hidden />;
-
-    case "RIJVIA_4_WEEKS":
-      return <Trophy className={iconClass} aria-hidden />;
-  }
-}
 
 export function FreeExamPaywall({
   open,
@@ -238,8 +228,7 @@ export function FreeExamPaywall({
               const selected =
                 selectedPlan === plan;
 
-              const recommended =
-                plan === "RIJVIA_1_WEEK";
+              const recommended = plan === RECOMMENDED_PAYMENT_PLAN;
 
               return (
                 <button
@@ -258,20 +247,19 @@ export function FreeExamPaywall({
                   ].join(" ")}
                 >
                   {recommended ? (
-                    <span className="absolute -top-2 end-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-black text-primary-foreground md:-top-3 md:end-3 md:px-2.5 md:py-1 md:text-[11px]">
-                      {t("home.pricing.recommended")}
-                    </span>
+                    <RecommendedPlanBadge
+                      label={t("home.pricing.recommended")}
+                      variant="compact"
+                    />
                   ) : null}
 
-                  <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 md:gap-2.5">
-                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-primary/15 bg-primary/10 text-primary md:h-7 md:w-7">
-                      <PlanIcon plan={plan} />
-                    </span>
-
-                    <p className="truncate text-sm font-black md:text-base">
-                      {t(`payment.plan.${plan}`)}
-                    </p>
-                  </div>
+                  <PlanIdentity
+                    plan={plan}
+                    label={t(`payment.plan.${plan}`)}
+                    featured={recommended}
+                    variant="paywall"
+                    labelAs="p"
+                  />
 
                   <p className="hidden text-sm leading-5 text-muted-foreground md:mt-2 md:block">
                     {t(`home.pricing.tagline.${plan}`)}

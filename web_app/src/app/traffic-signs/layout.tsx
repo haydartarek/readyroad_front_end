@@ -1,7 +1,5 @@
 import { getRequestLocale } from "@/lib/server/request-locale";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { SeoIntentSection } from "@/components/seo/seo-intent-section";
 import { getTrafficSignsSeoCopy } from "@/lib/learning-seo-copy";
 import {
   DEFAULT_APP_URL,
@@ -55,16 +53,12 @@ export default async function TrafficSignsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = (await headers()).get("x-Rijvia-pathname") || "/traffic-signs";
 
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
         {children}
-        {pathname === "/traffic-signs" ? (
-          <SeoIntentSection page="trafficSigns" />
-        ) : null}
-      </main>
+</main>
     </div>
   );
 }

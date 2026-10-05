@@ -76,16 +76,16 @@ export function FeaturesSection() {
   const features = primaryFeatures;
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/20 py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/20 py-14 sm:py-16 lg:py-20">
       <div className="pointer-events-none absolute -top-44 start-1/2 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="container relative mx-auto px-4">
-        <div className="mb-10 text-center lg:mb-14">
-          <h2 data-testid="home-features-heading" className="mx-auto mb-4 w-full text-balance text-3xl font-extrabold leading-snug tracking-normal text-secondary md:text-4xl lg:w-2/3 lg:text-5xl">
+        <div className="mb-10 text-center sm:mb-12">
+          <h2 data-testid="home-features-heading" className="mx-auto max-w-3xl text-balance text-3xl font-black leading-tight tracking-tight text-secondary sm:text-4xl">
             {t("home.features.title")}
           </h2>
 
-          <p className="mx-auto max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
             {t("home.features.subtitle")}
           </p>
         </div>
@@ -124,26 +124,28 @@ export function FeaturesSection() {
                     </>
                   )}
 
-                  <CardHeader className="relative pb-2 pt-7">
-                    <div
-                      className={[
-                        "mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border shadow-sm",
-                        feature.iconWrap,
-                      ].join(" ")}
-                    >
-                      <Icon
-                        className={["h-5 w-5", feature.iconTone].join(" ")}
-                        aria-hidden
-                      />
-                    </div>
+                  <CardHeader className="relative pb-2 pt-5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className={[
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-sm",
+                          feature.iconWrap,
+                        ].join(" ")}
+                      >
+                        <Icon
+                          className={["h-4 w-4", feature.iconTone].join(" ")}
+                          aria-hidden
+                        />
+                      </div>
 
-                    <CardTitle className="text-xl font-bold tracking-tight text-secondary">
-                      {feature.title}
-                    </CardTitle>
+                      <CardTitle className="min-w-0 text-lg font-bold leading-6 tracking-tight text-secondary sm:text-xl sm:leading-7">
+                        {feature.title}
+                      </CardTitle>
+                    </div>
                   </CardHeader>
 
                   <CardContent className="relative flex flex-1 flex-col pb-7 pt-1">
-                    <p className="min-h-[4.5rem] text-sm font-medium leading-6 text-muted-foreground">
+                    <p className="min-h-[4.5rem] text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
                       {feature.description}
                     </p>
 

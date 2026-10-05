@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "@/components/localized-link";
 import { ArrowRight } from "lucide-react";
@@ -48,7 +48,7 @@ function SecondaryAction({
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 text-sm font-semibold text-secondary-foreground/75 transition-colors hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
+      className="inline-flex h-12 min-w-0 items-center justify-center gap-2 rounded-xl border border-secondary-foreground/25 bg-secondary-foreground/5 px-8 text-sm font-semibold text-secondary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-secondary-foreground/40 hover:bg-secondary-foreground/10 hover:shadow-md active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
     >
       {label}
       <ArrowRight
@@ -71,7 +71,7 @@ export function ExamCta() {
   return (
     <section
       id="exam-cta"
-      className="relative overflow-hidden bg-secondary py-16 lg:py-24"
+      className="relative overflow-hidden bg-secondary py-14 sm:py-16 lg:py-20"
     >
       <div className="pointer-events-none absolute -top-44 end-0 h-[34rem] w-[34rem] rounded-full bg-primary/12 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-44 start-0 h-[30rem] w-[30rem] rounded-full bg-primary/8 blur-3xl" />
@@ -82,11 +82,11 @@ export function ExamCta() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-secondary-foreground/10 via-transparent to-transparent" />
 
             <div className="relative">
-              <h2 className="mx-auto max-w-2xl text-balance text-3xl font-bold tracking-tight text-secondary-foreground md:text-4xl lg:text-5xl">
+              <h2 className="mx-auto max-w-3xl text-balance text-3xl font-black leading-tight tracking-tight text-secondary-foreground sm:text-4xl">
                 {t("home.quiz_cta.title")}
               </h2>
 
-              <p className="mx-auto mt-4 max-w-2xl text-pretty text-base font-normal leading-relaxed text-secondary-foreground/70 sm:text-lg">
+              <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-7 text-secondary-foreground/70 sm:text-lg sm:leading-8">
                 {t("home.quiz_cta.subtitle")}
               </p>
 
@@ -94,7 +94,7 @@ export function ExamCta() {
                 {isLoading ? (
                   <CtaSkeleton />
                 ) : (
-                  <div className="flex flex-col items-center gap-4">
+                  <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                     <PrimaryAction
                       href={primaryHref}
                       label={primaryLabel}

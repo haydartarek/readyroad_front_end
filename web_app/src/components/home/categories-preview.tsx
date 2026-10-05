@@ -139,17 +139,17 @@ export function CategoriesPreview() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-14 sm:py-16 lg:py-20">
       <div className="pointer-events-none absolute -top-44 start-1/2 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="container relative mx-auto px-4">
-        <div className="mb-10 flex flex-col gap-5 lg:mb-14 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-10 flex flex-col gap-5 sm:mb-12 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <h2 className="mb-4 text-balance text-3xl font-extrabold tracking-tight text-secondary md:text-4xl lg:text-5xl">
+            <h2 className="text-balance text-3xl font-black leading-tight tracking-tight text-secondary sm:text-4xl">
               {t("home.categories.title")}
             </h2>
 
-            <p className="text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+            <p className="mt-4 text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
               {t("home.categories.subtitle")}
             </p>
           </div>
@@ -237,7 +237,7 @@ export function CategoriesPreview() {
                     </span>
 
                     <span className="min-w-0 flex-1">
-                      <span className="block text-base font-bold leading-snug tracking-tight text-secondary sm:text-lg">
+                      <span className="block text-lg font-bold leading-6 tracking-tight text-secondary sm:text-xl sm:leading-7">
                         {categoryName}
                       </span>
 

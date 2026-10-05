@@ -303,18 +303,18 @@ export default function TrafficSignDetailClient({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
-      <div className="container mx-auto px-4 py-8 md:py-10 space-y-6 md:space-y-8">
+      <div className="container mx-auto space-y-4 px-4 py-5 md:space-y-5 md:py-7">
         <Breadcrumb items={breadcrumbItems} />
 
-        <PageHeroSurface>
-          <div className="grid gap-8 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-center">
-            <div className="rounded-[1.9rem] border border-border/60 bg-background/80 p-5 shadow-sm">
-              <div className="rounded-[1.5rem] border border-border/60 bg-muted/20 p-5">
-                <div className="relative mx-auto aspect-square w-full max-w-[280px]">
+        <PageHeroSurface contentClassName="px-4 py-4 sm:px-5 sm:py-5">
+          <div className="grid gap-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:items-center">
+            <div className="rounded-[1.5rem] border border-border/60 bg-background/80 p-3 shadow-sm">
+              <div className="rounded-[1.25rem] border border-border/60 bg-muted/20 p-3">
+                <div className="relative mx-auto aspect-square w-full max-w-[220px]">
                   <SignImage
                     src={resolveTrafficSignImage(sign)}
                     alt={currentName}
-                    className="object-contain p-4"
+                    className="object-contain p-3"
                     preload
                   />
                 </div>
@@ -323,7 +323,7 @@ export default function TrafficSignDetailClient({
 
             <div className="space-y-5">
               <span
-                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${style.chip}`}
+                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.chip}`}
               >
                 {info.title[currentLanguage]}
               </span>
@@ -335,7 +335,7 @@ export default function TrafficSignDetailClient({
                 {currentSummary ? (
                   <p
                     dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                    className="max-w-3xl text-base leading-8 text-muted-foreground md:text-lg"
+                    className="max-w-3xl text-sm leading-7 text-muted-foreground md:text-base"
                   >
                     {currentSummary}
                   </p>
@@ -345,23 +345,23 @@ export default function TrafficSignDetailClient({
           </div>
         </PageHeroSurface>
 
-        <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.25fr)_360px]">
-          <div className="min-w-0 space-y-6">
-            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl font-black">
+        <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.35fr)_320px]">
+          <div className="min-w-0 space-y-4">
+            <Card className="gap-3 rounded-[1.5rem] border border-border/60 py-4 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-black sm:text-xl">
                   {t("sign_detail.overview")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="divide-y divide-border/60">
-                <section className="pb-6">
+                <section className="pb-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
                     {t("sign_detail.meaning")}
                   </p>
                   {currentDescription ? (
                     <p
                       dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                      className="mt-3 whitespace-pre-line text-base leading-8 text-foreground"
+                      className="mt-2 whitespace-pre-line text-sm leading-7 text-foreground sm:text-base"
                     >
                       {currentDescription}
                     </p>
@@ -372,28 +372,28 @@ export default function TrafficSignDetailClient({
                   )}
                 </section>
 
-                <section className="py-6">
+                <section className="py-4">
                   <h2 className="flex items-center gap-2 text-base font-black text-foreground">
-                    <Route className="h-5 w-5 text-primary" />
+                    <Route className="h-4 w-4 text-primary" />
                     {t("sign_detail.guidance")}
                   </h2>
                   <p
                     dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                    className="mt-3 whitespace-pre-line text-base leading-8 text-foreground"
+                    className="mt-2 whitespace-pre-line text-sm leading-7 text-foreground sm:text-base"
                   >
                     {currentDriverGuidance}
                   </p>
                 </section>
 
                 {currentExceptions.length > 0 ? (
-                  <section className="pt-6">
+                  <section className="pt-4">
                     <h2 className="flex items-center gap-2 text-base font-black text-foreground">
-                      <CircleAlert className="h-5 w-5 text-amber-600" />
+                      <CircleAlert className="h-4 w-4 text-amber-600" />
                       {t("sign_detail.exceptions")}
                     </h2>
                     <ul
                       dir={currentLanguage === "ar" ? "rtl" : "ltr"}
-                      className="mt-3 space-y-3 text-base leading-8 text-foreground"
+                      className="mt-2 space-y-2 text-sm leading-7 text-foreground sm:text-base"
                     >
                       {currentExceptions.map((exception) => (
                         <li key={exception} className="flex items-start gap-3">
@@ -411,25 +411,25 @@ export default function TrafficSignDetailClient({
             </Card>
           </div>
 
-          <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
-            <Card className="rounded-[1.75rem] border border-border/60 shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl font-black">
-                  <Trophy className="h-5 w-5 text-primary" />
+          <div className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+            <Card className="gap-3 rounded-[1.5rem] border border-border/60 py-4 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg font-black sm:text-xl">
+                  <Trophy className="h-4 w-4 text-primary" />
                   {t("sign_quiz.quiz_section_title")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-2">
+              <CardContent className="space-y-3">
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <BookOpen className="h-4 w-4 text-primary" />
                         <p className="font-semibold text-foreground">
                           {t("sign_quiz.practice_mode")}
                         </p>
                       </div>
-                      <p className="text-sm leading-6 text-muted-foreground">
+                      <p className="text-sm leading-5 text-muted-foreground">
                         {t("sign_quiz.practice_desc")}
                       </p>
                     </div>
@@ -441,7 +441,7 @@ export default function TrafficSignDetailClient({
                     )}
                   </div>
 
-                  <Button className="mt-4 w-full rounded-xl" asChild>
+                  <Button className="mt-3 h-9 w-full rounded-xl text-sm" asChild>
                     <Link href={`/traffic-signs/${routeCode}/practice`}>
                       {signProgress?.practiceStarted &&
                       !signProgress.practiceCompleted
@@ -453,13 +453,13 @@ export default function TrafficSignDetailClient({
                   </Button>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-2">
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1.5">
                       <p className="font-semibold text-foreground">
                         {t("sign_quiz.exam_label")}
                       </p>
-                      <p className="text-sm leading-6 text-muted-foreground">
+                      <p className="text-sm leading-5 text-muted-foreground">
                         {examSummaryText}
                       </p>
                     </div>
@@ -475,7 +475,7 @@ export default function TrafficSignDetailClient({
 
                   <Button
                     variant="outline"
-                    className="mt-4 w-full rounded-xl"
+                    className="mt-3 h-9 w-full rounded-xl text-sm"
                     asChild
                   >
                     <Link href={`/traffic-signs/${routeCode}/exam/1`}>

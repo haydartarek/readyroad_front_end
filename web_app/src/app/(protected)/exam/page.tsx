@@ -6,9 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   PageHeroDescription,
-  PageHeroSurface,
   PageHeroTitle,
-  PageMetricCard,
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -182,18 +180,22 @@ export default function TheoryExamPage() {
 
   return (
     <div
-      className="min-h-[calc(100vh-74px)] bg-background"
+      className="min-h-[calc(100vh-74px)] bg-gradient-to-b from-primary/5 via-background to-background"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
-          <PageHeroSurface>
-            <div className="max-w-3xl space-y-6">
-              <div className="space-y-3">
-                <PageHeroTitle>
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:py-12">
+        <div className="space-y-6">
+          <section
+            data-testid="exam-intro-surface"
+            className="rounded-[28px] border border-primary/10 bg-card/95 px-5 py-6 shadow-sm ring-1 ring-primary/[0.03] sm:px-7 sm:py-8"
+          >
+            <div className="mx-auto max-w-4xl space-y-7">
+              <div className="space-y-3 text-center">
+                <PageHeroTitle className="text-secondary sm:text-4xl">
                   {t("practice_exam.intro_title")}
                 </PageHeroTitle>
-                <PageHeroDescription className="max-w-2xl">
+
+                <PageHeroDescription className="mx-auto max-w-3xl text-pretty text-center">
                   {t("practice_exam.intro_subtitle")}
                 </PageHeroDescription>
               </div>
@@ -202,30 +204,56 @@ export default function TheoryExamPage() {
                 data-testid="exam-summary-grid"
                 className="grid gap-3 sm:grid-cols-3"
               >
-                <PageMetricCard
-                  icon={<ClipboardList className="h-5 w-5" />}
-                  value={String(EXAM_RULES.TOTAL_QUESTIONS)}
-                  label={t("exam.total_questions")}
-                  tone="primary"
-                  mobileStacked
-                />
-                <PageMetricCard
-                  icon={<Clock3 className="h-5 w-5" />}
-                  value={t("exam.duration_value", {
-                    minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
-                    seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
-                  })}
-                  label={t("exam.duration")}
-                  tone="primary"
-                  mobileStacked
-                />
-                <PageMetricCard
-                  icon={<Trophy className="h-5 w-5" />}
-                  value={`${EXAM_RULES.PASSING_SCORE}/${EXAM_RULES.TOTAL_QUESTIONS}`}
-                  label={t("exam.pass_score")}
-                  tone="primary"
-                  mobileStacked
-                />
+                <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-background/80 p-4 shadow-sm">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+                    <ClipboardList className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      {t("exam.total_questions")}
+                    </p>
+
+                    <p className="mt-1 break-words text-xl font-black leading-tight text-secondary sm:text-2xl">
+                      {String(EXAM_RULES.TOTAL_QUESTIONS)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-background/80 p-4 shadow-sm">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+                    <Clock3 className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      {t("exam.duration")}
+                    </p>
+
+                    <p className="mt-1 break-words text-xl font-black leading-tight text-secondary sm:text-2xl">
+                      {t("exam.duration_value", {
+                        minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
+                        seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-background/80 p-4 shadow-sm">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+                    <Trophy className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      {t("exam.pass_score")}
+                    </p>
+
+                    <p className="mt-1 break-words text-xl font-black leading-tight text-secondary sm:text-2xl">
+                      {`${EXAM_RULES.PASSING_SCORE}/${EXAM_RULES.TOTAL_QUESTIONS}`}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {loadError ? (
@@ -235,11 +263,11 @@ export default function TheoryExamPage() {
                 </Alert>
               ) : null}
 
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
                 <Button
                   data-testid="exam-start-button"
                   size="lg"
-                  className="h-11 min-h-11 w-full flex-none gap-2 py-2.5 sm:w-auto sm:flex-1"
+                  className="h-12 min-h-12 w-full gap-2 rounded-full bg-primary px-8 font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md active:translate-y-0"
                   disabled={isAuthLoading || isChecking || isStarting}
                   onClick={() => void startOrResumeExam()}
                 >
@@ -250,6 +278,7 @@ export default function TheoryExamPage() {
                   ) : (
                     <Play className="h-4 w-4" />
                   )}
+
                   <span data-testid="exam-start-button-label">
                     {isAuthLoading || isChecking || isStarting
                       ? t("exam.starting")
@@ -258,11 +287,13 @@ export default function TheoryExamPage() {
                         : t("practice_exam.start_btn")}
                   </span>
                 </Button>
+
                 <Button
                   data-testid="exam-back-button"
                   variant="outline"
                   size="lg"
                   asChild
+                  className="h-12 w-full rounded-full border-primary/15 bg-background/85 px-7 font-semibold text-secondary shadow-sm ring-1 ring-primary/10 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md active:translate-y-0 sm:w-auto"
                 >
                   <Link href="/practice">
                     {t("practice_exam.back_practice")}
@@ -270,26 +301,30 @@ export default function TheoryExamPage() {
                 </Button>
               </div>
             </div>
-          </PageHeroSurface>
+          </section>
 
           <PageSectionSurface
+            className="rounded-[28px] border-primary/10 bg-card/80 shadow-sm ring-1 ring-primary/[0.03]"
             title={t("exam.rules.title")}
             description={t("exam.rules.subtitle")}
           >
             <aside>
-              <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <ExamRule
                   icon={<CheckCircle2 className="h-5 w-5" />}
                   text={t("exam.rules.content.totalQuestions")}
                 />
+
                 <ExamRule
                   icon={<Timer className="h-5 w-5" />}
                   text={t("exam.rules.content.timeLimit")}
                 />
+
                 <ExamRule
                   icon={<Trophy className="h-5 w-5" />}
                   text={t("exam.rules.content.passScore")}
                 />
+
                 <ExamRule
                   icon={<ClipboardList className="h-5 w-5" />}
                   text={t("exam.rules.content.submission")}
@@ -311,11 +346,17 @@ function ExamRule({
   text: string;
 }) {
   return (
-    <div className="flex items-start gap-3 border-b border-border/70 pb-4 last:border-b-0">
-      <div className="mt-0.5 text-primary" aria-hidden>
+    <div className="flex min-w-0 items-start gap-3 rounded-2xl border border-primary/10 bg-background/70 p-4">
+      <div
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10"
+        aria-hidden
+      >
         {icon}
       </div>
-      <p className="text-sm font-medium leading-6 text-foreground">{text}</p>
+
+      <p className="min-w-0 pt-1 text-sm font-medium leading-6 text-secondary">
+        {text}
+      </p>
     </div>
   );
 }

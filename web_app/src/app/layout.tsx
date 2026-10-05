@@ -34,7 +34,7 @@ import { getRequestLocale } from "@/lib/server/request-locale";
 // ─── Typography ──────────────────────────────────────────
 
 const tajawal = Tajawal({
-  weight: "500",
+  weight: ["500", "700"],
   variable: "--font-tajawal",
   subsets: ["arabic", "latin"],
   display: "swap",

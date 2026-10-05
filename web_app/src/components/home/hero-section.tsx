@@ -44,25 +44,14 @@ function GuestCtas({
 }
 
 function MemberCtas({
-  primary,
   secondary,
 }: {
-  primary: string;
   secondary: string;
 }) {
   return (
     <>
-      <Button size="lg" className={CTA_CLASS} asChild>
+      <Button size="lg" className={`${CTA_CLASS} h-14 px-9 text-base sm:min-w-[220px]`} asChild>
         <Link href={ROUTES.EXAM}>{secondary}</Link>
-      </Button>
-
-      <Button
-        size="lg"
-        variant="outline"
-        className={`${CTA_CLASS} border-border bg-background text-foreground hover:bg-muted/50`}
-        asChild
-      >
-        <Link href={ROUTES.LESSONS}>{primary}</Link>
       </Button>
     </>
   );
@@ -80,6 +69,16 @@ export function HeroSection() {
   return (
     <section className="relative isolate overflow-hidden border-b border-border/60 bg-background py-12 sm:py-16 lg:py-20 xl:py-24">
       <div
+        className="pointer-events-none absolute inset-0 -z-20"
+        style={{
+          backgroundColor: "hsl(var(--secondary))",
+          opacity: 0.06,
+        }}
+        aria-hidden="true"
+      />
+
+
+      <div
         className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
         aria-hidden="true"
       >
@@ -92,7 +91,7 @@ export function HeroSection() {
         <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
           <div
             dir="ltr"
-            className="inline-flex items-baseline text-[clamp(4rem,10vw,8.5rem)] font-black leading-none tracking-[-0.065em] text-foreground"
+            className="inline-flex items-baseline text-[clamp(4rem,10vw,8.5rem)] font-[950] leading-none tracking-[-0.065em] text-foreground"
           >
             <span className="text-primary">R</span>
             <span>ij</span>
@@ -100,23 +99,22 @@ export function HeroSection() {
             <span>ia</span>
           </div>
 
-          <h1 className="mt-6 max-w-4xl text-balance text-[clamp(2.1rem,5vw,4.35rem)] font-black leading-[1.08] tracking-normal text-foreground">
+            <h1 className="mt-6 max-w-4xl text-balance text-[clamp(2.1rem,5vw,4.35rem)] font-black leading-[1.08] tracking-normal text-foreground">
             {headline}{" "}
             <span className="text-primary">
-              {t("home.hero.headline_highlight")}
+            {t("home.hero.headline_highlight")}
             </span>
-          </h1>
+            </h1>
 
-          <p className="mt-5 max-w-3xl text-pretty text-base font-normal leading-7 text-muted-foreground sm:mt-6 sm:text-lg sm:leading-8">
+            <p className="mt-5 max-w-3xl text-pretty text-base font-bold leading-7 text-foreground/70 sm:mt-6 sm:text-lg sm:leading-8">
             {t("home.hero.subtitle")}
-          </p>
+            </p>
 
           <div className="mt-8 flex w-full max-w-xl flex-col justify-center gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center">
             {isLoading ? (
               <CtaSkeleton />
             ) : isAuthenticated ? (
               <MemberCtas
-                primary={t("home.hero.cta_primary")}
                 secondary={t("home.hero.cta_secondary")}
               />
             ) : (

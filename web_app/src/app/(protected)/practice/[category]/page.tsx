@@ -9,13 +9,7 @@ import { SignImage } from "@/components/traffic-signs/sign-image";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  PageHeroDescription,
-  PageHeroSurface,
-  PageHeroTitle,
-  PageMetricCard,
-  PageSectionSurface,
-} from "@/components/ui/page-surface";
+import { PageSectionSurface } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import apiClient, { isServiceUnavailable, logApiError } from "@/lib/api";
@@ -186,16 +180,7 @@ export default function PracticeSignsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryCode, isAuthenticated, language]);
 
-  const localizedCategoryName = groupInfo.info.title[lang] || categoryCode;
   const localizedCategoryDescription = groupInfo.info.description[lang];
-  const completedCount = signs.filter((sign) => {
-    const routeCode = sign.routeCode ?? sign.signCode;
-    return progress[routeCode]?.practiceCompleted;
-  }).length;
-  const passedSignsCount = signs.filter((sign) => {
-    const routeCode = sign.routeCode ?? sign.signCode;
-    return progress[routeCode]?.exam1Passed;
-  }).length;
 
   if (isLoading) {
     return <LoadingSpinner message={t("practice.loading")} />;
@@ -272,97 +257,6 @@ export default function PracticeSignsPage() {
           </Alert>
         )}
 
-        <PageHeroSurface>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full px-4 font-semibold"
-              onClick={() => router.push("/practice")}
-            >
-              {isRtl ? (
-                <ArrowRight className="me-2 h-4 w-4" />
-              ) : (
-                <ArrowLeft className="me-2 h-4 w-4" />
-              )}
-              {t("practice.signs.back")}
-            </Button>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold",
-                  groupInfo.style.chip,
-                )}
-              >
-                {groupInfo.info.displayKey ?? categoryCode}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <div
-                  className={cn(
-                    "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold",
-                    groupInfo.style.chip,
-                  )}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {localizedCategoryName}
-                </div>
-
-                <PageHeroTitle className="max-w-3xl text-balance">
-                  {localizedCategoryName}
-                </PageHeroTitle>
-                <PageHeroDescription className="max-w-3xl text-pretty">
-                  {localizedCategoryDescription || t("practice.signs.choose")}
-                </PageHeroDescription>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant="secondary"
-                  className="rounded-full border-0 bg-background/80 px-3 py-1.5 text-foreground shadow-sm"
-                >
-                  {t("practice.signs.count", { count: signs.length })}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="rounded-full border-0 bg-primary/10 px-3 py-1.5 text-primary"
-                >
-                  {t("practice.hub.per_sign_questions")}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="rounded-full border-0 bg-amber-500/10 px-3 py-1.5 text-amber-700"
-                >
-                  {t("practice.hub.three_levels")}
-                </Badge>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-              <PageMetricCard
-                icon={<BookOpen className="h-4 w-4" />}
-                label={t("practice.signs.total_signs")}
-                value={String(signs.length)}
-              />
-              <PageMetricCard
-                icon={<CheckCircle2 className="h-4 w-4" />}
-                label={t("practice.signs.completed_practice")}
-                value={String(completedCount)}
-              />
-              <PageMetricCard
-                icon={<Trophy className="h-4 w-4" />}
-                label={t("practice.signs.passed_signs")}
-                value={String(passedSignsCount)}
-              />
-            </div>
-          </div>
-        </PageHeroSurface>
-
         {signs.length === 0 ? (
           <PageSectionSurface className="mt-8 rounded-[2rem] border-dashed text-center">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -430,12 +324,6 @@ export default function PracticeSignsPage() {
                         )}
                       >
                         <div className="mb-3 flex items-start justify-between gap-3">
-                          <Badge
-                            variant="outline"
-                            className="rounded-full border-border/60 bg-background/80 px-2.5 py-1 text-[11px] font-mono shadow-sm"
-                          >
-                            {sign.signCode}
-                          </Badge>
 
                           <div className="flex flex-wrap items-center justify-end gap-1.5">
                             <StatusChip

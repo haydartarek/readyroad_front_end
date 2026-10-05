@@ -1,12 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CalendarCheck, Trophy, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  PlanIdentity,
+  RecommendedPlanBadge,
+  RECOMMENDED_PAYMENT_PLAN,
+} from "@/components/payment/plan-identity";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { checkoutRequestId, createCheckout, forgetCheckoutRequest, PAYMENTS_ENABLED, PAYMENT_PLANS, type PaymentPlan } from "@/services/paymentService";
 
 const PRICE_BY_PLAN: Record<PaymentPlan, string> = {
@@ -14,21 +18,6 @@ const PRICE_BY_PLAN: Record<PaymentPlan, string> = {
   RIJVIA_1_WEEK: "€6.99",
   RIJVIA_4_WEEKS: "€14.99",
 };
-
-function PlanIcon({ plan }: { plan: PaymentPlan }) {
-  const iconClass = "h-4 w-4";
-
-  switch (plan) {
-    case "RIJVIA_3_DAYS":
-      return <Zap className={iconClass} aria-hidden />;
-
-    case "RIJVIA_1_WEEK":
-      return <CalendarCheck className={iconClass} aria-hidden />;
-
-    case "RIJVIA_4_WEEKS":
-      return <Trophy className={iconClass} aria-hidden />;
-  }
-}
 
 export function PlanSelection() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -73,7 +62,7 @@ export function PlanSelection() {
       {error && <p role="alert" className="mt-6 rounded-xl border border-destructive/40 p-4">{t(error)}</p>}
       <div className="mt-8 grid gap-5 md:grid-cols-3">
         {PAYMENT_PLANS.map((plan) => {
-          const featured = plan === "RIJVIA_1_WEEK";
+          const featured = plan === RECOMMENDED_PAYMENT_PLAN;
 
           return (
             <Card
@@ -84,19 +73,20 @@ export function PlanSelection() {
               ].join(" ")}
             >
               {featured ? (
-                <span className="absolute end-4 top-4 rounded-full bg-primary px-2.5 py-1 text-xs font-black text-primary-foreground">
-                  {t("home.pricing.recommended")}
-                </span>
+                <RecommendedPlanBadge
+                  label={t("home.pricing.recommended")}
+                  variant="corner"
+                />
               ) : null}
 
-              <CardHeader className="items-center text-center">
-                <span className="grid h-9 w-9 place-items-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
-                  <PlanIcon plan={plan} />
-                </span>
-
-                <CardTitle className="text-center text-2xl font-black">
-                  {t(`payment.plan.${plan}`)}
-                </CardTitle>
+              <CardHeader className="text-center">
+                <PlanIdentity
+                  plan={plan}
+                  label={t(`payment.plan.${plan}`)}
+                  featured={featured}
+                  variant="selection"
+                  labelAs="h3"
+                />
               </CardHeader>
 
               <CardContent className="text-center">

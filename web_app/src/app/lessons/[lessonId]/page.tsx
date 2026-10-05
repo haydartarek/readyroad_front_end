@@ -10,7 +10,6 @@ import RelatedLearningArticles from "@/components/content/related-learning-artic
 import { localizePathname } from "@/lib/i18n-routing";
 import { getRelatedPublicArticles } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
-import { SeoIntentSection } from "@/components/seo/seo-intent-section";
 
 type LessonDetailPageProps = Readonly<{
   params: Promise<{ lessonId: string }>;
@@ -51,7 +50,6 @@ export default async function LessonDetailPage({
       {lesson && (
         <LessonKeywordSupport lessonCode={lesson.lessonCode} locale={locale} />
       )}
-      {lesson && <SeoIntentSection page="lessons" />}
       <RelatedLearningArticles articles={relatedArticles} locale={locale} />
     </>
   );

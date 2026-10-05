@@ -50,27 +50,27 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
         return (
           <Card
             key={lesson.id}
-            className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-border/50 bg-card/90 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/10"
+            className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-border/50 bg-card/90 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/10"
           >
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/70 via-secondary/50 to-primary/20 opacity-70" />
-            <CardContent className="flex flex-1 flex-col p-6">
-              <div className="mb-5 flex items-start justify-between gap-3">
-                <div className="space-y-2">
+            <CardContent className="flex flex-1 flex-col p-4 sm:p-5">
+              <div className="mb-3 flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge
                     variant="outline"
-                    className="rounded-full border-primary/20 bg-primary/5 px-3 py-1 text-sm font-bold text-primary"
+                    className="rounded-full border-primary/20 bg-primary/5 px-2.5 py-0.5 text-xs font-bold text-primary"
                   >
                     {t("lessons.lesson")} {lesson.displayOrder}
                   </Badge>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     {(lesson.totalPages ?? 0) > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
                         <BookOpen className="h-3 w-3" />
                         {lesson.totalPages} {t("lessons.pages")}
                       </span>
                     )}
                     {lesson.estimatedMinutes > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
                         <Clock className="h-3 w-3" />
                         {lesson.estimatedMinutes} {t("lessons.minutes_short")}
                       </span>
@@ -80,20 +80,20 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
 
               </div>
 
-              <h3 className="mb-3 line-clamp-2 text-xl font-black tracking-tight text-foreground">
+              <h3 className="mb-2 line-clamp-2 text-lg font-black tracking-tight text-foreground sm:text-xl">
                 {title}
               </h3>
 
-              <p className="mb-6 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-muted-foreground">
+              <p className="mb-4 line-clamp-3 min-h-[3.75rem] text-sm leading-5 text-muted-foreground">
                 {description}
               </p>
 
-              <div className="mt-auto flex items-center justify-between gap-3">
+              <div className="mt-auto flex items-center justify-between gap-2">
                 <div className="text-xs text-muted-foreground">
                   {t("lessons.card_cta_hint")}
                 </div>
                 <Button
-                  className="rounded-full px-5 shadow-sm shadow-primary/15"
+                  className="h-9 rounded-full px-4 text-sm shadow-sm shadow-primary/15"
                   asChild
                 >
                   <Link

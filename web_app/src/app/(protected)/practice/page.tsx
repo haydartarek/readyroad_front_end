@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +20,7 @@ import {
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
-import { getCategoryVisual } from "@/lib/category-visuals";
+import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { buildLearningLoginHref } from "@/lib/auth-return-url";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -29,7 +31,6 @@ import {
   TRAFFIC_SIGN_GROUP_ORDER,
 } from "@/lib/traffic-sign-presentation";
 import type { TrafficSign } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import {
   BookOpen,
   CheckCircle2,
@@ -48,8 +49,72 @@ interface CategoryCardData {
   signCount: number;
   practiceCompleted: number;
   passedSigns: number;
+  representativeImage: string | null;
 }
 
+const PRACTICE_CATEGORY_TITLES: Record<
+  Lang,
+  Partial<Record<string, string>>
+> = {
+  ar: {
+    A: "علامات الخطر",
+    B: "علامات الأولوية",
+    C: "علامات المنع",
+    D: "العلامات الإجبارية",
+    E: "علامات الوقوف والتوقف",
+    F: "العلامات الإرشادية",
+  },
+  en: {
+    A: "Danger signs",
+    B: "Priority signs",
+    C: "Prohibition signs",
+    D: "Mandatory signs",
+    E: "Parking and stopping signs",
+    F: "Information signs",
+  },
+  nl: {
+    A: "Gevaarsborden",
+    B: "Voorrangsborden",
+    C: "Verbodsborden",
+    D: "Gebodsborden",
+    E: "Stilstaan- en parkeerborden",
+    F: "Aanwijzingsborden",
+  },
+  fr: {
+    A: "Signaux de danger",
+    B: "Signaux de priorité",
+    C: "Signaux d’interdiction",
+    D: "Signaux d’obligation",
+    E: "Signaux d’arrêt et de stationnement",
+    F: "Signaux d’indication",
+  },
+};
+
+function getPracticeCategoryTitle(
+  code: string,
+  language: Lang,
+  fallback: string,
+): string {
+  return PRACTICE_CATEGORY_TITLES[language][code] ?? fallback;
+}
+
+function getRepresentativeSignImage(signs: TrafficSign[]): string | null {
+  for (const sign of signs) {
+    const imageUrl = resolveTrafficSignImage(sign);
+
+    if (!imageUrl) {
+      continue;
+    }
+
+    const signPathIndex = imageUrl.indexOf("/images/signs/");
+
+    return signPathIndex >= 0
+      ? imageUrl.slice(signPathIndex)
+      : imageUrl;
+  }
+
+  return null;
+}
 function LoadingSpinner({ message }: { message?: string }) {
   const { t } = useLanguage();
 
@@ -176,10 +241,11 @@ export default function PracticePage() {
           const info = getGroupInfo(group).info;
           return {
             code: group,
-            title: info.title[lang],
+            title: getPracticeCategoryTitle(group, lang, info.title[lang]),
             signCount: signs.length,
             practiceCompleted,
             passedSigns,
+            representativeImage: getRepresentativeSignImage(signs),
           };
         },
       ).filter((card): card is CategoryCardData => card !== null);
@@ -203,9 +269,9 @@ export default function PracticePage() {
   return (
     <div
       dir={isRtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-background"
+      className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background"
     >
-      <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
+      <div className="container mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:py-12">
 
         {serviceUnavailable && (
           <ServiceUnavailableBanner
@@ -239,45 +305,45 @@ export default function PracticePage() {
           </Alert>
         )}
 
-        <PageSectionSurface>
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <PageSectionSurface className="rounded-[28px] border-primary/10 bg-card/95 shadow-sm ring-1 ring-primary/[0.03]">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-black text-foreground">
+                <h2 className="text-xl font-extrabold tracking-tight text-secondary sm:text-2xl">
                   {t("traffic_signs.category_all_signs")}
                 </h2>
               </div>
-              <p className="text-muted-foreground text-sm font-medium max-w-2xl">
+              <p className="max-w-2xl text-sm font-medium leading-6 text-muted-foreground">
                 {t("practice.hub.all_signs_desc")}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {!isLoading ? (
                   <Badge
                     variant="secondary"
-                    className="bg-primary/10 text-primary border-0"
+                    className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1 font-semibold text-primary"
                   >
                     {t("practice.signs.count", { count: totalSigns })}
                   </Badge>
                 ) : null}
                 <Badge
                   variant="secondary"
-                  className="bg-emerald-500/10 text-emerald-700 border-0"
+                  className="rounded-full border border-primary/10 bg-background/80 px-3 py-1 font-semibold text-secondary"
                 >
                   {t("practice.hub.per_sign_questions")}
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className="bg-amber-500/10 text-amber-700 border-0"
+                  className="rounded-full border border-primary/10 bg-background/80 px-3 py-1 font-semibold text-secondary"
                 >
                   {t("practice.hub.three_levels")}
                 </Badge>
               </div>
             </div>
-            <div className="flex min-w-0 flex-col gap-3 lg:w-[248px]">
+            <div className="flex min-w-0 flex-col gap-3 lg:w-[260px]">
               <Button
                 onClick={() => router.push("/traffic-signs")}
-                className="w-full min-w-0 flex-shrink-0 gap-2 whitespace-normal text-center font-bold"
+                className="w-full min-w-0 flex-shrink-0 gap-2 whitespace-normal rounded-full bg-primary text-center font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md active:translate-y-0"
                 size="lg"
               >
                 <BookOpen className="w-4 h-4" />
@@ -286,7 +352,7 @@ export default function PracticePage() {
               <Button
                 onClick={() => router.push("/practice/random")}
                 variant="outline"
-                className="w-full min-w-0 flex-shrink-0 gap-2 whitespace-normal rounded-xl border-primary/20 bg-primary/5 text-center font-semibold text-primary hover:bg-primary/10 hover:text-primary"
+                className="w-full min-w-0 flex-shrink-0 gap-2 whitespace-normal rounded-full border-primary/15 bg-background/85 text-center font-semibold text-secondary shadow-sm ring-1 ring-primary/10 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md active:translate-y-0"
                 size="lg"
               >
                 <Shuffle className="w-4 h-4" />
@@ -299,11 +365,12 @@ export default function PracticePage() {
         <PageSectionSurface
           title={t("practice.by_category")}
           description={t("practice.subtitle")}
+          className="rounded-[28px] border-primary/10 bg-card/80 shadow-sm ring-1 ring-primary/[0.03]"
         >
           {isLoading ? (
             <LoadingSpinner message={t("practice.loading")} />
           ) : categories.length === 0 ? (
-            <Card className="border border-border/50 shadow-sm bg-card/80">
+            <Card className="rounded-2xl border border-primary/10 bg-background/80 shadow-sm ring-1 ring-primary/[0.03]">
               <CardContent className="py-14 text-center space-y-3">
                 <div className="text-5xl">🔍</div>
                 <p className="text-muted-foreground font-medium">
@@ -312,83 +379,85 @@ export default function PracticePage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
               {categories.map((cat) => {
                 const practicePct =
                   cat.signCount > 0
                     ? Math.round((cat.practiceCompleted / cat.signCount) * 100)
                     : 0;
-                const groupMeta = getGroupInfo(cat.code);
-                const visual = getCategoryVisual(cat.code);
-                const CategoryIcon = visual.icon;
 
                 return (
                   <Card
                     key={cat.code}
                     data-testid="practice-category-card"
-                    className={cn(
-                      "group relative overflow-hidden cursor-pointer border border-border/50 bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg",
-                      groupMeta.style.cardBorder,
-                      groupMeta.style.cardGlow,
-                    )}
+                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-primary/10 bg-card/95 shadow-sm ring-1 ring-primary/[0.03] transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
                     onClick={() =>
                       openProtectedPractice(`/practice/${cat.code}`)
                     }
                   >
-                    <CardHeader className="pb-3">
+                    <CardHeader className="p-5 pb-4 sm:p-6 sm:pb-4">
                       <div
                         data-testid="practice-category-header"
-                        className="flex min-w-0 flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:text-start"
+                        className="flex min-w-0 items-center gap-5"
                       >
                         <div
                           data-testid="practice-category-icon"
-                          className={cn(
-                            "flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-[1.03]",
-                            visual.iconWrap,
-                          )}
+                          className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-background p-2 shadow-sm ring-1 ring-primary/5 transition-transform duration-200 group-hover:scale-[1.03] sm:h-[5.5rem] sm:w-[5.5rem]"
                         >
-                          <CategoryIcon
-                            className={cn("h-5 w-5", visual.iconTone)}
-                          />
+                          {cat.representativeImage ? (
+                            <Image
+                              src={cat.representativeImage}
+                              alt=""
+                              width={88}
+                              height={88}
+                              unoptimized
+                              className="h-full w-full object-contain"
+                            />
+                          ) : (
+                            <span className="text-xl font-extrabold tracking-tight text-primary">
+                              {cat.code}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex min-w-0 flex-col items-center gap-1.5 sm:flex-1 sm:items-start">
+
+                        <div className="min-w-0 flex-1">
                           <span
                             data-testid="practice-category-code"
-                            className={cn(
-                              "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[10px] font-black uppercase tracking-[0.14em]",
-                              visual.countBadge,
-                            )}
+                            className="sr-only"
                           >
                             {cat.code}
                           </span>
+
                           <CardTitle
                             data-testid="practice-category-title"
-                            className="max-w-full break-words text-base font-black leading-tight"
+                            className="max-w-full break-words text-base font-bold leading-snug tracking-tight text-secondary sm:text-lg"
                           >
                             {cat.title}
                           </CardTitle>
+
+                          <Badge
+                            data-testid="practice-category-count"
+                            variant="secondary"
+                            className="mt-2.5 inline-flex rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary"
+                          >
+                            {t("practice.signs.count", { count: cat.signCount })}
+                          </Badge>
                         </div>
-                        <Badge
-                          data-testid="practice-category-count"
-                          variant="secondary"
-                          className={cn(
-                            "max-w-full whitespace-normal border-0 text-center text-xs font-semibold sm:ms-auto sm:shrink-0",
-                            visual.countBadge,
-                          )}
-                        >
-                          {t("practice.signs.count", { count: cat.signCount })}
-                        </Badge>
+
+                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/15 bg-background text-primary shadow-sm transition-all group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
+                          <ChevDir className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                        </div>
                       </div>
                     </CardHeader>
 
-                    <CardContent className="pt-0 space-y-4">
+                    <CardContent className="space-y-4 px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
                       {isAuthenticated && (
                         <div className="grid grid-cols-2 gap-2">
                           <div
                             data-testid="practice-category-stat"
-                            className="flex min-h-[104px] min-w-0 flex-col items-center justify-center rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 text-center sm:min-h-0 sm:items-stretch sm:justify-start sm:text-start"
+                            className="flex min-h-[88px] min-w-0 flex-col justify-center rounded-2xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2"
                           >
-                            <div className="flex min-w-0 flex-col items-center gap-1 text-emerald-700 sm:flex-row sm:gap-2">
+                            <div className="flex min-w-0 items-center gap-2 text-emerald-700">
                               <CheckCircle2
                                 data-testid="practice-category-stat-icon"
                                 className="h-4 w-4 shrink-0"
@@ -407,11 +476,12 @@ export default function PracticePage() {
                               {progressUnavailable ? "…" : cat.practiceCompleted}
                             </p>
                           </div>
+
                           <div
                             data-testid="practice-category-stat"
-                            className="flex min-h-[104px] min-w-0 flex-col items-center justify-center rounded-xl border border-amber-200/70 bg-amber-50/70 px-3 py-2 text-center sm:min-h-0 sm:items-stretch sm:justify-start sm:text-start"
+                            className="flex min-h-[88px] min-w-0 flex-col justify-center rounded-2xl border border-amber-200/70 bg-amber-50/70 px-3 py-2"
                           >
-                            <div className="flex min-w-0 flex-col items-center gap-1 text-amber-700 sm:flex-row sm:gap-2">
+                            <div className="flex min-w-0 items-center gap-2 text-amber-700">
                               <Trophy
                                 data-testid="practice-category-stat-icon"
                                 className="h-4 w-4 shrink-0"
@@ -443,33 +513,34 @@ export default function PracticePage() {
                           </span>
                           <span
                             data-testid="practice-category-progress-value"
-                            className={cn("shrink-0", visual.actionTone)}
+                            className="shrink-0 text-primary"
                           >
                             {progressUnavailable ? "…" : `${practicePct}%`}
                           </span>
                         </div>
+
                         <div
                           data-testid="practice-category-progress-bar"
                           role="progressbar"
                           aria-valuemin={0}
                           aria-valuemax={100}
-                          aria-valuenow={progressUnavailable ? undefined : practicePct}
+                          aria-valuenow={
+                            progressUnavailable ? undefined : practicePct
+                          }
                           aria-busy={progressUnavailable}
-                          className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                          className="h-1.5 w-full overflow-hidden rounded-full bg-primary/10"
                         >
                           <div
-                            className={cn(
-                              "h-full rounded-full transition-all duration-500",
-                              visual.progressBar,
-                            )}
+                            className="h-full rounded-full bg-primary transition-all duration-500"
                             style={{ width: `${practicePct}%` }}
                           />
                         </div>
+
                         <Button
                           data-testid="practice-category-action"
                           type="button"
                           size="lg"
-                          className="h-11 min-h-11 w-full gap-2"
+                          className="h-11 min-h-11 w-full gap-2 rounded-full bg-primary font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md"
                           disabled={isAuthLoading}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -482,6 +553,7 @@ export default function PracticePage() {
                       </div>
                     </CardContent>
 
+                    <span className="pointer-events-none absolute -bottom-16 -end-16 h-36 w-36 rounded-full bg-primary/10 opacity-0 blur-3xl transition-opacity group-hover:opacity-100" />
                   </Card>
                 );
               })}

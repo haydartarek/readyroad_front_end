@@ -7,14 +7,17 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import {
   ArrowRight,
   Banknote,
-  CalendarCheck,
   CalendarX2,
   CheckCircle2,
   ShieldCheck,
-  Trophy,
-  Zap,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
+import {
+  PlanIdentity,
+  RecommendedPlanAccent,
+  RecommendedPlanBadge,
+  RECOMMENDED_PAYMENT_PLAN,
+} from "@/components/payment/plan-identity";
 import {
   checkoutRequestId,
   createCheckout,
@@ -39,21 +42,6 @@ const FEATURES = [
 ] as const;
 
 const PENDING_PLAN_KEY = "rijvia.pendingCheckoutPlan";
-
-function PlanIcon({ plan }: { plan: PaymentPlan }) {
-  const iconClass = "h-4 w-4";
-
-  switch (plan) {
-    case "RIJVIA_3_DAYS":
-      return <Zap className={iconClass} aria-hidden />;
-
-    case "RIJVIA_1_WEEK":
-      return <CalendarCheck className={iconClass} aria-hidden />;
-
-    case "RIJVIA_4_WEEKS":
-      return <Trophy className={iconClass} aria-hidden />;
-  }
-}
 
 export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: boolean }) {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -220,7 +208,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
     <section
       id="pricing"
       aria-labelledby="pricing-heading"
-      className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-background via-muted/20 to-background py-10 sm:py-12 lg:py-16"
+      className="relative scroll-mt-24 overflow-hidden bg-gradient-to-b from-background via-muted/20 to-background py-14 sm:py-16 lg:py-20"
     >
       <div
         aria-hidden
@@ -233,15 +221,15 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
       />
 
       <div className="rv-container relative">
-        <div className="mx-auto mb-6 max-w-3xl text-center lg:mb-8">
+        <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-12">
           <h2
             id="pricing-heading"
-            className="text-balance text-3xl font-extrabold tracking-tight text-secondary md:text-4xl"
+            className="text-balance text-3xl font-black leading-tight tracking-tight text-secondary sm:text-4xl"
           >
             {t("home.pricing.title")}
           </h2>
 
-          <p className="mx-auto mt-3 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
             {t("home.pricing.subtitle")}
           </p>
 
@@ -285,52 +273,37 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3 xl:gap-5">
           {PAYMENT_PLANS.map((plan) => {
-            const featured = plan === "RIJVIA_1_WEEK";
+            const featured = plan === RECOMMENDED_PAYMENT_PLAN;
 
             return (
               <article
                 key={plan}
                 className={[
-                  "group relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border px-4 pb-4 pt-4 transition-all duration-300 sm:px-5 md:rounded-[20px] xl:rounded-[24px] xl:px-5 xl:pb-5 xl:pt-5",
+                  "group relative flex h-full min-w-0 flex-col overflow-visible rounded-2xl border px-4 pb-4 pt-8 transition-all duration-300 sm:px-5 md:rounded-[20px] xl:rounded-[24px] xl:px-5 xl:pb-5 xl:pt-8",
                   "hover:-translate-y-0.5 hover:shadow-lg xl:hover:-translate-y-1 xl:hover:shadow-xl",
                   featured
-                    ? "order-first border-secondary bg-secondary pt-10 text-secondary-foreground shadow-lg shadow-secondary/15 md:col-span-2 xl:order-none xl:col-span-1 xl:-translate-y-1 xl:pt-11"
+                    ? "order-first z-10 border-secondary bg-secondary text-secondary-foreground shadow-xl shadow-secondary/20 md:col-span-2 xl:order-none xl:col-span-1"
                     : "border-border bg-card text-card-foreground shadow-sm hover:border-primary/25 hover:shadow-primary/10",
                 ].join(" ")}
               >
                 {featured && (
-                  <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+                  <RecommendedPlanAccent />
                 )}
 
                 {featured && (
-                  <span className="absolute left-1/2 top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-3 py-1 text-[11px] font-black text-primary-foreground shadow-sm xl:text-xs">
-                    {t("home.pricing.recommended")}
-                  </span>
+                  <RecommendedPlanBadge
+                    label={t("home.pricing.recommended")}
+                    variant="floating"
+                  />
                 )}
 
-                <div className="mb-2 flex min-w-0 items-center justify-center gap-2 text-center xl:mb-3 xl:flex-col">
-                  <div
-                    className={[
-                      "grid h-8 w-8 shrink-0 place-items-center rounded-xl border xl:h-9 xl:w-9",
-                      featured
-                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                        : "border-primary/15 bg-primary/10 text-primary",
-                    ].join(" ")}
-                  >
-                    <PlanIcon plan={plan} />
-                  </div>
-
-                  <h3
-                    className={[
-                      "text-center text-lg font-black sm:text-xl xl:mt-1",
-                      featured
-                        ? "text-secondary-foreground"
-                        : "text-secondary",
-                    ].join(" ")}
-                  >
-                    {t(`payment.plan.${plan}`)}
-                  </h3>
-                </div>
+                <PlanIdentity
+                  plan={plan}
+                  label={t(`payment.plan.${plan}`)}
+                  featured={featured}
+                  variant="home"
+                  labelAs="h3"
+                />
 
                 <div className="mb-3 text-center xl:mb-4">
                   <bdi

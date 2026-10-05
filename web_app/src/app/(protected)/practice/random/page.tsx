@@ -369,88 +369,70 @@ export default function RandomPracticePage() {
   if (phase === "intro") {
     return (
       <div
-        className="relative min-h-screen overflow-hidden bg-gradient-to-b from-background via-background to-muted/35"
+        className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/25"
         dir={isRTL ? "rtl" : "ltr"}
       >
-        <div className="pointer-events-none absolute -top-32 right-[-8rem] h-[24rem] w-[24rem] rounded-full bg-primary/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-[-8rem] h-[20rem] w-[20rem] rounded-full bg-secondary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 right-[-6rem] h-72 w-72 rounded-full bg-primary/[0.07] blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-[-5rem] h-56 w-56 rounded-full bg-secondary/[0.05] blur-3xl" />
 
-        <div className="container relative mx-auto max-w-6xl px-4 py-6 md:py-8">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
-            <section className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-sm">
-              <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5" />
-              <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-24 translate-y-1/2 -translate-x-1/2 rounded-full bg-primary/5" />
-              <div className="relative space-y-4 px-6 py-7">
-                <div className="space-y-3">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-[1.3rem] bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
-                      <Shuffle className="h-8 w-8 text-primary-foreground" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <PageHeroTitle>
-                        {t("sign_practice.intro_title")}
-                      </PageHeroTitle>
-                      <PageHeroDescription className="max-w-2xl">
-                        {t("sign_practice.intro_subtitle")}
-                      </PageHeroDescription>
-                    </div>
+        <div className="container relative mx-auto max-w-5xl px-4 py-5 sm:py-6 lg:py-8">
+          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
+            <section className="relative overflow-hidden rounded-[1.75rem] border border-primary/15 bg-gradient-to-br from-primary/[0.09] via-primary/[0.035] to-background shadow-sm">
+              <div className="pointer-events-none absolute top-0 end-0 h-40 w-40 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/[0.05]" />
+
+              <div className="relative space-y-5 p-5 sm:p-6 lg:p-7">
+                <div className="flex items-start gap-3.5 sm:items-center">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/15">
+                    <Shuffle className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0 space-y-1.5">
+                    <PageHeroTitle>
+                      {t("sign_practice.intro_title")}
+                    </PageHeroTitle>
+
+                    <PageHeroDescription className="max-w-2xl">
+                      {t("sign_practice.intro_subtitle")}
+                    </PageHeroDescription>
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                   {[
                     {
+                      icon: <ClipboardList className="h-4 w-4" />,
                       value: "50",
-                      label: t("sign_practice.rule_questions"),
-                      color: "text-primary",
+                      label: t("sign_practice.stat_questions"),
+                      tone: "text-primary",
+                      iconTone: "bg-primary/10 text-primary",
                     },
                     {
+                      icon: <Timer className="h-4 w-4" />,
                       value: "15s",
-                      label: t("practice_exam.rule_time"),
-                      color: "text-orange-500",
+                      label: t("sign_practice.stat_time"),
+                      tone: "text-orange-600",
+                      iconTone: "bg-orange-500/10 text-orange-600",
                     },
                     {
+                      icon: <Trophy className="h-4 w-4" />,
                       value: "41/50",
-                      label: t("practice_exam.rule_pass"),
-                      color: "text-green-600",
+                      label: t("sign_practice.stat_pass"),
+                      tone: "text-green-600",
+                      iconTone: "bg-green-500/10 text-green-600",
                     },
                   ].map((stat) => (
                     <div
-                      key={stat.value}
-                      className="rounded-[1.2rem] border border-border/60 bg-background/80 px-3.5 py-3 shadow-sm"
+                      key={stat.label}
+                      className="rounded-[1.15rem] border border-border/60 bg-background/85 p-3 shadow-sm sm:p-3.5"
                     >
+                      <div className="flex min-w-0 items-center gap-2">                         <div                           className={cn(                             "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",                             stat.iconTone,                           )}                         >                           {stat.icon}                         </div>                          <p className="min-w-0 text-[11px] font-semibold leading-4 text-muted-foreground sm:text-xs">                           {stat.label}                         </p>                       </div>
                       <p
-                        className={`text-2xl font-black tabular-nums ${stat.color}`}
+                        className={cn(
+                          "mt-2 text-xl font-black tabular-nums sm:text-2xl",
+                          stat.tone,
+                        )}
                       >
                         {stat.value}
-                      </p>
-                      <p className="mt-1.5 text-xs font-semibold leading-5 text-foreground/80">
-                        {stat.label}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  {[
-                    {
-                      icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-                      text: t("practice_exam.rule_choices"),
-                    },
-                    {
-                      icon: <RefreshCw className="h-5 w-5 text-sky-500" />,
-                      text: t("sign_practice.rule_freshness"),
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.text}
-                      className="flex items-start gap-2.5 rounded-[1.1rem] border border-border/60 bg-background/80 px-3.5 py-3 shadow-sm"
-                    >
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.95rem] bg-primary/10 ring-1 ring-primary/10">
-                        {item.icon}
-                      </div>
-                      <p className="text-xs font-bold leading-5 text-foreground">
-                        {item.text}
                       </p>
                     </div>
                   ))}
@@ -465,136 +447,136 @@ export default function RandomPracticePage() {
                   </Alert>
                 ) : null}
 
-                <div className="flex flex-col gap-3 sm:flex-row">
+                <div className="flex flex-col gap-2.5 sm:flex-row">
                   <Button
                     data-testid="sign-exam-start-button"
                     size="lg"
-                    className="shadow-lg shadow-primary/20 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25 sm:flex-1"
+                    className="h-11 shadow-lg shadow-primary/15 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/20 sm:flex-1"
                     disabled={isAuthLoading}
                     onClick={() => void startExam()}
                   >
                     <Timer className="h-4 w-4" />
                     {t("practice_exam.start_btn")}
                   </Button>
-                  <Button variant="outline" size="lg" asChild>
+
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-11 bg-background/75"
+                    asChild
+                  >
                     <Link href="/practice">{backToPracticeContent}</Link>
                   </Button>
                 </div>
               </div>
             </section>
 
-            <aside className="space-y-4">
-              <div className="rounded-[1.75rem] border border-border/60 bg-card/85 p-4 shadow-sm">
-                <div className="mb-3 flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-primary/10 text-primary ring-1 ring-primary/10">
-                    <ClipboardList className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-black text-foreground">
-                      {t("practice_exam.overview_title")}
-                    </h2>
-                    <p className="text-xs font-semibold text-foreground/75">
-                      {t("practice_exam.overview_desc")}
-                    </p>
-                  </div>
+            <aside className="rounded-[1.75rem] border border-border/60 bg-card/90 p-4 shadow-sm sm:p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] bg-primary/10 text-primary ring-1 ring-primary/10">
+                  <ClipboardList className="h-4 w-4" />
                 </div>
 
-                <div className="space-y-2">
-                  {[
-                    {
-                      icon: <ClipboardList className="h-4 w-4 text-primary" />,
-                      text: t("sign_practice.rule_questions"),
-                    },
-                    {
-                      icon: <Timer className="h-4 w-4 text-orange-500" />,
-                      text: t("practice_exam.rule_time"),
-                    },
-                    {
-                      icon: <Trophy className="h-4 w-4 text-green-500" />,
-                      text: t("practice_exam.rule_pass"),
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.text}
-                      className="flex items-start gap-2.5 rounded-[1.05rem] bg-background/80 px-3 py-2.5"
-                    >
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem] bg-primary/10 ring-1 ring-primary/10">
-                        {item.icon}
-                      </div>
-                      <p className="text-xs font-bold leading-5 text-foreground">
-                        {item.text}
-                      </p>
-                    </div>
-                  ))}
+                <div className="min-w-0">
+                  <h2 className="text-base font-black text-foreground">
+                    {t("practice_exam.rules_title")}
+                  </h2>
+                  <p className="mt-0.5 text-xs font-semibold leading-5 text-muted-foreground">
+                    {t("practice_exam.rules_desc")}
+                  </p>
                 </div>
               </div>
 
-              <div className="rounded-[1.75rem] border border-border/60 bg-card/85 p-4 shadow-sm">
-                <div className="mb-3 flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-[1rem] bg-primary/10 text-primary ring-1 ring-primary/10">
-                    <Shapes className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-black text-foreground">
-                      {t("practice_exam.rules_title")}
-                    </h2>
-                    <p className="text-xs font-semibold text-foreground/75">
-                      {t("practice_exam.rules_desc")}
+              <div className="mt-4 space-y-2">
+                {[
+                  {
+                    icon: <CheckCircle2 className="h-4 w-4 text-green-600" />,
+                    text: t("practice_exam.rule_choices"),
+                  },
+                  {
+                    icon: <RefreshCw className="h-4 w-4 text-sky-600" />,
+                    text: t("sign_practice.rule_freshness"),
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.text}
+                    className="flex items-start gap-2.5 rounded-[1rem] bg-background/80 px-3 py-2.5"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.85rem] bg-muted/60">
+                      {item.icon}
+                    </div>
+
+                    <p className="pt-1 text-xs font-semibold leading-5 text-foreground/85">
+                      {item.text}
                     </p>
                   </div>
-                </div>
+                ))}
+              </div>
 
-                <div className="rounded-[1.15rem] border border-border/60 bg-background/80 p-3 shadow-sm">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-foreground">
+              <div className="my-4 h-px bg-border/60" />
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-[0.85rem] bg-primary/10 text-primary">
+                      <Shapes className="h-4 w-4" />
+                    </div>
+
+                    <span className="text-sm font-black text-foreground">
                       {t("practice_exam.difficulty_mix")}
                     </span>
-                    <span className="text-sm font-semibold text-muted-foreground">
-                      20 · 20 · 10
-                    </span>
                   </div>
-                  <div className="grid gap-1.5">
-                    {[
-                      {
-                        value: 20,
-                        total: 50,
-                        label: t("practice_exam.difficulty_easy"),
-                        bar: "bg-green-500",
-                        tone: "text-green-700",
-                      },
-                      {
-                        value: 20,
-                        total: 50,
-                        label: t("practice_exam.difficulty_medium"),
-                        bar: "bg-orange-500",
-                        tone: "text-orange-600",
-                      },
-                      {
-                        value: 10,
-                        total: 50,
-                        label: t("practice_exam.difficulty_hard"),
-                        bar: "bg-red-500",
-                        tone: "text-red-600",
-                      },
-                    ].map((item) => (
-                      <div key={item.label} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm font-semibold">
-                          <span className={item.tone}>{item.label}</span>
-                          <span className="text-muted-foreground">
-                            {item.value}/50
-                          </span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-muted/70">
-                          <div
-                            className={`h-full rounded-full ${item.bar}`}
-                            style={{
-                              width: `${(item.value / item.total) * 100}%`,
-                            }}
-                          />
-                        </div>
+
+                  <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+                    20 · 20 · 10
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {[
+                    {
+                      value: 20,
+                      total: 50,
+                      label: t("practice_exam.difficulty_easy"),
+                      bar: "bg-green-500",
+                      tone: "text-green-700",
+                    },
+                    {
+                      value: 20,
+                      total: 50,
+                      label: t("practice_exam.difficulty_medium"),
+                      bar: "bg-orange-500",
+                      tone: "text-orange-600",
+                    },
+                    {
+                      value: 10,
+                      total: 50,
+                      label: t("practice_exam.difficulty_hard"),
+                      bar: "bg-red-500",
+                      tone: "text-red-600",
+                    },
+                  ].map((item) => (
+                    <div key={item.label} className="space-y-1">
+                      <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+                        <span className={item.tone}>{item.label}</span>
+                        <span className="tabular-nums text-muted-foreground">
+                          {item.value}/50
+                        </span>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="h-1.5 overflow-hidden rounded-full bg-muted/70">
+                        <div
+                          className={cn(
+                            "h-full rounded-full",
+                            item.bar,
+                          )}
+                          style={{
+                            width: `${(item.value / item.total) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </aside>
@@ -603,7 +585,6 @@ export default function RandomPracticePage() {
       </div>
     );
   }
-
   if (phase === "loading" || phase === "submitting") {
     return (
       <LoadingState

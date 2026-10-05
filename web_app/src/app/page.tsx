@@ -7,8 +7,6 @@ import { FeaturesSection } from "@/components/home/features-section";
 import { CategoriesPreview } from "@/components/home/categories-preview";
 import { PricingSection } from "@/components/home/pricing-section";
 import { ExamCta } from "@/components/home/exam-cta";
-import { ContactCtaSection } from "@/components/home/contact-cta-section";
-import { StickyCTA } from "@/components/home/sticky-cta";
 import {
   DEFAULT_APP_URL,
   getAlternateOpenGraphLocales,
@@ -86,10 +84,8 @@ export default async function Home({ searchParams }: HomeProps) {
         <CategoriesPreview />
         <PricingSection />
         <ExamCta />
-        <ContactCtaSection />
       </main>
 
-      <StickyCTA />
     </div>
   );
 }

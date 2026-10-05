@@ -4,40 +4,82 @@ export const FALLBACK_IMAGE =
 
 // ─── Helpers ─────────────────────────────────────────────
 
+const RIJVIA_MEDIA_FAMILIES = [
+  "lessons",
+  "quiz",
+  "signs",
+  "articles",
+] as const;
+
 /**
- * Build a backend-owned traffic sign image URL from the database image path.
+ * Resolve backend-owned Rijvia media to the internal public image route.
+ *
+ * Examples:
+ * - old absolute storage URL containing /images/quiz/... -> /images/quiz/...
+ * - images/signs/... -> /images/signs/...
+ * - lessons/... -> /images/lessons/...
+ *
+ * Unrelated external URLs remain unchanged.
+ */
+export function resolveRijviaMediaUrl(
+  src: string | null | undefined,
+): string | null {
+  const value = src?.trim();
+
+  if (!value) {
+    return null;
+  }
+
+  if (value.startsWith("data:")) {
+    return value;
+  }
+
+  for (const family of RIJVIA_MEDIA_FAMILIES) {
+    const internalPrefix = `/images/${family}/`;
+    const internalIndex = value.indexOf(
+      internalPrefix,
+    );
+
+    if (internalIndex >= 0) {
+      return value.slice(internalIndex);
+    }
+
+    const withoutLeadingSlash =
+      `images/${family}/`;
+
+    if (value.startsWith(withoutLeadingSlash)) {
+      return `/${value}`;
+    }
+
+    const legacyPrefix = `${family}/`;
+
+    if (value.startsWith(legacyPrefix)) {
+      return `/images/${value}`;
+    }
+  }
+
+  return value;
+}
+
+/**
+ * Build a browser-safe traffic sign image URL.
  */
 export function getSignImageUrl(
   imagePath: string | null | undefined,
 ): string | null {
-  if (!imagePath?.trim()) return null;
-
-  const value = imagePath.trim();
-
-  if (value.startsWith("http") || value.startsWith("data:")) {
-    return value;
-  }
-
-  const normalizedPath = value.startsWith("/") ? value : `/${value}`;
-
-  if (normalizedPath.startsWith("/images/signs/")) {
-    return normalizedPath;
-  }
-
-  return normalizedPath;
+  return resolveRijviaMediaUrl(
+    imagePath,
+  );
 }
 
 /**
- * Convert an asset path from the backend to a browser URL.
- * Kept for existing image consumers; sign images are delegated to getSignImageUrl.
+ * Convert a backend asset path to a browser URL.
  */
 export function convertToPublicImageUrl(
   src: string | undefined,
 ): string | undefined {
-  if (!src) return undefined;
-
-  const signImageUrl = getSignImageUrl(src);
-  if (signImageUrl) return signImageUrl;
-
-  return undefined;
+  return (
+    resolveRijviaMediaUrl(src) ??
+    undefined
+  );
 }

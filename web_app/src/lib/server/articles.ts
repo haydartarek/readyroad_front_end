@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { SiteLocale } from "@/lib/site-copy";
+import { resolveRijviaMediaUrl } from "@/lib/image-utils";
 import { getPublicBackendApiUrl } from "@/lib/server/public-catalog";
 
 const API_LANGUAGE: Record<SiteLocale, "AR" | "NL" | "FR" | "EN"> = {
@@ -37,6 +38,51 @@ export type PublicArticleImage = Readonly<{
   licenseUrl?: string | null;
 }>;
 
+function normalizeArticleImage(
+  image: PublicArticleImage | null | undefined,
+): PublicArticleImage | null {
+  if (!image) {
+    return null;
+  }
+
+  return {
+    ...image,
+    heroUrl:
+      resolveRijviaMediaUrl(image.heroUrl) ??
+      image.heroUrl,
+    cardUrl:
+      resolveRijviaMediaUrl(image.cardUrl) ??
+      image.cardUrl,
+    mobileUrl:
+      resolveRijviaMediaUrl(image.mobileUrl) ??
+      image.mobileUrl,
+    thumbnailUrl: image.thumbnailUrl
+      ? (
+          resolveRijviaMediaUrl(
+            image.thumbnailUrl,
+          ) ?? image.thumbnailUrl
+        )
+      : undefined,
+    ogUrl:
+      resolveRijviaMediaUrl(image.ogUrl) ??
+      image.ogUrl,
+  };
+}
+
+function normalizeArticleSummary(
+  article: PublicArticleSummary,
+): PublicArticleSummary {
+  if (!article.image) {
+    return article;
+  }
+
+  return {
+    ...article,
+    image: normalizeArticleImage(
+      article.image,
+    ),
+  };
+}
 export type PublicArticleInternalLink = Readonly<{
   type: "ARTICLE" | "LESSON" | "TRAFFIC_SIGN" | "PRACTICE" | "EXAM" | "VIDEO";
   targetPath: string;
@@ -86,16 +132,34 @@ export async function getPublicArticles(
     `/articles?language=${API_LANGUAGE[locale]}`,
   );
 
-  return Array.isArray(articles) ? articles : [];
+  return Array.isArray(articles)
+    ? articles.map(normalizeArticleSummary)
+    : [];
 }
 
 export async function getPublicArticle(
   locale: SiteLocale,
   slug: string,
 ): Promise<PublicArticle | null> {
-  return fetchArticleApi<PublicArticle>(
-    `/articles/${encodeURIComponent(slug)}?language=${API_LANGUAGE[locale]}`,
-  );
+  const article =
+    await fetchArticleApi<PublicArticle>(
+      `/articles/${encodeURIComponent(slug)}?language=${API_LANGUAGE[locale]}`,
+    );
+
+  if (!article) {
+    return null;
+  }
+
+  if (!article.image) {
+    return article;
+  }
+
+  return {
+    ...article,
+    image: normalizeArticleImage(
+      article.image,
+    ),
+  };
 }
 
 export async function getRelatedPublicArticles(
@@ -111,5 +175,7 @@ export async function getRelatedPublicArticles(
     `/articles/related?${query.toString()}`,
   );
 
-  return Array.isArray(articles) ? articles : [];
+  return Array.isArray(articles)
+    ? articles.map(normalizeArticleSummary)
+    : [];
 }

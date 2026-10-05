@@ -2,50 +2,38 @@
 
 import { useEffect, useState } from "react";
 import { LessonsGrid } from "@/components/lessons/lessons-grid";
-import { getAllLessons, searchLessons } from "@/services/lessonService";
+import { getAllLessons } from "@/services/lessonService";
 import { isServiceUnavailable, logApiError } from "@/lib/api";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { LoadErrorState } from "@/components/ui/load-error-state";
 import { PageLoading } from "@/components/ui/page-loading";
 import { useLanguage } from "@/contexts/language-context";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import {
-  PageHeroDescription,
-  PageHeroTitle,
-  PageHeroSurface,
-  PageSectionSurface,
-} from "@/components/ui/page-surface";
-import {
-  Search,
-  X,
-} from "lucide-react";
+import { PageSectionSurface } from "@/components/ui/page-surface";
+import { Search } from "lucide-react";
 import type { Lesson } from "@/lib/types";
 
 export default function LessonsClient({
   initialLessons,
 }: Readonly<{ initialLessons: Lesson[] }>) {
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
   const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
   const [loading, setLoading] = useState(initialLessons.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
-  const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    const query = searchValue.trim();
 
-    if (!query && fetchKey === 0 && initialLessons.length > 0) {
+    if (fetchKey === 0 && initialLessons.length > 0) {
       return;
     }
 
     const timer = window.setTimeout(() => {
       setLoading(true);
       setError(null);
-      const loader = query ? searchLessons(query) : getAllLessons();
+      const loader = getAllLessons();
 
       loader
         .then((data) => {
@@ -74,7 +62,7 @@ export default function LessonsClient({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [fetchKey, initialLessons, searchValue, t]);
+  }, [fetchKey, initialLessons, t]);
 
   if (serviceUnavailable) {
     return (
@@ -105,15 +93,6 @@ export default function LessonsClient({
     );
   }
 
-  const hasSearch = searchValue.trim().length > 0;
-  const updateSearchValue = (value: string) => {
-    setSearchValue(value);
-    if (!value.trim() && initialLessons.length > 0) {
-      setLessons(initialLessons);
-      setLoading(false);
-      setError(null);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(223,88,48,0.10),_transparent_35%),linear-gradient(to_bottom,_hsl(var(--muted))_0%,_hsl(var(--background))_22%)]">
@@ -125,74 +104,10 @@ export default function LessonsClient({
           ]}
         />
 
-        <PageHeroSurface>
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)] lg:items-start">
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <PageHeroTitle className="max-w-3xl">
-                  {t("lessons.page_title")}
-                </PageHeroTitle>
-                <PageHeroDescription className="max-w-3xl">
-                  {t("lessons.page_subtitle")}
-                </PageHeroDescription>
-              </div>
-
-            </div>
-
-            <div className="rounded-[28px] border border-border/50 bg-background/80 p-5 shadow-sm">
-              <label
-                htmlFor="lessons-search"
-                className="mb-3 block text-sm font-bold text-foreground"
-              >
-                {t("lessons.search_label")}
-              </label>
-              <div className="relative">
-                <Search
-                  className={`pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground ${isRTL ? "right-4" : "left-4"}`}
-                />
-                <Input
-                  id="lessons-search"
-                  name="lessons-search"
-                  type="search"
-                  autoComplete="off"
-                  value={searchValue}
-                  onChange={(e) => updateSearchValue(e.target.value)}
-                  placeholder={t("lessons.search_placeholder")}
-                  className={`h-12 rounded-2xl border-border/60 bg-card ${isRTL ? "pr-11 pl-12 text-right" : "pl-11 pr-12"}`}
-                />
-                {hasSearch && (
-                  <button
-                    type="button"
-                    onClick={() => updateSearchValue("")}
-                    className={`absolute top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground ${isRTL ? "left-3" : "right-3"}`}
-                    aria-label={t("lessons.search_clear")}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                {t("lessons.search_help")}
-              </p>
-            </div>
-          </div>
-        </PageHeroSurface>
-
         <PageSectionSurface
           className="mt-8 rounded-[30px] border-border/50 bg-card/80 p-6"
           title={t("lessons.collection_title")}
           description={t("lessons.results_label", { count: lessons.length })}
-          actions={
-            hasSearch ? (
-              <Button
-                variant="outline"
-                className="rounded-full"
-                onClick={() => setSearchValue("")}
-              >
-                {t("lessons.search_clear")}
-              </Button>
-            ) : null
-          }
         >
           {lessons.length > 0 ? (
             <LessonsGrid lessons={lessons} />
@@ -207,14 +122,6 @@ export default function LessonsClient({
               <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                 {t("lessons.empty_desc")}
               </p>
-              {hasSearch && (
-                <Button
-                  className="mt-5 rounded-full px-5"
-                  onClick={() => setSearchValue("")}
-                >
-                  {t("lessons.reset_filters")}
-                </Button>
-              )}
             </div>
           )}
         </PageSectionSurface>

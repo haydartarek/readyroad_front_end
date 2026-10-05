@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   PageHeroDescription,
   PageHeroTitle,
+  PageMetricCard,
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -204,56 +205,33 @@ export default function TheoryExamPage() {
                 data-testid="exam-summary-grid"
                 className="grid gap-3 sm:grid-cols-3"
               >
-                <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-background/80 p-4 shadow-sm">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
-                    <ClipboardList className="h-5 w-5" />
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-muted-foreground">
-                      {t("exam.total_questions")}
-                    </p>
-
-                    <p className="mt-1 break-words text-xl font-black leading-tight text-secondary sm:text-2xl">
-                      {String(EXAM_RULES.TOTAL_QUESTIONS)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-background/80 p-4 shadow-sm">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
-                    <Clock3 className="h-5 w-5" />
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-muted-foreground">
-                      {t("exam.duration")}
-                    </p>
-
-                    <p className="mt-1 break-words text-xl font-black leading-tight text-secondary sm:text-2xl">
-                      {t("exam.duration_value", {
-                        minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
-                        seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
-                      })}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-background/80 p-4 shadow-sm">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
-                    <Trophy className="h-5 w-5" />
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-muted-foreground">
-                      {t("exam.pass_score")}
-                    </p>
-
-                    <p className="mt-1 break-words text-xl font-black leading-tight text-secondary sm:text-2xl">
-                      {`${EXAM_RULES.PASSING_SCORE}/${EXAM_RULES.TOTAL_QUESTIONS}`}
-                    </p>
-                  </div>
-                </div>
+                <PageMetricCard
+                  icon={<ClipboardList className="h-5 w-5" />}
+                  label={t("exam.total_questions")}
+                  value={String(EXAM_RULES.TOTAL_QUESTIONS)}
+                  tone="primary"
+                  mobileStacked
+                  className="rounded-2xl border-primary/10 bg-background/80"
+                />
+                <PageMetricCard
+                  icon={<Clock3 className="h-5 w-5" />}
+                  label={t("exam.duration")}
+                  value={t("exam.duration_value", {
+                    minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
+                    seconds: EXAM_RULES.DURATION_REMAINING_SECONDS,
+                  })}
+                  tone="primary"
+                  mobileStacked
+                  className="rounded-2xl border-primary/10 bg-background/80"
+                />
+                <PageMetricCard
+                  icon={<Trophy className="h-5 w-5" />}
+                  label={t("exam.pass_score")}
+                  value={`${EXAM_RULES.PASSING_SCORE}/${EXAM_RULES.TOTAL_QUESTIONS}`}
+                  tone="primary"
+                  mobileStacked
+                  className="rounded-2xl border-primary/10 bg-background/80"
+                />
               </div>
 
               {loadError ? (
@@ -263,11 +241,11 @@ export default function TheoryExamPage() {
                 </Alert>
               ) : null}
 
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button
                   data-testid="exam-start-button"
                   size="lg"
-                  className="h-12 min-h-12 w-full gap-2 rounded-full bg-primary px-8 font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md active:translate-y-0"
+                  className="h-11 min-h-11 w-full min-w-0 flex-1 gap-2 rounded-full bg-primary px-8 font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md active:translate-y-0"
                   disabled={isAuthLoading || isChecking || isStarting}
                   onClick={() => void startOrResumeExam()}
                 >
@@ -293,7 +271,7 @@ export default function TheoryExamPage() {
                   variant="outline"
                   size="lg"
                   asChild
-                  className="h-12 w-full rounded-full border-primary/15 bg-background/85 px-7 font-semibold text-secondary shadow-sm ring-1 ring-primary/10 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md active:translate-y-0 sm:w-auto"
+                  className="h-11 min-h-11 w-full min-w-0 shrink-0 rounded-full border-primary/15 bg-background/85 px-7 font-semibold text-secondary shadow-sm ring-1 ring-primary/10 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md active:translate-y-0 sm:w-auto"
                 >
                   <Link href="/practice">
                     {t("practice_exam.back_practice")}

@@ -571,7 +571,7 @@ export default function LessonDetailClient({
               </div>
             </PageSectionSurface>
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2">
               <Button
                 className="h-11 justify-center gap-2 px-3 text-[12px] font-bold shadow-sm shadow-primary/15 sm:text-[13px]"
                 asChild

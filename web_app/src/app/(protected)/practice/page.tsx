@@ -363,7 +363,7 @@ export default function PracticePage() {
         </PageSectionSurface>
 
         <PageSectionSurface
-          title={t("practice.by_category")}
+          title={t("practice.title")}
           description={t("practice.subtitle")}
           className="rounded-[28px] border-primary/10 bg-card/80 shadow-sm ring-1 ring-primary/[0.03]"
         >
@@ -395,10 +395,10 @@ export default function PracticePage() {
                       openProtectedPractice(`/practice/${cat.code}`)
                     }
                   >
-                    <CardHeader className="p-5 pb-4 sm:p-6 sm:pb-4">
+                    <CardHeader className="min-w-0 p-5 pb-4 sm:p-6 sm:pb-4">
                       <div
                         data-testid="practice-category-header"
-                        className="flex min-w-0 items-center gap-5"
+                        className="flex min-w-0 flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-5"
                       >
                         <div
                           data-testid="practice-category-icon"
@@ -420,10 +420,10 @@ export default function PracticePage() {
                           )}
                         </div>
 
-                        <div className="min-w-0 flex-1">
+                        <div className="w-full min-w-0 flex-1 text-center sm:w-auto">
                           <span
                             data-testid="practice-category-code"
-                            className="sr-only"
+                            className="block text-sm font-extrabold tracking-[0.2em] text-primary"
                           >
                             {cat.code}
                           </span>
@@ -438,7 +438,7 @@ export default function PracticePage() {
                           <Badge
                             data-testid="practice-category-count"
                             variant="secondary"
-                            className="mt-2.5 inline-flex rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary"
+                            className="mt-2.5 inline-flex max-w-full whitespace-normal break-words rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-center text-xs font-semibold text-primary"
                           >
                             {t("practice.signs.count", { count: cat.signCount })}
                           </Badge>
@@ -450,14 +450,14 @@ export default function PracticePage() {
                       </div>
                     </CardHeader>
 
-                    <CardContent className="space-y-4 px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
+                    <CardContent className="min-w-0 space-y-4 px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
                       {isAuthenticated && (
                         <div className="grid grid-cols-2 gap-2">
                           <div
                             data-testid="practice-category-stat"
                             className="flex min-h-[88px] min-w-0 flex-col justify-center rounded-2xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2"
                           >
-                            <div className="flex min-w-0 items-center gap-2 text-emerald-700">
+                            <div className="flex min-w-0 flex-col items-center gap-1 text-center text-emerald-700 sm:flex-row sm:justify-center sm:text-start">
                               <CheckCircle2
                                 data-testid="practice-category-stat-icon"
                                 className="h-4 w-4 shrink-0"
@@ -481,7 +481,7 @@ export default function PracticePage() {
                             data-testid="practice-category-stat"
                             className="flex min-h-[88px] min-w-0 flex-col justify-center rounded-2xl border border-amber-200/70 bg-amber-50/70 px-3 py-2"
                           >
-                            <div className="flex min-w-0 items-center gap-2 text-amber-700">
+                            <div className="flex min-w-0 flex-col items-center gap-1 text-center text-amber-700 sm:flex-row sm:justify-center sm:text-start">
                               <Trophy
                                 data-testid="practice-category-stat-icon"
                                 className="h-4 w-4 shrink-0"
@@ -553,7 +553,7 @@ export default function PracticePage() {
                       </div>
                     </CardContent>
 
-                    <span className="pointer-events-none absolute -bottom-16 -end-16 h-36 w-36 rounded-full bg-primary/10 opacity-0 blur-3xl transition-opacity group-hover:opacity-100" />
+                    <span className="pointer-events-none absolute -bottom-16 end-0 h-36 w-36 rounded-full bg-primary/10 opacity-0 blur-3xl transition-opacity group-hover:opacity-100" />
                   </Card>
                 );
               })}

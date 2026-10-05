@@ -81,7 +81,7 @@ export function FeaturesSection() {
 
       <div className="container relative mx-auto px-4">
         <div className="mb-10 text-center sm:mb-12">
-          <h2 data-testid="home-features-heading" className="mx-auto max-w-3xl text-balance text-3xl font-black leading-tight tracking-tight text-secondary sm:text-4xl">
+          <h2 data-testid="home-features-heading" className="mx-auto max-w-3xl text-balance text-3xl font-black leading-tight tracking-tight text-secondary sm:text-4xl lg:max-w-[66.666667%]">
             {t("home.features.title")}
           </h2>
 

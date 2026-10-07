@@ -68,7 +68,7 @@ test.describe("localized public blog routes", () => {
         new RegExp(`${articlePath}$`),
       );
       const canonicalUrl = `https://rijvia.be${articlePath}`;
-      await expect(page).toHaveTitle(`${article.title} | Rijvia`);
+      await expect(page).toHaveTitle(`${article.title} | RijVia`);
       await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
         "href",

@@ -4,12 +4,11 @@ import { Suspense } from "react";
 import Link from "@/components/localized-link";
 import { useSearchParams } from "next/navigation";
 import {
-  AlertCircle,
+  Activity,
   ClipboardList,
   LayoutDashboard,
-  WalletCards,
-  TrendingDown,
   User,
+  WalletCards,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
@@ -34,18 +33,11 @@ const NAV_ITEMS: NavItem[] = [
     section: null,
   },
   {
-    key: "weak_areas",
-    labelKey: "user_sidebar.weak_areas",
-    href: "/dashboard?section=weak-areas",
-    icon: TrendingDown,
-    section: "weak-areas",
-  },
-  {
-    key: "error_patterns",
-    labelKey: "user_sidebar.error_patterns",
-    href: "/dashboard?section=error-patterns",
-    icon: AlertCircle,
-    section: "error-patterns",
+    key: "progress",
+    labelKey: "dashboard.progress_v2.nav",
+    href: "/dashboard?section=progress",
+    icon: Activity,
+    section: "progress",
   },
   {
     key: "exam_results",
@@ -73,11 +65,14 @@ const ACCOUNT_ITEMS: NavItem[] = [
   },
 ];
 
-function SidebarSectionLabel({ children }: { children: React.ReactNode }) {
+function SidebarSectionLabel({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center gap-2 px-1 pb-2 pt-3">
-      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-      <p className="text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="px-3 pb-2">
+      <p className="text-xs font-semibold text-muted-foreground">
         {children}
       </p>
     </div>
@@ -88,43 +83,40 @@ function SidebarNavLink({
   item,
   isActive,
   label,
-  isRTL,
 }: {
   item: NavItem;
   isActive: boolean;
   label: string;
-  isRTL: boolean;
 }) {
   const Icon = item.icon;
 
   return (
     <Link
       href={item.href}
+      aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-200",
+        "group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
         isActive
-          ? "border-primary/15 bg-primary/[0.06] text-foreground"
-          : "border-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/60 hover:text-foreground",
+          ? "bg-primary/10 text-foreground"
+          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
       )}
     >
+      <Icon
+        className={cn(
+          "h-4 w-4 shrink-0 transition-colors",
+          isActive
+            ? "text-primary"
+            : "text-muted-foreground group-hover:text-secondary",
+        )}
+        aria-hidden
+      />
+
       <span
         className={cn(
-          "absolute bottom-3 top-3 w-1 rounded-full transition-opacity",
-          isActive ? "bg-primary opacity-100" : "opacity-0",
-          isRTL ? "right-1.5" : "left-1.5",
-        )}
-      />
-      <div
-        className={cn(
-          "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border transition-all duration-200",
-          isActive
-            ? "border-primary/20 bg-primary/10 text-primary"
-            : "border-border/60 bg-muted/35 text-muted-foreground group-hover:border-primary/15 group-hover:bg-primary/10 group-hover:text-primary",
+          "min-w-0 flex-1 truncate",
+          isActive ? "font-semibold" : "font-medium",
         )}
       >
-        <Icon className="h-4 w-4" />
-      </div>
-      <span className={cn("flex-1 truncate", isActive && "font-semibold")}>
         {label}
       </span>
     </Link>
@@ -141,7 +133,8 @@ function UserSidebarInner() {
 
   const hideSidebar =
     pathname.startsWith("/practice") ||
-    (pathname.startsWith("/exam") && !pathname.startsWith("/exam/results"));
+    (pathname.startsWith("/exam") &&
+      !pathname.startsWith("/exam/results"));
 
   if (hideSidebar) return null;
 
@@ -151,97 +144,124 @@ function UserSidebarInner() {
     "U"
   ).toUpperCase();
 
-  const displayName = user?.fullName ?? user?.firstName ?? t("app.name");
+  const displayName =
+    user?.fullName ??
+    user?.firstName ??
+    t("app.name");
+
+  const isLearningItemActive = (item: NavItem) => {
+    if (pathname !== "/dashboard") {
+      return false;
+    }
+
+    if (item.section === null) {
+      return !currentSection;
+    }
+
+    if (item.section === "progress") {
+      return [
+        "progress",
+        "weak-areas",
+        "error-patterns",
+      ].includes(currentSection ?? "");
+    }
+
+    return currentSection === item.section;
+  };
+
+  const isAccountItemActive = (item: NavItem) =>
+    item.section !== null &&
+    pathname === "/dashboard" &&
+    currentSection === item.section;
 
   return (
     <aside
+      dir={isRTL ? "rtl" : "ltr"}
       className={cn(
-        "sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-border/60 bg-background/95 shadow-[6px_0_20px_rgba(15,23,42,0.035)] backdrop-blur lg:flex lg:flex-col",
+        "sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-hidden border-border/60 bg-background lg:flex lg:flex-col",
         isRTL ? "border-l" : "border-r",
       )}
     >
-      <div className="border-b border-border/60 px-5 pb-5 pt-5">
-        <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-sm font-black text-primary">
-                {avatarInitial}
-              </div>
-              {unreadCount > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground ring-2 ring-card">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              ) : null}
+      <div className="border-b border-border/60 px-5 py-5">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="relative shrink-0">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-sm font-black text-primary">
+              {avatarInitial}
             </div>
 
-            <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-primary/80">
-                {t("user_sidebar.workspace_title")}
+            {unreadCount > 0 ? (
+              <span
+                className={cn(
+                  "absolute -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground ring-2 ring-background",
+                  isRTL ? "-left-1" : "-right-1",
+                )}
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            ) : null}
+          </div>
+
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="text-xs font-semibold text-primary">
+              {t("user_sidebar.workspace_title")}
+            </p>
+
+            <p
+              dir="auto"
+              className="truncate text-sm font-semibold text-foreground"
+            >
+              {displayName}
+            </p>
+
+            {user?.email ? (
+              <p
+                dir="auto"
+                className="truncate text-xs text-muted-foreground"
+              >
+                {user.email}
               </p>
-              <p className="truncate text-sm font-bold text-foreground">
-                {displayName}
-              </p>
-              <p className="text-xs font-medium leading-5 text-muted-foreground">
-                {t("user_sidebar.workspace_subtitle")}
-              </p>
-              {user?.email ? (
-                <p className="truncate text-xs text-muted-foreground">
-                  {user.email}
-                </p>
-              ) : null}
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-        <div>
-          <SidebarSectionLabel>
-            {t("user_sidebar.section_learning")}
-          </SidebarSectionLabel>
-          <div className="space-y-1.5">
-            {NAV_ITEMS.map((item) => {
-              const isActive =
-                item.section === null
-                  ? pathname === "/dashboard" && !currentSection
-                  : pathname === "/dashboard" &&
-                    currentSection === item.section;
+      <nav className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="space-y-6">
+          <section>
+            <SidebarSectionLabel>
+              {t("user_sidebar.section_learning")}
+            </SidebarSectionLabel>
 
-              return (
+            <div className="space-y-1">
+              {NAV_ITEMS.map((item) => (
                 <SidebarNavLink
                   key={item.key}
                   item={item}
-                  isActive={isActive}
+                  isActive={isLearningItemActive(item)}
                   label={t(item.labelKey)}
-                  isRTL={isRTL}
                 />
-              );
-            })}
-          </div>
-        </div>
+              ))}
+            </div>
+          </section>
 
-        <div>
-          <SidebarSectionLabel>
-            {t("user_sidebar.section_account")}
-          </SidebarSectionLabel>
-          <div className="space-y-1.5">
-            {ACCOUNT_ITEMS.map((item) => {
-              const isActive =
-                pathname === "/dashboard" && currentSection === item.section;
-              return (
+          <section>
+            <SidebarSectionLabel>
+              {t("user_sidebar.section_account")}
+            </SidebarSectionLabel>
+
+            <div className="space-y-1">
+              {ACCOUNT_ITEMS.map((item) => (
                 <SidebarNavLink
                   key={item.key}
                   item={item}
-                  isActive={isActive}
+                  isActive={isAccountItemActive(item)}
                   label={t(item.labelKey)}
-                  isRTL={isRTL}
                 />
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          </section>
         </div>
       </nav>
-
     </aside>
   );
 }

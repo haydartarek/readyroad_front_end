@@ -22,6 +22,7 @@ import {
   PageHeroEyebrow,
   PageHeroSurface,
   PageHeroTitle,
+  PageMetricCard,
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { cn } from "@/lib/utils";
@@ -41,8 +42,7 @@ import type {
 } from "@/services/progressService";
 
 import { RecentActivityList } from "@/components/dashboard/recent-activity-list";
-import { WeakAreasPageContent } from "@/app/(protected)/analytics/weak-areas/page";
-import { ErrorPatternsContent } from "@/app/(protected)/analytics/error-patterns/page";
+import { DashboardProgressSection } from "@/components/dashboard/dashboard-progress-section";
 import { ExamResultsPageContent } from "@/app/(protected)/exam/results/page";
 import { ProfilePageContent } from "@/app/(protected)/profile/page";
 
@@ -53,7 +53,7 @@ import { AccountAccessCard } from "@/components/payment/account-access-card";
 // ─── Progress Tracker types (inline, no extra file) ──────────────────────────
 
 type DashboardSection =
-  "overview" | "weak-areas" | "error-patterns" | "exam-results" | "profile";
+  "overview" | "progress" | "exam-results" | "profile";
 
 interface DashboardActivityItem {
   id: string;
@@ -321,11 +321,6 @@ function DashboardHome() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey, currentUserId, language]);
 
-  const firstName =
-    user?.firstName ||
-    user?.username ||
-    t("dashboard.learner");
-
   if (isLoading) {
     return (
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
@@ -456,26 +451,10 @@ function DashboardHome() {
 
   const focusActionPath =
     focusCategoryCode
-      ? `/practice/${focusCategoryCode}`
+      ? /^TH(?:0[1-9]|10)$/.test(focusCategoryCode)
+        ? `/exam?category=${focusCategoryCode}`
+        : `/practice/${focusCategoryCode}`
       : topRecommendation?.actionPath || "/practice";
-
-  const hasFocusEvidence =
-    Boolean(topPriority || fallbackWeakArea);
-
-  const heroInsight =
-    hasFocusEvidence && focusAccuracy !== null
-      ? t("student_intelligence.top_priority", {
-          category: focusName,
-          accuracy: Math.round(focusAccuracy),
-        })
-      : t("dashboard.subtitle");
-
-  const recommendationText =
-    topRecommendation
-      ? t(topRecommendation.key, {
-          category: focusName,
-        })
-      : heroInsight;
 
   const focusCtaLabel =
     focusCategoryCode
@@ -525,25 +504,21 @@ function DashboardHome() {
       label: t("dashboard.stat_questions_done"),
       value: progressData.totalAttempted,
       icon: BookOpen,
-      tone: "primary",
     },
     {
       label: t("analytics.stat_accuracy"),
       value: `${Math.round(progressData.averageScore)}%`,
       icon: Target,
-      tone: "primary",
     },
     {
       label: t("student_intelligence.exam.total"),
       value: progressData.totalExamsTaken,
       icon: Trophy,
-      tone: "secondary",
     },
     {
       label: t("dashboard.lessons_completed"),
       value: progressData.lessonsCompletedCount,
       icon: CheckCircle,
-      tone: "secondary",
     },
   ] as const;
 
@@ -552,79 +527,65 @@ function DashboardHome() {
       dir={language === "ar" ? "rtl" : "ltr"}
       className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8"
     >
-      {/* Primary status area */}
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="break-words text-lg font-black text-foreground">
-            {t("dashboard.welcome_back")} {firstName}
-          </p>
-        </div>
-
+      {/* Access status stays available where the desktop sidebar is absent. */}
+      <div className="lg:hidden">
         <AccountAccessCard compact />
       </div>
 
-      <PageHeroSurface>
-        <PageHeroEyebrow>
-          {t("student_intelligence.title")}
-        </PageHeroEyebrow>
+      <PageHeroSurface
+        contentClassName="space-y-4 px-6 py-6 sm:px-8"
+      >
+        <div className="max-w-3xl space-y-2">
+          <PageHeroEyebrow>
+            {t("student_intelligence.title")}
+          </PageHeroEyebrow>
 
-        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-          <div className="min-w-0">
-            <PageHeroTitle>
-              {t("student_intelligence.readiness")}
-            </PageHeroTitle>
+          <PageHeroTitle>
+            {t("student_intelligence.readiness")}
+          </PageHeroTitle>
 
-            <PageHeroDescription className="mt-2 max-w-3xl">
-              {heroInsight}
-            </PageHeroDescription>
-
-            <div className="mt-5 flex min-w-0 flex-wrap items-end gap-3">
-              <span className="text-4xl font-black tracking-tight text-primary sm:text-5xl">
-                {readinessLabel}
-              </span>
-
-              <span className="pb-1 text-sm font-semibold text-muted-foreground">
-                {levelLabel} · {trendLabel}
-              </span>
-            </div>
-
-            <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-500"
-                style={{
-                  width: `${readiness ?? 0}%`,
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="min-w-[150px] rounded-2xl border border-secondary/15 bg-secondary/[0.05] p-4">
-            <p className="text-xs font-semibold text-muted-foreground">
-              {t("student_intelligence.pass_probability")}
-            </p>
-
-            <p className="mt-1 text-2xl font-black text-secondary">
-              {passProbabilityLabel}
-            </p>
-          </div>
+          <PageHeroDescription>
+            {t("dashboard.readiness_description")}
+          </PageHeroDescription>
         </div>
 
-        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-          <Button asChild className="w-full sm:w-auto">
-            <Link href="/exam">
-              {t("dashboard.v2_exam_cta")}
-            </Link>
-          </Button>
+        <div className="min-w-0 space-y-4">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-6 gap-y-2">
+            <span className="text-4xl font-black tracking-tight text-primary sm:text-5xl">
+              {readinessLabel}
+            </span>
 
-          <Button
-            asChild
-            variant="outline"
-            className="w-full sm:w-auto"
-          >
-            <Link href={focusActionPath}>
-              {focusCtaLabel}
-            </Link>
-          </Button>
+            <span className="text-sm font-semibold text-muted-foreground">
+              {levelLabel} · {trendLabel}
+            </span>
+
+            <span className="inline-flex items-baseline gap-2 text-sm font-semibold text-muted-foreground">
+              <span>
+                {t("student_intelligence.pass_probability")}
+              </span>
+
+              <strong className="text-xl font-black tracking-tight text-secondary">
+                {passProbabilityLabel}
+              </strong>
+            </span>
+          </div>
+
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-500"
+              style={{
+                width: `${readiness ?? 0}%`,
+              }}
+            />
+          </div>
+
+          <div className="flex justify-start">
+            <Button asChild className="w-full sm:w-auto">
+              <Link href="/exam">
+                {t("dashboard.v2_exam_cta")}
+              </Link>
+            </Button>
+          </div>
         </div>
       </PageHeroSurface>
 
@@ -635,64 +596,34 @@ function DashboardHome() {
       >
         {metrics.map((metric) => {
           const Icon = metric.icon;
-          const isPrimary = metric.tone === "primary";
 
           return (
-            <div
+            <PageMetricCard
               key={metric.label}
-              className="min-w-0 rounded-2xl border border-border/60 bg-card p-4 shadow-sm"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span
-                  className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                    isPrimary
-                      ? "bg-primary/10 text-primary"
-                      : "bg-secondary/10 text-secondary",
-                  )}
-                >
-                  <Icon
-                    className="h-4.5 w-4.5"
-                    aria-hidden
-                  />
-                </span>
-
-                <div className="min-w-0">
-                  <p className="break-words text-xs font-semibold text-muted-foreground">
-                    {metric.label}
-                  </p>
-
-                  <p
-                    className={cn(
-                      "mt-0.5 break-words text-xl font-black",
-                      isPrimary
-                        ? "text-primary"
-                        : "text-secondary",
-                    )}
-                  >
-                    {metric.value}
-                  </p>
-                </div>
-              </div>
-            </div>
+              icon={<Icon className="h-4 w-4" aria-hidden />}
+              label={metric.label}
+              value={metric.value}
+              mobileStacked
+              className="bg-card/90"
+            />
           );
         })}
       </section>
 
       {/* One trend area + one next-focus area */}
-      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
+      <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
         <PageSectionSurface
           title={t("student_intelligence.exam_history")}
           description={t("student_intelligence.exam.score_trend")}
         >
           {recentScores.length === 0 ? (
-            <div className="flex min-h-40 items-center justify-center rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 text-center text-sm text-muted-foreground">
+            <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 text-center text-sm text-muted-foreground">
               {t("common.not_available")}
             </div>
           ) : (
             <div
               dir="ltr"
-              className="flex h-48 min-w-0 items-end gap-2 rounded-2xl border border-border/60 bg-background/70 px-3 pb-3 pt-4 sm:gap-3 sm:px-4"
+              className="flex h-48 min-w-0 items-end gap-2 rounded-xl border border-border/40 bg-muted/20 px-3 pb-3 pt-4 sm:gap-3 sm:px-4"
             >
               {recentScores.map((score, index) => {
                 const isLatest =
@@ -748,7 +679,7 @@ function DashboardHome() {
 
         <PageSectionSurface
           title={t("student_intelligence.next_steps")}
-          description={t("analytics.weak_areas")}
+          description={t("dashboard.next_focus_description")}
         >
           <div className="space-y-4">
             <div className="flex min-w-0 items-start gap-3">
@@ -777,12 +708,9 @@ function DashboardHome() {
               </div>
             </div>
 
-            <p className="rounded-xl bg-muted/40 px-3 py-3 text-sm leading-6 text-muted-foreground">
-              {recommendationText}
-            </p>
 
-            <div className="border-t border-border/60 pt-4">
-              <Button asChild className="w-full">
+            <div>
+              <Button asChild variant="outline" className="w-full">
                 <Link href={focusActionPath}>
                   {focusCtaLabel}
                 </Link>
@@ -813,14 +741,9 @@ function DashboardSectionNav({
   }> = [
     { section: "overview", label: t("nav.dashboard"), href: "/dashboard" },
     {
-      section: "weak-areas",
-      label: t("analytics.weak_areas"),
-      href: "/dashboard?section=weak-areas",
-    },
-    {
-      section: "error-patterns",
-      label: t("analytics.error_patterns"),
-      href: "/dashboard?section=error-patterns",
+      section: "progress",
+      label: t("dashboard.progress_v2.nav"),
+      href: "/dashboard?section=progress",
     },
     {
       section: "exam-results",
@@ -857,27 +780,26 @@ function DashboardSectionContent() {
   const searchParams = useSearchParams();
   const requestedSection = searchParams.get("section");
 
-  const activeSection: DashboardSection =
-    requestedSection === "weak-areas" ||
-    requestedSection === "error-patterns" ||
-    requestedSection === "exam-results" ||
-    requestedSection === "profile"
+  const legacyProgressSection =
+    requestedSection === "weak-areas" || requestedSection === "error-patterns"
       ? requestedSection
-      : "overview";
+      : null;
+
+  const activeSection: DashboardSection =
+    requestedSection === "progress" || legacyProgressSection
+      ? "progress"
+      : requestedSection === "exam-results" || requestedSection === "profile"
+        ? requestedSection
+        : "overview";
 
   return (
     <div className="space-y-6">
       <DashboardSectionNav activeSection={activeSection} />
 
       {activeSection === "overview" && <DashboardHome />}
-      {activeSection === "weak-areas" && (
-        <div className="px-6 pb-6">
-          <WeakAreasPageContent />
-        </div>
-      )}
-      {activeSection === "error-patterns" && (
-        <div className="px-6 pb-6">
-          <ErrorPatternsContent />
+      {activeSection === "progress" && (
+        <div className="mx-auto max-w-6xl px-4 pb-6 sm:px-6">
+          <DashboardProgressSection legacySection={legacyProgressSection} />
         </div>
       )}
       {activeSection === "exam-results" && (

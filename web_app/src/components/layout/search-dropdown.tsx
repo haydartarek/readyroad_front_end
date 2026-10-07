@@ -31,9 +31,9 @@ const TYPE_ICON: Record<ResultType, React.ElementType> = {
 };
 
 const TYPE_BADGE_COLOR: Record<ResultType, string> = {
-  traffic_sign: "bg-green-100  text-green-700",
-  lesson: "bg-purple-100 text-purple-700",
-  question: "bg-blue-100   text-blue-700",
+  traffic_sign: "bg-primary/10 text-primary",
+  lesson: "bg-secondary/10 text-secondary",
+  question: "bg-muted text-muted-foreground",
 };
 
 const TYPE_I18N_KEY: Record<ResultType, string> = {

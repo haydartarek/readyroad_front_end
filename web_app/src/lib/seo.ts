@@ -13,14 +13,14 @@ export function toBrandedMetadataTitle(title: string): string {
     .split(/\s*\|\s*/)
     .map((section) => section.trim())
     .filter((section) => section && !/^RijVia$/iu.test(section))
-    .map((section) => section.replace(/\bRijVia\b/giu, "Rijvia"))
+    .map((section) => section.replace(/\bRijVia\b/giu, "RijVia"))
     .join(" | ");
 
-  return content ? `${content} | Rijvia` : "Rijvia";
+  return content ? `${content} | RijVia` : "RijVia";
 }
 
 export function normalizeSeoBrand(value: string): string {
-  return value.replace(/\bRijVia\b/giu, "Rijvia");
+  return value.replace(/\bRijVia\b/giu, "RijVia");
 }
 
 export function toMetadataDescription(

@@ -110,7 +110,7 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
     practice: {
       title: "Exercices Théorie Permis B Belgique",
       description:
-        "Faites des exercices de théorie permis B Belgique et des questions d’exercice par thème pour travailler le code de la route belge et conserver votre progression après connexion.",
+        "Faites des exercices de théorie pour le permis B en Belgique, avec des questions par thème sur le code de la route et le suivi de votre progression.",
       keywords: [
         "exercices théorie permis B Belgique",
         "questions d'exercice permis B",
@@ -136,7 +136,7 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
     theoryExam: {
       title: "Examen Blanc Permis B Belgique",
       description:
-        "Passez un examen blanc permis B Belgique de 50 questions comme simulation de l’examen théorique, avec 15 secondes pour répondre après la lecture et un seuil de 41 sur 50.",
+        "Passez un examen blanc du permis B en Belgique : 50 questions, 15 secondes pour répondre après la lecture et un seuil de réussite de 41 sur 50.",
       keywords: [
         "examen blanc permis B Belgique",
         "test théorique belge",

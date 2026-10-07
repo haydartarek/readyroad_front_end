@@ -101,8 +101,10 @@ const MAX_VISIBLE_QUESTIONS = 5;
 
 export function ErrorPatternList({
   patterns,
+  compact = false,
 }: {
   patterns: ErrorPatternViewModel[];
+  compact?: boolean;
 }) {
   const { t, language } = useLanguage();
   const [expandedPattern, setExpandedPattern] = useState<string | null>(null);
@@ -111,7 +113,7 @@ export function ErrorPatternList({
     setExpandedPattern((prev) => (prev === key ? null : key));
 
   return (
-    <div className="space-y-4">
+    <div className={compact ? "divide-y divide-border/60 overflow-hidden rounded-2xl border border-border/60 bg-card/70" : "space-y-4"}>
       {patterns.map((pattern, index) => {
         const cfg = SEVERITY_CONFIG[pattern.severity];
         const isExpanded = expandedPattern === pattern.pattern;
@@ -139,13 +141,15 @@ export function ErrorPatternList({
             key={pattern.pattern}
             data-testid="error-pattern-card"
             className={cn(
-              "rounded-2xl border-2 transition-all shadow-sm",
-              cfg.border,
+              compact
+                ? "rounded-none border-0 bg-transparent shadow-none"
+                : "rounded-2xl border-2 transition-all shadow-sm",
+              !compact && cfg.border,
             )}
           >
             {/* ── Header (clickable) ── */}
             <CardHeader
-              className={cn("cursor-pointer py-6 px-6", cfg.bg)}
+              className={cn(compact ? "cursor-pointer bg-transparent px-4 py-3 sm:px-5" : "cursor-pointer py-6 px-6", !compact && cfg.bg)}
               onClick={() => toggle(pattern.pattern)}
             >
               <div className="flex items-start justify-between gap-4">
@@ -153,8 +157,11 @@ export function ErrorPatternList({
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        "w-7 h-7 rounded-lg flex items-center justify-center",
-                        cfg.badgeBg,
+                        compact
+                          ? "flex h-7 w-7 items-center justify-center"
+                          : "w-7 h-7 rounded-lg flex items-center justify-center",
+                        !compact && cfg.badgeBg,
+                        compact && cfg.text,
                       )}
                     >
                       <SeverityIcon
@@ -164,8 +171,10 @@ export function ErrorPatternList({
                     </div>
                     <Badge
                       className={cn(
-                        "border text-xs font-semibold",
-                        cfg.badgeBg,
+                        compact
+                          ? "border-0 bg-transparent p-0 text-xs font-semibold shadow-none"
+                          : "border text-xs font-semibold",
+                        compact ? cfg.text : cfg.badgeBg,
                       )}
                     >
                       {t(cfg.labelKey)}
@@ -174,16 +183,16 @@ export function ErrorPatternList({
                       #{index + 1}
                     </span>
                   </div>
-                  <CardTitle className="text-lg font-black">
+                  <CardTitle className={compact ? "text-sm font-semibold text-foreground" : "text-lg font-black"}>
                     {t(pattern.patternKey)}
                   </CardTitle>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className={compact ? "mt-1 text-sm leading-5 text-muted-foreground" : "text-sm font-medium text-muted-foreground"}>
                     {t(pattern.descriptionKey)}
                   </p>
                 </div>
 
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className={cn("text-3xl font-black", cfg.text)}>
+                  <span className={cn(compact ? "text-base font-bold" : "text-3xl font-black", cfg.text)}>
                     {pattern.count}
                   </span>
                   <span className="text-xs text-muted-foreground">
@@ -199,47 +208,47 @@ export function ErrorPatternList({
             </CardHeader>
 
             {/* ── Content ── */}
-            <CardContent className="px-6 py-5 space-y-4">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <div className="rounded-xl border border-border/50 bg-background/70 p-3 text-center">
+            <CardContent className={compact ? "space-y-3 border-t border-border/50 px-4 py-4 sm:px-5" : "px-6 py-5 space-y-4"}>
+              <div className={compact ? "grid grid-cols-2 border-y border-border/60 sm:grid-cols-4" : "grid grid-cols-2 gap-2 sm:grid-cols-4"}>
+                <div className={compact ? "px-3 py-2.5 text-center" : "rounded-xl border border-border/50 bg-background/70 p-3 text-center"}>
                   <p className="text-xs text-muted-foreground">
                     {t("error_patterns.previous_value")}
                   </p>
-                  <p className="mt-1 text-lg font-black">
+                  <p className={compact ? "mt-1 text-base font-bold" : "mt-1 text-lg font-black"}>
                     {pattern.previousCount ?? "—"}
                   </p>
                 </div>
-                <div className="rounded-xl border border-border/50 bg-background/70 p-3 text-center">
+                <div className={compact ? "px-3 py-2.5 text-center" : "rounded-xl border border-border/50 bg-background/70 p-3 text-center"}>
                   <p className="text-xs text-muted-foreground">
                     {t("error_patterns.current_value")}
                   </p>
-                  <p className={cn("mt-1 text-lg font-black", cfg.text)}>
+                  <p className={cn(compact ? "mt-1 text-base font-bold" : "mt-1 text-lg font-black", cfg.text)}>
                     {pattern.currentCount}
                   </p>
                 </div>
-                <div className="rounded-xl border border-border/50 bg-background/70 p-3 text-center">
+                <div className={compact ? "px-3 py-2.5 text-center" : "rounded-xl border border-border/50 bg-background/70 p-3 text-center"}>
                   <p className="text-xs text-muted-foreground">
                     {t("error_patterns.change")}
                   </p>
-                  <p className="mt-1 text-lg font-black">
+                  <p className={compact ? "mt-1 text-base font-bold" : "mt-1 text-lg font-black"}>
                     {pattern.delta === null
                       ? "—"
                       : `${pattern.delta > 0 ? "+" : ""}${pattern.delta}`}
                   </p>
                 </div>
-                <div className="flex min-w-0 items-center justify-center rounded-xl border border-border/50 bg-background/70 p-3 text-center">
-                  <Badge className={cn("max-w-full whitespace-normal", cfg.badgeBg)}>
+                <div className={compact ? "flex min-w-0 items-center justify-center px-3 py-2.5 text-center" : "flex min-w-0 items-center justify-center rounded-xl border border-border/50 bg-background/70 p-3 text-center"}>
+                  <Badge className={cn(compact ? "max-w-full whitespace-normal border-0 bg-transparent p-0 shadow-none" : "max-w-full whitespace-normal", compact ? cfg.text : cfg.badgeBg)}>
                     {t(trendKey)}
                   </Badge>
                 </div>
               </div>
 
               {pattern.trend === "INSUFFICIENT_DATA" ? (
-                <p className="text-center text-xs text-muted-foreground">
+                <p className={compact ? "hidden" : "text-center text-xs text-muted-foreground"}>
                   {t("error_patterns.insufficient_comparison")}
                 </p>
               ) : (
-                <p className="text-center text-xs text-muted-foreground">
+                <p className={compact ? "hidden" : "text-center text-xs text-muted-foreground"}>
                   {pattern.delta !== null && pattern.delta < 0
                     ? t("error_patterns.fewer_errors", {
                         count: Math.abs(pattern.delta),
@@ -252,7 +261,7 @@ export function ErrorPatternList({
                 </p>
               )}
 
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <div className={compact ? "hidden" : "flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground"}>
                 <span>
                   {t("error_patterns.recent_attempts", {
                     count: pattern.recentAttemptsCount,
@@ -289,19 +298,19 @@ export function ErrorPatternList({
 
               {/* Expanded content */}
               {isExpanded && (
-                <div className="space-y-4 border-t border-border/50 pt-4">
+                <div className={compact ? "space-y-3 border-t border-border/50 pt-3" : "space-y-4 border-t border-border/50 pt-4"}>
                   {/* Affected categories */}
                   {pattern.affectedCategories.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
+                      <h4 className={cn("mb-2 font-bold", compact ? "text-sm text-foreground" : "text-xs uppercase tracking-wide text-muted-foreground")}>
                         {t("error_patterns.affected_categories")}
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {pattern.affectedCategories.map((cat) => (
                           <Badge
                             key={cat}
-                            variant="secondary"
-                            className="rounded-full text-xs"
+                            variant={compact ? "outline" : "secondary"}
+                            className={compact ? "rounded-lg border-border/70 bg-muted/40 px-2.5 py-1 text-xs font-semibold text-foreground shadow-none" : "rounded-full text-xs"}
                           >
                             {cat}
                           </Badge>
@@ -310,28 +319,8 @@ export function ErrorPatternList({
                     </div>
                   )}
 
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
-                      {t("error_patterns.grouped_analysis")}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {pattern.analysisGroups.map((group) => (
-                        <Badge
-                          key={`${group.groupType}:${group.code}`}
-                          variant="outline"
-                          className="rounded-full text-xs"
-                        >
-                          {group.labelKey ? t(group.labelKey) : group.label}
-                          <span className="ms-1 text-muted-foreground">
-                            · {group.count}
-                          </span>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Recommendation */}
-                  <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
+                  <div className={compact ? "rounded-xl bg-primary/[0.04] p-3 ring-1 ring-primary/15" : "rounded-xl bg-primary/5 border border-primary/20 p-4"}>
                     <h4 className="flex items-center gap-2 text-sm font-semibold text-primary mb-2">
                       <Lightbulb className="w-4 h-4 flex-shrink-0" />
                       {t("error_patterns.recommendation_label")}
@@ -342,20 +331,20 @@ export function ErrorPatternList({
                   </div>
 
                   {/* Example questions */}
-                  {pattern.exampleQuestions.length > 0 && (
+                  {!compact && pattern.exampleQuestions.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">
+                      <h4 className={cn("mb-2 font-bold", compact ? "text-sm text-foreground" : "text-xs uppercase tracking-wide text-muted-foreground")}>
                         {t("error_patterns.example_questions_label")} (
                         {pattern.exampleQuestions.length})
                       </h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className={compact ? "hidden" : "flex flex-wrap gap-2"}>
                         {pattern.exampleQuestions
                           .slice(0, MAX_VISIBLE_QUESTIONS)
                           .map((qId) => (
                             <Badge
                               key={qId}
                               variant="outline"
-                              className="font-mono text-xs"
+                              className="rounded-lg px-3 py-1.5 font-mono text-xs"
                             >
                               Q#{qId}
                             </Badge>
@@ -380,7 +369,8 @@ export function ErrorPatternList({
                   <div className="flex flex-col gap-2 pt-1 sm:flex-row">
                     <Button
                       size="sm"
-                      className="w-full gap-2 rounded-xl shadow-sm shadow-primary/20 sm:w-auto"
+                      variant="default"
+                      className={compact ? "h-8 w-auto gap-2 rounded-lg px-3" : "w-full gap-2 rounded-xl shadow-sm shadow-primary/20 sm:w-auto"}
                       asChild
                     >
                       <Link href={practiceHref}>
@@ -391,7 +381,7 @@ export function ErrorPatternList({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="w-full gap-2 rounded-xl sm:w-auto"
+                      className={compact ? "h-8 w-auto gap-2 rounded-lg px-3" : "w-full gap-2 rounded-xl sm:w-auto"}
                     >
                       <BookOpen className="w-3.5 h-3.5" />
                       {t("error_patterns.study_material")}

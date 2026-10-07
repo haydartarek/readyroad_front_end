@@ -115,7 +115,7 @@ function buildBreadcrumbs(
 function Separator({ isRTL }: { isRTL: boolean }) {
   return (
     <span
-      className="mx-0.5 flex-shrink-0 text-muted-foreground/40"
+      className="mx-0.5 flex-shrink-0 text-primary/35"
       aria-hidden="true"
     >
       {isRTL ? (
@@ -137,7 +137,7 @@ function BreadcrumbLink({
   if (item.isCurrentPage) {
     return (
       <span
-        className="inline-flex max-w-[200px] items-center gap-1.5 rounded-xl bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary"
+        className="inline-flex max-w-[min(22rem,70vw)] items-center py-1 text-sm font-bold text-secondary"
         aria-current="page"
       >
         {item.label}
@@ -149,11 +149,11 @@ function BreadcrumbLink({
     <Link
       href={item.href}
       className={cn(
-        "inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground",
+        "inline-flex items-center py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary",
         isFirst && "gap-1.5",
       )}
     >
-      {isFirst ? <Home className="h-3.5 w-3.5 flex-shrink-0" /> : null}
+      {isFirst ? <Home className="h-3.5 w-3.5 flex-shrink-0 text-primary" /> : null}
       {item.label}
     </Link>
   );
@@ -224,7 +224,7 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
     >
       <ol
         ref={containerRef}
-        className="inline-flex max-w-full flex-wrap items-center gap-1 overflow-hidden rounded-2xl border border-border/50 bg-card px-4 py-2 shadow-sm"
+        className="inline-flex max-w-full flex-wrap items-center gap-1.5 overflow-hidden"
       >
         {isCollapsed ? (
           <>
@@ -236,7 +236,7 @@ export function Breadcrumb({ items: customItems }: BreadcrumbProps = {}) {
             <li className="relative flex items-center gap-1">
               <button
                 onClick={() => setShowDropdown((prev) => !prev)}
-                className="inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                className="inline-flex items-center py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
                 aria-label={t("common.show_more_breadcrumbs")}
                 aria-expanded={showDropdown}
               >

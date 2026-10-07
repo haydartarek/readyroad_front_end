@@ -273,7 +273,7 @@ function TrafficSignsContent({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
-      <div className="container mx-auto px-4 py-6 md:py-7 space-y-5 md:space-y-6">
+      <div className="container mx-auto px-4 pt-8 pb-6 md:pt-8 md:pb-7 space-y-5 md:space-y-6">
         <Breadcrumb />
 
         <PageHeroSurface contentClassName="space-y-3">

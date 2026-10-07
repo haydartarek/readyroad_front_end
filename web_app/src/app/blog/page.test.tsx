@@ -5,6 +5,9 @@ import BlogPage, { generateMetadata } from "./page";
 
 jest.mock("@/lib/server/articles", () => ({ getPublicArticles: jest.fn() }));
 jest.mock("@/lib/server/request-locale", () => ({ getRequestLocale: jest.fn() }));
+jest.mock("@/components/ui/breadcrumb", () => ({
+  Breadcrumb: () => <nav aria-label="breadcrumb" />,
+}));
 
 const getArticles = getPublicArticles as jest.Mock;
 const getLocale = getRequestLocale as jest.Mock;
@@ -41,7 +44,7 @@ describe("localized public blog index", () => {
     render(await BlogPage());
 
     expect(getArticles).toHaveBeenCalledWith(locale);
-    expect(screen.getByTestId("blog-article-grid")).toHaveClass("grid-cols-1", "md:grid-cols-2", "lg:grid-cols-4");
+    expect(screen.getByTestId("blog-article-grid")).toHaveClass("grid-cols-1", "md:grid-cols-2", "lg:grid-cols-3");
     expect(screen.getByRole("link", { name: /Safer driving in Belgium/i })).toHaveAttribute(
       "href",
       href,
@@ -56,7 +59,7 @@ describe("localized public blog index", () => {
     const metadata = await generateMetadata();
 
     expect(metadata.title).toEqual({
-      absolute: "Comprenez plus clairement la théorie de la conduite belge | Rijvia",
+      absolute: "Théorie de la conduite belge : guides pratiques | RijVia",
     });
     expect(metadata.alternates).toEqual({
       canonical: "https://rijvia.be/fr/blog",

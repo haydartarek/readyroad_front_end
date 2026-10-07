@@ -673,19 +673,20 @@ export default function ExamPage() {
 
   // ── Exam Screen ──
   return (
+    <div className="px-4 pb-8 pt-1 md:pt-2 lg:px-8">
     <FocusedExamShell
       dir={isRTL ? "rtl" : "ltr"}
       counter={questionCounter}
       difficultyLabel={t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
-      difficultyClassName={DIFF_COLORS[current.difficulty]}
+      difficultyClassName="bg-primary/10 text-primary"
       timerPill={
         <div
           className={cn(
-            "inline-flex items-center gap-1.5 text-[13px] font-bold tabular-nums transition-colors sm:text-sm",
+            "inline-flex items-center gap-1.5 text-[13px] font-black tabular-nums transition-colors sm:text-sm",
             timerPillClass,
           )}
         >
-          <Clock3 className="h-3.5 w-3.5" />
+          <Clock3 className="h-4 w-4" />
           {timeLeft}s
         </div>
       }
@@ -694,12 +695,12 @@ export default function ExamPage() {
       afterCard={
         <div
           data-testid="exam-actions"
-          className="grid grid-cols-1 gap-2 pb-3 pt-1 sm:grid-cols-3"
+          className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-5 pb-3"
         >
           <Button
-            variant="outline"
+            variant="destructive"
             size="lg"
-            className="order-3 w-full border-destructive/25 text-destructive hover:bg-destructive/5 hover:text-destructive sm:order-1"
+            className="w-full whitespace-normal px-3"
             asChild
           >
             <Link href={`/traffic-signs/${routeCode}`}>
@@ -714,7 +715,7 @@ export default function ExamPage() {
           <Button
             variant="outline"
             size="lg"
-            className="order-2 w-full"
+            className="w-full whitespace-normal px-3"
             asChild
           >
             <Link href="/contact">
@@ -722,32 +723,26 @@ export default function ExamPage() {
               {t("practice_exam.report_question")}
             </Link>
           </Button>
-          <Button
-            size="lg"
-            onClick={
-              currentIdx < total - 1
-                ? () => setCurrentIdx((i) => i + 1)
-                : handleForceSubmit
-            }
-            disabled={submitting || !answers.has(current.id)}
-            className="order-1 w-full shadow-md shadow-primary/20 sm:order-3"
-          >
-            {currentIdx + 1 === total
-              ? submitting
-                ? t("sign_quiz.exam.submitting")
-                : t("sign_quiz.exam.submit_exam")
-              : t("sign_quiz.practice.next_question")}
-            {currentIdx + 1 === total ? null : isRTL ? (
-              <ArrowLeft className="h-4 w-4" />
-            ) : (
-              <ArrowRight className="h-4 w-4" />
-            )}
-          </Button>
         </div>
       }
     >
       <FocusedQuestionCard
         compactOptionGap
+        compactMobile
+        footer={
+          <Button
+            data-testid="exam-next"
+            size="lg"
+            onClick={currentIdx < total - 1 ? () => setCurrentIdx((i) => i + 1) : handleForceSubmit}
+            disabled={submitting || !answers.has(current.id)}
+            className="w-full shadow-md shadow-primary/20"
+          >
+            {currentIdx + 1 === total
+              ? submitting ? t("sign_quiz.exam.submitting") : t("sign_quiz.exam.submit_exam")
+              : t("sign_quiz.practice.next_question")}
+            {currentIdx + 1 === total ? null : isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+          </Button>
+        }
         headerBadges={
           <>
             <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
@@ -760,17 +755,14 @@ export default function ExamPage() {
         }
         difficultyBadge={
           <span
-            className={cn(
-              "inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-bold",
-              DIFF_COLORS[current.difficulty],
-            )}
+            className="inline-flex min-h-8 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-black text-primary"
           >
             {t(`sign_quiz.${current.difficulty.toLowerCase()}`)}
           </span>
         }
         media={
           questionImageUrl ? (
-            <ExamQuestionImageFrame>
+            <ExamQuestionImageFrame variant="theory" className="max-lg:max-h-[28svh] max-lg:p-1.5">
               <SignImage
                 src={questionImageUrl}
                 alt={sign.nameEn}
@@ -788,5 +780,6 @@ export default function ExamPage() {
         }))}
       />
     </FocusedExamShell>
+    </div>
   );
 }

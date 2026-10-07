@@ -750,7 +750,7 @@ export default function EditorialEditorPanel({
 
   return (
     <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(17rem,0.32fr)_minmax(0,1fr)]">
-      <aside className="min-w-0 self-start rounded-3xl border border-border/50 bg-card/80 p-4 shadow-sm xl:sticky xl:top-4">
+      <aside className="min-w-0 self-start rounded-2xl border border-border/50 bg-card/80 p-4 shadow-sm xl:sticky xl:top-4">
         <section className="mb-4 border-b border-border/50 pb-4" data-testid="editorial-content-graph">
           <div className="flex items-center gap-2">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -811,10 +811,10 @@ export default function EditorialEditorPanel({
 
       {selectedTopic ? (
         <main className="min-w-0 space-y-5">
-          <section className="min-w-0 overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm">
+          <section className="min-w-0 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
             {selectedTopic.articleId ? (
               <div
-                className="border-b border-border/50 bg-sky-50/30 p-4 dark:bg-sky-950/10 sm:p-6"
+                className="border-b border-border/50 bg-primary/5 p-4 dark:bg-primary/10 sm:p-6"
                 data-testid="editorial-translation-top"
               >
                 <TranslationPanel
@@ -1444,7 +1444,7 @@ function TranslationPanel({
   onRequest: () => void;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-4 dark:bg-sky-950/10 sm:p-5" data-testid="editorial-translation-request">
+    <section className="space-y-4 rounded-2xl border border-primary/15 bg-primary/5 p-4 dark:bg-primary/10 sm:p-5" data-testid="editorial-translation-request">
       <div>
         <h3 className="flex items-center gap-2 font-black">
           <FilePenLine className="h-4 w-4 text-primary" />

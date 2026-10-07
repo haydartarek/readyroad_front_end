@@ -4,66 +4,66 @@ import { seedCookieConsent } from "./helpers/consent";
 const entryPages: EntryPage[] = [
   {
     path: "/practice",
-    title: "Belgian Driving Theory Practice by Category | Rijvia",
+    title: "Belgian Driving Theory Practice by Category | RijVia",
     heading: "Practice Belgian driving theory questions by topic",
     headingLevel: 2,
   },
   {
     path: "/nl/practice",
-    title: "Theorie Rijbewijs B Oefenen per Onderwerp | Rijvia",
+    title: "Theorie Rijbewijs B Oefenen per Onderwerp | RijVia",
     heading: "Theorie rijbewijs B oefenen per onderwerp",
     headingLevel: 2,
   },
   {
     path: "/fr/practice",
-    title: "Exercices Théorie Permis B Belgique | Rijvia",
+    title: "Exercices Théorie Permis B Belgique | RijVia",
     heading: "Exercices théorie permis B Belgique par thème",
     headingLevel: 2,
   },
   {
     path: "/ar/practice",
-    title: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا | Rijvia",
+    title: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا | RijVia",
     heading: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا حسب الموضوع",
     headingLevel: 2,
   },
   {
     path: "/practice/random",
-    title: "Belgian Traffic Signs Test | Rijvia",
+    title: "Belgian Traffic Signs Test | RijVia",
     heading: "Belgian Traffic Signs Test",
   },
   {
     path: "/nl/practice/random",
-    title: "Verkeersborden Oefenen België | Rijvia",
+    title: "Verkeersborden Oefenen België | RijVia",
     heading: "Verkeersborden Oefenen België",
   },
   {
     path: "/fr/practice/random",
-    title: "Test Panneaux de Signalisation Belgique | Rijvia",
+    title: "Test Panneaux de Signalisation Belgique | RijVia",
     heading: "Test Panneaux de Signalisation Belgique",
   },
   {
     path: "/ar/practice/random",
-    title: "اختبار العلامات المرورية في بلجيكا | Rijvia",
+    title: "اختبار العلامات المرورية في بلجيكا | RijVia",
     heading: "اختبار العلامات المرورية في بلجيكا",
   },
   {
     path: "/exam",
-    title: "Belgian Driving Theory Practice Test | Rijvia",
+    title: "Belgian Driving Theory Practice Test | RijVia",
     heading: "Belgian Driving Theory Practice Test",
   },
   {
     path: "/nl/exam",
-    title: "Proefexamen Rijbewijs B België | Rijvia",
+    title: "Proefexamen Rijbewijs B België | RijVia",
     heading: "Proefexamen Rijbewijs B België",
   },
   {
     path: "/fr/exam",
-    title: "Examen Blanc Permis B Belgique | Rijvia",
+    title: "Examen Blanc Permis B Belgique | RijVia",
     heading: "Examen Blanc Permis B Belgique",
   },
   {
     path: "/ar/exam",
-    title: "أسئلة امتحان السياقة النظري في بلجيكا | Rijvia",
+    title: "أسئلة امتحان السياقة النظري في بلجيكا | RijVia",
     heading: "أسئلة امتحان السياقة النظري في بلجيكا",
   },
 ] as const;

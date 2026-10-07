@@ -337,7 +337,7 @@ export default function LessonDetailClient({
     <div
       ref={contentRef}
       dir={isRtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(223,88,48,0.10),_transparent_34%),linear-gradient(to_bottom,_hsl(var(--muted))_0%,_hsl(var(--background))_22%)]"
+      className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--brand-orange)/0.10),_transparent_34%),linear-gradient(to_bottom,_hsl(var(--muted))_0%,_hsl(var(--background))_22%)]"
     >
       <div className="container mx-auto px-4 py-6 md:py-8">
         <Breadcrumb

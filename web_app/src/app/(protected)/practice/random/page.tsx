@@ -128,6 +128,10 @@ export default function RandomPracticePage() {
   const isAdvancingRef = useRef(false);
   const consecutiveUnansweredRef = useRef(0);
 
+  useEffect(() => {
+    if (phase === "exam") window.scrollTo({ top: 0, behavior: "instant" });
+  }, [phase]);
+
   const localize = useCallback(
     (
       en?: string | null,
@@ -410,8 +414,8 @@ export default function RandomPracticePage() {
                       icon: <Timer className="h-4 w-4" />,
                       value: "15s",
                       label: t("sign_practice.stat_time"),
-                      tone: "text-orange-600",
-                      iconTone: "bg-orange-500/10 text-orange-600",
+                      tone: "text-primary",
+                      iconTone: "bg-primary/10 text-primary",
                     },
                     {
                       icon: <Trophy className="h-4 w-4" />,
@@ -494,7 +498,7 @@ export default function RandomPracticePage() {
                     text: t("practice_exam.rule_choices"),
                   },
                   {
-                    icon: <RefreshCw className="h-4 w-4 text-sky-600" />,
+                    icon: <RefreshCw className="h-4 w-4 text-secondary" />,
                     text: t("sign_practice.rule_freshness"),
                   },
                 ].map((item) => (
@@ -609,11 +613,6 @@ export default function RandomPracticePage() {
           : "text-muted-foreground";
     const questionCounter = `${currentIndex + 1} / ${questions.length}`;
     const difficultyLabel = getDifficultyLabel(question.difficulty);
-    const difficultyClassName = cn(
-      question.difficulty === "EASY" && "bg-green-100 text-green-800",
-      question.difficulty === "MEDIUM" && "bg-orange-100 text-orange-800",
-      question.difficulty === "HARD" && "bg-red-100 text-red-800",
-    );
 
     return (
       <>
@@ -621,15 +620,15 @@ export default function RandomPracticePage() {
           dir={isRTL ? "rtl" : "ltr"}
           counter={questionCounter}
           difficultyLabel={difficultyLabel}
-          difficultyClassName={difficultyClassName}
+          difficultyClassName="bg-primary/10 text-primary"
           timerPill={
             <div
               className={cn(
-                "flex items-center gap-1.5 text-[13px] font-bold tabular-nums transition-colors sm:text-sm",
+                "inline-flex items-center gap-1.5 text-[13px] font-black tabular-nums transition-colors sm:text-sm",
                 timerPillClass,
               )}
             >
-              <Clock className="h-3.5 w-3.5" />
+              <Clock className="h-4 w-4" />
               {timeLeft}s
             </div>
           }
@@ -638,12 +637,12 @@ export default function RandomPracticePage() {
           afterCard={
             <div
               data-testid="exam-actions"
-              className="grid grid-cols-1 gap-2 pb-3 pt-1 sm:grid-cols-3"
+              className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-5 pb-3"
             >
               <Button
                 variant="destructive"
                 size="lg"
-                className="order-3 w-full sm:order-1"
+                className="w-full whitespace-normal px-3"
                 onClick={() => setShowExitDialog(true)}
               >
                 {t("practice_exam.end_exam")}
@@ -651,7 +650,7 @@ export default function RandomPracticePage() {
               <Button
                 variant="outline"
                 size="lg"
-                className="order-2 w-full"
+                className="w-full whitespace-normal px-3"
                 asChild
               >
                 <Link href="/contact">
@@ -659,31 +658,24 @@ export default function RandomPracticePage() {
                   {t("practice_exam.report_question")}
                 </Link>
               </Button>
-              <Button
-                size="lg"
-                onClick={() => advanceToNext(selectedOption, "manual")}
-                disabled={isLockedUi}
-                className={cn(
-                  "order-1 w-full shadow-md transition-all sm:order-3",
-                  selectedOption !== null
-                    ? "shadow-primary/20 hover:-translate-y-0.5"
-                    : "opacity-80",
-                )}
-              >
-                {currentIndex + 1 === questions.length
-                  ? t("practice_exam.submit_btn")
-                  : t("practice_exam.next_btn")}
-                {isRTL ? (
-                  <ArrowLeft className="h-4 w-4" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" />
-                )}
-              </Button>
             </div>
           }
         >
           <FocusedQuestionCard
             compactOptionGap
+            compactMobile
+            footer={
+              <Button
+                data-testid="exam-next"
+                size="lg"
+                onClick={() => advanceToNext(selectedOption, "manual")}
+                disabled={isLockedUi}
+                className="w-full shadow-md shadow-primary/20"
+              >
+                {currentIndex + 1 === questions.length ? t("practice_exam.submit_btn") : t("practice_exam.next_btn")}
+                {isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+              </Button>
+            }
             headerBadges={
               <span className="inline-flex items-center rounded-full border border-border/60 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                 {getRandomPracticeCategoryLabel(question.signCode, t)}
@@ -691,17 +683,14 @@ export default function RandomPracticePage() {
             }
             difficultyBadge={
               <span
-                className={cn(
-                  "inline-flex min-h-8 items-center rounded-full px-3 text-xs font-bold",
-                  difficultyClassName,
-                )}
+                className="inline-flex min-h-8 items-center rounded-full border border-primary/20 bg-primary/10 px-3 text-xs font-black text-primary"
               >
                 {difficultyLabel}
               </span>
             }
             media={
-              question.showSign && question.signImagePath ? (
-                <ExamQuestionImageFrame>
+          question.signImagePath ? (
+                <ExamQuestionImageFrame variant="theory" className="max-lg:max-h-[28svh] max-lg:p-1.5">
                   <SignImage
                     src={question.signImagePath}
                     alt={question.signCode ?? "traffic sign"}
@@ -912,7 +901,7 @@ export default function RandomPracticePage() {
                 asChild
               >
                 <Link
-                  href={`/dashboard?section=exam-results&randomSignExamId=${result.sessionId}`}
+                  href={`/exam/results?randomSignExamId=${result.sessionId}`}
                 >
                   <Trophy className="me-2 h-4 w-4" />
                   {t("sign_practice.result_cta")}

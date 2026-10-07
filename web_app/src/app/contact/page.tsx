@@ -163,7 +163,7 @@ export default function ContactPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
-      <div className="container mx-auto px-4 py-12 max-w-2xl">
+      <div className="container mx-auto px-4 pt-8 pb-12 max-w-2xl">
         <Breadcrumb
           items={[
             { label: homeLabel, href: "/" },

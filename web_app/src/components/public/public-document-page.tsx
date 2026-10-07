@@ -63,7 +63,7 @@ export function PublicDocumentPage({
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
 
-      <div className="mx-auto min-w-0 w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto min-w-0 w-full max-w-5xl px-4 pt-8 pb-10 sm:px-6 sm:pt-8 sm:pb-14">
         <Breadcrumb
           items={[
             { label: homeLabel, href: "/" },

@@ -9,7 +9,7 @@ import {
   ArrowRight,
   Shuffle,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageSectionSurface } from "@/components/ui/page-surface";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -53,8 +53,14 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
   const { t, language } = useLanguage();
 
   const TYPE_CONFIG = {
-    exam: { icon: ClipboardList, label: t("dashboard.activity_exam_label") },
-    practice: { icon: Target, label: t("dashboard.activity_practice_label") },
+    exam: {
+      icon: ClipboardList,
+      label: t("dashboard.activity_exam_label"),
+    },
+    practice: {
+      icon: Target,
+      label: t("dashboard.activity_practice_label"),
+    },
     "sign-exam": {
       icon: Shuffle,
       label: t("dashboard.activity_sign_exam_label"),
@@ -64,191 +70,226 @@ export function RecentActivityList({ activities }: { activities: Activity[] }) {
   const statusConfig = {
     IN_PROGRESS: {
       label: t("dashboard.activity_status_in_progress"),
-      className: "bg-primary/10 text-primary border-primary/20",
+      className: "text-primary",
     },
     EXPIRED: {
       label: t("dashboard.activity_status_expired"),
-      className: "bg-amber-100 text-amber-700 border-amber-200",
+      className: "text-amber-700 dark:text-amber-400",
     },
     ABANDONED: {
       label: t("dashboard.activity_status_abandoned"),
-      className: "bg-destructive/10 text-destructive border-destructive/20",
+      className: "text-destructive",
     },
     COMPLETED: {
       label: t("dashboard.activity_status_completed"),
-      className: "bg-secondary/10 text-secondary border-secondary/20",
+      className: "text-secondary",
     },
   } as const;
 
   if (activities.length === 0) {
     return (
-      <Card className="gap-0 overflow-hidden rounded-2xl border border-border bg-card py-0 shadow-sm">
-                <CardHeader className="border-b border-border/60 py-5">
-          <CardTitle className="font-black text-secondary">
-            {t("dashboard.recent_activity")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="px-5 py-8 text-center text-sm text-muted-foreground">
-            {t("dashboard.no_activity")}
-          </p>
-        </CardContent>
-      </Card>
+      <PageSectionSurface
+        title={t("dashboard.recent_activity")}
+        contentClassName="space-y-0"
+      >
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          {t("dashboard.no_activity")}
+        </p>
+      </PageSectionSurface>
     );
   }
 
   return (
-    <Card className="gap-0 overflow-hidden rounded-2xl border border-border bg-card py-0 shadow-sm">
-              <CardHeader className="border-b border-border/60 py-5">
-        <CardTitle className="font-black text-secondary">
-          {t("dashboard.recent_activity")}
-        </CardTitle>
-      </CardHeader>
+    <PageSectionSurface
+      title={t("dashboard.recent_activity")}
+      contentClassName="space-y-0"
+    >
+      <div className="divide-y divide-border/60">
+        {activities.map((activity) => {
+          const cfg = TYPE_CONFIG[activity.type];
+          const Icon = cfg.icon;
 
-      <CardContent className="px-0">
-        <div className="divide-y divide-border/60">
-          {activities.map((activity) => {
-            const cfg = TYPE_CONFIG[activity.type];
-            const Icon = cfg.icon;
-            const localizedSignName =
-              language === "ar"
-                ? activity.signNameAr
-                : language === "nl"
-                  ? activity.signNameNl
-                  : language === "fr"
-                    ? activity.signNameFr
-                    : activity.signNameEn;
+          const localizedSignName =
+            language === "ar"
+              ? activity.signNameAr
+              : language === "nl"
+                ? activity.signNameNl
+                : language === "fr"
+                  ? activity.signNameFr
+                  : activity.signNameEn;
 
-            const label =
-              activity.type === "practice" &&
-              (localizedSignName || activity.category)
-                ? `${cfg.label} · ${localizedSignName ?? activity.category}`
-                : activity.type === "sign-exam" &&
-                    (localizedSignName || activity.category)
-                  ? `${cfg.label} · ${localizedSignName ?? activity.category}`
-                  : cfg.label;
+          const subject =
+            localizedSignName ?? activity.category ?? null;
 
-            const status =
-              activity.status && activity.status in statusConfig
-                ? statusConfig[activity.status]
-                : null;
+          const label =
+            subject &&
+            (activity.type === "practice" ||
+              activity.type === "sign-exam")
+              ? `${cfg.label} \u00B7 ${subject}`
+              : cfg.label;
 
-            const progressLabel =
-              activity.questionsAnswered !== undefined &&
-              activity.totalQuestions !== undefined
-                ? `${activity.questionsAnswered}/${activity.totalQuestions} ${t("dashboard.activity_questions_progress")}`
-                : null;
+          const status =
+            activity.status && activity.status in statusConfig
+              ? statusConfig[activity.status]
+              : null;
 
-            const showScore = activity.score !== undefined;
-            const showResult = showScore && activity.passed !== undefined;
-            const shouldShowAction = Boolean(activity.link);
+          const progressLabel =
+            activity.questionsAnswered !== undefined &&
+            activity.totalQuestions !== undefined
+              ? `${activity.questionsAnswered}/${activity.totalQuestions} ${t(
+                  "dashboard.activity_questions_progress",
+                )}`
+              : null;
 
-            return (
-              <div
-                key={activity.id}
-                data-testid="recent-activity-card"
-                className="group flex min-w-0 flex-col items-stretch gap-3 px-5 py-4 text-start transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex min-w-0 max-w-full items-center gap-3">
-                  <div
-                    data-testid="recent-activity-icon"
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-primary/10"
+          const showScore = activity.score !== undefined;
+          const showResult =
+            showScore && activity.passed !== undefined;
+
+          const shouldShowAction = Boolean(activity.link);
+
+          return (
+            <div
+              key={activity.id}
+              data-testid="recent-activity-card"
+              className="group flex min-h-16 min-w-0 flex-col gap-4 py-4 text-start transition-colors hover:bg-muted/20 sm:flex-row sm:items-center sm:justify-start sm:gap-6"
+            >
+              <div className="flex min-w-0 items-center gap-4 sm:w-80 sm:shrink-0">
+                <span
+                  data-testid="recent-activity-icon"
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-secondary/10 text-secondary"
+                >
+                  <Icon
+                    className="h-4 w-4"
+                    aria-hidden
+                  />
+                </span>
+
+                <div className="min-w-0">
+                  <p
+                    data-testid="recent-activity-name"
+                    className="line-clamp-2 break-words text-sm font-semibold text-foreground sm:truncate"
                   >
-                    <Icon className="h-4 w-4 text-primary" />
-                  </div>
+                    {label}
+                  </p>
 
-                  <div className="min-w-0 max-w-full text-start">
-                    <p
-                      data-testid="recent-activity-name"
-                      className="line-clamp-2 min-w-0 max-w-full break-words text-sm font-semibold text-foreground sm:truncate"
-                    >
-                      {label}
-                    </p>
-                    <div
-                      data-testid="recent-activity-meta"
-                      className="mt-1 flex min-w-0 max-w-full flex-wrap items-center justify-start gap-x-2 gap-y-1 text-xs text-muted-foreground sm:mt-0.5"
-                    >
-                      <span>
-                        {formatActivityDate(activity.date, language)}
-                      </span>
-                      {progressLabel && <span>• {progressLabel}</span>}
-                    </div>
+                  <div
+                    data-testid="recent-activity-meta"
+                    className="mt-1 flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted-foreground"
+                  >
+                    <span>
+                      {formatActivityDate(
+                        activity.date,
+                        language,
+                      )}
+                    </span>
+
+                    {progressLabel ? (
+                      <>
+                        <span aria-hidden="true">
+                          {"\u00B7"}
+                        </span>
+
+                        <span>
+                          {progressLabel}
+                        </span>
+                      </>
+                    ) : null}
                   </div>
                 </div>
-
-                {(showScore || status || shouldShowAction) && (
-                  <div className="flex min-w-0 w-full max-w-full flex-col items-center gap-3 sm:w-auto sm:flex-shrink-0 sm:flex-row sm:gap-4">
-                    <div className="space-y-1 text-center sm:text-end">
-                      {showScore && (
-                        <p
-                          data-testid="recent-activity-score"
-                          className="text-lg font-black leading-tight text-foreground"
-                        >
-                          {activity.score}%
-                        </p>
-                      )}
-
-                      {showResult && (
-                        <div
-                          data-testid="recent-activity-status"
-                          className={cn(
-                            "flex items-center justify-center gap-1 text-xs font-semibold sm:justify-end",
-                            activity.passed
-                              ? "text-green-600 dark:text-green-400"
-                              : "text-destructive",
-                          )}
-                        >
-                          {activity.passed ? (
-                            <>
-                              <CheckCircle2 className="h-3 w-3" />
-                              {t("dashboard.result_passed")}
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="h-3 w-3" />
-                              {t("dashboard.result_failed")}
-                            </>
-                          )}
-                        </div>
-                      )}
-
-                      {!showResult && status && (
-                        <div
-                          data-testid="recent-activity-status"
-                          className={cn(
-                            "inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold sm:justify-end",
-                            status.className,
-                          )}
-                        >
-                          {status.label}
-                        </div>
-                      )}
-                    </div>
-
-                    {shouldShowAction && (
-                      <Link
-                        data-testid="recent-activity-action"
-                        href={
-                          activity.link ??
-                          (activity.type === "exam"
-                            ? `/exam/results/${activity.id}`
-                            : `/practice`)
-                        }
-                        className="flex min-h-9 w-full max-w-full items-center justify-center gap-1 rounded-full border border-primary/20 px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 hover:text-primary/80 sm:min-h-0 sm:w-auto sm:rounded-none sm:border-0 sm:p-0 sm:hover:bg-transparent"
-                      >
-                        {activity.status === "IN_PROGRESS"
-                          ? t("dashboard.activity_resume")
-                          : t("dashboard.activity_view")}
-                        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                      </Link>
-                    )}
-                  </div>
-                )}
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+
+              <div className="flex min-w-0 w-full items-center justify-between gap-4 sm:w-48 sm:shrink-0">
+                {(showScore || status) ? (
+                  <div className="flex min-w-0 items-center gap-2">
+                    {showScore ? (
+                      <p
+                        data-testid="recent-activity-score"
+                        dir="ltr"
+                        className="text-base font-black leading-none text-foreground"
+                      >
+                        {activity.score}%
+                      </p>
+                    ) : null}
+
+                    {showResult ? (
+                      <div
+                        data-testid="recent-activity-status"
+                        className={cn(
+                          "inline-flex items-center gap-1 text-xs font-semibold",
+                          activity.passed
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-destructive",
+                        )}
+                      >
+                        {activity.passed ? (
+                          <>
+                            <CheckCircle2
+                              className="h-3 w-3"
+                              aria-hidden
+                            />
+
+                            {t("dashboard.result_passed")}
+                          </>
+                        ) : (
+                          <>
+                            <XCircle
+                              className="h-3 w-3"
+                              aria-hidden
+                            />
+
+                            {t("dashboard.result_failed")}
+                          </>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {!showResult && status ? (
+                      <div
+                        data-testid="recent-activity-status"
+                        className={cn(
+                          "inline-flex items-center text-xs font-semibold",
+                          status.className,
+                        )}
+                      >
+                        {status.label}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <span aria-hidden="true" />
+                )}
+
+                {shouldShowAction ? (
+                  <Link
+                    data-testid="recent-activity-action"
+                    href={
+                      activity.link ??
+                      (activity.type === "exam"
+                        ? `/exam/results/${activity.id}`
+                        : "/practice")
+                    }
+                    className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg px-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 hover:text-primary/80 sm:min-h-9"
+                  >
+                    {activity.status === "IN_PROGRESS"
+                      ? t("dashboard.activity_resume")
+                      : t("dashboard.activity_view")}
+
+                    <ArrowRight
+                      className={cn(
+                        "h-3.5 w-3.5 transition-transform",
+                        language === "ar"
+                          ? "rotate-180 group-hover:-translate-x-0.5"
+                          : "group-hover:translate-x-0.5",
+                      )}
+                      aria-hidden
+                    />
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </PageSectionSurface>
   );
 }

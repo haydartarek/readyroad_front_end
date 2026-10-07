@@ -1,8 +1,6 @@
 "use client";
 
-import { useLocalizedRouter } from "@/hooks/use-localized-router";
-
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/localized-link";
 import { ExamQuestionImageFrame } from "@/components/exam/exam-question-image-frame";
@@ -21,7 +19,6 @@ import {
   PageHeroDescription,
   PageHeroSurface,
   PageHeroTitle,
-  PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { cn } from "@/lib/utils";
 import {
@@ -103,6 +100,9 @@ interface AllAnsweredQuestion {
 interface CategoryBreakdown {
   categoryCode: string;
   categoryNameEn: string;
+  categoryNameAr?: string | null;
+  categoryNameNl?: string | null;
+  categoryNameFr?: string | null;
   totalQuestions: number;
   correctAnswers: number;
   accuracyPercentage: number;
@@ -373,8 +373,8 @@ export function ExamResultsPageContent() {
       {/* ── Header ── */}
       <PageHeroSurface>
         <div className="flex min-w-0 items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
-            <ClipboardList className="h-6 w-6" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+            <ClipboardList className="h-5 w-5" />
           </div>
           <div className="min-w-0 space-y-1">
             <PageHeroTitle>
@@ -452,28 +452,28 @@ export function ExamResultsPageContent() {
                 ? Math.round((passedCount / data.totalExams) * 100)
                 : 0;
             return (
-              <div className="grid min-w-0 grid-cols-3 gap-3">
-                <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                  <p className="text-2xl font-black text-foreground">
+              <div className="grid min-w-0 grid-cols-3 overflow-hidden rounded-xl border border-border/70 bg-card divide-x divide-border/60 rtl:divide-x-reverse">
+                <div className="min-w-0 space-y-1 p-4 text-center">
+                  <p className="text-xl font-bold text-foreground">
                     {data.totalExams}
                   </p>
-                  <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
+                  <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
                     {t("user_sidebar.exam_total_taken")}
                   </p>
                 </div>
-                <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
-                  <p className="text-2xl font-black text-green-600">
+                <div className="min-w-0 space-y-1 p-4 text-center">
+                  <p className="text-xl font-bold text-green-700">
                     {passedCount}
                   </p>
-                  <p className="text-xs text-green-600/80 font-medium [overflow-wrap:anywhere]">
+                  <p className="text-xs font-medium leading-4 text-green-700/80 [overflow-wrap:anywhere]">
                     {t("dashboard.result_passed")}
                   </p>
                 </div>
-                <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                  <p className="text-2xl font-black text-foreground">
+                <div className="min-w-0 space-y-1 p-4 text-center">
+                  <p className="text-xl font-bold text-foreground">
                     {passRate}%
                   </p>
-                  <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
+                  <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
                     {t("progress.pass_rate")}
                   </p>
                 </div>
@@ -498,22 +498,22 @@ export function ExamResultsPageContent() {
                   data-testid="official-exam-result-card"
                   data-exam-result-kind="official"
                   className={cn(
-                    "rounded-2xl border bg-card shadow-sm overflow-hidden transition-all duration-200",
-                    isPassed ? "border-green-200" : "",
-                    isFailed ? "border-red-200" : "",
-                    !isCompleted ? "border-border opacity-60" : "",
-                    isExpanded ? "shadow-md" : "",
+                    "overflow-hidden rounded-xl border bg-card transition-colors duration-200",
+                    isPassed ? "border-border/70" : "",
+                    isFailed ? "border-border/70" : "",
+                    !isCompleted ? "border-border/70 opacity-75" : "",
+                    isExpanded ? "border-primary/25" : "",
                   )}
                 >
                   {/* Accent top strip */}
                   <div
                     className={cn(
-                      "h-1 w-full",
+                      "hidden",
                       isPassed
-                        ? "bg-gradient-to-r from-green-400 to-emerald-500"
+                        ? "bg-green-500"
                         : "",
                       isFailed
-                        ? "bg-gradient-to-r from-red-400 to-rose-500"
+                        ? "bg-red-500"
                         : "",
                       !isCompleted ? "bg-muted" : "",
                     )}
@@ -523,7 +523,7 @@ export function ExamResultsPageContent() {
                   <div
                     data-testid="official-exam-result-header"
                     className={cn(
-                      "flex min-w-0 flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start",
+                      "flex min-w-0 items-center gap-2 px-4 py-4 text-start sm:gap-4",
                       isCompleted ? "cursor-pointer select-none" : "",
                     )}
                     onClick={() => isCompleted && toggleExpand(exam.examId)}
@@ -533,7 +533,7 @@ export function ExamResultsPageContent() {
                       data-testid="official-exam-result-icon"
                       data-result-part="icon"
                       className={cn(
-                        "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                         isPassed ? "bg-green-100 text-green-600" : "",
                         isFailed ? "bg-red-100 text-red-600" : "",
                         !isCompleted ? "bg-muted text-muted-foreground" : "",
@@ -541,23 +541,23 @@ export function ExamResultsPageContent() {
                     >
                       {isCompleted ? (
                         exam.passed ? (
-                          <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
+                          <Trophy className="h-4 w-4" />
                         ) : (
-                          <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+                          <XCircle className="h-4 w-4" />
                         )
                       ) : (
-                        <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <Clock className="h-4 w-4" />
                       )}
                     </div>
 
                     {/* Info */}
-                    <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
+                    <div className="min-w-0 flex-1 space-y-2">
                       {/* Title row */}
-                      <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
+                      <div className="flex min-w-0 max-w-full flex-row flex-wrap items-center gap-2">
                         <span
                           data-testid="official-exam-result-name"
                           data-result-part="name"
-                          className="line-clamp-2 break-words text-sm font-bold text-foreground sm:line-clamp-1"
+                          className="line-clamp-2 break-words text-base font-semibold text-foreground sm:line-clamp-1"
                         >
                           {t("user_sidebar.exam_number")} #
                           {data.totalExams - index}
@@ -567,7 +567,7 @@ export function ExamResultsPageContent() {
                             data-testid="official-exam-result-status"
                             data-result-part="status"
                             className={cn(
-                              "inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full",
+                              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
                               isPassed
                                 ? "bg-green-100 text-green-700"
                                 : "bg-red-100 text-red-700",
@@ -579,7 +579,7 @@ export function ExamResultsPageContent() {
                           <span
                             data-testid="official-exam-result-status"
                             data-result-part="status"
-                            className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                            className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground"
                           >
                             {exam.status === "ABANDONED"
                               ? t("dashboard.activity_status_abandoned")
@@ -597,9 +597,9 @@ export function ExamResultsPageContent() {
                         data-testid="official-exam-result-date"
                         data-result-part="date"
                         data-calendar="gregory"
-                        className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
+                        className="flex min-w-0 max-w-full items-center justify-start gap-1 break-words text-xs text-muted-foreground"
                       >
-                        <Clock className="h-3 w-3 shrink-0 opacity-60" />
+                        <Clock className="h-4 w-4 shrink-0 opacity-60" />
                         <span className="min-w-0 break-words">
                           {formatDate(exam.completedAt ?? exam.startedAt)}
                         </span>
@@ -610,21 +610,21 @@ export function ExamResultsPageContent() {
                         <div
                           data-testid="official-exam-result-progress"
                           data-result-part="progress"
-                          className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
+                          className="w-full min-w-0 max-w-full space-y-1"
                         >
-                          <div className="flex items-center justify-center text-xs sm:justify-between">
+                          <div className="flex items-center justify-start text-xs">
                             <span className="text-muted-foreground">
                               {exam.correctAnswers}/{exam.totalQuestions}{" "}
                               {t("exam.correct_answers")}
                             </span>
                           </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="h-1 rounded-full bg-muted overflow-hidden">
                             <div
                               className={cn(
                                 "h-full rounded-full transition-all duration-500",
                                 isPassed
-                                  ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                  : "bg-gradient-to-r from-red-400 to-rose-500",
+                                  ? "bg-green-500"
+                                  : "bg-red-500",
                               )}
                               style={{ width: `${pct}%` }}
                             />
@@ -639,27 +639,27 @@ export function ExamResultsPageContent() {
                         data-testid="official-exam-result-score"
                         data-result-part="score"
                         className={cn(
-                          "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
+                          "flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl border text-base font-bold leading-none sm:h-12 sm:w-12 sm:text-lg",
                           isPassed
                             ? "bg-green-50 border-green-200 text-green-700"
                             : "bg-red-50 border-red-200 text-red-600",
                         )}
                       >
                         <span>{pct}</span>
-                        <span className="text-xs font-semibold mt-0.5">%</span>
+                        <span className="mt-0.5 text-[11px] font-medium">%</span>
                       </div>
                     )}
 
                     {/* Expand/collapse chevron */}
                     {isCompleted &&
                       (isLoadingThis ? (
-                        <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
                       ) : isExpanded ? (
                         <ChevronUp
                           data-testid="official-exam-result-chevron"
                           data-result-part="chevron"
                           className={cn(
-                            "order-6 h-5 w-5 shrink-0 sm:order-none",
+                            "h-4 w-4 shrink-0",
                             isPassed ? "text-green-500" : "text-red-400",
                           )}
                         />
@@ -668,7 +668,7 @@ export function ExamResultsPageContent() {
                           data-testid="official-exam-result-chevron"
                           data-result-part="chevron"
                           className={cn(
-                            "order-6 h-5 w-5 shrink-0 sm:order-none",
+                            "h-4 w-4 shrink-0",
                             isPassed ? "text-green-500" : "text-red-400",
                           )}
                         />
@@ -706,8 +706,12 @@ export function ExamResultsPageContent() {
                                           : "bg-red-50 border-red-200 text-red-700",
                                     )}
                                   >
-                                    {cat.categoryNameEn}: {cat.correctAnswers}/
-                                    {cat.totalQuestions}
+                                    {localizeExamText(language, {
+                                      en: cat.categoryNameEn,
+                                      ar: cat.categoryNameAr,
+                                      nl: cat.categoryNameNl,
+                                      fr: cat.categoryNameFr,
+                                    })}: {cat.correctAnswers}/{cat.totalQuestions}
                                   </span>
                                 ))}
                               </div>
@@ -899,41 +903,41 @@ export function ExamResultsPageContent() {
 
               return (
                 <>
-                  <PageSectionSurface className="border-primary/15">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <Shuffle className="h-5 w-5" />
+                  <div className="border-t border-border/60 pt-6">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Shuffle className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 space-y-0.5">
-                        <h2 className="break-words text-xl font-black tracking-normal text-foreground">
+                        <h2 className="break-words text-lg font-bold tracking-normal text-foreground">
                           {t("sign_practice.history_title")}
                         </h2>
                       </div>
                     </div>
-                  </PageSectionSurface>
+                  </div>
 
-                  <div className="grid min-w-0 grid-cols-3 gap-3">
-                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-foreground">
+                  <div className="grid min-w-0 grid-cols-3 overflow-hidden rounded-xl border border-border/70 bg-card divide-x divide-border/60 rtl:divide-x-reverse">
+                    <div className="min-w-0 space-y-1 p-4 text-center">
+                      <p className="text-xl font-bold text-foreground">
                         {randomHistory.totalSessions}
                       </p>
-                      <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
+                      <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
                         {t("sign_practice.history_total")}
                       </p>
                     </div>
-                    <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-green-600">
+                    <div className="min-w-0 space-y-1 p-4 text-center">
+                      <p className="text-xl font-bold text-green-700">
                         {passedCount}
                       </p>
-                      <p className="text-xs text-green-600/80 font-medium [overflow-wrap:anywhere]">
+                      <p className="text-xs font-medium leading-4 text-green-700/80 [overflow-wrap:anywhere]">
                         {t("dashboard.result_passed")}
                       </p>
                     </div>
-                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-foreground">
+                    <div className="min-w-0 space-y-1 p-4 text-center">
+                      <p className="text-xl font-bold text-foreground">
                         {passRate}%
                       </p>
-                      <p className="text-xs text-muted-foreground font-medium [overflow-wrap:anywhere]">
+                      <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
                         {t("progress.pass_rate")}
                       </p>
                     </div>
@@ -956,23 +960,23 @@ export function ExamResultsPageContent() {
                           data-testid="mixed-sign-exam-result-card"
                           data-exam-result-kind="mixed-sign"
                           className={cn(
-                            "overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200",
-                            isPassed ? "border-green-200" : "border-red-200",
-                            isExpanded ? "shadow-md" : "",
-                            isHighlighted ? "ring-2 ring-primary/25" : "",
+                            "overflow-hidden rounded-xl border bg-card transition-colors duration-200",
+                            isPassed ? "border-border/70" : "border-border/70",
+                            isExpanded ? "border-primary/25" : "",
+                            isHighlighted ? "ring-1 ring-primary/20" : "",
                           )}
                         >
                           <div
                             className={cn(
-                              "h-1 w-full",
+                              "hidden",
                               isPassed
-                                ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                : "bg-gradient-to-r from-red-400 to-rose-500",
+                                ? "bg-green-500"
+                                : "bg-red-500",
                             )}
                           />
 
                           <div
-                            className="flex min-w-0 cursor-pointer select-none flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start"
+                            className="flex min-w-0 cursor-pointer select-none items-center gap-2 px-4 py-4 text-start transition-colors hover:bg-muted/20 sm:gap-4"
                             onClick={() =>
                               void toggleExpandRandom(session.sessionId)
                             }
@@ -980,24 +984,24 @@ export function ExamResultsPageContent() {
                             <div
                               data-result-part="icon"
                               className={cn(
-                                "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                                 isPassed
                                   ? "bg-green-100 text-green-600"
                                   : "bg-red-100 text-red-600",
                               )}
                             >
                               {isPassed ? (
-                                <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
+                                <Trophy className="h-4 w-4" />
                               ) : (
-                                <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+                                <XCircle className="h-4 w-4" />
                               )}
                             </div>
 
-                            <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
-                              <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <div className="flex min-w-0 max-w-full flex-row flex-wrap items-center gap-2">
                                 <span
                                   data-result-part="name"
-                                  className="line-clamp-2 break-words text-sm font-bold text-foreground sm:line-clamp-1"
+                                  className="line-clamp-2 break-words text-base font-semibold text-foreground sm:line-clamp-1"
                                 >
                                   {t("sign_practice.history_session")} #
                                   {randomHistory.totalSessions - index}
@@ -1005,7 +1009,7 @@ export function ExamResultsPageContent() {
                                 <span
                                   data-result-part="status"
                                   className={cn(
-                                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+                                    "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
                                     isPassed
                                       ? "bg-green-100 text-green-700"
                                       : "bg-red-100 text-red-700",
@@ -1016,7 +1020,7 @@ export function ExamResultsPageContent() {
                                     : t("exam.failed")}
                                 </span>
                                 {isHighlighted && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
                                     {t("sign_practice.history_latest")}
                                   </span>
                                 )}
@@ -1025,9 +1029,9 @@ export function ExamResultsPageContent() {
                               <p
                                 data-result-part="date"
                                 data-calendar="gregory"
-                                className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
+                                className="flex min-w-0 max-w-full items-center justify-start gap-1 break-words text-xs text-muted-foreground"
                               >
-                                <Clock className="h-3 w-3 shrink-0 opacity-60" />
+                                <Clock className="h-4 w-4 shrink-0 opacity-60" />
                                 <span className="min-w-0 break-words">
                                   {formatDate(
                                     session.completedAt ?? session.startedAt,
@@ -1037,22 +1041,22 @@ export function ExamResultsPageContent() {
 
                               <div
                                 data-result-part="progress"
-                                className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
+                                className="w-full min-w-0 max-w-full space-y-1"
                               >
-                                <div className="flex items-center justify-center text-xs sm:justify-between">
+                                <div className="flex items-center justify-start text-xs">
                                   <span className="text-muted-foreground">
                                     {session.correctAnswers}/
                                     {session.totalQuestions}{" "}
                                     {t("exam.correct_answers")}
                                   </span>
                                 </div>
-                                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                <div className="h-1 rounded-full bg-muted overflow-hidden">
                                   <div
                                     className={cn(
                                       "h-full rounded-full transition-all duration-500",
                                       isPassed
-                                        ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                        : "bg-gradient-to-r from-red-400 to-rose-500",
+                                        ? "bg-green-500"
+                                        : "bg-red-500",
                                     )}
                                     style={{ width: `${pct}%` }}
                                   />
@@ -1063,25 +1067,25 @@ export function ExamResultsPageContent() {
                             <div
                               data-result-part="score"
                               className={cn(
-                                "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
+                                "flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl border text-base font-bold leading-none sm:h-12 sm:w-12 sm:text-lg",
                                 isPassed
                                   ? "bg-green-50 border-green-200 text-green-700"
                                   : "bg-red-50 border-red-200 text-red-600",
                               )}
                             >
                               <span>{pct}</span>
-                              <span className="mt-0.5 text-xs font-semibold">
+                              <span className="mt-0.5 text-[11px] font-medium">
                                 %
                               </span>
                             </div>
 
                             {isLoadingThis ? (
-                              <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
+                              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
                             ) : isExpanded ? (
                               <ChevronUp
                                 data-result-part="chevron"
                                 className={cn(
-                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
+                                  "h-4 w-4 shrink-0",
                                   isPassed ? "text-green-500" : "text-red-400",
                                 )}
                               />
@@ -1089,7 +1093,7 @@ export function ExamResultsPageContent() {
                               <ChevronDown
                                 data-result-part="chevron"
                                 className={cn(
-                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
+                                  "h-4 w-4 shrink-0",
                                   isPassed ? "text-green-500" : "text-red-400",
                                 )}
                               />
@@ -1297,44 +1301,44 @@ export function ExamResultsPageContent() {
 
               return (
                 <>
-                  <PageSectionSurface className="border-primary/15">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <Shield className="h-5 w-5" />
+                  <div className="border-t border-border/60 pt-6">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Shield className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 space-y-0.5">
                         <p className="text-sm font-semibold text-primary">
                           {t("sign_quiz.history_badge")}
                         </p>
-                        <h2 className="break-words text-xl font-black tracking-normal text-foreground">
+                        <h2 className="break-words text-lg font-bold tracking-normal text-foreground">
                           {t("sign_quiz.history_title")}
                         </h2>
                       </div>
                     </div>
-                  </PageSectionSurface>
+                  </div>
 
-                  <div className="grid min-w-0 grid-cols-3 gap-3">
-                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-foreground">
+                  <div className="grid min-w-0 grid-cols-3 overflow-hidden rounded-xl border border-border/70 bg-card divide-x divide-border/60 rtl:divide-x-reverse">
+                    <div className="min-w-0 space-y-1 p-4 text-center">
+                      <p className="text-xl font-bold text-foreground">
                         {signExamHistory.totalResults}
                       </p>
-                      <p className="text-xs font-medium text-muted-foreground [overflow-wrap:anywhere]">
+                      <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
                         {t("sign_quiz.history_total")}
                       </p>
                     </div>
-                    <div className="min-w-0 rounded-2xl border border-green-100 bg-green-50/60 px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-green-600">
+                    <div className="min-w-0 space-y-1 p-4 text-center">
+                      <p className="text-xl font-bold text-green-700">
                         {passedCount}
                       </p>
-                      <p className="text-xs font-medium text-green-600/80 [overflow-wrap:anywhere]">
+                      <p className="text-xs font-medium leading-4 text-green-700/80 [overflow-wrap:anywhere]">
                         {t("dashboard.result_passed")}
                       </p>
                     </div>
-                    <div className="min-w-0 rounded-2xl border border-border bg-card px-4 py-3 text-center space-y-0.5 shadow-sm">
-                      <p className="text-2xl font-black text-foreground">
+                    <div className="min-w-0 space-y-1 p-4 text-center">
+                      <p className="text-xl font-bold text-foreground">
                         {passRate}%
                       </p>
-                      <p className="text-xs font-medium text-muted-foreground [overflow-wrap:anywhere]">
+                      <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
                         {t("progress.pass_rate")}
                       </p>
                     </div>
@@ -1359,23 +1363,23 @@ export function ExamResultsPageContent() {
                           data-testid="sign-exam-result-card"
                           data-exam-result-kind="sign-specific"
                           className={cn(
-                            "overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200",
-                            isPassed ? "border-green-200" : "border-red-200",
-                            isExpanded ? "shadow-md" : "",
-                            isHighlighted ? "ring-2 ring-primary/25" : "",
+                            "overflow-hidden rounded-xl border bg-card transition-colors duration-200",
+                            isPassed ? "border-border/70" : "border-border/70",
+                            isExpanded ? "border-primary/25" : "",
+                            isHighlighted ? "ring-1 ring-primary/20" : "",
                           )}
                         >
                           <div
                             className={cn(
-                              "h-1 w-full",
+                              "hidden",
                               isPassed
-                                ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                : "bg-gradient-to-r from-red-400 to-rose-500",
+                                ? "bg-green-500"
+                                : "bg-red-500",
                             )}
                           />
 
                           <div
-                            className="flex min-w-0 cursor-pointer select-none flex-col items-center gap-3 p-5 text-center sm:flex-row sm:gap-4 sm:text-start"
+                            className="flex min-w-0 cursor-pointer select-none items-center gap-2 px-4 py-4 text-start transition-colors hover:bg-muted/20 sm:gap-4"
                             onClick={() =>
                               void toggleExpandSign(result.resultId)
                             }
@@ -1383,31 +1387,31 @@ export function ExamResultsPageContent() {
                             <div
                               data-result-part="icon"
                               className={cn(
-                                "order-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                                 isPassed
                                   ? "bg-green-100 text-green-600"
                                   : "bg-red-100 text-red-600",
                               )}
                             >
                               {isPassed ? (
-                                <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
+                                <Trophy className="h-4 w-4" />
                               ) : (
-                                <XCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+                                <XCircle className="h-4 w-4" />
                               )}
                             </div>
 
-                            <div className="contents sm:order-none sm:block sm:min-w-0 sm:flex-1 sm:space-y-2">
-                              <div className="order-2 flex min-w-0 max-w-full flex-col items-center gap-2 sm:order-none sm:flex-row sm:flex-wrap">
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <div className="flex min-w-0 max-w-full flex-row flex-wrap items-center gap-2">
                                 <span
                                   data-result-part="name"
-                                  className="line-clamp-2 min-w-0 max-w-full break-words text-sm font-bold text-foreground sm:truncate"
+                                  className="line-clamp-2 min-w-0 max-w-full break-words text-base font-semibold text-foreground sm:truncate"
                                 >
                                   {signName}
                                 </span>
                                 <span
                                   data-result-part="status"
                                   className={cn(
-                                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+                                    "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
                                     isPassed
                                       ? "bg-green-100 text-green-700"
                                       : "bg-red-100 text-red-700",
@@ -1418,12 +1422,12 @@ export function ExamResultsPageContent() {
                                     : t("exam.failed")}
                                 </span>
                                 {result.routeCode ? (
-                                  <span className="inline-flex items-center rounded-full border border-border/60 bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                                  <span className="inline-flex items-center rounded-md border border-border/60 bg-background px-2 py-1 text-xs font-medium text-muted-foreground">
                                     {result.routeCode}
                                   </span>
                                 ) : null}
                                 {isHighlighted && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
                                     {t("sign_quiz.history_latest")}
                                   </span>
                                 )}
@@ -1432,9 +1436,9 @@ export function ExamResultsPageContent() {
                               <p
                                 data-result-part="date"
                                 data-calendar="gregory"
-                                className="order-3 flex min-w-0 max-w-full items-center justify-center gap-1 break-words text-xs text-muted-foreground sm:order-none sm:justify-start"
+                                className="flex min-w-0 max-w-full items-center justify-start gap-1 break-words text-xs text-muted-foreground"
                               >
-                                <Clock className="h-3 w-3 shrink-0 opacity-60" />
+                                <Clock className="h-4 w-4 shrink-0 opacity-60" />
                                 <span className="min-w-0 break-words">
                                   {formatDate(result.completedAt ?? null)}
                                 </span>
@@ -1442,22 +1446,22 @@ export function ExamResultsPageContent() {
 
                               <div
                                 data-result-part="progress"
-                                className="order-5 w-full min-w-0 max-w-full space-y-1 sm:order-none"
+                                className="w-full min-w-0 max-w-full space-y-1"
                               >
-                                <div className="flex items-center justify-center text-xs sm:justify-between">
+                                <div className="flex items-center justify-start text-xs">
                                   <span className="text-muted-foreground">
                                     {result.correctAnswers}/
                                     {result.totalQuestions}{" "}
                                     {t("exam.correct_answers")}
                                   </span>
                                 </div>
-                                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                <div className="h-1 rounded-full bg-muted overflow-hidden">
                                   <div
                                     className={cn(
                                       "h-full rounded-full transition-all duration-500",
                                       isPassed
-                                        ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                                        : "bg-gradient-to-r from-red-400 to-rose-500",
+                                        ? "bg-green-500"
+                                        : "bg-red-500",
                                     )}
                                     style={{ width: `${pct}%` }}
                                   />
@@ -1468,25 +1472,25 @@ export function ExamResultsPageContent() {
                             <div
                               data-result-part="score"
                               className={cn(
-                                "order-4 flex h-13 w-13 shrink-0 flex-col items-center justify-center rounded-2xl border-2 text-lg font-black leading-none sm:order-none sm:h-16 sm:w-16 sm:text-xl",
+                                "flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl border text-base font-bold leading-none sm:h-12 sm:w-12 sm:text-lg",
                                 isPassed
                                   ? "bg-green-50 border-green-200 text-green-700"
                                   : "bg-red-50 border-red-200 text-red-600",
                               )}
                             >
                               <span>{pct}</span>
-                              <span className="mt-0.5 text-xs font-semibold">
+                              <span className="mt-0.5 text-[11px] font-medium">
                                 %
                               </span>
                             </div>
 
                             {isLoadingThis ? (
-                              <Loader2 className="w-5 h-5 shrink-0 animate-spin text-muted-foreground" />
+                              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
                             ) : isExpanded ? (
                               <ChevronUp
                                 data-result-part="chevron"
                                 className={cn(
-                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
+                                  "h-4 w-4 shrink-0",
                                   isPassed ? "text-green-500" : "text-red-400",
                                 )}
                               />
@@ -1494,7 +1498,7 @@ export function ExamResultsPageContent() {
                               <ChevronDown
                                 data-result-part="chevron"
                                 className={cn(
-                                  "order-6 h-5 w-5 shrink-0 sm:order-none",
+                                  "h-4 w-4 shrink-0",
                                   isPassed ? "text-green-500" : "text-red-400",
                                 )}
                               />
@@ -1679,11 +1683,9 @@ export function ExamResultsPageContent() {
 }
 
 export default function ExamResultsPage() {
-  const router = useLocalizedRouter();
-
-  useEffect(() => {
-    router.replace("/dashboard?section=exam-results");
-  }, [router]);
-
-  return null;
+  return (
+    <Suspense fallback={null}>
+      <ExamResultsPageContent />
+    </Suspense>
+  );
 }

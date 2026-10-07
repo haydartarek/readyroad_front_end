@@ -234,7 +234,13 @@ function LoadingSpinner({ message }: { message?: string }) {
   );
 }
 
-export function ErrorPatternsContent() {
+interface ErrorPatternsContentProps {
+  embedded?: boolean;
+}
+
+export function ErrorPatternsContent({
+  embedded = false,
+}: ErrorPatternsContentProps = {}) {
   const searchParams = useSearchParams();
   const examId = searchParams.get("examId");
   const { t, language } = useLanguage();
@@ -316,9 +322,13 @@ export function ErrorPatternsContent() {
 
   if (!data || !data.patterns || data.patterns.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className={embedded ? "space-y-4" : "space-y-6"}>
         {/* Header card — matches dashboard GreetingHeader pattern */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+        <div className={
+          embedded
+            ? "hidden"
+            : "relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm"
+        }>
           <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
           <div className="relative flex items-center gap-4">
@@ -362,9 +372,13 @@ export function ErrorPatternsContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={embedded ? "space-y-4" : "space-y-6"}>
       {/* Header card — matches dashboard GreetingHeader pattern */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+      <div className={
+          embedded
+            ? "hidden"
+            : "relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm"
+        }>
         <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
         <div className="relative flex items-center gap-4">
@@ -385,10 +399,16 @@ export function ErrorPatternsContent() {
       </div>
 
       {/* Summary Cards */}
-      <ErrorSummary totalErrors={data.totalErrors} patterns={data.patterns} />
+      {!embedded ? (
+        <ErrorSummary
+          totalErrors={data.totalErrors}
+          patterns={data.patterns}
+          compact={false}
+        />
+      ) : null}
 
       {/* Info Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm">
+      <div className={embedded ? "hidden" : "relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/15 px-6 py-7 shadow-sm"}>
         <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
         <div className="relative flex items-start gap-4">
@@ -411,10 +431,10 @@ export function ErrorPatternsContent() {
       </div>
 
       {/* Pattern List */}
-      <ErrorPatternList patterns={data.patterns} />
+      <ErrorPatternList patterns={data.patterns} compact={embedded} />
 
       {/* Recommended Actions */}
-      <Card className="rounded-2xl border-border/50 shadow-sm">
+      <Card className={embedded ? "hidden" : "rounded-2xl border-border/50 shadow-sm"}>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">

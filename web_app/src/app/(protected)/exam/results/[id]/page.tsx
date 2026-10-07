@@ -713,7 +713,7 @@ export default function ExamResultsPage() {
               <div className="space-y-3 px-5 py-5">
                 {[
                   {
-                    icon: <Clock className="h-4 w-4 text-orange-500" />,
+                    icon: <Clock className="h-4 w-4 text-primary" />,
                     label: t("exam.results_total_time"),
                     value: totalTime ?? t("common.not_available"),
                   },
@@ -953,16 +953,16 @@ function ExamReviewCard({
         >
           <div
             data-testid="result-review-question-category"
-            className="flex min-w-0 items-start gap-2"
+            className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1"
           >
-            <span className="shrink-0 pt-1 text-xs font-black text-foreground/70">
-              Q{index}
+            <span className="shrink-0 text-xs font-semibold text-foreground/70">
+              {t("exam.question")} {index}
             </span>
-            <span className="min-w-0 max-w-full break-words rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-xs font-semibold text-foreground/75">
+            <span className="min-w-0 max-w-full break-words text-xs font-medium text-muted-foreground">
               {categoryName}
             </span>
             {answer.difficulty ? (
-              <span className="shrink-0 rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-xs font-semibold text-foreground/75">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground before:me-2 before:content-['·']">
                 {t(
                   `practice_exam.difficulty_${answer.difficulty.toLowerCase()}`,
                 )}
@@ -994,7 +994,7 @@ function ExamReviewCard({
           </ExamQuestionImageFrame>
         )}
 
-        <p className="mx-auto max-w-3xl break-words text-center text-[15px] font-semibold leading-7 text-foreground">
+        <p className="mx-auto w-full max-w-3xl break-words text-start text-base font-semibold leading-7 text-foreground">
           {questionText}
         </p>
 
@@ -1011,10 +1011,10 @@ function ExamReviewCard({
             className={cn(
               "text-foreground shadow-none",
               answer.wasTimeout
-                ? "border-amber-200/70 bg-amber-50/45 dark:bg-amber-950/20"
+                ? "border-amber-200/70 bg-amber-50/30 dark:border-amber-900/60 dark:bg-amber-950/15"
                 : answer.isCorrect
-                  ? "border-green-200/70 bg-green-50/45 dark:bg-green-950/20"
-                  : "border-red-200/70 bg-red-50/45 dark:bg-red-950/20",
+                  ? "border-green-200/70 bg-green-50/35 dark:border-green-900/60 dark:bg-green-950/15"
+                  : "border-red-200/70 bg-red-50/35 dark:border-red-900/60 dark:bg-red-950/15",
             )}
           >
             {answer.wasTimeout
@@ -1026,7 +1026,7 @@ function ExamReviewCard({
             <ResultAnswerBlock
               label={t("exam.correct_answer")}
               tone="correct"
-              className="border-green-200/70 bg-green-50/45 text-foreground shadow-none dark:bg-green-950/20"
+              className="border-green-200/70 bg-green-50/35 text-foreground shadow-none dark:border-green-900/60 dark:bg-green-950/15"
             >
               {correctOptionText || t("common.not_available")}
             </ResultAnswerBlock>
@@ -1036,7 +1036,7 @@ function ExamReviewCard({
             <ResultAnswerBlock
               label={t("practice_exam.review_explanation")}
               tone="neutral"
-              className="border-primary/15 bg-primary/[0.035] text-foreground shadow-none"
+              className="border-primary/15 bg-primary/[0.025] text-foreground shadow-none dark:border-primary/20 dark:bg-primary/[0.05]"
             >
               {explanation}
             </ResultAnswerBlock>

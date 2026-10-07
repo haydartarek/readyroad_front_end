@@ -45,7 +45,7 @@ export function AuthShowcasePanel({
       >
         <div className="rounded-[1.55rem] border border-white/12 bg-white/8 px-3.5 py-3.5 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 ring-2 ring-primary/35 shadow-[0_12px_30px_rgba(223,88,48,0.22)]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 ring-2 ring-primary/35 shadow-[0_12px_30px_hsl(var(--brand-orange)/0.22)]">
               <Image
                 src="/icons/icon-192.png"
                 alt=""

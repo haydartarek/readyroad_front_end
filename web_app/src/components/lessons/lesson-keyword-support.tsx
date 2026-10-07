@@ -142,7 +142,7 @@ export default function LessonKeywordSupport({
       aria-labelledby={headingId}
       className="container mx-auto px-4 pb-8"
     >
-      <div className="mx-auto max-w-5xl rounded-3xl border border-border/50 bg-card/80 p-5 shadow-sm sm:p-6">
+      <div className="mx-auto max-w-5xl rounded-2xl border border-border/50 bg-card/80 p-5 shadow-sm sm:p-6">
         <h2
           id={headingId}
           className="text-lg font-black tracking-tight text-foreground sm:text-xl"

@@ -63,9 +63,11 @@ const STAT_CARDS = [
 export function ErrorSummary({
   totalErrors,
   patterns,
+  compact = false,
 }: {
   totalErrors: number;
   patterns: ErrorPattern[];
+  compact?: boolean;
 }) {
   const { t } = useLanguage();
 
@@ -83,14 +85,14 @@ export function ErrorSummary({
   );
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className={compact ? "overflow-hidden rounded-2xl border border-border/60 bg-card/90 shadow-sm" : "overflow-hidden rounded-2xl border border-border bg-card shadow-sm"}>
+      <CardHeader className={compact ? "hidden" : "pb-3"}>
         <CardTitle className="text-lg font-extrabold tracking-tight text-secondary">
           {t("error_patterns.summary_title")}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <CardContent className={compact ? "p-0" : undefined}>
+        <div className={compact ? "grid gap-px bg-border/60 sm:grid-cols-2 lg:grid-cols-4" : "grid gap-4 sm:grid-cols-2 lg:grid-cols-4"}>
           {STAT_CARDS.map(
             ({
               labelKey,
@@ -103,27 +105,29 @@ export function ErrorSummary({
               <div
                 key={labelKey}
                 data-testid="error-summary-card"
-                className="group relative overflow-hidden rounded-2xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur"
+                className={compact ? "relative overflow-hidden bg-card px-4 py-4 sm:px-5" : "group relative overflow-hidden rounded-2xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur"}
               >
-                <div className="pointer-events-none absolute inset-0 ring-1 ring-border/60" />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                <div className={compact ? "hidden" : "pointer-events-none absolute inset-0 ring-1 ring-border/60"} />
+                <div className={compact ? "hidden" : "pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"} />
                 <div
                   data-testid="error-summary-content"
-                  className="relative flex min-w-0 flex-col items-center gap-2 text-center sm:flex-row sm:items-start sm:gap-3 sm:text-start"
+                  className="relative flex min-w-0 items-start gap-3 text-start"
                 >
                   <div
                     data-testid="error-summary-icon"
                     className={cn(
-                      "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 shadow-sm",
+                      compact
+                        ? "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-background/60"
+                        : "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 shadow-sm",
                       iconBg,
                     )}
                   >
                     <Icon className="h-5 w-5" aria-hidden />
                   </div>
-                  <div className="min-w-0 max-w-full flex-1 text-center sm:text-start">
+                  <div className="min-w-0 max-w-full flex-1 text-start">
                     <p
                       data-testid="error-summary-label"
-                      className="break-words text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                      className={compact ? "break-words text-sm font-semibold text-foreground/80" : "break-words text-xs font-semibold uppercase tracking-wide text-muted-foreground"}
                     >
                       {t(labelKey)}
                     </p>
@@ -138,7 +142,7 @@ export function ErrorSummary({
                     </p>
                     <p
                       data-testid="error-summary-description"
-                      className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground sm:mt-0.5 sm:line-clamp-1"
+                      className={compact ? "mt-1 break-words text-sm leading-5 text-muted-foreground" : "mt-1 line-clamp-2 break-words text-xs text-muted-foreground sm:mt-0.5 sm:line-clamp-1"}
                     >
                       {valueKey === "topCount"
                         ? stats.topLabel

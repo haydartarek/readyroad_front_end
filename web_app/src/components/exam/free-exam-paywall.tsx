@@ -25,6 +25,7 @@ import {
   navigateToCheckout,
   PAYMENTS_ENABLED,
   rememberExamCheckoutResume,
+  rememberCategoryCheckoutResume,
   type PaymentPlan,
 } from "@/services/paymentService";
 
@@ -43,6 +44,7 @@ const PRICE_BY_PLAN: Record<PaymentPlan, string> = {
 export function FreeExamPaywall({
   open,
   examId,
+  categoryCode,
   totalQuestions,
   completedQuestions,
   onOpenChange,
@@ -50,7 +52,8 @@ export function FreeExamPaywall({
   onCheckoutNavigationFailed,
 }: {
   open: boolean;
-  examId: number;
+  examId?: number;
+  categoryCode?: string;
   totalQuestions: number;
   completedQuestions: number;
   onOpenChange: (open: boolean) => void;
@@ -114,10 +117,11 @@ export function FreeExamPaywall({
         language,
       );
 
-      rememberExamCheckoutResume(
-        examId,
-        checkout.purchaseId,
-      );
+      if (categoryCode) {
+        rememberCategoryCheckoutResume(categoryCode, checkout.purchaseId);
+      } else if (examId) {
+        rememberExamCheckoutResume(examId, checkout.purchaseId);
+      }
 
       onCheckoutNavigationStart?.();
       checkoutNavigationStarted = true;
@@ -162,20 +166,20 @@ export function FreeExamPaywall({
       >
         <DialogHeader className={isRTL ? "text-right sm:text-right" : "text-left sm:text-left"}>
           <DialogTitle className="text-lg font-black sm:text-2xl">
-            {t("exam.paywall.title")}
+            {t(categoryCode ? "category_exam.title" : "exam.paywall.title")}
           </DialogTitle>
 
           <DialogDescription className={["text-xs leading-4 sm:text-sm sm:leading-5", isRTL ? "text-right" : "text-left"].join(" ")}>
-            {t("exam.paywall.description")}
+            {t(categoryCode ? "category_exam.paywall_description" : "exam.paywall.description")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-start text-xs font-semibold sm:px-4 sm:py-2.5 sm:text-sm">
+        {!categoryCode && <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-start text-xs font-semibold sm:px-4 sm:py-2.5 sm:text-sm">
           <span className="inline-flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             {t("exam.paywall.answers_saved")}
           </span>
-        </div>
+        </div>}
 
         <div className="rounded-xl border bg-muted/30 px-3 py-2 sm:rounded-2xl sm:px-4 sm:py-3">
           <div className="flex items-end justify-between gap-4">
@@ -265,12 +269,23 @@ export function FreeExamPaywall({
                     {t(`home.pricing.tagline.${plan}`)}
                   </p>
 
+                  <div
+                    className="col-start-2 row-start-1 flex items-center gap-1.5 self-center justify-self-start md:contents"
+                    dir="ltr"
+                  >
                   <bdi
                     dir="ltr"
-                    className="col-start-2 row-start-1 self-center text-lg font-black text-primary md:mt-auto md:block md:self-auto md:pt-3 md:text-2xl"
+                    className="text-lg font-black text-primary md:mt-auto md:block md:self-auto md:pt-3 md:text-2xl"
                   >
                     {PRICE_BY_PLAN[plan]}
                   </bdi>
+                    {recommended ? (
+                      <RecommendedPlanBadge
+                        label={t("home.pricing.recommended")}
+                        variant="inline"
+                      />
+                    ) : null}
+                  </div>
 
                   <bdi
                     dir="ltr"
@@ -308,7 +323,7 @@ export function FreeExamPaywall({
             t("payment.opening")
           ) : (
             <>
-              <span>{t("exam.paywall.continue")}</span>
+              <span>{t(categoryCode ? "category_exam.continue" : "exam.paywall.continue")}</span>
               <bdi dir="ltr">{PRICE_BY_PLAN[selectedPlan]}</bdi>
             </>
           )}

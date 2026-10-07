@@ -28,7 +28,13 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 
-export function WeakAreasPageContent() {
+interface WeakAreasPageContentProps {
+  embedded?: boolean;
+}
+
+export function WeakAreasPageContent({
+  embedded = false,
+}: WeakAreasPageContentProps = {}) {
   const { t, language } = useLanguage();
   const [data, setData] = useState<WeakAreasData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -113,7 +119,7 @@ export function WeakAreasPageContent() {
   }
 
   // ── Shared page header ───────────────────────────
-  const pageHeader = (
+  const pageHeader = embedded ? null : (
     <PageHeroSurface>
       <div className="space-y-1">
         <PageHeroTitle>{t("weak_areas.title")}</PageHeroTitle>
@@ -127,7 +133,11 @@ export function WeakAreasPageContent() {
   // ── Empty state ──────────────────────────────────
   if (!data || !data.weakAreas || data.weakAreas.length === 0) {
     return (
-      <div className="mx-auto max-w-6xl space-y-6 py-4">
+      <div className={
+        embedded
+          ? "space-y-3"
+          : "mx-auto max-w-6xl space-y-6 py-4"
+      }>
         {pageHeader}
 
         {/* Success card */}
@@ -198,21 +208,33 @@ export function WeakAreasPageContent() {
 
   // ── Data state ───────────────────────────────────
   return (
-    <div className="mx-auto max-w-6xl space-y-6 py-4">
+    <div className={
+        embedded
+          ? "space-y-3"
+          : "mx-auto max-w-6xl space-y-6 py-4"
+      }>
       {pageHeader}
 
       {/* Summary Cards */}
-      <WeakAreaSummary
-        weakAreas={data.weakAreas}
-        totalCategories={data.totalCategories}
-        overallAccuracy={data.overallAccuracy}
-      />
+      {!embedded ? (
+        <WeakAreaSummary
+          weakAreas={data.weakAreas}
+          totalCategories={data.totalCategories}
+          overallAccuracy={data.overallAccuracy}
+          compact={false}
+        />
+      ) : null}
 
       {/* Info Alert */}
-      <Alert className="border border-primary/20 bg-primary/5">
+      <Alert className={embedded ? "hidden" : "border border-primary/20 bg-primary/5"}>
         <AlertDescription className="space-y-1">
-          <p className="font-semibold text-foreground">
-            🎯 {t("weak_areas.strategy_title")}
+          <p className="flex items-center gap-2 font-semibold text-foreground">
+            {embedded ? (
+              <Target className="h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
+            ) : (
+              <span aria-hidden="true">🎯</span>
+            )}
+            {t("weak_areas.strategy_title")}
           </p>
           <p className="text-sm text-muted-foreground">
             {t("weak_areas.strategy_desc")}
@@ -221,10 +243,10 @@ export function WeakAreasPageContent() {
       </Alert>
 
       {/* Weak Areas Details */}
-      <WeakAreaDetails weakAreas={data.weakAreas} />
+      <WeakAreaDetails weakAreas={data.weakAreas} compact={embedded} />
 
       {/* Actions Card */}
-      <Card>
+      <Card className={embedded ? "hidden" : undefined}>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">

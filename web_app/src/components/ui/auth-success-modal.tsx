@@ -99,7 +99,7 @@ function AuthSuccessModalContent({
           className="relative flex flex-col items-center pt-9 pb-16 overflow-hidden"
           style={{
             background:
-              "linear-gradient(135deg, hsl(13 76% 53%), hsl(13 76% 45%) 40%, hsl(25 95% 50%))",
+              "linear-gradient(135deg, hsl(var(--brand-orange)), hsl(var(--brand-orange-strong)) 40%, hsl(var(--brand-orange)))",
           }}
         >
           {/* Decorative blobs */}
@@ -198,7 +198,7 @@ function AuthSuccessModalContent({
             style={{
               fontSize: "2rem",
               background:
-                "linear-gradient(135deg, hsl(13 76% 48%), hsl(25 95% 50%))",
+                "linear-gradient(135deg, hsl(var(--brand-orange)), hsl(var(--brand-orange)))",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -229,7 +229,7 @@ function AuthSuccessModalContent({
                 style={{
                   width: `${progress}%`,
                   background:
-                    "linear-gradient(90deg, hsl(13 76% 53%), hsl(25 95% 50%), #10b981)",
+                    "linear-gradient(90deg, hsl(var(--brand-orange)), hsl(var(--brand-orange)), #10b981)",
                   transition: prefersReducedMotion
                     ? "none"
                     : `width ${TICK_MS}ms linear`,

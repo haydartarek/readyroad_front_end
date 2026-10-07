@@ -199,14 +199,14 @@ export function PageMetricCard({
       {mobileStacked ? (
         <div
           className={cn(
-            "grid min-w-0 grid-cols-1 justify-items-center text-center sm:grid-cols-[auto_minmax(0,1fr)] sm:justify-items-stretch sm:text-start",
+            "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center justify-items-stretch text-start",
             isSmall ? "gap-y-1 sm:gap-x-1" : "gap-y-2 sm:gap-x-3",
           )}
         >
           <div
             data-testid="dashboard-stat-icon"
             className={cn(
-              "row-start-1 shrink-0 sm:col-start-1",
+              "col-start-1 row-start-1 shrink-0",
               isSmall
                 ? "flex h-5 w-5 items-center justify-center rounded-[0.55rem]"
                 : "flex h-8 w-8 items-center justify-center rounded-[0.9rem]",
@@ -218,10 +218,10 @@ export function PageMetricCard({
           <p
             data-testid="dashboard-stat-label"
             className={cn(
-              "row-start-2 min-w-0 max-w-full break-words font-semibold uppercase text-muted-foreground sm:col-span-2 sm:justify-self-start",
+              "col-start-2 row-start-1 min-w-0 max-w-full break-words text-xs font-semibold leading-4 tracking-normal text-muted-foreground",
               isSmall
-                ? "text-[8px] tracking-[0.08em] sm:mt-0.5"
-                : "text-[10px] tracking-[0.16em] sm:mt-2",
+                ? "text-[10px] leading-4"
+                : "text-xs leading-4",
             )}
           >
             {label}
@@ -229,7 +229,7 @@ export function PageMetricCard({
           <p
             data-testid="dashboard-stat-value"
             className={cn(
-              "row-start-3 min-w-0 max-w-full break-words sm:col-start-2 sm:row-start-1 sm:justify-self-end",
+              "col-start-2 row-start-2 min-w-0 max-w-full break-words justify-self-start",
               isSmall
                 ? "text-[13px] font-semibold leading-4 tracking-normal"
                 : "text-xl font-black tracking-normal sm:text-2xl",
@@ -241,7 +241,7 @@ export function PageMetricCard({
           {hint ? (
             <p
               className={cn(
-                "row-start-4 min-w-0 max-w-full break-words font-medium text-foreground/80 sm:col-span-2 sm:justify-self-start",
+                "col-start-2 row-start-3 min-w-0 max-w-full break-words font-medium text-foreground/80",
                 isSmall
                   ? "text-[9px] leading-3.5 md:text-[9px]"
                   : "text-sm leading-4.5 md:text-base",

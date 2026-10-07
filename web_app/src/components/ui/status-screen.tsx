@@ -43,7 +43,7 @@ export function StatusScreen({
   return (
     <div
       className={cn(
-        "bg-[radial-gradient(circle_at_top_right,rgba(223,88,48,0.12),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(28,48,67,0.12),transparent_28%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--muted)/0.35)_100%)]",
+        "bg-[radial-gradient(circle_at_top_right,hsl(var(--brand-orange)/0.12),transparent_24%),radial-gradient(circle_at_bottom_left,hsl(var(--brand-navy)/0.12),transparent_28%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--muted)/0.35)_100%)]",
         fullscreen ? "min-h-screen" : "min-h-[calc(100vh-74px)]",
       )}
       dir={dir}

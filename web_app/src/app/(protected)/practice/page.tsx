@@ -15,6 +15,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  PageHeroDescription,
+  PageHeroTitle,
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
@@ -272,6 +274,14 @@ export default function PracticePage() {
       className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background"
     >
       <div className="container mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:py-12">
+        <header className="max-w-3xl space-y-2">
+          <PageHeroTitle className="text-balance">
+            {t("practice.title")}
+          </PageHeroTitle>
+          <PageHeroDescription className="text-pretty">
+            {t("practice.hub.subtitle")}
+          </PageHeroDescription>
+        </header>
 
         {serviceUnavailable && (
           <ServiceUnavailableBanner
@@ -398,7 +408,7 @@ export default function PracticePage() {
                     <CardHeader className="min-w-0 p-5 pb-4 sm:p-6 sm:pb-4">
                       <div
                         data-testid="practice-category-header"
-                        className="flex min-w-0 flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-5"
+                        className="flex min-w-0 items-center gap-3 sm:gap-5"
                       >
                         <div
                           data-testid="practice-category-icon"
@@ -457,7 +467,7 @@ export default function PracticePage() {
                             data-testid="practice-category-stat"
                             className="flex min-h-[88px] min-w-0 flex-col justify-center rounded-2xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2"
                           >
-                            <div className="flex min-w-0 flex-col items-center gap-1 text-center text-emerald-700 sm:flex-row sm:justify-center sm:text-start">
+                            <div className="flex min-w-0 items-center justify-center gap-1 text-start text-emerald-700">
                               <CheckCircle2
                                 data-testid="practice-category-stat-icon"
                                 className="h-4 w-4 shrink-0"
@@ -481,7 +491,7 @@ export default function PracticePage() {
                             data-testid="practice-category-stat"
                             className="flex min-h-[88px] min-w-0 flex-col justify-center rounded-2xl border border-amber-200/70 bg-amber-50/70 px-3 py-2"
                           >
-                            <div className="flex min-w-0 flex-col items-center gap-1 text-center text-amber-700 sm:flex-row sm:justify-center sm:text-start">
+                            <div className="flex min-w-0 items-center justify-center gap-1 text-start text-amber-700">
                               <Trophy
                                 data-testid="practice-category-stat-icon"
                                 className="h-4 w-4 shrink-0"

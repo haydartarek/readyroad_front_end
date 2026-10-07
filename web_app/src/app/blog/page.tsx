@@ -2,6 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import {
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+} from "@/components/ui/page-surface";
 import { buildLocalizedUrl, localizePathname } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
 import { toBrandedMetadataTitle } from "@/lib/seo";
@@ -20,7 +26,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const title = toBrandedMetadataTitle(translateMessage(locale, "blog.title"));
-  const description = translateMessage(locale, "blog.introduction");
+  const description = translateMessage(locale, "blog.metadata_description");
   const canonical = buildLocalizedUrl("/blog", locale, APP_URL);
   const image = { ...getSharedOgImage(locale), alt: title };
 
@@ -54,18 +60,30 @@ export default async function BlogPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <section className="border-b border-border/50 bg-muted/25">
-        <div className="container mx-auto max-w-6xl px-4 py-10 text-center sm:px-6 md:py-14">
-          <h1 className="mt-2 text-balance text-3xl font-black tracking-normal sm:text-4xl">
-            {translateMessage(locale, "blog.title")}
-          </h1>
-          <p className="mx-auto mt-3 max-w-2xl text-pretty text-sm leading-7 text-muted-foreground sm:text-base">
-            {translateMessage(locale, "blog.introduction")}
-          </p>
-        </div>
-      </section>
+      <div className="container mx-auto max-w-6xl px-4 pt-8 pb-12 sm:px-6">
+        <Breadcrumb
+          items={[
+            {
+              label: translateMessage(locale, "nav.home"),
+              href: "/",
+            },
+            {
+              label: translateMessage(locale, "blog.title"),
+              isCurrentPage: true,
+            },
+          ]}
+        />
 
-      <section className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 md:py-12">
+        <PageHeroSurface>
+          <PageHeroTitle>
+            {translateMessage(locale, "blog.title")}
+          </PageHeroTitle>
+          <PageHeroDescription className="max-w-3xl">
+            {translateMessage(locale, "blog.introduction")}
+          </PageHeroDescription>
+        </PageHeroSurface>
+
+        <section className="mt-8">
         {articles.length === 0 ? (
           <div className="mx-auto max-w-xl py-16 text-center">
             <h2 className="text-xl font-bold">
@@ -76,7 +94,7 @@ export default async function BlogPage() {
             </p>
           </div>
         ) : (
-          <div data-testid="blog-article-grid" className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+          <div data-testid="blog-article-grid" className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {articles.map((article) => {
               const href = localizePathname(
                 `/blog/${encodeURIComponent(article.slug)}`,
@@ -86,21 +104,21 @@ export default async function BlogPage() {
               return (
                 <article
                   key={`${article.language}:${article.slug}`}
-                  className="flex min-w-0 flex-col rounded-lg border border-border/60 bg-card shadow-sm transition-colors hover:border-primary/25"
+                  className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/95 shadow-sm transition-colors hover:border-primary/30"
                 >
                   {article.image ? (
-                    <Link href={href} className="relative block aspect-video bg-muted">
+                    <Link href={href} className="relative block aspect-video overflow-hidden bg-muted">
                       <Image
                         src={article.image.cardUrl}
                         alt={article.image.altText}
                         fill
                         sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 280px"
-                        className="rounded-t-lg object-cover"
+                        className="object-cover"
                       />
                     </Link>
                   ) : null}
-                  <div className="flex flex-1 flex-col p-4">
-                  <h2 className="mt-4 break-words text-lg font-black leading-snug tracking-normal">
+                  <div className="flex flex-1 flex-col p-5">
+                  <h2 className="break-words text-lg font-black leading-snug tracking-normal text-foreground">
                     <Link href={href} className="outline-none hover:text-primary focus-visible:text-primary">
                       {article.title}
                     </Link>
@@ -121,7 +139,8 @@ export default async function BlogPage() {
             })}
           </div>
         )}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

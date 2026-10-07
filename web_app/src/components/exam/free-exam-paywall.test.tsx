@@ -2,6 +2,7 @@ import {
   fireEvent,
   render,
   screen,
+  within,
   waitFor,
 } from "@testing-library/react";
 
@@ -12,6 +13,7 @@ import {
   createCheckout,
   navigateToCheckout,
   rememberExamCheckoutResume,
+  rememberCategoryCheckoutResume,
 } from "@/services/paymentService";
 
 let mockLanguage: "en" | "ar" = "en";
@@ -42,6 +44,7 @@ jest.mock("@/services/paymentService", () => ({
   forgetCheckoutRequest: jest.fn(),
   navigateToCheckout: jest.fn(),
   rememberExamCheckoutResume: jest.fn(),
+  rememberCategoryCheckoutResume: jest.fn(),
 }));
 
 jest.mock("@/components/ui/dialog", () => ({
@@ -133,10 +136,25 @@ test("weekly plan is recommended and selected by default", () => {
       onOpenChange={jest.fn()}
     />,
   );
+  const recommendedBadges =
+    screen.getAllByText("Recommended");
+
+  expect(recommendedBadges).toHaveLength(2);
 
   expect(
-    screen.getByText("Recommended"),
-  ).toBeVisible();
+    recommendedBadges.some(
+      (badge) =>
+        badge.classList.contains("md:hidden"),
+    ),
+  ).toBe(true);
+
+  expect(
+    recommendedBadges.some(
+      (badge) =>
+        badge.classList.contains("hidden") &&
+        badge.classList.contains("md:inline-flex"),
+    ),
+  ).toBe(true);
 
   expect(
     screen.getByTestId(
@@ -215,6 +233,52 @@ test("mobile paywall keeps the plans compact while preserving desktop cards", ()
   );
 });
 
+test("mobile recommended badge stays inline with the weekly price", () => {
+  render(
+    <FreeExamPaywall
+      open
+      examId={42}
+      totalQuestions={50}
+      completedQuestions={10}
+      onOpenChange={jest.fn()}
+    />,
+  );
+
+  const weeklyCard =
+    screen.getByTestId("exam-paywall-RIJVIA_1_WEEK");
+
+  const weeklyPrice =
+    within(weeklyCard).getByText("€6.99");
+  const priceRow = weeklyPrice.parentElement;
+
+  expect(priceRow).toHaveClass(
+    "flex",
+    "items-center",
+    "gap-1.5",
+    "md:contents",
+  );
+
+  const recommendedBadges =
+    screen.getAllByText("Recommended");
+
+  expect(recommendedBadges).toHaveLength(2);
+
+  expect(
+    recommendedBadges.some((badge) =>
+      badge.classList.contains("md:hidden"),
+    ),
+  ).toBe(true);
+
+  expect(
+    recommendedBadges.some(
+      (badge) =>
+        badge.classList.contains("hidden") &&
+        badge.classList.contains("md:inline-flex"),
+    ),
+  ).toBe(true);
+
+  expect(weeklyPrice).toBeVisible();
+});
 test("Arabic paywall uses RTL and right-aligned content", () => {
   mockLanguage = "ar";
   mockIsRTL = true;
@@ -383,4 +447,14 @@ test("the learner can change the selected plan", () => {
         `Continue from question 11 now ${EURO}2.99`,
     }),
   ).toBeVisible();
+});
+
+test("category checkout uses the same plans and resumes the category instead of a simulated exam", async () => {
+  render(<FreeExamPaywall open categoryCode="TH01" totalQuestions={67} completedQuestions={0}
+    onOpenChange={jest.fn()} />);
+  expect(screen.queryByText(translateMessage("en", "exam.paywall.answers_saved"))).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: `Unlock category exam ${EURO}6.99` }));
+  await waitFor(() => expect(rememberCategoryCheckoutResume).toHaveBeenCalledWith("TH01", PURCHASE_ID));
+  expect(rememberExamCheckoutResume).not.toHaveBeenCalled();
+  expect(navigateToCheckout).toHaveBeenCalledWith(CHECKOUT_URL);
 });

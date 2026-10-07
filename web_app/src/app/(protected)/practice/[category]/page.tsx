@@ -446,7 +446,7 @@ function StatusChip({
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm",
         tone === "neutral"
-          ? "bg-slate-100 text-slate-600"
+          ? "bg-muted text-muted-foreground"
           : getSignExamStatusClasses(tone),
       )}
     >

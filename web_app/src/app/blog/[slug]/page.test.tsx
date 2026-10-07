@@ -7,6 +7,9 @@ import BlogArticlePage, { generateMetadata } from "./page";
 
 jest.mock("@/lib/server/articles", () => ({ getPublicArticle: jest.fn() }));
 jest.mock("@/lib/server/request-locale", () => ({ getRequestLocale: jest.fn() }));
+jest.mock("@/components/ui/breadcrumb", () => ({
+  Breadcrumb: () => <nav aria-label="breadcrumb" />,
+}));
 jest.mock("next/navigation", () => ({
   notFound: jest.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
@@ -41,9 +44,9 @@ describe("localized public blog article", () => {
       alternateSlugs: { [locale.toUpperCase()]: "published-article" },
     });
     const metadata = await generateMetadata({ params: Promise.resolve({ slug: "published-article" }) });
-    expect(metadata.title).toEqual({ absolute: "Published article | Rijvia" });
-    expect(metadata.openGraph?.title).toBe("Published article | Rijvia");
-    expect(metadata.twitter?.title).toBe("Published article | Rijvia");
+    expect(metadata.title).toEqual({ absolute: "Published article | RijVia" });
+    expect(metadata.openGraph?.title).toBe("Published article | RijVia");
+    expect(metadata.twitter?.title).toBe("Published article | RijVia");
   });
 
   describe.each(["ar", "en", "nl", "fr"] as const)("image attribution in %s", (locale) => {
@@ -208,7 +211,7 @@ describe("localized public blog article", () => {
       params: Promise.resolve({ slug: "veilig-rijden" }),
     });
 
-    expect(metadata.title).toEqual({ absolute: "Veiliger rijden in België | Rijvia" });
+    expect(metadata.title).toEqual({ absolute: "Veiliger rijden in België | RijVia" });
     expect(metadata.alternates).toEqual({
       canonical: "https://rijvia.be/nl/blog/veilig-rijden",
       languages: {

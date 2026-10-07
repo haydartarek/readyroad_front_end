@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { TheoryCoverageWidget } from "./theory-coverage-widget";
 
+jest.mock("@/components/localized-link", () => ({ __esModule: true,
+  default: ({ children, ...props }: React.ComponentProps<"a">) => <a {...props}>{children}</a> }));
+
 describe("TheoryCoverageWidget", () => {
   it("keeps coverage, accuracy, and evidence confidence separate", () => {
     render(
@@ -47,5 +50,6 @@ describe("TheoryCoverageWidget", () => {
       screen.getByText("dashboard.theory_coverage.confidence_low"),
     ).toBeInTheDocument();
     expect(screen.getByText("الأولوية والتقاطعات")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "الأولوية والتقاطعات" })).toHaveAttribute("href", "/exam?category=TH01");
   });
 });

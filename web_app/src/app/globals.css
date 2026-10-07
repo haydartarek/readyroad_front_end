@@ -23,6 +23,9 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  --color-brand-orange: hsl(var(--brand-orange));
+  --color-brand-orange-strong: hsl(var(--brand-orange-strong));
+  --color-brand-navy: hsl(var(--brand-navy));
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -46,9 +49,17 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
   --card-foreground: 0 0% 9%;
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 9%;
-  --primary: 13 76% 42%;
+
+  /* Rijvia brand identity */
+  --brand-orange: 13.71 73.22% 53.14%; /* #DF5830 */
+  --brand-orange-strong: 12.96 75.7% 41.96%; /* #BC3D1A */
+  --brand-navy: 210 29.03% 24.31%; /* #2C3E50 */
+  --brand-navy-soft: 210 29% 35%;
+  --brand-navy-deep: 215 40% 14%;
+
+  --primary: var(--brand-orange-strong);
   --primary-foreground: 0 0% 100%;
-  --secondary: 210 29% 24%;
+  --secondary: var(--brand-navy);
   --secondary-foreground: 0 0% 100%;
   --muted: 0 0% 96%;
   --muted-foreground: 0 0% 42%;
@@ -58,7 +69,7 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
   --destructive-foreground: 0 0% 100%;
   --border: 0 0% 90%;
   --input: 0 0% 90%;
-  --ring: 13 76% 53%;
+  --ring: var(--brand-orange);
 
   /* RijVia layout system: based on the approved wireframe references. */
   --rv-content-max: 80rem;
@@ -75,9 +86,9 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
   --card-foreground: 0 0% 96%;
   --popover: 220 13% 14%;
   --popover-foreground: 0 0% 96%;
-  --primary: 13 76% 42%;
+  --primary: var(--brand-orange-strong);
   --primary-foreground: 0 0% 100%;
-  --secondary: 210 29% 35%;
+  --secondary: var(--brand-navy-soft);
   --secondary-foreground: 0 0% 96%;
   --muted: 220 13% 18%;
   --muted-foreground: 0 0% 60%;
@@ -87,7 +98,7 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
   --destructive-foreground: 0 0% 100%;
   --border: 220 13% 22%;
   --input: 220 13% 22%;
-  --ring: 13 76% 53%;
+  --ring: var(--brand-orange);
 }
 
 @layer base {

@@ -12,6 +12,7 @@ import {
   getPurchaseStatus,
   isPurchaseId,
   readExamCheckoutResume,
+  readCategoryCheckoutResume,
   type PurchaseStatus,
 } from "@/services/paymentService";
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
@@ -61,6 +62,12 @@ function PurchaseConfirmation({ purchaseId, username, isAuthLoading }: {
           }
 
           if (result.status === "PAID") {
+            const categoryPath = readCategoryCheckoutResume(purchaseId!);
+            if (categoryPath) {
+              forgetExamCheckoutResume(purchaseId!);
+              replace(categoryPath);
+              return;
+            }
             const resumeExamId =
               readExamCheckoutResume(purchaseId!);
 

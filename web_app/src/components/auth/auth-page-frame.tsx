@@ -27,7 +27,7 @@ export function AuthPageFrame({
   const { t } = useLanguage();
 
   return (
-    <main className="min-h-screen min-w-0 max-w-full bg-[radial-gradient(circle_at_top_right,rgba(223,88,48,0.08),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(28,48,67,0.08),transparent_28%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--muted)/0.35)_100%)]">
+    <main className="min-h-screen min-w-0 max-w-full bg-[radial-gradient(circle_at_top_right,hsl(var(--brand-orange)/0.08),transparent_25%),radial-gradient(circle_at_bottom_left,hsl(var(--brand-navy)/0.08),transparent_28%),linear-gradient(180deg,hsl(var(--background))_0%,hsl(var(--muted)/0.35)_100%)]">
       <div className="flex min-h-screen min-w-0 max-w-full">
         {showcase}
 

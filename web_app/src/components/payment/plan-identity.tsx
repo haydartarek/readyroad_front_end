@@ -18,7 +18,8 @@ type PlanLabelTag =
 type RecommendedBadgeVariant =
   | "floating"
   | "corner"
-  | "compact";
+  | "compact"
+  | "inline";
 
 function PlanGlyph({
   plan,
@@ -150,11 +151,13 @@ const BADGE_VARIANTS: Record<
   string
 > = {
   floating:
-    "left-1/2 top-0 h-8 -translate-x-1/2 -translate-y-1/2 px-4 text-xs ring-2 ring-background sm:text-sm",
+    "absolute left-1/2 top-0 inline-flex h-8 -translate-x-1/2 -translate-y-1/2 px-4 text-xs ring-2 ring-background sm:text-sm",
   corner:
-    "end-4 top-4 h-7 px-3 text-xs ring-2 ring-background",
+    "absolute end-4 top-4 inline-flex h-7 px-3 text-xs ring-2 ring-background",
   compact:
-    "-top-2 end-2 h-6 px-2 text-[10px] ring-2 ring-background md:-top-3 md:end-3 md:h-7 md:px-2.5 md:text-[11px]",
+    "hidden md:absolute md:-top-3 md:end-3 md:inline-flex md:h-7 md:px-2.5 md:text-[11px] md:ring-2 md:ring-background",
+  inline:
+    "relative inline-flex h-5 px-2 text-[9px] shadow-none ring-1 ring-primary/15 md:hidden",
 };
 
 export function RecommendedPlanBadge({
@@ -167,7 +170,7 @@ export function RecommendedPlanBadge({
   return (
     <span
       className={[
-        "absolute z-20 inline-flex items-center whitespace-nowrap rounded-full bg-primary font-black text-primary-foreground shadow-md",
+        "z-20 items-center whitespace-nowrap rounded-full bg-primary font-black text-primary-foreground shadow-md",
         BADGE_VARIANTS[variant],
       ].join(" ")}
     >

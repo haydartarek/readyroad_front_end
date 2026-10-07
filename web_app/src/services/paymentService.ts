@@ -92,8 +92,32 @@ const EXAM_CHECKOUT_RESUME_KEY =
   "rijvia.examPaywallResume";
 
 interface ExamCheckoutResumeRecord {
-  examId: number;
+  examId?: number;
+  categoryCode?: string;
   purchaseId: string;
+}
+
+export function rememberCategoryCheckoutResume(categoryCode: string, purchaseId: string) {
+  if (!/^TH(?:0[1-9]|10)$/.test(categoryCode) || !isPurchaseId(purchaseId)) return;
+  try {
+    sessionStorage.setItem(EXAM_CHECKOUT_RESUME_KEY, JSON.stringify({ categoryCode, purchaseId }));
+  } catch {
+    // Checkout remains available when browser storage is unavailable.
+  }
+}
+
+export function readCategoryCheckoutResume(purchaseId: string): string | null {
+  if (!isPurchaseId(purchaseId)) return null;
+  try {
+    const raw = sessionStorage.getItem(EXAM_CHECKOUT_RESUME_KEY);
+    if (!raw) return null;
+    const record = JSON.parse(raw) as Partial<ExamCheckoutResumeRecord>;
+    return record.purchaseId === purchaseId && typeof record.categoryCode === "string"
+      && /^TH(?:0[1-9]|10)$/.test(record.categoryCode)
+      ? `/exam?category=${record.categoryCode}` : null;
+  } catch {
+    return null;
+  }
 }
 
 export function rememberExamCheckoutResume(

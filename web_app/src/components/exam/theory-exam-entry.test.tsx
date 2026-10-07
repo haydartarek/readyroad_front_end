@@ -1,0 +1,178 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { AxiosAdapter } from "axios";
+
+import TheoryExamEntry from "./theory-exam-entry";
+import { apiClient } from "@/lib/api";
+
+const pushMock = jest.fn();
+const requestUrls: string[] = [];
+let authState = { isAuthenticated: true, isLoading: false };
+
+jest.mock("@/hooks/use-localized-router", () => ({
+  useLocalizedRouter: () => ({ push: pushMock }),
+}));
+
+jest.mock("@/contexts/language-context", () => ({
+  useLanguage: () => ({
+    t: (key: string, values?: Record<string, string | number>) =>
+      key === "exam.duration_value"
+        ? `${values?.minutes} min ${values?.seconds} sec`
+        : key,
+    language: "ar",
+  }),
+}));
+
+jest.mock("@/contexts/auth-context", () => ({
+  useAuth: () => authState,
+}));
+
+jest.mock("@/components/localized-link", () => {
+  return function MockLink({
+    href,
+    children,
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) {
+    return <a href={href}>{children}</a>;
+  };
+});
+
+jest.mock("@/components/ui/service-unavailable-banner", () => ({
+  ServiceUnavailableBanner: () => <div>service unavailable</div>,
+}));
+
+const client = apiClient.getInstance();
+const originalAdapter = client.defaults.adapter;
+
+const examResponse = {
+  examId: 42,
+  totalQuestions: 50,
+  timeLimitMinutes: 12.5,
+  timeLimitSeconds: 750,
+  status: "IN_PROGRESS",
+  startedAt: "2026-07-28T10:00:00Z",
+  expiresAt: "2026-07-28T10:12:30Z",
+  questions: [],
+};
+
+function examAdapter(
+  active: boolean,
+  accessState?: "FREE_LIMIT_REACHED",
+): AxiosAdapter {
+  return async (config) => {
+    const url = config.url ?? "";
+    requestUrls.push(`${config.method?.toUpperCase()} ${url}`);
+
+    if (url === "/exams/simulations/active") {
+      return {
+        data: {
+          hasActiveExam: active,
+          activeExam: active
+            ? { ...examResponse, accessState }
+            : null,
+        },
+        status: 200,
+        statusText: "OK",
+        headers: {},
+        config,
+        request: {},
+      };
+    }
+
+    if (url === "/exams/simulations/start") {
+      return {
+        data: examResponse,
+        status: 201,
+        statusText: "Created",
+        headers: {},
+        config,
+        request: {},
+      };
+    }
+
+    throw new Error(`Unexpected request: ${url}`);
+  };
+}
+
+describe("TheoryExamEntry persistent exam flow", () => {
+  beforeEach(() => {
+    pushMock.mockReset();
+    requestUrls.length = 0;
+    localStorage.clear();
+    authState = { isAuthenticated: true, isLoading: false };
+  });
+
+  afterAll(() => {
+    client.defaults.adapter = originalAdapter;
+  });
+
+  it("starts the persisted exam and opens its durable route", async () => {
+    client.defaults.adapter = examAdapter(false);
+    render(<TheoryExamEntry />);
+
+    expect(document.querySelector('[dir="rtl"]')).toBeInTheDocument();
+    expect(screen.getByText("12 min 30 sec")).toBeVisible();
+
+    const startButton = await screen.findByRole("button", {
+      name: "practice_exam.start_btn",
+    });
+    fireEvent.click(startButton);
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/exam/42");
+    });
+
+    expect(requestUrls).toContain("POST /exams/simulations/start");
+    expect(requestUrls.join("\n")).not.toContain("/quiz/theory-exam");
+    expect(localStorage.getItem("current_exam")).toBeNull();
+  });
+
+  it("resumes an existing persisted exam without creating a duplicate", async () => {
+    client.defaults.adapter = examAdapter(true);
+    render(<TheoryExamEntry />);
+
+    const resumeButton = await screen.findByRole("button", {
+      name: "exam.back_to_exam_start",
+    });
+    fireEvent.click(resumeButton);
+
+    expect(pushMock).toHaveBeenCalledWith("/exam/42");
+    expect(requestUrls).not.toContain("POST /exams/simulations/start");
+  });
+
+  it("restarts the free preview through the existing start action after the paywall", async () => {
+    client.defaults.adapter = examAdapter(true, "FREE_LIMIT_REACHED");
+    render(<TheoryExamEntry />);
+
+    const restartButton = await screen.findByRole("button", {
+      name: "exam.back_to_exam_start",
+    });
+    fireEvent.click(restartButton);
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/exam/42");
+    });
+
+    expect(requestUrls).toContain("POST /exams/simulations/start");
+  });
+
+  it("keeps the intro public and sends an anonymous visitor to login", async () => {
+    authState = { isAuthenticated: false, isLoading: false };
+    client.defaults.adapter = examAdapter(false);
+
+    render(<TheoryExamEntry />);
+
+    const startButton = await screen.findByRole("button", {
+      name: "practice_exam.start_btn",
+    });
+    expect(requestUrls).toHaveLength(0);
+
+    fireEvent.click(startButton);
+
+    expect(pushMock).toHaveBeenCalledWith(
+      "/ar/login?returnUrl=%2Far%2Fexam",
+    );
+    expect(requestUrls).toHaveLength(0);
+  });
+});

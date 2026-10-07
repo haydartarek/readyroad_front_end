@@ -14,22 +14,22 @@ type AnswerTone = "correct" | "incorrect" | "neutral";
 
 const ANSWER_TONE_CLASSES: Record<AnswerTone, string> = {
   correct:
-    "border-emerald-200 bg-emerald-50/85 dark:border-emerald-800 dark:bg-emerald-950/55",
+    "border-green-200/70 bg-green-50/35 dark:border-green-900/60 dark:bg-green-950/15",
   incorrect:
-    "border-red-200 bg-red-50/85 dark:border-red-800 dark:bg-red-950/55",
+    "border-red-200/70 bg-red-50/35 dark:border-red-900/60 dark:bg-red-950/15",
   neutral:
-    "border-primary/15 bg-primary/[0.045] dark:border-primary/25 dark:bg-primary/[0.10]",
+    "border-primary/15 bg-primary/[0.025] dark:border-primary/20 dark:bg-primary/[0.05]",
 };
 
 const ANSWER_LABEL_CLASSES: Record<AnswerTone, string> = {
-  correct: "text-emerald-800 dark:text-emerald-200",
-  incorrect: "text-red-800 dark:text-red-200",
+  correct: "text-green-700 dark:text-green-300",
+  incorrect: "text-red-700 dark:text-red-300",
   neutral: "text-foreground",
 };
 
 const ANSWER_BODY_CLASSES: Record<AnswerTone, string> = {
-  correct: "text-emerald-950 dark:text-emerald-50",
-  incorrect: "text-red-950 dark:text-red-50",
+  correct: "text-foreground",
+  incorrect: "text-foreground",
   neutral: "text-foreground",
 };
 
@@ -52,7 +52,7 @@ export function ResultAnswerBlock({
       data-answer-tone={tone}
       data-answer-marker={marker}
       className={cn(
-        "min-w-0 rounded-xl border px-3.5 py-3 shadow-sm",
+        "min-w-0 rounded-xl border px-3.5 py-3",
         ANSWER_TONE_CLASSES[tone],
         className,
       )}
@@ -75,14 +75,14 @@ export function ResultAnswerBlock({
           )}
         </span>
         {marker ? (
-          <span className="flex h-7 min-w-7 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background px-2 text-xs font-black text-foreground">
+          <span className="flex h-7 min-w-7 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background px-2 text-xs font-semibold text-foreground">
             {marker}
           </span>
         ) : null}
         <p
           data-testid="result-answer-label"
           className={cn(
-            "min-w-0 break-words text-sm font-bold uppercase tracking-[0.12em]",
+            "min-w-0 break-words text-xs font-semibold leading-5",
             ANSWER_LABEL_CLASSES[tone],
           )}
         >
@@ -93,7 +93,7 @@ export function ResultAnswerBlock({
         <div
           data-testid="result-answer-body"
           className={cn(
-            "mt-1 min-w-0 break-words text-sm font-semibold leading-6",
+            "mt-1.5 min-w-0 break-words text-sm font-medium leading-6",
             ANSWER_BODY_CLASSES[tone],
           )}
         >
@@ -120,7 +120,7 @@ export function ResultDetailsToggle({
       type="button"
       aria-expanded={expanded}
       onClick={onToggle}
-      className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary transition-colors hover:border-primary/25 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+      className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-border hover:bg-muted/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
     >
       {expanded ? (
         <ChevronUp className="h-4 w-4 shrink-0" />

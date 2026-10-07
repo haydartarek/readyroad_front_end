@@ -65,12 +65,12 @@ function QuickActionButton({
   return (
     <Link
       href={href}
-      className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-border/50 bg-muted/30 hover:bg-primary/5 hover:border-primary/30 p-4 transition-all duration-200"
+      className="group flex items-center gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 text-start transition-all duration-200 hover:border-primary/30 hover:bg-primary/5"
     >
       <div className="w-10 h-10 rounded-xl bg-background border border-border/50 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:border-primary/30 transition-colors duration-200 group-hover:scale-110">
         {icon}
       </div>
-      <span className="text-sm font-semibold text-foreground text-center leading-tight">
+      <span className="min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
         {label}
       </span>
     </Link>

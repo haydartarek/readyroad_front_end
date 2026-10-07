@@ -106,7 +106,7 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
   nl: {
     title: "Theorie Rijbewijs B België: Lessen & Verkeersregels",
     description:
-      "Leer theorie rijbewijs B in België met 32 gestructureerde lessen over Belgische verkeersregels, verkeersborden, voorrang, snelheid, parkeren en veiligheid tot en met les-31.",
+      "Leer theorie rijbewijs B in België met 32 lessen over verkeersregels, verkeersborden, voorrang, snelheid, parkeren en veiligheid.",
     keywords: [
       "theorie rijbewijs B leren",
       "theorie rijbewijs B België",

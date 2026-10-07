@@ -131,7 +131,7 @@ export function VideoGallery({
       className="min-h-screen bg-background text-foreground"
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full min-w-0 max-w-7xl px-4 pt-8 pb-8 sm:px-6 sm:pt-8 sm:pb-12">
         <Breadcrumb
           items={[
             { label: t("nav.home"), href: "/" },
@@ -214,7 +214,11 @@ export function VideoGallery({
         ) : null}
 
         {featuredVideo ? (
-          <section aria-labelledby="latest-video-heading" className="space-y-6">
+          <section
+            aria-labelledby="latest-video-heading"
+            data-nosnippet=""
+            className="space-y-6"
+          >
             {!query ? (
               <FeaturedVideoCard
                 video={featuredVideo}

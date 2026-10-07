@@ -52,10 +52,12 @@ export function WeakAreaSummary({
   weakAreas,
   totalCategories,
   overallAccuracy,
+  compact = false,
 }: {
   weakAreas: WeakArea[];
   totalCategories: number;
   overallAccuracy: number | null;
+  compact?: boolean;
 }) {
   const { t } = useLanguage();
 
@@ -70,15 +72,15 @@ export function WeakAreaSummary({
   );
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+    <div className={compact ? "grid gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/60 sm:grid-cols-2 lg:grid-cols-4" : "grid gap-4 sm:grid-cols-2 md:grid-cols-4"}>
       {STAT_CARDS.map(({ labelKey, subKey, key, color, format }) => (
-        <Card key={labelKey} className="rounded-2xl border-border/50 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        <Card key={labelKey} className={compact ? "rounded-none border-0 bg-card shadow-none" : "rounded-2xl border-border/50 shadow-sm"}>
+          <CardHeader className={compact ? "px-4 pb-1 pt-3" : "pb-2"}>
+            <CardTitle className={compact ? "text-sm font-semibold text-muted-foreground" : "text-xs font-bold uppercase tracking-wide text-muted-foreground"}>
               {t(labelKey)}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-0.5">
+          <CardContent className={compact ? "space-y-0.5 px-4 pb-3 pt-0" : "space-y-0.5"}>
             <p className={cn("text-xl font-black", color)}>
               {stats[key] === null
                 ? t("common.not_available")

@@ -64,8 +64,8 @@ export function FeaturesSection() {
     },
     {
       icon: BarChart3,
-      iconWrap: "border-sky-500/20 bg-sky-500/10",
-      iconTone: "text-sky-600 dark:text-sky-400",
+      iconWrap: "border-primary/20 bg-primary/10",
+      iconTone: "text-primary",
       cta: t("home.features.cta_analytics"),
       title: t("home.features.analytics_title"),
       description: t("home.features.analytics_desc"),

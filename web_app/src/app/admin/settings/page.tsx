@@ -495,7 +495,7 @@ export default function AdminSettingsPage() {
           <SectionHeader
             icon={<ClipboardList className="w-4 h-4" />}
             title={t("admin.settings_page.section_exam")}
-            color="bg-blue-500/10 text-blue-600"
+            color="bg-primary/10 text-primary"
           />
         </CardHeader>
         <CardContent className="space-y-5">
@@ -599,7 +599,7 @@ export default function AdminSettingsPage() {
               </span>
             </div>
             <div className="flex items-center gap-2 rounded-xl bg-background border border-border/50 px-3 py-2">
-              <Timer className="w-4 h-4 text-blue-500" />
+              <Timer className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold">
                 {settings.examDurationMinutes}
               </span>

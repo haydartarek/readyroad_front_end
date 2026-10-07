@@ -1,119 +1,159 @@
-import { BookOpenCheck, Eye, Gauge, Target } from "lucide-react";
 import type { TheoryQuestionCoverage } from "@/services/progressService";
+import { PageSectionSurface } from "@/components/ui/page-surface";
 import { Progress } from "@/components/ui/progress";
+import Link from "@/components/localized-link";
 
 type Translate = (key: string) => string;
 
+type ResolveCategoryName = (
+  categoryCode: string,
+  fallback: string,
+) => string;
+
 function percentage(value: number | null): string {
-  return value == null ? "—" : `${Math.round(value)}%`;
+  return value == null ? "\u2014" : `${Math.round(value)}%`;
 }
 
 export function TheoryCoverageWidget({
   coverage,
   t,
+  resolveCategoryName,
 }: {
   coverage: TheoryQuestionCoverage;
   t: Translate;
+  resolveCategoryName?: ResolveCategoryName;
 }) {
   const confidence = t(
     `dashboard.theory_coverage.confidence_${coverage.confidenceState.toLowerCase()}`,
   );
 
+  const summary = [
+    {
+      key: "coverage",
+      label: t("dashboard.theory_coverage.coverage"),
+      value: percentage(coverage.coveragePercentage),
+      numeric: true,
+    },
+    {
+      key: "accuracy",
+      label: t("dashboard.theory_coverage.accuracy"),
+      value: percentage(coverage.accuracyPercentage),
+      numeric: true,
+    },
+    {
+      key: "confidence",
+      label: t("dashboard.theory_coverage.confidence"),
+      value: confidence,
+      numeric: false,
+    },
+  ] as const;
+
   return (
-    <section
-      className="min-w-0 rounded-2xl border border-border/50 bg-card p-4 shadow-sm sm:p-5"
-      data-testid="theory-coverage-widget"
-    >
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <BookOpenCheck className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-base font-black text-foreground">
-            {t("dashboard.theory_coverage.title")}
-          </h2>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {t("dashboard.theory_coverage.description")}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Metric
-          icon={<Eye className="h-4 w-4" />}
-          label={t("dashboard.theory_coverage.coverage")}
-          value={percentage(coverage.coveragePercentage)}
-        />
-        <Metric
-          icon={<Target className="h-4 w-4" />}
-          label={t("dashboard.theory_coverage.accuracy")}
-          value={percentage(coverage.accuracyPercentage)}
-        />
-        <Metric
-          icon={<Gauge className="h-4 w-4" />}
-          label={t("dashboard.theory_coverage.confidence")}
-          value={confidence}
-        />
-      </div>
-
-      <div className="mt-4 space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>
-            {t("dashboard.theory_coverage.seen")}: {coverage.uniqueQuestionsSeen}/
-            {coverage.eligibleQuestions}
-          </span>
-          <span>
-            {t("dashboard.theory_coverage.unseen")}: {coverage.unseenQuestions}
-          </span>
-        </div>
-        <Progress value={coverage.coveragePercentage ?? 0} className="h-2" />
-      </div>
-
-      {coverage.categories.length > 0 ? (
-        <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2">
-          {coverage.categories.map((category) => (
-            <article
-              key={category.categoryId}
-              className="min-w-0 rounded-xl border border-border/40 bg-background/60 p-3"
+    <div data-testid="theory-coverage-widget">
+      <PageSectionSurface
+        title={t("dashboard.theory_coverage.title")}
+        description={t("dashboard.theory_coverage.description")}
+        contentClassName="space-y-0"
+      >
+        <div className="grid min-w-0 gap-4 pb-4 sm:grid-cols-3 sm:gap-6">
+          {summary.map((item) => (
+            <div
+              key={item.key}
+              className="min-w-0"
             >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <p className="min-w-0 break-words text-sm font-bold text-foreground">
-                  {category.categoryName}
-                </p>
-                <span className="shrink-0 text-sm font-black text-primary">
-                  {percentage(category.coveragePercentage)}
-                </span>
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                <span>
-                  {t("dashboard.theory_coverage.accuracy")}: {percentage(category.accuracyPercentage)}
-                </span>
-                <span className="text-end">
-                  {t("dashboard.theory_coverage.answered")}: {category.uniqueQuestionsAnswered}
-                </span>
-              </div>
-            </article>
+              <p className="text-xs font-semibold text-muted-foreground">
+                {item.label}
+              </p>
+
+              <p
+                dir={item.numeric ? "ltr" : undefined}
+                className="mt-1 break-words text-xl font-black tracking-tight text-foreground sm:text-2xl"
+              >
+                {item.value}
+              </p>
+            </div>
           ))}
         </div>
-      ) : null}
-    </section>
-  );
-}
 
-function Metric({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col items-center gap-2 rounded-xl border border-border/40 bg-background/60 p-3 text-center">
-      <span className="text-primary">{icon}</span>
-      <span className="break-words text-xs font-semibold text-muted-foreground">{label}</span>
-      <strong className="break-words text-lg font-black text-foreground">{value}</strong>
+        <div className="border-t border-border/60 py-4">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+            <span>
+              {t("dashboard.theory_coverage.seen")}:{" "}
+              <strong
+                dir="ltr"
+                className="font-semibold text-foreground"
+              >
+                {coverage.uniqueQuestionsSeen}/{coverage.eligibleQuestions}
+              </strong>
+            </span>
+
+            <span>
+              {t("dashboard.theory_coverage.unseen")}:{" "}
+              <strong
+                dir="ltr"
+                className="font-semibold text-foreground"
+              >
+                {coverage.unseenQuestions}
+              </strong>
+            </span>
+          </div>
+
+          <Progress
+            value={coverage.coveragePercentage ?? 0}
+            className="mt-3 h-2"
+          />
+        </div>
+
+        {coverage.categories.length > 0 ? (
+          <div className="border-t border-border/60">
+            <div className="divide-y divide-border/60">
+              {coverage.categories.map((category) => {
+                const displayName =
+                  resolveCategoryName?.(
+                    category.categoryCode,
+                    category.categoryName,
+                  ) ?? category.categoryName;
+
+                return (
+                  <div
+                    key={category.categoryId}
+                    className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 py-3"
+                  >
+                    <p className="min-w-0 break-words text-sm font-semibold text-foreground">
+                      {/^TH(?:0[1-9]|10)$/.test(category.categoryCode) ? (
+                        <Link className="underline-offset-4 hover:underline" href={`/exam?category=${category.categoryCode}`}>
+                          {displayName}
+                        </Link>
+                      ) : displayName}
+                    </p>
+
+                    <strong
+                      dir="ltr"
+                      className="shrink-0 text-base font-black text-primary"
+                    >
+                      {percentage(category.coveragePercentage)}
+                    </strong>
+
+                    <p className="col-start-1 row-start-2 min-w-0 break-words text-xs text-muted-foreground">
+                      {t("dashboard.theory_coverage.answered")}:{" "}
+                      <span dir="ltr">
+                        {category.uniqueQuestionsAnswered}
+                      </span>
+
+                      {" \u00B7 "}
+
+                      {t("dashboard.theory_coverage.accuracy")}:{" "}
+                      <span dir="ltr">
+                        {percentage(category.accuracyPercentage)}
+                      </span>
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+      </PageSectionSurface>
     </div>
   );
 }

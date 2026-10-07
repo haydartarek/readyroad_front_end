@@ -70,14 +70,14 @@ describe("home metadata titles", () => {
       const videosMetadata = await generateVideosMetadata();
 
       expect(homeMetadata.title).toEqual({
-        absolute: `${getHomeMetadataCopy(locale).title.split(" | ").slice(1).join(" | ")} | Rijvia`,
+        absolute: `${getHomeMetadataCopy(locale).title.split(" | ").slice(1).join(" | ")} | RijVia`,
       });
       expect(videosMetadata.title).toEqual({
-        absolute: expect.stringContaining("| Rijvia"),
+        absolute: expect.stringContaining("| RijVia"),
       });
       expect(
         String((videosMetadata.title as { absolute: string }).absolute).match(
-          /Rijvia/g,
+          /RijVia/g,
         ),
       ).toHaveLength(1);
     },

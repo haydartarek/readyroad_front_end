@@ -13,11 +13,11 @@ describe("ResultAnswerBlock", () => {
     expect(block).toHaveAttribute("data-answer-marker", "A");
     expect(block).toHaveAttribute("data-answer-tone", "incorrect");
     expect(screen.getByTestId("result-answer-label")).toHaveClass(
-      "text-red-800",
+      "text-red-700",
     );
     expect(screen.getByTestId("result-answer-body")).toHaveClass(
-      "text-red-950",
-      "dark:text-red-50",
+      "text-foreground",
+
     );
     expect(screen.getByText("A")).toBeInTheDocument();
     expect(screen.getByText("A deliberately wrong answer")).toBeInTheDocument();

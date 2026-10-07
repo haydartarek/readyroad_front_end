@@ -53,7 +53,7 @@ export default function FaqPage() {
         />
       ))}
 
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-10 sm:px-6 sm:pt-8 sm:pb-14">
         <Breadcrumb
           items={[
             { label: homeLabel, href: "/" },

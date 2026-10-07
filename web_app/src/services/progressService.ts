@@ -503,9 +503,12 @@ export async function getTheoryTimeoutAnalysis(
   return response.data;
 }
 
-export async function getTheoryQuestionCoverage(): Promise<TheoryQuestionCoverage> {
+export async function getTheoryQuestionCoverage(
+  language?: string,
+): Promise<TheoryQuestionCoverage> {
   const response = await apiClient.get<TheoryQuestionCoverage>(
     ENDPOINTS.THEORY_COVERAGE,
+    language ? { language } : undefined,
   );
   const data = response.data;
   if (

@@ -26,7 +26,7 @@ export default function AdminMetricCard({
   return (
     <div
       className={cn(
-        "flex h-full min-w-0 flex-col items-center rounded-2xl border border-border/50 bg-card p-4 text-center shadow-sm transition-shadow hover:shadow-md",
+        "flex h-full min-w-0 items-start gap-3 rounded-2xl border border-border/50 bg-card p-4 text-start shadow-sm transition-shadow hover:shadow-md",
         className,
       )}
     >
@@ -38,31 +38,36 @@ export default function AdminMetricCard({
       >
         {icon}
       </div>
-      <p
-        className={cn(
-          "mt-3 break-words text-xs font-semibold uppercase text-muted-foreground",
-          labelClassName,
-        )}
-      >
-        {label}
-      </p>
-      {loading ? (
-        <div className="mt-2 h-8 w-20 animate-pulse rounded-lg bg-muted" />
-      ) : (
+
+      <div className="min-w-0 flex-1">
         <p
           className={cn(
-            "mt-1 max-w-full break-words text-2xl font-black text-foreground",
-            valueClassName,
+            "break-words text-xs font-semibold uppercase text-muted-foreground",
+            labelClassName,
           )}
         >
-          {value ?? "—"}
+          {label}
         </p>
-      )}
-      {description && !loading ? (
-        <p className="mt-1 max-w-full break-words text-sm text-muted-foreground">
-          {description}
-        </p>
-      ) : null}
+
+        {loading ? (
+          <div className="mt-2 h-8 w-20 animate-pulse rounded-lg bg-muted" />
+        ) : (
+          <p
+            className={cn(
+              "mt-1 max-w-full break-words text-2xl font-black text-foreground",
+              valueClassName,
+            )}
+          >
+            {value ?? "—"}
+          </p>
+        )}
+
+        {description && !loading ? (
+          <p className="mt-1 max-w-full break-words text-sm text-muted-foreground">
+            {description}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

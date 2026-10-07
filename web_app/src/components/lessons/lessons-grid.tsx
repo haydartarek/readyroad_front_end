@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
 import { ArrowRight, BookOpen, Clock } from "lucide-react";
 import { Lesson } from "@/lib/types";
+import type { HomeLessonOverviewItem } from "@/lib/home-lessons-overview";
+import { LessonCategoryExamLink } from "./lesson-category-exam-link";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -36,7 +38,9 @@ function getLessonDescription(lesson: Lesson, lang: LangCode): string {
 
 // ─── Component ───────────────────────────────────────────
 
-export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
+export function LessonsGrid({ lessons, theoryOverview = [] }: {
+  lessons: Lesson[]; theoryOverview?: HomeLessonOverviewItem[];
+}) {
   const { language, t } = useLanguage();
   const lang = language as LangCode;
   const isRtl = lang === "ar";
@@ -46,6 +50,8 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
       {lessons.map((lesson) => {
         const title = getLessonTitle(lesson, lang);
         const description = getLessonDescription(lesson, lang);
+        const category = theoryOverview.find((item) => item.id === lesson.id)?.categories
+          .find((item) => item.primary);
 
         return (
           <Card
@@ -88,7 +94,7 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
                 {description}
               </p>
 
-              <div className="mt-auto flex items-center justify-between gap-2">
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
                 <div className="text-xs text-muted-foreground">
                   {t("lessons.card_cta_hint")}
                 </div>
@@ -106,6 +112,7 @@ export function LessonsGrid({ lessons }: { lessons: Lesson[] }) {
                     />
                   </Link>
                 </Button>
+                {category ? <LessonCategoryExamLink category={category} /> : null}
               </div>
             </CardContent>
           </Card>

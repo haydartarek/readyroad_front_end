@@ -21,7 +21,7 @@ export default function GlobalError({
       suppressHydrationWarning
     >
       <head>
-        <title>{`${translateMessage(language, "common.error_title")} | RijVia`}</title>
+        <title>{`${translateMessage(language, "common.error_title")} | Rijvia`}</title>
         <meta name="robots" content="noindex,nofollow" />
       </head>
       <body>

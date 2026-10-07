@@ -1,10 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import ArticleMarkdown from "@/components/blog/ArticleMarkdown";
 import ArticleLearningCards from "@/components/blog/ArticleLearningCards";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import {
+  PageHeroDescription,
+  PageHeroSurface,
+  PageHeroTitle,
+} from "@/components/ui/page-surface";
 import { localizePathname } from "@/lib/i18n-routing";
 import { createArticleMetadata } from "@/lib/article-metadata";
 import { createArticleStructuredData } from "@/lib/article-structured-data";
@@ -80,23 +86,32 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
-      <article className="container mx-auto max-w-3xl px-4 py-8 sm:px-6 md:py-12">
-        <Link
-          href={localizePathname("/blog", locale)}
-          className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
-        >
-          <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-          {translateMessage(locale, "blog.back")}
-        </Link>
+      <article className="container mx-auto max-w-5xl px-4 pt-8 pb-12 sm:px-6">
+        <Breadcrumb
+          items={[
+            {
+              label: translateMessage(locale, "nav.home"),
+              href: localizePathname("/", locale),
+            },
+            {
+              label: translateMessage(locale, "nav.blog"),
+              href: localizePathname("/blog", locale),
+            },
+            {
+              label: article.title,
+              isCurrentPage: true,
+            },
+          ]}
+        />
 
-        <header className="mt-6 border-b border-border/60 pb-7 text-center md:pb-9">
-          <h1 className="text-balance break-words text-3xl font-black leading-tight tracking-normal sm:text-4xl">
+        <PageHeroSurface>
+          <PageHeroTitle className="text-balance">
             {article.title}
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl break-words text-base leading-8 text-muted-foreground">
+          </PageHeroTitle>
+          <PageHeroDescription className="max-w-3xl break-words leading-8">
             {article.summary}
-          </p>
-        </header>
+          </PageHeroDescription>
+        </PageHeroSurface>
 
         {article.image ? (
           <figure className="mx-auto mt-8 max-w-4xl md:mt-10">
@@ -148,7 +163,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
                 <li key={internalLink.targetPath} className="min-w-0">
                   <Link
                     href={internalLink.targetPath}
-                    className="flex min-h-12 min-w-0 items-center justify-between gap-3 rounded-xl border border-border/60 bg-card px-4 py-3 text-sm font-bold transition-colors hover:border-primary/25 hover:bg-primary/[0.05] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
+                    className="flex min-h-12 min-w-0 items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3 text-sm font-bold transition-colors hover:border-primary/30 hover:bg-primary/[0.05] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
                   >
                     <span className="min-w-0 break-words">{internalLink.anchorText}</span>
                     <ArrowRight className="h-4 w-4 shrink-0 rtl:rotate-180" aria-hidden="true" />

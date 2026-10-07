@@ -9,14 +9,22 @@ import { LoadErrorState } from "@/components/ui/load-error-state";
 import { PageLoading } from "@/components/ui/page-loading";
 import { useLanguage } from "@/contexts/language-context";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { PageSectionSurface } from "@/components/ui/page-surface";
+import {
+  PageHeroDescription,
+  PageHeroTitle,
+  PageSectionSurface,
+} from "@/components/ui/page-surface";
 import { Search } from "lucide-react";
 import type { Lesson } from "@/lib/types";
+import type { HomeLessonOverviewItem } from "@/lib/home-lessons-overview";
+import { useLessonTheoryOverview } from "@/hooks/use-lesson-theory-overview";
 
 export default function LessonsClient({
   initialLessons,
-}: Readonly<{ initialLessons: Lesson[] }>) {
+  initialOverview = [],
+}: Readonly<{ initialLessons: Lesson[]; initialOverview?: HomeLessonOverviewItem[] }>) {
   const { t } = useLanguage();
+  const overview = useLessonTheoryOverview(initialOverview);
   const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
   const [loading, setLoading] = useState(initialLessons.length === 0);
   const [error, setError] = useState<string | null>(null);
@@ -95,8 +103,8 @@ export default function LessonsClient({
 
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(223,88,48,0.10),_transparent_35%),linear-gradient(to_bottom,_hsl(var(--muted))_0%,_hsl(var(--background))_22%)]">
-      <div className="container mx-auto px-4 py-8 md:py-12">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--brand-orange)/0.10),_transparent_35%),linear-gradient(to_bottom,_hsl(var(--muted))_0%,_hsl(var(--background))_22%)]">
+      <div className="container mx-auto px-4 pt-8 pb-8 md:pt-8 md:pb-12">
         <Breadcrumb
           items={[
             { label: t("nav.home"), href: "/" },
@@ -104,13 +112,23 @@ export default function LessonsClient({
           ]}
         />
 
-        <PageSectionSurface
+
+        <header className="mt-8 max-w-3xl space-y-2">
+          <PageHeroTitle className="text-balance">
+            {t("lessons.page_title")}
+          </PageHeroTitle>
+          <PageHeroDescription className="text-pretty">
+            {t("lessons.page_subtitle")}
+          </PageHeroDescription>
+        </header>
+
+<PageSectionSurface
           className="mt-8 rounded-[30px] border-border/50 bg-card/80 p-6"
           title={t("lessons.collection_title")}
           description={t("lessons.results_label", { count: lessons.length })}
         >
           {lessons.length > 0 ? (
-            <LessonsGrid lessons={lessons} />
+            <LessonsGrid lessons={lessons} theoryOverview={overview} />
           ) : (
             <div className="rounded-[24px] border border-dashed border-border bg-muted/20 px-6 py-12 text-center">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">

@@ -195,7 +195,7 @@ export default function LessonDraftPreviewDialog({
               ? "rtl"
               : "ltr"
           }
-          className="min-w-0 space-y-5 bg-[radial-gradient(circle_at_top,_rgba(223,88,48,0.08),_transparent_32%)] p-4 sm:p-6"
+          className="min-w-0 space-y-5 bg-[radial-gradient(circle_at_top,_hsl(var(--brand-orange)/0.08),_transparent_32%)] p-4 sm:p-6"
         >
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">

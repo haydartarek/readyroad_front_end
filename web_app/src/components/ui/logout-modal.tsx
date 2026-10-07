@@ -92,7 +92,7 @@ function LogoutModalContent({
           className="relative flex flex-col items-center pt-9 pb-16 overflow-hidden"
           style={{
             background:
-              "linear-gradient(135deg, hsl(210 29% 30%), hsl(210 35% 20%) 50%, hsl(215 40% 14%))",
+              "linear-gradient(135deg, hsl(var(--brand-navy)), hsl(var(--brand-navy-deep)) 50%, hsl(var(--brand-navy-deep)))",
           }}
         >
           {/* Decorative blobs */}
@@ -150,7 +150,7 @@ function LogoutModalContent({
                   cx="26"
                   cy="26"
                   r="22"
-                  stroke="hsl(210 29% 40%)"
+                  stroke="hsl(var(--brand-navy-soft))"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   style={{
@@ -165,7 +165,7 @@ function LogoutModalContent({
                 {/* Door frame — left bracket */}
                 <path
                   d="M24 14H16a2 2 0 00-2 2v24a2 2 0 002 2h8"
-                  stroke="hsl(13 76% 53%)"
+                  stroke="hsl(var(--brand-orange))"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -181,7 +181,7 @@ function LogoutModalContent({
                 {/* Exit arrow → */}
                 <path
                   d="M22 26h16M32 21l6 5-6 5"
-                  stroke="hsl(13 76% 53%)"
+                  stroke="hsl(var(--brand-orange))"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -212,7 +212,7 @@ function LogoutModalContent({
             style={{
               fontSize: "2rem",
               background:
-                "linear-gradient(135deg, hsl(210 29% 28%), hsl(210 40% 40%))",
+                "linear-gradient(135deg, hsl(var(--brand-navy)), hsl(var(--brand-navy-soft)))",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -245,7 +245,7 @@ function LogoutModalContent({
                 style={{
                   width: `${progress}%`,
                   background:
-                    "linear-gradient(90deg, hsl(210 29% 35%), hsl(210 40% 50%), hsl(210 29% 30%))",
+                    "linear-gradient(90deg, hsl(var(--brand-navy-soft)), hsl(var(--brand-navy-soft)), hsl(var(--brand-navy)))",
                   transition: prefersReducedMotion
                     ? "none"
                     : `width ${TICK_MS}ms linear`,

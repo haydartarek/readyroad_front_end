@@ -7,6 +7,8 @@ import {
   getPurchaseStatus,
   readExamCheckoutResume,
   rememberExamCheckoutResume,
+  rememberCategoryCheckoutResume,
+  readCategoryCheckoutResume,
 } from "./paymentService";
 
 jest.mock("@/lib/api", () => ({ apiClient: { post: jest.fn(), get: jest.fn() } }));
@@ -83,4 +85,15 @@ test("exam checkout resume can be cleared only for the matching purchase", () =>
   expect(
     readExamCheckoutResume(purchaseId),
   ).toBeNull();
+});
+
+test("category checkout resumes only the matching purchase and a canonical category path", () => {
+  const id = "1c0c5a1b-9ab6-4f59-a9ac-31a87910fc64";
+  rememberCategoryCheckoutResume("TH10", id);
+  expect(readCategoryCheckoutResume(id)).toBe("/exam?category=TH10");
+  expect(readExamCheckoutResume(id)).toBeNull();
+  expect(readCategoryCheckoutResume("865d2812-991c-43f3-8fc5-4c09d4f9b964")).toBeNull();
+  forgetExamCheckoutResume(id);
+  rememberCategoryCheckoutResume("//evil.example", id);
+  expect(readCategoryCheckoutResume(id)).toBeNull();
 });

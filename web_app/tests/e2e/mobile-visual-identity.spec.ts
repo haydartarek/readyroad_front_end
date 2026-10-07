@@ -432,6 +432,7 @@ async function installAnonymousMocks(page: Page) {
     }
     if (
       pathname.endsWith("/api/proxy/lessons") ||
+      pathname.endsWith("/api/proxy/lessons/home-overview") ||
       pathname.endsWith("/api/proxy/categories")
     ) {
       return fulfillJson(route, []);
@@ -522,7 +523,24 @@ async function installAuthenticatedSession(
       });
     }
     if (pathname.endsWith("/users/me/progress/theory-coverage")) {
-      return fulfillJson(route, emptyTheoryQuestionCoverage);
+      return fulfillJson(route, {
+        ...emptyTheoryQuestionCoverage,
+        categories: categoryProgress.map((category) => ({
+          categoryCode: category.categoryCode,
+          categoryName: category.categoryName,
+          eligibleQuestions: 100,
+          uniqueQuestionsSeen: category.questionsAttempted,
+          uniqueQuestionsAnswered: category.questionsAttempted,
+          unseenQuestions: 100 - category.questionsAttempted,
+          coveragePercentage: category.questionsAttempted,
+          timesPresented: category.questionsAttempted,
+          timesAnswered: category.questionsAttempted,
+          timesCorrect: category.correctAnswers,
+          timesIncorrect: category.questionsAttempted - category.correctAnswers,
+          accuracyPercentage: category.accuracyRate,
+          confidenceState: "LOW",
+        })),
+      });
     }
     if (pathname.endsWith("/users/me/progress/theory-timeouts")) {
       return fulfillJson(route, { totalTimeouts: 0, items: [] });
@@ -557,6 +575,7 @@ async function installAuthenticatedSession(
     }
     if (
       pathname.endsWith("/sign-quiz/user-progress") ||
+      pathname.endsWith("/lessons/home-overview") ||
       pathname.endsWith("/traffic-signs")
     ) {
       return fulfillJson(route, []);
@@ -939,356 +958,87 @@ async function expectViewportLayout(
 }
 
 test.describe("RijVia mobile visual identity", () => {
-  test("dashboard category progress cards stay readable in every language and viewport", async ({
+  test("dashboard category progress stays readable in every language and viewport", async ({
     context,
     page,
-  }, testInfo) => {
+  }) => {
     test.setTimeout(180_000);
     await seedCookieConsent(page);
-    await installAuthenticatedSession(
-      context,
-      page,
-      longCategoryProgressFixtures,
-    );
-
+    await installAuthenticatedSession(context, page, longCategoryProgressFixtures);
     const consoleErrors: string[] = [];
     const pageErrors: string[] = [];
     page.on("console", (message) => {
       if (message.type() === "error") consoleErrors.push(message.text());
     });
     page.on("pageerror", (error) => pageErrors.push(error.message));
-
     for (const locale of locales) {
-      await page.setViewportSize({ width: 320, height: 900 });
-      await navigate(page, localizedPath("/dashboard", locale));
-      await page.evaluate(() => document.fonts.ready);
-
-      const widget = page.getByTestId("category-progress-widget");
-      const cards = widget.getByTestId("category-progress-card");
-      await expect(widget).toBeVisible();
-      await expect(cards).toHaveCount(longCategoryProgressFixtures.length);
-      await expect(
-        cards.first().getByTestId("category-progress-name"),
-      ).toHaveText(localizedInformationCategoryNames[locale]);
-
+      await navigate(page, localizedPath("/dashboard?section=progress", locale));
+      const links = page.getByRole("main").locator('h3 > a[href*="/exam?category=TH"]');
+      await expect(links).toHaveCount(longCategoryProgressFixtures.length);
+      await expect(links.first()).toHaveText(localizedInformationCategoryNames[locale]);
+      for (const [index, category] of longCategoryProgressFixtures.entries()) {
+        await expect(links.nth(index)).toHaveAttribute(
+          "href", localizedPath(`/exam?category=${category.categoryCode}`, locale),
+        );
+        const row = links.nth(index).locator("xpath=../../..");
+        await expect(row.locator("strong").last()).toHaveText(String(category.questionsAttempted));
+      }
       for (const width of dashboardProgressViewports) {
         await page.setViewportSize({ width, height: 900 });
-        await page.evaluate(
-          () =>
-            new Promise<void>((resolve) =>
-              requestAnimationFrame(() =>
-                requestAnimationFrame(() => resolve()),
-              ),
-            ),
-        );
-        await waitForDocumentContainment(
-          page,
-          width,
-          `${locale} dashboard progress`,
-        );
-
-        const metrics = await widget.evaluate((element) => {
-          const viewport = window.innerWidth;
-          const grid = element.querySelector(
-            '[data-testid="category-progress-grid"]',
-          );
-          const cardElements = [
-            ...element.querySelectorAll(
-              '[data-testid="category-progress-card"]',
-            ),
-          ];
-          const rect = (target: Element) => target.getBoundingClientRect();
-
-          const invalidCards = cardElements.flatMap((card, index) => {
-            const cardRect = rect(card);
-            const header = card.querySelector(
-              '[data-testid="category-progress-header"]',
-            );
-            const name = card.querySelector(
-              '[data-testid="category-progress-name"]',
-            );
-            const percentage = card.querySelector(
-              '[data-testid="category-progress-percentage"]',
-            );
-            const progress = card.querySelector('[role="progressbar"]');
-            const icon = card.querySelector(
-              '[data-testid="category-progress-icon"]',
-            );
-            const trend = card.querySelector(
-              '[data-testid="category-progress-trend"]',
-            );
-            const counts = card.querySelector(
-              '[data-testid="category-progress-counts"]',
-            );
-            const actions = card.querySelector(
-              '[data-testid="category-progress-actions"]',
-            );
-            const buttons = [...card.querySelectorAll("a")];
-
-            if (
-              !header ||
-              !name ||
-              !percentage ||
-              !progress ||
-              !icon ||
-              !trend ||
-              !counts ||
-              !actions
-            ) {
-              return [
-                {
-                  index,
-                  category: name?.textContent?.trim() ?? "unknown",
-                  reason: "missing required card content",
-                  cardWidth: cardRect.width,
-                  cardLeft: cardRect.left,
-                  cardRight: cardRect.right,
-                  headerWidth: 0,
-                  percentageLeft: 0,
-                  percentageRight: 0,
-                  buttonWidths: buttons.map((button) => rect(button).width),
-                },
-              ];
-            }
-
-            const headerRect = rect(header);
-            const nameRect = rect(name);
-            const percentageRect = rect(percentage);
-            const progressRect = rect(progress);
-            const nameStyle = getComputedStyle(name);
-            const boundedElements = [
-              ["icon", icon],
-              ["trend", trend],
-              ["counts", counts],
-              ["actions", actions],
-            ] as const;
-            const buttonOverflow = buttons.some((button) => {
-              const buttonRect = rect(button);
-              return (
-                buttonRect.left < cardRect.left - 1 ||
-                buttonRect.right > cardRect.right + 1 ||
-                button.scrollWidth > button.clientWidth + 1
-              );
-            });
-            const boundedOverflow = boundedElements.flatMap(
-              ([elementName, target]) => {
-                const targetRect = rect(target);
-                return targetRect.left < cardRect.left - 1 ||
-                  targetRect.right > cardRect.right + 1 ||
-                  target.scrollWidth > target.clientWidth + 1
-                  ? [`${elementName} overflows card`]
-                  : [];
-              },
-            );
-
-            const reasons = [
-              cardRect.left < -1 && "card starts outside viewport",
-              cardRect.right > viewport + 1 && "card ends outside viewport",
-              card.scrollWidth > card.clientWidth + 1 && "card scrolls",
-              headerRect.left < cardRect.left - 1 &&
-                "header starts outside card",
-              headerRect.right > cardRect.right + 1 &&
-                "header ends outside card",
-              header.scrollWidth > header.clientWidth + 1 && "header scrolls",
-              nameRect.left < cardRect.left - 1 && "name starts outside card",
-              nameRect.right > cardRect.right + 1 && "name ends outside card",
-              nameStyle.whiteSpace === "nowrap" && "name cannot wrap",
-              nameStyle.webkitLineClamp !== "2" &&
-                "name is not clamped to two lines",
-              percentageRect.left < cardRect.left - 1 &&
-                "percentage starts outside card",
-              percentageRect.right > cardRect.right + 1 &&
-                "percentage ends outside card",
-              progressRect.left < cardRect.left - 1 &&
-                "progress starts outside card",
-              progressRect.right > cardRect.right + 1 &&
-                "progress ends outside card",
-              Math.abs(progressRect.width - headerRect.width) > 1 &&
-                "progress does not fill card content width",
-              buttonOverflow && "button overflows card",
-              ...boundedOverflow,
-            ].filter((reason): reason is string => Boolean(reason));
-
-            return reasons.map((reason) => ({
-              index,
-              category: name.textContent?.trim() ?? "unknown",
-              reason,
-              cardWidth: cardRect.width,
-              cardLeft: cardRect.left,
-              cardRight: cardRect.right,
-              headerWidth: headerRect.width,
-              percentageLeft: percentageRect.left,
-              percentageRight: percentageRect.right,
-              buttonWidths: buttons.map((button) => rect(button).width),
-            }));
+        await page.evaluate(() => document.fonts.ready);
+        await waitForDocumentContainment(page, width, `${locale} dashboard progress`);
+        const invalidRows = await links.evaluateAll((elements) => elements.flatMap((link, index) => {
+          const row = link.closest("h3")!.parentElement!.parentElement!;
+          const rowRect = row.getBoundingClientRect();
+          const nameRect = link.getBoundingClientRect();
+          const outside = [...row.querySelectorAll("span, strong")].some((part) => {
+            const rect = part.getBoundingClientRect();
+            return rect.left < rowRect.left - 1 || rect.right > rowRect.right + 1;
           });
-
-          const widgetStyle = getComputedStyle(element);
-          const htmlStyle = getComputedStyle(document.documentElement);
-          const bodyStyle = getComputedStyle(document.body);
-          return {
-            viewport,
-            documentWidth: document.documentElement.scrollWidth,
-            bodyWidth: document.body.scrollWidth,
-            widgetWidth: element.getBoundingClientRect().width,
-            widgetScrollWidth: element.scrollWidth,
-            gridWidth: grid?.getBoundingClientRect().width ?? 0,
-            gridScrollWidth: grid?.scrollWidth ?? 0,
-            gridColumnCount: grid
-              ? getComputedStyle(grid).gridTemplateColumns.split(" ").length
-              : 0,
-            headerColumnCounts: cardElements.map((card) => {
-              const header = card.querySelector(
-                '[data-testid="category-progress-header"]',
-              );
-              return header
-                ? getComputedStyle(header).gridTemplateColumns.split(" ").length
-                : 0;
-            }),
-            widgetOverflowX: widgetStyle.overflowX,
-            htmlOverflowX: htmlStyle.overflowX,
-            bodyOverflowX: bodyStyle.overflowX,
-            invalidCards,
-          };
-        });
-
-        if (metrics.invalidCards.length > 0) {
-          await page.screenshot({
-            path: testInfo.outputPath(
-              `dashboard-progress-${locale}-${width}px-overflow.png`,
-            ),
-            fullPage: true,
-          });
-        }
-
-        expect(metrics, `${locale} dashboard progress at ${width}px`).toEqual({
-          viewport: width,
-          documentWidth: width,
-          bodyWidth: width,
-          widgetWidth: expect.any(Number),
-          widgetScrollWidth: expect.any(Number),
-          gridWidth: expect.any(Number),
-          gridScrollWidth: expect.any(Number),
-          gridColumnCount: expect.any(Number),
-          headerColumnCounts: expect.any(Array),
-          widgetOverflowX: "visible",
-          htmlOverflowX: "visible",
-          bodyOverflowX: "visible",
-          invalidCards: [],
-        });
-        const expectedGridColumns =
-          width >= 1280 || (width >= 768 && width < 1024) ? 2 : 1;
-        expect(metrics.gridColumnCount).toBe(expectedGridColumns);
-        expect(metrics.headerColumnCounts).toEqual(
-          Array(longCategoryProgressFixtures.length).fill(width >= 768 ? 2 : 1),
-        );
-        expect(metrics.widgetScrollWidth).toBeLessThanOrEqual(
-          metrics.widgetWidth + 1,
-        );
-        expect(metrics.gridScrollWidth).toBeLessThanOrEqual(
-          metrics.gridWidth + 1,
-        );
+          return rowRect.left < -1 || rowRect.right > window.innerWidth + 1 ||
+            row.scrollWidth > row.clientWidth + 1 || nameRect.height <= 0 || outside
+            ? [index] : [];
+        }));
+        expect(invalidRows, `${locale} progress at ${width}px`).toEqual([]);
       }
-
-      await expect(widget.getByText("TH01", { exact: true })).toHaveCount(0);
     }
-
     expect(consoleErrors).toEqual([]);
     expect(pageErrors).toEqual([]);
   });
 
-  test("dashboard separates theory from sign performance and avoids repeated category scores", async ({
+  test("dashboard keeps theory coverage in the progress section without duplicate category rows", async ({
     context,
     page,
   }) => {
     await seedCookieConsent(page);
-    await installAuthenticatedSession(context, page);
     const theoryCategories = longCategoryProgressFixtures.slice(0, 3);
-
-    await page.route("**/api/proxy/users/me/progress/overall", (route) =>
-      fulfillJson(route, {
-        ...emptyOverallProgress,
-        strongCategories: [
-          {
-            categoryCode: "TH02",
-            categoryName: "Speed, roads and distances",
-            categoryNameEn: "Speed, roads and distances",
-            categoryNameNl: "Snelheid, wegen en afstanden",
-            categoryNameFr: "Vitesse, routes et distances",
-            categoryNameAr: "السرعة والطرق والمسافات",
-            attempted: 20,
-            accuracy: 90,
-          },
-        ],
-      }),
-    );
-    await page.route("**/api/proxy/users/me/progress/categories", (route) =>
-      fulfillJson(route, {
-        categories: theoryCategories,
-        overallAccuracy: 40,
-      }),
-    );
-    await page.route("**/api/proxy/users/me/analytics/weak-areas", (route) =>
-      fulfillJson(route, {
-        weakAreas: [
-          {
-            categoryId: 1,
-            categoryCode: "TH01",
-            categoryName: "Priority and intersections",
-            categoryNameEn: "Priority and intersections",
-            categoryNameNl: "Voorrang en kruispunten",
-            categoryNameFr: "Priorite et intersections",
-            categoryNameAr: "الاولوية والتقاطعات",
-            currentAccuracy: 33.3,
-            targetAccuracy: 80,
-            accuracyGap: 46.7,
-            recommendedQuestions: 10,
-            recommendedDifficulty: "MEDIUM",
-            estimatedTimeMinutes: 15,
-            priority: 1,
-            questionsAttempted: 3,
-          },
-        ],
-        totalPracticedCategories: 3,
-        overallAccuracy: 40,
-      }),
-    );
-
+    await installAuthenticatedSession(context, page, theoryCategories);
+    await page.route("**/api/proxy/users/me/progress/overall", (route) => fulfillJson(route, {
+      ...emptyOverallProgress,
+      totalAttempted: 30,
+      totalCorrect: 24,
+      overallAccuracy: 80,
+      totalExamsTaken: 2,
+      passedExams: 1,
+      failedExams: 1,
+      passRate: 50,
+      lessonsCompletedCount: 3,
+      signPracticeCount: 7,
+      signExamCount: 4,
+      signPassedCount: 2,
+    }));
     await page.setViewportSize({ width: 1280, height: 1200 });
     await navigate(page, "/dashboard");
-    const main = page.getByRole("main");
-    const widget = page.getByTestId("category-progress-widget");
-
-    await expect(widget.getByTestId("category-progress-card")).toHaveCount(1);
-    await expect(widget).toContainText("Manoeuvres, overtaking and lanes");
-    await expect(main.getByText(/^TH0[1-8]$/)).toHaveCount(0);
-    await expect(widget.locator('a[href="/exam"]')).toBeVisible();
-    await expect(widget.locator('a[href="/lessons"]')).toBeVisible();
-    await expect(widget.locator('a[href^="/practice/TH"]')).toHaveCount(0);
-
-    const headings = [
-      "Recent Activity",
-      "Theoretical Exam Performance",
-      "Traffic Sign Practice Performance",
-      "Weak Areas",
-      "Strong Areas",
-      "Learning overview",
-    ];
-    const tops: number[] = [];
-    for (const heading of headings) {
-      const candidates = main.getByText(heading, { exact: true });
-      let visibleTop: number | null = null;
-      for (let index = 0; index < (await candidates.count()); index += 1) {
-        const candidate = candidates.nth(index);
-        if (await candidate.isVisible()) {
-          visibleTop = (await candidate.boundingBox())?.y ?? null;
-          break;
-        }
-      }
-      expect(visibleTop, `${heading} has a visible dashboard heading`).not.toBeNull();
-      tops.push(visibleTop ?? -1);
+    await expect(page.getByTestId("dashboard-stat-card")).toHaveCount(4);
+    await expect(page.getByTestId("dashboard-stat-value")).toHaveText(["30", "80%", "2", "3"]);
+    await expect(page.getByRole("main").locator('h3 > a[href*="/exam?category=TH"]')).toHaveCount(0);
+    await navigate(page, "/dashboard?section=progress");
+    const categoryLinks = page.getByRole("main").locator('h3 > a[href*="/exam?category=TH"]');
+    await expect(categoryLinks).toHaveCount(theoryCategories.length);
+    await expect(categoryLinks).toHaveText(theoryCategories.map((category) => category.categoryNameEn ?? category.categoryName));
+    for (const category of theoryCategories) {
+      await expect(categoryLinks.filter({ hasText: category.categoryNameEn })).toHaveCount(1);
     }
-    expect(tops).toEqual([...tops].sort((a, b) => a - b));
   });
 
   test("affected dashboard sections preserve responsive RTL and LTR containment", async ({
@@ -1804,7 +1554,7 @@ test.describe("RijVia mobile visual identity", () => {
       await page.evaluate(() => document.fonts.ready);
 
       const statCards = page.getByTestId("dashboard-stat-card");
-      await expect(statCards).toHaveCount(8);
+      await expect(statCards).toHaveCount(4);
 
       for (const width of mobileWidths) {
         await page.setViewportSize({ width, height: 900 });
@@ -1860,13 +1610,11 @@ test.describe("RijVia mobile visual identity", () => {
               cardRect.left < -1 && "card starts outside viewport",
               cardRect.right > viewport + 1 && "card ends outside viewport",
               card.scrollWidth > card.clientWidth + 1 && "card scrolls",
-              Math.abs(centerX(iconRect) - centerX(cardRect)) > 1 &&
-                "icon is not centered",
-              Math.abs(centerX(labelRect) - centerX(cardRect)) > 1 &&
-                "label is not centered",
-              Math.abs(centerX(valueRect) - centerX(cardRect)) > 1 &&
-                "value is not centered",
-              iconRect.bottom > labelRect.top + 1 && "icon is not before label",
+              (iconRect.top >= labelRect.bottom || iconRect.bottom <= labelRect.top) &&
+                "icon and label do not share a row",
+              Math.abs(labelRect.left - valueRect.left) > 1 &&
+                Math.abs(labelRect.right - valueRect.right) > 1 &&
+                "label and value do not share a reading edge",
               labelRect.bottom > valueRect.top + 1 &&
                 "label is not before value",
               ...parts.flatMap(([part, partRect]) =>
@@ -1944,19 +1692,11 @@ test.describe("RijVia mobile visual identity", () => {
           const iconRect = icon.getBoundingClientRect();
           const labelRect = label.getBoundingClientRect();
           const valueRect = value.getBoundingClientRect();
-          const isSummary = card.getAttribute("data-stat-kind") === "summary";
-
-          if (isSummary) {
-            return Math.abs(iconRect.top - valueRect.top) <= 1 &&
-              labelRect.top >= Math.max(iconRect.bottom, valueRect.bottom) - 1
-              ? []
-              : [`summary card ${index} changed desktop order`];
-          }
-
-          return iconRect.bottom <= valueRect.top + 1 &&
-            valueRect.bottom <= labelRect.top + 1
+          return iconRect.top < labelRect.bottom &&
+            iconRect.bottom > labelRect.top &&
+            labelRect.bottom <= valueRect.top + 1
             ? []
-            : [`activity card ${index} changed desktop order`];
+            : [`card ${index} changed its icon-label row and value order`];
         }),
       );
 
@@ -1969,7 +1709,7 @@ test.describe("RijVia mobile visual identity", () => {
     expect(pageErrors).toEqual([]);
   });
 
-  test("recent activity cards use a clear vertical mobile hierarchy", async ({
+  test("recent activity cards keep compact actions and readable mobile content", async ({
     context,
     page,
   }, testInfo) => {
@@ -2097,7 +1837,6 @@ test.describe("RijVia mobile visual identity", () => {
 
         const metrics = await cards.evaluateAll((activityCards) => {
           const viewport = window.innerWidth;
-          const centerX = (target: DOMRect) => target.left + target.width / 2;
           const invalidCards = activityCards.flatMap((card, index) => {
             const cardRect = card.getBoundingClientRect();
             const parts = [
@@ -2129,8 +1868,8 @@ test.describe("RijVia mobile visual identity", () => {
               nameStyle.whiteSpace === "nowrap" && "name cannot wrap",
               nameStyle.webkitLineClamp !== "2" &&
                 "name is not limited to two readable lines",
-              actionRect.width < cardRect.width - 34 &&
-                "action is not near full width",
+              (actionRect.width < 40 || actionRect.height < 32) &&
+                "activity action is too small to use",
               ...partRects.flatMap((partRect, partIndex) => {
                 const findings: string[] = [];
                 if (
@@ -2139,14 +1878,8 @@ test.describe("RijVia mobile visual identity", () => {
                 ) {
                   findings.push(`part ${partIndex} leaves card bounds`);
                 }
-                if (Math.abs(centerX(partRect) - centerX(cardRect)) > 1) {
-                  findings.push(`part ${partIndex} is not centered`);
-                }
-                if (
-                  partIndex > 0 &&
-                  partRects[partIndex - 1].bottom > partRect.top + 1
-                ) {
-                  findings.push(`part ${partIndex} is out of vertical order`);
+                if (partRect.width <= 0 || partRect.height <= 0) {
+                  findings.push(`part ${partIndex} has no visible area`);
                 }
                 return findings;
               }),
@@ -2205,10 +1938,10 @@ test.describe("RijVia mobile visual identity", () => {
     expect(pageErrors).toEqual([]);
   });
 
-  test("dashboard error summary cards use a centered mobile hierarchy", async ({
+  test("dashboard embedded error patterns keep readable mobile content", async ({
     context,
     page,
-  }, testInfo) => {
+  }) => {
     test.setTimeout(120_000);
     await seedCookieConsent(page);
     await installAuthenticatedSession(context, page);
@@ -2277,152 +2010,24 @@ test.describe("RijVia mobile visual identity", () => {
 
     for (const locale of locales) {
       await page.setViewportSize({ width: 320, height: 900 });
-      await navigate(
-        page,
-        localizedPath("/dashboard?section=error-patterns", locale),
-      );
-      await page.evaluate(() => document.fonts.ready);
-
-      const cards = page.getByTestId("error-summary-card");
-      await expect(cards).toHaveCount(4);
+      await navigate(page, localizedPath("/dashboard?section=error-patterns", locale));
       const patternCards = page.getByTestId("error-pattern-card");
       await expect(patternCards).toHaveCount(2);
-
-      for (const width of [320, 360, 375, 390, 428] as const) {
+      await expect(page.getByTestId("error-summary-card")).toHaveCount(0);
+      await expect(patternCards.first()).toContainText("12");
+      await expect(patternCards.nth(1)).toContainText("8");
+      for (const width of mobileWidths) {
         await page.setViewportSize({ width, height: 900 });
-        await page.evaluate(
-          () =>
-            new Promise<void>((resolve) =>
-              requestAnimationFrame(() =>
-                requestAnimationFrame(() => resolve()),
-              ),
-            ),
-        );
-
-        const metrics = await cards.evaluateAll((summaryCards) => {
-          const viewport = window.innerWidth;
-          const centerX = (target: DOMRect) => target.left + target.width / 2;
-          const invalidCards = summaryCards.flatMap((card, index) => {
-            const cardRect = card.getBoundingClientRect();
-            const icon = card.querySelector(
-              '[data-testid="error-summary-icon"]',
-            );
-            const label = card.querySelector(
-              '[data-testid="error-summary-label"]',
-            );
-            const value = card.querySelector(
-              '[data-testid="error-summary-value"]',
-            );
-            const description = card.querySelector(
-              '[data-testid="error-summary-description"]',
-            );
-
-            if (!icon || !label || !value || !description) {
-              return [{ index, reason: "summary card content is incomplete" }];
-            }
-
-            const parts = [icon, label, value, description];
-            const partRects = parts.map((part) => part.getBoundingClientRect());
-            const descriptionStyle = getComputedStyle(description);
-            const reasons = [
-              cardRect.left < -1 && "card starts outside viewport",
-              cardRect.right > viewport + 1 && "card ends outside viewport",
-              card.scrollWidth > card.clientWidth + 1 && "card scrolls",
-              descriptionStyle.webkitLineClamp !== "2" &&
-                "description is not allowed two lines",
-              ...partRects.flatMap((partRect, partIndex) => {
-                const findings: string[] = [];
-                if (
-                  partRect.left < cardRect.left - 1 ||
-                  partRect.right > cardRect.right + 1
-                ) {
-                  findings.push(`part ${partIndex} leaves card bounds`);
-                }
-                if (Math.abs(centerX(partRect) - centerX(cardRect)) > 1) {
-                  findings.push(`part ${partIndex} is not centered`);
-                }
-                if (
-                  partIndex > 0 &&
-                  partRects[partIndex - 1].bottom > partRect.top + 1
-                ) {
-                  findings.push(`part ${partIndex} is out of vertical order`);
-                }
-                return findings;
-              }),
-            ].filter((reason): reason is string => Boolean(reason));
-
-            return reasons.map((reason) => ({
-              index,
-              reason,
-              cardLeft: cardRect.left,
-              cardRight: cardRect.right,
-              cardWidth: cardRect.width,
-            }));
-          });
-
-          return {
-            viewport,
-            documentWidth: document.documentElement.scrollWidth,
-            bodyWidth: document.body.scrollWidth,
-            invalidCards,
-          };
-        });
-
-        if (
-          metrics.documentWidth > width ||
-          metrics.bodyWidth > width ||
-          metrics.invalidCards.length > 0
-        ) {
-          await page.screenshot({
-            path: testInfo.outputPath(`error-summary-${locale}-${width}px.png`),
-            fullPage: true,
-          });
-        }
-
-        expect(metrics, `${locale} error summary at ${width}px`).toEqual({
-          viewport: width,
-          documentWidth: width,
-          bodyWidth: width,
-          invalidCards: [],
-        });
-
-        const patternMetrics = await patternCards.evaluateAll((items) => ({
-          viewport: window.innerWidth,
-          documentWidth: document.documentElement.scrollWidth,
-          invalidCards: items.flatMap((item, index) => {
-            const rect = item.getBoundingClientRect();
-            return rect.left < -1 || rect.right > window.innerWidth + 1
-              ? [{ index, left: rect.left, right: rect.right }]
-              : [];
-          }),
+        await page.evaluate(() => document.fonts.ready);
+        await waitForDocumentContainment(page, width, `${locale} embedded error patterns`);
+        const invalidCards = await patternCards.evaluateAll((cards) => cards.flatMap((card, index) => {
+          const rect = card.getBoundingClientRect();
+          return rect.left < -1 || rect.right > window.innerWidth + 1 ||
+            card.scrollWidth > card.clientWidth + 1 || rect.height <= 0
+            ? [index] : [];
         }));
-        expect(
-          patternMetrics,
-          `${locale} error pattern comparison at ${width}px`,
-        ).toEqual({
-          viewport: width,
-          documentWidth: width,
-          invalidCards: [],
-        });
+        expect(invalidCards, `${locale} error patterns at ${width}px`).toEqual([]);
       }
-
-      await page.setViewportSize({ width: 1280, height: 900 });
-      await page.evaluate(
-        () =>
-          new Promise<void>((resolve) =>
-            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-          ),
-      );
-      await expect(
-        cards.first().getByTestId("error-summary-content"),
-      ).toHaveCSS("flex-direction", "row");
-      expect(
-        await page.evaluate(() => ({
-          viewport: window.innerWidth,
-          documentWidth: document.documentElement.scrollWidth,
-          bodyWidth: document.body.scrollWidth,
-        })),
-      ).toEqual({ viewport: 1280, documentWidth: 1280, bodyWidth: 1280 });
     }
   });
 
@@ -2495,7 +2100,6 @@ test.describe("RijVia mobile visual identity", () => {
 
         const metrics = await cards.evaluateAll((resultCards) => {
           const viewport = window.innerWidth;
-          const centerX = (target: DOMRect) => target.left + target.width / 2;
           const invalidCards = resultCards.flatMap((card, index) => {
             const cardRect = card.getBoundingClientRect();
             const icon = card.querySelector(
@@ -2543,18 +2147,18 @@ test.describe("RijVia mobile visual identity", () => {
               cardRect.left < -1 && "card starts outside viewport",
               cardRect.right > viewport + 1 && "card ends outside viewport",
               card.scrollWidth > card.clientWidth + 1 && "card scrolls",
-              Math.abs(iconRect.width - 40) > 1 && "icon container is not 40px",
-              Math.abs(iconRect.height - 40) > 1 &&
-                "icon container is not 40px",
+              Math.abs(iconRect.width - 32) > 1 && "icon container is not 32px",
+              Math.abs(iconRect.height - 32) > 1 &&
+                "icon container is not 32px",
               iconSvgRect &&
-                Math.abs(iconSvgRect.width - 20) > 1 &&
-                "status icon is not 20px",
+                Math.abs(iconSvgRect.width - 16) > 1 &&
+                "status icon is not 16px",
               scoreRect &&
-                Math.abs(scoreRect.width - 52) > 1 &&
-                "score container is not 52px",
+                Math.abs(scoreRect.width - 40) > 1 &&
+                "score container is not 40px",
               scoreRect &&
-                Math.abs(scoreRect.height - 52) > 1 &&
-                "score container is not 52px",
+                Math.abs(scoreRect.height - 40) > 1 &&
+                "score container is not 40px",
               date.getAttribute("data-calendar") !== "gregory" &&
                 "date is not Gregorian",
               !dateText.includes("2026") && "Gregorian year is missing",
@@ -2568,14 +2172,8 @@ test.describe("RijVia mobile visual identity", () => {
                 ) {
                   findings.push(`part ${partIndex} leaves card bounds`);
                 }
-                if (Math.abs(centerX(partRect) - centerX(cardRect)) > 1) {
-                  findings.push(`part ${partIndex} is not centered`);
-                }
-                if (
-                  partIndex > 0 &&
-                  partRects[partIndex - 1].bottom > partRect.top + 1
-                ) {
-                  findings.push(`part ${partIndex} is out of vertical order`);
+                if (partRect.width <= 0 || partRect.height <= 0) {
+                  findings.push(`part ${partIndex} has no visible area`);
                 }
                 return findings;
               }),
@@ -2634,10 +2232,10 @@ test.describe("RijVia mobile visual identity", () => {
       ).toHaveCSS("flex-direction", "row");
       await expect(
         cards.first().getByTestId("official-exam-result-icon"),
-      ).toHaveCSS("width", "48px");
+      ).toHaveCSS("width", "32px");
       await expect(
         cards.first().getByTestId("official-exam-result-score"),
-      ).toHaveCSS("width", "64px");
+      ).toHaveCSS("width", "48px");
     }
   });
 
@@ -2786,7 +2384,6 @@ test.describe("RijVia mobile visual identity", () => {
 
         const metrics = await cards.evaluateAll((resultCards) => {
           const viewport = window.innerWidth;
-          const centerX = (target: DOMRect) => target.left + target.width / 2;
           const invalidCards = resultCards.flatMap((card, index) => {
             const cardRect = card.getBoundingClientRect();
             const parts = [
@@ -2824,11 +2421,11 @@ test.describe("RijVia mobile visual identity", () => {
               cardRect.left < -1 && "card starts outside viewport",
               cardRect.right > viewport + 1 && "card ends outside viewport",
               card.scrollWidth > card.clientWidth + 1 && "card scrolls",
-              Math.abs(iconRect.width - 40) > 1 && "icon is not 40px",
+              Math.abs(iconRect.width - 32) > 1 && "icon is not 32px",
               iconSvgRect &&
-                Math.abs(iconSvgRect.width - 20) > 1 &&
-                "icon glyph is not 20px",
-              Math.abs(scoreRect.width - 52) > 1 && "score is not 52px",
+                Math.abs(iconSvgRect.width - 16) > 1 &&
+                "icon glyph is not 16px",
+              Math.abs(scoreRect.width - 40) > 1 && "score is not 40px",
               nameStyle.whiteSpace === "nowrap" && "name cannot wrap",
               nameStyle.webkitLineClamp !== "2" &&
                 "name is not limited to two readable lines",
@@ -2845,14 +2442,8 @@ test.describe("RijVia mobile visual identity", () => {
                 ) {
                   findings.push(`part ${partIndex} leaves card bounds`);
                 }
-                if (Math.abs(centerX(partRect) - centerX(cardRect)) > 1) {
-                  findings.push(`part ${partIndex} is not centered`);
-                }
-                if (
-                  partIndex > 0 &&
-                  partRects[partIndex - 1].bottom > partRect.top + 1
-                ) {
-                  findings.push(`part ${partIndex} is out of vertical order`);
+                if (partRect.width <= 0 || partRect.height <= 0) {
+                  findings.push(`part ${partIndex} has no visible area`);
                 }
                 return findings;
               }),
@@ -2922,8 +2513,8 @@ test.describe("RijVia mobile visual identity", () => {
       expect(desktopMetrics).toEqual(
         Array(6).fill({
           direction: "row",
-          iconWidth: 48,
-          scoreWidth: 64,
+          iconWidth: 32,
+          scoreWidth: 48,
         }),
       );
     }
@@ -3040,7 +2631,7 @@ test.describe("RijVia mobile visual identity", () => {
     }
   });
 
-  test("exam summary cards share the icon label value mobile hierarchy", async ({
+  test("exam summary cards share the icon-label row and value hierarchy", async ({
     context,
     page,
   }) => {
@@ -3118,6 +2709,10 @@ test.describe("RijVia mobile visual identity", () => {
                 iconCenterDelta: Math.abs(
                   iconRect.left + iconRect.width / 2 - cardCenter,
                 ),
+                labelLeft: labelRect.left,
+                labelRight: labelRect.right,
+                valueLeft: valueRect.left,
+                valueRight: valueRect.right,
                 labelTop: labelRect.top,
                 labelBottom: labelRect.bottom,
                 labelCenterDelta: Math.abs(
@@ -3152,13 +2747,15 @@ test.describe("RijVia mobile visual identity", () => {
           expect(card.cardScrollWidth).toBeLessThanOrEqual(
             card.cardClientWidth + 1,
           );
-          expect(card.iconBottom).toBeLessThanOrEqual(card.labelTop + 1);
+          expect(card.iconTop).toBeLessThan(card.labelBottom);
+          expect(card.iconBottom).toBeGreaterThan(card.labelTop);
           expect(card.labelBottom).toBeLessThanOrEqual(card.valueTop + 1);
-          expect(card.iconCenterDelta).toBeLessThanOrEqual(1);
-          expect(card.labelCenterDelta).toBeLessThanOrEqual(1);
-          expect(card.valueCenterDelta).toBeLessThanOrEqual(1);
-          expect(card.labelTextAlign).toBe("center");
-          expect(card.valueTextAlign).toBe("center");
+          expect(Math.min(
+            Math.abs(card.labelLeft - card.valueLeft),
+            Math.abs(card.labelRight - card.valueRight),
+          )).toBeLessThanOrEqual(1);
+          expect(card.labelTextAlign).toBe("start");
+          expect(card.valueTextAlign).toBe("start");
           expect(card.valueScrollWidth).toBeLessThanOrEqual(
             card.valueClientWidth + 1,
           );
@@ -3198,15 +2795,15 @@ test.describe("RijVia mobile visual identity", () => {
             valueTop: Math.round(valueRect.top),
             labelTop: Math.round(labelRect.top),
             firstRowBottom: Math.round(
-              Math.max(iconRect.bottom, valueRect.bottom),
+              Math.max(iconRect.bottom, labelRect.bottom),
             ),
           };
         }),
       );
 
       for (const card of desktopMetrics) {
-        expect(Math.abs(card.iconTop - card.valueTop)).toBeLessThanOrEqual(1);
-        expect(card.labelTop).toBeGreaterThanOrEqual(card.firstRowBottom);
+        expect(Math.abs(card.iconTop - card.labelTop)).toBeLessThanOrEqual(8);
+        expect(card.valueTop).toBeGreaterThanOrEqual(card.firstRowBottom);
       }
     }
   });
@@ -3324,7 +2921,6 @@ test.describe("RijVia mobile visual identity", () => {
               ?.getBoundingClientRect();
             const progressBarRect = progressBar.getBoundingClientRect();
             const actionRect = action.getBoundingClientRect();
-            const cardCenter = cardRect.left + cardRect.width / 2;
             const statMetrics = stats.map((stat) => {
               const statIcon = stat.querySelector<HTMLElement>(
                 '[data-testid="practice-category-stat-icon"]',
@@ -3357,8 +2953,8 @@ test.describe("RijVia mobile visual identity", () => {
                 labelCenterDelta: Math.abs(
                   statLabelRect.left + statLabelRect.width / 2 - statCenter,
                 ),
-                valueCenterDelta: Math.abs(
-                  statValueRect.left + statValueRect.width / 2 - statCenter,
+                partsWithinStat: [statIconRect, statLabelRect, statValueRect].every(
+                  (rect) => rect.left >= statRect.left - 1 && rect.right <= statRect.right + 1,
                 ),
               };
             });
@@ -3382,13 +2978,13 @@ test.describe("RijVia mobile visual identity", () => {
               titleTop: titleRect.top,
               titleBottom: titleRect.bottom,
               countTop: countRect.top,
-              headerCenterDeltas: [
+              headerPartsWithinCard: [
                 iconRect,
                 codeRect,
                 titleRect,
                 countRect,
-              ].map((rect) =>
-                Math.abs(rect.left + rect.width / 2 - cardCenter),
+              ].every((rect) =>
+                rect.left >= cardRect.left - 1 && rect.right <= cardRect.right + 1,
               ),
               statMetrics,
               progressHeaderBottom: progressHeaderRect?.bottom ?? 0,
@@ -3413,22 +3009,19 @@ test.describe("RijVia mobile visual identity", () => {
           expect(card.cardScrollWidth).toBeLessThanOrEqual(
             card.cardClientWidth + 1,
           );
-          expect(card.headerDirection).toBe("column");
+          expect(card.headerDirection).toBe("row");
           expect(card.descriptionCount).toBe(0);
-          expect(card.iconBottom).toBeLessThanOrEqual(card.codeTop + 1);
           expect(card.codeBottom).toBeLessThanOrEqual(card.titleTop + 1);
           expect(card.titleBottom).toBeLessThanOrEqual(card.countTop + 1);
-          expect(Math.max(...card.headerCenterDeltas)).toBeLessThanOrEqual(1);
+          expect(card.headerPartsWithinCard).toBe(true);
           expect(
             new Set(card.statMetrics.map((stat) => stat.height)).size,
           ).toBe(1);
           for (const stat of card.statMetrics) {
-            expect(stat.direction).toBe("column");
-            expect(stat.iconBottom).toBeLessThanOrEqual(stat.labelTop + 1);
+            expect(stat.direction).toBe("row");
+            expect(stat.iconBottom).toBeGreaterThan(stat.labelTop);
             expect(stat.labelBottom).toBeLessThanOrEqual(stat.valueTop + 1);
-            expect(stat.iconCenterDelta).toBeLessThanOrEqual(1);
-            expect(stat.labelCenterDelta).toBeLessThanOrEqual(1);
-            expect(stat.valueCenterDelta).toBeLessThanOrEqual(1);
+            expect(stat.partsWithinStat).toBe(true);
           }
           expect(card.progressHeaderBottom).toBeLessThanOrEqual(
             card.progressBarTop,

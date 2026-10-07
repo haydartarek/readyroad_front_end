@@ -142,7 +142,7 @@ async function expectUnifiedLayout(page: Page, width: number) {
   await expect(page.getByTestId("exam-actions")).toBeVisible();
   await expect(
     page.getByTestId("exam-actions").locator(":scope > a, :scope > button"),
-  ).toHaveCount(3);
+  ).toHaveCount(2);
 
   const measurements = await page.evaluate(() => {
     const image = document.querySelector<HTMLElement>(

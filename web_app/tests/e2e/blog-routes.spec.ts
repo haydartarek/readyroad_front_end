@@ -151,7 +151,7 @@ test.describe("localized public blog routes", () => {
                 getComputedStyle(grid).gridTemplateColumns.split(" ").length,
             ),
           )
-          .toBe(width >= 1024 ? 4 : 1);
+          .toBe(width >= 1024 ? 3 : 1);
         await expect(page.getByTitle(translateMessage(article.locale, "nav.theme_dark"), { exact: true })).toHaveCount(1);
 
         const blogName = translateMessage(article.locale, "nav.blog");

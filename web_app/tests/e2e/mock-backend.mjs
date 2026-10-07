@@ -118,6 +118,12 @@ function publishedArticle(language) {
 
 const server = http.createServer((request, response) => {
   response.setHeader("Content-Type", "application/json; charset=utf-8");
+  const requestUrl = new URL(request.url, `http://127.0.0.1:${port}`);
+
+  if (requestUrl.pathname === "/api/lessons/home-overview") {
+    response.end(JSON.stringify([{ ...summary, categories: [] }]));
+    return;
+  }
 
   if (request.url === "/api/lessons") {
     response.end(JSON.stringify([summary]));
@@ -152,7 +158,6 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  const requestUrl = new URL(request.url, `http://127.0.0.1:${port}`);
   if (requestUrl.pathname === "/api/articles") {
     const language = requestUrl.searchParams.get("language") ?? "EN";
     const article = articleSlugs[language] ? publishedArticle(language) : null;

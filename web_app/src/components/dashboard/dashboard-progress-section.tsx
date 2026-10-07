@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { useEffect, useMemo, useState } from "react";
 
 
@@ -423,7 +423,7 @@ export function DashboardProgressSection({
                 <div className="min-w-0">
                   <h3 className="min-w-0 text-sm font-semibold">
                     <Link
-                      href={`/practice/${coverageCategory.categoryCode}`}
+                      href={`/exam?category=${coverageCategory.categoryCode}`}
                       className="break-words text-foreground transition-colors hover:text-primary hover:underline hover:underline-offset-4 focus-visible:text-primary focus-visible:outline-none"
                     >
                       {displayName}

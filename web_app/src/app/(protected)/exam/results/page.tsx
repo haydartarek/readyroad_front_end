@@ -125,6 +125,8 @@ export function ExamResultsPageContent() {
     searchParams.get("randomSignExamId") ?? "",
     10,
   );
+  const hasSelectedRandomResult =
+    Number.isFinite(highlightedRandomSessionId) && highlightedRandomSessionId > 0;
   const highlightedSignResultId = Number.parseInt(
     searchParams.get("signExamResultId") ?? "",
     10,
@@ -167,6 +169,15 @@ export function ExamResultsPageContent() {
     setIsLoading(true);
     setError(null);
     try {
+      if (hasSelectedRandomResult) {
+        const result = await getRandomPracticeResult(highlightedRandomSessionId);
+        setData({ totalExams: 0, exams: [] });
+        setRandomHistory({ totalSessions: 1, sessions: [result] });
+        setSignExamHistory({ totalResults: 0, results: [] });
+        setRandomDetailsCache((prev) => ({ ...prev, [result.sessionId]: result }));
+        setExpandedRandomId(result.sessionId);
+        return;
+      }
       const [theoryHistory, mixedSignHistory, signHistory] = await Promise.all([
         apiClient.get<ExamHistoryResponse>("/exams/simulations/history"),
         getRandomPracticeHistory(),
@@ -185,7 +196,7 @@ export function ExamResultsPageContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, t]);
+  }, [user, t, hasSelectedRandomResult, highlightedRandomSessionId]);
 
   useEffect(() => {
     fetchHistory();
@@ -378,11 +389,17 @@ export function ExamResultsPageContent() {
           </div>
           <div className="min-w-0 space-y-1">
             <PageHeroTitle>
-              {t("user_sidebar.exam_history_title")}
+              {t(
+                hasSelectedRandomResult
+                  ? "sign_practice.history_title"
+                  : "user_sidebar.exam_history_title",
+              )}
             </PageHeroTitle>
-            <PageHeroDescription>
-              {t("user_sidebar.exam_history_subtitle")}
-            </PageHeroDescription>
+            {!hasSelectedRandomResult && (
+              <PageHeroDescription>
+                {t("user_sidebar.exam_history_subtitle")}
+              </PageHeroDescription>
+            )}
           </div>
         </div>
       </PageHeroSurface>
@@ -903,46 +920,50 @@ export function ExamResultsPageContent() {
 
               return (
                 <>
-                  <div className="border-t border-border/60 pt-6">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Shuffle className="h-4 w-4" />
+                  {!hasSelectedRandomResult && (
+                    <>
+                      <div className="border-t border-border/60 pt-6">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <Shuffle className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 space-y-0.5">
+                            <h2 className="break-words text-lg font-bold tracking-normal text-foreground">
+                              {t("sign_practice.history_title")}
+                            </h2>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0 space-y-0.5">
-                        <h2 className="break-words text-lg font-bold tracking-normal text-foreground">
-                          {t("sign_practice.history_title")}
-                        </h2>
+
+                      <div className="grid min-w-0 grid-cols-3 overflow-hidden rounded-xl border border-border/70 bg-card divide-x divide-border/60 rtl:divide-x-reverse">
+                        <div className="min-w-0 space-y-1 p-4 text-center">
+                          <p className="text-xl font-bold text-foreground">
+                            {randomHistory.totalSessions}
+                          </p>
+                          <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
+                            {t("sign_practice.history_total")}
+                          </p>
+                        </div>
+                        <div className="min-w-0 space-y-1 p-4 text-center">
+                          <p className="text-xl font-bold text-green-700">
+                            {passedCount}
+                          </p>
+                          <p className="text-xs font-medium leading-4 text-green-700/80 [overflow-wrap:anywhere]">
+                            {t("dashboard.result_passed")}
+                          </p>
+                        </div>
+                        <div className="min-w-0 space-y-1 p-4 text-center">
+                          <p className="text-xl font-bold text-foreground">
+                            {passRate}%
+                          </p>
+                          <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
+                            {t("progress.pass_rate")}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="grid min-w-0 grid-cols-3 overflow-hidden rounded-xl border border-border/70 bg-card divide-x divide-border/60 rtl:divide-x-reverse">
-                    <div className="min-w-0 space-y-1 p-4 text-center">
-                      <p className="text-xl font-bold text-foreground">
-                        {randomHistory.totalSessions}
-                      </p>
-                      <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
-                        {t("sign_practice.history_total")}
-                      </p>
-                    </div>
-                    <div className="min-w-0 space-y-1 p-4 text-center">
-                      <p className="text-xl font-bold text-green-700">
-                        {passedCount}
-                      </p>
-                      <p className="text-xs font-medium leading-4 text-green-700/80 [overflow-wrap:anywhere]">
-                        {t("dashboard.result_passed")}
-                      </p>
-                    </div>
-                    <div className="min-w-0 space-y-1 p-4 text-center">
-                      <p className="text-xl font-bold text-foreground">
-                        {passRate}%
-                      </p>
-                      <p className="text-xs font-medium leading-4 text-muted-foreground [overflow-wrap:anywhere]">
-                        {t("progress.pass_rate")}
-                      </p>
-                    </div>
-                  </div>
-
+                    </>
+                  )}
                   <div className="space-y-3">
                     {randomHistory.sessions.map((session, index) => {
                       const pct = Math.round(session.scorePercentage ?? 0);
@@ -1004,7 +1025,9 @@ export function ExamResultsPageContent() {
                                   className="line-clamp-2 break-words text-base font-semibold text-foreground sm:line-clamp-1"
                                 >
                                   {t("sign_practice.history_session")} #
-                                  {randomHistory.totalSessions - index}
+                                  {hasSelectedRandomResult
+                                    ? session.sessionId
+                                    : randomHistory.totalSessions - index}
                                 </span>
                                 <span
                                   data-result-part="status"

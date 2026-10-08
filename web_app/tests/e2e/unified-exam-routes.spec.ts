@@ -198,6 +198,74 @@ async function expectSingleVisibleText(page: Page, text: string) {
 }
 
 for (const [locale, labels] of Object.entries(locales)) {
+  test(`${locale} completed random sign exam opens its saved results`, async ({ page }) => {
+    await prepare(page);
+    const historyRequests: string[] = [];
+    const result = {
+      sessionId: 88,
+      status: "COMPLETED",
+      totalQuestions: 1,
+      answeredCount: 1,
+      correctAnswers: 1,
+      wrongAnswers: 0,
+      unanswered: 0,
+      scorePercentage: 100,
+      passed: true,
+      passingScore: 1,
+      startedAt: "2026-08-12T00:00:00Z",
+      completedAt: "2026-08-12T00:01:00Z",
+      questions: [{
+        ...question,
+        questionId: question.id,
+        selectedChoiceId: 101,
+        correctChoiceId: 101,
+        selectedChoiceEn: question.choices[0].textEn,
+        selectedChoiceAr: question.choices[0].textAr,
+        selectedChoiceNl: question.choices[0].textNl,
+        selectedChoiceFr: question.choices[0].textFr,
+        correctChoiceEn: question.choices[0].textEn,
+        correctChoiceAr: question.choices[0].textAr,
+        correctChoiceNl: question.choices[0].textNl,
+        correctChoiceFr: question.choices[0].textFr,
+        isCorrect: true,
+        wasTimeout: false,
+      }],
+    };
+    await page.route("**/api/proxy/**", async (route) => {
+      const path = new URL(route.request().url()).pathname.replace("/api/proxy", "");
+      if (["/exams/simulations/history", "/sign-quiz/random-practice/history", "/sign-quiz/exam-history"].includes(path)) {
+        historyRequests.push(path);
+      }
+      if (path === "/sign-quiz/random-practice/check") {
+        expect(route.request().method()).toBe("POST");
+        expect(route.request().postDataJSON()).toEqual({
+          sessionId: 88,
+          answers: [{ questionId: question.id, selectedChoiceId: 101 }],
+        });
+        return fulfillJson(route, result);
+      }
+      if (path === "/exams/simulations/history") {
+        return fulfillJson(route, { totalExams: 0, exams: [] });
+      }
+      if (path === "/sign-quiz/random-practice/history") {
+        return fulfillJson(route, { totalSessions: 1, sessions: [result] });
+      }
+      if (path === "/sign-quiz/random-practice/88/results") return fulfillJson(route, result);
+      if (path === "/sign-quiz/exam-history") {
+        return fulfillJson(route, { totalResults: 0, results: [] });
+      }
+      return route.fallback();
+    });
+    await page.goto(`${labels.prefix}/practice/random`);
+    await page.getByRole("button", { name: labels.start }).click();
+    await page.getByRole("button", { name: question.choices[0][`text${locale === "en" ? "En" : locale === "ar" ? "Ar" : locale === "nl" ? "Nl" : "Fr"}`] }).click();
+    await page.getByTestId("exam-next").click();
+    await expect(page).toHaveURL(`${process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005"}${labels.prefix}/exam/results?randomSignExamId=88`);
+    await expect(page.getByTestId("mixed-sign-exam-result-card")).toBeVisible();
+    await expect(page.getByTestId("mixed-sign-exam-result-card")).toHaveCount(1);
+    expect(historyRequests).toEqual([]);
+  });
+
   for (const kind of ["traffic-sign", "random"] as const) {
     test(`${locale} traffic-sign and random exams share the responsive shell: ${kind}`, async ({
       page,

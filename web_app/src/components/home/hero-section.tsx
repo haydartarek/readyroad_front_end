@@ -13,16 +13,13 @@ function CtaSkeleton() {
   return (
     <>
       <div className="h-12 w-full animate-pulse rounded-xl bg-muted sm:w-44" />
-      <div className="h-12 w-full animate-pulse rounded-xl bg-muted sm:w-40" />
     </>
   );
 }
 
 function GuestCtas({
-  primary,
   secondary,
 }: {
-  primary: string;
   secondary: string;
 }) {
   return (
@@ -31,14 +28,6 @@ function GuestCtas({
         <Link href="/exam">{secondary}</Link>
       </Button>
 
-      <Button
-        size="lg"
-        variant="outline"
-        className={`${CTA_CLASS} border-border bg-background text-foreground hover:bg-muted/50`}
-        asChild
-      >
-        <Link href="/register">{primary}</Link>
-      </Button>
     </>
   );
 }
@@ -119,7 +108,6 @@ export function HeroSection() {
               />
             ) : (
               <GuestCtas
-                primary={t("home.hero.cta_guest_primary")}
                 secondary={t("home.hero.cta_guest_secondary")}
               />
             )}

@@ -62,6 +62,7 @@ const mockedSignHistory = getSignExamHistory as jest.Mock;
 
 describe("random sign exam review", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     mockRandomSignExamId = "10";
     mockedApiGet.mockResolvedValue({ data: { totalExams: 0, exams: [] } });
     mockedRandomHistory.mockResolvedValue({
@@ -136,6 +137,13 @@ describe("random sign exam review", () => {
       expect(screen.getByText("الإجابة الصحيحة")).toBeVisible();
     });
     expect(mockedRandomResult).toHaveBeenCalledWith(10);
+    expect(mockedRandomHistory).not.toHaveBeenCalled();
+    expect(mockedApiGet).not.toHaveBeenCalled();
+    expect(mockedSignHistory).not.toHaveBeenCalled();
+    expect(screen.getAllByTestId("mixed-sign-exam-result-card")).toHaveLength(1);
+    expect(screen.queryByText("user_sidebar.exam_history_title")).not.toBeInTheDocument();
+    expect(screen.queryByText("sign_practice.history_total")).not.toBeInTheDocument();
+    expect(screen.queryByText("progress.pass_rate")).not.toBeInTheDocument();
   });
 
   it("localizes theory answers and renders the saved explanation", async () => {

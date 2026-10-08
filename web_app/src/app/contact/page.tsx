@@ -206,13 +206,13 @@ export default function ContactPage() {
                 </span>
               </span>
             </a>
-            <div className="flex items-start gap-3 p-2">
+            <div className="flex min-w-0 items-start gap-3 p-2">
               <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-              <span>
+              <span className="min-w-0">
                 <span className="block text-sm font-semibold">
                   {t("contact.responseTime")}
                 </span>
-                <span className="block text-sm text-muted-foreground">
+                <span className="block break-words text-sm text-muted-foreground">
                   {t("contact.responseTimeValue")}
                 </span>
               </span>

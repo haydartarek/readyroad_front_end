@@ -178,7 +178,7 @@ export function AccountAccessCard({ compact = false }: { compact?: boolean } = {
         dir={isRTL ? "rtl" : "ltr"}
         className="flex max-w-full flex-wrap items-center gap-3 rounded-2xl border border-border/60 bg-card px-3 py-2 shadow-sm"
       >
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
           {isPaid || isUnlimited ? (
             <Crown className="h-4 w-4" aria-hidden />
           ) : (
@@ -237,7 +237,7 @@ export function AccountAccessCard({ compact = false }: { compact?: boolean } = {
     >
       <div className="flex flex-col gap-3 border-b border-border/60 bg-muted/25 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
             {isPaid || isUnlimited ? (
               <Crown className="h-4 w-4" aria-hidden />
             ) : (

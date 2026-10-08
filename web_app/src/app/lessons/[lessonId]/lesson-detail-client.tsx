@@ -412,8 +412,8 @@ export default function LessonDetailClient({
                     data-lesson-page={currentPage.pageNumber} className="scroll-mt-24">
                   <PageSectionSurface className="overflow-hidden border-border/50 bg-card/95 p-0">
                     <div className="border-b border-border/40 bg-primary/[0.025] px-4 py-4 sm:px-5">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
                           <FileText className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">

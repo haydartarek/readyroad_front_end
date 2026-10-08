@@ -490,7 +490,7 @@ export default function ExamResultsPage() {
                   </p>
                 </div>
 
-                <div className="flex w-full max-w-[220px] shrink-0 items-center justify-center gap-3 rounded-[1.25rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm lg:w-auto">
+                <div className="flex w-full max-w-[220px] shrink-0 items-center justify-center gap-3 rounded-2xl border border-border/60 bg-background/80 px-4 py-3 shadow-sm lg:w-auto">
                   {results.passed ? (
                     <Trophy className="h-8 w-8 text-green-500" />
                   ) : (
@@ -512,7 +512,7 @@ export default function ExamResultsPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 rounded-[1.5rem] border border-border/60 bg-background/80 p-4 shadow-sm">
+              <div className="space-y-2 rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="font-semibold text-foreground">
                     {t("practice_exam.score_pass_threshold").replace(
@@ -551,19 +551,19 @@ export default function ExamResultsPage() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[
                   {
-                    icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+                    icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
                     label: t("practice_exam.score_correct"),
                     value: results.correctAnswers,
                     tone: "text-green-600",
                   },
                   {
-                    icon: <XCircle className="h-5 w-5 text-destructive" />,
+                    icon: <XCircle className="h-4 w-4 text-destructive" />,
                     label: t("practice_exam.score_wrong"),
                     value: results.wrongAnswers,
                     tone: "text-red-500",
                   },
                   {
-                    icon: <Clock className="h-5 w-5 text-orange-500" />,
+                    icon: <Clock className="h-4 w-4 text-orange-500" />,
                     label: t("practice_exam.score_timeout"),
                     value: unansweredCount,
                     tone: "text-orange-500",
@@ -622,10 +622,10 @@ export default function ExamResultsPage() {
         </PageHeroSurface>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
-          <section className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/85 shadow-sm">
+          <section className="overflow-hidden rounded-2xl border border-border/60 bg-card/85 shadow-sm">
             <div className="flex items-center gap-3 border-b border-border/40 px-5 py-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
-                <BarChart2 className="h-5 w-5 text-primary" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+                <BarChart2 className="h-4 w-4 text-primary" />
               </div>
               <div>
                 <h2 className="text-lg font-black text-foreground">
@@ -695,10 +695,10 @@ export default function ExamResultsPage() {
           </section>
 
           <aside className="space-y-4">
-            <section className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/85 shadow-sm">
+            <section className="overflow-hidden rounded-2xl border border-border/60 bg-card/85 shadow-sm">
               <div className="flex items-center gap-3 border-b border-border/40 px-5 py-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
-                  <Timer className="h-5 w-5 text-primary" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+                  <Timer className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-foreground">
@@ -730,10 +730,10 @@ export default function ExamResultsPage() {
                 ].map((item) => (
                   <div
                     key={item.label}
-                    className="flex items-center justify-between gap-3 rounded-[1.2rem] border border-border/50 bg-background/80 px-4 py-3"
+                    className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-border/50 bg-background/80 px-4 py-3"
                   >
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10">
+                    <div className="flex min-w-0 flex-1 items-center gap-3 text-sm font-semibold text-foreground">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15 [&>svg]:h-4 [&>svg]:w-4">
                         {item.icon}
                       </div>
                       {item.label}
@@ -760,7 +760,7 @@ export default function ExamResultsPage() {
           id="exam-answer-review"
           tabIndex={-1}
           aria-labelledby="exam-answer-review-title"
-          className="scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/85 shadow-sm outline-none"
+          className="scroll-mt-24 overflow-hidden rounded-2xl border border-border/60 bg-card/85 shadow-sm outline-none"
         >
           <button
             type="button"

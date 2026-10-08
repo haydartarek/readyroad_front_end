@@ -95,9 +95,6 @@ export function LessonsGrid({ lessons, theoryOverview = [] }: {
               </p>
 
               <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
-                <div className="text-xs text-muted-foreground">
-                  {t("lessons.card_cta_hint")}
-                </div>
                 <Button
                   className="h-9 rounded-full px-4 text-sm shadow-sm shadow-primary/15"
                   asChild

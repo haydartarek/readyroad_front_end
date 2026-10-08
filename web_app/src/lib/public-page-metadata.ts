@@ -33,8 +33,8 @@ export async function createPublicPageMetadata(
     description: normalizeSeoBrand(copy.description),
     alternates: getLocalizedAlternates(path, locale, APP_URL),
     openGraph: {
-      title: toBrandedMetadataTitle(copy.openGraphTitle),
-      description: normalizeSeoBrand(copy.openGraphDescription),
+      title: toBrandedMetadataTitle(copy.title),
+      description: normalizeSeoBrand(copy.description),
       url: canonical,
       siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
@@ -44,8 +44,8 @@ export async function createPublicPageMetadata(
     },
     twitter: {
       card: "summary_large_image",
-      title: toBrandedMetadataTitle(copy.openGraphTitle),
-      description: normalizeSeoBrand(copy.openGraphDescription),
+      title: toBrandedMetadataTitle(copy.title),
+      description: normalizeSeoBrand(copy.description),
       images: [ogImage.url],
     },
     robots: { index: true, follow: true },

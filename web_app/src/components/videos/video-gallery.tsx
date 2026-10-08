@@ -31,6 +31,7 @@ import {
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
+import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import {
   YOUTUBE_CHANNEL_URL,
   type YouTubeVideo,
@@ -161,6 +162,8 @@ export function VideoGallery({
             </Button>
           </div>
         </PageHeroSurface>
+
+        <SeoIntentLinks page="videos" />
 
         {data?.stale ? (
           <div

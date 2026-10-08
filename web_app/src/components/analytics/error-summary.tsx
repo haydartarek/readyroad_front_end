@@ -117,12 +117,12 @@ export function ErrorSummary({
                     data-testid="error-summary-icon"
                     className={cn(
                       compact
-                        ? "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-background/60"
-                        : "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 shadow-sm",
+                        ? "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-background/60"
+                        : "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 shadow-sm",
                       iconBg,
                     )}
                   >
-                    <Icon className="h-5 w-5" aria-hidden />
+                    <Icon className="h-4 w-4" aria-hidden />
                   </div>
                   <div className="min-w-0 max-w-full flex-1 text-start">
                     <p

@@ -9,7 +9,6 @@ import {
 import {
   buildAbsoluteUrl,
   serializeJsonLd,
-  toBrandedMetadataTitle,
   toMetadataDescription,
 } from "@/lib/seo";
 import { getPublicTrafficSign } from "@/lib/server/public-catalog";
@@ -43,11 +42,11 @@ export async function generateMetadata({
   const routePath = `/traffic-signs/${encodeURIComponent(routeCode)}`;
   const canonical = buildLocalizedUrl(routePath, locale, APP_URL);
   const description = toMetadataDescription(
-    copy.description ? `${sign.signCode}: ${copy.description}` : "",
+    copy.description,
     copy.fallbackDescription,
   );
   const image = buildAbsoluteUrl(sign.imageUrl, APP_URL);
-  const title = toBrandedMetadataTitle(copy.title);
+  const title = copy.title;
 
   return {
     title: { absolute: title },
@@ -115,7 +114,7 @@ export default async function SignLayout({
         {
           "@type": "ListItem",
           position: 3,
-          name: `${sign.signCode}: ${copy.name}`,
+          name: copy.name,
           item: canonical,
         },
       ],
@@ -125,7 +124,7 @@ export default async function SignLayout({
       "@type": "LearningResource",
       "@id": `${canonical}#learning-resource`,
       mainEntityOfPage: canonical,
-      name: `${sign.signCode}: ${copy.name}`,
+      name: copy.name,
       description,
       url: canonical,
       image,

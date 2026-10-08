@@ -39,14 +39,21 @@ describe("localized public blog article", () => {
     getLocale.mockResolvedValue(locale);
     getArticle.mockResolvedValue({
       language: locale.toUpperCase(), slug: "published-article",
-      metaTitle: "Published article - RijVia", metaDescription: "Reviewed description",
+      title: "Published article",
+      summary: "Published summary",
+      metaTitle: "Legacy metadata title - RijVia",
+      metaDescription: "Legacy metadata description",
       publishedAt: "2026-09-02T12:00:00Z", image: null,
       alternateSlugs: { [locale.toUpperCase()]: "published-article" },
     });
     const metadata = await generateMetadata({ params: Promise.resolve({ slug: "published-article" }) });
-    expect(metadata.title).toEqual({ absolute: "Published article | RijVia" });
-    expect(metadata.openGraph?.title).toBe("Published article | RijVia");
-    expect(metadata.twitter?.title).toBe("Published article | RijVia");
+    expect(metadata.title).toEqual({ absolute: "Published article | Rijvia" });
+    expect(metadata.openGraph?.title).toBe("Published article | Rijvia");
+    expect(metadata.twitter?.title).toBe("Published article | Rijvia");
+
+    expect(metadata.description).toBe("Published summary");
+    expect(metadata.openGraph?.description).toBe("Published summary");
+    expect(metadata.twitter?.description).toBe("Published summary");
   });
 
   describe.each(["ar", "en", "nl", "fr"] as const)("image attribution in %s", (locale) => {
@@ -211,7 +218,7 @@ describe("localized public blog article", () => {
       params: Promise.resolve({ slug: "veilig-rijden" }),
     });
 
-    expect(metadata.title).toEqual({ absolute: "Veiliger rijden in België | RijVia" });
+    expect(metadata.title).toEqual({ absolute: "Veiliger rijden in België | Rijvia" });
     expect(metadata.alternates).toEqual({
       canonical: "https://rijvia.be/nl/blog/veilig-rijden",
       languages: {

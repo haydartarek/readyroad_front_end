@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "@/components/localized-link";
+import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -188,9 +189,9 @@ export default function TheoryExamEntry() {
         <div className="space-y-6">
           <section
             data-testid="exam-intro-surface"
-            className="rounded-[28px] border border-primary/10 bg-card/95 px-5 py-6 shadow-sm ring-1 ring-primary/[0.03] sm:px-7 sm:py-8"
+            className="rounded-2xl border border-primary/10 bg-card/95 px-4 py-6 shadow-sm ring-1 ring-primary/[0.03] sm:px-6 sm:py-7"
           >
-            <div className="mx-auto max-w-4xl space-y-7">
+            <div className="mx-auto max-w-4xl space-y-6">
               <div className="space-y-3 text-center">
                 <PageHeroTitle className="text-secondary sm:text-4xl">
                   {t("practice_exam.intro_title")}
@@ -206,15 +207,16 @@ export default function TheoryExamEntry() {
                 className="grid gap-3 sm:grid-cols-3"
               >
                 <PageMetricCard
-                  icon={<ClipboardList className="h-5 w-5" />}
+                  icon={<ClipboardList className="h-4 w-4" />}
                   label={t("exam.total_questions")}
                   value={String(EXAM_RULES.TOTAL_QUESTIONS)}
                   tone="primary"
                   mobileStacked
-                  className="rounded-2xl border-primary/10 bg-background/80"
+                  className="border-primary/10 bg-background/80"
                 />
+
                 <PageMetricCard
-                  icon={<Clock3 className="h-5 w-5" />}
+                  icon={<Clock3 className="h-4 w-4" />}
                   label={t("exam.duration")}
                   value={t("exam.duration_value", {
                     minutes: EXAM_RULES.DURATION_WHOLE_MINUTES,
@@ -222,15 +224,16 @@ export default function TheoryExamEntry() {
                   })}
                   tone="primary"
                   mobileStacked
-                  className="rounded-2xl border-primary/10 bg-background/80"
+                  className="border-primary/10 bg-background/80"
                 />
+
                 <PageMetricCard
-                  icon={<Trophy className="h-5 w-5" />}
+                  icon={<Trophy className="h-4 w-4" />}
                   label={t("exam.pass_score")}
                   value={`${EXAM_RULES.PASSING_SCORE}/${EXAM_RULES.TOTAL_QUESTIONS}`}
                   tone="primary"
                   mobileStacked
-                  className="rounded-2xl border-primary/10 bg-background/80"
+                  className="border-primary/10 bg-background/80"
                 />
               </div>
 
@@ -281,30 +284,35 @@ export default function TheoryExamEntry() {
             </div>
           </section>
 
+          <SeoIntentLinks
+            page="theoryExam"
+            excludeHrefs={["/practice"]}
+          />
+
           <PageSectionSurface
-            className="rounded-[28px] border-primary/10 bg-card/80 shadow-sm ring-1 ring-primary/[0.03]"
+            className="border-primary/10 bg-card/80 shadow-sm ring-1 ring-primary/[0.03]"
             title={t("exam.rules.title")}
             description={t("exam.rules.subtitle")}
           >
             <aside>
               <div className="grid gap-3 sm:grid-cols-2">
                 <ExamRule
-                  icon={<CheckCircle2 className="h-5 w-5" />}
+                  icon={<CheckCircle2 className="h-4 w-4" />}
                   text={t("exam.rules.content.totalQuestions")}
                 />
 
                 <ExamRule
-                  icon={<Timer className="h-5 w-5" />}
+                  icon={<Timer className="h-4 w-4" />}
                   text={t("exam.rules.content.timeLimit")}
                 />
 
                 <ExamRule
-                  icon={<Trophy className="h-5 w-5" />}
+                  icon={<Trophy className="h-4 w-4" />}
                   text={t("exam.rules.content.passScore")}
                 />
 
                 <ExamRule
-                  icon={<ClipboardList className="h-5 w-5" />}
+                  icon={<ClipboardList className="h-4 w-4" />}
                   text={t("exam.rules.content.submission")}
                 />
               </div>
@@ -324,15 +332,15 @@ function ExamRule({
   text: string;
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-3 rounded-2xl border border-primary/10 bg-background/70 p-4">
+    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-background/70 p-3.5 sm:p-4">
       <div
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15"
         aria-hidden
       >
         {icon}
       </div>
 
-      <p className="min-w-0 pt-1 text-sm font-medium leading-6 text-secondary">
+      <p className="min-w-0 flex-1 break-words text-sm font-medium leading-6 text-secondary">
         {text}
       </p>
     </div>

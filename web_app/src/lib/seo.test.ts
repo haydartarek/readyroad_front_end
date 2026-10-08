@@ -1,5 +1,6 @@
 import {
   buildAbsoluteUrl,
+  normalizeSeoBrand,
   serializeJsonLd,
   toMetadataDescription,
   toBrandedMetadataTitle,
@@ -7,16 +8,23 @@ import {
 
 describe("SEO helpers", () => {
   it.each([
-    ["Article", "Article | RijVia"],
-    ["Article - RijVia", "Article | RijVia"],
-    ["Article \u2013 RijVia", "Article | RijVia"],
-    ["Article \u2014 RijVia", "Article | RijVia"],
-    ["Article | RijVia", "Article | RijVia"],
-    ["Article | RijVia | RijVia", "Article | RijVia"],
-    ["A long-term plan", "A long-term plan | RijVia"],
-    ["Section ‹ Topic > RijVia", "Section | Topic | RijVia"],
+    ["Article", "Article | Rijvia"],
+    ["Article | RijVia", "Article | Rijvia"],
+    ["Article - Rijvia", "Article | Rijvia"],
+    ["Article \u2013 Rijvia", "Article | Rijvia"],
+    ["Article \u2014 Rijvia", "Article | Rijvia"],
+    ["Article | Rijvia", "Article | Rijvia"],
+    ["Article | Rijvia | Rijvia", "Article | Rijvia"],
+    ["A long-term plan", "A long-term plan | Rijvia"],
+    ["Section ‹ Topic > Rijvia", "Section | Topic | Rijvia"],
   ])("normalizes the brand separator without changing content: %s", (input, expected) => {
     expect(toBrandedMetadataTitle(input)).toBe(expected);
+  });
+
+  it("normalizes legacy brand casing in SEO text", () => {
+    expect(normalizeSeoBrand("RijVia helps learners")).toBe(
+      "Rijvia helps learners",
+    );
   });
 
   it("builds absolute URLs and encodes spaces", () => {

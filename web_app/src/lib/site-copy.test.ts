@@ -34,52 +34,108 @@ describe("home metadata titles", () => {
     ],
     [fr, "RijVia | Préparez l’examen théorique belge en toute confiance"],
   ])(
-    "keeps the approved educational and privacy hierarchy",
+    "keeps the approved visible Hero hierarchy",
     (messages, headline) => {
       expect(
         `${messages["home.hero.headline"]} ${messages["home.hero.headline_highlight"]}`,
       ).toBe(headline);
-      expect(messages["home.hero.subtitle"]).toBeTruthy();
-      expect(messages["home.hero.privacy"]).toBeTruthy();
+
+      expect(
+        messages["home.hero.subtitle"],
+      ).toBeTruthy();
+
+      expect(
+        messages["home.hero.privacy"],
+      ).toBeTruthy();
     },
   );
 
   it.each([
-    ["en", "Rijvia | Belgian Driving Theory Exam Preparation"],
-    ["ar", "Rijvia | الاستعداد لامتحان السياقة النظري في بلجيكا"],
-    ["nl", "Rijvia | Theorie Rijbewijs B België"],
-    ["fr", "Rijvia | Préparation à l'examen théorique permis B en Belgique"],
+    ["en", en],
+    ["nl", nl],
+    ["fr", fr],
+    ["ar", ar],
   ] as const)(
-    "uses one pipe-separated Rijvia title for %s",
-    (locale, title) => {
-      const copy = getHomeMetadataCopy(locale);
+    "uses visible Home Hero content as metadata source for %s",
+    async (locale, messages) => {
+      mockedGetRequestLocale.mockResolvedValue(
+        locale,
+      );
 
-      expect(copy.title).toBe(title);
-      expect(copy.openGraphTitle).toBe(title);
-      expect(copy.title).not.toContain("Rijvia:");
-      expect(copy.title.match(/Rijvia/g)).toHaveLength(1);
+      const metadata =
+        await generateHomeMetadata();
+
+      const headline =
+        messages["home.hero.headline"]
+          .replace(
+            /^RijVia\s*\|\s*/i,
+            "",
+          )
+          .trim();
+
+      const expectedTitle =
+        `${headline} ${messages["home.hero.headline_highlight"]} | Rijvia`;
+
+      expect(metadata.title).toEqual({
+        absolute: expectedTitle,
+      });
+
+      expect(metadata.description).toBe(
+        messages["home.hero.subtitle"],
+      );
+
+      expect(metadata.openGraph?.title).toBe(
+        expectedTitle,
+      );
+
+      expect(
+        metadata.openGraph?.description,
+      ).toBe(
+        messages["home.hero.subtitle"],
+      );
+
+      expect(metadata.twitter?.title).toBe(
+        expectedTitle,
+      );
+
+      expect(
+        metadata.twitter?.description,
+      ).toBe(
+        messages["home.hero.subtitle"],
+      );
+
+      expect(
+        getHomeMetadataCopy(locale).keywords.length,
+      ).toBeGreaterThan(0);
     },
   );
 
-  it.each(["en", "ar", "nl", "fr"] as const)(
-    "keeps branded home and video titles absolute for %s",
+  it.each(["en", "nl", "fr", "ar"] as const)(
+    "keeps the canonical Rijvia suffix for Videos in %s",
     async (locale) => {
-      mockedGetRequestLocale.mockResolvedValue(locale);
+      mockedGetRequestLocale.mockResolvedValue(
+        locale,
+      );
 
-      const homeMetadata = await generateHomeMetadata();
-      const videosMetadata = await generateVideosMetadata();
+      const metadata =
+        await generateVideosMetadata();
 
-      expect(homeMetadata.title).toEqual({
-        absolute: `${getHomeMetadataCopy(locale).title.split(" | ").slice(1).join(" | ")} | RijVia`,
-      });
-      expect(videosMetadata.title).toEqual({
-        absolute: expect.stringContaining("| RijVia"),
-      });
+      const absolute =
+        String(
+          (
+            metadata.title as {
+              absolute: string;
+            }
+          ).absolute,
+        );
+
       expect(
-        String((videosMetadata.title as { absolute: string }).absolute).match(
-          /RijVia/g,
-        ),
-      ).toHaveLength(1);
+        absolute.endsWith("| Rijvia"),
+      ).toBe(true);
+
+      expect(
+        absolute.endsWith("| RijVia"),
+      ).toBe(false);
     },
   );
 });

@@ -7,11 +7,12 @@ const pages: SeoIntentPage[] = [
   "signExam",
   "theoryExam",
   "trafficSigns",
+  "videos",
   "lessons",
 ];
 
 describe("SEO intent copy", () => {
-  test.each(locales)("covers all six public intents for %s", (locale) => {
+  test.each(locales)("covers all public intents for %s", (locale) => {
     for (const page of pages) {
       const copy = getSeoIntentCopy(locale, page);
       expect(copy.heading.trim()).not.toBe("");

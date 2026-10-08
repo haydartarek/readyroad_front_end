@@ -199,8 +199,8 @@ export function PageMetricCard({
       {mobileStacked ? (
         <div
           className={cn(
-            "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center justify-items-stretch text-start",
-            isSmall ? "gap-y-1 sm:gap-x-1" : "gap-y-2 sm:gap-x-3",
+            "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start justify-items-stretch text-start",
+            isSmall ? "gap-x-2.5 gap-y-1" : "gap-x-3 gap-y-1.5",
           )}
         >
           <div
@@ -208,8 +208,8 @@ export function PageMetricCard({
             className={cn(
               "col-start-1 row-start-1 shrink-0",
               isSmall
-                ? "flex h-5 w-5 items-center justify-center rounded-[0.55rem]"
-                : "flex h-8 w-8 items-center justify-center rounded-[0.9rem]",
+                ? "flex h-6 w-6 items-center justify-center rounded-lg [&>svg]:h-3.5 [&>svg]:w-3.5"
+                : "flex h-8 w-8 items-center justify-center rounded-xl [&>svg]:h-4 [&>svg]:w-4",
               METRIC_ICON_TONE_CLASSES[tone],
             )}
           >
@@ -220,8 +220,8 @@ export function PageMetricCard({
             className={cn(
               "col-start-2 row-start-1 min-w-0 max-w-full break-words text-xs font-semibold leading-4 tracking-normal text-muted-foreground",
               isSmall
-                ? "text-[10px] leading-4"
-                : "text-xs leading-4",
+                ? "text-[11px] leading-4"
+                : "text-xs leading-5",
             )}
           >
             {label}
@@ -231,8 +231,8 @@ export function PageMetricCard({
             className={cn(
               "col-start-2 row-start-2 min-w-0 max-w-full break-words justify-self-start",
               isSmall
-                ? "text-[13px] font-semibold leading-4 tracking-normal"
-                : "text-xl font-black tracking-normal sm:text-2xl",
+                ? "text-sm font-bold leading-5 tracking-normal"
+                : "text-lg font-black leading-6 tracking-normal sm:text-xl",
               METRIC_TONE_CLASSES[tone],
             )}
           >
@@ -243,8 +243,8 @@ export function PageMetricCard({
               className={cn(
                 "col-start-2 row-start-3 min-w-0 max-w-full break-words font-medium text-foreground/80",
                 isSmall
-                  ? "text-[9px] leading-3.5 md:text-[9px]"
-                  : "text-sm leading-4.5 md:text-base",
+                  ? "text-[10px] leading-4"
+                  : "text-xs leading-4 sm:text-sm sm:leading-5",
               )}
             >
               {hint}
@@ -262,8 +262,8 @@ export function PageMetricCard({
             <div
               className={cn(
                 isSmall
-                  ? "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-[0.55rem]"
-                  : "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem]",
+                  ? "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg [&>svg]:h-3.5 [&>svg]:w-3.5"
+                  : "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl [&>svg]:h-4 [&>svg]:w-4",
                 METRIC_ICON_TONE_CLASSES[tone],
               )}
             >
@@ -299,8 +299,8 @@ export function PageMetricCard({
                 className={cn(
                   "break-words font-medium text-foreground/80",
                   isSmall
-                    ? "text-[9px] leading-3.5 md:text-[9px]"
-                    : "text-sm leading-4.5 md:text-base",
+                    ? "text-[10px] leading-4"
+                    : "text-xs leading-4 sm:text-sm sm:leading-5",
                 )}
               >
                 {hint}

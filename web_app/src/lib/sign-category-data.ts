@@ -12,7 +12,7 @@ export interface GroupInfo {
 export const GROUP_INFO: Record<string, GroupInfo> = {
   A: {
     title: {
-      nl: "Gevaar",
+      nl: "Gevaarsborden",
       en: "Danger Signs",
       ar: "علامات الخطر",
       fr: "Panneaux de danger",
@@ -26,9 +26,9 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   B: {
     title: {
-      nl: "Voorrang",
+      nl: "Voorrangsborden",
       en: "Priority Signs",
-      ar: "الأولوية",
+      ar: "علامات الأولوية",
       fr: "Panneaux de priorité",
     },
     description: {
@@ -40,9 +40,9 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   C: {
     title: {
-      nl: "Verbod",
+      nl: "Verbodsborden",
       en: "Prohibition Signs",
-      ar: "المنع",
+      ar: "علامات المنع",
       fr: "Panneaux d'interdiction",
     },
     description: {
@@ -54,9 +54,9 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   D: {
     title: {
-      nl: "Gebod",
+      nl: "Gebodsborden",
       en: "Mandatory Signs",
-      ar: "الإلزام",
+      ar: "العلامات الإجبارية",
       fr: "Panneaux d'obligation",
     },
     description: {
@@ -68,10 +68,10 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   E: {
     title: {
-      nl: "Parkeren / Stilstaan",
-      en: "Stopping & Parking",
-      ar: "الوقوف والركن",
-      fr: "Arrêt et stationnement",
+      nl: "Parkeer- en stilstaanborden",
+      en: "Parking and Standing Signs",
+      ar: "علامات الوقوف والتوقف",
+      fr: "Panneaux de stationnement et d'arrêt",
     },
     description: {
       nl: "Borden voor stilstaan en parkeren regelen waar en wanneer voertuigen langs de weg mogen stilstaan of parkeren. Naleving helpt verkeershinder te voorkomen, vooral in drukke stedelijke gebieden.",
@@ -82,9 +82,9 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
   },
   F: {
     title: {
-      nl: "Aanwijzing",
+      nl: "Aanwijzingsborden",
       en: "Information Signs",
-      ar: "إرشادات",
+      ar: "العلامات الإرشادية",
       fr: "Panneaux d'indication",
     },
     // No displayKey — letter 'F' is shown in badge as-is
@@ -156,7 +156,7 @@ export const GROUP_INFO: Record<string, GroupInfo> = {
     title: {
       nl: "Zoneborden",
       en: "Zone Signs",
-      ar: "علامات المناطق",
+      ar: "علامات المناطق المرورية",
       fr: "Panneaux de zone",
     },
     description: {

@@ -1,6 +1,7 @@
 import {
   PUBLIC_CONTACT,
   getAllPublicContent,
+  getPublicMetadata,
   type PublicDocumentKey,
   type PublicPageKey,
 } from "@/lib/public-content";
@@ -45,20 +46,57 @@ describe("public content governance", () => {
     }
   });
 
-  it("contains complete, unique metadata in every supported language", () => {
+  it("derives public metadata from the same visible content source", () => {
     for (const language of LANGUAGES) {
       const titles = new Set<string>();
       const descriptions = new Set<string>();
 
       for (const page of PAGE_KEYS) {
-        const metadata = content[language].metadata[page];
+        const metadata =
+          getPublicMetadata(language, page);
+
+        const asset =
+          content[language].metadata[page];
+
         expect(metadata.title.trim()).not.toBe("");
-        expect(metadata.description.length).toBeGreaterThanOrEqual(70);
-        expect(metadata.description.length).toBeLessThanOrEqual(180);
-        expect(metadata.openGraphTitle.trim()).not.toBe("");
-        expect(metadata.openGraphDescription.trim()).not.toBe("");
+        expect(metadata.description.trim()).not.toBe("");
+        expect(metadata.imageAlt).toBe(asset.imageAlt);
         expect(metadata.imageAlt.trim()).not.toBe("");
-        expect(metadata.description).not.toMatch(PLACEHOLDER_PATTERN);
+        expect(metadata.description).not.toMatch(
+          PLACEHOLDER_PATTERN,
+        );
+
+        if (page === "contact") {
+          expect(metadata.title).toBe(
+            ALL_MESSAGES[language]["contact.title"],
+          );
+
+          expect(metadata.description).toBe(
+            ALL_MESSAGES[language]["contact.subtitle"],
+          );
+        } else if (page === "faq") {
+          expect(metadata.title).toBe(
+            content[language].faq.title,
+          );
+
+          expect(metadata.description).toBe(
+            content[language].faq.intro,
+          );
+        } else {
+          const document =
+            content[language].documents[
+              page as PublicDocumentKey
+            ];
+
+          expect(metadata.title).toBe(
+            document.title,
+          );
+
+          expect(metadata.description).toBe(
+            document.intro,
+          );
+        }
+
         titles.add(metadata.title);
         descriptions.add(metadata.description);
       }

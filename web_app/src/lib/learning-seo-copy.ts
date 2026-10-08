@@ -1,5 +1,8 @@
 import type { LessonDetail, TrafficSign } from "@/lib/types";
 import type { SiteLocale } from "@/lib/site-copy";
+import { GROUP_INFO } from "@/lib/sign-category-data";
+import { translateMessage } from "@/lib/messages";
+import { getTrafficSignName } from "@/lib/traffic-sign-presentation";
 
 export type LearningIndexSeoCopy = {
   title: string;
@@ -10,6 +13,11 @@ export type LearningIndexSeoCopy = {
   imageAlt: string;
 };
 
+type LearningIndexSeoConfig = Pick<
+  LearningIndexSeoCopy,
+  "keywords" | "imageAlt"
+>;
+
 type LocalizedLearningResourceCopy = {
   homeLabel: string;
   indexLabel: string;
@@ -18,11 +26,8 @@ type LocalizedLearningResourceCopy = {
   educationalUse: string;
 };
 
-const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
+const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoConfig> = {
   en: {
-    title: "Belgian Traffic Signs: Meanings and Explanations",
-    description:
-      "Explore 184 Belgian traffic signs and road signs with meanings, explanations and driver guidance in English, Dutch, French and Arabic, organized by sign family.",
     keywords: [
       "Belgian traffic signs meanings",
       "traffic signs Belgium",
@@ -30,15 +35,9 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "Belgian road signs meanings",
       "Belgian traffic signs explained",
     ],
-    openGraphTitle: "Belgian Traffic Signs and Meanings | Rijvia",
-    openGraphDescription:
-      "Browse 184 Belgian traffic signs by family with clear multilingual meanings and explanations.",
     imageAlt: "Belgian traffic signs and meanings on Rijvia",
   },
   nl: {
-    title: "Verkeersborden België: betekenis en uitleg",
-    description:
-      "Bekijk 184 Belgische verkeersborden met betekenis en uitleg voor bestuurders, geordend per categorie en beschikbaar in het Nederlands, Engels, Frans en Arabisch.",
     keywords: [
       "verkeersborden België betekenis",
       "Belgische verkeersborden",
@@ -46,15 +45,9 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "verkeersborden uitleg",
       "Belgische verkeersborden betekenis",
     ],
-    openGraphTitle: "Verkeersborden België: betekenis en uitleg | Rijvia",
-    openGraphDescription:
-      "Bekijk 184 Belgische verkeersborden per familie met duidelijke meertalige betekenis en uitleg.",
     imageAlt: "Belgische verkeersborden met betekenis op Rijvia",
   },
   fr: {
-    title: "Panneaux de signalisation Belgique : signification",
-    description:
-      "Consultez 184 panneaux de signalisation et panneaux routiers belges avec leur signification, leurs explications et des conseils pour les conducteurs.",
     keywords: [
       "panneaux de signalisation Belgique",
       "signification panneaux Belgique",
@@ -62,16 +55,9 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "signification panneaux routiers belges",
       "panneaux Belgique explication",
     ],
-    openGraphTitle:
-      "Panneaux de signalisation Belgique : signification | Rijvia",
-    openGraphDescription:
-      "Parcourez 184 panneaux belges par famille avec des significations et explications multilingues claires.",
     imageAlt: "Panneaux de signalisation belges et leur signification",
   },
   ar: {
-    title: "العلامات المرورية في بلجيكا: المعاني والشرح",
-    description:
-      "تعرّف على 184 علامة وإشارة مرور في بلجيكا مع المعاني والشرح وإرشادات للسائق، بالعربية والهولندية والفرنسية والإنجليزية ومرتبة حسب الفئة.",
     keywords: [
       "العلامات المرورية في بلجيكا",
       "إشارات المرور في بلجيكا",
@@ -79,18 +65,12 @@ const TRAFFIC_SIGNS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "معاني العلامات المرورية البلجيكية",
       "معاني إشارات المرور في بلجيكا",
     ],
-    openGraphTitle: "العلامات المرورية في بلجيكا ومعانيها | Rijvia",
-    openGraphDescription:
-      "تصفح 184 علامة مرورية بلجيكية مرتبة حسب الفئة، مع المعاني والشرح بأربع لغات.",
     imageAlt: "العلامات المرورية البلجيكية ومعانيها على Rijvia",
   },
 };
 
-const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
+const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoConfig> = {
   en: {
-    title: "Belgian Driving Theory Lessons & Road Rules",
-    description:
-      "Study 32 structured Belgian driving theory lessons for category B covering Belgian road rules, traffic signs, priority, speed, parking and safety through lesson 31.",
     keywords: [
       "Belgian driving theory lessons",
       "Belgian road rules",
@@ -98,15 +78,9 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "Belgian traffic rules explained",
       "learn Belgian driving theory",
     ],
-    openGraphTitle: "Belgian Driving Theory Lessons & Road Rules | Rijvia",
-    openGraphDescription:
-      "Study 32 structured category B lessons about Belgian road rules in English, Dutch, French and Arabic through lesson 31.",
     imageAlt: "Belgian category B driving theory lessons on Rijvia",
   },
   nl: {
-    title: "Theorie Rijbewijs B België: Lessen & Verkeersregels",
-    description:
-      "Leer theorie rijbewijs B in België met 32 lessen over verkeersregels, verkeersborden, voorrang, snelheid, parkeren en veiligheid.",
     keywords: [
       "theorie rijbewijs B leren",
       "theorie rijbewijs B België",
@@ -114,15 +88,9 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "Belgische verkeersregels leren",
       "Belgische rijtheorie",
     ],
-    openGraphTitle: "Theorie Rijbewijs B België: Lessen | Rijvia",
-    openGraphDescription:
-      "Leer Belgische verkeersregels met 32 gestructureerde rijtheorielessen in vier talen tot en met les-31.",
     imageAlt: "Belgische rijtheorie voor rijbewijs B op Rijvia",
   },
   fr: {
-    title: "Cours Théorie Permis B Belgique & Code de la Route",
-    description:
-      "Étudiez 32 cours de théorie permis B en Belgique sur le code de la route belge : panneaux, priorités, vitesse, stationnement et sécurité jusqu’à la leçon 31.",
     keywords: [
       "cours théorie permis B Belgique",
       "théorie permis B Belgique",
@@ -130,15 +98,9 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "règles de circulation belges",
       "apprendre théorie permis B",
     ],
-    openGraphTitle: "Cours Théorie Permis B Belgique | Rijvia",
-    openGraphDescription:
-      "Étudiez le code de la route belge avec 32 leçons structurées en quatre langues jusqu’à la leçon 31.",
     imageAlt: "Leçons de théorie du permis B belge sur Rijvia",
   },
   ar: {
-    title: "تعليم السياقة في بلجيكا بالعربية: دروس النظري",
-    description:
-      "تعلّم قواعد المرور البلجيكية بالعربية من خلال 32 درسًا منظمًا للنظري من الفئة B، تشمل العلامات والأولوية والسرعة والركن والسلامة حتى الدرس 31.",
     keywords: [
       "تعليم السياقة في بلجيكا بالعربية",
       "دروس السياقة النظرية في بلجيكا",
@@ -146,9 +108,6 @@ const LESSONS_COPY: Record<SiteLocale, LearningIndexSeoCopy> = {
       "تعلم قانون السير البلجيكي",
       "دروس امتحان السياقة النظري في بلجيكا",
     ],
-    openGraphTitle: "تعليم السياقة في بلجيكا بالعربية | Rijvia",
-    openGraphDescription:
-      "تعلّم قواعد المرور البلجيكية من خلال 32 درسًا منظمًا للنظري بأربع لغات حتى الدرس 31.",
     imageAlt: "دروس السياقة النظرية البلجيكية على Rijvia",
   },
 };
@@ -221,11 +180,31 @@ const LESSON_RESOURCE_COPY: Record<
 export function getTrafficSignsSeoCopy(
   locale: SiteLocale,
 ): LearningIndexSeoCopy {
-  return TRAFFIC_SIGNS_COPY[locale];
+  const config = TRAFFIC_SIGNS_COPY[locale];
+  const title = translateMessage(locale, "traffic_signs.page_title");
+  const description = translateMessage(locale, "traffic_signs.page_subtitle");
+
+  return {
+    ...config,
+    title,
+    description,
+    openGraphTitle: title,
+    openGraphDescription: description,
+  };
 }
 
 export function getLessonsSeoCopy(locale: SiteLocale): LearningIndexSeoCopy {
-  return LESSONS_COPY[locale];
+  const config = LESSONS_COPY[locale];
+  const title = translateMessage(locale, "lessons.page_title");
+  const description = translateMessage(locale, "lessons.page_subtitle");
+
+  return {
+    ...config,
+    title,
+    description,
+    openGraphTitle: title,
+    openGraphDescription: description,
+  };
 }
 
 export function getLocalizedTrafficSignSeo(
@@ -234,40 +213,47 @@ export function getLocalizedTrafficSignSeo(
 ) {
   const localized = {
     en: {
-      name: sign.nameEn,
       summary: sign.summaryEn,
       description: sign.descriptionEn,
+      guidance: sign.driverGuidanceEn,
     },
     nl: {
-      name: sign.nameNl,
       summary: sign.summaryNl,
       description: sign.descriptionNl,
+      guidance: sign.driverGuidanceNl,
     },
     fr: {
-      name: sign.nameFr,
       summary: sign.summaryFr,
       description: sign.descriptionFr,
+      guidance: sign.driverGuidanceFr,
     },
     ar: {
-      name: sign.nameAr,
       summary: sign.summaryAr,
       description: sign.descriptionAr,
+      guidance: sign.driverGuidanceAr,
     },
   }[locale];
   const resource = RESOURCE_COPY[locale];
-  const name = localized.name || sign.nameEn || sign.signCode;
-  const description =
+  const name = getTrafficSignName(sign, locale) || sign.nameEn || sign.signCode;
+  const categoryCode = sign.categoryCode?.trim().toUpperCase();
+  const category = categoryCode ? GROUP_INFO[categoryCode] : undefined;
+  const categoryTitle = category?.title[locale] || resource.contextLabel;
+  const baseDescription =
     localized.description ||
     localized.summary ||
     sign.descriptionEn ||
-    sign.summaryEn;
+    sign.summaryEn ||
+    "";
+  const guidance = localized.guidance || sign.driverGuidanceEn || "";
+  const description = [baseDescription, guidance].filter(Boolean).join(" ");
 
   return {
     name,
+    categoryTitle,
     description,
-    title: `${sign.signCode}: ${name} | Rijvia`,
-    fallbackDescription: `${resource.contextLabel} ${sign.signCode}: ${name}.`,
-    imageAlt: `${sign.signCode}: ${name}`,
+    title: `${name} | ${categoryTitle} | Rijvia`,
+    fallbackDescription: `${resource.contextLabel}: ${name}.`,
+    imageAlt: name,
     ...resource,
   };
 }
@@ -354,13 +340,12 @@ export function getLocalizedLessonSeo(
   }[locale];
   const resource = LESSON_RESOURCE_COPY[locale];
   const title = localized.title || lesson.titleEn || lesson.lessonCode;
-  const searchCopy = getLessonSearchCopy(lesson.lessonCode, locale);
-  const description = searchCopy?.description || localized.description || lesson.descriptionEn;
+  const description = localized.description || lesson.descriptionEn;
 
   return {
     name: title,
     description,
-    title: searchCopy?.title || `${title} | ${resource.contextLabel} | Rijvia`,
+    title: `${title} | ${resource.contextLabel} | Rijvia`,
     fallbackDescription: `${resource.contextLabel}: ${title}.`,
     imageAlt: `${title} | Rijvia`,
     ...resource,

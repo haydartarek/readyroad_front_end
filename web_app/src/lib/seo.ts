@@ -5,22 +5,22 @@ export function buildAbsoluteUrl(path: string, appUrl: string): string {
 export function toBrandedMetadataTitle(title: string): string {
   const content = title
     .trim()
-    .replace(/^RijVia\s*(?:[-\u2013\u2014|\u2039>])\s*/iu, "")
-    .replace(/^RijVia\s+/iu, "")
-    .replace(/\s*(?:[-\u2013\u2014|\u2039>])?\s*RijVia\s*$/iu, "")
+    .replace(/^Rijvia\s*(?:[-\u2013\u2014|\u2039>])\s*/iu, "")
+    .replace(/^Rijvia\s+/iu, "")
+    .replace(/\s*(?:[-\u2013\u2014|\u2039>])?\s*Rijvia\s*$/iu, "")
     .replace(/\s+(?:[-\u2013\u2014]|\u2039|>)\s+/g, " | ")
     .replace(/\s+-\s+/g, " | ")
     .split(/\s*\|\s*/)
     .map((section) => section.trim())
-    .filter((section) => section && !/^RijVia$/iu.test(section))
-    .map((section) => section.replace(/\bRijVia\b/giu, "RijVia"))
+    .filter((section) => section && !/^Rijvia$/iu.test(section))
+    .map((section) => section.replace(/\bRijvia\b/giu, "Rijvia"))
     .join(" | ");
 
-  return content ? `${content} | RijVia` : "RijVia";
+  return content ? `${content} | Rijvia` : "Rijvia";
 }
 
 export function normalizeSeoBrand(value: string): string {
-  return value.replace(/\bRijVia\b/giu, "RijVia");
+  return value.replace(/\bRijvia\b/giu, "Rijvia");
 }
 
 export function toMetadataDescription(

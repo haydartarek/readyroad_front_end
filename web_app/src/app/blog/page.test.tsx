@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { getPublicArticles } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
+import { translateMessage } from "@/lib/messages";
 import BlogPage, { generateMetadata } from "./page";
 
 jest.mock("@/lib/server/articles", () => ({ getPublicArticles: jest.fn() }));
@@ -59,8 +60,13 @@ describe("localized public blog index", () => {
     const metadata = await generateMetadata();
 
     expect(metadata.title).toEqual({
-      absolute: "Théorie de la conduite belge : guides pratiques | RijVia",
+      absolute: "Théorie de la conduite belge : guides pratiques | Rijvia",
     });
+
+    expect(metadata.description).toBe(
+      translateMessage("fr", "blog.introduction"),
+    );
+
     expect(metadata.alternates).toEqual({
       canonical: "https://rijvia.be/fr/blog",
       languages: {

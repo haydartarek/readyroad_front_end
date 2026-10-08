@@ -94,14 +94,16 @@ export function CheckoutCancel({ expired = false }: { expired?: boolean }) {
           </p>
         </div>
 
-        <div className="mx-auto mt-6 max-w-4xl rounded-[28px] border bg-card p-5 shadow-sm sm:p-6">
-          <div className="flex items-center gap-3">
-            <BookOpenCheck
-              className="h-6 w-6 text-primary"
-              aria-hidden
-            />
+        <div className="mx-auto mt-6 max-w-4xl rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <BookOpenCheck
+                className="h-4 w-4"
+                aria-hidden
+              />
+            </span>
 
-            <h2 className="text-xl font-extrabold text-foreground">
+            <h2 className="min-w-0 break-words text-xl font-extrabold text-foreground">
               {t("payment.cancel_value_title")}
             </h2>
           </div>
@@ -110,34 +112,34 @@ export function CheckoutCancel({ expired = false }: { expired?: boolean }) {
             {BENEFIT_KEYS.map((key, index) => (
               <div
                 key={key}
-                className="flex items-start gap-3 rounded-2xl border bg-background/70 p-3.5"
+                className="flex min-w-0 items-start gap-3 rounded-2xl border bg-background/70 p-3.5"
               >
                 {index === 3 ? (
                   <Languages
-                    className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+                    className="mt-1 h-4 w-4 shrink-0 text-primary"
                     aria-hidden
                   />
                 ) : (
                   <CheckCircle2
-                    className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+                    className="mt-1 h-4 w-4 shrink-0 text-primary"
                     aria-hidden
                   />
                 )}
 
-                <span className="font-medium leading-7 text-foreground">
+                <span className="min-w-0 flex-1 break-words text-sm font-medium leading-6 text-foreground">
                   {t(key)}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 flex items-start gap-3 rounded-2xl bg-primary/5 p-3.5">
+          <div className="mt-4 flex min-w-0 items-start gap-3 rounded-2xl bg-primary/5 p-3.5">
             <ShieldCheck
-              className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+              className="mt-1 h-4 w-4 shrink-0 text-primary"
               aria-hidden
             />
 
-            <p className="font-medium leading-7 text-foreground">
+            <p className="min-w-0 flex-1 break-words text-sm font-medium leading-6 text-foreground">
               {t("payment.one_time")}
             </p>
           </div>

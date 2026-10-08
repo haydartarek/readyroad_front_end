@@ -1,4 +1,5 @@
 import type { Language } from "@/lib/constants";
+import { translateMessage } from "@/lib/messages";
 
 export type PublicPageKey =
   | "about"
@@ -55,13 +56,15 @@ export interface FaqContent {
 export interface PublicMetadataCopy {
   title: string;
   description: string;
-  openGraphTitle: string;
-  openGraphDescription: string;
+  imageAlt: string;
+}
+
+interface PublicMetadataAsset {
   imageAlt: string;
 }
 
 interface PublicLocaleBundle {
-  metadata: Record<PublicPageKey, PublicMetadataCopy>;
+  metadata: Record<PublicPageKey, PublicMetadataAsset>;
   documents: Record<PublicDocumentKey, PublicDocument>;
   faq: FaqContent;
   breadcrumbHome: string;
@@ -84,66 +87,24 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
     breadcrumbHome: "Home",
     metadata: {
       about: {
-        title: "About RijVia",
-        description:
-          "Learn how RijVia supports Belgian driving theory study through multilingual content, official-source review, and structured practice.",
-        openGraphTitle: "About RijVia | Belgian Driving Theory Learning",
-        openGraphDescription:
-          "Discover RijVia's mission, multilingual approach, official-source policy, and independent educational role.",
         imageAlt: "About the RijVia learning platform",
       },
       contact: {
-        title: "Contact RijVia",
-        description:
-          "Contact RijVia for account support, accessibility help, content corrections, privacy requests, or platform feedback.",
-        openGraphTitle: "Contact RijVia Support",
-        openGraphDescription:
-          "Send RijVia a support request, report a content issue, or share feedback through the secure contact form.",
         imageAlt: "Contact RijVia support",
       },
       privacy: {
-        title: "Privacy Policy",
-        description:
-          "Read how RijVia collects, uses, stores, and protects account, learning, authentication, and contact data under the GDPR.",
-        openGraphTitle: "RijVia Privacy Policy",
-        openGraphDescription:
-          "How RijVia handles personal data, account security, retention, service providers, and GDPR rights.",
         imageAlt: "RijVia privacy policy",
       },
       cookies: {
-        title: "Cookie Policy",
-        description:
-          "See which essential and optional cookies RijVia uses for login security, language, preferences, Google sign-in, and consent-based analytics.",
-        openGraphTitle: "RijVia Cookie Policy",
-        openGraphDescription:
-          "A transparent inventory of RijVia cookies, browser storage, purposes, and retention periods.",
         imageAlt: "RijVia cookie policy",
       },
       terms: {
-        title: "Terms of Service",
-        description:
-          "Read the rules for RijVia accounts, acceptable use, educational content, intellectual property, and service availability.",
-        openGraphTitle: "RijVia Terms of Service",
-        openGraphDescription:
-          "Terms governing accounts, responsible use, educational materials, availability, and liability on RijVia.",
         imageAlt: "RijVia terms of service",
       },
       disclaimer: {
-        title: "Educational Disclaimer",
-        description:
-          "Understand RijVia's independent educational role and why official Belgian law and examination authorities remain decisive.",
-        openGraphTitle: "RijVia Educational Disclaimer",
-        openGraphDescription:
-          "RijVia supports study but does not replace Belgian legislation, official instructions, or professional advice.",
         imageAlt: "RijVia educational disclaimer",
       },
       faq: {
-        title: "Frequently Asked Questions",
-        description:
-          "Find answers about RijVia accounts, free access, lessons, traffic signs, practice, exams, progress, languages, and updates.",
-        openGraphTitle: "RijVia Frequently Asked Questions",
-        openGraphDescription:
-          "Answers about studying Belgian driving theory with RijVia, including accounts, practice, progress, and languages.",
         imageAlt: "RijVia frequently asked questions",
       },
     },
@@ -530,66 +491,24 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
     breadcrumbHome: "Home",
     metadata: {
       about: {
-        title: "Over RijVia",
-        description:
-          "Lees hoe RijVia Belgische rijtheorie toegankelijk maakt met meertalige inhoud, controle van officiële bronnen en gestructureerde oefeningen.",
-        openGraphTitle: "Over RijVia | Belgische rijtheorie leren",
-        openGraphDescription:
-          "Ontdek de missie, meertalige aanpak, bronnenpolitiek en onafhankelijke educatieve rol van RijVia.",
         imageAlt: "Over het leerplatform RijVia",
       },
       contact: {
-        title: "Contact met RijVia",
-        description:
-          "Neem contact op met RijVia voor accounthulp, toegankelijkheid, inhoudelijke correcties, privacyverzoeken of feedback.",
-        openGraphTitle: "Contact met RijVia-support",
-        openGraphDescription:
-          "Stuur een supportvraag, meld een inhoudelijk probleem of deel feedback via het contactformulier van RijVia.",
         imageAlt: "Contact met RijVia-support",
       },
       privacy: {
-        title: "Privacybeleid",
-        description:
-          "Lees hoe RijVia account-, leer-, authenticatie- en contactgegevens verzamelt, gebruikt, bewaart en beveiligt onder de AVG.",
-        openGraphTitle: "Privacybeleid van RijVia",
-        openGraphDescription:
-          "Hoe RijVia persoonsgegevens, accountbeveiliging, bewaartermijnen, dienstverleners en AVG-rechten behandelt.",
         imageAlt: "Privacybeleid van RijVia",
       },
       cookies: {
-        title: "Cookiebeleid",
-        description:
-          "Bekijk welke noodzakelijke en optionele cookies RijVia gebruikt voor inlogbeveiliging, taal, voorkeuren, Google-login en analyse na toestemming.",
-        openGraphTitle: "Cookiebeleid van RijVia",
-        openGraphDescription:
-          "Een transparant overzicht van RijVia-cookies, browseropslag, doeleinden en bewaartermijnen.",
         imageAlt: "Cookiebeleid van RijVia",
       },
       terms: {
-        title: "Gebruiksvoorwaarden",
-        description:
-          "Lees de regels voor RijVia-accounts, toegestaan gebruik, educatieve inhoud, intellectuele eigendom en beschikbaarheid.",
-        openGraphTitle: "Gebruiksvoorwaarden van RijVia",
-        openGraphDescription:
-          "Voorwaarden voor accounts, verantwoord gebruik, leermateriaal, beschikbaarheid en aansprakelijkheid op RijVia.",
         imageAlt: "Gebruiksvoorwaarden van RijVia",
       },
       disclaimer: {
-        title: "Educatieve disclaimer",
-        description:
-          "Begrijp de onafhankelijke educatieve rol van RijVia en waarom Belgische wetgeving en officiële instanties altijd doorslaggevend zijn.",
-        openGraphTitle: "Educatieve disclaimer van RijVia",
-        openGraphDescription:
-          "RijVia ondersteunt studie maar vervangt geen Belgische wetgeving, officiële instructies of professioneel advies.",
         imageAlt: "Educatieve disclaimer van RijVia",
       },
       faq: {
-        title: "Veelgestelde vragen",
-        description:
-          "Vind antwoorden over RijVia-accounts, gratis toegang, lessen, verkeersborden, oefeningen, examens, voortgang, talen en updates.",
-        openGraphTitle: "Veelgestelde vragen over RijVia",
-        openGraphDescription:
-          "Antwoorden over Belgische rijtheorie studeren met RijVia, waaronder accounts, oefeningen, voortgang en talen.",
         imageAlt: "Veelgestelde vragen over RijVia",
       },
     },
@@ -976,66 +895,24 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
     breadcrumbHome: "Accueil",
     metadata: {
       about: {
-        title: "À propos de RijVia",
-        description:
-          "Découvrez comment RijVia facilite l'étude de la théorie belge grâce à un contenu multilingue, des sources officielles et un entraînement structuré.",
-        openGraphTitle: "À propos de RijVia | Théorie de conduite belge",
-        openGraphDescription:
-          "Découvrez la mission, l'approche multilingue, la politique de sources et le rôle pédagogique indépendant de RijVia.",
         imageAlt: "À propos de la plateforme RijVia",
       },
       contact: {
-        title: "Contacter RijVia",
-        description:
-          "Contactez RijVia pour une aide de compte, l'accessibilité, une correction de contenu, une demande de confidentialité ou un retour.",
-        openGraphTitle: "Contacter l'assistance RijVia",
-        openGraphDescription:
-          "Envoyez une demande d'aide, signalez un problème de contenu ou partagez un retour via le formulaire RijVia.",
         imageAlt: "Contacter l'assistance RijVia",
       },
       privacy: {
-        title: "Politique de confidentialité",
-        description:
-          "Découvrez comment RijVia collecte, utilise, conserve et protège les données de compte, d'apprentissage, d'authentification et de contact.",
-        openGraphTitle: "Politique de confidentialité RijVia",
-        openGraphDescription:
-          "Traitement des données personnelles, sécurité du compte, conservation, prestataires et droits RGPD chez RijVia.",
         imageAlt: "Politique de confidentialité RijVia",
       },
       cookies: {
-        title: "Politique relative aux cookies",
-        description:
-          "Consultez les cookies nécessaires et facultatifs utilisés par RijVia pour la connexion, la langue, les préférences, Google et l'analyse soumise au consentement.",
-        openGraphTitle: "Politique relative aux cookies RijVia",
-        openGraphDescription:
-          "Inventaire transparent des cookies RijVia, du stockage navigateur, de leurs finalités et durées.",
         imageAlt: "Politique relative aux cookies RijVia",
       },
       terms: {
-        title: "Conditions d'utilisation",
-        description:
-          "Lisez les règles concernant les comptes RijVia, l'usage autorisé, le contenu pédagogique, la propriété intellectuelle et la disponibilité.",
-        openGraphTitle: "Conditions d'utilisation RijVia",
-        openGraphDescription:
-          "Conditions applicables aux comptes, à l'usage responsable, aux contenus, à la disponibilité et à la responsabilité.",
         imageAlt: "Conditions d'utilisation RijVia",
       },
       disclaimer: {
-        title: "Avertissement pédagogique",
-        description:
-          "Comprenez le rôle pédagogique indépendant de RijVia et la priorité de la loi belge et des autorités officielles.",
-        openGraphTitle: "Avertissement pédagogique RijVia",
-        openGraphDescription:
-          "RijVia aide à étudier sans remplacer la législation belge, les instructions officielles ou un conseil professionnel.",
         imageAlt: "Avertissement pédagogique RijVia",
       },
       faq: {
-        title: "Questions fréquentes",
-        description:
-          "Trouvez des réponses sur les comptes RijVia, l'accès gratuit, les leçons, panneaux, exercices, examens, progrès, langues et mises à jour.",
-        openGraphTitle: "Questions fréquentes sur RijVia",
-        openGraphDescription:
-          "Réponses sur l'étude de la théorie belge avec RijVia : comptes, entraînement, progrès et langues.",
         imageAlt: "Questions fréquentes sur RijVia",
       },
     },
@@ -1422,66 +1299,24 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
     breadcrumbHome: "الرئيسية",
     metadata: {
       about: {
-        title: "عن RijVia",
-        description:
-          "تعرّف على طريقة RijVia في مساعدتك على دراسة قواعد السياقة البلجيكية من خلال محتوى متعدد اللغات ومصادر رسمية وتدريب منظم.",
-        openGraphTitle: "عن RijVia | تعلّم قواعد السياقة البلجيكية",
-        openGraphDescription:
-          "اكتشف رسالة RijVia ونهجه متعدد اللغات وسياسة المصادر ودوره التعليمي المستقل.",
         imageAlt: "عن منصة RijVia التعليمية",
       },
       contact: {
-        title: "التواصل مع RijVia",
-        description:
-          "تواصل مع RijVia لدعم الحساب أو الوصول أو تصحيح المحتوى أو طلبات الخصوصية أو ملاحظات المنصة.",
-        openGraphTitle: "التواصل مع دعم RijVia",
-        openGraphDescription:
-          "أرسل طلب دعم أو بلّغ عن مشكلة في المحتوى أو شارك ملاحظاتك عبر نموذج RijVia.",
         imageAlt: "التواصل مع دعم RijVia",
       },
       privacy: {
-        title: "سياسة الخصوصية",
-        description:
-          "اقرأ كيف تجمع RijVia بيانات الحساب والتعلم والمصادقة والتواصل وتستخدمها وتحفظها وتحميها وفق اللائحة العامة لحماية البيانات.",
-        openGraphTitle: "سياسة خصوصية RijVia",
-        openGraphDescription:
-          "كيفية تعامل RijVia مع البيانات الشخصية وأمن الحساب والاحتفاظ ومقدمي الخدمة وحقوق GDPR.",
         imageAlt: "سياسة خصوصية RijVia",
       },
       cookies: {
-        title: "سياسة ملفات الارتباط",
-        description:
-          "اطّلع على ملفات الارتباط الضرورية والاختيارية التي تستخدمها RijVia لتأمين الدخول واللغة والتفضيلات وتسجيل Google والتحليلات المشروطة بالموافقة.",
-        openGraphTitle: "سياسة ملفات الارتباط في RijVia",
-        openGraphDescription:
-          "جرد شفاف لملفات ارتباط RijVia وتخزين المتصفح وأغراضها ومددها.",
         imageAlt: "سياسة ملفات الارتباط في RijVia",
       },
       terms: {
-        title: "شروط الاستخدام",
-        description:
-          "اقرأ قواعد حسابات RijVia والاستخدام المقبول والمحتوى التعليمي والملكية الفكرية وتوفر الخدمة.",
-        openGraphTitle: "شروط استخدام RijVia",
-        openGraphDescription:
-          "الشروط المنظمة للحسابات والاستخدام المسؤول والمواد التعليمية والتوفر والمسؤولية في RijVia.",
         imageAlt: "شروط استخدام RijVia",
       },
       disclaimer: {
-        title: "إخلاء المسؤولية التعليمي",
-        description:
-          "افهم دور RijVia التعليمي المستقل ولماذا تبقى القوانين البلجيكية والجهات الرسمية هي المرجع الحاسم.",
-        openGraphTitle: "إخلاء المسؤولية التعليمي في RijVia",
-        openGraphDescription:
-          "تساعد RijVia على الدراسة ولا تستبدل التشريع البلجيكي أو التعليمات الرسمية أو المشورة المهنية.",
         imageAlt: "إخلاء المسؤولية التعليمي في RijVia",
       },
       faq: {
-        title: "الأسئلة الشائعة",
-        description:
-          "اعثر على إجابات حول حساب RijVia والوصول المجاني والدروس والعلامات والتدريب والامتحانات والتقدم واللغات والتحديثات.",
-        openGraphTitle: "الأسئلة الشائعة عن RijVia",
-        openGraphDescription:
-          "إجابات عن دراسة قواعد السياقة البلجيكية في RijVia، بما فيها الحسابات والتدريب والتقدم واللغات.",
         imageAlt: "الأسئلة الشائعة عن RijVia",
       },
     },
@@ -1870,7 +1705,44 @@ export function getPublicMetadata(
   language: Language,
   page: PublicPageKey,
 ): PublicMetadataCopy {
-  return PUBLIC_CONTENT[language].metadata[page];
+  const asset =
+    PUBLIC_CONTENT[language].metadata[page];
+
+  if (page === "contact") {
+    return {
+      title: translateMessage(
+        language,
+        "contact.title",
+      ),
+      description: translateMessage(
+        language,
+        "contact.subtitle",
+      ),
+      imageAlt: asset.imageAlt,
+    };
+  }
+
+  if (page === "faq") {
+    const faq =
+      PUBLIC_CONTENT[language].faq;
+
+    return {
+      title: faq.title,
+      description: faq.intro,
+      imageAlt: asset.imageAlt,
+    };
+  }
+
+  const document =
+    PUBLIC_CONTENT[language].documents[
+      page as PublicDocumentKey
+    ];
+
+  return {
+    title: document.title,
+    description: document.intro,
+    imageAlt: asset.imageAlt,
+  };
 }
 
 export function getPublicDocument(

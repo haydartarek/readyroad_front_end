@@ -62,15 +62,15 @@ export default function FaqPage() {
         />
 
         <header className="border-b border-border pb-8 pt-2">
-          <div className="flex items-start gap-4">
+          <div className="flex min-w-0 items-start gap-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <CircleHelp className="h-6 w-6" aria-hidden="true" />
             </span>
-            <div>
-              <p className="text-sm font-bold text-primary">
+            <div className="min-w-0 flex-1">
+              <p className="break-words text-sm font-bold text-primary">
                 {content.eyebrow}
               </p>
-              <h1 className="mt-1 text-3xl font-black tracking-normal sm:text-4xl">
+              <h1 className="mt-1 max-w-full break-words text-3xl font-black tracking-normal [overflow-wrap:anywhere] sm:text-4xl">
                 {content.title}
               </h1>
             </div>

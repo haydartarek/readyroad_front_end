@@ -26,6 +26,7 @@ describe("traffic sign detail metadata", () => {
     mockedGetPublicTrafficSign.mockResolvedValue({
       signCode: "A1a",
       routeCode: "A1a",
+      categoryCode: "A",
       nameEn: "Dangerous bend to the left",
       descriptionEn: "Warns of a dangerous bend to the left.",
       summaryEn: "Dangerous bend ahead.",
@@ -37,16 +38,16 @@ describe("traffic sign detail metadata", () => {
     });
 
     expect(metadata.title).toEqual({
-      absolute: "A1a: Dangerous bend to the left | RijVia",
+      absolute: "Dangerous bend to the left | Danger Signs | Rijvia",
     });
     expect(metadata.alternates?.canonical).toBe(`${appUrl}/traffic-signs/A1a`);
     expect(metadata.description).toBe(
-      "A1a: Warns of a dangerous bend to the left.",
+      "Warns of a dangerous bend to the left.",
     );
     expect(metadata.openGraph?.images).toEqual([
       {
         url: `${appUrl}/images/signs/danger%20signs/A1a.png`,
-        alt: "A1a: Dangerous bend to the left",
+        alt: "Dangerous bend to the left",
       },
     ]);
   });
@@ -58,6 +59,7 @@ describe("traffic sign detail metadata", () => {
     mockedGetPublicTrafficSign.mockResolvedValue({
       signCode: "B1",
       routeCode: "B1",
+      categoryCode: "B",
       nameEn: "Yield",
       nameFr: "Cédez le passage",
       descriptionEn: "Give way to other road users.",
@@ -70,10 +72,10 @@ describe("traffic sign detail metadata", () => {
     });
 
     expect(metadata.title).toEqual({
-      absolute: "B1: Cédez le passage | RijVia",
+      absolute: "Cédez le passage | Panneaux de priorité | Rijvia",
     });
     expect(metadata.description).toBe(
-      "B1: Cédez le passage aux autres usagers.",
+      "Cédez le passage aux autres usagers.",
     );
     expect(metadata.openGraph?.locale).toBe("fr_BE");
     expect(metadata.alternates?.canonical).toBe(

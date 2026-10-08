@@ -286,7 +286,7 @@ test.describe("multilingual YouTube videos page", () => {
       },
       {
         path: "/ar/videos",
-        title: "فيديوهات تعليم السياقة في بلجيكا",
+        title: "فيديوهات السياقة النظرية في بلجيكا",
         dir: "rtl",
       },
     ] as const;

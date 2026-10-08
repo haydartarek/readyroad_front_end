@@ -51,8 +51,8 @@ function MetricCard({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
       <div className="relative flex items-start gap-3">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 shadow-sm">
-          <Icon className="h-5 w-5 text-primary" aria-hidden />
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 shadow-sm">
+          <Icon className="h-4 w-4 text-primary" aria-hidden />
         </div>
 
         <div className="min-w-0 flex-1">

@@ -16,30 +16,59 @@ import {
 } from "@/lib/site-copy";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
+import { translateMessage } from "@/lib/messages";
 import { toBrandedMetadataTitle } from "@/lib/seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
-  const copy = getHomeMetadataCopy(locale);
+  const homeMetadata = getHomeMetadataCopy(locale);
+
+  const visibleHeadline = translateMessage(
+    locale,
+    "home.hero.headline",
+  )
+    .replace(/^RijVia\s*\|\s*/i, "")
+    .trim();
+
+  const visibleHighlight = translateMessage(
+    locale,
+    "home.hero.headline_highlight",
+  ).trim();
+
+  const visibleTitle =
+    `${visibleHeadline} ${visibleHighlight}`.trim();
+
+  const visibleDescription =
+    translateMessage(
+      locale,
+      "home.hero.subtitle",
+    );
+
   const ogImage = getSharedOgImage(locale);
   const canonical = buildLocalizedUrl("/", locale, APP_URL);
 
   return {
-    title: { absolute: toBrandedMetadataTitle(copy.title) },
-    description: copy.description,
-    keywords: copy.keywords,
+    title: { absolute: toBrandedMetadataTitle(visibleTitle) },
+    description: visibleDescription,
+    keywords: homeMetadata.keywords,
     alternates: getLocalizedAlternates("/", locale, APP_URL),
     openGraph: {
-      title: toBrandedMetadataTitle(copy.openGraphTitle),
-      description: copy.openGraphDescription,
+      title: toBrandedMetadataTitle(visibleTitle),
+      description: visibleDescription,
       url: canonical,
       siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
       alternateLocale: getAlternateOpenGraphLocales(locale),
       images: [ogImage],
       type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: toBrandedMetadataTitle(visibleTitle),
+      description: visibleDescription,
+      images: [ogImage.url],
     },
     robots: {
       index: true,

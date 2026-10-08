@@ -4,6 +4,7 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "@/components/localized-link";
+import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
@@ -295,6 +296,8 @@ function TrafficSignsContent({
             onClearFilters={handleClearFilters}
           />
         </PageHeroSurface>
+
+        <SeoIntentLinks page="trafficSigns" />
 
         {activeGroup && (
           <PageSectionSurface>

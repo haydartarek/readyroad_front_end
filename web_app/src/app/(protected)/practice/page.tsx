@@ -20,6 +20,7 @@ import {
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
+import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { useAuth } from "@/contexts/auth-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
@@ -52,52 +53,6 @@ interface CategoryCardData {
   practiceCompleted: number;
   passedSigns: number;
   representativeImage: string | null;
-}
-
-const PRACTICE_CATEGORY_TITLES: Record<
-  Lang,
-  Partial<Record<string, string>>
-> = {
-  ar: {
-    A: "علامات الخطر",
-    B: "علامات الأولوية",
-    C: "علامات المنع",
-    D: "العلامات الإجبارية",
-    E: "علامات الوقوف والتوقف",
-    F: "العلامات الإرشادية",
-  },
-  en: {
-    A: "Danger signs",
-    B: "Priority signs",
-    C: "Prohibition signs",
-    D: "Mandatory signs",
-    E: "Parking and stopping signs",
-    F: "Information signs",
-  },
-  nl: {
-    A: "Gevaarsborden",
-    B: "Voorrangsborden",
-    C: "Verbodsborden",
-    D: "Gebodsborden",
-    E: "Stilstaan- en parkeerborden",
-    F: "Aanwijzingsborden",
-  },
-  fr: {
-    A: "Signaux de danger",
-    B: "Signaux de priorité",
-    C: "Signaux d’interdiction",
-    D: "Signaux d’obligation",
-    E: "Signaux d’arrêt et de stationnement",
-    F: "Signaux d’indication",
-  },
-};
-
-function getPracticeCategoryTitle(
-  code: string,
-  language: Lang,
-  fallback: string,
-): string {
-  return PRACTICE_CATEGORY_TITLES[language][code] ?? fallback;
 }
 
 function getRepresentativeSignImage(signs: TrafficSign[]): string | null {
@@ -243,7 +198,7 @@ export default function PracticePage() {
           const info = getGroupInfo(group).info;
           return {
             code: group,
-            title: getPracticeCategoryTitle(group, lang, info.title[lang]),
+            title: info.title[lang],
             signCount: signs.length,
             practiceCompleted,
             passedSigns,
@@ -282,6 +237,11 @@ export default function PracticePage() {
             {t("practice.hub.subtitle")}
           </PageHeroDescription>
         </header>
+
+        <SeoIntentLinks
+          page="practice"
+          excludeHrefs={["/practice/random"]}
+        />
 
         {serviceUnavailable && (
           <ServiceUnavailableBanner

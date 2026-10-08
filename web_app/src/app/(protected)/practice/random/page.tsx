@@ -477,7 +477,7 @@ export default function RandomPracticePage() {
 
             <aside className="rounded-[1.75rem] border border-border/60 bg-card/90 p-4 shadow-sm sm:p-5">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] bg-primary/10 text-primary ring-1 ring-primary/10">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
                   <ClipboardList className="h-4 w-4" />
                 </div>
 
@@ -504,13 +504,13 @@ export default function RandomPracticePage() {
                 ].map((item) => (
                   <div
                     key={item.text}
-                    className="flex items-start gap-2.5 rounded-[1rem] bg-background/80 px-3 py-2.5"
+                    className="flex min-w-0 items-start gap-3 rounded-2xl bg-background/80 px-3 py-2.5"
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.85rem] bg-muted/60">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-muted/60 [&>svg]:h-4 [&>svg]:w-4">
                       {item.icon}
                     </div>
 
-                    <p className="pt-1 text-xs font-semibold leading-5 text-foreground/85">
+                    <p className="min-w-0 flex-1 break-words text-xs font-semibold leading-5 text-foreground/85">
                       {item.text}
                     </p>
                   </div>
@@ -522,11 +522,11 @@ export default function RandomPracticePage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-[0.85rem] bg-primary/10 text-primary">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary [&>svg]:h-4 [&>svg]:w-4">
                       <Shapes className="h-4 w-4" />
                     </div>
 
-                    <span className="text-sm font-black text-foreground">
+                    <span className="min-w-0 break-words text-sm font-black text-foreground">
                       {t("practice_exam.difficulty_mix")}
                     </span>
                   </div>

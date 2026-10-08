@@ -135,7 +135,7 @@ export function TheoryTimeoutWidget({
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
             <TimerOff className="h-4 w-4" />
           </span>
           <div className="min-w-0">
@@ -683,9 +683,9 @@ function DashboardHome() {
         >
           <div className="space-y-4">
             <div className="flex min-w-0 items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Target
-                  className="h-4.5 w-4.5"
+                  className="h-4 w-4"
                   aria-hidden
                 />
               </span>

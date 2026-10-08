@@ -26,7 +26,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const title = toBrandedMetadataTitle(translateMessage(locale, "blog.title"));
-  const description = translateMessage(locale, "blog.metadata_description");
+  const description = translateMessage(locale, "blog.introduction");
   const canonical = buildLocalizedUrl("/blog", locale, APP_URL);
   const image = { ...getSharedOgImage(locale), alt: title };
 

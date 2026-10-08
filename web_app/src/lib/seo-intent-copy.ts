@@ -5,6 +5,7 @@ export type SeoIntentPage =
   | "signExam"
   | "theoryExam"
   | "trafficSigns"
+  | "videos"
   | "lessons";
 
 type SeoIntentLink = {
@@ -66,6 +67,17 @@ const COPY: Record<SiteLocale, Record<SeoIntentPage, SeoIntentCopy>> = {
         { href: "/practice", label: "Practice Belgian driving theory" },
       ],
     },
+    videos: {
+      kicker: "Video learning",
+      heading: "Belgian driving theory videos and visual explanations",
+      body: "Watch visual explanations about Belgian driving theory and road rules. Use the dedicated lessons, traffic-sign reference and practice pages when you want structured study, sign meanings or exam questions.",
+      relatedLabel: "Continue from video to the right study resource",
+      links: [
+        { href: "/lessons", label: "Study Belgian driving theory lessons" },
+        { href: "/traffic-signs", label: "Review Belgian traffic signs and meanings" },
+        { href: "/practice", label: "Practice Belgian driving theory questions" },
+      ],
+    },
     lessons: {
       kicker: "Theory and road rules",
       heading: "Belgian driving theory lessons and Belgian road rules",
@@ -121,6 +133,17 @@ const COPY: Record<SiteLocale, Record<SeoIntentPage, SeoIntentCopy>> = {
         { href: "/practice/random", label: "Verkeersborden oefenen België" },
         { href: "/lessons", label: "Belgische verkeersregels leren" },
         { href: "/practice", label: "Theorievragen oefenen" },
+      ],
+    },
+    videos: {
+      kicker: "Leren met video",
+      heading: "Video’s over Belgische rijtheorie en verkeersregels",
+      body: "Bekijk visuele uitleg over Belgische rijtheorie en verkeersregels. Gebruik de aparte lessen, verkeersbordenbibliotheek en oefenpagina’s voor gestructureerde theorie, betekenissen van borden en examenvragen.",
+      relatedLabel: "Ga van video naar de juiste leerbron",
+      links: [
+        { href: "/lessons", label: "Theorie rijbewijs B België leren" },
+        { href: "/traffic-signs", label: "Betekenis van Belgische verkeersborden" },
+        { href: "/practice", label: "Theorie rijbewijs B oefenen" },
       ],
     },
     lessons: {
@@ -180,6 +203,17 @@ const COPY: Record<SiteLocale, Record<SeoIntentPage, SeoIntentCopy>> = {
         { href: "/practice", label: "Exercices théorie permis B" },
       ],
     },
+    videos: {
+      kicker: "Apprendre en vidéo",
+      heading: "Vidéos de théorie du permis B et règles belges",
+      body: "Regardez des explications visuelles sur la théorie du permis B et les règles de circulation belges. Utilisez les cours, le catalogue de panneaux et les exercices dédiés pour approfondir les règles, les panneaux et les questions d'examen.",
+      relatedLabel: "Passez de la vidéo à la bonne ressource",
+      links: [
+        { href: "/lessons", label: "Cours théorie permis B Belgique" },
+        { href: "/traffic-signs", label: "Signification des panneaux routiers belges" },
+        { href: "/practice", label: "Exercices théorie permis B Belgique" },
+      ],
+    },
     lessons: {
       kicker: "Cours et code de la route",
       heading: "Cours théorie permis B Belgique et code de la route belge",
@@ -235,6 +269,17 @@ const COPY: Record<SiteLocale, Record<SeoIntentPage, SeoIntentCopy>> = {
         { href: "/practice/random", label: "اختبار إشارات المرور في بلجيكا" },
         { href: "/lessons", label: "تعليم قواعد المرور البلجيكية بالعربية" },
         { href: "/practice", label: "التدريب على أسئلة السياقة في بلجيكا" },
+      ],
+    },
+    videos: {
+      kicker: "التعلّم بالفيديو",
+      heading: "فيديوهات السياقة النظرية في بلجيكا وشروحات مرئية",
+      body: "شاهد شروحات مرئية تساعدك على فهم السياقة النظرية وقواعد المرور في بلجيكا. وللدراسة المنظمة أو معرفة معاني العلامات أو حل الأسئلة، استخدم الصفحات المخصصة لكل نوع من المحتوى.",
+      relatedLabel: "انتقل من الفيديو إلى المصدر المناسب",
+      links: [
+        { href: "/lessons", label: "دروس السياقة النظرية في بلجيكا" },
+        { href: "/traffic-signs", label: "معاني العلامات المرورية في بلجيكا" },
+        { href: "/practice", label: "أسئلة تدريبية للسياقة النظرية" },
       ],
     },
     lessons: {

@@ -62,7 +62,7 @@ test.describe("localized public blog routes", () => {
       );
       await link.click();
       await expect(page.getByRole("heading", { name: article.title })).toBeVisible();
-      const articleResponse = await page.goto(articlePath);
+      const articleResponse = await page.request.get(articlePath);
       expect(articleResponse?.status(), `${article.indexPath}/${article.slug}`).toBe(200);
       await expect(page).toHaveURL(
         new RegExp(`${articlePath}$`),
@@ -176,7 +176,9 @@ test.describe("localized public blog routes", () => {
           await expect(page.getByTestId("mobile-navigation-dialog")).not.toBeVisible();
         }
 
-        await page.goto(`${article.indexPath}/${encodeURIComponent(article.slug)}`);
+        await page.goto(`${article.indexPath}/${encodeURIComponent(article.slug)}`, {
+          waitUntil: "domcontentloaded",
+        });
         const cards = page.getByTestId("article-learning-cards");
         await expect(cards).toHaveCount(1);
 

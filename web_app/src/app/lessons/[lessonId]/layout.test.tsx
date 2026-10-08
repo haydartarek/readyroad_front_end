@@ -42,7 +42,7 @@ describe("lesson detail metadata", () => {
     expect(metadata.alternates?.canonical).toBe(`${appUrl}/lessons/les-0`);
     expect(metadata.title).toEqual({
       absolute:
-        "Road users and public roads | Belgian Driving Theory | RijVia",
+        "Road users and public roads | Belgian Driving Theory | Rijvia",
     });
     expect(metadata.robots).toEqual({ index: true, follow: true });
   });
@@ -65,7 +65,7 @@ describe("lesson detail metadata", () => {
 
     expect(metadata.title).toEqual({
       absolute:
-        "الأولوية من اليمين | قواعد السياقة البلجيكية | RijVia",
+        "الأولوية من اليمين | قواعد السياقة البلجيكية | Rijvia",
     });
     expect(metadata.description).toBe("شرح قاعدة الأولوية من اليمين.");
     expect(metadata.openGraph?.locale).toBe("ar_BE");

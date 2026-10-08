@@ -316,9 +316,9 @@ test.describe("Milestone 4 UX and accessibility", () => {
         hasProgressbar: true,
         animationName,
       };
-    });
+    }).then((handle) => handle.jsonValue());
     await page.locator('form button[type="submit"]').click();
-    const dialogState = await (await dialogStatePromise).jsonValue();
+    const dialogState = await dialogStatePromise;
     expect(dialogState).toEqual({
       focused: true,
       hasProgressbar: true,

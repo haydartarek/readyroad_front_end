@@ -21,8 +21,8 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
-  const title = toBrandedMetadataTitle(translateMessage(locale, "videos.metadata_title"));
-  const description = translateMessage(locale, "videos.metadata_description");
+  const title = toBrandedMetadataTitle(translateMessage(locale, "videos.hero_title"));
+  const description = translateMessage(locale, "videos.hero_description");
   const canonical = buildLocalizedUrl("/videos", locale, APP_URL);
   const ogImage = getSharedOgImage(locale);
 
@@ -74,7 +74,7 @@ export default async function VideosPage() {
   const pageTitle = translateMessage(locale, "videos.hero_title");
   const pageDescription = translateMessage(
     locale,
-    "videos.metadata_description",
+    "videos.hero_description",
   );
   const structuredData = {
     "@context": "https://schema.org",

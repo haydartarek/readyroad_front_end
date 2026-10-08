@@ -11,6 +11,7 @@ import {
 } from "@/lib/site-copy";
 import { buildLocalizedUrl } from "@/lib/i18n-routing";
 import { getLocalizedAlternates } from "@/lib/localized-seo";
+import { translateMessage } from "@/lib/messages";
 import { normalizeSeoBrand, toBrandedMetadataTitle } from "@/lib/seo";
 
 export type LearningEntryPage = "practice" | "signExam" | "theoryExam";
@@ -21,14 +22,36 @@ interface LearningEntryCopy {
   keywords: string[];
 }
 
+interface LearningEntryKeywords {
+  keywords: string[];
+}
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
-const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
+const ENTRY_MESSAGE_KEYS: Record<
+  LearningEntryPage,
+  { title: string; description: string }
+> = {
+  practice: {
+    title: "practice.title",
+    description: "practice.hub.subtitle",
+  },
+  signExam: {
+    title: "sign_practice.intro_title",
+    description: "sign_practice.intro_subtitle",
+  },
+  theoryExam: {
+    title: "practice_exam.intro_title",
+    description: "practice_exam.intro_subtitle",
+  },
+};
+
+const KEYWORD_COPY: Record<
+  Language,
+  Record<LearningEntryPage, LearningEntryKeywords>
+> = {
   en: {
     practice: {
-      title: "Belgian Driving Theory Practice by Category",
-      description:
-        "Practice Belgian driving theory questions by topic, work on category B theory and Belgian traffic rules, and save your progress after signing in.",
       keywords: [
         "Belgian driving theory practice",
         "driving theory practice Belgium",
@@ -39,9 +62,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
       ],
     },
     signExam: {
-      title: "Belgian Traffic Signs Test",
-      description:
-        "Take a 50-question Belgian traffic signs test and road signs quiz with timed answers, then review your result and continue studying sign meanings.",
       keywords: [
         "Belgian traffic signs test",
         "Belgian road signs quiz",
@@ -52,9 +72,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
       ],
     },
     theoryExam: {
-      title: "Belgian Driving Theory Practice Test",
-      description:
-        "Take a 50-question Belgian driving theory practice test and exam simulation with 15 seconds to answer after each question is read and a 41 out of 50 pass target.",
       keywords: [
         "Belgian driving theory practice test",
         "Belgian theory exam simulation",
@@ -67,9 +84,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
   },
   nl: {
     practice: {
-      title: "Theorie Rijbewijs B Oefenen per Onderwerp",
-      description:
-        "Theorie rijbewijs B oefenen met theorievragen en oefenvragen per onderwerp, Belgische verkeersregels versterken en je voortgang bewaren na het inloggen.",
       keywords: [
         "theorie rijbewijs B oefenen",
         "theorievragen oefenen",
@@ -80,9 +94,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
       ],
     },
     signExam: {
-      title: "Verkeersborden Oefenen België",
-      description:
-        "Verkeersborden oefenen België met een test van 50 vragen, een verkeersborden quiz voor rijbewijs B, getimede antwoorden en een duidelijk resultaat.",
       keywords: [
         "verkeersborden oefenen België",
         "verkeersborden test",
@@ -93,9 +104,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
       ],
     },
     theoryExam: {
-      title: "Proefexamen Rijbewijs B België",
-      description:
-        "Maak een proefexamen rijbewijs B met 50 vragen als theorie-examensimulatie, 15 seconden antwoordtijd na het voorlezen en een slaagscore van 41 op 50.",
       keywords: [
         "proefexamen rijbewijs B",
         "theorie-examen oefenen",
@@ -108,9 +116,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
   },
   fr: {
     practice: {
-      title: "Exercices Théorie Permis B Belgique",
-      description:
-        "Faites des exercices de théorie pour le permis B en Belgique, avec des questions par thème sur le code de la route et le suivi de votre progression.",
       keywords: [
         "exercices théorie permis B Belgique",
         "questions d'exercice permis B",
@@ -121,9 +126,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
       ],
     },
     signExam: {
-      title: "Test Panneaux de Signalisation Belgique",
-      description:
-        "Passez un test de 50 questions sur les panneaux de signalisation en Belgique, avec quiz de panneaux routiers belges, réponses chronométrées et résultat clair.",
       keywords: [
         "test panneaux de signalisation Belgique",
         "quiz panneaux routiers belges",
@@ -134,9 +136,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
       ],
     },
     theoryExam: {
-      title: "Examen Blanc Permis B Belgique",
-      description:
-        "Passez un examen blanc du permis B en Belgique : 50 questions, 15 secondes pour répondre après la lecture et un seuil de réussite de 41 sur 50.",
       keywords: [
         "examen blanc permis B Belgique",
         "test théorique belge",
@@ -149,9 +148,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
   },
   ar: {
     practice: {
-      title: "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا",
-      description:
-        "تدرّب على أسئلة السياقة النظرية وأسئلة رخصة السياقة في بلجيكا حسب الموضوع، وطوّر معرفتك بقواعد المرور البلجيكية مع حفظ تقدمك بعد تسجيل الدخول.",
       keywords: [
         "أسئلة تدريبية لامتحان السياقة النظري في بلجيكا",
         "التدريب على أسئلة السياقة في بلجيكا",
@@ -162,9 +158,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
       ],
     },
     signExam: {
-      title: "اختبار العلامات المرورية في بلجيكا",
-      description:
-        "اختبر معرفتك من خلال 50 سؤالًا عن العلامات المرورية البلجيكية وإشارات المرور في بلجيكا، مع وقت محدد للإجابة ونتيجة واضحة بعد الاختبار.",
       keywords: [
         "اختبار العلامات المرورية في بلجيكا",
         "اختبار إشارات المرور في بلجيكا",
@@ -175,9 +168,6 @@ const COPY: Record<Language, Record<LearningEntryPage, LearningEntryCopy>> = {
       ],
     },
     theoryExam: {
-      title: "أسئلة امتحان السياقة النظري في بلجيكا",
-      description:
-        "اختبر نفسك بمحاكاة Rijvia من 50 سؤالًا لامتحان السياقة النظري في بلجيكا، مع 15 ثانية للإجابة بعد القراءة ودرجة نجاح 41 من 50.",
       keywords: [
         "أسئلة امتحان السياقة النظري في بلجيكا",
         "محاكاة امتحان السياقة النظري",
@@ -194,7 +184,13 @@ export function getLearningEntryCopy(
   locale: Language,
   page: LearningEntryPage,
 ): LearningEntryCopy {
-  return COPY[locale][page];
+  const source = ENTRY_MESSAGE_KEYS[page];
+
+  return {
+    title: translateMessage(locale, source.title),
+    description: translateMessage(locale, source.description),
+    keywords: KEYWORD_COPY[locale][page].keywords,
+  };
 }
 
 export async function createLearningEntryMetadata(

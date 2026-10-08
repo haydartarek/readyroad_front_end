@@ -17,7 +17,7 @@ describe("learning index metadata", () => {
     const metadata = await generateTrafficSignsMetadata();
 
     expect(metadata.title).toEqual({
-      absolute: "العلامات المرورية في بلجيكا: المعاني والشرح | RijVia",
+      absolute: "العلامات المرورية في بلجيكا: المعاني والشرح | Rijvia",
     });
     expect(metadata.openGraph?.locale).toBe("ar_BE");
     expect(metadata.alternates?.canonical).toContain("/traffic-signs");
@@ -31,7 +31,7 @@ describe("learning index metadata", () => {
     const metadata = await generateLessonsMetadata();
 
     expect(metadata.title).toEqual({
-      absolute: "Theorie Rijbewijs B België: Lessen & Verkeersregels | RijVia",
+      absolute: "Theorie Rijbewijs B België: Lessen & Verkeersregels | Rijvia",
     });
     expect(metadata.openGraph?.locale).toBe("nl_BE");
     expect(metadata.alternates?.canonical).toContain("/lessons");

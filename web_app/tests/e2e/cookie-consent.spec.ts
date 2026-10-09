@@ -256,7 +256,7 @@ test.describe("Milestone 5 cookie consent management", () => {
       name: "الموافقة على ملفات الارتباط",
     });
     await expect(banner).toHaveAttribute("dir", "rtl");
-    await page.getByRole("button", { name: "تخصيص" }).click();
+    await page.getByRole("button", { name: "إدارة التفضيلات" }).click();
     const dialog = page.getByRole("dialog", {
       name: "إعدادات ملفات الارتباط",
     });

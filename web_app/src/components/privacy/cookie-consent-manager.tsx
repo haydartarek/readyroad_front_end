@@ -67,6 +67,7 @@ export function CookieConsentManager() {
   const { t, isRTL } = useLanguage();
   const {
     consent,
+    isReady,
     isSettingsOpen,
     draft,
     announcement,
@@ -84,7 +85,7 @@ export function CookieConsentManager() {
         {announcement}
       </p>
 
-      {!consent && (
+      {isReady && !consent && (
         <section
           role="region"
           aria-label={t("consent.banner.label")}
@@ -112,13 +113,13 @@ export function CookieConsentManager() {
               </div>
             </div>
             <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3 lg:min-w-[430px]">
-              <Button className="min-h-11" variant="outline" onClick={rejectOptional}>
+              <Button className="min-h-11 h-auto min-w-0 whitespace-normal px-3 py-2 text-center leading-5" variant="outline" onClick={rejectOptional}>
                 {t("consent.reject_optional")}
               </Button>
-              <Button className="min-h-11" variant="outline" onClick={openSettings}>
+              <Button className="min-h-11 h-auto min-w-0 whitespace-normal px-3 py-2 text-center leading-5" variant="outline" onClick={openSettings}>
                 {t("consent.customize")}
               </Button>
-              <Button className="min-h-11" onClick={acceptAll}>
+              <Button className="min-h-11 h-auto min-w-0 whitespace-normal px-3 py-2 text-center leading-5" onClick={acceptAll}>
                 {t("consent.accept_all")}
               </Button>
             </div>

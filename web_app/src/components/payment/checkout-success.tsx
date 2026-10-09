@@ -16,6 +16,8 @@ import {
   type PurchaseStatus,
 } from "@/services/paymentService";
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
+import { trackConfirmedPurchase } from "@/lib/payment-analytics";
+import { COOKIE_CONSENT_CHANGED_EVENT } from "@/lib/cookie-consent";
 
 export function CheckoutSuccess() {
   const params = useSearchParams();
@@ -62,6 +64,7 @@ function PurchaseConfirmation({ purchaseId, username, isAuthLoading }: {
           }
 
           if (result.status === "PAID") {
+            trackConfirmedPurchase(purchaseId!, result.plan);
             const categoryPath = readCategoryCheckoutResume(purchaseId!);
             if (categoryPath) {
               forgetExamCheckoutResume(purchaseId!);
@@ -94,6 +97,19 @@ function PurchaseConfirmation({ purchaseId, username, isAuthLoading }: {
     void poll();
     return () => { active = false; clearTimeout(deadline); clearTimeout(pollTimer); abort.abort(); };
   }, [purchaseId, username, isAuthLoading, replace]);
+
+  // Retry only when the user grants analytics after a confirmed payment.
+  // The analytics helper keeps the purchase idempotent across reloads.
+  useEffect(() => {
+    if (!purchase || purchase.status !== "PAID" || !isPurchaseId(purchaseId)) return;
+    const confirmedPurchaseId = purchaseId;
+    const confirmedPlan = purchase.plan;
+    const onConsentChange = () => {
+      trackConfirmedPurchase(confirmedPurchaseId, confirmedPlan);
+    };
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, onConsentChange);
+    return () => window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, onConsentChange);
+  }, [purchaseId, purchase]);
 
   const invalid = !isPurchaseId(purchaseId) || state === "invalid";
   const paid = !invalid && purchase?.status === "PAID";

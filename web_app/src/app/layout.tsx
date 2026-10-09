@@ -1,3 +1,4 @@
+import { ExamCaptureGuard } from "@/components/exam/exam-capture-guard";
 import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import { headers } from "next/headers";
@@ -159,6 +160,7 @@ export default async function RootLayout({
         className={`${tajawal.className} ${tajawal.variable} antialiased`}
         suppressHydrationWarning
       >
+        <ExamCaptureGuard />
         <ErrorBoundary>
           <LanguageProvider initialLanguage={locale as Language}>
             <CookieConsentProvider>

@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api";
 import { isValidLanguage } from "@/lib/messages";
+import { trackCheckoutError, trackCheckoutStarted } from "@/lib/payment-analytics";
 
 export const PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED !== "false";
 
@@ -31,10 +32,19 @@ export function navigateToCheckout(
 export async function createCheckout(plan: PaymentPlan, clientRequestId: string, locale: string) {
   if (!PAYMENTS_ENABLED) throw new Error("Payments are disabled");
   if (!isValidLanguage(locale)) throw new Error("Unsupported checkout locale");
-  const response = await apiClient.post<CheckoutResult>("/checkout", { plan, clientRequestId }, {
-    headers: { "Accept-Language": locale },
-  });
-  return response.data;
+  try {
+    const response = await apiClient.post<CheckoutResult>("/checkout", { plan, clientRequestId }, {
+      headers: { "Accept-Language": locale },
+    });
+    if (typeof response.data.checkoutUrl === "string" && response.data.checkoutUrl.length > 0) {
+      trackCheckoutStarted(plan);
+    }
+    return response.data;
+  } catch (error) {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    trackCheckoutError("create_checkout", status, plan);
+    throw error;
+  }
 }
 
 export async function getPurchaseStatus(id: string, signal?: AbortSignal) {
@@ -58,12 +68,17 @@ export async function resumeCheckout(id: string) {
     throw new Error("Invalid purchase ID");
   }
 
-  const response = await apiClient.post<CheckoutResult>(
-    `/purchases/${encodeURIComponent(id)}/resume`,
-    {},
-  );
-
-  return response.data;
+  try {
+    const response = await apiClient.post<CheckoutResult>(
+      `/purchases/${encodeURIComponent(id)}/resume`,
+      {},
+    );
+    return response.data;
+  } catch (error) {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    trackCheckoutError("resume_checkout", status);
+    throw error;
+  }
 }
 
 const key = (user: string, plan: PaymentPlan) => `rijvia.checkout.${user}.${plan}`;

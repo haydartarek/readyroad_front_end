@@ -1,8 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
+import { COOKIE_CONSENT_CHANGED_EVENT } from "@/lib/cookie-consent";
+import {
+  trackCheckoutAuthRequired,
+  trackPlanSelected,
+  trackPricingViewed,
+} from "@/lib/payment-analytics";
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,13 +29,39 @@ export function PlanSelection() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const { language, t, isRTL } = useLanguage();
   const router = useLocalizedRouter();
+  const trackedView = useRef(false);
   const [busy, setBusy] = useState<PaymentPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
 
+  useEffect(() => {
+    if (trackedView.current || typeof IntersectionObserver === "undefined") return;
+    const cards = document.getElementById("rijvia-plan-selection-cards");
+    if (!cards) return;
+    let visible = false;
+    const maybeTrack = () => {
+      if (visible && !trackedView.current && trackPricingViewed(PAYMENT_PLANS)) {
+        trackedView.current = true;
+        observer.disconnect();
+      }
+    };
+    const observer = new IntersectionObserver((entries) => {
+      visible = entries.some((entry) => entry.isIntersecting);
+      maybeTrack();
+    }, { threshold: 0.1 });
+    observer.observe(cards);
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, maybeTrack);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, maybeTrack);
+    };
+  }, []);
+
   async function choose(plan: PaymentPlan) {
     if (!PAYMENTS_ENABLED || submitting.current) return;
+    trackPlanSelected(plan);
     if (!isAuthenticated || !user) {
+      trackCheckoutAuthRequired(plan);
       router.push("/login?returnUrl=%2Fplans");
       return;
     }
@@ -60,7 +92,7 @@ export function PlanSelection() {
       <p className="mt-3 text-muted-foreground">{t("payment.one_time")}</p>
       <p className="mt-2 text-sm text-muted-foreground">{t("payment.price_at_checkout")}</p>
       {error && <p role="alert" className="mt-6 rounded-xl border border-destructive/40 p-4">{t(error)}</p>}
-      <div className="mt-8 grid gap-5 md:grid-cols-3">
+      <div id="rijvia-plan-selection-cards" className="mt-8 grid gap-5 md:grid-cols-3">
         {PAYMENT_PLANS.map((plan) => {
           const featured = plan === RECOMMENDED_PAYMENT_PLAN;
 

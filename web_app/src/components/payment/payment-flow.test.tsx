@@ -5,6 +5,8 @@ import { CheckoutCancel } from "./checkout-cancel";
 import { PlanSelection } from "./plan-selection";
 import { translateMessage } from "@/lib/messages";
 import { createCheckout, getPurchaseStatus, forgetCheckoutRequest, rememberExamCheckoutResume } from "@/services/paymentService";
+import { COOKIE_CONSENT_CHANGED_EVENT } from "@/lib/cookie-consent";
+import { GOOGLE_ANALYTICS_ID } from "@/lib/google-analytics";
 
 jest.mock("@/services/paymentService", () => ({
   ...jest.requireActual("@/services/paymentService"),
@@ -50,6 +52,46 @@ test("polls the owned purchase, ignores session_id, then displays confirmed plan
   expect(forgetCheckoutRequest).toHaveBeenCalledWith(mockUser.username, "RIJVIA_3_DAYS");
   await act(async () => { await jest.advanceTimersByTimeAsync(20_000); });
   expect(getPurchaseStatus).toHaveBeenCalledTimes(2);
+});
+
+test("PAID is tracked once if analytics is accepted after confirmation", async () => {
+  const gaWindow = window as unknown as Window & {
+    gtag?: jest.Mock;
+    [key: `ga-disable-${string}`]: boolean | undefined;
+  };
+  const disableKey = `ga-disable-${GOOGLE_ANALYTICS_ID}` as const;
+  const originalFlag = gaWindow[disableKey];
+  const originalGtag = gaWindow.gtag;
+  const marker = `rijvia.ga4.purchase.${id}`;
+  const gtagMock = jest.fn();
+
+  try {
+    window.localStorage.removeItem(marker);
+    gaWindow[disableKey] = true;
+    gaWindow.gtag = gtagMock;
+    jest.mocked(getPurchaseStatus).mockResolvedValue(paid);
+
+    render(<CheckoutSuccess />);
+    await act(async () => { await jest.advanceTimersByTimeAsync(0); });
+    expect(gtagMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      gaWindow[disableKey] = false;
+      window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_CHANGED_EVENT));
+      window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_CHANGED_EVENT));
+    });
+    expect(gtagMock).toHaveBeenCalledTimes(1);
+    expect(gtagMock).toHaveBeenCalledWith(
+      "event", "purchase",
+      expect.objectContaining({ transaction_id: id, currency: "EUR", value: 2.99 }),
+    );
+  } finally {
+    window.localStorage.removeItem(marker);
+    if (originalFlag === undefined) delete gaWindow[disableKey];
+    else gaWindow[disableKey] = originalFlag;
+    if (originalGtag === undefined) delete gaWindow.gtag;
+    else gaWindow.gtag = originalGtag;
+  }
 });
 
 test("timeout is still confirming, including network failures, and stops polling", async () => {

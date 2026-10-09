@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   BookOpenCheck,
@@ -12,6 +12,8 @@ import {
 import Link from "@/components/localized-link";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
+import { COOKIE_CONSENT_CHANGED_EVENT } from "@/lib/cookie-consent";
+import { trackCheckoutCanceled } from "@/lib/payment-analytics";
 import {
   isPurchaseId,
   resumeCheckout,
@@ -27,6 +29,17 @@ const BENEFIT_KEYS = [
 export function CheckoutCancel({ expired = false }: { expired?: boolean }) {
   const { t, isRTL } = useLanguage();
   const searchParams = useSearchParams();
+  const cancelTracked = useRef(false);
+
+  useEffect(() => {
+    if (expired || !isPurchaseId(searchParams.get("purchaseId"))) return;
+    const maybeTrack = () => {
+      if (!cancelTracked.current && trackCheckoutCanceled()) cancelTracked.current = true;
+    };
+    maybeTrack();
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, maybeTrack);
+    return () => window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, maybeTrack);
+  }, [expired, searchParams]);
 
   const [resuming, setResuming] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);

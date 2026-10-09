@@ -113,10 +113,23 @@ export function clearDisallowedOptionalStorage(
   consent: CookieConsentRecord | null,
   storage: Storage,
 ): void {
-  if (consent?.preferences) return;
+  if (!consent?.preferences) {
+    for (const key of OPTIONAL_STORAGE_KEYS) {
+      storage.removeItem(key);
+    }
+  }
 
-  for (const key of OPTIONAL_STORAGE_KEYS) {
-    storage.removeItem(key);
+  if (!consent?.analytics) {
+    const purchaseTrackingKeys: string[] = [];
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (key?.startsWith("rijvia.ga4.purchase.")) {
+        purchaseTrackingKeys.push(key);
+      }
+    }
+    for (const key of purchaseTrackingKeys) {
+      storage.removeItem(key);
+    }
   }
 }
 

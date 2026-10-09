@@ -12,6 +12,12 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
+import { COOKIE_CONSENT_CHANGED_EVENT } from "@/lib/cookie-consent";
+import {
+  trackCheckoutAuthRequired,
+  trackPlanSelected,
+  trackPricingViewed,
+} from "@/lib/payment-analytics";
 import {
   PlanIdentity,
   RecommendedPlanAccent,
@@ -47,10 +53,34 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
   const { user, isLoading, isAuthenticated } = useAuth();
   const { language, t, isRTL } = useLanguage();
   const router = useLocalizedRouter();
+  const trackedPricingView = useRef(false);
 
   const [busy, setBusy] = useState<PaymentPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
+
+  useEffect(() => {
+    if (resumeCheckout || trackedPricingView.current || typeof IntersectionObserver === "undefined") return;
+    const pricingCards = document.getElementById("rijvia-pricing-cards");
+    if (!pricingCards) return;
+    let visible = false;
+    const maybeTrack = () => {
+      if (visible && !trackedPricingView.current && trackPricingViewed(PAYMENT_PLANS)) {
+        trackedPricingView.current = true;
+        observer.disconnect();
+      }
+    };
+    const observer = new IntersectionObserver((entries) => {
+      visible = entries.some((entry) => entry.isIntersecting);
+      maybeTrack();
+    }, { threshold: 0.1 });
+    observer.observe(pricingCards);
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, maybeTrack);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, maybeTrack);
+    };
+  }, [resumeCheckout, error]);
 
   useEffect(() => {
     if (window.location.hash !== "#pricing") return;
@@ -145,8 +175,10 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
 
   async function choose(plan: PaymentPlan) {
     if (!PAYMENTS_ENABLED || submitting.current) return;
+    trackPlanSelected(plan);
 
     if (!isAuthenticated || !user) {
+      trackCheckoutAuthRequired(plan);
       try {
         sessionStorage.setItem(PENDING_PLAN_KEY, plan);
       } catch {
@@ -271,7 +303,7 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
           </p>
         )}
 
-        <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3 xl:gap-5">
+        <div id="rijvia-pricing-cards" className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3 xl:gap-5">
           {PAYMENT_PLANS.map((plan) => {
             const featured = plan === RECOMMENDED_PAYMENT_PLAN;
 

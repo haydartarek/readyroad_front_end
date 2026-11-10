@@ -74,9 +74,7 @@ describe("traffic sign exam metadata and server content", () => {
       "x-default": appUrl + "/traffic-signs/F45L/exam/1",
     });
     expect(metadata.description).toContain("8 questions");
-    expect(metadata.description).toContain(
-      "This sign marks the end of the prohibition on overtaking.",
-    );
+    expect(metadata.description).toContain("End of prohibition of overtaking");
     expect(metadata.openGraph?.url).toBe(
       appUrl + "/traffic-signs/F45L/exam/1",
     );
@@ -133,9 +131,10 @@ describe("traffic sign exam metadata and server content", () => {
     );
 
     expect(markup).toContain('dir="rtl"');
-    expect(markup).toContain("اختبر معرفتك بإشارة نهاية منع التجاوز");
+    expect(markup).toContain("امتحان الإشارة المرورية: نهاية منع التجاوز");
     expect(markup).toContain("8");
     expect(markup).toContain("6 / 8");
+    expect(markup).toContain("تشير هذه العلامة إلى نهاية منع التجاوز.");
     expect(markup).toContain("Exam UI");
   });
 });

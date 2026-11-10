@@ -37,52 +37,52 @@ const EXAM_COPY: Record<SiteLocale, SignExamSeoCopy> = {
   en: {
     eyebrow: "Belgian driving theory · Traffic sign exam",
     title: (name) => "Belgian Traffic Sign Exam: " + name + " | Rijvia",
-    heading: (name) => "Test your knowledge of " + name,
+    heading: (name) => "Belgian traffic sign exam: " + name,
     intro: (name, count) =>
-      "Prepare for the Belgian driving theory test with this focused exam about " +
+      "Practice for the Belgian theory test with " +
       name +
-      ". It contains " +
+      ". Answer " +
       count +
-      " questions to help you review the sign's meaning and the driving rules it represents.",
+      " questions about this sign and the rules it represents.",
     questionsLabel: "Questions",
     passLabel: "Correct answers to pass",
   },
   nl: {
     eyebrow: "Belgisch theorie-examen · Verkeersbord",
     title: (name) => "Theorie-examen verkeersbord: " + name + " | Rijvia",
-    heading: (name) => "Test je kennis van " + name,
+    heading: (name) => "Theorie-examen verkeersbord: " + name,
     intro: (name, count) =>
-      "Bereid je voor op het Belgische theorie-examen met dit gerichte examen over " +
+      "Oefen voor het Belgische theorie-examen met " +
       name +
-      ". Het bevat " +
+      ". Beantwoord " +
       count +
-      " vragen om de betekenis van het verkeersbord en de bijbehorende verkeersregels te herhalen.",
+      " vragen over dit verkeersbord en de bijbehorende verkeersregels.",
     questionsLabel: "Vragen",
     passLabel: "Juiste antwoorden om te slagen",
   },
   fr: {
     eyebrow: "Théorie belge · Examen du panneau",
     title: (name) => "Examen théorique du panneau " + name + " | Rijvia",
-    heading: (name) => "Testez vos connaissances sur " + name,
+    heading: (name) => "Examen du panneau : " + name,
     intro: (name, count) =>
-      "Préparez l’examen théorique belge avec ce test consacré à " +
+      "Préparez l’examen théorique belge avec " +
       name +
-      ". Il comprend " +
+      ". Répondez à " +
       count +
-      " questions pour réviser la signification du panneau et les règles de conduite associées.",
+      " questions sur ce panneau et les règles de conduite associées.",
     questionsLabel: "Questions",
     passLabel: "Bonnes réponses pour réussir",
   },
   ar: {
     eyebrow: "الامتحان النظري البلجيكي · اختبار الإشارة",
     title: (name) => "امتحان الإشارة المرورية " + name + " | Rijvia",
-    heading: (name) => "اختبر معرفتك بإشارة " + name,
+    heading: (name) => "امتحان الإشارة المرورية: " + name,
     intro: (name, count) =>
-      "استعد لامتحان السياقة النظري في بلجيكا من خلال هذا الاختبار المخصص لإشارة " +
+      "استعد للامتحان النظري البلجيكي مع " +
       name +
-      ". يتضمن الامتحان " +
+      ". أجب عن " +
       count +
-      " سؤالًا لمراجعة معنى الإشارة وقواعد القيادة المرتبطة بها.",
+      " سؤالًا حول هذه الإشارة وقواعد القيادة المرتبطة بها.",
     questionsLabel: "عدد الأسئلة",
     passLabel: "الإجابات الصحيحة للنجاح",
   },
@@ -135,10 +135,7 @@ async function getSignExamPageData(
   const canonical = buildLocalizedUrl(pathname, locale, APP_URL);
   const questionCount = sign.exam1TotalQuestions;
   const intro = copy.intro(signSeo.name, questionCount);
-  const description = toMetadataDescription(
-    [intro, signSeo.description].filter(Boolean).join(" "),
-    intro,
-  );
+  const description = toMetadataDescription(intro, intro);
   const image = sign.imageUrl
     ? buildAbsoluteUrl(sign.imageUrl, APP_URL)
     : undefined;

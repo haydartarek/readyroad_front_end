@@ -7,10 +7,18 @@ describe("robots policy", () => {
     const defaultRule = Array.isArray(policy.rules)
       ? policy.rules.find((rule) => rule.userAgent === "*")
       : policy.rules;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
 
     expect(defaultRule).toEqual(
       expect.objectContaining({
-        allow: expect.arrayContaining(["/", "/traffic-signs/", "/lessons/"]),
+        allow: expect.arrayContaining([
+          "/",
+          "/traffic-signs/",
+          "/nl/traffic-signs/",
+          "/fr/traffic-signs/",
+          "/ar/traffic-signs/",
+          "/lessons/",
+        ]),
         disallow: expect.arrayContaining(["/admin", "/api/", "/dashboard"]),
       }),
     );
@@ -30,9 +38,7 @@ describe("robots policy", () => {
     expect(defaultRule?.disallow).toEqual(
       expect.arrayContaining(["/practice/", "/exam/"]),
     );
-    expect(policy.sitemap).toBe(
-      `${process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL}/sitemap.xml`,
-    );
-    expect(policy.host).toBe(process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL);
+    expect(policy.sitemap).toBe(appUrl + "/sitemap.xml");
+    expect(policy.host).toBe(appUrl);
   });
 });

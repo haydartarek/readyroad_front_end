@@ -18,6 +18,7 @@ const mockedGetPublicLessons = jest.mocked(getPublicLessons);
 const mockedGetPublicTrafficSigns = jest.mocked(getPublicTrafficSigns);
 const mockedGetPublicArticles = jest.mocked(getPublicArticles);
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL;
+const url = (pathname: string) => appUrl + pathname;
 const STATIC_PUBLIC_PAGE_COUNT = 15;
 const LOCALE_COUNT = 4;
 
@@ -26,11 +27,11 @@ describe("public sitemap", () => {
     expect(dynamic).toBe("force-dynamic");
   });
 
-  it("includes canonical catalog pages and excludes noindex auth pages", async () => {
+  it("includes canonical catalog and active sign-exam pages while excluding noindex auth pages", async () => {
     mockedGetPublicTrafficSigns.mockResolvedValue([
-      { signCode: "A1a", routeCode: "A1a" },
-      { signCode: "A1a", routeCode: "A1a" },
-      { signCode: "B1", routeCode: "B1" },
+      { signCode: "A1a", routeCode: "A1a", exam1TotalQuestions: 8 },
+      { signCode: "A1a", routeCode: "A1a", exam1TotalQuestions: 8 },
+      { signCode: "B1", routeCode: "B1", exam1TotalQuestions: null },
     ] as Awaited<ReturnType<typeof getPublicTrafficSigns>>);
     mockedGetPublicLessons.mockResolvedValue([
       { lessonCode: "les-0", totalPages: 3 },
@@ -55,47 +56,62 @@ describe("public sitemap", () => {
     const urls = entries.map((entry) => entry.url);
 
     expect(urls).toHaveLength(
-      (STATIC_PUBLIC_PAGE_COUNT + 2 + 1) * LOCALE_COUNT + LOCALE_COUNT,
+      (STATIC_PUBLIC_PAGE_COUNT + 2 + 1 + 1) * LOCALE_COUNT + LOCALE_COUNT,
     );
     expect(new Set(urls).size).toBe(urls.length);
-    expect(urls.every((url) => new URL(url).origin === appUrl)).toBe(true);
-    expect(urls).toContain(`${appUrl}/about`);
-    expect(urls).toContain(`${appUrl}/faq`);
-    expect(urls).toContain(`${appUrl}/cookie-policy`);
-    expect(urls).toContain(`${appUrl}/disclaimer`);
-    expect(urls).toContain(`${appUrl}/videos`);
-    expect(urls).toContain(`${appUrl}/blog`);
-    expect(urls).toContain(`${appUrl}/practice`);
-    expect(urls).toContain(`${appUrl}/practice/random`);
-    expect(urls).toContain(`${appUrl}/exam`);
-    expect(urls).toContain(`${appUrl}/nl/practice`);
-    expect(urls).toContain(`${appUrl}/fr/practice/random`);
-    expect(urls).toContain(`${appUrl}/ar/exam`);
-    expect(urls).toContain(`${appUrl}/nl/videos`);
-    expect(urls).toContain(`${appUrl}/fr/videos`);
-    expect(urls).toContain(`${appUrl}/ar/videos`);
-    expect(urls).toContain(`${appUrl}/traffic-signs/A1a`);
-    expect(urls).toContain(`${appUrl}/traffic-signs/B1`);
-    expect(urls).toContain(`${appUrl}/lessons/les-0`);
-    expect(urls).not.toContain(`${appUrl}/nl/lessons/les-0/2`);
-    expect(urls).toContain(`${appUrl}/nl/lessons/les-0`);
-    expect(urls).not.toContain(`${appUrl}/fr/lessons/les-0/3`);
-    expect(urls).toContain(`${appUrl}/fr/lessons/les-0`);
-    expect(urls).toContain(`${appUrl}/ar/traffic-signs/B1`);
-    expect(urls).toContain(`${appUrl}/blog/safe-driving`);
-    expect(urls).toContain(`${appUrl}/nl/blog/veilig-rijden`);
-    expect(urls).toContain(`${appUrl}/fr/blog/conduite-sure`);
-    expect(urls).toContain(`${appUrl}/ar/blog/al-qiyada-al-amina`);
+    expect(urls.every((entryUrl) => new URL(entryUrl).origin === appUrl)).toBe(true);
+    expect(urls).toContain(url("/about"));
+    expect(urls).toContain(url("/faq"));
+    expect(urls).toContain(url("/cookie-policy"));
+    expect(urls).toContain(url("/disclaimer"));
+    expect(urls).toContain(url("/videos"));
+    expect(urls).toContain(url("/blog"));
+    expect(urls).toContain(url("/practice"));
+    expect(urls).toContain(url("/practice/random"));
+    expect(urls).toContain(url("/exam"));
+    expect(urls).toContain(url("/nl/practice"));
+    expect(urls).toContain(url("/fr/practice/random"));
+    expect(urls).toContain(url("/ar/exam"));
+    expect(urls).toContain(url("/nl/videos"));
+    expect(urls).toContain(url("/fr/videos"));
+    expect(urls).toContain(url("/ar/videos"));
+    expect(urls).toContain(url("/traffic-signs/A1a"));
+    expect(urls).toContain(url("/traffic-signs/B1"));
+    expect(urls).toContain(url("/traffic-signs/A1a/exam/1"));
+    expect(urls).toContain(url("/nl/traffic-signs/A1a/exam/1"));
+    expect(urls).toContain(url("/fr/traffic-signs/A1a/exam/1"));
+    expect(urls).toContain(url("/ar/traffic-signs/A1a/exam/1"));
+    expect(urls).not.toContain(url("/traffic-signs/B1/exam/1"));
+    expect(urls).toContain(url("/lessons/les-0"));
+    expect(urls).not.toContain(url("/nl/lessons/les-0/2"));
+    expect(urls).toContain(url("/nl/lessons/les-0"));
+    expect(urls).not.toContain(url("/fr/lessons/les-0/3"));
+    expect(urls).toContain(url("/fr/lessons/les-0"));
+    expect(urls).toContain(url("/ar/traffic-signs/B1"));
+    expect(urls).toContain(url("/blog/safe-driving"));
+    expect(urls).toContain(url("/nl/blog/veilig-rijden"));
+    expect(urls).toContain(url("/fr/blog/conduite-sure"));
+    expect(urls).toContain(url("/ar/blog/al-qiyada-al-amina"));
     const dutchArticle = entries.find(
-      (entry) => entry.url === `${appUrl}/nl/blog/veilig-rijden`,
+      (entry) => entry.url === url("/nl/blog/veilig-rijden"),
     );
     expect(dutchArticle?.lastModified).toEqual(new Date("2026-08-22T10:00:00Z"));
     expect(dutchArticle?.alternates?.languages).toEqual({
-      en: `${appUrl}/blog/safe-driving`,
-      "nl-BE": `${appUrl}/nl/blog/veilig-rijden`,
-      "fr-BE": `${appUrl}/fr/blog/conduite-sure`,
-      ar: `${appUrl}/ar/blog/al-qiyada-al-amina`,
-      "x-default": `${appUrl}/blog/safe-driving`,
+      en: url("/blog/safe-driving"),
+      "nl-BE": url("/nl/blog/veilig-rijden"),
+      "fr-BE": url("/fr/blog/conduite-sure"),
+      ar: url("/ar/blog/al-qiyada-al-amina"),
+      "x-default": url("/blog/safe-driving"),
+    });
+    const dutchSignExam = entries.find(
+      (entry) => entry.url === url("/nl/traffic-signs/A1a/exam/1"),
+    );
+    expect(dutchSignExam?.alternates?.languages).toEqual({
+      en: url("/traffic-signs/A1a/exam/1"),
+      "nl-BE": url("/nl/traffic-signs/A1a/exam/1"),
+      "fr-BE": url("/fr/traffic-signs/A1a/exam/1"),
+      ar: url("/ar/traffic-signs/A1a/exam/1"),
+      "x-default": url("/traffic-signs/A1a/exam/1"),
     });
     expect(
       entries.every(
@@ -107,10 +123,10 @@ describe("public sitemap", () => {
           entry.alternates.languages.ar,
       ),
     ).toBe(true);
-    expect(urls.some((url) => url.endsWith("/login"))).toBe(false);
-    expect(urls.some((url) => url.endsWith("/register"))).toBe(false);
+    expect(urls.some((entryUrl) => entryUrl.endsWith("/login"))).toBe(false);
+    expect(urls.some((entryUrl) => entryUrl.endsWith("/register"))).toBe(false);
     expect(
-      urls.some((url) => /\/(?:admin|api|dashboard|profile)(?:\/|$)/.test(url)),
+      urls.some((entryUrl) => /\/(?:admin|api|dashboard|profile)(?:\/|$)/.test(entryUrl)),
     ).toBe(false);
     expect(
       entries

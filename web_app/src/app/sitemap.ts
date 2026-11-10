@@ -109,25 +109,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
   ];
   const signPages = uniqueSignCodes.map((code) => ({
-    pathname: `/traffic-signs/${encodeURIComponent(code)}`,
+    pathname: "/traffic-signs/" + encodeURIComponent(code),
     changeFrequency: "monthly" as const,
     priority: 0.7,
   }));
+  const uniqueSignExamCodes = [
+    ...new Set(
+      signs
+        .filter(
+          (sign) =>
+            typeof sign.exam1TotalQuestions === "number" &&
+            sign.exam1TotalQuestions > 0,
+        )
+        .map((sign) => sign.routeCode || sign.signCode)
+        .filter((code): code is string => Boolean(code)),
+    ),
+  ];
+  const signExamPages = uniqueSignExamCodes.map((code) => ({
+    pathname: "/traffic-signs/" + encodeURIComponent(code) + "/exam/1",
+    changeFrequency: "monthly" as const,
+    priority: 0.65,
+  }));
   const lessonPages = lessons.flatMap((lesson) => {
     if (!lesson.lessonCode) return [];
-    const lessonPath = `/lessons/${encodeURIComponent(lesson.lessonCode)}`;
+    const lessonPath = "/lessons/" + encodeURIComponent(lesson.lessonCode);
     return [{
       pathname: lessonPath,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     }];
   });
-  const routes = [...publicPages, ...signPages, ...lessonPages];
+  const routes = [...publicPages, ...signPages, ...signExamPages, ...lessonPages];
   const articlePages = localizedArticles.flatMap((articles, localeIndex) => {
     const locale = SITE_LOCALES[localeIndex];
     return articles.map((article) => ({
       url: buildLocalizedUrl(
-        `/blog/${encodeURIComponent(article.slug)}`,
+        "/blog/" + encodeURIComponent(article.slug),
         locale,
         APP_URL,
       ),

@@ -6,7 +6,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "@/components/localized-link";
 import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Shapes } from "lucide-react";
+import { Heart, Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
 import { TrafficSignsFilters } from "@/components/traffic-signs/traffic-signs-filters";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -20,6 +20,8 @@ import {
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
+import { favoriteCopy, favoriteLocale } from "@/lib/road-sign-favorites";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import {
@@ -73,6 +75,8 @@ function TrafficSignsContent({
   initialSigns: TrafficSignCatalogItem[];
 }) {
   const { t, language } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const favoriteLabels = favoriteCopy[favoriteLocale(language)];
   const router = useLocalizedRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -286,6 +290,16 @@ function TrafficSignsContent({
               {t("traffic_signs.page_subtitle")}
             </PageHeroDescription>
           </div>
+
+          {isAuthenticated ? (
+            <Link
+              href="/traffic-signs/favorites"
+              className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-primary/20 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
+            >
+              <Heart className="h-4 w-4" aria-hidden="true" />
+              {favoriteLabels.collection}
+            </Link>
+          ) : null}
 
           <TrafficSignsFilters
             categories={categories}

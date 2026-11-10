@@ -37,6 +37,16 @@ async function proxyRequest(
   const token = await getAuthTokenFromCookie();
   const headers: Record<string, string> = { Accept: "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
+  // Forward only the favorites account guard; the backend validates it against the JWT.
+  if (/^users\/me\/favorites(?:\/[1-9]\d*)?$/.test(targetPath)) {
+    const expectedUserId = request.headers.get("x-expected-user-id");
+    if (expectedUserId != null) {
+      if (!/^[1-9]\d*$/.test(expectedUserId)) {
+        return NextResponse.json({ message: "Invalid account guard" }, { status: 400 });
+      }
+      headers["X-Expected-User-Id"] = expectedUserId;
+    }
+  }
 
   const contentType = request.headers.get("content-type");
   if (contentType) headers["Content-Type"] = contentType;

@@ -4,6 +4,7 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import { useEffect, useState } from "react";
 import Link from "@/components/localized-link";
+import { PilotSignLessonLink } from "@/components/seo/pilot-sign-lesson-link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -18,6 +19,7 @@ import {
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { PageHeroSurface, PageHeroTitle } from "@/components/ui/page-surface";
 import { SignImage } from "@/components/traffic-signs/sign-image";
+import { RoadSignFavoriteButton } from "@/components/traffic-signs/road-sign-favorite-button";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
 import { LoadErrorState } from "@/components/ui/load-error-state";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +91,11 @@ function LoadingState() {
 
 export default function TrafficSignDetailClient({
   initialSign,
-}: Readonly<{ initialSign: TrafficSign | null }>) {
+  availableLessonCodes = [],
+}: Readonly<{
+  initialSign: TrafficSign | null;
+  availableLessonCodes?: readonly string[];
+}>) {
   const params = useParams<{ signCode: string }>();
   const routeParam = params.signCode;
   const router = useLocalizedRouter();
@@ -341,6 +347,7 @@ export default function TrafficSignDetailClient({
                   </p>
                 ) : null}
               </div>
+              <RoadSignFavoriteButton signId={sign.id} />
             </div>
           </div>
         </PageHeroSurface>
@@ -363,7 +370,12 @@ export default function TrafficSignDetailClient({
                       dir={currentLanguage === "ar" ? "rtl" : "ltr"}
                       className="mt-2 whitespace-pre-line text-sm leading-7 text-foreground sm:text-base"
                     >
-                      {currentDescription}
+                      <PilotSignLessonLink
+                        signCode={sign.routeCode}
+                        text={currentDescription}
+                        language={currentLanguage}
+                        availableLessonCodes={availableLessonCodes}
+                      />
                     </p>
                   ) : (
                     <p className="text-sm italic text-muted-foreground">

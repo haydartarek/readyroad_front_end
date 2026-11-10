@@ -21,6 +21,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: [
           "/",
           "/traffic-signs/",
+          ...URL_LOCALES.map((locale) => "/" + locale + "/traffic-signs/"),
           "/lessons/",
           "/about",
           "/contact",
@@ -31,7 +32,7 @@ export default function robots(): MetadataRoute.Robots {
           "/disclaimer",
           ...publicLearningPaths,
           ...URL_LOCALES.flatMap((locale) =>
-            publicLearningPaths.map((path) => `/${locale}${path}`),
+            publicLearningPaths.map((path) => "/" + locale + path),
           ),
         ],
         disallow: [
@@ -39,7 +40,7 @@ export default function robots(): MetadataRoute.Robots {
           ...privateLearningPaths,
           ...URL_LOCALES.flatMap((locale) =>
             [...privatePaths, ...privateLearningPaths].map(
-              (path) => `/${locale}${path}`,
+              (path) => "/" + locale + path,
             ),
           ),
           "/api/",
@@ -56,7 +57,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/"],
       },
     ],
-    sitemap: `${APP_URL}/sitemap.xml`,
+    sitemap: APP_URL + "/sitemap.xml",
     host: APP_URL,
   };
 }

@@ -244,7 +244,6 @@ describe("Navbar responsive account navigation", () => {
         "Traffic Signs",
         "Practice",
         "Exam",
-        "Driving Videos",
         "Blog",
       ],
     ],
@@ -256,7 +255,6 @@ describe("Navbar responsive account navigation", () => {
         "Verkeersborden",
         "Oefenen",
         "Examen",
-        "Rijlesvideo’s",
         "Blog",
       ],
     ],
@@ -268,7 +266,6 @@ describe("Navbar responsive account navigation", () => {
         "Panneaux",
         "Entraînement",
         "Examen",
-        "Vidéos de conduite",
         "Articles",
       ],
     ],
@@ -438,11 +435,18 @@ describe("Navbar responsive account navigation", () => {
       mockPathname = "/videos";
       render(<Navbar />);
 
+      if (language !== "ar") {
+        expect(within(screen.getByTestId("desktop-primary-navigation")).queryByRole("link", { name: label })).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "nav.open_menu" }));
+        expect(within(await screen.findByTestId("mobile-navigation-dialog")).queryByRole("link", { name: label })).not.toBeInTheDocument();
+        return;
+      }
+
       const desktopLink = within(
         screen.getByTestId("desktop-primary-navigation"),
       ).getByRole("link", { name: label });
       expect(desktopLink).toHaveAttribute("href", href);
-      expect(desktopLink).toHaveClass("bg-primary");
+      expect(desktopLink).toHaveClass("after:scale-x-100", "after:opacity-100");
 
       fireEvent.click(screen.getByRole("button", { name: "nav.open_menu" }));
       const mobileNavigation = within(
@@ -470,7 +474,7 @@ describe("Navbar responsive account navigation", () => {
     const desktopLink = within(screen.getByTestId("desktop-primary-navigation"))
       .getByRole("link", { name: label });
     expect(desktopLink).toHaveAttribute("href", href);
-    expect(desktopLink).toHaveClass("bg-primary");
+    expect(desktopLink).toHaveClass("after:scale-x-100", "after:opacity-100");
     fireEvent.click(screen.getByRole("button", { name: "nav.open_menu" }));
     const menu = within(await screen.findByTestId("mobile-navigation-dialog"));
     expect(menu.getAllByRole("link", { name: label })).toHaveLength(1);

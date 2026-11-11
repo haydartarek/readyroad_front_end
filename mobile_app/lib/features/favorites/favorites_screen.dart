@@ -1,9 +1,13 @@
+import '../../design_system/widgets/rijvia_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/di/service_locator.dart';
-import '../../core/constants/api_constants.dart';
+import '../../design_system/widgets/rijvia_content.dart';
+import '../categories/widgets/rijvia_sign_card.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/providers/favorites_provider.dart';
 import '../../core/providers/language_provider.dart';
+import '../../design_system/widgets/rijvia_components.dart';
 import '../../shared/models/content_item.dart';
 import '../../shared/services/content_service.dart';
 import '../categories/sign_details_screen.dart';
@@ -22,16 +26,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   bool _isLoading = true;
   String? _error;
 
-  String _toBackendImageUrl(String imageUrl) {
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    if (imageUrl.startsWith('/images/signs/')) {
-      return '${ApiConstants.baseUrl}$imageUrl';
-    }
-    return imageUrl;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -46,13 +40,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     try {
       final favoritesProvider = context.read<FavoritesProvider>();
+      await favoritesProvider.refresh();
+      if (!mounted) return;
       if (!favoritesProvider.isLoaded) {
-        await Future.delayed(const Duration(milliseconds: 100));
+        throw StateError('Favorites are not synchronized yet');
       }
-
+      final userAtStart = favoritesProvider.boundUserId;
+      final versionAtStart = favoritesProvider.bindingVersion;
       final favoriteIds = favoritesProvider.favoriteIds;
 
       if (favoriteIds.isEmpty) {
+        if (!mounted) return;
         setState(() {
           _favoriteContent = [];
           _isLoading = false;
@@ -62,6 +60,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
       // Load all content and filter favorites
       final allContent = await _contentService.getAllContent();
+      if (!mounted ||
+          favoritesProvider.boundUserId != userAtStart ||
+          favoritesProvider.bindingVersion != versionAtStart) {
+        return;
+      }
       final favorites = allContent
           .where((item) => favoriteIds.contains(item.id))
           .toList();
@@ -71,6 +74,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -80,15 +84,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Favorites'),
+      appBar: RijviaAppBar(
+        title: Text(l10n.t('nav.favorites')),
         actions: [
           if (_favoriteContent.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_outline),
               onPressed: _showClearDialog,
-              tooltip: 'Clear all favorites',
+              tooltip: l10n.commonDelete,
             ),
         ],
       ),
@@ -97,169 +102,66 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading favorites',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: RijviaEmptyState(
+            icon: Icons.cloud_off_outlined,
+            title: l10n.t('favorites.load_error'),
+            description: _error!,
+            action: FilledButton.icon(
               onPressed: _loadFavorites,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.commonRetry),
             ),
-          ],
+          ),
         ),
       );
     }
 
     if (_favoriteContent.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.favorite_border, size: 100, color: Colors.grey[400]),
-            const SizedBox(height: 24),
-            Text(
-              'No favorites yet',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Add content to favorites to see them here',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: RijviaEmptyState(
+            icon: Icons.favorite_border,
+            title: l10n.t('favorites.empty'),
+            description: l10n.t('favorites.empty_description'),
+          ),
         ),
       );
     }
 
     return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
-        return GridView.builder(
+      builder: (context, language, _) => RijviaScrollFrame(
+        child: ListView(
           padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.85,
-          ),
-          itemCount: _favoriteContent.length,
-          itemBuilder: (context, index) {
-            final item = _favoriteContent[index];
-            return _buildContentCard(item, languageProvider.currentLanguage);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildContentCard(ContentItem item, String languageCode) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SignDetailsScreen(content: item),
-            ),
-          );
-          // Reload favorites after returning
-          _loadFavorites();
-        },
-        child: Stack(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            RijviaAdaptiveGrid(
+              minCellWidth: MediaQuery.textScalerOf(context).scale(260),
               children: [
-                // Image
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    color: Colors.grey[200],
-                    child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                        ? Image.network(
-                            _toBackendImageUrl(item.imageUrl!),
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.image,
-                                size: 48,
-                                color: Colors.grey,
-                              );
-                            },
-                          )
-                        : const Icon(Icons.image, size: 48, color: Colors.grey),
-                  ),
-                ),
-                // Info
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.code,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: Colors.grey[600]),
+                for (final item in _favoriteContent)
+                  RijviaSignCard(
+                    item: item,
+                    language: language.currentLanguage,
+                    isFavorite: true,
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SignDetailsScreen(content: item),
                         ),
-                        const SizedBox(height: 4),
-                        Expanded(
-                          child: Text(
-                            item.getName(languageCode),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                      if (mounted) _loadFavorites();
+                    },
                   ),
-                ),
               ],
-            ),
-            // Favorite badge
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.9),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.favorite,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
             ),
           ],
         ),
@@ -271,22 +173,41 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear all favorites?'),
-        content: const Text(
-          'This will remove all signs from your favorites list.',
+        title: Text(AppLocalizations.of(context).t('favorites.clear_title')),
+        content: Text(
+          AppLocalizations.of(context).t('favorites.clear_confirm'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
-            onPressed: () {
-              context.read<FavoritesProvider>().clearFavorites();
+            onPressed: () async {
+              final favoritesProvider = this.context.read<FavoritesProvider>();
               Navigator.pop(context);
-              _loadFavorites();
+              try {
+                await favoritesProvider.clearFavorites();
+                if (!mounted) return;
+                await _loadFavorites();
+              } catch (_) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      AppLocalizations.of(
+                        this.context,
+                      ).t('favorites.sync_error'),
+                    ),
+                  ),
+                );
+                await _loadFavorites();
+              }
             },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
+            child: Text(
+              AppLocalizations.of(context).commonDelete,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         ],
       ),

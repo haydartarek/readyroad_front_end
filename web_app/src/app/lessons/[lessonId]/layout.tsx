@@ -36,11 +36,33 @@ export async function generateMetadata({
 
   const routePath = `/lessons/${encodeURIComponent(lesson.lessonCode)}`;
   const canonical = buildLocalizedUrl(routePath, locale, APP_URL);
+  const isDutchLesson24CtrPilot = locale === "nl" && lesson.lessonCode === "les-24";
+  const isArabicLesson14CtrPilot = locale === "ar" && lesson.lessonCode === "les-14";
+  const isDutchLesson16CtrPilot = locale === "nl" && lesson.lessonCode === "les-16";
+  const isDutchLesson12CtrPilot = locale === "nl" && lesson.lessonCode === "les-12";
   const description = toMetadataDescription(
-    copy.description,
+    isDutchLesson24CtrPilot
+      ? "Wat betekent verkeersbord D1? Leer het verschil tussen verplichte rijrichting en eenrichtingsweg, met uitleg over verkeersborden en hindernissen in België."
+      : isArabicLesson14CtrPilot
+        ? "ما الفرق بين مسافة التوقف ومسافة الفرملة؟ تعرّف على زمن رد الفعل ومسافة رد الفعل ومسافة الأمان، وكيف ترتبط هذه المفاهيم بقواعد السياقة النظرية في بلجيكا."
+        : isDutchLesson16CtrPilot
+          ? "Wanneer mag je rechts inhalen in België? Leer het verschil tussen inhalen en voorbijrijden, wanneer links inhalen geldt en hoe je veilig afstand houdt."
+          : isDutchLesson12CtrPilot
+            ? "Wanneer gebruik je dimlichten, grootlichten of mistlichten in België? Ontdek de regels voor standlichten, waarschuwingslichten en het theorie-examen."
+            : copy.description,
     copy.fallbackDescription,
   );
-  const title = toBrandedMetadataTitle(copy.title);
+  const title = toBrandedMetadataTitle(
+    isDutchLesson24CtrPilot
+      ? "Verkeersbord D1: betekenis en verschil met eenrichtingsweg"
+      : isArabicLesson14CtrPilot
+        ? "مسافة التوقف ومسافة الفرملة | زمن رد الفعل في السياقة"
+        : isDutchLesson16CtrPilot
+          ? "Rechts inhalen of voorbijrijden? Regels in België"
+          : isDutchLesson12CtrPilot
+            ? "Wanneer dimlichten, grootlichten en mistlichten gebruiken?"
+            : copy.title,
+  );
   const image = buildAbsoluteUrl("/opengraph-image", APP_URL);
 
   return {

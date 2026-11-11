@@ -4,7 +4,6 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "@/components/localized-link";
-import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Heart, Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
@@ -311,8 +310,6 @@ function TrafficSignsContent({
           />
         </PageHeroSurface>
 
-        <SeoIntentLinks page="trafficSigns" />
-
         {activeGroup && (
           <PageSectionSurface>
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -363,7 +360,7 @@ function TrafficSignsContent({
             {groupedFilteredSigns.map(
               ({ group, signs, totalCount, info, style }) => (
                 <section key={group} className="space-y-3">
-                  <div className="flex flex-col gap-2.5 border-b border-border/60 pb-3 md:flex-row md:items-end md:justify-between">
+                  <div className="border-b border-border/60 pb-3">
                     <div className="flex items-start gap-3">
                       <div
                         className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-[1rem] bg-gradient-to-br ${style.accent} text-sm font-black text-white shadow-sm`}
@@ -371,21 +368,21 @@ function TrafficSignsContent({
                         {info.displayKey ?? group}
                       </div>
 
-                      <div className="space-y-0.5">
+                      <div className="min-w-0 flex-1 space-y-1">
                         <h2 className="text-lg font-black tracking-tight text-foreground md:text-xl">
                           {info.title[lang]}
+                          <span className="px-2 font-normal text-muted-foreground/70" aria-hidden="true">|</span>
+                          <span className="whitespace-nowrap text-sm font-semibold text-muted-foreground md:text-base">
+                            {t("traffic_signs.section_count", { count: totalCount })}
+                          </span>
                         </h2>
-                        <p className="line-clamp-2 max-w-3xl text-xs leading-5 text-muted-foreground md:text-sm">
+                        <p className="max-w-3xl break-words text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
                           {info.description[lang]}
                         </p>
                       </div>
                     </div>
 
-                    <span
-                      className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-sm font-semibold ${style.chip}`}
-                    >
-                      {t("traffic_signs.section_count", { count: totalCount })}
-                    </span>
+
                   </div>
 
                   <TrafficSignsGrid signs={signs} />

@@ -5,7 +5,6 @@ import {
   ArrowRight,
   BarChart3,
   FileText,
-  Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
@@ -19,7 +18,7 @@ interface FeatureItem {
   title: string;
   description: string;
   href: string;
-  emphasis?: "primary" | "secondary";
+  ctaStyle?: "primary" | "outline";
 }
 
 function FeatureArrow({ isRTL }: { isRTL: boolean }) {
@@ -51,16 +50,7 @@ export function FeaturesSection() {
         }),
       }),
       href: "/exam",
-    },
-    {
-      icon: Target,
-      iconWrap: "border-secondary/20 bg-secondary/10",
-      iconTone: "text-secondary",
-      cta: t("home.features.cta_practice"),
-      title: t("home.features.practice_title"),
-      description: t("home.features.practice_desc"),
-      href: "/practice",
-      emphasis: "primary",
+      ctaStyle: "primary",
     },
     {
       icon: BarChart3,
@@ -92,11 +82,10 @@ export function FeaturesSection() {
 
         <div
           data-testid="home-features-grid"
-          className="grid auto-rows-fr gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-7"
+          className="mx-auto grid auto-rows-fr gap-5 md:grid-cols-2 lg:w-[calc(66.666667%_-_9.333333px)] lg:gap-7"
         >
           {features.map((feature) => {
             const Icon = feature.icon;
-            const isPrimary = feature.emphasis === "primary";
 
             return (
               <Link
@@ -112,18 +101,9 @@ export function FeaturesSection() {
                   className={[
                     "relative h-full overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200",
                     "hover:-translate-y-1 hover:shadow-lg",
-                    isPrimary
-                      ? "border-primary/25 ring-1 ring-primary/15"
-                      : "border-border hover:border-primary/25",
+                    "border-border hover:border-primary/25",
                   ].join(" ")}
                 >
-                  {isPrimary && (
-                    <>
-                      <div className="pointer-events-none absolute -end-16 -top-16 h-44 w-44 rounded-full bg-primary/12 blur-3xl" />
-                      <div className="pointer-events-none absolute -bottom-20 -start-16 h-48 w-48 rounded-full bg-secondary/10 blur-3xl" />
-                    </>
-                  )}
-
                   <CardHeader className="relative pb-2 pt-5">
                     <div className="flex min-w-0 items-center gap-3">
                       <div
@@ -153,8 +133,8 @@ export function FeaturesSection() {
                       data-testid="home-feature-cta"
                       className={[
                         "mt-auto inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-all",
-                        isPrimary
-                          ? "bg-primary text-primary-foreground shadow-sm group-hover:shadow-md"
+                        feature.ctaStyle === "primary"
+                          ? "bg-primary text-primary-foreground shadow-sm group-hover:bg-primary/90 group-hover:shadow-md"
                           : "border border-border bg-background text-secondary group-hover:border-primary/25 group-hover:bg-primary/5",
                       ].join(" ")}
                     >

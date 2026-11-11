@@ -1,9 +1,14 @@
+import '../../design_system/widgets/rijvia_content.dart';
+import '../../design_system/widgets/rijvia_app_bar.dart';
+import '../../design_system/widgets/rijvia_components.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../core/providers/statistics_provider.dart';
+import 'package:provider/provider.dart';
 
-/// Statistics Screen - Shows quiz performance statistics
+import '../../core/providers/statistics_provider.dart';
+import '../../shared/models/statistics_models.dart';
+
+/// Never combine account-wide metrics and device-only quiz sessions.
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
 
@@ -13,365 +18,399 @@ class StatisticsScreen extends StatefulWidget {
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<StatisticsProvider>().refreshRemote();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final copy = _StatisticsCopy(Localizations.localeOf(context).languageCode);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Statistics'),
+      appBar: RijviaAppBar(
+        title: Text(copy('title')),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: _showClearDialog,
-            tooltip: 'Clear statistics',
+            icon: const Icon(Icons.refresh),
+            tooltip: copy('refresh'),
+            onPressed: () => context.read<StatisticsProvider>().refreshRemote(),
           ),
         ],
       ),
-      body: Consumer<StatisticsProvider>(
-        builder: (context, statsProvider, child) {
-          if (!statsProvider.isLoaded) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final stats = statsProvider.statistics;
-
-          if (stats.totalQuizzesTaken == 0) {
-            return _buildEmptyState();
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: RijviaScrollFrame(
+        child: Consumer<StatisticsProvider>(
+          builder: (context, provider, _) {
+            if (!provider.isLoaded) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                // Overview Cards
-                _buildOverviewCard(stats),
-
-                const SizedBox(height: 16),
-
-                // Performance Card
-                _buildPerformanceCard(stats),
-
-                const SizedBox(height: 16),
-
-                // Recent Quizzes
-                _buildRecentQuizzes(stats),
+                _sectionTitle(copy('practiceServer')),
+                _serverCard(
+                  provider.progressState,
+                  copy,
+                  builder: () =>
+                      _practiceContent(provider.serverProgress!, copy),
+                ),
+                const SizedBox(height: 12),
+                _sectionTitle(copy('examsServer')),
+                _serverCard(
+                  provider.progressState,
+                  copy,
+                  builder: () => _examContent(provider.serverProgress!, copy),
+                ),
+                const SizedBox(height: 12),
+                _sectionTitle(copy('recentExams')),
+                _serverCard(
+                  provider.historyState,
+                  copy,
+                  builder: () => _historyContent(provider.serverExams, copy),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _sectionTitle(copy('deviceTitle'))),
+                    if (provider.quizResults.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: () => _confirmLocalClear(provider, copy),
+                        icon: const Icon(Icons.delete_outline),
+                        label: Text(copy('clearDevice')),
+                      ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    copy('deviceExplanation'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                Card(
+                  child: provider.quizResults.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(copy('noLocal')),
+                        )
+                      : Column(
+                          children: [
+                            _statRow(
+                              copy('deviceSessions'),
+                              '${provider.statistics.totalQuizzesTaken}',
+                            ),
+                            ...provider.statistics.recentResults.map(
+                              (result) => ListTile(
+                                leading: Icon(
+                                  result.isPassed
+                                      ? Icons.check_circle_outline
+                                      : Icons.cancel_outlined,
+                                ),
+                                title: Text(
+                                  '${result.correctAnswers}/${result.totalQuestions}',
+                                ),
+                                subtitle: Text(
+                                  DateFormat(
+                                    'dd/MM/yyyy HH:mm',
+                                  ).format(result.completedAt.toLocal()),
+                                ),
+                                trailing: Text('${result.score}%'),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
               ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String label) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Text(
+      label,
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    ),
+  );
+
+  Widget _serverCard(
+    StatisticsLoadState state,
+    _StatisticsCopy copy, {
+    required Widget Function() builder,
+  }) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: switch (state) {
+          StatisticsLoadState.ready => builder(),
+          StatisticsLoadState.loading => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: CircularProgressIndicator(),
             ),
-          );
+          ),
+          StatisticsLoadState.unavailable => Row(
+            children: [
+              const Icon(Icons.wifi_off_outlined),
+              const SizedBox(width: 10),
+              Expanded(child: Text(copy('unavailable'))),
+              TextButton(
+                onPressed: () =>
+                    context.read<StatisticsProvider>().refreshRemote(),
+                child: Text(copy('retry')),
+              ),
+            ],
+          ),
+          StatisticsLoadState.notApplicable => Text(copy('signIn')),
         },
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _practiceContent(ServerPracticeProgress p, _StatisticsCopy copy) =>
+      Column(
         children: [
-          Icon(Icons.bar_chart, size: 100, color: Colors.grey[400]),
-          const SizedBox(height: 24),
-          Text(
-            'No statistics yet',
-            style: Theme.of(context).textTheme.titleLarge,
+          RijviaProgressRing(
+            value: p.accuracy / 100,
+            label: '${p.accuracy.toStringAsFixed(0)}%',
+            caption: copy('accuracy'),
+            size: 110,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Take a quiz to see your progress',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+          const SizedBox(height: 16),
+          RijviaAdaptiveGrid(
+            minCellWidth: MediaQuery.textScalerOf(context).scale(220),
+            maxColumns: 3,
+            children: [
+              RijviaMetricCard(
+                label: copy('answered'),
+                value: '${p.attempted}',
+                icon: Icons.question_answer_outlined,
+              ),
+              RijviaMetricCard(
+                label: copy('correct'),
+                value: '${p.correct}',
+                icon: Icons.check_circle_outline,
+              ),
+              RijviaMetricCard(
+                label: copy('wrong'),
+                value: '${p.wrong}',
+                icon: Icons.cancel_outlined,
+              ),
+            ],
           ),
         ],
-      ),
-    );
-  }
+      );
 
-  Widget _buildOverviewCard(dynamic stats) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Overview',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatItem(
-                    Icons.quiz,
-                    'Quizzes',
-                    '${stats.totalQuizzesTaken}',
-                    Colors.blue,
-                  ),
-                ),
-                Expanded(
-                  child: _buildStatItem(
-                    Icons.question_answer,
-                    'Questions',
-                    '${stats.totalQuestionsSolved}',
-                    Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatItem(
-                    Icons.check_circle,
-                    'Correct',
-                    '${stats.totalCorrectAnswers}',
-                    Colors.green,
-                  ),
-                ),
-                Expanded(
-                  child: _buildStatItem(
-                    Icons.cancel,
-                    'Wrong',
-                    '${stats.totalWrongAnswers}',
-                    Colors.red,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _examContent(ServerPracticeProgress p, _StatisticsCopy copy) => Column(
+    children: [
+      _statRow(copy('examTotal'), '${p.examsTaken}'),
+      _statRow(copy('passed'), '${p.examsPassed}'),
+      _statRow(copy('failed'), '${p.examsFailed}'),
+      _statRow(copy('passRate'), '${p.examPassRate.toStringAsFixed(1)}%'),
+    ],
+  );
 
-  Widget _buildPerformanceCard(dynamic stats) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Performance',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildPerformanceRow(
-              'Average Score',
-              '${stats.averageScore.toStringAsFixed(1)}%',
-              _getScoreColor(stats.averageScore),
-            ),
-            const Divider(),
-            _buildPerformanceRow(
-              'Pass Rate',
-              '${stats.passRate.toStringAsFixed(1)}%',
-              stats.passRate >= 70 ? Colors.green : Colors.orange,
-            ),
-            const Divider(),
-            _buildPerformanceRow(
-              'Passed / Failed',
-              '${stats.quizzesPassed} / ${stats.quizzesFailed}',
-              null,
-            ),
-            const Divider(),
-            _buildPerformanceRow(
-              'Most Common Grade',
-              stats.mostCommonGrade,
-              _getGradeColor(stats.mostCommonGrade),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecentQuizzes(dynamic stats) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Recent Quizzes',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ...stats.recentResults.map(
-              (result) => _buildQuizResultItem(result),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(
-    IconData icon,
-    String label,
-    String value,
-    Color color,
-  ) {
+  Widget _historyContent(List<ServerTheoryExam> exams, _StatisticsCopy copy) {
+    if (exams.isEmpty) return Text(copy('noExams'));
     return Column(
+      children: exams
+          .take(5)
+          .map(
+            (exam) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('${copy('exam')} #${exam.examId}'),
+              subtitle: Text(
+                DateFormat(
+                  'dd/MM/yyyy HH:mm',
+                ).format(exam.completedAt.toLocal()),
+              ),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${exam.correctAnswers}/${exam.totalQuestions}'),
+                  Text(exam.passed ? copy('passed') : copy('failed')),
+                ],
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _statRow(String label, String value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 5),
+    child: Row(
       children: [
-        Icon(icon, color: color, size: 32),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+        Expanded(child: Text(label)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
-    );
-  }
+    ),
+  );
 
-  Widget _buildPerformanceRow(String label, String value, Color? color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuizResultItem(dynamic result) {
-    final dateFormat = DateFormat('MMM dd, yyyy - HH:mm');
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: result.isPassed
-            ? Colors.green.withValues(alpha: 0.1)
-            : Colors.red.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: result.isPassed ? Colors.green : Colors.red,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            result.isPassed ? Icons.check_circle : Icons.cancel,
-            color: result.isPassed ? Colors.green : Colors.red,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      '${result.score}%',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getGradeColor(result.grade),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        result.grade,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${result.correctAnswers}/${result.totalQuestions} correct',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                Text(
-                  dateFormat.format(result.completedAt),
-                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getScoreColor(double score) {
-    if (score >= 90) return Colors.green[700]!;
-    if (score >= 70) return Colors.green;
-    if (score >= 60) return Colors.orange;
-    return Colors.red;
-  }
-
-  Color _getGradeColor(String grade) {
-    switch (grade) {
-      case 'A':
-        return Colors.green[700]!;
-      case 'B':
-        return Colors.green;
-      case 'C':
-        return Colors.blue;
-      case 'D':
-        return Colors.orange;
-      default:
-        return Colors.red;
-    }
-  }
-
-  void _showClearDialog() {
-    showDialog(
+  Future<void> _confirmLocalClear(
+    StatisticsProvider provider,
+    _StatisticsCopy copy,
+  ) async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear statistics?'),
-        content: const Text(
-          'This will delete all your quiz history and statistics.',
-        ),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(copy('clearDevice')),
+        content: Text(copy('clearExplanation')),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(copy('cancel')),
           ),
           TextButton(
-            onPressed: () {
-              context.read<StatisticsProvider>().clearStatistics();
-              Navigator.pop(context);
-            },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(copy('clear')),
           ),
         ],
       ),
     );
+    if (confirmed == true) await provider.clearStatistics();
   }
+}
+
+/// Feature-local copy is complete in all four supported languages and does
+/// not depend on modifying the user's existing l10n assets during a data fix.
+class _StatisticsCopy {
+  final String language;
+  const _StatisticsCopy(this.language);
+
+  String call(String key) =>
+      (_labels[language] ?? _labels['en']!)[key] ?? _labels['en']![key] ?? key;
+
+  static const Map<String, Map<String, String>> _labels = {
+    'en': {
+      'title': 'Statistics',
+      'refresh': 'Refresh',
+      'practiceServer': 'Practice progress · Account',
+      'examsServer': 'Theory exams · Account',
+      'recentExams': 'Recent completed theory exams',
+      'deviceTitle': 'Quiz sessions · This device',
+      'deviceExplanation':
+          'These session summaries are stored on this device only. Your submitted practice answers are saved to your account.',
+      'noLocal': 'No device sessions recorded',
+      'deviceSessions': 'Recorded sessions',
+      'answered': 'Practice answers',
+      'correct': 'Correct',
+      'wrong': 'Wrong',
+      'accuracy': 'Practice accuracy',
+      'examTotal': 'Exams completed',
+      'passed': 'Passed',
+      'failed': 'Failed',
+      'passRate': 'Exam pass rate',
+      'exam': 'Exam',
+      'noExams': 'No completed exams yet',
+      'signIn': 'Sign in to view account statistics',
+      'unavailable':
+          'Account data unavailable. No local values have been substituted.',
+      'retry': 'Retry',
+      'clearDevice': 'Clear device sessions',
+      'clearExplanation':
+          'Remove only the quiz session summaries saved on this device. Server progress and exam results will not be changed.',
+      'cancel': 'Cancel',
+      'clear': 'Clear',
+    },
+    'ar': {
+      'title': 'الإحصائيات',
+      'refresh': 'تحديث',
+      'practiceServer': 'تقدم التدريبات · الحساب',
+      'examsServer': 'الامتحانات النظرية · الحساب',
+      'recentExams': 'آخر الامتحانات النظرية المكتملة',
+      'deviceTitle': 'جلسات التدريب · هذا الجهاز',
+      'deviceExplanation':
+          'ملخصات الجلسات محفوظة على هذا الجهاز فقط، أما الإجابات المرسلة فتُحفظ في حسابك.',
+      'noLocal': 'لا توجد جلسات محفوظة على الجهاز',
+      'deviceSessions': 'الجلسات المسجلة',
+      'answered': 'إجابات التدريبات',
+      'correct': 'صحيحة',
+      'wrong': 'خاطئة',
+      'accuracy': 'دقة التدريبات',
+      'examTotal': 'الامتحانات المكتملة',
+      'passed': 'ناجح',
+      'failed': 'راسب',
+      'passRate': 'نسبة نجاح الامتحانات',
+      'exam': 'امتحان',
+      'noExams': 'لا توجد امتحانات مكتملة بعد',
+      'signIn': 'سجّل الدخول لعرض إحصائيات الحساب',
+      'unavailable': 'بيانات الحساب غير متاحة. لن نستبدلها بأرقام الجهاز.',
+      'retry': 'إعادة المحاولة',
+      'clearDevice': 'مسح جلسات الجهاز',
+      'clearExplanation':
+          'سيتم مسح ملخصات جلسات التدريب على هذا الجهاز فقط، دون تغيير التقدم أو نتائج الامتحانات على الخادم.',
+      'cancel': 'إلغاء',
+      'clear': 'مسح',
+    },
+    'nl': {
+      'title': 'Statistieken',
+      'refresh': 'Vernieuwen',
+      'practiceServer': 'Oefenvoortgang · Account',
+      'examsServer': 'Theorie-examens · Account',
+      'recentExams': 'Recente voltooide theorie-examens',
+      'deviceTitle': 'Oefensessies · Dit apparaat',
+      'deviceExplanation':
+          'Deze sessiesamenvattingen staan alleen op dit apparaat. Ingediende oefenantwoorden staan in je account.',
+      'noLocal': 'Geen sessies op dit apparaat',
+      'deviceSessions': 'Opgeslagen sessies',
+      'answered': 'Oefenantwoorden',
+      'correct': 'Juist',
+      'wrong': 'Fout',
+      'accuracy': 'Oefennauwkeurigheid',
+      'examTotal': 'Voltooide examens',
+      'passed': 'Geslaagd',
+      'failed': 'Gezakt',
+      'passRate': 'Slagingspercentage',
+      'exam': 'Examen',
+      'noExams': 'Nog geen voltooide examens',
+      'signIn': 'Log in om accountstatistieken te bekijken',
+      'unavailable':
+          'Accountgegevens niet beschikbaar. Lokale cijfers worden niet als vervanging gebruikt.',
+      'retry': 'Opnieuw',
+      'clearDevice': 'Apparaatsessies wissen',
+      'clearExplanation':
+          'Wis alleen de sessiesamenvattingen op dit apparaat. Voortgang en examenresultaten op de server blijven bewaard.',
+      'cancel': 'Annuleren',
+      'clear': 'Wissen',
+    },
+    'fr': {
+      'title': 'Statistiques',
+      'refresh': 'Actualiser',
+      'practiceServer': 'Progression des exercices · Compte',
+      'examsServer': 'Examens théoriques · Compte',
+      'recentExams': 'Examens théoriques terminés récemment',
+      'deviceTitle': 'Séances de quiz · Cet appareil',
+      'deviceExplanation':
+          'Ces résumés de séances sont conservés uniquement sur cet appareil. Les réponses envoyées sont enregistrées sur votre compte.',
+      'noLocal': 'Aucune séance enregistrée sur cet appareil',
+      'deviceSessions': 'Séances enregistrées',
+      'answered': 'Réponses aux exercices',
+      'correct': 'Correctes',
+      'wrong': 'Incorrectes',
+      'accuracy': 'Précision des exercices',
+      'examTotal': 'Examens terminés',
+      'passed': 'Réussi',
+      'failed': 'Échoué',
+      'passRate': 'Taux de réussite',
+      'exam': 'Examen',
+      'noExams': 'Aucun examen terminé',
+      'signIn': 'Connectez-vous pour voir vos statistiques',
+      'unavailable':
+          'Données du compte indisponibles. Les chiffres locaux ne sont pas utilisés à la place.',
+      'retry': 'Réessayer',
+      'clearDevice': 'Effacer les séances locales',
+      'clearExplanation':
+          'Effacer uniquement les résumés de séances de cet appareil, sans modifier la progression ni les résultats sur le serveur.',
+      'cancel': 'Annuler',
+      'clear': 'Effacer',
+    },
+  };
 }

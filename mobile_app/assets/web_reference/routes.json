@@ -1,0 +1,317 @@
+[
+  {
+    "route": "/",
+    "source": "src/app/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/about",
+    "source": "src/app/about/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/admin",
+    "source": "src/app/admin/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/analytics",
+    "source": "src/app/admin/analytics/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/dashboard",
+    "source": "src/app/admin/dashboard/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/data-import",
+    "source": "src/app/admin/data-import/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/lessons",
+    "source": "src/app/admin/lessons/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/lessons/[idOrCode]/edit",
+    "source": "src/app/admin/lessons/[idOrCode]/edit/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/lessons/new",
+    "source": "src/app/admin/lessons/new/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/marketing",
+    "source": "src/app/admin/marketing/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/moderation",
+    "source": "src/app/admin/moderation/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/quizzes",
+    "source": "src/app/admin/quizzes/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/quizzes/[id]/edit",
+    "source": "src/app/admin/quizzes/[id]/edit/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/quizzes/categories",
+    "source": "src/app/admin/quizzes/categories/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/quizzes/new",
+    "source": "src/app/admin/quizzes/new/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/settings",
+    "source": "src/app/admin/settings/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/signs",
+    "source": "src/app/admin/signs/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/users",
+    "source": "src/app/admin/users/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/users/[id]/learning",
+    "source": "src/app/admin/users/[id]/learning/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/admin/users/[id]/learning/exams/[examType]/[examId]",
+    "source": "src/app/admin/users/[id]/learning/exams/[examType]/[examId]/page.tsx",
+    "group": "admin"
+  },
+  {
+    "route": "/analytics",
+    "source": "src/app/(protected)/analytics/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/analytics/error-patterns",
+    "source": "src/app/(protected)/analytics/error-patterns/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/analytics/weak-areas",
+    "source": "src/app/(protected)/analytics/weak-areas/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/assessment",
+    "source": "src/app/(protected)/assessment/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/assessment/[category]",
+    "source": "src/app/(protected)/assessment/[category]/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/assessment/[category]/[level]",
+    "source": "src/app/(protected)/assessment/[category]/[level]/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/blog",
+    "source": "src/app/blog/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/blog/[slug]",
+    "source": "src/app/blog/[slug]/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/checkout/cancel",
+    "source": "src/app/checkout/cancel/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/checkout/expired",
+    "source": "src/app/checkout/expired/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/checkout/success",
+    "source": "src/app/checkout/success/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/contact",
+    "source": "src/app/contact/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/cookie-policy",
+    "source": "src/app/cookie-policy/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/dashboard",
+    "source": "src/app/(protected)/dashboard/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/disclaimer",
+    "source": "src/app/disclaimer/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/exam",
+    "source": "src/app/(protected)/exam/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/exam/[id]",
+    "source": "src/app/(protected)/exam/[id]/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/exam/results",
+    "source": "src/app/(protected)/exam/results/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/exam/results/[id]",
+    "source": "src/app/(protected)/exam/results/[id]/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/faq",
+    "source": "src/app/faq/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/forgot-password",
+    "source": "src/app/(auth)/forgot-password/page.tsx",
+    "group": "auth"
+  },
+  {
+    "route": "/lessons",
+    "source": "src/app/lessons/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/lessons/[lessonId]",
+    "source": "src/app/lessons/[lessonId]/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/lessons/[lessonId]/[pageNumber]",
+    "source": "src/app/lessons/[lessonId]/[pageNumber]/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/login",
+    "source": "src/app/(auth)/login/page.tsx",
+    "group": "auth"
+  },
+  {
+    "route": "/plans",
+    "source": "src/app/plans/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/practice",
+    "source": "src/app/(protected)/practice/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/practice/[category]",
+    "source": "src/app/(protected)/practice/[category]/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/practice/random",
+    "source": "src/app/(protected)/practice/random/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/privacy",
+    "source": "src/app/privacy/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/privacy-policy",
+    "source": "src/app/privacy-policy/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/profile",
+    "source": "src/app/(protected)/profile/page.tsx",
+    "group": "student"
+  },
+  {
+    "route": "/register",
+    "source": "src/app/(auth)/register/page.tsx",
+    "group": "auth"
+  },
+  {
+    "route": "/reset-password",
+    "source": "src/app/(auth)/reset-password/page.tsx",
+    "group": "auth"
+  },
+  {
+    "route": "/terms",
+    "source": "src/app/terms/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/traffic-signs",
+    "source": "src/app/traffic-signs/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/traffic-signs/[signCode]",
+    "source": "src/app/traffic-signs/[signCode]/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/traffic-signs/[signCode]/exam",
+    "source": "src/app/traffic-signs/[signCode]/exam/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/traffic-signs/[signCode]/exam/[examNumber]",
+    "source": "src/app/traffic-signs/[signCode]/exam/[examNumber]/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/traffic-signs/[signCode]/practice",
+    "source": "src/app/traffic-signs/[signCode]/practice/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/traffic-signs/favorites",
+    "source": "src/app/traffic-signs/favorites/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/unauthorized",
+    "source": "src/app/unauthorized/page.tsx",
+    "group": "public"
+  },
+  {
+    "route": "/videos",
+    "source": "src/app/videos/page.tsx",
+    "group": "public"
+  }
+]

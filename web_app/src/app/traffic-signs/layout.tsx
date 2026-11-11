@@ -16,15 +16,30 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const copy = getTrafficSignsSeoCopy(locale);
   const canonical = buildLocalizedUrl("/traffic-signs", locale, APP_URL);
+  const isEnglishTrafficSignsCtrPilot = locale === "en";
+  const seoTitle = toBrandedMetadataTitle(
+    isEnglishTrafficSignsCtrPilot
+      ? "Belgian Road Signs & Traffic Signs Explained"
+      : copy.title,
+  );
+  const seoDescription = isEnglishTrafficSignsCtrPilot
+    ? "Explore 184 Belgian road and traffic signs with clear meanings. Learn priority, warning and prohibition signs for the Belgian driving theory exam."
+    : copy.description;
+  const socialTitle = isEnglishTrafficSignsCtrPilot
+    ? seoTitle
+    : toBrandedMetadataTitle(copy.openGraphTitle);
+  const socialDescription = isEnglishTrafficSignsCtrPilot
+    ? seoDescription
+    : copy.openGraphDescription;
 
   return {
-    title: { absolute: toBrandedMetadataTitle(copy.title) },
-    description: copy.description,
+    title: { absolute: seoTitle },
+    description: seoDescription,
     keywords: copy.keywords,
     alternates: getLocalizedAlternates("/traffic-signs", locale, APP_URL),
     openGraph: {
-      title: toBrandedMetadataTitle(copy.openGraphTitle),
-      description: copy.openGraphDescription,
+      title: socialTitle,
+      description: socialDescription,
       url: canonical,
       siteName: "Rijvia",
       locale: getOpenGraphLocale(locale),
@@ -41,8 +56,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: toBrandedMetadataTitle(copy.openGraphTitle),
-      description: copy.openGraphDescription,
+      title: socialTitle,
+      description: socialDescription,
       images: ["/opengraph-image"],
     },
   };

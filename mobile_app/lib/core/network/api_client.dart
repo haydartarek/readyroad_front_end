@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../constants/api_constants.dart';
 
 /// API Client using Dio
@@ -18,10 +19,13 @@ class ApiClient {
       ),
     );
 
-    // Add interceptors for logging
-    _dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true, error: true),
-    );
+    // Keep network diagnostics in debug builds without exposing user data in
+    // production logs.
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(requestBody: false, responseBody: false, error: true),
+      );
+    }
   }
 
   /// GET Request

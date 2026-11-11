@@ -37,6 +37,8 @@ dependencies:
 
   # Network
   dio: ^5.4.0
+  # Already present in pubspec.lock; PKCE uses its verified SHA-256 implementation.
+  crypto: 3.0.7
 
   # Dependency Injection
   get_it: ^7.6.4
@@ -47,11 +49,17 @@ dependencies:
 
   # Deep Links
   app_links: ^6.3.4
+  # Opens the existing hosted Stripe Checkout in the system browser.
+  url_launcher: ^6.3.2
 
   # Internationalization
   intl: ^0.20.2
   flutter_localizations:
     sdk: flutter
+  file_selector: 1.1.0
+  markdown: 7.3.1
+  unorm_dart: 0.3.3
+  timezone: 0.11.2
 
 dev_dependencies:
   flutter_test:
@@ -82,7 +90,20 @@ flutter:
   assets:
     # Translation files
     - lib/l10n/
-    - assets/branding/readyroad-app-icon.png
+    - assets/branding/rijvia-app-icon.png
+    - assets/branding/rijvia-auth-mark.png
+    - assets/branding/rijvia-wordmark.png
+    - assets/branding/rijvia-wordmark-dark.png
+    - assets/web_reference/
+    - assets/fonts/tajawal/OFL.txt
+
+  fonts:
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/tajawal/Tajawal-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/tajawal/Tajawal-Bold.ttf
+          weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

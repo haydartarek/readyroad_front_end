@@ -1,9 +1,13 @@
+import '../../design_system/widgets/rijvia_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../shared/models/category.dart';
 import '../../shared/models/content_item.dart';
 import '../../core/di/service_locator.dart';
-import '../../core/constants/api_constants.dart';
+import '../../design_system/widgets/rijvia_components.dart';
+import '../../design_system/widgets/rijvia_content.dart';
+import 'widgets/rijvia_sign_card.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/providers/language_provider.dart';
 import '../../core/providers/favorites_provider.dart';
 import '../../shared/services/content_service.dart';
@@ -24,16 +28,6 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
   List<ContentItem> _contentItems = [];
   bool _isLoading = true;
   String? _error;
-
-  String _toBackendImageUrl(String imageUrl) {
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    if (imageUrl.startsWith('/images/signs/')) {
-      return '${ApiConstants.baseUrl}$imageUrl';
-    }
-    return imageUrl;
-  }
 
   @override
   void initState() {
@@ -68,7 +62,7 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
     final languageCode = context.watch<LanguageProvider>().currentLanguage;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.category.getName(languageCode))),
+      appBar: RijviaAppBar(title: Text(widget.category.getName(languageCode))),
       body: _buildBody(),
     );
   }
@@ -86,7 +80,7 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'Error loading content',
+              AppLocalizations.of(context).t('signs.load_error'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
@@ -102,7 +96,7 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
             ElevatedButton.icon(
               onPressed: _loadContent,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(AppLocalizations.of(context).t('dashboard.retry')),
             ),
           ],
         ),
@@ -117,7 +111,7 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
             Icon(Icons.content_paste, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No content in this category',
+              AppLocalizations.of(context).t('signs.empty'),
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ],
@@ -125,119 +119,48 @@ class _CategorySignsScreenState extends State<CategorySignsScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadContent,
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.85,
+    return RijviaScrollFrame(
+      child: RefreshIndicator(
+        onRefresh: _loadContent,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            RijviaAdaptiveGrid(
+              minCellWidth: MediaQuery.textScalerOf(context).scale(260),
+              maxColumns: 3,
+              children: _contentItems.map(_buildContentCard).toList(),
+            ),
+          ],
         ),
-        itemCount: _contentItems.length,
-        itemBuilder: (context, index) {
-          final item = _contentItems[index];
-          return _buildContentCard(item);
-        },
       ),
     );
   }
 
-  Widget _buildContentCard(ContentItem item) {
-    return Consumer2<LanguageProvider, FavoritesProvider>(
-      builder: (context, languageProvider, favoritesProvider, child) {
-        final isFavorite = favoritesProvider.isFavorite(item.id);
-
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SignDetailsScreen(content: item),
-                ),
-              );
-            },
-            child: Stack(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Image placeholder
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        color: Colors.grey[200],
-                        child:
-                            item.imageUrl != null && item.imageUrl!.isNotEmpty
-                            ? Image.network(
-                                _toBackendImageUrl(item.imageUrl!),
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.image,
-                                    size: 48,
-                                    color: Colors.grey,
-                                  );
-                                },
-                              )
-                            : const Icon(
-                                Icons.image,
-                                size: 48,
-                                color: Colors.grey,
-                              ),
-                      ),
-                    ),
-                    // Content info
-                    Expanded(
-                      flex: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.code,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: Colors.grey[600]),
-                            ),
-                            const SizedBox(height: 4),
-                            Expanded(
-                              child: Text(
-                                item.getName(languageProvider.currentLanguage),
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                // Favorite button
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: IconButton(
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorite ? Colors.red : Colors.white,
-                    ),
-                    onPressed: () {
-                      favoritesProvider.toggleFavorite(item.id);
-                    },
+  Widget _buildContentCard(ContentItem item) =>
+      Consumer2<LanguageProvider, FavoritesProvider>(
+        builder: (context, language, favorites, _) => RijviaSignCard(
+          item: item,
+          language: language.currentLanguage,
+          isFavorite: favorites.isFavorite(item.id),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => SignDetailsScreen(content: item)),
+          ),
+          onFavorite: () async {
+            try {
+              await favorites.toggleFavorite(item.id);
+            } catch (_) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context).t('favorites.load_error'),
                   ),
                 ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+              );
+            }
+          },
+        ),
+      );
 }

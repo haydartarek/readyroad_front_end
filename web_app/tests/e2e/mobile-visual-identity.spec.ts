@@ -2520,7 +2520,7 @@ test.describe("RijVia mobile visual identity", () => {
     }
   });
 
-  test("exam start button matches the large secondary action height at every target viewport", async ({
+  test("exam start button keeps its height and fits at every target viewport", async ({
     context,
     page,
   }) => {
@@ -2531,10 +2531,10 @@ test.describe("RijVia mobile visual identity", () => {
     await navigate(page, localizedPath("/exam", "ar"));
 
     const startButton = page.getByTestId("exam-start-button");
-    const backButton = page.getByTestId("exam-back-button");
     await expect(startButton).toBeVisible();
     await expect(startButton).toBeEnabled();
-    await expect(backButton).toBeVisible();
+    await expect(page.getByTestId("exam-back-button")).toHaveCount(0);
+    await expect(page.getByTestId("seo-intent-links-theoryExam")).toHaveCount(0);
 
     const targetWidths = [320, 375, 768, 1024, 1440] as const;
     let primaryBackground = "";
@@ -2549,20 +2549,16 @@ test.describe("RijVia mobile visual identity", () => {
       );
 
       const metrics = await startButton.evaluate((element) => {
-        const back = document.querySelector<HTMLElement>(
-          '[data-testid="exam-back-button"]',
-        );
         const icon = element.querySelector<SVGElement>("svg");
         const label = element.querySelector<HTMLElement>(
           '[data-testid="exam-start-button-label"]',
         );
         const parent = element.parentElement;
-        if (!back || !icon || !label || !parent) {
+        if (!icon || !label || !parent) {
           throw new Error("Exam action button structure is incomplete");
         }
 
         const buttonRect = element.getBoundingClientRect();
-        const backRect = back.getBoundingClientRect();
         const iconRect = icon.getBoundingClientRect();
         const labelRect = label.getBoundingClientRect();
         const parentRect = parent.getBoundingClientRect();
@@ -2575,7 +2571,6 @@ test.describe("RijVia mobile visual identity", () => {
           documentWidth: document.documentElement.scrollWidth,
           bodyWidth: document.body.scrollWidth,
           height: buttonRect.height,
-          backHeight: backRect.height,
           width: buttonRect.width,
           left: buttonRect.left,
           right: buttonRect.right,
@@ -2607,7 +2602,6 @@ test.describe("RijVia mobile visual identity", () => {
         documentWidth: width,
         bodyWidth: width,
         height: 44,
-        backHeight: 44,
         alignItems: "center",
         justifyContent: "center",
         columnGap: "8px",

@@ -48,7 +48,12 @@ class _UnauthenticatedRepository implements AuthRepository {
   }
 
   @override
-  Future<User> register(String email, String password, String name) {
+  Future<User> register(
+    String username,
+    String email,
+    String password,
+    String name,
+  ) {
     throw UnimplementedError();
   }
 

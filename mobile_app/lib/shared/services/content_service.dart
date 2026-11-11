@@ -18,7 +18,8 @@ class ContentService {
       final response = await _apiClient.get(ApiConstants.trafficSigns);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data;
+        final body = response.data;
+        final List<dynamic> data = body is List ? body : body['signs'] as List;
         return data.map((json) => ContentItem.fromJson(json)).toList();
       } else {
         throw Exception('Failed to load content');
@@ -29,6 +30,13 @@ class ContentService {
   }
 
   /// Get content item by ID
+  Future<ContentItem> getContentByCode(String code) async {
+    final response = await _apiClient.get(
+      '${ApiConstants.trafficSigns}/${Uri.encodeComponent(code)}',
+    );
+    return ContentItem.fromJson(Map<String, dynamic>.from(response.data));
+  }
+
   Future<ContentItem> getContentById(int id) async {
     try {
       final response = await _apiClient.get('${ApiConstants.trafficSigns}/$id');

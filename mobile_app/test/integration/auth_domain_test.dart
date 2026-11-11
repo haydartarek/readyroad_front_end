@@ -138,7 +138,12 @@ class _MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<User> register(String email, String password, String name) async {
+  Future<User> register(
+    String username,
+    String email,
+    String password,
+    String name,
+  ) async {
     throw UnimplementedError();
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/language_provider.dart';
+import '../../core/localization/app_localizations.dart';
 
 /// Language Selector Widget
 class LanguageSelector extends StatelessWidget {
@@ -11,16 +12,11 @@ class LanguageSelector extends StatelessWidget {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return PopupMenuButton<String>(
-          icon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                languageProvider.currentLanguageOption.flag,
-                style: const TextStyle(fontSize: 20),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.arrow_drop_down),
-            ],
+          tooltip: AppLocalizations.of(context).navLanguage,
+          padding: EdgeInsets.zero,
+          icon: Text(
+            languageProvider.currentLanguageOption.label,
+            style: Theme.of(context).textTheme.labelMedium,
           ),
           onSelected: (languageCode) {
             languageProvider.setLanguage(languageCode);
@@ -32,11 +28,17 @@ class LanguageSelector extends StatelessWidget {
                 value: lang.code,
                 child: Row(
                   children: [
-                    Text(lang.flag, style: const TextStyle(fontSize: 20)),
+                    Text(
+                      lang.label,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(width: 12),
-                    Text(lang.name),
+                    Expanded(child: Text(lang.name)),
                     if (isSelected) ...[
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       Icon(Icons.check, color: Theme.of(context).primaryColor),
                     ],
                   ],

@@ -1,5 +1,6 @@
 import TrafficSignDetailClient from "@/app/traffic-signs/[signCode]/sign-detail-client";
-import { getPublicTrafficSign } from "@/lib/server/public-catalog";
+import { getPublicLessons, getPublicTrafficSign } from "@/lib/server/public-catalog";
+import { hasSignLessonRules } from "@/components/seo/inline-link-rules";
 import RelatedLearningArticles from "@/components/content/related-learning-articles";
 import { localizePathname } from "@/lib/i18n-routing";
 import { getRelatedPublicArticles } from "@/lib/server/articles";
@@ -18,14 +19,18 @@ export default async function TrafficSignDetailPage({
     `/traffic-signs/${encodeURIComponent(signCode)}`,
     locale,
   );
-  const [sign, relatedArticles] = await Promise.all([
+  const [sign, relatedArticles, lessons] = await Promise.all([
     getPublicTrafficSign(signCode),
     getRelatedPublicArticles(locale, targetPath),
+    hasSignLessonRules(signCode) ? getPublicLessons() : Promise.resolve([]),
   ]);
 
   return (
     <>
-      <TrafficSignDetailClient initialSign={sign} />
+      <TrafficSignDetailClient
+        initialSign={sign}
+        availableLessonCodes={lessons.map((lesson) => lesson.lessonCode)}
+      />
       <RelatedLearningArticles articles={relatedArticles} locale={locale} />
     </>
   );

@@ -35,7 +35,13 @@ class AppLocalizations {
   }
 
   /// Shorthand for translate
-  String t(String key) => translate(key);
+  String t(String key, [Map<String, Object> params = const {}]) {
+    var value = translate(key);
+    for (final entry in params.entries) {
+      value = value.replaceAll('{${entry.key}}', entry.value.toString());
+    }
+    return value;
+  }
 
   // ========== APP ==========
   String get appName => translate('app.name');
@@ -71,6 +77,40 @@ class AppLocalizations {
   String get authHaveAccount => translate('auth.have_account');
   String get authSignIn => translate('auth.sign_in');
   String get authSignUp => translate('auth.sign_up');
+  String get authRegistrationTitle => translate('auth.registration_title');
+  String get authRegistrationSubtitle =>
+      translate('auth.registration_subtitle');
+  String get authRegistrationSubmit => translate('auth.registration_submit');
+  String get authForgotPasswordTitle => translate('auth.forgot_password_title');
+  String get authForgotPasswordDescription =>
+      translate('auth.forgot_password_description');
+  String get authForgotPasswordSubmit =>
+      translate('auth.forgot_password_submit');
+  String get authForgotPasswordSent => translate('auth.forgot_password_sent');
+  String get authResetPasswordTitle => translate('auth.reset_password_title');
+  String get authResetPasswordToken => translate('auth.reset_password_token');
+  String get authResetPasswordNew => translate('auth.reset_password_new');
+  String get authResetPasswordConfirm =>
+      translate('auth.reset_password_confirm');
+  String get authResetPasswordSubmit => translate('auth.reset_password_submit');
+  String get authResetPasswordSuccess =>
+      translate('auth.reset_password_success');
+  String get authBackToLogin => translate('auth.back_to_login');
+  String get authValidationRequired => translate('auth.validation.required');
+  String get authValidationEmailInvalid =>
+      translate('auth.validation.email_invalid');
+  String get authValidationPasswordShort =>
+      translate('auth.validation.password_short');
+  String get authValidationPasswordMismatch =>
+      translate('auth.validation.password_mismatch');
+  String get authValidationUsernameLength =>
+      translate('auth.validation.username_length');
+  String get authValidationUsernameChars =>
+      translate('auth.validation.username_chars');
+  String get authValidationNameLength =>
+      translate('auth.validation.name_length');
+  String get authValidationTokenRequired =>
+      translate('auth.validation.token_required');
 
   // ========== EXAM ==========
   String get examStart => translate('exam.start');
@@ -144,6 +184,7 @@ class AppLocalizations {
   String get commonFilter => translate('common.filter');
   String get commonSort => translate('common.sort');
   String get commonActions => translate('common.actions');
+  String get commonRetry => translate('common.retry');
 
   // ========== DELEGATE ==========
   static const LocalizationsDelegate<AppLocalizations> delegate =

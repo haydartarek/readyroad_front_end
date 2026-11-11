@@ -1,12 +1,30 @@
 import '../../core/network/api_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../shared/models/category.dart';
+import '../../shared/models/content_item.dart';
+import '../../shared/services/content_service.dart';
 
 /// Category Service
 class CategoryService {
   final ApiClient _apiClient;
 
   CategoryService(this._apiClient);
+
+  /// Uses the same first sign with an image per category as web CategoriesPreview.
+  Future<Map<String, ContentItem>> getRepresentativeSigns() async {
+    final signs = await ContentService(_apiClient).getAllContent();
+    final representatives = <String, ContentItem>{};
+    for (final sign in signs) {
+      final code = sign.categoryCode?.trim().toUpperCase();
+      final category = code?.isNotEmpty == true
+          ? code!
+          : RegExp(r'^[A-Z]+').firstMatch(sign.code.toUpperCase())?.group(0);
+      if (category != null && sign.imageUrl?.trim().isNotEmpty == true) {
+        representatives.putIfAbsent(category, () => sign);
+      }
+    }
+    return representatives;
+  }
 
   /// Get all categories
   Future<List<Category>> getAllCategories() async {

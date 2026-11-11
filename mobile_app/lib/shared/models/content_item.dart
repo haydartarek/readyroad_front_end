@@ -21,6 +21,7 @@ class ContentItem {
   final String? descriptionFr;
   final String? imageUrl;
   final String? categoryCode;
+  final Map<String, dynamic> details;
   final String?
   contentType; // 'traffic_sign', 'math', 'medical', etc. (for UI hints only)
 
@@ -37,8 +38,17 @@ class ContentItem {
     this.descriptionFr,
     this.imageUrl,
     this.categoryCode,
+    this.details = const {},
     this.contentType,
   });
+
+  String get routeCode => (details['routeCode'] ?? code).toString();
+
+  String? localizedDetail(String field, String languageCode) {
+    final suffix = languageCode[0].toUpperCase() + languageCode.substring(1);
+    final value = details['$field$suffix'] ?? details['${field}En'];
+    return value is String && value.trim().isNotEmpty ? value : null;
+  }
 
   /// Get name by language code
   String getName(String languageCode) {
@@ -83,6 +93,7 @@ class ContentItem {
       descriptionFr: json['descriptionFr'] as String?,
       imageUrl: json['imageUrl'] as String?,
       categoryCode: json['categoryCode'] as String?,
+      details: Map<String, dynamic>.unmodifiable(json),
       contentType: json['contentType'] as String?,
     );
   }
@@ -90,6 +101,7 @@ class ContentItem {
   /// To JSON
   Map<String, dynamic> toJson() {
     return {
+      ...details,
       'id': id,
       'code': code,
       'nameEn': nameEn,
@@ -131,6 +143,7 @@ class ContentItem {
     String? descriptionFr,
     String? imageUrl,
     String? categoryCode,
+    Map<String, dynamic>? details,
     String? contentType,
   }) {
     return ContentItem(
@@ -146,6 +159,7 @@ class ContentItem {
       descriptionFr: descriptionFr ?? this.descriptionFr,
       imageUrl: imageUrl ?? this.imageUrl,
       categoryCode: categoryCode ?? this.categoryCode,
+      details: details ?? this.details,
       contentType: contentType ?? this.contentType,
     );
   }

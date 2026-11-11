@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "@/components/localized-link";
-import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -269,25 +267,9 @@ export default function TheoryExamEntry() {
                   </span>
                 </Button>
 
-                <Button
-                  data-testid="exam-back-button"
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  className="h-11 min-h-11 w-full min-w-0 shrink-0 rounded-full border-primary/15 bg-background/85 px-7 font-semibold text-secondary shadow-sm ring-1 ring-primary/10 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:text-primary hover:shadow-md active:translate-y-0 sm:w-auto"
-                >
-                  <Link href="/practice">
-                    {t("practice_exam.back_practice")}
-                  </Link>
-                </Button>
               </div>
             </div>
           </section>
-
-          <SeoIntentLinks
-            page="theoryExam"
-            excludeHrefs={["/practice"]}
-          />
 
           <PageSectionSurface
             className="border-primary/10 bg-card/80 shadow-sm ring-1 ring-primary/[0.03]"

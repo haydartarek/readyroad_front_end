@@ -59,8 +59,9 @@ export function createArticleMetadata(
   locale: SiteLocale,
 ): Metadata {
   const canonical = buildLocalizedUrl(articlePath(article.slug), locale, APP_URL);
-  const title = toBrandedMetadataTitle(article.title);
-  const description = toMetadataDescription(
+  const isDutchTheoryExamCtrPilot = locale === 'nl' && article.slug === 'hoeveel-vragen-theorie-examen-rijbewijs-b-belgie';
+  const title = toBrandedMetadataTitle(isDutchTheoryExamCtrPilot ? 'Theorie-examen B België: 50 vragen, 41/50 nodig' : article.title);
+  const description = isDutchTheoryExamCtrPilot ? 'Hoeveel vragen en punten heb je nodig voor het theorie-examen rijbewijs B in België? Ontdek de 50 vragen, de slaaggrens van 41/50 en hoe fouten meetellen.' : toMetadataDescription(
     normalizeSeoBrand(article.summary),
     normalizeSeoBrand(article.title),
   );

@@ -7,7 +7,6 @@ const localeCases = [
     path: "/",
     ctas: [
       "Start exam",
-      "Start practicing",
       "View progress",
     ],
   },
@@ -16,7 +15,6 @@ const localeCases = [
     path: "/nl",
     ctas: [
       "Start het examen",
-      "Start met oefenen",
       "Bekijk je voortgang",
     ],
   },
@@ -25,7 +23,6 @@ const localeCases = [
     path: "/fr",
     ctas: [
       "Commencer l'examen",
-      "Commencer l'entraînement",
       "Voir ma progression",
     ],
   },
@@ -34,7 +31,6 @@ const localeCases = [
     path: "/ar",
     ctas: [
       "ابدأ الامتحان",
-      "ابدأ التدريب",
       "اعرض تقدمك",
     ],
   },
@@ -117,9 +113,9 @@ test.describe("Homepage learning feature cards", () => {
           parent: element.parentElement!.getBoundingClientRect().width,
         }));
         expect(headingWidth.actual / headingWidth.parent).toBeCloseTo(width >= 1024 ? 2 / 3 : 1, 2);
-        await expect(cards).toHaveCount(3);
-        await expect(links).toHaveCount(3);
-        await expect(ctas).toHaveCount(3);
+        await expect(cards).toHaveCount(2);
+        await expect(links).toHaveCount(2);
+        await expect(ctas).toHaveCount(2);
 
         for (const [index, cta] of localeCase.ctas.entries()) {
           await expect(ctas.nth(index)).toContainText(cta);

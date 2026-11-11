@@ -1,27 +1,34 @@
+import '../../domain/entities/session_validation_failure.dart';
 import '../../domain/entities/user.dart';
 
-/// Auth States
+/// Auth states. A stored token is never treated as proof of server validation.
 abstract class AuthState {}
 
-/// Initial state
 class AuthInitial extends AuthState {}
 
-/// Loading state
 class AuthLoading extends AuthState {}
 
-/// Authenticated state (logged in)
+/// The user was verified by the server in this or a previous session.
+/// When [validationIssue] is non-null, only the encrypted verified snapshot
+/// is available; the client must not assume server-dependent writes succeeded.
 class Authenticated extends AuthState {
   final User user;
+  final SessionValidationIssue? validationIssue;
 
-  Authenticated(this.user);
+  Authenticated(this.user, {this.validationIssue});
 }
 
-/// Unauthenticated state (logged out)
 class Unauthenticated extends AuthState {}
 
-/// Auth error state
+/// A token still exists, but connectivity prevented verification and there is
+/// no verified cached user to display. Do not redirect to login automatically.
+class AuthRevalidationRequired extends AuthState {
+  final SessionValidationIssue issue;
+  AuthRevalidationRequired(this.issue);
+}
+
 class AuthError extends AuthState {
   final String message;
-
-  AuthError(this.message);
+  final String? messageKey;
+  AuthError(this.message, {this.messageKey});
 }

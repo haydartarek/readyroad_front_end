@@ -10,6 +10,7 @@ class SecureStorageService {
   static const String _keyRefreshToken = 'refresh_token';
   static const String _keyUserId = 'user_id';
   static const String _keyUserEmail = 'user_email';
+  static const String _keyVerifiedUser = 'verified_user_snapshot';
 
   /// Save access token securely
   Future<void> saveAccessToken(String token) async {
@@ -51,7 +52,17 @@ class SecureStorageService {
     return await _storage.read(key: _keyUserEmail);
   }
 
-  /// Check if user is authenticated (has valid token)
+  /// Verified server identity, retained only in encrypted local storage.
+  /// The repository validates its ID/email against the saved identity before use.
+  Future<void> saveVerifiedUserSnapshot(String json) async {
+    await _storage.write(key: _keyVerifiedUser, value: json);
+  }
+
+  Future<String?> getVerifiedUserSnapshot() async {
+    return _storage.read(key: _keyVerifiedUser);
+  }
+
+  /// Check if user has a persisted token (not proof that it is still valid).
   Future<bool> isAuthenticated() async {
     final token = await getAccessToken();
     return token != null && token.isNotEmpty;
@@ -63,6 +74,7 @@ class SecureStorageService {
     await _storage.delete(key: _keyRefreshToken);
     await _storage.delete(key: _keyUserId);
     await _storage.delete(key: _keyUserEmail);
+    await _storage.delete(key: _keyVerifiedUser);
   }
 
   /// Clear all storage (complete reset)

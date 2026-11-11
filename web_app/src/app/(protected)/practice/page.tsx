@@ -20,7 +20,6 @@ import {
   PageSectionSurface,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
-import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { useAuth } from "@/contexts/auth-context";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { resolveTrafficSignImage } from "@/lib/sign-image-resolver";
@@ -237,11 +236,6 @@ export default function PracticePage() {
             {t("practice.hub.subtitle")}
           </PageHeroDescription>
         </header>
-
-        <SeoIntentLinks
-          page="practice"
-          excludeHrefs={["/practice/random"]}
-        />
 
         {serviceUnavailable && (
           <ServiceUnavailableBanner

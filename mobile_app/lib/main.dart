@@ -1,29 +1,30 @@
+import 'core/navigation/web_route_registry.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_links/app_links.dart';
 import 'core/di/service_locator.dart';
+import 'core/network/authenticated_api_client.dart';
 import 'core/constants/app_theme.dart';
+import 'core/constants/api_constants.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/providers/language_provider.dart';
 import 'core/providers/favorites_provider.dart';
+import 'core/providers/favorites_api_gateway.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/providers/statistics_provider.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
-import 'features/auth/presentation/screens/login_screen.dart';
-import 'features/home/home_screen.dart';
-import 'features/exam/exam_screen.dart';
-import 'features/quiz/quiz_screen.dart';
-import 'features/statistics/statistics_screen.dart';
-import 'features/lessons/lessons_list_screen.dart';
-import 'features/favorites/favorites_screen.dart';
-import 'features/search/search_screen.dart';
+import 'features/auth/presentation/auth_session_messages.dart';
+import 'features/auth/data/services/google_oauth_service.dart';
+import 'features/home/rijvia_app_shell.dart';
 
 void main() {
+  ApiConstants.validateConfiguration();
   // Setup Dependency Injection
   setupDependencies();
 
@@ -37,12 +38,17 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  String? _boundAuthUserId;
+  // One AuthBloc instance drives both session checks and the UI.
+  // This also holds when dependency injection uses registerFactory in tests.
+  late final AuthBloc _authBloc;
   late AppLinks _appLinks;
   StreamSubscription? _deepLinkSubscription;
 
   /// Pending deep link stored as Uri to preserve query parameters
   Uri? _pendingDeepLink;
+  bool _handledGoogleCallback = false;
 
   /// Global navigator key for navigation from outside BuildContext
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
@@ -50,17 +56,53 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _authBloc = getIt<AuthBloc>();
+    // A 401 means the stored session must be rechecked locally; do not
+    // send a second remote logout request with an already invalid token.
+    if (getIt.isRegistered<AuthenticatedApiClient>()) {
+      getIt<AuthenticatedApiClient>().onUnauthorized = () {
+        if (mounted && !_authBloc.isClosed) {
+          _authBloc.add(CheckAuthEvent());
+        }
+      };
+    }
+    // Run the initial auth check once, not on each MaterialApp rebuild.
+    if (!(kIsWeb && _handleGoogleCallback(Uri.base))) {
+      _authBloc.add(CheckAuthEvent());
+    }
     _initDeepLinks();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _deepLinkSubscription?.cancel();
+    if (getIt.isRegistered<AuthenticatedApiClient>()) {
+      getIt<AuthenticatedApiClient>().onUnauthorized = null;
+    }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || _authBloc.isClosed) return;
+    final current = _authBloc.state;
+    if (current is AuthRevalidationRequired ||
+        (current is Authenticated && current.validationIssue != null)) {
+      _authBloc.add(CheckAuthEvent());
+    }
   }
 
   /// Initialize deep link handling
   Future<void> _initDeepLinks() async {
+    if (kIsWeb) {
+      if (!_handledGoogleCallback &&
+          (Uri.base.path != "/" || Uri.base.hasFragment)) {
+        _handleDeepLink(Uri.base);
+      }
+      return;
+    }
     _appLinks = AppLinks();
 
     // Handle initial deep link (app was closed)
@@ -84,106 +126,103 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  /// Handle deep link navigation
+  bool _handleGoogleCallback(Uri uri) {
+    if (!getIt.isRegistered<GoogleOAuthService>()) return false;
+    final oauth = getIt<GoogleOAuthService>();
+    if (!oauth.isCallback(uri)) return false;
+    if (_handledGoogleCallback) return true;
+    _handledGoogleCallback = true;
+    try {
+      final callback = oauth.consumeCallback(uri);
+      _pendingDeepLink = Uri.parse(
+        WebRouteRegistry.safeReturn(callback.returnPath),
+      );
+      _authBloc.add(GoogleCallbackEvent(callback));
+    } on GoogleAuthFailure catch (error) {
+      _authBloc.add(GoogleCallbackEvent.failed(error.messageKey));
+    } catch (_) {
+      _authBloc.add(GoogleCallbackEvent.failed('auth.google.invalid_callback'));
+    }
+    return true;
+  }
+
+  /// Deep links and in-app links use the same route and access rules.
   void _handleDeepLink(Uri uri) {
-    debugPrint('Deep link received: $uri');
-
-    // Normalize path
-    String path = uri.path;
-    if (path.isEmpty || path == '/') {
-      path = '/home';
-    }
-
-    // Protected routes requiring authentication
-    const protectedRoutes = [
-      '/dashboard',
-      '/exam',
-      '/practice',
-      '/analytics',
-      '/profile',
-      '/lessons',
-      '/favorites',
-      '/search',
-      '/quiz',
-    ];
-
-    final isProtectedRoute = protectedRoutes.any(
-      (route) => path.startsWith(route),
-    );
-
-    // Check auth state
-    final authBloc = getIt<AuthBloc>();
-    final authState = authBloc.state;
-
-    // Store pending deep link if protected and not authenticated
-    if (isProtectedRoute && authState is! Authenticated) {
-      // Store full URI to preserve query parameters
-      _pendingDeepLink = uri;
-      debugPrint('Pending deep link (requires auth): $uri');
-      return;
-    }
-
-    // Navigate immediately if authenticated or public route
+    if (_handleGoogleCallback(uri)) return;
     _navigateToDeepLink(uri);
   }
 
-  /// Execute navigation to deep link destination
   void _navigateToDeepLink(Uri uri) {
     final navigator = _navigatorKey.currentState;
     if (navigator == null) {
-      debugPrint('Navigator not ready, storing deep link: $uri');
       _pendingDeepLink = uri;
       return;
     }
+    final local = Uri(
+      path: uri.path,
+      query: uri.hasQuery ? uri.query : null,
+      fragment: uri.hasFragment ? uri.fragment : null,
+    );
+    navigator.pushNamed(local.toString());
+  }
 
-    final path = uri.path.isEmpty ? '/home' : uri.path;
-    final queryParams = uri.queryParameters;
+  void _flushPendingDeepLink() {
+    final pending = _pendingDeepLink;
+    if (pending == null || _navigatorKey.currentState == null) return;
+    _pendingDeepLink = null;
+    _navigateToDeepLink(pending);
+  }
 
-    debugPrint('Navigating to: $path with params: $queryParams');
-
-    // Route mapping - match path to screen
-    Widget? targetScreen;
-
-    if (path.startsWith('/exam')) {
-      targetScreen = const ExamScreen();
-    } else if (path.startsWith('/quiz') || path.startsWith('/practice')) {
-      targetScreen = const QuizScreen();
-    } else if (path.startsWith('/analytics') ||
-        path.startsWith('/statistics')) {
-      targetScreen = const StatisticsScreen();
-    } else if (path.startsWith('/lessons')) {
-      targetScreen = const LessonsListScreen();
-    } else if (path.startsWith('/favorites')) {
-      targetScreen = const FavoritesScreen();
-    } else if (path.startsWith('/search')) {
-      targetScreen = const SearchScreen();
-    } else if (path.startsWith('/home') || path.startsWith('/dashboard')) {
-      // Already on home, no navigation needed
-      debugPrint('Deep link to home - no navigation needed');
-      return;
-    } else {
-      // Unknown route - fallback to home with warning
-      debugPrint('Unknown deep link route: $path - fallback to home');
-      return;
+  void _syncUserProviders(BuildContext context, AuthState state) {
+    if (state is Authenticated) {
+      if (_boundAuthUserId != state.user.id) {
+        _boundAuthUserId = state.user.id;
+        context.read<LanguageProvider>().applyAccountLanguage(
+          state.user.preferredLanguage,
+        );
+        context.read<FavoritesProvider>().bindToUser(state.user.id);
+        context.read<StatisticsProvider>().bindToUser(state.user.id);
+      }
+    } else if (state is Unauthenticated) {
+      if (_boundAuthUserId != null) {
+        _boundAuthUserId = null;
+        context.read<FavoritesProvider>().bindToUser(null);
+        context.read<StatisticsProvider>().bindToUser(null);
+      }
     }
-
-    // Push the target screen
-    navigator.push(MaterialPageRoute(builder: (context) => targetScreen!));
   }
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _flushPendingDeepLink(),
+    );
     return MultiBlocProvider(
       providers: [
         // Auth BLoC (global)
-        BlocProvider<AuthBloc>(
-          create: (context) => getIt<AuthBloc>()..add(CheckAuthEvent()),
-        ),
+        BlocProvider<AuthBloc>.value(value: _authBloc),
       ],
       child: MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => LanguageProvider()),
-          ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+          ChangeNotifierProvider(
+            create: (_) => LanguageProvider(
+              persistAccountLanguage: (language) async {
+                if (_authBloc.state is! Authenticated) return;
+                final response = await getIt<AuthenticatedApiClient>().patch(
+                  '/api/users/me/preferred-language',
+                  data: {'preferredLanguage': language},
+                );
+                if ((response.statusCode ?? 500) >= 400) {
+                  throw StateError('Language preference was not saved');
+                }
+              },
+            ),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => FavoritesProvider(
+              gateway: FavoritesApiGateway(getIt<AuthenticatedApiClient>()),
+            ),
+          ),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => StatisticsProvider()),
         ],
@@ -198,9 +237,11 @@ class _MyAppState extends State<MyApp> {
                 : TextDirection.ltr;
 
             return MaterialApp(
-              title: 'RijVia',
+              title: 'Rijvia',
               debugShowCheckedModeBanner: false,
               navigatorKey: _navigatorKey,
+              initialRoute: "/",
+              onGenerateRoute: WebRouteRegistry.generate,
 
               // Localization Setup
               locale: locale,
@@ -234,6 +275,44 @@ class _MyAppState extends State<MyApp> {
               // Home Route (Auth-based)
               home: BlocConsumer<AuthBloc, AuthState>(
                 listener: (context, state) {
+                  _syncUserProviders(context, state);
+
+                  final messenger = ScaffoldMessenger.of(context);
+                  if (state is AuthError && state.messageKey != null) {
+                    final message = AppLocalizations.of(
+                      context,
+                    ).t(state.messageKey!);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(message)),
+                        );
+                      }
+                    });
+                  }
+                  messenger.clearMaterialBanners();
+                  if (state is Authenticated && state.validationIssue != null) {
+                    final language = Localizations.localeOf(
+                      context,
+                    ).languageCode;
+                    messenger.showMaterialBanner(
+                      MaterialBanner(
+                        leading: const Icon(Icons.wifi_off_outlined),
+                        content: Text(
+                          AuthSessionMessages.issue(
+                            state.validationIssue!,
+                            language,
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => _authBloc.add(CheckAuthEvent()),
+                            child: Text(AuthSessionMessages.retry(language)),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
                   // Handle pending deep link after successful authentication
                   if (state is Authenticated && _pendingDeepLink != null) {
                     final deepLink = _pendingDeepLink!;
@@ -249,15 +328,61 @@ class _MyAppState extends State<MyApp> {
                   }
                 },
                 builder: (context, state) {
+                  // Restored auth may precede this listener while locales load.
+                  // Apply the same binding once after the initial frame.
+                  if (state is Authenticated &&
+                      _boundAuthUserId != state.user.id) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (context.mounted) {
+                        _syncUserProviders(context, _authBloc.state);
+                      }
+                    });
+                  }
                   // Show appropriate screen based on auth state
                   if (state is AuthLoading || state is AuthInitial) {
                     return const Scaffold(
                       body: Center(child: CircularProgressIndicator()),
                     );
                   } else if (state is Authenticated) {
-                    return const HomeScreen();
+                    return const RijviaAppShell();
+                  } else if (state is AuthRevalidationRequired) {
+                    final language = Localizations.localeOf(
+                      context,
+                    ).languageCode;
+                    return Scaffold(
+                      body: SafeArea(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.cloud_off_outlined, size: 44),
+                                const SizedBox(height: 16),
+                                Text(
+                                  AuthSessionMessages.issue(
+                                    state.issue,
+                                    language,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                FilledButton.icon(
+                                  onPressed: () =>
+                                      _authBloc.add(CheckAuthEvent()),
+                                  icon: const Icon(Icons.refresh),
+                                  label: Text(
+                                    AuthSessionMessages.retry(language),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
                   } else {
-                    return const LoginScreen();
+                    return const RijviaAppShell();
                   }
                 },
               ),

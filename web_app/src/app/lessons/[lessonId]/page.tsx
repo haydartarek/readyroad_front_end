@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import {
   getPublicLesson,
   getPublicLessons,
+  getPublicTrafficSignCatalog,
 } from "@/lib/server/public-catalog";
+import { hasLessonSignRules } from "@/components/seo/inline-link-rules";
 import LessonStructuredData from "@/app/lessons/[lessonId]/lesson-structured-data";
 import LessonKeywordSupport from "@/components/lessons/lesson-keyword-support";
 import RelatedLearningArticles from "@/components/content/related-learning-articles";
@@ -38,7 +40,12 @@ export default async function LessonDetailPage({
     return <MissingLesson />;
   }
 
-  const relatedArticles = await getRelatedPublicArticles(locale, targetPath);
+  const [relatedArticles, publicSigns] = await Promise.all([
+    getRelatedPublicArticles(locale, targetPath),
+    hasLessonSignRules(lesson?.lessonCode ?? lessonId)
+      ? getPublicTrafficSignCatalog()
+      : Promise.resolve([]),
+  ]);
 
   return (
     <>
@@ -46,6 +53,7 @@ export default async function LessonDetailPage({
       <LessonDetailClient
         initialLesson={lesson}
         initialLessons={lessons}
+        availableSignCodes={publicSigns.map((sign) => sign.routeCode)}
       />
       {lesson && (
         <LessonKeywordSupport lessonCode={lesson.lessonCode} locale={locale} />

@@ -1,0 +1,6 @@
+{
+  "chat.agent.sandbox.network.allowLocalNetwork": true,
+  "chat.agent.sandbox.fileSystem.userConfiguredPaths": {
+    
+  }
+}

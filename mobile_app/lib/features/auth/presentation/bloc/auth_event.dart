@@ -1,3 +1,5 @@
+import '../../data/services/google_oauth_service.dart';
+
 /// Auth Events
 abstract class AuthEvent {}
 
@@ -11,11 +13,13 @@ class LoginEvent extends AuthEvent {
 
 /// Register event
 class RegisterEvent extends AuthEvent {
+  final String username;
   final String email;
   final String password;
   final String name;
 
   RegisterEvent({
+    required this.username,
     required this.email,
     required this.password,
     required this.name,
@@ -30,3 +34,15 @@ class CheckAuthEvent extends AuthEvent {}
 
 /// Get current user event
 class GetCurrentUserEvent extends AuthEvent {}
+
+class GoogleSignInEvent extends AuthEvent {
+  final String language;
+  GoogleSignInEvent(this.language);
+}
+
+class GoogleCallbackEvent extends AuthEvent {
+  final GoogleOAuthCallback? callback;
+  final String? failureKey;
+  GoogleCallbackEvent(this.callback) : failureKey = null;
+  GoogleCallbackEvent.failed(this.failureKey) : callback = null;
+}

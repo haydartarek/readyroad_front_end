@@ -1,6 +1,8 @@
 /// Category Model
 class Category {
   final int id;
+  final String? code;
+  final int? signCount;
   final String nameEn;
   final String nameAr;
   final String nameNl;
@@ -12,6 +14,8 @@ class Category {
 
   Category({
     required this.id,
+    this.code,
+    this.signCount,
     required this.nameEn,
     required this.nameAr,
     required this.nameNl,
@@ -54,6 +58,8 @@ class Category {
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
       id: json['id'],
+      code: json['code']?.toString(),
+      signCount: (json['signCount'] as num?)?.toInt(),
       nameEn: json['nameEn'],
       nameAr: json['nameAr'],
       nameNl: json['nameNl'],
@@ -69,6 +75,8 @@ class Category {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      if (code != null) 'code': code,
+      if (signCount != null) 'signCount': signCount,
       'nameEn': nameEn,
       'nameAr': nameAr,
       'nameNl': nameNl,

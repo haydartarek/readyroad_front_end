@@ -8,7 +8,6 @@ import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-ba
 import { LoadErrorState } from "@/components/ui/load-error-state";
 import { PageLoading } from "@/components/ui/page-loading";
 import { useLanguage } from "@/contexts/language-context";
-import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
   PageHeroDescription,
@@ -122,8 +121,6 @@ export default function LessonsClient({
             {t("lessons.page_subtitle")}
           </PageHeroDescription>
         </header>
-
-        <SeoIntentLinks page="lessons" />
 
         <PageSectionSurface
           className="mt-8 rounded-[30px] border-border/50 bg-card/80 p-6"

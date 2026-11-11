@@ -1,13 +1,20 @@
+import '../../design_system/widgets/rijvia_answer_option.dart';
+import '../../design_system/widgets/rijvia_content.dart';
+import '../../design_system/widgets/rijvia_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/providers/language_provider.dart';
-import '../../core/constants/api_constants.dart';
-import '../../shared/models/quiz_models.dart';
-import '../../shared/models/category.dart';
-import 'quiz_service.dart';
-import 'quiz_result_screen.dart';
 
-/// Quiz Screen - Main quiz interface
+import '../../core/constants/api_constants.dart';
+import '../../core/di/service_locator.dart';
+import '../../core/localization/app_localizations.dart';
+import '../../core/providers/language_provider.dart';
+import '../../core/network/authenticated_api_client.dart';
+import '../../shared/models/category.dart';
+import '../../shared/models/quiz_models.dart';
+import '../../shared/widgets/service_unavailable_banner.dart';
+import 'quiz_result_screen.dart';
+import 'quiz_service.dart';
+
 class QuizScreen extends StatefulWidget {
   final Category? category;
   final int questionCount;
@@ -19,86 +26,136 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  final QuizService _quizService = QuizService();
-
-  List<QuizQuestion>? _questions;
+  final QuizService _quizService = getIt<QuizService>();
+  List<QuizQuestion> _questions = const [];
   int _currentQuestionIndex = 0;
   int _correctAnswers = 0;
   int _wrongAnswers = 0;
   int? _selectedAnswer;
   bool _isAnswered = false;
+  bool _isSubmitting = false;
   bool _isLoading = true;
   String? _error;
-
-  late DateTime _startTime;
-
-  String _toBackendImageUrl(String imageUrl) {
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    if (imageUrl.startsWith('/images/signs/')) {
-      return '${ApiConstants.baseUrl}$imageUrl';
-    }
-    return imageUrl;
-  }
+  bool _serviceUnavailable = false;
+  PracticeAnswerFeedback? _feedback;
+  final List<QuizReviewItem> _review = [];
+  late DateTime _quizStartTime;
+  late DateTime _questionStartTime;
 
   @override
   void initState() {
     super.initState();
-    _startTime = DateTime.now();
+    _quizStartTime = DateTime.now();
+    _questionStartTime = _quizStartTime;
     _loadQuiz();
   }
 
   Future<void> _loadQuiz() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+        _serviceUnavailable = false;
+        _questions = const [];
+        _currentQuestionIndex = 0;
+        _correctAnswers = 0;
+        _wrongAnswers = 0;
+        _selectedAnswer = null;
+        _feedback = null;
+        _review.clear();
+        _isAnswered = false;
+      });
+    }
     try {
       final questions = await _quizService.generateQuiz(
         categoryId: widget.category?.id,
         questionCount: widget.questionCount,
       );
-
+      if (!mounted) return;
       setState(() {
         _questions = questions;
+        _quizStartTime = DateTime.now();
+        _questionStartTime = _quizStartTime;
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (error) {
+      if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = error.toString();
+        _serviceUnavailable = AuthenticatedApiClient.isServiceUnavailable(
+          error,
+        );
         _isLoading = false;
       });
     }
   }
 
-  void _selectAnswer(int index) {
-    if (_isAnswered) return;
-
+  Future<void> _selectAnswer(int optionId) async {
+    if (_isAnswered || _isSubmitting || _questions.isEmpty) return;
+    final question = _questions[_currentQuestionIndex];
     setState(() {
-      _selectedAnswer = index;
-      _isAnswered = true;
-
-      if (_questions![_currentQuestionIndex].isCorrect(index)) {
-        _correctAnswers++;
-      } else {
-        _wrongAnswers++;
-      }
+      _selectedAnswer = optionId;
+      _isSubmitting = true;
     });
 
-    // Auto advance after 1.5 seconds
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) _nextQuestion();
-    });
+    try {
+      final feedback = await _quizService.submitAnswer(
+        question.id,
+        optionId,
+        DateTime.now().difference(_questionStartTime),
+      );
+      if (!mounted) return;
+      setState(() {
+        _feedback = feedback;
+        _isAnswered = true;
+        _isSubmitting = false;
+        if (feedback.isCorrect) {
+          _correctAnswers++;
+        } else {
+          _wrongAnswers++;
+        }
+        _review.add(
+          QuizReviewItem(
+            question: question,
+            selectedOptionId: optionId,
+            correctOptionId: feedback.correctOptionId,
+            explanationEn: feedback.explanationEn,
+            explanationAr: feedback.explanationAr,
+            explanationNl: feedback.explanationNl,
+            explanationFr: feedback.explanationFr,
+          ),
+        );
+      });
+      Future<void>.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted && _isAnswered) _nextQuestion();
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _selectedAnswer = null;
+        _serviceUnavailable = AuthenticatedApiClient.isServiceUnavailable(
+          error,
+        );
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).t('practice.result_error'),
+          ),
+        ),
+      );
+    }
   }
 
   void _nextQuestion() {
-    if (_currentQuestionIndex < _questions!.length - 1) {
+    if (_currentQuestionIndex < _questions.length - 1) {
       setState(() {
         _currentQuestionIndex++;
         _selectedAnswer = null;
+        _feedback = null;
         _isAnswered = false;
+        _questionStartTime = DateTime.now();
       });
     } else {
       _finishQuiz();
@@ -106,164 +163,215 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _finishQuiz() {
-    final timeTaken = DateTime.now().difference(_startTime);
+    if (_questions.isEmpty) return;
     final result = QuizResult(
-      totalQuestions: _questions!.length,
+      totalQuestions: _questions.length,
       correctAnswers: _correctAnswers,
       wrongAnswers: _wrongAnswers,
-      timeTaken: timeTaken,
+      timeTaken: DateTime.now().difference(_quizStartTime),
       categoryId: widget.category?.id,
+      review: List.unmodifiable(_review),
     );
-
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => QuizResultScreen(result: result)),
+      MaterialPageRoute(
+        builder: (_) => QuizResultScreen(
+          result: result,
+          retryBuilder: (_) => QuizScreen(
+            category: widget.category,
+            questionCount: widget.questionCount,
+          ),
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final language = context.watch<LanguageProvider>().currentLanguage;
+    final isArabic = language == 'ar';
+    final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final shouldPop = await _showExitDialog();
-        if (shouldPop == true && context.mounted) {
-          Navigator.of(context).pop();
-        }
+        final shouldPop = await _showExitDialog(isArabic);
+        if (shouldPop == true && context.mounted) Navigator.of(context).pop();
       },
       child: Scaffold(
-        appBar: AppBar(
+        appBar: RijviaAppBar(
           title: Text(
-            widget.category != null
-                ? '${widget.category!.getName('en')} Quiz'
-                : 'Content Quiz',
+            widget.category == null
+                ? l10n.t('practice.quiz')
+                : '${widget.category!.getName(language)} ${l10n.t('practice.quiz_suffix')}',
           ),
           actions: [
-            if (_questions != null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 16),
+            if (_questions.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
                   child: Text(
-                    '${_currentQuestionIndex + 1}/${_questions!.length}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    '${_currentQuestionIndex + 1}/${_questions.length}',
                   ),
                 ),
               ),
           ],
         ),
-        body: _buildBody(),
+        body: RijviaScrollFrame(
+          maxWidth: 950,
+          child: _buildBody(language, isArabic),
+        ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(String language, bool isArabic) {
+    final l10n = AppLocalizations.of(context);
     if (_isLoading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Generating quiz...'),
-          ],
-        ),
-      );
-    }
-
-    if (_error != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text('Error: $_error'),
-            const SizedBox(height: 24),
-            ElevatedButton(onPressed: _loadQuiz, child: const Text('Retry')),
+            Text(l10n.t('practice.loading_questions')),
           ],
         ),
       );
     }
+    if (_error != null) {
+      if (_serviceUnavailable) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ServiceUnavailableBanner(onRetry: _loadQuiz),
+        );
+      }
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                l10n.t('practice.result_error'),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadQuiz,
+                child: Text(l10n.t('dashboard.retry')),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_questions.isEmpty) {
+      return Center(child: Text(l10n.t('practice.no_questions')));
+    }
 
-    final question = _questions![_currentQuestionIndex];
-    final languageCode = context.watch<LanguageProvider>().currentLanguage;
-
+    final question = _questions[_currentQuestionIndex];
     return Column(
       children: [
-        // Progress bar
         LinearProgressIndicator(
-          value: (_currentQuestionIndex + 1) / _questions!.length,
-          backgroundColor: Colors.grey[300],
+          value: (_currentQuestionIndex + 1) / _questions.length,
         ),
-
-        // Score
-        Container(
+        Padding(
           padding: const EdgeInsets.all(16),
-          color: Colors.grey[100],
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildScoreItem(
                 Icons.check_circle,
                 Colors.green,
-                'Correct',
+                l10n.t('practice.correct'),
                 _correctAnswers,
               ),
-              _buildScoreItem(Icons.cancel, Colors.red, 'Wrong', _wrongAnswers),
+              _buildScoreItem(
+                Icons.cancel,
+                Colors.red,
+                l10n.t('practice.wrong'),
+                _wrongAnswers,
+              ),
             ],
           ),
         ),
-
-        // Question
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // Question image
-                Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            children: [
+              if (question.contentImageUrl != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: ColoredBox(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    child: SizedBox(
+                      height: 200,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            _resolveImageUrl(question.contentImageUrl!),
+                            fit: BoxFit.contain,
+                            semanticLabel: l10n.t('media.question_image'),
+                            errorBuilder: (_, _, _) =>
+                                const Icon(Icons.image, size: 100),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  child:
-                      question.correctContent.imageUrl != null &&
-                          question.correctContent.imageUrl!.isNotEmpty
-                      ? Image.network(
-                          _toBackendImageUrl(question.correctContent.imageUrl!),
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.image, size: 100);
-                          },
-                        )
-                      : const Icon(Icons.image, size: 100),
                 ),
-
-                const SizedBox(height: 24),
-
-                Text(
-                  'What is this?',
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
+              const SizedBox(height: 16),
+              Text(
+                question.questionFor(language),
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+              if (question.difficultyLevel.isNotEmpty ||
+                  question.questionType.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  children: [
+                    if (question.difficultyLevel.isNotEmpty)
+                      Chip(
+                        label: Text(
+                          _difficultyLabel(question.difficultyLevel, l10n),
+                        ),
+                      ),
+                    if (question.questionType.isNotEmpty)
+                      Chip(label: Text(question.questionType)),
+                  ],
                 ),
-
-                const SizedBox(height: 24),
-
-                // Options
-                ...List.generate(question.options.length, (index) {
-                  return _buildOption(
-                    index,
-                    question.options[index].getName(languageCode),
-                    question,
-                  );
-                }),
               ],
-            ),
+              const SizedBox(height: 20),
+              ...question.options.map(
+                (option) => _buildOption(option, question, language),
+              ),
+              if (_feedback != null) ...[
+                const SizedBox(height: 12),
+                Card(
+                  color: _feedback!.isCorrect
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      _feedback!.explanationFor(language).isEmpty
+                          ? (_feedback!.isCorrect
+                                ? l10n.t('practice.correct_answer')
+                                : l10n.t('practice.incorrect_answer'))
+                          : _feedback!.explanationFor(language),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -275,94 +383,69 @@ class _QuizScreenState extends State<QuizScreen> {
       children: [
         Icon(icon, color: color),
         const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-            Text(
-              '$value',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
+        Text('$label: $value'),
       ],
     );
   }
 
-  Widget _buildOption(int index, String text, QuizQuestion question) {
-    Color? backgroundColor;
-    Color? borderColor;
-    IconData? icon;
-
-    if (_isAnswered) {
-      final isCorrect = question.isCorrect(index);
-      final isSelected = _selectedAnswer == index;
-
-      if (isCorrect) {
-        backgroundColor = Colors.green.withValues(alpha: 0.1);
-        borderColor = Colors.green;
-        icon = Icons.check_circle;
-      } else if (isSelected && !isCorrect) {
-        backgroundColor = Colors.red.withValues(alpha: 0.1);
-        borderColor = Colors.red;
-        icon = Icons.cancel;
-      }
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => _selectAnswer(index),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            border: Border.all(
-              color: borderColor ?? Colors.grey[300]!,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  text,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              if (icon != null) Icon(icon, color: borderColor),
-            ],
-          ),
-        ),
-      ),
+  Widget _buildOption(
+    QuizAnswerOption option,
+    QuizQuestion question,
+    String language,
+  ) {
+    final isSelected = _selectedAnswer == option.id;
+    final isCorrect = _feedback?.correctOptionId == option.id;
+    final isWrongSelection = _isAnswered && isSelected && !isCorrect;
+    return RijviaAnswerOption(
+      index: question.options.indexOf(option),
+      text: option.textFor(language),
+      state: isCorrect
+          ? RijviaAnswerState.correct
+          : isWrongSelection
+          ? RijviaAnswerState.incorrect
+          : isSelected
+          ? RijviaAnswerState.selected
+          : _isAnswered
+          ? RijviaAnswerState.neutral
+          : RijviaAnswerState.idle,
+      onSelect: _isAnswered || _isSubmitting
+          ? null
+          : () => _selectAnswer(option.id),
     );
   }
 
-  Future<bool?> _showExitDialog() {
+  Future<bool?> _showExitDialog(bool isArabic) {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Exit Quiz?'),
-        content: const Text('Your progress will be lost.'),
+        title: Text(isArabic ? 'مغادرة الاختبار؟' : 'Exit quiz?'),
+        content: Text(
+          isArabic
+              ? 'سيتم فقدان تقدم هذا الاختبار.'
+              : 'This quiz progress will be lost.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Exit', style: TextStyle(color: Colors.red)),
+            child: Text(isArabic ? 'مغادرة' : 'Exit'),
           ),
         ],
       ),
     );
   }
+
+  String _difficultyLabel(String value, AppLocalizations l10n) {
+    return switch (value.toUpperCase()) {
+      'EASY' => l10n.t('practice.easy'),
+      'HARD' => l10n.t('practice.hard'),
+      _ => l10n.t('practice.medium'),
+    };
+  }
+
+  String _resolveImageUrl(String path) =>
+      ApiConstants.resolveMediaUrl(path) ?? path;
 }

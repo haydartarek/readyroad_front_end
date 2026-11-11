@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
+import { PilotInlineLink } from "@/components/seo/pilot-inline-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -101,9 +102,11 @@ function getPageContent(page: LessonPage, lang: string) {
 export default function LessonDetailClient({
   initialLesson,
   initialLessons,
+  availableSignCodes = [],
 }: Readonly<{
   initialLesson: LessonDetail | null;
   initialLessons: Lesson[];
+  availableSignCodes?: readonly string[];
 }>) {
   const params = useParams();
   const lessonIdOrCode = params.lessonId as string;
@@ -479,7 +482,14 @@ export default function LessonDetailClient({
                               key={index}
                               className="break-words text-base leading-8 text-foreground/90"
                             >
-                              {paragraph}
+                              <PilotInlineLink
+                                lessonCode={lesson.lessonCode}
+                                pageNumber={currentPage.pageNumber}
+                                paragraphIndex={index}
+                                paragraphs={paragraphs}
+                                text={paragraph}
+                                availableSignCodes={availableSignCodes}
+                              />
                             </p>
                           );
                         })}

@@ -3,6 +3,9 @@ import '../network/api_client.dart';
 import '../network/authenticated_api_client.dart';
 import '../storage/secure_storage_service.dart';
 import '../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../features/auth/data/services/auth_recovery_service.dart';
+import '../../features/auth/data/services/social_auth_service.dart';
+import '../../features/auth/data/services/google_oauth_service.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
@@ -11,8 +14,11 @@ import '../../features/auth/domain/usecases/get_current_user_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/categories/category_service.dart';
 import '../../features/lessons/lesson_service.dart';
+import '../../features/categories/sign_quiz_service.dart';
 import '../../features/exam/exam_question_service.dart';
-import '../../features/practice/practice_question_service.dart';
+import '../../features/exam/exam_payment_service.dart';
+import '../../features/dashboard/dashboard_service.dart';
+import '../../features/quiz/quiz_service.dart';
 import '../../shared/services/content_service.dart';
 
 /// Service Locator for Dependency Injection
@@ -36,6 +42,16 @@ void setupDependencies() {
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSource(getIt<AuthenticatedApiClient>()),
   );
+  getIt.registerLazySingleton<AuthRecoveryService>(
+    () => AuthRecoveryService(getIt<AuthenticatedApiClient>()),
+  );
+  getIt.registerLazySingleton<SocialAuthService>(
+    () => SocialAuthService(
+      getIt<AuthRemoteDataSource>(),
+      getIt<SecureStorageService>(),
+    ),
+  );
+  getIt.registerLazySingleton<GoogleOAuthService>(() => GoogleOAuthService());
 
   // Auth Feature - Repositories
   getIt.registerLazySingleton<AuthRepository>(
@@ -59,12 +75,17 @@ void setupDependencies() {
   );
 
   // Auth Feature - BLoC
-  getIt.registerFactory<AuthBloc>(
+  // Authentication is application-scoped. A factory here creates a second
+  // bloc for deep-link checks, so it can report AuthInitial while the visible
+  // app is already authenticated. Keep one source of truth for the whole app.
+  getIt.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       loginUseCase: getIt<LoginUseCase>(),
       logoutUseCase: getIt<LogoutUseCase>(),
       getCurrentUserUseCase: getIt<GetCurrentUserUseCase>(),
       authRepository: getIt<AuthRepository>(),
+      googleOAuth: getIt<GoogleOAuthService>(),
+      socialAuth: getIt<SocialAuthService>(),
     ),
   );
 
@@ -78,14 +99,27 @@ void setupDependencies() {
   );
 
   getIt.registerLazySingleton<LessonService>(
-    () => LessonService(getIt<ApiClient>()),
+    () => LessonService(getIt<ApiClient>(), getIt<AuthenticatedApiClient>()),
   );
 
   getIt.registerLazySingleton<ExamQuestionService>(
-    () => ExamQuestionService(getIt<ApiClient>()),
+    () => ExamQuestionService(getIt<AuthenticatedApiClient>()),
+  );
+  getIt.registerLazySingleton<ExamPaymentService>(
+    () => ExamPaymentService(
+      getIt<AuthenticatedApiClient>(),
+      getIt<SecureStorageService>(),
+    ),
+  );
+  getIt.registerLazySingleton<DashboardService>(
+    () => DashboardService(getIt<AuthenticatedApiClient>()),
   );
 
-  getIt.registerLazySingleton<PracticeQuestionService>(
-    () => PracticeQuestionService(getIt<ApiClient>()),
+  getIt.registerLazySingleton<SignQuizService>(
+    () => SignQuizService(getIt<AuthenticatedApiClient>()),
+  );
+
+  getIt.registerLazySingleton<QuizService>(
+    () => QuizService(getIt<ApiClient>(), getIt<AuthenticatedApiClient>()),
   );
 }

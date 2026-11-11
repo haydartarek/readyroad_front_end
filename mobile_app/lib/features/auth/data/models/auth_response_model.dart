@@ -13,10 +13,26 @@ class AuthResponseModel {
 
   /// From JSON
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
+    // The Spring Boot API returns a flat AuthResponse. Keep the nested shape
+    // internally so the existing domain layer remains stable.
+    final nestedUser = json['user'];
+    final user = nestedUser is Map<String, dynamic>
+        ? nestedUser
+        : <String, dynamic>{
+            'id': json['userId'],
+            'username': json['username'],
+            'email': json['email'],
+            'fullName': json['fullName'],
+            'preferredLanguage': json['preferredLanguage'],
+            'role': json['role'],
+            'emailVerified': json['emailVerified'],
+            'linkedProviders': json['linkedProviders'],
+            'googleLinked': json['googleLinked'],
+          };
     return AuthResponseModel(
       accessToken: json['accessToken'] ?? json['token'] ?? '',
       refreshToken: json['refreshToken'],
-      user: json['user'] ?? {},
+      user: user,
     );
   }
 

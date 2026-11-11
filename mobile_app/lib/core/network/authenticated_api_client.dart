@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../constants/api_constants.dart';
 import '../storage/secure_storage_service.dart';
 
@@ -9,6 +10,18 @@ class AuthenticatedApiClient {
 
   // Callback for unauthorized access (401/403)
   Function()? onUnauthorized;
+
+  static bool isServiceUnavailable(Object error) {
+    if (error is DioException) {
+      final status = error.response?.statusCode;
+      return status == 502 ||
+          status == 503 ||
+          status == 504 ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout;
+    }
+    return false;
+  }
 
   AuthenticatedApiClient(this._secureStorage) {
     _dio = Dio(
@@ -28,10 +41,13 @@ class AuthenticatedApiClient {
       InterceptorsWrapper(onRequest: _onRequest, onError: _onError),
     );
 
-    // Add logging interceptor
-    _dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true, error: true),
-    );
+    // Keep network diagnostics in debug builds without exposing tokens or
+    // account data in production logs.
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(requestBody: false, responseBody: false, error: true),
+      );
+    }
   }
 
   /// Attach JWT token to every request
@@ -50,22 +66,41 @@ class AuthenticatedApiClient {
     handler.next(options);
   }
 
-  /// Handle errors (especially 401/403 unauthorized)
+  /// Invalid credentials on login/register are NOT an expired session.
+  /// Only a rejected authenticated request invalidates an existing token.
+  static bool shouldInvalidateSession({
+    required int? statusCode,
+    required String requestPath,
+    required bool hadBearerToken,
+  }) {
+    if (statusCode != 401 || !hadBearerToken) return false;
+    const authActions = <String>{
+      '/api/auth/login',
+      '/api/auth/register',
+      '/api/auth/refresh',
+      '/api/auth/logout',
+    };
+    return !authActions.contains(requestPath);
+  }
+
+  /// Handle errors while retaining the distinction between 401 and 403.
   Future<void> _onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    // Handle unauthorized (401) or forbidden (403)
-    if (err.response?.statusCode == 401 || err.response?.statusCode == 403) {
-      // Clear auth data
+    final authorization = err.requestOptions.headers['Authorization'];
+    final hadBearerToken =
+        authorization is String &&
+        authorization.startsWith('Bearer ') &&
+        authorization.length > 'Bearer '.length;
+    if (shouldInvalidateSession(
+      statusCode: err.response?.statusCode,
+      requestPath: err.requestOptions.uri.path,
+      hadBearerToken: hadBearerToken,
+    )) {
       await _secureStorage.clearAuth();
-
-      // Trigger logout callback
-      if (onUnauthorized != null) {
-        onUnauthorized!();
-      }
+      onUnauthorized?.call();
     }
-
     handler.next(err);
   }
 
@@ -73,9 +108,10 @@ class AuthenticatedApiClient {
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
+    Options? options,
   }) async {
     try {
-      final response = await _dio.get(path, queryParameters: queryParameters);
+      final response = await _dio.get(path, queryParameters: queryParameters, options: options);
       return response;
     } catch (e) {
       rethrow;
@@ -83,9 +119,9 @@ class AuthenticatedApiClient {
   }
 
   /// POST Request
-  Future<Response> post(String path, {dynamic data}) async {
+  Future<Response> post(String path, {dynamic data, Options? options}) async {
     try {
-      final response = await _dio.post(path, data: data);
+      final response = await _dio.post(path, data: data, options: options);
       return response;
     } catch (e) {
       rethrow;
@@ -93,19 +129,23 @@ class AuthenticatedApiClient {
   }
 
   /// PUT Request
-  Future<Response> put(String path, {dynamic data}) async {
+  Future<Response> put(String path, {dynamic data, Options? options}) async {
     try {
-      final response = await _dio.put(path, data: data);
+      final response = await _dio.put(path, data: data, options: options);
       return response;
     } catch (e) {
       rethrow;
     }
   }
 
+  Future<Response> patch(String path, {dynamic data}) async {
+    return _dio.patch(path, data: data);
+  }
+
   /// DELETE Request
-  Future<Response> delete(String path) async {
+  Future<Response> delete(String path, {Options? options}) async {
     try {
-      final response = await _dio.delete(path);
+      final response = await _dio.delete(path, options: options);
       return response;
     } catch (e) {
       rethrow;

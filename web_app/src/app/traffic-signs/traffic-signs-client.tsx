@@ -4,9 +4,8 @@ import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "@/components/localized-link";
-import { SeoIntentLinks } from "@/components/seo/seo-intent-links";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Shapes } from "lucide-react";
+import { Heart, Shapes } from "lucide-react";
 import { TrafficSignsGrid } from "@/components/traffic-signs/traffic-signs-grid";
 import { TrafficSignsFilters } from "@/components/traffic-signs/traffic-signs-filters";
 import { ServiceUnavailableBanner } from "@/components/ui/service-unavailable-banner";
@@ -20,6 +19,8 @@ import {
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
+import { favoriteCopy, favoriteLocale } from "@/lib/road-sign-favorites";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import {
@@ -73,6 +74,8 @@ function TrafficSignsContent({
   initialSigns: TrafficSignCatalogItem[];
 }) {
   const { t, language } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const favoriteLabels = favoriteCopy[favoriteLocale(language)];
   const router = useLocalizedRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -287,6 +290,16 @@ function TrafficSignsContent({
             </PageHeroDescription>
           </div>
 
+          {isAuthenticated ? (
+            <Link
+              href="/traffic-signs/favorites"
+              className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-primary/20 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
+            >
+              <Heart className="h-4 w-4" aria-hidden="true" />
+              {favoriteLabels.collection}
+            </Link>
+          ) : null}
+
           <TrafficSignsFilters
             categories={categories}
             selectedCategory={category}
@@ -296,8 +309,6 @@ function TrafficSignsContent({
             onClearFilters={handleClearFilters}
           />
         </PageHeroSurface>
-
-        <SeoIntentLinks page="trafficSigns" />
 
         {activeGroup && (
           <PageSectionSurface>
@@ -349,7 +360,7 @@ function TrafficSignsContent({
             {groupedFilteredSigns.map(
               ({ group, signs, totalCount, info, style }) => (
                 <section key={group} className="space-y-3">
-                  <div className="flex flex-col gap-2.5 border-b border-border/60 pb-3 md:flex-row md:items-end md:justify-between">
+                  <div className="border-b border-border/60 pb-3">
                     <div className="flex items-start gap-3">
                       <div
                         className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-[1rem] bg-gradient-to-br ${style.accent} text-sm font-black text-white shadow-sm`}
@@ -357,21 +368,21 @@ function TrafficSignsContent({
                         {info.displayKey ?? group}
                       </div>
 
-                      <div className="space-y-0.5">
+                      <div className="min-w-0 flex-1 space-y-1">
                         <h2 className="text-lg font-black tracking-tight text-foreground md:text-xl">
                           {info.title[lang]}
+                          <span className="px-2 font-normal text-muted-foreground/70" aria-hidden="true">|</span>
+                          <span className="whitespace-nowrap text-sm font-semibold text-muted-foreground md:text-base">
+                            {t("traffic_signs.section_count", { count: totalCount })}
+                          </span>
                         </h2>
-                        <p className="line-clamp-2 max-w-3xl text-xs leading-5 text-muted-foreground md:text-sm">
+                        <p className="max-w-3xl break-words text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
                           {info.description[lang]}
                         </p>
                       </div>
                     </div>
 
-                    <span
-                      className={`inline-flex items-center self-start rounded-full border px-2.5 py-1 text-sm font-semibold ${style.chip}`}
-                    >
-                      {t("traffic_signs.section_count", { count: totalCount })}
-                    </span>
+
                   </div>
 
                   <TrafficSignsGrid signs={signs} />

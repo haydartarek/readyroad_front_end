@@ -210,6 +210,7 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
       </> : null}
       {error ? <p role="alert" className="rv-container py-3 text-destructive">{t(error)}</p> : null}
       {exam && question && !finished ? (
+        <div className="px-4 pb-8 pt-1 md:pt-2 lg:px-8">
         <FocusedExamShell dir={isRTL ? "rtl" : "ltr"} counter={`${index + 1} / ${total}`}
           progressPercent={total ? index * 100 / total : 0}
           difficultyLabel={difficultyLabel}
@@ -255,6 +256,7 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
             }
           />
         </FocusedExamShell>
+        </div>
       ) : finished && exam ? (
         <main className="rv-container space-y-5 pb-8">
           <PageSectionSurface title={t("category_exam.completed")}>

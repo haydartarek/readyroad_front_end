@@ -326,7 +326,7 @@ export default function PracticePage() {
 
 
         <PageSectionSurface
-          title={t("practice.hub.categories_section_title")}
+          title={t("practice.title")}
           description={t("practice.subtitle")}
           className={`mt-8 ${LEARNING_SECTION_CLASS}`}
         >
@@ -385,13 +385,26 @@ export default function PracticePage() {
                         </div>
 
                         <div className="min-w-0 flex-1 text-start">
-
+                          <span
+                            data-testid="practice-category-code"
+                            className="block text-sm font-extrabold tracking-[0.2em] text-primary"
+                          >
+                            {cat.code}
+                          </span>
                           <CardTitle
                             data-testid="practice-category-title"
                             className={LEARNING_CARD_TITLE_CLASS}
                           >
                             {cat.title}
                           </CardTitle>
+
+                          <Badge
+                            data-testid="practice-category-count"
+                            variant="secondary"
+                            className="mt-2.5 inline-flex max-w-full whitespace-normal break-words rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-center text-xs font-semibold text-primary"
+                          >
+                            {t("practice.signs.count", { count: cat.signCount })}
+                          </Badge>
 
                         </div>
 

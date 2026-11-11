@@ -404,6 +404,37 @@ function TrafficSignsContent({
           </div>
         )}
 
+        {filteredSigns.length > 0 ? (
+          <div className="mt-8">
+            <details className="rounded-2xl border border-border/60 bg-card/70 p-4">
+              <summary className="cursor-pointer text-sm font-bold text-foreground marker:text-primary">
+                {t("traffic_signs.all_sign_links", {
+                  count: filteredSigns.length,
+                })}
+              </summary>
+              <nav
+                aria-label={t("traffic_signs.all_sign_links", {
+                  count: filteredSigns.length,
+                })}
+                className="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              >
+                {filteredSigns.map((sign) => {
+                  const routeCode = sign.routeCode ?? sign.signCode;
+                  return (
+                    <Link
+                      key={routeCode}
+                      href={`/traffic-signs/${routeCode}`}
+                      className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      {getTrafficSignName(sign, lang)}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </details>
+          </div>
+        ) : null}
+
       </div>
     </div>
   );

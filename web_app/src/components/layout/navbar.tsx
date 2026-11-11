@@ -120,7 +120,7 @@ function NavLink({
       className={cn(
         "relative shrink-0 whitespace-nowrap rounded-lg px-2.5 py-2.5 text-sm font-semibold transition-colors duration-300 after:pointer-events-none after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:rounded-full after:bg-gradient-to-r after:from-primary after:to-secondary after:content-[''] after:transition-[transform,opacity] after:duration-[320ms] after:ease-in-out motion-reduce:after:transition-none sm:px-3 xl:px-2 xl:text-sm min-[1800px]:px-3",
         isActive
-          ? "text-foreground after:scale-x-100 after:opacity-100"
+          ? "bg-primary/10 text-foreground after:scale-x-100 after:opacity-100"
           : "text-muted-foreground hover:bg-background/85 hover:text-foreground after:scale-x-0 after:opacity-0",
       )}
     >
@@ -156,7 +156,9 @@ export function Navbar() {
   const isAdmin = user?.role === "ADMIN";
   const isStaff = user?.role === "ADMIN" || user?.role === "MODERATOR";
   const roleLabel = t(getRoleLabelKey(user?.role));
-  const primaryNavigationItems = NAV_ITEMS.filter((item) => language === "ar" || item.href !== ROUTES.VIDEOS);
+  const primaryNavigationItems = NAV_ITEMS.filter(
+    (item) => language === "ar" || item.href !== ROUTES.VIDEOS,
+  );
   const displayName = user?.fullName ?? user?.username ?? t("nav.profile");
   const userInitial = displayName.trim().charAt(0).toUpperCase();
   const isDarkTheme = resolvedTheme === "dark";

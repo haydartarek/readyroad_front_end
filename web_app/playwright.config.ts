@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3005);
 const backendPort = Number(process.env.PLAYWRIGHT_BACKEND_PORT ?? 8899);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
+const canonicalURL = process.env.PLAYWRIGHT_CANONICAL_URL ?? "https://rijvia.be";
 const useExternalServer = process.env.PLAYWRIGHT_EXTERNAL_SERVER === "true";
 
 export default defineConfig({
@@ -41,6 +42,7 @@ export default defineConfig({
         ...process.env,
         PORT: String(port),
         HOSTNAME: "127.0.0.1",
+        NEXT_PUBLIC_APP_URL: canonicalURL,
         PLAYWRIGHT_BACKEND_PORT: String(backendPort),
         BACKEND_URL: `http://127.0.0.1:${backendPort}/api`,
         NEXT_PUBLIC_API_BASE_URL: `http://127.0.0.1:${backendPort}/api`,

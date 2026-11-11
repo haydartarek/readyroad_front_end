@@ -165,7 +165,7 @@ test.describe("multilingual YouTube videos page", () => {
     expect(html).not.toContain("googleapis.com/youtube/v3");
   });
 
-  test("uses videos as the single header destination and preserves the route when switching language", async ({
+  test("keeps videos as an Arabic header destination and preserves the route when switching language", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1920, height: 900 });
@@ -175,9 +175,7 @@ test.describe("multilingual YouTube videos page", () => {
     const desktopVideosLink = desktopNavigation.getByRole("link", {
       name: "Driving Videos",
     });
-    await expect(desktopVideosLink).toHaveCount(1);
-    await expect(desktopVideosLink).toHaveAttribute("href", "/videos");
-    await expect(desktopVideosLink).toHaveClass(/bg-primary/);
+    await expect(desktopVideosLink).toHaveCount(0);
     await expect(
       desktopNavigation.getByRole("link", { name: "About" }),
     ).toHaveCount(0);

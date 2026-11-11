@@ -497,3 +497,41 @@ html[data-rijvia-consent="stored"] .rijvia-cookie-consent-banner {
     transform: rotate(6deg);
   }
 }
+
+/* Rijvia Arabic tracking normalization */
+@layer utilities {
+  html[lang="ar"] :is([class~="tracking-wide"], [class~="tracking-wider"], [class~="tracking-widest"], [class*="tracking-[0."]):not([dir="ltr"], [dir="ltr"] *):not([class*="select-none"]) {
+    letter-spacing: 0;
+  }
+}
+
+.rijvia-page-background {
+  background-image:
+    radial-gradient(
+      circle at top,
+      hsl(var(--brand-orange) / 0.10),
+      transparent 35%
+    ),
+    linear-gradient(
+      to bottom,
+      hsl(var(--muted)) 0%,
+      hsl(var(--background)) 22%
+    );
+}
+
+.rijvia-learning-page-background {
+  background-image:
+    radial-gradient(
+      circle at top,
+      hsl(var(--brand-orange) / 0.10),
+      transparent 35%
+    ),
+    linear-gradient(
+      to bottom,
+      hsl(var(--muted)) 0%,
+      hsl(var(--background)) 22%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: 100% 100vh;
+}

@@ -808,7 +808,7 @@ function DashboardSectionContent() {
         </div>
       )}
       {activeSection === "profile" && (
-        <div className="px-6 pb-6">
+        <div className="pb-6">
           <ProfilePageContent embedded />
         </div>
       )}

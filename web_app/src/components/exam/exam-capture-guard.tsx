@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { isAdmin, useAuth } from "@/contexts/auth-context";
 
 const SUPPORTED_LOCALES =
   new Set(["ar", "en", "fr", "nl"]);
@@ -106,10 +107,9 @@ export function ExamCaptureGuard() {
   const pathname =
     usePathname() || "/";
 
-  const active =
-    isProtectedExamPath(
-      pathname,
-    );
+  const { user } = useAuth();
+
+  const active = isProtectedExamPath(pathname) && !isAdmin(user);
 
   useEffect(() => {
     if (!active) {

@@ -71,7 +71,7 @@ function SectionHeader({
   return (
     <div className="flex min-w-0 items-center gap-3">
       <div
-        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}
+        className={`h-10 w-10 rounded-xl border border-current/10 flex shrink-0 items-center justify-center [&_svg]:size-[18px] ${color}`}
       >
         {icon}
       </div>
@@ -311,13 +311,13 @@ export function ProfilePageContent({
     <>
       <div
         className={cn(
-          !embedded && "min-h-screen bg-background",
+          embedded ? "min-h-screen rijvia-page-background" : "min-h-screen bg-background",
         )}
       >
         <div
           className={cn(
-            "mx-auto max-w-5xl px-4 space-y-8",
-            embedded ? "py-4" : "container py-10",
+            "mx-auto px-4 space-y-8",
+            embedded ? "max-w-6xl pt-8 pb-12" : "container max-w-5xl py-10",
           )}
         >
           {serviceUnavailable && (
@@ -327,7 +327,7 @@ export function ProfilePageContent({
           )}
 
           {/* ── Hero Banner ── */}
-          <PageHeroSurface>
+          <PageHeroSurface className="rounded-[30px] border-border/50 bg-card/80">
             <div className="flex min-w-0 flex-col items-center gap-5 sm:flex-row sm:items-end">
               {/* Avatar */}
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-3xl font-black text-primary shadow-sm sm:h-24 sm:w-24 sm:text-4xl">
@@ -381,11 +381,11 @@ export function ProfilePageContent({
           </PageHeroSurface>
 
           {/* ── Two-column layout ── */}
-          <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+          <div className="grid min-w-0 items-start gap-6 lg:grid-cols-3">
             {/* ── Left sidebar ── */}
-            <div className="min-w-0 space-y-6">
+            <div className="order-2 min-w-0 space-y-6">
               {/* Stats */}
-              <Card className="border-border/50 shadow-sm">
+              <Card className="rounded-[24px] border-border/50 bg-card/90 shadow-sm">
                 <CardHeader className="pb-3">
                   <SectionHeader
                     icon={<BarChart2 className="w-4 h-4" />}
@@ -415,7 +415,7 @@ export function ProfilePageContent({
               </Card>
 
               {/* Account Status */}
-              <Card className="border-border/50 shadow-sm">
+              <Card className="rounded-[24px] border-border/50 bg-card/90 shadow-sm">
                 <CardHeader className="pb-3">
                   <SectionHeader
                     icon={<ShieldCheck className="w-4 h-4" />}
@@ -471,55 +471,9 @@ export function ProfilePageContent({
                 </CardContent>
               </Card>
 
-              {isPrivileged && (
-                <Card className="border-primary/15 shadow-sm">
-                  <CardHeader className="pb-3">
-                    <SectionHeader
-                      icon={<KeyRound className="h-4 w-4" />}
-                      title={t("profile.permissions_summary")}
-                    />
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {(isAdmin
-                      ? [
-                          "profile.permission_users",
-                          "profile.permission_content",
-                          "profile.permission_settings",
-                        ]
-                      : [
-                          "profile.permission_review",
-                          "profile.permission_moderation",
-                        ]
-                    ).map((permission) => (
-                      <div
-                        key={permission}
-                        className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/25 px-3 py-2.5 text-xs font-semibold text-foreground"
-                      >
-                        <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
-                        {t(permission)}
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
 
-              {isPrivileged && (
-                <Card className="border-border/50 shadow-sm">
-                  <CardHeader className="pb-3">
-                    <SectionHeader
-                      icon={<LockKeyhole className="h-4 w-4" />}
-                      title={t("profile.security_information")}
-                    />
-                  </CardHeader>
-                  <CardContent>
-                    <p className="rounded-xl bg-muted/35 px-3 py-3 text-xs leading-5 text-muted-foreground">
-                      {t(isAdmin ? "profile.admin_security_help" : "profile.moderator_security_help")}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
 
-              {!isPrivileged && <Card className="border-border/50 shadow-sm">
+              {!isPrivileged && <Card className="rounded-[24px] border-border/50 bg-card/90 shadow-sm">
                 <CardHeader className="pb-3">
                   <SectionHeader
                     icon={<ShieldCheck className="w-4 h-4" />}
@@ -567,9 +521,9 @@ export function ProfilePageContent({
             </div>
 
             {/* ── Right main content ── */}
-            <div className="min-w-0 space-y-6 lg:col-span-2">
+            <div className="order-1 min-w-0 space-y-6 lg:col-span-2">
               {/* Personal Information */}
-              <Card className="border-border/50 shadow-sm">
+              <Card className="rounded-[24px] border-border/50 bg-card/90 shadow-sm">
                 <CardHeader className="pb-4">
                   <div className="flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <SectionHeader
@@ -731,7 +685,7 @@ export function ProfilePageContent({
               </Card>
 
               {/* Language Preferences */}
-              <Card className="border-border/50 shadow-sm">
+              <Card className="rounded-[24px] border-border/50 bg-card/90 shadow-sm">
                 <CardHeader className="pb-4">
                   <SectionHeader
                     icon={<Globe className="w-4 h-4" />}
@@ -771,6 +725,57 @@ export function ProfilePageContent({
                   </p>
                 </CardContent>
               </Card>
+
+              {isPrivileged && (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {isPrivileged && (
+                <Card className="rounded-[24px] border-border/50 bg-card/90 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <SectionHeader
+                      icon={<KeyRound className="h-4 w-4" />}
+                      title={t("profile.permissions_summary")}
+                    />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {(isAdmin
+                      ? [
+                          "profile.permission_users",
+                          "profile.permission_content",
+                          "profile.permission_settings",
+                        ]
+                      : [
+                          "profile.permission_review",
+                          "profile.permission_moderation",
+                        ]
+                    ).map((permission) => (
+                      <div
+                        key={permission}
+                        className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/25 px-3 py-3 text-sm font-semibold text-foreground"
+                      >
+                        <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                        {t(permission)}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+              {isPrivileged && (
+                <Card className="rounded-[24px] border-border/50 bg-card/90 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <SectionHeader
+                      icon={<LockKeyhole className="h-4 w-4" />}
+                      title={t("profile.security_information")}
+                    />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="rounded-xl bg-muted/35 px-3 py-3 text-sm leading-6 text-muted-foreground">
+                      {t(isAdmin ? "profile.admin_security_help" : "profile.moderator_security_help")}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+                </div>
+              )}
 
               {/* Danger Zone */}
               {!isPrivileged && <Card className="border-destructive/25 shadow-sm">

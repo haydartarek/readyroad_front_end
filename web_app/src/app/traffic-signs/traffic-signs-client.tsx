@@ -13,6 +13,9 @@ import { LoadErrorState } from "@/components/ui/load-error-state";
 import { PageLoading } from "@/components/ui/page-loading";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  LEARNING_PAGE_BACKGROUND_CLASS,
+  LEARNING_PAGE_CONTAINER_CLASS,
+  LEARNING_SECTION_CLASS,
   PageHeroDescription,
   PageHeroSurface,
   PageSectionSurface,
@@ -37,7 +40,9 @@ type Lang = "en" | "ar" | "nl" | "fr";
 async function getAllTrafficSigns(): Promise<TrafficSignCatalogItem[]> {
   const response = await apiClient.get<
     TrafficSign[] | { signs: TrafficSign[] }
-  >(API_ENDPOINTS.TRAFFIC_SIGNS.LIST);
+  >(API_ENDPOINTS.TRAFFIC_SIGNS.LIST, undefined, {
+    skipAuthRedirect: true,
+  });
   const data = response.data;
   return Array.isArray(data) ? data : (data.signs ?? []);
 }
@@ -276,11 +281,11 @@ function TrafficSignsContent({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/35">
-      <div className="container mx-auto px-4 pt-8 pb-6 md:pt-8 md:pb-7 space-y-5 md:space-y-6">
+    <div className={LEARNING_PAGE_BACKGROUND_CLASS}>
+      <div className={LEARNING_PAGE_CONTAINER_CLASS}>
         <Breadcrumb />
 
-        <PageHeroSurface contentClassName="space-y-3">
+        <header className="mt-8 max-w-3xl space-y-2">
           <div className="space-y-2">
             <PageHeroTitle className="max-w-3xl text-balance">
               {t("traffic_signs.page_title")}
@@ -289,7 +294,12 @@ function TrafficSignsContent({
               {t("traffic_signs.page_subtitle")}
             </PageHeroDescription>
           </div>
+        </header>
 
+        <PageHeroSurface
+          className={`mt-6 mb-6 md:mb-8 ${LEARNING_SECTION_CLASS}`}
+          contentClassName="space-y-3 border-s-0 p-0"
+        >
           {isAuthenticated ? (
             <Link
               href="/traffic-signs/favorites"
@@ -311,7 +321,7 @@ function TrafficSignsContent({
         </PageHeroSurface>
 
         {activeGroup && (
-          <PageSectionSurface>
+          <PageSectionSurface className={LEARNING_SECTION_CLASS}>
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="flex items-start gap-3">
                 <div
@@ -342,7 +352,9 @@ function TrafficSignsContent({
         )}
 
         {filteredSigns.length === 0 ? (
-          <PageSectionSurface className="rounded-[2rem] border-dashed text-center">
+          <PageSectionSurface
+            className={`${LEARNING_SECTION_CLASS} rounded-[2rem] border-dashed text-center`}
+          >
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Shapes className="h-8 w-8" />
             </div>
@@ -392,36 +404,6 @@ function TrafficSignsContent({
           </div>
         )}
 
-        {filteredSigns.length > 0 && (
-          <div>
-            <details className="rounded-lg border border-border/60 bg-card/70 p-4">
-              <summary className="cursor-pointer text-sm font-bold text-foreground marker:text-primary">
-                {t("traffic_signs.all_sign_links", {
-                  count: filteredSigns.length,
-                })}
-              </summary>
-              <nav
-                aria-label={t("traffic_signs.all_sign_links", {
-                  count: filteredSigns.length,
-                })}
-                className="mt-4 grid gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              >
-                {filteredSigns.map((sign) => {
-                  const routeCode = sign.routeCode ?? sign.signCode;
-                  return (
-                    <Link
-                      key={routeCode}
-                      href={`/traffic-signs/${routeCode}`}
-                      className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-                    >
-                      {getTrafficSignName(sign, lang)}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </details>
-          </div>
-        )}
       </div>
     </div>
   );

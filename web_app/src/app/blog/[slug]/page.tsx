@@ -8,7 +8,6 @@ import ArticleLearningCards from "@/components/blog/ArticleLearningCards";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
   PageHeroDescription,
-  PageHeroSurface,
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { localizePathname } from "@/lib/i18n-routing";
@@ -80,13 +79,13 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
     : null;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen rijvia-page-background text-foreground">
       <script
         id="article-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
-      <article className="container mx-auto max-w-5xl px-4 pt-8 pb-12 sm:px-6">
+      <article className="container mx-auto max-w-5xl px-4 pt-8 pb-8 md:pt-8 md:pb-12">
         <Breadcrumb
           items={[
             {
@@ -104,17 +103,17 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
           ]}
         />
 
-        <PageHeroSurface>
+        <header className="mt-8 max-w-3xl space-y-2">
           <PageHeroTitle className="text-balance">
             {article.title}
           </PageHeroTitle>
-          <PageHeroDescription className="max-w-3xl break-words leading-8">
+          <PageHeroDescription className="text-pretty break-words">
             {article.summary}
           </PageHeroDescription>
-        </PageHeroSurface>
+        </header>
 
         {article.image ? (
-          <figure className="mx-auto mt-8 max-w-4xl md:mt-10">
+          <figure className="mx-auto mt-8 mb-10 max-w-[800px] md:mt-10">
             <Image
               src={article.image.heroUrl}
               alt={article.image.altText}
@@ -122,7 +121,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
               height={1080}
               priority
               sizes="(max-width: 768px) 100vw, 896px"
-              className="h-auto w-full rounded-2xl border border-border/60 object-cover shadow-sm"
+              className="h-auto w-full rounded-[24px] border border-border/50 object-cover shadow-md shadow-black/10"
             />
             {imageCaption || imageCredit ? (
               <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">

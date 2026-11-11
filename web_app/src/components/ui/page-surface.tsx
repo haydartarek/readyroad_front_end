@@ -5,6 +5,23 @@ import { cn } from "@/lib/utils";
 
 type MetricTone = "default" | "primary" | "success" | "warning" | "danger";
 
+export const LEARNING_PAGE_BACKGROUND_CLASS =
+  "min-h-screen rijvia-learning-page-background";
+export const LEARNING_PAGE_CONTAINER_CLASS =
+  "container mx-auto px-4 pt-8 pb-8 md:pt-8 md:pb-12";
+export const LEARNING_SECTION_CLASS =
+  "rounded-[30px] border border-border/50 bg-card/80 p-6 sm:p-5";
+export const LEARNING_CARD_CLASS =
+  "group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-border/50 bg-card/90 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/10";
+export const LEARNING_CARD_ACCENT_CLASS =
+  "absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/70 via-secondary/50 to-primary/20 opacity-70";
+export const LEARNING_CARD_TITLE_CLASS =
+  "max-w-full break-words text-lg font-black leading-snug tracking-tight text-foreground sm:text-xl";
+export const LEARNING_SECTION_TITLE_CLASS =
+  "break-words text-lg font-black tracking-normal text-foreground sm:text-xl";
+export const LEARNING_SECTION_DESCRIPTION_CLASS =
+  "break-words text-xs leading-5 text-muted-foreground sm:text-sm";
+
 const METRIC_TONE_CLASSES: Record<MetricTone, string> = {
   default: "text-foreground",
   primary: "text-primary",
@@ -143,12 +160,12 @@ export function PageSectionSurface({
         <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 space-y-1">
             {title ? (
-              <h2 className="break-words text-lg font-black tracking-normal text-foreground sm:text-xl">
+              <h2 className={LEARNING_SECTION_TITLE_CLASS}>
                 {title}
               </h2>
             ) : null}
             {description ? (
-              <p className="break-words text-xs leading-5 text-muted-foreground sm:text-sm">
+              <p className={LEARNING_SECTION_DESCRIPTION_CLASS}>
                 {description}
               </p>
             ) : null}

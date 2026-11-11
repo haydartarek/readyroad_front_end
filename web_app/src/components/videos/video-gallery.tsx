@@ -26,8 +26,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
+  LEARNING_CARD_CLASS,
+  LEARNING_CARD_TITLE_CLASS,
+  LEARNING_PAGE_BACKGROUND_CLASS,
+  LEARNING_PAGE_CONTAINER_CLASS,
+  LEARNING_SECTION_CLASS,
+  LEARNING_SECTION_DESCRIPTION_CLASS,
+  LEARNING_SECTION_TITLE_CLASS,
   PageHeroDescription,
-  PageHeroSurface,
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { useLanguage } from "@/contexts/language-context";
@@ -128,10 +134,10 @@ export function VideoGallery({
 
   return (
     <main
-      className="min-h-screen bg-background text-foreground"
+      className={LEARNING_PAGE_BACKGROUND_CLASS}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="mx-auto w-full min-w-0 max-w-7xl px-4 pt-8 pb-8 sm:px-6 sm:pt-8 sm:pb-12">
+      <div className={LEARNING_PAGE_CONTAINER_CLASS}>
         <Breadcrumb
           items={[
             { label: t("nav.home"), href: "/" },
@@ -139,11 +145,11 @@ export function VideoGallery({
           ]}
         />
 
-        <PageHeroSurface className="mb-8">
+        <header className="mt-8 mb-8">
           <div className="flex min-w-0 flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0 max-w-3xl space-y-3">
-              <PageHeroTitle>{t("videos.hero_title")}</PageHeroTitle>
-              <PageHeroDescription className="max-w-2xl text-base leading-7">
+            <div className="min-w-0 max-w-3xl space-y-2">
+              <PageHeroTitle className="text-balance">{t("videos.hero_title")}</PageHeroTitle>
+              <PageHeroDescription className="text-pretty">
                 {t("videos.hero_description")}
               </PageHeroDescription>
             </div>
@@ -154,13 +160,13 @@ export function VideoGallery({
                 rel="noopener noreferrer"
                 className="shrink-0"
               >
-                <Youtube className="h-5 w-5" aria-hidden="true" />
+              <Youtube className="h-4 w-4" aria-hidden="true" />
                 {t("videos.visit_channel")}
                 <ExternalLink className="h-4 w-4" aria-hidden="true" />
               </a>
             </Button>
           </div>
-        </PageHeroSurface>
+        </header>
 
         {data?.stale ? (
           <div
@@ -202,12 +208,12 @@ export function VideoGallery({
         ) : null}
 
         {data && data.videos.length > 0 && filteredVideos.length === 0 ? (
-          <div className="rounded-2xl border border-border/60 bg-card p-8 text-center shadow-sm">
+          <div className={`${LEARNING_SECTION_CLASS} text-center`}>
             <Search className="mx-auto h-9 w-9 text-muted-foreground" aria-hidden="true" />
-            <h2 className="mt-4 text-lg font-black">
+            <h2 className={`${LEARNING_SECTION_TITLE_CLASS} mt-4`}>
               {t("videos.no_search_results")}
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className={`${LEARNING_SECTION_DESCRIPTION_CLASS} mt-2`}>
               {t("videos.no_search_results_description")}
             </p>
           </div>
@@ -217,7 +223,7 @@ export function VideoGallery({
           <section
             aria-labelledby="latest-video-heading"
             data-nosnippet=""
-            className="space-y-6"
+            className={`${LEARNING_SECTION_CLASS} mt-8 space-y-6`}
           >
             {!query ? (
               <FeaturedVideoCard
@@ -233,13 +239,13 @@ export function VideoGallery({
               <div className="min-w-0">
                 <h2
                   id="latest-video-heading"
-                  className="break-words text-xl font-black sm:text-2xl"
+                  className={LEARNING_SECTION_TITLE_CLASS}
                 >
                   {query
                     ? t("videos.search_results")
                     : t("videos.latest_videos")}
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className={`${LEARNING_SECTION_DESCRIPTION_CLASS} mt-1`}>
                   {t("videos.video_count", {
                     count: filteredVideos.length,
                   })}
@@ -357,7 +363,9 @@ function FeaturedVideoCard({
   const { t } = useLanguage();
 
   return (
-    <Card className="overflow-hidden p-0 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+    <Card
+      className={`${LEARNING_CARD_CLASS} p-0 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]`}
+    >
       <VideoThumbnail
         video={video}
         label={t("videos.watch_video")}
@@ -370,7 +378,7 @@ function FeaturedVideoCard({
           <Video className="h-3.5 w-3.5" aria-hidden="true" />
           {t("videos.featured_label")}
         </span>
-        <h2 className="mt-4 break-words text-xl font-black leading-8 sm:text-2xl">
+        <h2 className={`${LEARNING_CARD_TITLE_CLASS} mt-4 leading-8`}>
           {video.title}
         </h2>
         <PublishedDate value={formattedDate} />
@@ -405,7 +413,10 @@ function VideoCard({
   const { t } = useLanguage();
 
   return (
-    <Card data-testid="video-card" className="h-full overflow-hidden p-0">
+    <Card
+      data-testid="video-card"
+      className={`${LEARNING_CARD_CLASS} p-0`}
+    >
       <VideoThumbnail
         video={video}
         label={t("videos.watch_video")}
@@ -413,7 +424,7 @@ function VideoCard({
         onPlay={onPlay}
       />
       <CardContent className="flex flex-1 flex-col p-5">
-        <h3 className="line-clamp-3 break-words text-base font-black leading-6">
+        <h3 className={`${LEARNING_CARD_TITLE_CLASS} line-clamp-3 leading-6`}>
           {video.title}
         </h3>
         <PublishedDate value={formattedDate} />
@@ -497,13 +508,13 @@ function VideoErrorState({
   return (
     <section
       role="alert"
-      className="rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm sm:p-10"
+      className={`${LEARNING_SECTION_CLASS} text-center`}
     >
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
         <Video className="h-7 w-7" aria-hidden="true" />
       </span>
-      <h2 className="mt-5 text-xl font-black">{t("videos.error_title")}</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+      <h2 className={`${LEARNING_SECTION_TITLE_CLASS} mt-5`}>{t("videos.error_title")}</h2>
+      <p className={`${LEARNING_SECTION_DESCRIPTION_CLASS} mx-auto mt-2 max-w-xl`}>
         {t("videos.error_description")}
       </p>
       <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
@@ -534,10 +545,10 @@ function VideoErrorState({
 function VideoEmptyState({ channelUrl }: { channelUrl: string }) {
   const { t } = useLanguage();
   return (
-    <section className="rounded-2xl border border-border/60 bg-card p-8 text-center shadow-sm">
+    <section className={`${LEARNING_SECTION_CLASS} text-center`}>
       <Video className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden="true" />
-      <h2 className="mt-4 text-xl font-black">{t("videos.empty_title")}</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+      <h2 className={`${LEARNING_SECTION_TITLE_CLASS} mt-4`}>{t("videos.empty_title")}</h2>
+      <p className={`${LEARNING_SECTION_DESCRIPTION_CLASS} mx-auto mt-2 max-w-xl`}>
         {t("videos.empty_description")}
       </p>
       <Button className="mt-5" variant="outline" asChild>

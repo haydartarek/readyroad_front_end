@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
+import { LayoutDashboard } from "lucide-react";
 
 // ─── Constants ───────────────────────────────────────────
 
@@ -240,20 +241,10 @@ function AuthSuccessModalContent({
               aria-live="polite"
               className="text-xs text-muted-foreground/70 flex items-center justify-center gap-1.5"
             >
-              <svg
-                viewBox="0 0 16 16"
-                className="w-3.5 h-3.5 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
+              <LayoutDashboard
+                className="h-3.5 w-3.5 shrink-0"
                 aria-hidden="true"
-              >
-                <path
-                  d="M2 10h1.5a1 1 0 001-1V7a1 1 0 011-1h5a1 1 0 011 1v2a1 1 0 001 1H14M4.5 10v1.5M11.5 10v1.5M1 7.5l1-3h12l1 3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              />
               {redirectingText}
             </p>
           </div>

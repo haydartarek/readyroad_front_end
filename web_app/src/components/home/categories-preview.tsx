@@ -143,8 +143,8 @@ export function CategoriesPreview() {
       <div className="pointer-events-none absolute -top-44 start-1/2 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="container relative mx-auto px-4">
-        <div className="mb-10 flex flex-col gap-5 sm:mb-12 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
+        <div className="mb-10 text-center sm:mb-12">
+          <div className="mx-auto max-w-2xl">
             <h2 className="text-balance text-3xl font-black leading-tight tracking-tight text-secondary sm:text-4xl">
               {t("home.categories.title")}
             </h2>
@@ -154,18 +154,6 @@ export function CategoriesPreview() {
             </p>
           </div>
 
-          {!loading && !error && (
-            <Button
-              variant="outline"
-              size="lg"
-              className={`${SECTION_OUTLINE_CTA_CLASS} shrink-0`}
-              asChild
-            >
-              <Link href={ROUTES.PRACTICE}>
-                {t("home.categories.view_all")}
-              </Link>
-            </Button>
-          )}
         </div>
 
         {loading ? (

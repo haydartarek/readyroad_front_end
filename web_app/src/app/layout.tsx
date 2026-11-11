@@ -160,7 +160,6 @@ export default async function RootLayout({
         className={`${tajawal.className} ${tajawal.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ExamCaptureGuard />
         <ErrorBoundary>
           <LanguageProvider initialLanguage={locale as Language}>
             <CookieConsentProvider>
@@ -173,6 +172,7 @@ export default async function RootLayout({
               >
                 <ConsentThemeController />
                 <AuthProvider>
+                  <ExamCaptureGuard />
                   <NotificationProvider>
                     <Navbar />
                     {children}

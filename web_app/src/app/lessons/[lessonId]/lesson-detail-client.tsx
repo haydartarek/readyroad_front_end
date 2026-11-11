@@ -623,8 +623,8 @@ export default function LessonDetailClient({
                     "w-full rounded-xl px-3 py-2.5 text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                     isRtl ? "text-right" : "text-left",
                     activePage === index
-                      ? "bg-primary/10 font-bold text-foreground ring-1 ring-primary/15"
-                      : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                      ? "font-bold text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <div className="flex items-start gap-3">

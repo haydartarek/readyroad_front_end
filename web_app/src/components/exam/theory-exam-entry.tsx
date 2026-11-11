@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
+  LEARNING_PAGE_BACKGROUND_CLASS,
+  LEARNING_PAGE_CONTAINER_CLASS,
+  LEARNING_SECTION_CLASS,
   PageHeroDescription,
   PageHeroTitle,
   PageMetricCard,
@@ -180,18 +183,18 @@ export default function TheoryExamEntry() {
 
   return (
     <div
-      className="min-h-[calc(100vh-74px)] bg-gradient-to-b from-primary/5 via-background to-background"
+      className={LEARNING_PAGE_BACKGROUND_CLASS}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:py-12">
+      <div className={LEARNING_PAGE_CONTAINER_CLASS}>
         <div className="space-y-6">
           <section
             data-testid="exam-intro-surface"
-            className="rounded-2xl border border-primary/10 bg-card/95 px-4 py-6 shadow-sm ring-1 ring-primary/[0.03] sm:px-6 sm:py-7"
+            className={`${LEARNING_SECTION_CLASS} shadow-sm`}
           >
             <div className="mx-auto max-w-4xl space-y-6">
               <div className="space-y-3 text-center">
-                <PageHeroTitle className="text-secondary sm:text-4xl">
+                <PageHeroTitle className="text-balance">
                   {t("practice_exam.intro_title")}
                 </PageHeroTitle>
 
@@ -272,7 +275,7 @@ export default function TheoryExamEntry() {
           </section>
 
           <PageSectionSurface
-            className="border-primary/10 bg-card/80 shadow-sm ring-1 ring-primary/[0.03]"
+            className={`${LEARNING_SECTION_CLASS} shadow-sm`}
             title={t("exam.rules.title")}
             description={t("exam.rules.subtitle")}
           >

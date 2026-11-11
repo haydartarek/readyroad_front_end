@@ -9,6 +9,11 @@ import { ArrowRight, BookOpen, Clock } from "lucide-react";
 import { Lesson } from "@/lib/types";
 import type { HomeLessonOverviewItem } from "@/lib/home-lessons-overview";
 import { LessonCategoryExamLink } from "./lesson-category-exam-link";
+import {
+  LEARNING_CARD_ACCENT_CLASS,
+  LEARNING_CARD_CLASS,
+  LEARNING_CARD_TITLE_CLASS,
+} from "@/components/ui/page-surface";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -56,9 +61,9 @@ export function LessonsGrid({ lessons, theoryOverview = [] }: {
         return (
           <Card
             key={lesson.id}
-            className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-border/50 bg-card/90 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/10"
+            className={LEARNING_CARD_CLASS}
           >
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/70 via-secondary/50 to-primary/20 opacity-70" />
+            <div className={LEARNING_CARD_ACCENT_CLASS} />
             <CardContent className="flex flex-1 flex-col p-4 sm:p-5">
               <div className="mb-3 flex items-start justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
@@ -86,7 +91,7 @@ export function LessonsGrid({ lessons, theoryOverview = [] }: {
 
               </div>
 
-              <h3 className="mb-2 line-clamp-2 text-lg font-black tracking-tight text-foreground sm:text-xl">
+              <h3 className={`${LEARNING_CARD_TITLE_CLASS} mb-2 line-clamp-2`}>
                 {title}
               </h3>
 

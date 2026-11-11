@@ -11,6 +11,11 @@ import {
   getTrafficSignGroupInfo,
   getTrafficSignName,
 } from "@/lib/traffic-sign-presentation";
+import {
+  LEARNING_CARD_ACCENT_CLASS,
+  LEARNING_CARD_CLASS,
+  LEARNING_CARD_TITLE_CLASS,
+} from "@/components/ui/page-surface";
 
 // ─── Component ───────────────────────────────────────────
 
@@ -26,7 +31,7 @@ export function TrafficSignsGrid({
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {signs.map((sign) => {
         const name = getTrafficSignName(sign, lang);
-        const { info, style } = getTrafficSignGroupInfo(sign);
+        const { style } = getTrafficSignGroupInfo(sign);
         const routeCode = sign.routeCode ?? sign.signCode;
 
         return (
@@ -36,17 +41,12 @@ export function TrafficSignsGrid({
             className="traffic-sign-card group block h-full"
           >
             <Card
-              className={`h-full overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/25 hover:shadow-md ${style.cardGlow}`}
+              className={`${LEARNING_CARD_CLASS} ${style.cardGlow}`}
             >
+              <div className={LEARNING_CARD_ACCENT_CLASS} />
               <CardContent className="flex h-full flex-col p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {info.title[lang]}
-                  </p>
-                </div>
-
                 <div
-                  className={`mt-4 rounded-[1.4rem] border border-border/60 p-4 ${style.soft}`}
+                  className={`rounded-[1.4rem] border border-border/60 p-4 ${style.soft}`}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden rounded-[1.1rem] bg-background/90">
                     <SignImage
@@ -58,7 +58,7 @@ export function TrafficSignsGrid({
                 </div>
 
                 <div className="mt-4 flex flex-1 flex-col">
-                  <h3 className="min-h-[3.1rem] line-clamp-2 text-base font-black leading-6 tracking-tight text-foreground sm:min-h-[3.3rem] sm:text-[1.1rem]">
+                  <h3 className={`${LEARNING_CARD_TITLE_CLASS} min-h-[3.1rem] line-clamp-2 sm:min-h-[3.3rem]`}>
                     {name}
                   </h3>
 

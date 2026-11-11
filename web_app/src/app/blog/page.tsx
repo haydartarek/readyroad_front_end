@@ -5,7 +5,6 @@ import { ArrowRight } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
   PageHeroDescription,
-  PageHeroSurface,
   PageHeroTitle,
 } from "@/components/ui/page-surface";
 import { buildLocalizedUrl, localizePathname } from "@/lib/i18n-routing";
@@ -59,8 +58,8 @@ export default async function BlogPage() {
   const articles = await getPublicArticles(locale);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto max-w-6xl px-4 pt-8 pb-12 sm:px-6">
+    <main className="min-h-screen rijvia-page-background text-foreground">
+      <div className="container mx-auto px-4 pt-8 pb-8 md:pt-8 md:pb-12">
         <Breadcrumb
           items={[
             {
@@ -68,22 +67,22 @@ export default async function BlogPage() {
               href: "/",
             },
             {
-              label: translateMessage(locale, "blog.title"),
+              label: ({ ar: "المقالات", nl: "Artikelen", fr: "Articles", en: "Articles" } as Record<string, string>)[locale] ?? "Articles",
               isCurrentPage: true,
             },
           ]}
         />
 
-        <PageHeroSurface>
-          <PageHeroTitle>
+        <header className="mt-8 max-w-3xl space-y-2">
+          <PageHeroTitle className="text-balance">
             {translateMessage(locale, "blog.title")}
           </PageHeroTitle>
-          <PageHeroDescription className="max-w-3xl">
+          <PageHeroDescription className="text-pretty">
             {translateMessage(locale, "blog.introduction")}
           </PageHeroDescription>
-        </PageHeroSurface>
+        </header>
 
-        <section className="mt-8">
+        <section className="mt-8 rounded-[30px] border border-border/50 bg-card/80 p-6">
         {articles.length === 0 ? (
           <div className="mx-auto max-w-xl py-16 text-center">
             <h2 className="text-xl font-bold">
@@ -104,7 +103,7 @@ export default async function BlogPage() {
               return (
                 <article
                   key={`${article.language}:${article.slug}`}
-                  className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/95 shadow-sm transition-colors hover:border-primary/30"
+                  className="flex min-w-0 flex-col overflow-hidden rounded-[24px] border border-border/50 bg-card/90 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/10"
                 >
                   {article.image ? (
                     <Link href={href} className="relative block aspect-video overflow-hidden bg-muted">

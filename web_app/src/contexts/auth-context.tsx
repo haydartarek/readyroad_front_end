@@ -242,17 +242,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const message = getSocialAuthSuccessMessage(t, authStatus);
-    if (message) {
-      toast.success(message);
-    }
-
     url.searchParams.delete("authProvider");
     url.searchParams.delete("authStatus");
+    const cleanRedirectPath = `${url.pathname}${url.search}${url.hash}`;
+
+    if (authStatus === "logged_in" || authStatus === "registered") {
+      const displayName =
+        user.firstName ??
+        user.fullName?.split(" ")[0] ??
+        user.username;
+
+      setSuccessModal({
+        open: true,
+        username: displayName,
+        isNewUser: authStatus === "registered",
+        redirectPath: cleanRedirectPath,
+      });
+    } else {
+      const message = getSocialAuthSuccessMessage(t, authStatus);
+      if (message) {
+        toast.success(message);
+      }
+    }
+
     window.history.replaceState(
       {},
       "",
-      `${url.pathname}${url.search}${url.hash}`,
+      cleanRedirectPath,
     );
   }, [t, user]);
 

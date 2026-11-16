@@ -114,7 +114,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "About RijVia",
         lastUpdated: "Last reviewed: 21 July 2026",
         intro:
-          "RijVia is an independent, free learning platform that helps people study Belgian driving theory in a structured and accessible way.",
+          "RijVia is an independent platform for Belgian driving-theory preparation. Lessons and traffic signs are free to browse, with a limited selection of free practice questions. Full training and theory-exam simulations require a paid plan.",
         sections: [
           {
             title: "Why RijVia exists",
@@ -435,7 +435,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "Is RijVia free?",
           answer:
-            "Yes. RijVia currently provides its core learning platform without a subscription or payment-card requirement.",
+            "You can browse lessons and traffic signs for free and try a limited selection of practice questions. Full training and theory exam simulations require a paid plan.",
         },
         {
           question: "Do I need an account?",
@@ -518,7 +518,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "Over RijVia",
         lastUpdated: "Laatst nagekeken: 21 juli 2026",
         intro:
-          "RijVia is een onafhankelijk en gratis leerplatform dat helpt om de Belgische rijtheorie gestructureerd en toegankelijk te bestuderen.",
+          "RijVia is een onafhankelijk platform om je voor te bereiden op het Belgische theorie-examen. Je kunt lessen en verkeersborden gratis bekijken en een beperkt aantal oefenvragen proberen. Voor volledige training en examensimulaties is een betaald pakket nodig.",
         sections: [
           {
             title: "Waarom RijVia bestaat",
@@ -839,7 +839,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "Is RijVia gratis?",
           answer:
-            "Ja. RijVia biedt het kernplatform momenteel zonder abonnement of betaalkaartvereiste aan.",
+            "Je kunt lessen en verkeersborden gratis bekijken en een beperkt aantal oefenvragen proberen. Voor volledige training en simulaties van het theorie-examen heb je een betaald pakket nodig.",
         },
         {
           question: "Heb ik een account nodig?",
@@ -922,7 +922,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "À propos de RijVia",
         lastUpdated: "Dernière vérification : 21 juillet 2026",
         intro:
-          "RijVia est une plateforme indépendante et gratuite qui aide à étudier la théorie de conduite belge de manière structurée et accessible.",
+          "RijVia est une plateforme indépendante de préparation à l'examen théorique belge. Vous pouvez consulter gratuitement les leçons et les panneaux de signalisation, et essayer un nombre limité de questions d'entraînement. L'entraînement complet et les simulations d'examen nécessitent une formule payante.",
         sections: [
           {
             title: "Pourquoi RijVia existe",
@@ -1243,7 +1243,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "RijVia est-il gratuit ?",
           answer:
-            "Oui. RijVia fournit actuellement sa plateforme principale sans abonnement ni carte de paiement.",
+            "Vous pouvez consulter gratuitement les leçons et les panneaux de signalisation, et essayer une sélection limitée de questions d'entraînement. L'accès à l'entraînement complet et aux simulations de l'examen théorique nécessite une formule payante.",
         },
         {
           question: "Faut-il un compte ?",
@@ -1326,7 +1326,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         title: "عن RijVia",
         lastUpdated: "آخر مراجعة: 21 يوليو 2026",
         intro:
-          "RijVia منصة تعليمية مستقلة ومجانية تساعدك على دراسة قواعد السياقة البلجيكية بطريقة منظمة وسهلة.",
+          "RijVia منصة تعليمية مستقلة للتحضير لامتحان السياقة النظري في بلجيكا. يمكنك تصفح الدروس والعلامات المرورية وتجربة مجموعة محدودة من الأسئلة التدريبية مجانًا، بينما يتطلب التدريب الكامل ومحاكاة الامتحان اختيار باقة مدفوعة.",
         sections: [
           {
             title: "لماذا أُنشئت RijVia؟",
@@ -1647,7 +1647,7 @@ const PUBLIC_CONTENT: Record<Language, PublicLocaleBundle> = {
         {
           question: "هل RijVia مجانية؟",
           answer:
-            "نعم. توفر RijVia حاليًا منصتها التعليمية الأساسية دون اشتراك أو طلب بيانات بطاقة دفع.",
+            "يمكنك تصفح الدروس والعلامات المرورية مجانًا، وتجربة مجموعة محدودة من الأسئلة التدريبية. للوصول إلى التدريب الكامل ومحاكاة الامتحان النظري، اختر إحدى الباقات المدفوعة المتاحة على الموقع.",
         },
         {
           question: "هل أحتاج إلى حساب؟",

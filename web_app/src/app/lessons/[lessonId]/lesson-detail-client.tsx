@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "@/components/localized-link";
+import ArticleLearningCards from "@/components/blog/ArticleLearningCards";
 import { PilotInlineLink } from "@/components/seo/pilot-inline-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -376,8 +377,6 @@ export default function LessonDetailClient({
 
                       <span className="text-xs font-semibold text-muted-foreground">
                         {lesson.pages.length} {t("lessons.pages")}
-                        {" · "}
-                        {lesson.estimatedMinutes} {t("lessons.minutes_short")}
                       </span>
                     </div>
 
@@ -395,7 +394,7 @@ export default function LessonDetailClient({
               </div>
             </PageHeroSurface>
 
-            {[...lesson.pages].sort((a, b) => a.pageNumber - b.pageNumber).map((currentPage) => {
+            {[...lesson.pages].sort((a, b) => a.pageNumber - b.pageNumber).map((currentPage, index) => {
                 const { title, content } = getPageContent(
                   currentPage,
                   language,
@@ -411,6 +410,8 @@ export default function LessonDetailClient({
                   );
 
                 return (
+                  <Fragment key={currentPage.pageNumber}>
+                    {lesson.pages.length > 1 && index === lesson.pages.length - 1 ? <ArticleLearningCards locale={language} /> : null}
                   <section key={currentPage.pageNumber} id={`section-${currentPage.pageNumber}`}
                     data-lesson-page={currentPage.pageNumber} className="scroll-mt-24">
                   <PageSectionSurface className="overflow-hidden border-border/50 bg-card/95 p-0">
@@ -498,6 +499,8 @@ export default function LessonDetailClient({
                     </div>
                   </PageSectionSurface>
                   </section>
+                  {lesson.pages.length === 1 ? <ArticleLearningCards locale={language} /> : null}
+                  </Fragment>
                 );
               })}
 

@@ -152,7 +152,7 @@ export default function ContactPage() {
 
   return (
     <main
-      className="min-h-screen bg-background"
+      className="min-h-screen rijvia-learning-page-background text-foreground"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <script
@@ -163,7 +163,7 @@ export default function ContactPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
-      <div className="container mx-auto px-4 pt-8 pb-12 max-w-2xl">
+      <div className="container mx-auto max-w-4xl px-4 pt-8 pb-12 sm:px-6">
         <Breadcrumb
           items={[
             { label: homeLabel, href: "/" },
@@ -171,13 +171,13 @@ export default function ContactPage() {
           ]}
         />
         <PageHeroSurface className="mb-8">
-          <div className="space-y-3 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+          <div className="flex min-w-0 items-start gap-4 text-start sm:gap-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/15">
               <MessageSquare className="h-7 w-7 text-primary" />
             </div>
-            <div className="space-y-1">
+            <div className="min-w-0 flex-1 space-y-2">
               <PageHeroTitle>{pageTitle}</PageHeroTitle>
-              <PageHeroDescription className="mx-auto max-w-md leading-relaxed">
+              <PageHeroDescription className="max-w-2xl leading-relaxed text-start">
                 {t("contact.subtitle")}
               </PageHeroDescription>
             </div>
@@ -186,7 +186,7 @@ export default function ContactPage() {
 
         <section
           aria-labelledby="contact-methods-title"
-          className="mb-8 border-y border-border py-5"
+          className="mb-6 rounded-2xl border border-border/60 bg-card/90 p-4 shadow-sm sm:p-5"
         >
           <h2 id="contact-methods-title" className="sr-only">
             {t("contact.methods")}
@@ -221,7 +221,7 @@ export default function ContactPage() {
         </section>
 
         {/* Form */}
-        <Card className="rounded-2xl border-border/50 shadow-sm">
+        <Card className="rounded-2xl border-border/60 bg-card/95 shadow-sm">
           <CardContent className="p-6 sm:p-8">
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
               {/* First + Last name */}

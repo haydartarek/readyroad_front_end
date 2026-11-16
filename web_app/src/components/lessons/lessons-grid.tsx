@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
-import { ArrowRight, BookOpen, Clock } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Lesson } from "@/lib/types";
 import type { HomeLessonOverviewItem } from "@/lib/home-lessons-overview";
 import { LessonCategoryExamLink } from "./lesson-category-exam-link";
@@ -78,12 +78,6 @@ export function LessonsGrid({ lessons, theoryOverview = [] }: {
                       <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
                         <BookOpen className="h-3 w-3" />
                         {lesson.totalPages} {t("lessons.pages")}
-                      </span>
-                    )}
-                    {lesson.estimatedMinutes > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
-                        <Clock className="h-3 w-3" />
-                        {lesson.estimatedMinutes} {t("lessons.minutes_short")}
                       </span>
                     )}
                   </div>

@@ -8,9 +8,6 @@ import {
 import { hasLessonSignRules } from "@/components/seo/inline-link-rules";
 import LessonStructuredData from "@/app/lessons/[lessonId]/lesson-structured-data";
 import LessonKeywordSupport from "@/components/lessons/lesson-keyword-support";
-import RelatedLearningArticles from "@/components/content/related-learning-articles";
-import { localizePathname } from "@/lib/i18n-routing";
-import { getRelatedPublicArticles } from "@/lib/server/articles";
 import { getRequestLocale } from "@/lib/server/request-locale";
 
 type LessonDetailPageProps = Readonly<{
@@ -22,7 +19,7 @@ export default async function LessonDetailPage({
 }: LessonDetailPageProps) {
   const { lessonId } = await params;
   const locale = await getRequestLocale();
-  const targetPath = localizePathname(`/lessons/${encodeURIComponent(lessonId)}`, locale);
+
   const [lesson, lessons] = await Promise.all([
     getPublicLesson(lessonId),
     getPublicLessons(),
@@ -40,12 +37,9 @@ export default async function LessonDetailPage({
     return <MissingLesson />;
   }
 
-  const [relatedArticles, publicSigns] = await Promise.all([
-    getRelatedPublicArticles(locale, targetPath),
-    hasLessonSignRules(lesson?.lessonCode ?? lessonId)
-      ? getPublicTrafficSignCatalog()
-      : Promise.resolve([]),
-  ]);
+  const publicSigns = hasLessonSignRules(lesson?.lessonCode ?? lessonId)
+    ? await getPublicTrafficSignCatalog()
+    : [];
 
   return (
     <>
@@ -58,7 +52,7 @@ export default async function LessonDetailPage({
       {lesson && (
         <LessonKeywordSupport lessonCode={lesson.lessonCode} locale={locale} />
       )}
-      <RelatedLearningArticles articles={relatedArticles} locale={locale} />
+
     </>
   );
 }

@@ -340,11 +340,11 @@ export function NotificationPanel() {
       {/* ── Panel ── */}
       {isOpen && (
         <div
-          data-testid="notification-popover"
+          data-testid="notification-popover" dir={language === "ar" ? "rtl" : "ltr"}
           className={cn(
-            "fixed inset-x-2 top-[70px] z-50 w-auto max-w-none sm:absolute sm:inset-x-auto sm:end-0 sm:top-[calc(100%+10px)] sm:w-96 sm:max-w-[calc(100vw-1rem)]",
-            "rounded-[1.65rem] border border-border/60 bg-gradient-to-br from-background/98 via-background/94 to-primary/[0.03]",
-            "p-2.5 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.34)] ring-1 ring-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80",
+            "fixed inset-x-2 top-[70px] z-50 w-auto max-w-none sm:absolute sm:inset-x-auto sm:end-0 sm:top-[calc(100%+10px)] sm:w-[28rem] sm:max-w-[calc(100vw-1rem)]",
+            "rounded-2xl border border-border/70 bg-card",
+            "p-3 shadow-xl",
             "animate-in fade-in-0 zoom-in-95 duration-150",
           )}
         >
@@ -448,7 +448,7 @@ export function NotificationPanel() {
                   const content = (
                     <div
                       className={cn(
-                        "flex gap-3 rounded-[1.2rem] border border-transparent px-3.5 py-3 transition-all duration-200",
+                        "flex min-w-0 items-start gap-3 rounded-xl border border-border/60 bg-background px-3 py-3.5 transition-colors",
                         "cursor-pointer hover:border-primary/10 hover:bg-primary/[0.04]",
                         !notif.isRead &&
                           "border-primary/10 bg-primary/[0.06] shadow-sm",
@@ -484,7 +484,7 @@ export function NotificationPanel() {
                       <div className="min-w-0 flex-1">
                         <p
                           className={cn(
-                            "text-sm leading-tight",
+                            "break-words text-sm leading-6 [overflow-wrap:anywhere]",
                             notif.isRead
                               ? "font-semibold text-foreground/80"
                               : "font-bold text-foreground",
@@ -494,11 +494,11 @@ export function NotificationPanel() {
                         </p>
                         <p
                           dir="auto"
-                          className="mt-0.5 text-xs leading-snug text-muted-foreground line-clamp-2"
+                          className="mt-1 whitespace-normal break-words text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]"
                         >
                           {displayMessage}
                         </p>
-                        <p className="mt-1 text-[10px] text-muted-foreground/70">
+                        <p className="mt-2 text-xs leading-5 text-muted-foreground/80">
                           {timeAgo(notif.createdAt)}
                         </p>
                       </div>

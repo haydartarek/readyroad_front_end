@@ -51,7 +51,7 @@ export function PublicDocumentPage({
 
   return (
     <main
-      className="min-h-screen bg-background text-foreground"
+      className="min-h-screen rijvia-learning-page-background text-foreground"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <script
@@ -71,9 +71,9 @@ export function PublicDocumentPage({
           ]}
         />
 
-        <header className="min-w-0 border-b border-border pb-8 pt-2">
+        <header className="mt-6 min-w-0 rounded-2xl border border-primary/15 border-s-4 border-s-primary bg-card/95 p-5 shadow-sm sm:p-7">
           <div className="flex min-w-0 items-start gap-4">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
               <Icon className="h-6 w-6" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
@@ -93,14 +93,14 @@ export function PublicDocumentPage({
           </p>
         </header>
 
-        <div className="divide-y divide-border">
+        <div className="mt-5 space-y-4">
           {document.sections.map((section, index) => {
             const headingId = `${page}-section-${index + 1}`;
             return (
               <section
                 key={section.title}
                 aria-labelledby={headingId}
-                className="min-w-0 py-8"
+                className="min-w-0 rounded-2xl border border-border/60 bg-card/90 p-5 shadow-sm sm:p-6"
               >
                 <h2
                   id={headingId}

@@ -72,7 +72,7 @@ const WRAPPER_CLASSES: Record<
   selection:
     "flex min-w-0 items-center justify-center gap-2 text-center",
   paywall:
-    "col-start-1 row-start-1 flex min-w-0 items-center gap-2 md:gap-2.5",
+    "col-start-1 row-start-1 flex min-w-0 items-center gap-2 md:justify-center md:gap-2.5",
 };
 
 const ICON_CLASSES: Record<
@@ -96,7 +96,7 @@ const LABEL_CLASSES: Record<
   selection:
     "min-w-0 text-center text-2xl font-black",
   paywall:
-    "truncate text-sm font-black md:text-base",
+    "truncate text-sm font-black md:whitespace-normal md:text-center md:text-base",
 };
 
 export function PlanIdentity({

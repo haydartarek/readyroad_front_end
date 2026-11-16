@@ -163,7 +163,7 @@ export function FreeExamPaywall({
     >
       <DialogContent
         dir={isRTL ? "rtl" : "ltr"}
-        className="max-h-[calc(100dvh-0.75rem)] gap-2 overflow-y-auto p-3 sm:max-w-3xl sm:gap-3 sm:p-5"
+        className="max-h-[calc(100dvh-0.75rem)] gap-2 overflow-y-auto p-3 sm:max-w-3xl sm:gap-2 sm:p-4"
       >
         <DialogHeader className={isRTL ? "text-right sm:text-right" : "text-left sm:text-left"}>
           <DialogTitle className="text-lg font-black sm:text-2xl">
@@ -246,9 +246,8 @@ export function FreeExamPaywall({
                   }
                   className={[
                     "relative grid min-h-0 grid-cols-[1fr_auto] items-center gap-x-3 rounded-xl border-2 px-3 py-2 text-start transition md:flex md:min-h-[132px] md:flex-col md:items-stretch md:rounded-2xl md:px-3.5 md:py-4",
-                    selected
-                      ? "border-primary bg-primary/10 shadow-md"
-                      : "border-border bg-card hover:border-primary/40",
+                    recommended ? "border-secondary bg-secondary text-secondary-foreground shadow-xl shadow-secondary/20 hover:border-primary [&_.text-foreground]:text-secondary-foreground [&_.text-muted-foreground]:text-secondary-foreground/85" : selected ? "border-primary bg-primary/10 shadow-md" : "border-border bg-card hover:border-primary/40",
+                    selected && recommended ? "ring-2 ring-primary ring-offset-2" : "",
                   ].join(" ")}
                 >
                   <RecommendedPlanBadge
@@ -265,7 +264,7 @@ export function FreeExamPaywall({
                     labelAs="p"
                   />
 
-                  <p className="hidden text-sm leading-5 text-muted-foreground md:mt-2 md:block">
+                  <p className={recommended ? "hidden text-sm leading-5 font-semibold text-secondary-foreground/90 md:mt-2 md:block md:text-center" : "hidden text-sm leading-5 font-semibold text-foreground/80 md:mt-2 md:block md:text-center"}>
                     {t(`home.pricing.tagline.${plan}`)}
                   </p>
 
@@ -275,7 +274,7 @@ export function FreeExamPaywall({
                   >
                   <bdi
                     dir="ltr"
-                    className="text-lg font-black text-primary md:mt-auto md:block md:self-auto md:pt-3 md:text-2xl"
+                    className="text-lg font-black text-primary md:mx-auto md:mt-auto md:block md:self-center md:pt-3 md:text-2xl"
                   >
                     {PRICE_BY_PLAN[plan]}
                   </bdi>
@@ -288,7 +287,7 @@ export function FreeExamPaywall({
 
                   <bdi
                     dir="ltr"
-                    className="col-start-2 row-start-2 self-start text-[11px] font-bold text-muted-foreground md:mt-1 md:block md:text-xs"
+                    className={recommended ? "col-start-2 row-start-2 self-start text-xs font-bold text-secondary-foreground/90 md:mt-1 md:block md:w-full md:text-center md:text-sm" : "col-start-2 row-start-2 self-start text-xs font-bold text-foreground/80 md:mt-1 md:block md:w-full md:text-center md:text-sm"}
                   >
                     {t(`home.pricing.per_day.${plan}`)}
                   </bdi>

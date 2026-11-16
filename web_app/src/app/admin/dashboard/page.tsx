@@ -65,9 +65,9 @@ function QuickActionButton({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-2xl border border-border/50 bg-muted/30 p-4 text-start transition-all duration-200 hover:border-primary/30 hover:bg-primary/5"
+      className="group flex min-w-0 items-center gap-3 rounded-2xl border border-border/60 bg-background/80 p-4 text-start shadow-sm transition-colors hover:border-primary/30 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
     >
-      <div className="w-10 h-10 rounded-xl bg-background border border-border/50 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:border-primary/30 transition-colors duration-200 group-hover:scale-110">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
         {icon}
       </div>
       <span className="min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
@@ -146,18 +146,18 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       {serviceUnavailable && (
         <ServiceUnavailableBanner onRetry={fetchDashboard} />
       )}
 
-      <AdminPageHeader
+      <AdminPageHeader className="rounded-2xl border-s-4 border-s-primary bg-none bg-card/95 shadow-sm"
         icon={<Gauge className="h-6 w-6" />}
         title={t("admin.dashboard")}
         description={`${t("admin.welcome")}, ${user?.fullName || t("admin.system_admin")}`}
         badge={
           user?.role ? (
-            <Badge className="border-0 bg-amber-500/15 px-3 py-1 text-sm font-bold text-amber-600">
+            <Badge className="border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
               {t(getRoleLabelKey(user.role))}
             </Badge>
           ) : undefined
@@ -165,8 +165,9 @@ export default function AdminDashboard() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <AdminMetricCard
+          className="rounded-[24px] border-border/60 bg-card/95 p-5 shadow-sm"
           label={t("admin.total_users")}
           value={data?.totalUsers?.toLocaleString()}
           icon={<Users className="w-6 h-6" />}
@@ -175,6 +176,7 @@ export default function AdminDashboard() {
           description={t("admin.total_users_desc")}
         />
         <AdminMetricCard
+          className="rounded-[24px] border-border/60 bg-card/95 p-5 shadow-sm"
           label={t("admin.total_signs")}
           value={data?.totalSigns?.toLocaleString()}
           icon={<TrafficCone className="w-6 h-6" />}
@@ -182,6 +184,7 @@ export default function AdminDashboard() {
           description={t("admin.total_signs_desc")}
         />
         <AdminMetricCard
+          className="rounded-[24px] border-border/60 bg-card/95 p-5 shadow-sm"
           label={t("admin.total_quizzes")}
           value={data?.totalQuizQuestions?.toLocaleString()}
           icon={<ClipboardList className="w-6 h-6" />}
@@ -200,11 +203,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
-        <h2 className="text-base font-black text-foreground">
+      <div className="rounded-[24px] border border-border/60 bg-card/95 p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-black text-foreground">
           {t("admin.quick_actions")}
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <QuickActionButton
             icon={<TrafficCone className="w-5 h-5" />}
             label={t("admin.signs.title")}

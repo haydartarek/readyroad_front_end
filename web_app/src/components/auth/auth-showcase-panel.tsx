@@ -17,6 +17,8 @@ export function AuthShowcasePanel({
   features,
   supportingText,
   verticalAlign = "center",
+  homeLogo = false,
+  hideBrandName = false,
 }: {
   badge: string;
   title: string;
@@ -25,6 +27,8 @@ export function AuthShowcasePanel({
   features: AuthFeature[];
   supportingText?: string;
   verticalAlign?: "center" | "start";
+  homeLogo?: boolean;
+  hideBrandName?: boolean;
 }) {
   const { t } = useLanguage();
 
@@ -43,23 +47,18 @@ export function AuthShowcasePanel({
             : "justify-center",
         ].join(" ")}
       >
-        <div className="rounded-[1.55rem] border border-white/12 bg-white/8 px-3.5 py-3.5 backdrop-blur-sm">
+        <div className={homeLogo ? "px-3.5 py-3.5" : "rounded-[1.55rem] border border-white/12 bg-white/8 px-3.5 py-3.5 backdrop-blur-sm"}>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 ring-2 ring-primary/35 shadow-[0_12px_30px_hsl(var(--brand-orange)/0.22)]">
-              <Image
-                src="/icons/icon-192.png"
-                alt=""
-                aria-hidden="true"
-                width={40}
-                height={40}
-                className="rounded-full object-cover"
-                priority
-              />
+            <div className="flex h-12 w-[124px] shrink-0 items-center justify-center">
+              <Image src="/images/logo.png" alt="" aria-hidden="true" width={124} height={48} className="h-12 w-full object-contain dark:hidden" priority />
+              <Image src="/images/logo-dark.png" alt="" aria-hidden="true" width={124} height={48} className="hidden h-12 w-full object-contain dark:block" priority />
             </div>
             <div className="min-w-0 space-y-1">
+              {!homeLogo && !hideBrandName && (
               <p className="text-[1.45rem] font-black tracking-tight text-white">
                 {t("app.name")}
               </p>
+              )}
               <p className="max-w-xs text-sm font-medium leading-[1.1rem] text-white/70">
                 {t("auth.showcase_brand_caption")}
               </p>
@@ -68,9 +67,11 @@ export function AuthShowcasePanel({
         </div>
 
         <div className="space-y-5">
+          {badge && (
           <span className="inline-flex w-fit items-center rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/85">
             {badge}
           </span>
+          )}
 
           <div className="space-y-2.5">
             <p className="max-w-xl text-[2.7rem] font-black leading-[1.02] tracking-tight text-white xl:text-[3rem]">

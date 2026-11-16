@@ -108,10 +108,11 @@ function LoginForm() {
     <AuthPageFrame
       showcase={
         <AuthShowcasePanel
-          badge={t("auth.login_panel_badge")}
-          title={t("auth.login_panel_heading")}
-          titleAccent={t("auth.login_panel_heading2")}
-          description={t("auth.login_panel_subtitle")}
+          homeLogo
+          badge=""
+          title={t("home.hero.headline").replace(/^RijVia\s*\|\s*/i, "")}
+          titleAccent={t("home.hero.headline_highlight")}
+          description={t("home.hero.subtitle")}
           supportingText={t("auth.panel_learners_text")}
           features={[
             { icon: BookOpen, label: t("auth.login_feat_1") },

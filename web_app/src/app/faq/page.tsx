@@ -42,7 +42,7 @@ export default function FaqPage() {
 
   return (
     <main
-      className="min-h-screen bg-background text-foreground"
+      className="min-h-screen rijvia-learning-page-background text-foreground"
       dir={isRTL ? "rtl" : "ltr"}
     >
       {[pageSchema, breadcrumbSchema, faqSchema].map((schema, index) => (
@@ -61,9 +61,9 @@ export default function FaqPage() {
           ]}
         />
 
-        <header className="border-b border-border pb-8 pt-2">
+        <header className="mt-6 rounded-2xl border border-primary/15 border-s-4 border-s-primary bg-card/95 p-5 shadow-sm sm:p-7">
           <div className="flex min-w-0 items-start gap-4">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
               <CircleHelp className="h-6 w-6" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
@@ -80,9 +80,9 @@ export default function FaqPage() {
           </p>
         </header>
 
-        <section aria-label={content.title} className="divide-y divide-border">
+        <section aria-label={content.title} className="mt-5 space-y-3">
           {content.items.map((item) => (
-            <details key={item.question} className="group py-1">
+            <details key={item.question} className="group rounded-2xl border border-border/60 bg-card/90 px-4 py-1 shadow-sm sm:px-5">
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-start text-base font-bold marker:content-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <span>{item.question}</span>
                 <ChevronDown

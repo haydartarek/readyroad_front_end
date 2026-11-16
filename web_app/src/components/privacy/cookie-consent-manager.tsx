@@ -33,7 +33,7 @@ function ConsentToggle({
 }: ConsentToggleProps) {
   const id = `consent-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-border/70 py-4 last:border-b-0">
+    <div className="flex items-start justify-between gap-4 rounded-xl border-b border-border/60 bg-muted/20 px-3 py-4 last:border-b-0">
       <div className="min-w-0">
         <label htmlFor={id} className="text-sm font-bold text-foreground">
           {label}
@@ -90,7 +90,7 @@ export function CookieConsentManager() {
           role="region"
           aria-label={t("consent.banner.label")}
           dir={isRTL ? "rtl" : "ltr"}
-          className="rijvia-cookie-consent-banner fixed inset-x-3 bottom-3 z-40 mx-auto max-w-5xl rounded-lg border border-border bg-background p-4 shadow-2xl sm:inset-x-6 sm:p-5"
+          className="rijvia-cookie-consent-banner fixed inset-x-3 bottom-3 z-40 mx-auto max-w-5xl rounded-2xl border border-primary/15 bg-card/95 p-4 shadow-2xl sm:inset-x-6 sm:p-5"
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
@@ -133,7 +133,7 @@ export function CookieConsentManager() {
       >
         <DialogContent
           dir={isRTL ? "rtl" : "ltr"}
-          className="max-h-[min(90vh,760px)] overflow-y-auto sm:max-w-xl"
+          className="max-h-[min(90vh,760px)] overflow-y-auto rounded-2xl border border-primary/15 bg-card shadow-2xl sm:max-w-xl"
         >
           <DialogHeader className="text-start">
             <div className="flex items-center gap-2 text-primary">

@@ -322,7 +322,7 @@ export default function RegisterPage() {
 
   const inputClassName = (field: FormFields, withAction = false) =>
     `${cn(
-      "h-12 rounded-2xl border-border/60 shadow-sm transition-colors duration-150",
+      "h-11 rounded-2xl border-border/60 shadow-sm transition-colors duration-150",
       isRTL
         ? withAction
           ? "pl-12 pr-10"
@@ -342,7 +342,8 @@ export default function RegisterPage() {
     <AuthPageFrame
       showcase={
         <AuthShowcasePanel
-          badge={t("auth.register_panel_badge")}
+          hideBrandName
+          badge=""
           title={t("auth.register_panel_heading")}
           titleAccent={t("auth.register_panel_heading2")}
           description={t("auth.register_panel_subtitle")}
@@ -356,26 +357,25 @@ export default function RegisterPage() {
         />
       }
       title={t("auth.register_title")}
-      subtitle={t("auth.register_subtitle")}
       maxWidthClassName="max-w-xl"
-      cardClassName="p-5 sm:p-6"
-      headerClassName="mb-6 space-y-1.5"
+      cardClassName="p-4 sm:p-5"
+      headerClassName="mb-3 space-y-1"
       footer={
         <p className="text-center text-xs text-muted-foreground/80">
           © {new Date().getFullYear()} {t("app.name")}. {t("auth.copyright")}
         </p>
       }
     >
-      <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-2">
         {serviceUnavailable && (
           <ServiceUnavailableBanner
             onRetry={() => setServiceUnavailable(false)}
           />
         )}
 
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {(["firstName", "lastName"] as const).map((field) => (
-            <div key={field} className="space-y-1.5">
+            <div key={field} className="space-y-1">
               <Label htmlFor={field} className="text-sm font-semibold">
                 {field === "firstName"
                   ? t("auth.first_name")
@@ -425,7 +425,7 @@ export default function RegisterPage() {
           ))}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label htmlFor="username" className="text-sm font-semibold">
             {t("auth.username")}
           </Label>
@@ -469,7 +469,7 @@ export default function RegisterPage() {
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label htmlFor="email" className="text-sm font-semibold">
             {t("auth.email")}
           </Label>
@@ -512,7 +512,7 @@ export default function RegisterPage() {
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label htmlFor="password" className="text-sm font-semibold">
             {t("auth.password")}
           </Label>
@@ -602,7 +602,7 @@ export default function RegisterPage() {
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Label htmlFor="confirmPassword" className="text-sm font-semibold">
             {t("auth.confirm_password")}
           </Label>
@@ -672,7 +672,7 @@ export default function RegisterPage() {
 
         <Button
           type="submit"
-          className="mt-1.5 h-11 w-full rounded-2xl text-base font-bold shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25"
+          className="mt-1 h-11 w-full rounded-2xl text-base font-bold shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25"
           disabled={isLoading}
         >
           {isLoading ? (

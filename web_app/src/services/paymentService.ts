@@ -4,8 +4,10 @@ import { trackCheckoutError, trackCheckoutStarted } from "@/lib/payment-analytic
 
 export const PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED !== "false";
 
-export const PAYMENT_PLANS = ["RIJVIA_3_DAYS", "RIJVIA_1_WEEK", "RIJVIA_4_WEEKS"] as const;
-export type PaymentPlan = (typeof PAYMENT_PLANS)[number];
+export const PAYMENT_PLANS = ["RIJVIA_1_WEEK", "RIJVIA_2_WEEKS", "RIJVIA_4_WEEKS"] as const;
+export const ALL_PAYMENT_PLANS = ["RIJVIA_3_DAYS", ...PAYMENT_PLANS] as const;
+export type PaymentPlan = (typeof ALL_PAYMENT_PLANS)[number];
+export type PurchasablePaymentPlan = (typeof PAYMENT_PLANS)[number];
 export interface PurchaseStatus {
   purchaseId: string;
   status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";

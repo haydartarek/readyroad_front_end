@@ -1,9 +1,9 @@
-import { CalendarCheck, Trophy, Zap } from "lucide-react";
+import { CalendarCheck, CalendarRange, Trophy, Zap } from "lucide-react";
 
 import type { PaymentPlan } from "@/services/paymentService";
 
 export const RECOMMENDED_PAYMENT_PLAN: PaymentPlan =
-  "RIJVIA_1_WEEK";
+  "RIJVIA_4_WEEKS";
 
 type PlanIdentityVariant =
   | "home"
@@ -40,6 +40,14 @@ function PlanGlyph({
     case "RIJVIA_1_WEEK":
       return (
         <CalendarCheck
+          className={iconClass}
+          aria-hidden
+        />
+      );
+
+    case "RIJVIA_2_WEEKS":
+      return (
+        <CalendarRange
           className={iconClass}
           aria-hidden
         />
@@ -163,14 +171,17 @@ const BADGE_VARIANTS: Record<
 export function RecommendedPlanBadge({
   label,
   variant,
+  featured = true,
 }: {
   label: string;
   variant: RecommendedBadgeVariant;
+  featured?: boolean;
 }) {
   return (
     <span
       className={[
-        "z-20 items-center whitespace-nowrap rounded-full bg-primary font-black text-primary-foreground shadow-md",
+        "z-20 items-center whitespace-nowrap rounded-full font-black shadow-md",
+        featured ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
         BADGE_VARIANTS[variant],
       ].join(" ")}
     >

@@ -126,7 +126,7 @@ beforeEach(() => {
     });
 });
 
-test("weekly plan is recommended and selected by default", () => {
+test("weekly plan remains selected by default while two-week is recommended", () => {
   render(
     <FreeExamPaywall
       open
@@ -140,6 +140,12 @@ test("weekly plan is recommended and selected by default", () => {
     screen.getAllByText("Recommended");
 
   expect(recommendedBadges).toHaveLength(2);
+
+  expect(screen.queryByTestId("exam-paywall-RIJVIA_3_DAYS")).not.toBeInTheDocument();
+  expect(screen.getByTestId("exam-paywall-RIJVIA_1_WEEK")).toHaveTextContent("Quick review");
+  expect(screen.getByTestId("exam-paywall-RIJVIA_2_WEEKS")).toHaveTextContent("Recommended");
+  expect(screen.getByTestId("exam-paywall-RIJVIA_4_WEEKS")).toHaveTextContent("Best value");
+  expect(screen.getByTestId("exam-paywall-RIJVIA_4_WEEKS")).toHaveAttribute("aria-pressed", "false");
 
   expect(
     recommendedBadges.some(
@@ -158,9 +164,9 @@ test("weekly plan is recommended and selected by default", () => {
 
   expect(
     screen.getByTestId(
-      "exam-paywall-RIJVIA_3_DAYS",
+      "exam-paywall-RIJVIA_2_WEEKS",
     ),
-  ).toHaveTextContent(`${EURO}2.99`);
+  ).toHaveTextContent(`${EURO}10.99`);
 
   expect(
     screen.getByTestId(
@@ -419,13 +425,13 @@ test("the learner can change the selected plan", () => {
 
   fireEvent.click(
     screen.getByTestId(
-      "exam-paywall-RIJVIA_3_DAYS",
+      "exam-paywall-RIJVIA_2_WEEKS",
     ),
   );
 
   expect(
     screen.getByTestId(
-      "exam-paywall-RIJVIA_3_DAYS",
+      "exam-paywall-RIJVIA_2_WEEKS",
     ),
   ).toHaveAttribute(
     "aria-pressed",
@@ -444,7 +450,7 @@ test("the learner can change the selected plan", () => {
   expect(
     screen.getByRole("button", {
       name:
-        `Continue from question 11 now ${EURO}2.99`,
+        `Continue from question 11 now ${EURO}10.99`,
     }),
   ).toBeVisible();
 });

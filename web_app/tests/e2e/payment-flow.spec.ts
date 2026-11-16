@@ -4,7 +4,7 @@ import { seedCookieConsent } from "./helpers/consent";
 
 const purchaseId = "a43bfbd3-c959-4a6f-b23f-cf23064891b1";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";
-const pending = { purchaseId, status: "PENDING", plan: "RIJVIA_3_DAYS", expiresAt: null };
+const pending = { purchaseId, status: "PENDING", plan: "RIJVIA_2_WEEKS", expiresAt: null };
 
 async function prepare(page: Page) {
   await seedCookieConsent(page);
@@ -32,15 +32,21 @@ for (const width of [390, 1366]) {
       await expect.poll(() => new URL(page.url()).hash).toBe("#pricing");
       await expect(page.locator("#pricing").getByRole("button")).toHaveCount(3);
       await expect(page.locator("#pricing").getByRole("button").first()).toBeEnabled();
-      const firstPrice = page.locator("#pricing").getByText("€2.99", { exact: true });
+      const firstPrice = page.locator("#pricing").getByText("€6.99", { exact: true });
+      const middlePrice = page.locator("#pricing").getByText("€10.99", { exact: true });
       const lastPrice = page.locator("#pricing").getByText("€14.99", { exact: true });
       const lastButton = page.locator("#pricing").getByRole("button").last();
+      const badgeLabels = { ar: ["مراجعة سريعة", "نوصي بها", "أفضل قيمة"], nl: ["Snelle herhaling", "Aanbevolen", "Beste waarde"], fr: ["Révision rapide", "Recommandé", "Meilleure valeur"], en: ["Quick review", "Recommended", "Best value"] } as const;
+      for (const label of badgeLabels[locale]) { await expect(page.locator("#rijvia-pricing-cards").getByText(label, { exact: true })).toHaveCount(1); }
+      await expect(page.locator("#pricing").getByText("€2.99", { exact: true })).toHaveCount(0);
       if (width >= 1280) {
         await expect(firstPrice).toBeInViewport();
+        await expect(middlePrice).toBeInViewport();
         await expect(lastPrice).toBeInViewport();
         await expect(lastButton).toBeInViewport();
       } else {
         await expect(firstPrice).toBeVisible();
+        await expect(middlePrice).toBeVisible();
         await expect(lastPrice).toBeVisible();
         await expect(lastButton).toBeVisible();
       }
@@ -54,7 +60,7 @@ for (const width of [390, 1366]) {
 test("plan -> hosted checkout -> pending -> paid, retaining Arabic route and owned purchase", async ({ page }) => {
   let polls = 0;
   await page.route("**/api/proxy/checkout", async route => {
-    expect(route.request().postDataJSON()).toEqual({ plan: "RIJVIA_3_DAYS", clientRequestId: expect.stringMatching(/^[0-9a-f-]{36}$/) });
+    expect(route.request().postDataJSON()).toEqual({ plan: "RIJVIA_2_WEEKS", clientRequestId: expect.stringMatching(/^[0-9a-f-]{36}$/) });
     expect(route.request().headers()["accept-language"]).toBe("ar");
     await route.fulfill({ json: { purchaseId, checkoutUrl: "https://checkout.stripe.com/c/pay/rijvia-offline-fixture" } });
   });
@@ -65,7 +71,7 @@ test("plan -> hosted checkout -> pending -> paid, retaining Arabic route and own
     ...pending, status: "PAID", expiresAt: "2026-10-01T14:00:00+02:00",
   } }));
   await page.goto("/ar#pricing");
-  await page.getByRole("button", { name: "اختر هذه الباقة: 3 أيام" }).click();
+  await page.getByRole("button", { name: "اختر هذه الباقة: أسبوعان" }).click();
   await expect(page).toHaveURL("https://checkout.stripe.com/c/pay/rijvia-offline-fixture");
   const firstStatus = page.waitForResponse(response => response.url().endsWith(`/purchases/${purchaseId}/status`));
   const paidStatus = page.waitForResponse(async response =>

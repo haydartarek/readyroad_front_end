@@ -8,6 +8,7 @@ import {
 const PRICE_EUR: Record<PaymentPlan, number> = {
   RIJVIA_3_DAYS: 2.99,
   RIJVIA_1_WEEK: 6.99,
+  RIJVIA_2_WEEKS: 10.99,
   RIJVIA_4_WEEKS: 14.99,
 };
 

@@ -146,7 +146,7 @@ test("checkout retry retains its UUID and sends the current validated locale", a
   await act(async () => { fireEvent.click(button); });
   const calls = jest.mocked(createCheckout).mock.calls;
   expect(calls).toHaveLength(2);
-  expect(calls[0]).toEqual(["RIJVIA_3_DAYS", expect.any(String), "fr"]);
+  expect(calls[0]).toEqual(["RIJVIA_1_WEEK", expect.any(String), "fr"]);
   expect(calls[1][1]).toBe(calls[0][1]);
 });
 

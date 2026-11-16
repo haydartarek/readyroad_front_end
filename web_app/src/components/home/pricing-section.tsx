@@ -36,15 +36,16 @@ import {
 const PRICE_BY_PLAN: Record<PaymentPlan, string> = {
   RIJVIA_3_DAYS: "\u20AC2.99",
   RIJVIA_1_WEEK: "\u20AC6.99",
+  RIJVIA_2_WEEKS: "\u20AC10.99",
   RIJVIA_4_WEEKS: "\u20AC14.99",
 };
 
 const FEATURES = [
-  "home.pricing.feature_questions",
   "home.pricing.feature_exam",
   "home.pricing.feature_explanations",
   "home.pricing.feature_progress",
   "home.pricing.feature_languages",
+  "home.pricing.feature_questions",
 ] as const;
 
 const PENDING_PLAN_KEY = "rijvia.pendingCheckoutPlan";
@@ -322,12 +323,11 @@ export function PricingSection({ resumeCheckout = false }: { resumeCheckout?: bo
                   <RecommendedPlanAccent />
                 )}
 
-                {featured && (
-                  <RecommendedPlanBadge
-                    label={t("home.pricing.recommended")}
-                    variant="floating"
-                  />
-                )}
+                <RecommendedPlanBadge
+                  label={t(`home.pricing.badge.${plan}`)}
+                  variant="floating"
+                  featured={featured}
+                />
 
                 <PlanIdentity
                   plan={plan}

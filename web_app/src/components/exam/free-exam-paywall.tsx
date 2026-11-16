@@ -30,14 +30,15 @@ import {
 } from "@/services/paymentService";
 
 const PAYWALL_PLANS: readonly PaymentPlan[] = [
-  "RIJVIA_3_DAYS",
   "RIJVIA_1_WEEK",
+  "RIJVIA_2_WEEKS",
   "RIJVIA_4_WEEKS",
 ];
 
 const PRICE_BY_PLAN: Record<PaymentPlan, string> = {
   RIJVIA_3_DAYS: "€2.99",
   RIJVIA_1_WEEK: "€6.99",
+  RIJVIA_2_WEEKS: "€10.99",
   RIJVIA_4_WEEKS: "€14.99",
 };
 
@@ -250,12 +251,11 @@ export function FreeExamPaywall({
                       : "border-border bg-card hover:border-primary/40",
                   ].join(" ")}
                 >
-                  {recommended ? (
-                    <RecommendedPlanBadge
-                      label={t("home.pricing.recommended")}
-                      variant="compact"
-                    />
-                  ) : null}
+                  <RecommendedPlanBadge
+                    label={t(`home.pricing.badge.${plan}`)}
+                    variant="compact"
+                    featured={recommended}
+                  />
 
                   <PlanIdentity
                     plan={plan}
@@ -279,12 +279,11 @@ export function FreeExamPaywall({
                   >
                     {PRICE_BY_PLAN[plan]}
                   </bdi>
-                    {recommended ? (
-                      <RecommendedPlanBadge
-                        label={t("home.pricing.recommended")}
-                        variant="inline"
-                      />
-                    ) : null}
+                    <RecommendedPlanBadge
+                      label={t(`home.pricing.badge.${plan}`)}
+                      variant="inline"
+                      featured={recommended}
+                    />
                   </div>
 
                   <bdi

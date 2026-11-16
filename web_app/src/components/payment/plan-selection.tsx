@@ -22,6 +22,7 @@ import { checkoutRequestId, createCheckout, forgetCheckoutRequest, PAYMENTS_ENAB
 const PRICE_BY_PLAN: Record<PaymentPlan, string> = {
   RIJVIA_3_DAYS: "€2.99",
   RIJVIA_1_WEEK: "€6.99",
+  RIJVIA_2_WEEKS: "€10.99",
   RIJVIA_4_WEEKS: "€14.99",
 };
 
@@ -104,12 +105,11 @@ export function PlanSelection() {
                 featured ? "border-primary shadow-md" : "",
               ].join(" ")}
             >
-              {featured ? (
-                <RecommendedPlanBadge
-                  label={t("home.pricing.recommended")}
-                  variant="corner"
-                />
-              ) : null}
+              <RecommendedPlanBadge
+                label={t(`home.pricing.badge.${plan}`)}
+                variant="corner"
+                featured={featured}
+              />
 
               <CardHeader className="text-center">
                 <PlanIdentity

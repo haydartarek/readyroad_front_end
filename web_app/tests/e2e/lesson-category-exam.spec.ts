@@ -73,9 +73,10 @@ for (const access of ["FREE", "EXPIRED"] as const) {
     if (access === "EXPIRED") await page.setViewportSize({ width: 320, height: 780 });
     const requests = await session(context, page, baseURL!, { active: false, expiresIn: -1 });
     await page.goto(access === "EXPIRED" ? "/ar/exam?category=TH07" : "/en/exam?category=TH07");
-    await expect(page.getByTestId("exam-paywall-RIJVIA_3_DAYS")).toBeVisible();
     await expect(page.getByTestId("exam-paywall-RIJVIA_1_WEEK")).toBeVisible();
+    await expect(page.getByTestId("exam-paywall-RIJVIA_2_WEEKS")).toBeVisible();
     await expect(page.getByTestId("exam-paywall-RIJVIA_4_WEEKS")).toBeVisible();
+    await expect(page.getByTestId("exam-paywall-RIJVIA_3_DAYS")).toHaveCount(0);
     await expect(page.getByTestId("exam-question-title")).toHaveCount(0);
     expect(requests.examRequests()).toBe(0);
     if (access === "EXPIRED") await expect(page.locator("html")).toHaveAttribute("dir", "rtl");

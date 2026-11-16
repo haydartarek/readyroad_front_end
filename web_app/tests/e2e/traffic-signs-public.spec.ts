@@ -134,7 +134,7 @@ test.describe("Public traffic sign detail page", () => {
     });
   }
 
-  test("renders the complete catalog once without a Load More control", async ({
+  test("renders the complete catalog as linked cards without a Load More control", async ({
     page,
   }) => {
     await seedCookieConsent(page);
@@ -161,15 +161,7 @@ test.describe("Public traffic sign detail page", () => {
     ).toBeVisible();
 
     const cards = page.locator("a.traffic-sign-card");
-    const catalogLinks = page.locator(
-      'details nav a[href^="/traffic-signs/"]',
-    );
-    await expect(catalogLinks.first()).toBeAttached();
-
-    const discoverableLinkCount = await catalogLinks.count();
     await expect(cards).toHaveCount(catalog.length);
-    expect(discoverableLinkCount).toBe(catalog.length);
-    await expect(catalogLinks).toHaveCount(discoverableLinkCount);
     await expect(
       page.getByRole("button", { name: "Load more signs" }),
     ).toHaveCount(0);

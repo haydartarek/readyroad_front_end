@@ -198,7 +198,7 @@ test.describe("Public information and legal pages", () => {
     await question.focus();
     await page.keyboard.press("Enter");
     await expect(
-      page.getByText(/without a subscription or payment-card requirement/i),
+      page.getByText(/Full training and theory exam simulations require a paid plan/i),
     ).toBeVisible();
     const hasFaqSchema = await page
       .locator('script[type="application/ld+json"]')

@@ -28,7 +28,10 @@ const summary = { categoryCode: "TH01", nameEn: "Priority", nameAr: "الأول�
   nameFr: "Priorité", questionCount: 67, primary: true, displayOrder: 1 };
 const questions = Array.from({ length: 67 }, (_, index) => ({ id: index + 1,
   questionEn: `Question ${index + 1}`, questionAr: "سؤال", questionNl: "Vraag", questionFr: "Question",
-  difficultyLevel: "EASY", options: [{ id: 1, optionTextEn: "First answer" }, { id: 2, optionTextEn: "Second answer" }] }));
+  difficultyLevel: "EASY", options: [
+    { id: 1, optionTextEn: "First answer", optionTextAr: "الأول", optionTextNl: "Eerste", optionTextFr: "Première" },
+    { id: 2, optionTextEn: "Second answer", optionTextAr: "الثاني", optionTextNl: "Tweede", optionTextFr: "Deuxième" },
+  ] }));
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -36,16 +39,24 @@ beforeEach(() => {
     expiresAt: new Date(Date.now() + 60_000).toISOString() });
   jest.mocked(getCategoryExamSummary).mockResolvedValue(summary);
   jest.mocked(getCategoryExam).mockResolvedValue({ category: summary, questions,
-    serverTime: new Date().toISOString() } as Awaited<ReturnType<typeof getCategoryExam>>);
+    serverTime: new Date().toISOString(), preview: false });
 });
 afterEach(() => jest.useRealTimers());
 
-test.each(["FREE", "EXPIRED"] as const)("%s learners see plans without requesting question content", async (status) => {
+test.each(["FREE", "EXPIRED"] as const)("%s learners receive one free question in a new category then see plans", async (status) => {
   jest.mocked(getAccountAccess).mockResolvedValue({ active: false, status, plan: null, expiresAt: null });
-  render(<CategoryExamMode categoryCode="TH07" />);
+  jest.mocked(getCategoryExamSummary).mockResolvedValue({ ...summary, categoryCode: "TH11" });
+  jest.mocked(getCategoryExam).mockResolvedValue({ category: { ...summary, categoryCode: "TH11", questionCount: 1 },
+    questions: questions.slice(0, 1), serverTime: new Date().toISOString(), preview: true });
+  jest.mocked(answerCategoryExam).mockResolvedValue({ questionId: 1, isCorrect: true, correctOptionId: 1 });
+  render(<CategoryExamMode categoryCode="TH11" />);
+  expect(await screen.findByText("Question 1")).toBeInTheDocument();
+  expect(screen.getByTestId("exam-question-counter")).toHaveTextContent("1 / 1");
+  expect(getAccountAccess).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: /First answer/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Next question" }));
   expect(await screen.findByRole("dialog")).toHaveTextContent("Purchase plans");
-  expect(getCategoryExam).not.toHaveBeenCalled();
-  expect(screen.queryByText("Question 1")).not.toBeInTheDocument();
+  expect(answerCategoryExam).toHaveBeenCalledWith("TH11", 1, 1);
 });
 
 test("paid learners get a dynamic 67-question exam and no answer feedback before completion", async () => {
@@ -68,6 +79,14 @@ test("staff with unlimited access do not need an expiry date", async () => {
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
+test("a missing account access endpoint does not mark a server-approved category unavailable", async () => {
+  jest.mocked(getAccountAccess).mockRejectedValue({ response: { status: 404 } });
+  render(<CategoryExamMode categoryCode="TH01" />);
+  expect(await screen.findByText("Question 1")).toBeInTheDocument();
+  expect(screen.queryByText("This category is unavailable.")).not.toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
 test("category questions use the simulator layout with Next inside and secondary actions below status", async () => {
   render(<CategoryExamMode categoryCode="TH07" />);
   await screen.findByText("Question 1");
@@ -86,7 +105,7 @@ test("category questions use the simulator layout with Next inside and secondary
 
 test("an empty category preserves its heading and empty state instead of showing exam controls", async () => {
   jest.mocked(getCategoryExam).mockResolvedValue({ category: { ...summary, questionCount: 0 },
-    questions: [], serverTime: new Date().toISOString() });
+    questions: [], serverTime: new Date().toISOString(), preview: false });
   render(<CategoryExamMode categoryCode="TH07" />);
   await screen.findByText("No questions are currently available in this category.");
   expect(screen.getByRole("heading", { name: "Priority", level: 1 })).toBeInTheDocument();

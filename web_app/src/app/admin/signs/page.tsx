@@ -3,6 +3,7 @@
 import { useLocalizedRouter } from "@/hooks/use-localized-router";
 
 import React, { useCallback, useEffect, useState } from "react";
+import Link from "@/components/localized-link";
 import Image from "next/image";
 import { useSearchParams, usePathname } from "next/navigation";
 import { apiClient, isServiceUnavailable, logApiError } from "@/lib/api";
@@ -25,6 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
+  Pencil,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────
@@ -59,6 +61,15 @@ interface CategoryOption {
   nameAr: string;
   nameNl: string;
   nameFr: string;
+}
+interface SignQuestionSummary {
+  id: number;
+  questionRef: string;
+  difficulty: string;
+  questionEn: string;
+  questionAr: string;
+  questionNl: string;
+  questionFr: string;
 }
 
 // ─── Constants ─────────────────────────────────────────
@@ -226,6 +237,9 @@ export default function AdminSignsPage() {
   const [totalPages, setTotalPages] = useState(0);
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [questionsBySign, setQuestionsBySign] = useState<Record<number, SignQuestionSummary[]>>({});
+  const [questionsLoadingId, setQuestionsLoadingId] = useState<number | null>(null);
+  const [questionsErrorId, setQuestionsErrorId] = useState<number | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
 
   useEffect(() => {
@@ -299,6 +313,22 @@ export default function AdminSignsPage() {
       setLoading(false);
     }
   }, [page, size, sortField, sortDir, categoryFilter, searchQuery, t]);
+
+  const loadSignQuestions = async (sign: TrafficSign) => {
+    setQuestionsLoadingId(sign.id);
+    setQuestionsErrorId(null);
+    try {
+      const response = await apiClient.get<{ questions: SignQuestionSummary[] }>(
+        `/admin/sign-quiz/signs/${encodeURIComponent(sign.signCode)}`,
+      );
+      setQuestionsBySign((current) => ({ ...current, [sign.id]: response.data.questions }));
+    } catch (err) {
+      logApiError("Failed to fetch sign questions", err);
+      setQuestionsErrorId(sign.id);
+    } finally {
+      setQuestionsLoadingId(null);
+    }
+  };
 
   useEffect(() => {
     fetchSigns();
@@ -488,18 +518,18 @@ export default function AdminSignsPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 border-b border-border/40">
               <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3 text-left font-semibold w-16">
+                <th className="px-4 py-3 text-start font-semibold w-16">
                   {t("admin.signs.col_image")}
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
+                  className="px-4 py-3 text-start font-semibold cursor-pointer select-none"
                   onClick={() => handleSort("signCode")}
                 >
                   {t("admin.signs.col_code")}
                   <SortIcon field="signCode" />
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
+                  className="px-4 py-3 text-start font-semibold cursor-pointer select-none"
                   onClick={() =>
                     handleSort(NAME_SORT_FIELD[language] || "nameEn")
                   }
@@ -508,13 +538,13 @@ export default function AdminSignsPage() {
                   <SortIcon field={NAME_SORT_FIELD[language] || "nameEn"} />
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
+                  className="px-4 py-3 text-start font-semibold cursor-pointer select-none"
                   onClick={() => handleSort("categoryCode")}
                 >
                   {t("admin.signs.col_category")}
                   <SortIcon field="categoryCode" />
                 </th>
-                <th className="px-4 py-3 text-right font-semibold">
+                <th className="px-4 py-3 text-end font-semibold">
                   {t("admin.signs.col_actions")}
                 </th>
               </tr>
@@ -584,11 +614,12 @@ export default function AdminSignsPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() =>
-                              setExpandedId(
-                                expandedId === sign.id ? null : sign.id,
-                              )
-                            }
+                            onClick={() => {
+                              const opening = expandedId !== sign.id;
+                              setExpandedId(opening ? sign.id : null);
+                              if (opening) void loadSignQuestions(sign);
+                            }}
+                            aria-label={t("admin.signs.view")}
                             className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
                           >
                             {expandedId === sign.id ? (
@@ -627,6 +658,65 @@ export default function AdminSignsPage() {
                               name={sign.nameFr}
                               desc={sign.descriptionFr}
                             />
+                          </div>
+                          <div className="space-y-3 border-t border-border/40 pt-3">
+                            <h3 className="text-sm font-bold text-foreground">
+                              {t("admin.signs.questions")}
+                            </h3>
+                            {questionsLoadingId === sign.id ? (
+                              <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+                            ) : questionsErrorId === sign.id ? (
+                              <Button type="button" variant="outline" size="sm" onClick={() => void loadSignQuestions(sign)}>
+                                {t("admin.signs.retry")}
+                              </Button>
+                            ) : questionsBySign[sign.id]?.length ? (
+                              <div className="overflow-x-auto rounded-xl border border-border/50 bg-card">
+                                <table className="w-full text-sm">
+                                  <thead className="border-b border-border/40 bg-muted/50">
+                                    <tr className="text-xs uppercase tracking-wide text-muted-foreground">
+                                      <th scope="col" className="px-4 py-3 text-start font-semibold">{t("admin.quizzes.col_question")}</th>
+                                      <th scope="col" className="px-4 py-3 text-start font-semibold">{t("admin.quizzes.col_difficulty")}</th>
+                                      <th scope="col" className="px-4 py-3 text-end font-semibold">{t("admin.quizzes.col_actions")}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-border/30">
+                                    {questionsBySign[sign.id].map((question) => {
+                                      const suffix = language.charAt(0).toUpperCase() + language.slice(1);
+                                      const localizedQuestion = question[`question${suffix}` as keyof SignQuestionSummary] || question.questionEn;
+                                      const query = searchParams.toString();
+                                      const returnTo = `/admin/signs${query ? `?${query}` : ""}`;
+                                      return (
+                                        <tr key={question.id} className="transition-colors hover:bg-muted/30">
+                                          <td className="max-w-sm px-4 py-3">
+                                            <span className="line-clamp-2 text-sm text-foreground">{localizedQuestion}</span>
+                                            <span className="text-xs text-muted-foreground" dir="ltr">{question.questionRef}</span>
+                                          </td>
+                                          <td className="px-4 py-3">
+                                            <Badge variant="outline" className="text-xs font-medium">
+                                              {t(`difficulty.${question.difficulty.toLowerCase()}`)}
+                                            </Badge>
+                                          </td>
+                                          <td className="px-4 py-3">
+                                            <div className="flex items-center justify-end">
+                                              <Link
+                                                href={`/admin/signs/${encodeURIComponent(sign.signCode)}/questions/${encodeURIComponent(question.questionRef)}/edit?returnTo=${encodeURIComponent(returnTo)}`}
+                                                aria-label={t("admin.signs.edit_question")}
+                                                title={t("admin.signs.edit_question")}
+                                                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary"
+                                              >
+                                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                                              </Link>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">{t("admin.signs.no_questions")}</p>
+                            )}
                           </div>
                           {sign.imageUrl && (
                             <div className="flex items-center gap-2">

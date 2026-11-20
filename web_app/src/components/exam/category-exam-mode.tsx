@@ -73,21 +73,36 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
       setSelected(null);
       setDeadline(null);
       setShowFinishDialog(false);
+      setPaywall(false);
       try {
-        const [summary, access] = await Promise.all([
+        const [summary, data] = await Promise.all([
           getCategoryExamSummary(categoryCode, language, abort.signal),
-          getAccountAccess(abort.signal),
+          getCategoryExam(categoryCode, language, abort.signal),
         ]);
         if (abort.signal.aborted) return;
         setCategory(summary);
-        if (!access.active && !access.unlimited) {
-          setPaywall(summary.questionCount > 0);
+        // The server decides whether this is the single free category question or the full exam.
+        serverOffset.current = Date.parse(data.serverTime) - Date.now();
+        if (data.preview) {
+          setDeadline(null);
+          setCategory(summary);
+          setExam(data);
           return;
         }
-        // The server independently authorizes delivery, even if the UI access record is stale.
-        const data = await getCategoryExam(categoryCode, language, abort.signal);
+        let access: Awaited<ReturnType<typeof getAccountAccess>> | null = null;
+        try {
+          access = await getAccountAccess(abort.signal);
+        } catch (accessError) {
+          const status = (accessError as { response?: { status?: number } }).response?.status;
+          if (status !== 404) throw accessError;
+        }
         if (abort.signal.aborted) return;
-        serverOffset.current = Date.parse(data.serverTime) - Date.now();
+        if (!access) {
+          setDeadline(null);
+          setCategory(data.category);
+          setExam(data);
+          return;
+        }
         const expiresAt = access.unlimited ? null : access.expiresAt;
         const expiry = expiresAt ? Date.parse(expiresAt) : null;
         if (!access.unlimited && (expiry === null || !Number.isFinite(expiry)
@@ -113,7 +128,7 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
   }, [authLoading, isAuthenticated, user?.username, categoryCode, language, push, requestKey]);
 
   useEffect(() => {
-    if (!exam) return;
+    if (!exam || exam.preview) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const checkDeadline = () => {
       clearTimeout(timer);
@@ -130,8 +145,9 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
         if (!active) return;
         if (!access.active && !access.unlimited) lock();
         else if (!access.unlimited && access.expiresAt) setDeadline(Date.parse(access.expiresAt));
-      } catch {
-        if (active) lock();
+      } catch (accessError) {
+        const status = (accessError as { response?: { status?: number } }).response?.status;
+        if (active && status !== 404) lock();
       }
     };
     checkDeadline();
@@ -161,7 +177,10 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
       setFeedback((current) => [...current, result]);
       setAnswers((current) => ({ ...current, [question.id]: selected }));
       setSelected(null);
-      if (index + 1 === exam!.questions.length) setFinished(true);
+      if (index + 1 === exam!.questions.length) {
+        setFinished(true);
+        if (exam!.preview) setPaywall(true);
+      }
       else setIndex((current) => current + 1);
     } catch (err) {
       const status = (err as { response?: { status?: number } }).response?.status;
@@ -250,8 +269,8 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
                   disabled={busy || selected === null}
                   onClick={() => void nextQuestion()}
                 >
-                  {t(index + 1 === total ? "category_exam.finish" : "category_exam.next")}
-                  {index + 1 !== total && (isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />)}
+                  {t(exam.preview || index + 1 !== total ? "category_exam.next" : "category_exam.finish")}
+                  {(exam.preview || index + 1 !== total) && (isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />)}
                 </Button>
             }
           />
@@ -264,6 +283,9 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
               {feedback.filter((answer) => answer.isCorrect).length} / {total}
             </p>
             <Button className="mt-4 font-bold" onClick={() => setRequestKey((current) => current + 1)}>{t("category_exam.restart")}</Button>
+            {exam.preview ? <Button className="mt-4 ms-3 font-bold" variant="outline" onClick={() => setPaywall(true)}>
+              {t("exam.paywall.choose_plan")}
+            </Button> : null}
           </PageSectionSurface>
           {exam.questions.map((item, questionIndex) => {
             const answer = feedback.find((entry) => entry.questionId === item.id);
@@ -296,7 +318,7 @@ export default function CategoryExamMode({ categoryCode }: { categoryCode: strin
         }}
         context="exam"
       />
-      <FreeExamPaywall open={paywall} categoryCode={categoryCode} totalQuestions={total}
+      <FreeExamPaywall open={paywall} categoryCode={categoryCode} totalQuestions={category?.questionCount ?? total}
         completedQuestions={feedback.length} onOpenChange={setPaywall} />
     </div>
   );

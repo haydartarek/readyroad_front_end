@@ -1,7 +1,7 @@
 import CategoryExamMode from "@/components/exam/category-exam-mode";
 import TheoryExamEntry from "@/components/exam/theory-exam-entry";
 
-const CATEGORY_CODE_PATTERN = /^TH(?:0[1-9]|10)$/;
+const CATEGORY_CODE_PATTERN = /^TH\d+$/;
 
 type ExamSearchParams = {
   category?: string | string[];

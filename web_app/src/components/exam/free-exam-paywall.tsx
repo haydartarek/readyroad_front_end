@@ -83,6 +83,7 @@ export function FreeExamPaywall({
     0,
     safeTotalQuestions - safeCompletedQuestions,
   );
+  const nextQuestionNumber = safeCompletedQuestions + 1;
   const progressPercent = Math.round(
     (safeCompletedQuestions / safeTotalQuestions) * 100,
   );
@@ -167,18 +168,18 @@ export function FreeExamPaywall({
       >
         <DialogHeader className={isRTL ? "text-right sm:text-right" : "text-left sm:text-left"}>
           <DialogTitle className="text-lg font-black sm:text-2xl">
-            {t(categoryCode ? "category_exam.title" : "exam.paywall.title")}
+            {t(categoryCode ? "category_exam.title" : "exam.paywall.title", { number: nextQuestionNumber })}
           </DialogTitle>
 
           <DialogDescription className={["text-xs leading-4 sm:text-sm sm:leading-5", isRTL ? "text-right" : "text-left"].join(" ")}>
-            {t(categoryCode ? "category_exam.paywall_description" : "exam.paywall.description")}
+            {t(categoryCode ? "category_exam.paywall_description" : "exam.paywall.description", { number: nextQuestionNumber })}
           </DialogDescription>
         </DialogHeader>
 
         {!categoryCode && <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-start text-xs font-semibold sm:px-4 sm:py-2.5 sm:text-sm">
           <span className="inline-flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            {t("exam.paywall.answers_saved")}
+            {t("exam.paywall.answers_saved", { number: nextQuestionNumber })}
           </span>
         </div>}
 
@@ -321,7 +322,7 @@ export function FreeExamPaywall({
             t("payment.opening")
           ) : (
             <>
-              <span>{t(categoryCode ? "category_exam.continue" : "exam.paywall.continue")}</span>
+              <span>{t(categoryCode ? "category_exam.continue" : "exam.paywall.continue", { number: nextQuestionNumber })}</span>
               <bdi dir="ltr">{PRICE_BY_PLAN[selectedPlan]}</bdi>
             </>
           )}

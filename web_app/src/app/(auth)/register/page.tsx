@@ -322,7 +322,7 @@ export default function RegisterPage() {
 
   const inputClassName = (field: FormFields, withAction = false) =>
     `${cn(
-      "h-11 rounded-2xl border-border/60 shadow-sm transition-colors duration-150",
+      "h-11 rounded-2xl border-border/60 shadow-sm transition-colors duration-150 [@media(max-height:720px)]:h-10",
       isRTL
         ? withAction
           ? "pl-12 pr-10"
@@ -342,6 +342,7 @@ export default function RegisterPage() {
     <AuthPageFrame
       showcase={
         <AuthShowcasePanel
+          homeLogo
           hideBrandName
           badge=""
           title={t("auth.register_panel_heading")}
@@ -366,14 +367,14 @@ export default function RegisterPage() {
         </p>
       }
     >
-      <form onSubmit={handleSubmit} noValidate className="space-y-2">
+      <form onSubmit={handleSubmit} noValidate className="space-y-2 [@media(max-height:720px)]:space-y-1.5">
         {serviceUnavailable && (
           <ServiceUnavailableBanner
             onRetry={() => setServiceUnavailable(false)}
           />
         )}
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2">
           {(["firstName", "lastName"] as const).map((field) => (
             <div key={field} className="space-y-1">
               <Label htmlFor={field} className="text-sm font-semibold">
@@ -425,91 +426,93 @@ export default function RegisterPage() {
           ))}
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="username" className="text-sm font-semibold">
-            {t("auth.username")}
-          </Label>
-          <div className="relative">
-            <User
-              className={cn(
-                "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground",
-                isRTL ? "right-3" : "left-3",
-              )}
-            />
-            <Input
-              id="username"
-              name="username"
-              autoComplete="username"
-              value={formData.username}
-              onChange={(e) => handleChange("username", e.target.value)}
-              onBlur={() => handleBlur("username")}
-              disabled={isLoading}
-              aria-invalid={hasError("username")}
-              aria-describedby={
-                hasError("username") ? "username-error" : undefined
-              }
-              className={inputClassName("username", isValid("username"))}
-            />
-            {isValid("username") && (
-              <CheckCircle2
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="username" className="text-sm font-semibold">
+              {t("auth.username")}
+            </Label>
+            <div className="relative">
+              <User
                 className={cn(
-                  "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-green-500",
-                  isRTL ? "left-3" : "right-3",
+                  "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground",
+                  isRTL ? "right-3" : "left-3",
                 )}
               />
-            )}
+              <Input
+                id="username"
+                name="username"
+                autoComplete="username"
+                value={formData.username}
+                onChange={(e) => handleChange("username", e.target.value)}
+                onBlur={() => handleBlur("username")}
+                disabled={isLoading}
+                aria-invalid={hasError("username")}
+                aria-describedby={
+                  hasError("username") ? "username-error" : undefined
+                }
+                className={inputClassName("username", isValid("username"))}
+              />
+              {isValid("username") && (
+                <CheckCircle2
+                  className={cn(
+                    "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-green-500",
+                    isRTL ? "left-3" : "right-3",
+                  )}
+                />
+              )}
+            </div>
+            {hasError("username") ? (
+              <p
+                id="username-error"
+                className="text-xs font-medium text-destructive"
+              >
+                {errors.username}
+              </p>
+            ) : null}
           </div>
-          {hasError("username") ? (
-            <p
-              id="username-error"
-              className="text-xs font-medium text-destructive"
-            >
-              {errors.username}
-            </p>
-          ) : null}
-        </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="email" className="text-sm font-semibold">
-            {t("auth.email")}
-          </Label>
-          <div className="relative">
-            <Mail
-              className={cn(
-                "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground",
-                isRTL ? "right-3" : "left-3",
-              )}
-            />
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              onBlur={() => handleBlur("email")}
-              disabled={isLoading}
-              aria-invalid={hasError("email")}
-              aria-describedby={hasError("email") ? "email-error" : undefined}
-              className={inputClassName("email", isValid("email"))}
-            />
-            {isValid("email") && (
-              <CheckCircle2
+          <div className="space-y-1">
+            <Label htmlFor="email" className="text-sm font-semibold">
+              {t("auth.email")}
+            </Label>
+            <div className="relative">
+              <Mail
                 className={cn(
-                  "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-green-500",
-                  isRTL ? "left-3" : "right-3",
+                  "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground",
+                  isRTL ? "right-3" : "left-3",
                 )}
               />
-            )}
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                onBlur={() => handleBlur("email")}
+                disabled={isLoading}
+                aria-invalid={hasError("email")}
+                aria-describedby={hasError("email") ? "email-error" : undefined}
+                className={inputClassName("email", isValid("email"))}
+              />
+              {isValid("email") && (
+                <CheckCircle2
+                  className={cn(
+                    "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-green-500",
+                    isRTL ? "left-3" : "right-3",
+                  )}
+                />
+              )}
+            </div>
+            {hasError("email") ? (
+              <p
+                id="email-error"
+                className="text-xs font-medium text-destructive"
+              >
+                {errors.email}
+              </p>
+            ) : null}
           </div>
-          {hasError("email") ? (
-            <p
-              id="email-error"
-              className="text-xs font-medium text-destructive"
-            >
-              {errors.email}
-            </p>
-          ) : null}
         </div>
 
         <div className="space-y-1">

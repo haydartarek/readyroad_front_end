@@ -41,7 +41,7 @@ export function AuthShowcasePanel({
 
       <div
         className={[
-          "relative z-10 flex min-h-screen w-full flex-col gap-7 px-6 py-6 text-white xl:px-8 xl:py-8",
+          "relative z-10 flex min-h-screen w-full flex-col gap-5 px-6 py-6 text-white xl:gap-7 xl:px-8 xl:py-8",
           verticalAlign === "start"
             ? "justify-start pt-10 xl:pt-12"
             : "justify-center",
@@ -50,8 +50,7 @@ export function AuthShowcasePanel({
         <div className={homeLogo ? "px-3.5 py-3.5" : "rounded-[1.55rem] border border-white/12 bg-white/8 px-3.5 py-3.5 backdrop-blur-sm"}>
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-[124px] shrink-0 items-center justify-center">
-              <Image src="/images/logo.png" alt="" aria-hidden="true" width={124} height={48} className="h-12 w-full object-contain dark:hidden" priority />
-              <Image src="/images/logo-dark.png" alt="" aria-hidden="true" width={124} height={48} className="hidden h-12 w-full object-contain dark:block" priority />
+              <Image src="/images/logo-dark.png" alt={t("app.name")} width={124} height={48} className="h-12 w-full object-contain" priority />
             </div>
             <div className="min-w-0 space-y-1">
               {!homeLogo && !hideBrandName && (

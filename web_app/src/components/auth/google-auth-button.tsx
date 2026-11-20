@@ -49,7 +49,7 @@ export function GoogleAuthButton({
       asChild
       variant="outline"
       className={cn(
-        "h-12 w-full rounded-2xl border-border/70 bg-background/90 text-sm font-semibold text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background hover:text-foreground hover:shadow-md",
+        "h-12 w-full rounded-2xl border-border/70 bg-background/90 text-sm font-semibold text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background hover:text-foreground hover:shadow-md [@media(max-height:720px)]:h-10",
         className,
       )}
     >

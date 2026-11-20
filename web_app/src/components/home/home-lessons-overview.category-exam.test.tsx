@@ -36,3 +36,12 @@ test("the question count reflects refreshed backend data without a fixed number"
   expect(screen.getByText("68 questions")).toBeInTheDocument();
   expect(screen.queryByText("67 questions")).not.toBeInTheDocument();
 });
+
+test("a newly added theory category receives an exam link", () => {
+  mockLanguage = "en";
+  render(<HomeLessonsOverview lessons={[{ ...lesson, categories: [
+    { ...lesson.categories[0], categoryCode: "TH11" },
+  ] }]} />);
+  expect(screen.getByRole("link", { name: translateMessage("en", "category_exam.start_named", { category: "Technical safety" }) }))
+    .toHaveAttribute("href", "/exam?category=TH11");
+});

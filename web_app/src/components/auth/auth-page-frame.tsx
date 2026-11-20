@@ -31,24 +31,16 @@ export function AuthPageFrame({
       <div className="flex min-h-screen min-w-0 max-w-full">
         {showcase}
 
-        <section className="flex min-w-0 max-w-full flex-1 items-center justify-center px-5 py-10 sm:px-6 lg:px-10">
+        <section className="flex min-w-0 max-w-full flex-1 items-center justify-center px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 [@media(max-height:720px)]:py-2">
           <div className={cn("min-w-0 w-full max-w-full", maxWidthClassName)}>
-            <div className="mb-8 flex min-w-0 w-full items-center justify-center gap-3 lg:hidden">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-background ring-2 ring-primary/20 shadow-sm">
-                <Image
-                  src="/icons/icon-192.png"
-                  alt=""
-                  aria-hidden="true"
-                  width={40}
-                  height={40}
-                  className="rounded-full object-cover"
-                  priority
-                />
+            <div className="mb-3 flex min-w-0 w-full items-center justify-center gap-3 sm:mb-5 lg:hidden [@media(max-height:720px)]:mb-2">
+              <div className="flex h-10 w-28 shrink-0 items-center justify-center [@media(max-height:720px)]:h-8">
+                <Image src="/images/logo.png" alt={t("app.name")} width={112} height={40}
+                  className="h-10 w-full object-contain dark:hidden" priority />
+                <Image src="/images/logo-dark.png" alt={t("app.name")} width={112} height={40}
+                  className="hidden h-10 w-full object-contain dark:block" priority />
               </div>
               <div className="min-w-0">
-                <p className="break-words text-xl font-black tracking-normal [overflow-wrap:anywhere]">
-                  {t("app.name")}
-                </p>
                 <p className="break-words text-xs font-medium text-muted-foreground [overflow-wrap:anywhere]">
                   {t("auth.mobile_brand_caption")}
                 </p>
@@ -57,11 +49,11 @@ export function AuthPageFrame({
 
             <div
               className={cn(
-                "min-w-0 max-w-full rounded-[2rem] border border-border/60 bg-card/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:p-8",
+                "min-w-0 max-w-full rounded-[2rem] border border-border/60 bg-card/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:p-8 [@media(max-height:720px)]:p-3",
                 cardClassName,
               )}
             >
-              <div className={cn("mb-8 min-w-0 space-y-2", headerClassName)}>
+              <div className={cn("mb-8 min-w-0 space-y-2 [@media(max-height:720px)]:mb-3", headerClassName)}>
                 <h1 className="break-words text-2xl font-black tracking-normal text-foreground [overflow-wrap:anywhere] sm:text-3xl">
                   {title}
                 </h1>
@@ -74,7 +66,7 @@ export function AuthPageFrame({
               {children}
             </div>
 
-            {footer ? <div className="mt-5">{footer}</div> : null}
+            {footer ? <div className="mt-3 sm:mt-5">{footer}</div> : null}
           </div>
         </section>
       </div>

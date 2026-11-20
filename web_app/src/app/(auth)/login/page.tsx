@@ -131,7 +131,7 @@ function LoginForm() {
         </p>
       }
     >
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5 [@media(max-height:720px)]:space-y-3">
         {showServiceUnavailable && (
           <ServiceUnavailableBanner
             onRetry={() => setServiceUnavailable(false)}

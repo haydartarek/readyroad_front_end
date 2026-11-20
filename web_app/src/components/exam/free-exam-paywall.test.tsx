@@ -315,7 +315,7 @@ test("Arabic paywall uses RTL and right-aligned content", () => {
       name: translateMessage(
         "ar",
         "exam.paywall.title",
-      ),
+      ).replace("{number}", "11"),
     }),
   ).toBeVisible();
 

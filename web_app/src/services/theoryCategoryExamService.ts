@@ -25,6 +25,7 @@ export interface CategoryExamData {
   category: HomeLessonCategory;
   questions: CategoryExamQuestion[];
   serverTime: string;
+  preview: boolean;
 }
 
 export interface CategoryExamFeedback {

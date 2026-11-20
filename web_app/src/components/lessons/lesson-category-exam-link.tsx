@@ -7,7 +7,7 @@ import { getLessonCategoryName } from "@/lib/home-lessons-overview";
 
 export function LessonCategoryExamLink({ category }: { category: HomeLessonCategory }) {
   const { language, t } = useLanguage();
-  if (!/^TH(?:0[1-9]|10)$/.test(category.categoryCode)) return null;
+  if (!/^TH\d+$/.test(category.categoryCode)) return null;
   const name = getLessonCategoryName(category, language);
   return (
     <Link href={`/exam?category=${category.categoryCode}`}

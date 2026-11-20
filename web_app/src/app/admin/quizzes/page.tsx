@@ -669,24 +669,24 @@ export default function AdminQuizzesPage() {
             <thead className="bg-muted/50 border-b border-border/40">
               <tr className="text-xs uppercase tracking-wide text-muted-foreground">
                 <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none w-14"
+                  className="px-4 py-3 text-start font-semibold cursor-pointer select-none w-14"
                   onClick={() => handleSort("id")}
                 >
                   {t("admin.quizzes.col_no")}
                   <SortIcon field="id" />
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
+                  className="px-4 py-3 text-start font-semibold cursor-pointer select-none"
                   onClick={() => handleSort("questionEn")}
                 >
                   {t("admin.quizzes.col_question")}
                   <SortIcon field="questionEn" />
                 </th>
-                <th className="px-4 py-3 text-left font-semibold">
+                <th className="px-4 py-3 text-start font-semibold">
                   {t("admin.quizzes.col_category")}
                 </th>
                 <th
-                  className="px-4 py-3 text-left font-semibold cursor-pointer select-none"
+                  className="px-4 py-3 text-start font-semibold cursor-pointer select-none"
                   onClick={() => handleSort("difficultyLevel")}
                 >
                   {t("admin.quizzes.col_difficulty")}
@@ -701,7 +701,7 @@ export default function AdminQuizzesPage() {
                 <th className="px-4 py-3 text-center font-semibold">
                   {t("admin.quizzes.col_availability")}
                 </th>
-                <th className="px-4 py-3 text-right font-semibold">
+                <th className="px-4 py-3 text-end font-semibold">
                   {t("admin.quizzes.col_actions")}
                 </th>
               </tr>

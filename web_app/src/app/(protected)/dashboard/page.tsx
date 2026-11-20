@@ -604,7 +604,8 @@ function DashboardHome() {
               label={metric.label}
               value={metric.value}
               mobileStacked
-              className="bg-card/90"
+              tone="primary"
+              className="bg-card/95"
             />
           );
         })}

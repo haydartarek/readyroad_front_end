@@ -16,7 +16,7 @@ const lesson = {
 // are independently covered by backend tests against isolated PostgreSQL.
 async function session(context: BrowserContext, page: Page, baseURL: string,
   { role = "USER", active = true, unlimited = false, expiresIn = 3600,
-    accessStatus = "EXPIRED" as "FREE" | "EXPIRED" } = {}) {
+    accessStatus = "EXPIRED" as "FREE" | "EXPIRED", categoryCode = "TH07" } = {}) {
   const user = { userId: 42, username: "category_exam_qa", fullName: "Category exam QA",
     email: "category.exam@example.test", role, preferredLanguage: null,
     isActive: true, createdAt: "2026-01-01T00:00:00Z" };
@@ -43,8 +43,8 @@ async function session(context: BrowserContext, page: Page, baseURL: string,
       expiresAt: unlimited || (!active && accessStatus === "FREE") ? null : expiresAt,
     } });
     if (path.endsWith("/lessons/home-overview")) return route.fulfill({ json: [lesson] });
-    if (path.endsWith("/TH07/summary")) return route.fulfill({ json: category });
-    if (path.endsWith("/TH07/exam")) {
+    if (path.endsWith(`/${categoryCode}/summary`)) return route.fulfill({ json: { ...category, categoryCode } });
+    if (path.endsWith(`/${categoryCode}/exam`)) {
       examRequests += 1;
       if (!active && examRequests > 1) {
         return route.fulfill({ status: 403, json: { message: "Preview already used" } });
@@ -58,10 +58,10 @@ async function session(context: BrowserContext, page: Page, baseURL: string,
           { id: 1001 + i * 2, optionTextEn: "Other answer", optionTextAr: "إجابة أخرى" },
         ],
       }));
-      return route.fulfill({ json: { category, questions: active ? questions : questions.slice(0, 1),
+      return route.fulfill({ json: { category: { ...category, categoryCode }, questions: active ? questions : questions.slice(0, 1),
         preview: !active, serverTime: new Date().toISOString() } });
     }
-    if (path.match(/\/TH07\/questions\/\d+\/answer$/)) {
+    if (path.includes(`/${categoryCode}/questions/`) && path.endsWith("/answer")) {
       answerRequests += 1;
       const questionId = Number(path.split("/").at(-2));
       return route.fulfill({ json: { questionId, isCorrect: true,
@@ -72,6 +72,17 @@ async function session(context: BrowserContext, page: Page, baseURL: string,
   });
   return { examRequests: () => examRequests, answerRequests: () => answerRequests };
 }
+
+test("a newly added category grants one free question before the purchase screen", async ({ context, page, baseURL }) => {
+  const requests = await session(context, page, baseURL!, { active: false, categoryCode: "TH11" });
+  await page.goto("/en/exam?category=TH11");
+  await expect(page.getByTestId("exam-question-counter")).toHaveText("1 / 1");
+  await page.getByRole("button", { name: "Safe answer" }).click();
+  await page.getByTestId("exam-next").click();
+  await expect(page.getByTestId("exam-paywall-RIJVIA_1_WEEK")).toBeVisible();
+  expect(requests.examRequests()).toBe(1);
+  expect(requests.answerRequests()).toBe(1);
+});
 
 for (const access of ["FREE", "EXPIRED"] as const) {
   test(`${access} member answers one free question then sees existing purchase screen`, async ({ context, page, baseURL }) => {

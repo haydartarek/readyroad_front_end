@@ -14,7 +14,7 @@ The product is designed for learners who want one clear place to study Belgian t
 - **480+ Belgian theory questions** with structured answers and explanations.
 - Full multilingual experience in **Arabic, Dutch, French and English**, including RTL support for Arabic.
 - **Theory lessons, traffic signs, category practice, random practice and realistic exam simulation** in one learning flow.
-- **Free exam preview** for the first 10 questions, followed by a controlled paywall that preserves progress and continues the same exam from question 11 after access is unlocked.
+- **Free category exam preview** with one question per theory category for learners without an active package, followed by the existing purchase screen when they continue in that category.
 - **Secure Stripe Checkout** for prepaid access packages using one-time payments without automatic renewal.
 - **Personal learning analytics** with overall progress, error patterns, weak areas, strong areas and recommendations.
 - **User accounts and authentication**, including Google sign-in integration and protected application areas.
